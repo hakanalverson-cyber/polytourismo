@@ -85,10 +85,15 @@ css=open(f'{SRC}/style.css').read()
 import base64
 pk=base64.b64encode(open(W+'/assets/car_pack_2.glb','rb').read()).decode()
 src=src.replace("const compile = s => eval('('+s+')');","const compile = s => eval('('+s+')');window.PTO=o;",1)
+BOOT_CSS='<style id="ptBootCss">html,body{background:#0b0e12!important}body>*:not(#ptBoot){visibility:hidden!important}#ptBoot{position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#0b0e12;color:#e8eef2;font:italic 800 34px/1 Arial Black,Impact,sans-serif;letter-spacing:.06em;visibility:visible!important;transition:opacity .25s}#ptBoot small{font:700 10px/1 monospace;letter-spacing:.4em;color:#6fd3ee;font-style:normal}#ptBoot i{display:block;width:140px;height:3px;background:#1d252d;position:relative;overflow:hidden}#ptBoot i:after{content:"";position:absolute;inset:0;width:40%;background:#6fd3ee;animation:ptb 1s linear infinite}@keyframes ptb{from{left:-40%}to{left:100%}}</style>'
+src=src.replace('<title>Poly Tourismo v7</title>','<title>Poly Tourismo</title>'+BOOT_CSS)
+src=src.replace('<body>','<body><div id="ptBoot">POLY TOURISMO<i></i><small>LOADING</small></div>',1)
+BOOT_JS='<script>(function(){function done(){var b=document.getElementById("ptBoot"),c=document.getElementById("ptBootCss");if(!b)return;b.style.opacity=0;setTimeout(function(){if(c)c.remove();b.remove()},260)}function go(){requestAnimationFrame(function(){requestAnimationFrame(function(){setTimeout(done,350)})})}if(document.readyState==="complete")go();else addEventListener("load",go);setTimeout(done,8000)})();</script>'
 add='<script>const CAR_PACK2_B64="'+pk+'";</script><style id="v8css">'+css+'</style><script>\n'+'\n'.join(parts)+'\n</script>'
 i=src.rindex('</body>') if '</body>' in src else len(src)
-src=src[:i]+add+src[i:]
-src=src.replace('<title>Poly Tourismo v7</title>','<title>Poly Tourismo v9</title>')
+src=src[:i]+add+BOOT_JS+src[i:]
+
+src=src.replace("'Poly Tourismo v7'","'Poly Tourismo'").replace("'Poly Tourismo v9'","'Poly Tourismo'")
 out=sys.argv[1] if len(sys.argv)>1 else W+'/dist/Poly-Tourismo.html'
 open(out,'w').write(src);print('wrote',out,len(src))
 if not len(sys.argv)>1:
