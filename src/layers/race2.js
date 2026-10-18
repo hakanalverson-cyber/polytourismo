@@ -30,7 +30,7 @@ function tick(Rc,dt){const T=Rc.T,en=endur(Rc),pit=Rc.pit,N=T.N;
   if(c.tyre==null){c.tyre=1;c.fuel=1}
   const k=c.sp/40,slide=c.sp>8?Math.abs(wr(Math.atan2(c.vx,c.vz)-c.yaw)):0,inp=c.in||{th:0,br:0};
   let rate=.0011*k+.010*Math.min(1,slide*2.5)*k+(inp.br?.0025*k:0)+(inp.th>.9&&c.sp<15?.002:0);
-  if(T.d.gravel)rate*=1.25;if(c.onRoad===false)rate*=1.5;
+  if(c.tune)rate*=P.tuneFx(c.tune,!!T.d.gravel).wear;if(T.d.gravel)rate*=1.25;if(c.onRoad===false)rate*=1.5;
   const live=Rc.state==='race';
   if(live){c.tyre=Math.max(0,c.tyre-rate*dt*(c.human?1:.6));c.fuel=Math.max(0,c.fuel-.0019*(.35+.65*inp.th)*dt*(c.human?1:.8))}
   /* pit zone */

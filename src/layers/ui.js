@@ -309,21 +309,36 @@ function openShow(kind,o){SR.kind=kind;SR.player=o.player||0;SR.cap=o.cap==null?
  else{if(!BYID[SR.id])SR.id='merc';if(SR.alt&&!P.owns(SR.id,1))SR.alt=0}
  renderShow();show('s8show');}
 function showList(){const sv=P.SV();let l=SORTED.map(c=>({...c,off:false}));if(SR.kind==='garage'){l=l.filter(c=>(sv.owned[c.id]||0)>0);l.forEach(c=>{c.off=SR.cap!=null&&CLS.indexOf(c.cls)>CLS.indexOf(SR.cap)});if(!l.length)l=[{...BYID.merc,off:false}]}return l}
-function statBars(c){const gt=P.gearTops(c).map(v=>v*3.6),hi=gt[gt.length-1];const n=(v,a,b)=>clamp((v-a)/(b-a),0,1);
- return{bars:[['Top speed',n(hi,120,190),Math.round(hi)+' km/h'],['Accel',n(c.acc,18,35),(c.acc*.115).toFixed(1)+' s'],['Handling',n(c.grip,.9,1.12),Math.round(c.grip*100)],['Braking',n(c.brk,.88,1.18),Math.round(c.brk*100)],['Off-road',c.off,Math.round(c.off*100)+'%']],gt}}
+function statBars(c,tn){const f=tn?P.tuneFx(tn,false):{top:1,acc:1,grip:1,brk:1},fg=tn?P.tuneFx(tn,true):{grip:1};
+ const gt=P.gearTops(c).map(v=>v*3.6*f.top),hi=gt[gt.length-1];const n=(v,a,b)=>clamp((v-a)/(b-a),0,1);
+ /* [label, tuned bar, text, ratio vs stock, stock bar] */
+ return{bars:[
+  ['Top speed',n(hi,120,190),Math.round(hi)+' km/h',f.top,n(hi/f.top,120,190)],
+  ['Accel',n(c.acc*f.acc,18,35),(c.acc*.115/f.acc).toFixed(1)+' s',f.acc,n(c.acc,18,35)],
+  ['Handling',n(c.grip*f.grip,.9,1.12),Math.round(c.grip*f.grip*100),f.grip,n(c.grip,.9,1.12)],
+  ['Braking',n(c.brk*f.brk,.88,1.18),Math.round(c.brk*f.brk*100),f.brk,n(c.brk,.88,1.18)],
+  ['Off-road',clamp(c.off*fg.grip,0,1),Math.round(c.off*fg.grip*100)+'%',fg.grip,c.off]],gt}}
+const barHTML=b=>{const pc=Math.round((b[3]-1)*100),w=Math.round(b[1]*100),w0=Math.round(b[4]*100);let ex='',lbl='';
+ if(pc>0){ex=`<s class="up" style="left:${w0}%;width:${Math.max(1,w-w0)}%"></s>`;lbl=` <b class="dl up">+${pc}%</b>`}
+ else if(pc<0){ex=`<s class="dn" style="left:${w}%;width:${Math.max(1,w0-w)}%"></s>`;lbl=` <b class="dl dn">${pc}%</b>`}
+ return `<div class="bar"><span>${b[0]}</span><i><u style="width:${Math.min(w,w0)}%"></u>${ex}</i><em>${b[2]}${lbl}</em></div>`};
+function tuneHTML(car){const t=P.tuneGet(car.id,SR.alt);
+ return `<div class="tune"><div class="th"><b>TUNING</b><button class="btn sm" id="tuReset"><span>Reset</span></button></div>`+P.TUNE.map(d=>{const v=t[d.k],pips=[];for(let i=-d.r;i<=d.r;i++)pips.push(`<i class="${i===0?'ctr ':''}${(v>0&&i>0&&i<=v)||(v<0&&i<0&&i>=v)?'on':''}"></i>`);
+  return `<div class="tr"><span>${d.n}</span><button class="btn sm" data-k="${d.k}" data-d="-1"><span>&lsaquo;</span></button><div class="pp5">${pips.join('')}</div><button class="btn sm" data-k="${d.k}" data-d="1"><span>&rsaquo;</span></button><em>${v===0?'STOCK':v<0?d.lo:d.hi}${v&&d.r>1?' '+Math.abs(v):''}</em></div>`}).join('')+`<div class="tn">Applies to races &amp; events. Time Attack always runs stock so medals stay fair.</div></div>`}
 function renderShow(){const kind=SR.kind,sv=P.SV(),list=showList(),car=BYID[SR.id],owned=P.owns(car.id,0),ownAlt=P.owns(car.id,1);
  $('shTitle').innerHTML=kind==='garage'?'YOUR <em>GARAGE</em>':'BRAND <em>CENTRAL</em>';$('shSub').textContent=kind==='garage'?(SR.cap?'Class '+SR.cap+' and below':''):'Buy cars / alt colors';
  let h='',last=null;for(const c of list){if(c.cls!==last){last=c.cls;h+=`<div class="ch"><span class="cls ${c.cls}">${c.cls}</span> &nbsp;Class ${c.cls}</div>`}const o=(sv.owned[c.id]||0)>0;
   h+=`<div class="ci ${c.id===SR.id?'sel':''} ${c.off?'off':''}" data-id="${c.id}"><b>${c.name}</b><small>${kind==='brand'?(o?'Owned':fmtCr(c.price)):(c.off?'Class cap':c.type)}</small></div>`}
  $('shList').innerHTML=h;$$('#shList .ci',root).forEach(e=>e.onclick=()=>{SR.id=e.dataset.id;if(!P.owns(SR.id,SR.alt))SR.alt=0;renderShow()});
  const sel=$$('#shList .ci.sel',root)[0];if(sel)sel.scrollIntoView({block:'nearest'});
- const sb=statBars(car),bars=sb.bars,gt=sb.gt;
+ const tn=kind==='garage'&&owned?P.tuneGet(car.id,SR.alt):null,sb=statBars(car,tn),bars=sb.bars,gt=sb.gt;
  $('shStat').innerHTML=`<div class="nm">${car.name}${SR.alt?' <span style="color:var(--ac2);font-size:.6em">ALT</span>':''}</div><div class="tp">${car.type} &middot; ${car.drive}</div>
  <div class="pp"><small>Perf.<br>points</small><b>${P.pp(car)}</b><span class="cls ${car.cls}">${car.cls}</span></div>
- ${bars.map(b=>`<div class="bar"><span>${b[0]}</span><i><u style="width:${Math.round(b[1]*100)}%"></u></i><em>${b[2]}</em></div>`).join('')}
+ ${bars.map(barHTML).join('')}
  ${fxBoth(car)}
  <div class="gears9" style="grid-template-columns:repeat(${gt.length<=6?3:gt.length<=8?4:5},1fr)">${gt.map((v,i)=>`<div><small>GEAR ${i+1}</small>${Math.round(v)}</div>`).join('')}</div>
- <div class="spec">${kind==='brand'?'Price<b>'+fmtCr(car.price)+'</b><br>Alt color<b>'+fmtCr(car.altPrice)+'</b>':'Status<b>'+(owned?'Owned':'Not owned')+'</b>'}</div><div class="photos" id="shPhotos"></div>`;
+ <div class="spec">${kind==='brand'?'Price<b>'+fmtCr(car.price)+'</b><br>Alt color<b>'+fmtCr(car.altPrice)+'</b>':'Status<b>'+(owned?'Owned':'Not owned')+'</b>'}</div>${kind==='garage'&&owned?tuneHTML(car):'<div class="photos" id="shPhotos"></div>'}`;
+ if(kind==='garage'&&owned){$$('#shStat .tr button',root).forEach(b=>b.onclick=()=>{const k=b.dataset.k;P.tuneSet(car.id,SR.alt,k,P.tuneGet(car.id,SR.alt)[k]+ +b.dataset.d);P.sfx('select');renderShow()});$('tuReset').onclick=()=>{P.tuneReset(car.id,SR.alt);P.sfx('select');renderShow()}}
  lastPhotoKey='';
  const m0=P.modelOf(car.id,0),m1=P.modelOf(car.id,1);
  $('shSw').innerHTML=`<div class="swb ${SR.alt?'':'sel'}" data-alt="0"><i style="background:${bodyColor(m0)}"></i><span>Standard${kind==='brand'&&owned?' &middot; owned':''}</span></div><div class="swb ${SR.alt?'sel':''}" data-alt="1"><i style="background:${bodyColor(m1)}"></i><span>Alt${kind==='brand'?(ownAlt?' &middot; owned':' &middot; '+fmtCr(car.altPrice)):(ownAlt?'':' &middot; locked')}</span></div>`;

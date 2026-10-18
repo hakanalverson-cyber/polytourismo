@@ -356,3 +356,23 @@ body:after{background:repeating-linear-gradient(0deg,#00000010 0 1px,transparent
 .rt td.pl{color:var(--gr)}
 #mm{background:none!important;border:0!important;box-shadow:none!important;filter:drop-shadow(0 1px 3px #000a)}
 #mm{top:0!important;right:0!important}
+
+/* ---- tuning panel + stat deltas ---- */
+.bar i s{position:absolute;top:0;bottom:0;display:block;transition:left .25s,width .25s}
+.bar i s.up{background:repeating-linear-gradient(90deg,#7fd68a 0 5px,transparent 5px 7px)}
+.bar i s.dn{background:repeating-linear-gradient(90deg,#ef6a5a66 0 5px,transparent 5px 7px)}
+.bar em{width:118px}
+.bar em .dl{font-size:9px;margin-left:3px}.bar em .dl.up{color:#7fd68a}.bar em .dl.dn{color:#ef6a5a}
+.tune{margin-top:12px;border-top:1px solid var(--ln);padding-top:10px}
+.tune .th{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.tune .th b{font:700 10px var(--mn);letter-spacing:.3em;color:var(--dim)}
+.tune .tr{display:flex;align-items:center;gap:6px;margin:5px 0;font-size:9px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase}
+.tune .tr>span{width:78px;flex:none}
+.tune .tr em{width:62px;text-align:right;font-style:normal;color:var(--tx);font-weight:700;white-space:nowrap;font-size:9px}
+.tune .tr button{min-width:22px;padding:0;height:20px;line-height:1}
+.tune .tr button span{padding:0 6px}
+.pp5{flex:1;display:flex;gap:3px}
+.pp5 i{flex:1;height:8px;background:#161b21}
+.pp5 i.ctr{background:#39434d}
+.pp5 i.on{background:var(--ac)}
+.tune .tn{font-size:9px;letter-spacing:.08em;color:var(--dim);margin-top:8px;line-height:1.5;text-transform:none}

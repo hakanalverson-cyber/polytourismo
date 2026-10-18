@@ -81,6 +81,14 @@ PT8.buy=(id,alt)=>{const c=BYID[id];const price=alt?c.altPrice:c.price;if(alt&&!
 PT8.modelOf=(id,alt)=>alt?BYID[id].alt:BYID[id].body;
 PT8.setSel=(p,id,alt)=>{SV.sel[p]={id,alt:alt?1:0};save()};
 PT8.resetSave=()=>{SV=defSave();save()};
+/* ---- tuning: per car (+alt) setups. gear/susp/aero/brake -3..3, tyre -1..1 ---- */
+PT8.TUNE=[{k:'gear',n:'Gearing',lo:'SHORT',hi:'LONG',r:3},{k:'tyre',n:'Tyres',lo:'SOFT',hi:'HARD',r:1},{k:'susp',n:'Suspension',lo:'SOFT',hi:'STIFF',r:3},{k:'aero',n:'Downforce',lo:'LOW',hi:'HIGH',r:3},{k:'brake',n:'Brakes',lo:'SOFT',hi:'STRONG',r:3}];
+PT8.tuneKey=(id,alt)=>id+(alt?'a':'');
+PT8.tuneGet=(id,alt)=>Object.assign({gear:0,tyre:0,susp:0,aero:0,brake:0},(SV.tune||{})[PT8.tuneKey(id,alt)]||{});
+PT8.tuneSet=(id,alt,k,v)=>{const d=PT8.TUNE.find(x=>x.k===k);if(!d)return;if(!SV.tune)SV.tune={};const key=PT8.tuneKey(id,alt),t=PT8.tuneGet(id,alt);t[k]=Math.max(-d.r,Math.min(d.r,v));SV.tune[key]=t;save()};
+PT8.tuneReset=(id,alt)=>{if(SV.tune)delete SV.tune[PT8.tuneKey(id,alt)];save()};
+PT8.tuneFx=(t,gravel)=>{const g=t.gear,ty=t.tyre,s=t.susp,a=t.aero,b=t.brake;
+ return{top:(1+.012*g)*(1-.008*a),acc:1-.04*g,grip:(1-.03*ty)*(gravel?1-.02*s:1+.012*s)*(1+.02*a),brk:1+.04*b,wear:(ty<0?1-.35*ty:1-.3*ty)*(1+.03*Math.max(0,b))}};
 
 /* ---------------- globals for physics ---------------- */
 const BASE=JSON.parse(JSON.stringify(MATS));
@@ -185,7 +193,7 @@ function launch(cfg){
   const car=BYID[e.id]||BYID.merc;
   while(COLS.length<=k){COLS.push([0xd4ded8,0x8a9fab,0xb2a28c,0x9a8c9e,0xc77,0x7c7,0x77c,0xcc7,0x7cc,0xc7c][COLS.length%10]);CS.push('#'+COLS[COLS.length-1].toString(16).padStart(6,'0'))}
   carChoices[k]=PT8.modelOf(car.id,e.alt);
-  const c=newCar(T,k,e.human);c.cs=car;c.carId=car.id;c.alt=e.alt?1:0;c.gear=0;c.shiftT=0;c.gearFlash=0;c.loan=!!e.loan;c.ptName=e.human?('P'+(e.p+1)):(e.name||NAMES[(k*7)%NAMES.length]);
+  const c=newCar(T,k,e.human);c.cs=car;c.carId=car.id;c.alt=e.alt?1:0;c.gear=0;c.shiftT=0;c.gearFlash=0;c.tune=e.human&&cfg.mode!=='ta'?PT8.tuneGet(e.id,e.alt):null;if(c.tune){const f=PT8.tuneFx(c.tune,!!T.d.gravel);c.cs=Object.assign({},car,{top:car.top*f.top,acc:car.acc*f.acc,grip:car.grip*f.grip,brk:car.brk*f.brk})}c.loan=!!e.loan;c.ptName=e.human?('P'+(e.p+1)):(e.name||NAMES[(k*7)%NAMES.length]);
   if(!e.human){c.ai={skill:e.skill||.85,lat:e.lat!=null?e.lat:(((k*37)%7)-3)/4,name:c.ptName};c.m.drv.visible=false}
   const nAI=total-nh;c.slot=e.human?(humanFirst?e.p:nAI+e.p):(humanFirst?nh+(i-nh):i-nh);
   gridSlot(T,c,c.slot);

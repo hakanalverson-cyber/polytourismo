@@ -1,0 +1,2 @@
+from shot import run,W
+run(W+'/Poly-Tourismo.html',[('wait',1000),('js',"(()=>{PT8.tuneSet('merc',0,'aero',3);PT8.ui.openShow('garage',{player:0,cap:null,ret:'menu'});return 1})()"),('wait',1500),('js',"(()=>{const r=[];for(const y of [350,358,364,370]){const e=document.elementFromPoint(1000,y);r.push(y+':'+e.tagName+'.'+e.className+'#'+e.id)}const g=document.querySelector('.gears9');return r.join(' | ')+' || '+g.getBoundingClientRect().height+' '+g.innerHTML.slice(0,200)})()")],'x')
