@@ -111,7 +111,7 @@ P.makeAI=function({n,classes,skill,rally,cap,seed}){
  return out};
 
 /* ================= rally/time-attack references, prizes ================= */
-P.MEDAL_REF={0:58.7,1:60.0,2:86.7,3:46.6,4:74.5,5:81.3,6:78.1,r0:58.9,r1:58.7,r2:85.9,r3:46.7,r4:77.3,r5:75.4,r6:80.8};/* per-lap seconds for the B-class reference (Mercedes): AI lap x1.06 */
+P.MEDAL_REF={0:58.0,1:59.9,2:85.0,3:46.0,4:73.5,5:79.9,6:80.4,r0:58.4,r1:58.3,r2:84.6,r3:46.1,r4:76.0,r5:74.8,r6:80.9};/* per-lap seconds for the B-class reference (Mercedes): AI lap x1.06 */
 const MEDALS=[{n:'PLATINUM',f:1.0,cr:3600,col:'#cfe8ff'},{n:'GOLD',f:1.05,cr:1800,col:'#ffd23f'},{n:'SILVER',f:1.12,cr:900,col:'#c7ccd1'},{n:'BRONZE',f:1.22,cr:400,col:'#d08a4a'}];
 P.MEDALS=MEDALS;
 P.medalFor=(track,car,lap)=>{const ref=P.MEDAL_REF[track];if(!ref||lap==null)return -1;const sc=Math.pow(BYID.merc.top/car.top,.8),r=ref*sc;for(let i=0;i<MEDALS.length;i++)if(lap<=r*MEDALS[i].f)return i;return MEDALS.length};

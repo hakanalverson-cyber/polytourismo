@@ -8,7 +8,7 @@ A low-poly 3D racing game that ships as **one HTML file** (Three.js r128). Open 
 - **Cut-Up** – weave through traffic for score
 - **Career** – earn Cr., buy cars in Brand Central, climb the class ranks D → S
 
-7 tracks (4 tarmac incl. a night city, 3 gravel rally), 14 cars with real-life gear counts, tyre wear, fuel and pit stops, slipstreaming, time of day, and an audio engine with per-car engine voices.
+7 tracks (4 tarmac incl. a night city, 3 gravel rally), 14 cars with 5-speed gearboxes (realistic ratios), tyre wear, fuel and pit stops, slipstreaming, time of day, and an audio engine with per-car engine voices.
 
 ## Controls
 | Player | Keys |
