@@ -13,11 +13,18 @@ function flag(sc){sc.traverse(o=>{if(o.userData.shd)return;if(!(o.isMesh||o.isIn
  if(m.transparent||m.isMeshBasicMaterial||m.depthWrite===false||o.isSkinnedMesh===undefined&&m.blending===THREE.AdditiveBlending){o.castShadow=false;o.receiveShadow=false;return}
  o.castShadow=true;o.receiveShadow=true})}
 const _d=new THREE.Vector3(),_f=new THREE.Vector3(),r0=R.render.bind(R);
-R.render=function(scene,cam){const sun=scene&&scene.userData&&scene.userData.sun;
+P.frame=0;(function tk(){P.frame++;requestAnimationFrame(tk)})();
+R.render=function(scene,cam){const sun=scene&&scene.userData&&scene.userData.sun;let upd=true;
  if(sun){if(!on()){sun.castShadow=false}else{sun.castShadow=true;
+  const O=window.PTO||{},res=O.shadowRes||2048,rate=Math.max(1,O.shadowRate|0||1);
+  if(sun.shadow.mapSize.x!==res){sun.shadow.mapSize.set(res,res);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null}}
+  /* update the shadow map every N frames (single viewport only); the sun is frozen between updates so shadows never swim */
+  const single=typeof scr!=='undefined'&&scr==='game'&&RACE&&RACE.cars.filter(c=>c.human).length<=1;
+  upd=!(rate>1&&single)||P.frame%rate===0;R.shadowMap.autoUpdate=false;R.shadowMap.needsUpdate=upd;
+  if(upd){
   if((scene.userData.flagT-=1)<=0){scene.userData.flagT=45;flag(scene)}
   cam.getWorldDirection(_d);_d.y=0;_d.normalize();_f.copy(cam.position).addScaledVector(_d,34);
   const q=2.5;_f.x=Math.round(_f.x/q)*q;_f.z=Math.round(_f.z/q)*q;_f.y=Math.round(_f.y/q)*q;
-  sun.target.position.copy(_f);sun.target.updateMatrixWorld();sun.position.copy(_f).addScaledVector(sun.userData.d0,260)}}
+  sun.target.position.copy(_f);sun.target.updateMatrixWorld();sun.position.copy(_f).addScaledVector(sun.userData.d0,260)}}}
  return r0(scene,cam)};
 })();

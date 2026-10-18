@@ -1,40 +1,30 @@
-/* ===== Poly Tourismo v9 layer: perf (adaptive render scale + shadow throttling, HUD DOM caching) ===== */
+/* ===== Poly Tourismo v9 layer: perf (performance options: presets, pixel density cap, FPS counter, HUD DOM caching) ===== */
 (function v9perf(){
 'use strict';
-const P=window.PT8,cv=R.domElement,dpr=Math.min(devicePixelRatio||1,2);
-const on=()=>!window.PTO||PTO.adaptive!==false;
-/* base scale: never render more than ~1.5x CSS pixels unless the machine proves it can */
-const S0=dpr>1.5?1.5/dpr:1;
-const LV=[{s:1,sh:1,sz:2048},{s:.86,sh:1,sz:2048},{s:.86,sh:2,sz:2048},{s:.72,sh:2,sz:1536},{s:.6,sh:3,sz:1024}];
-let lv=0,frames=0,ema=16.7,lastChange=performance.now(),last=performance.now(),fcount=0;const badUntil=[0,0,0,0,0],badLen=[30000,30000,30000,30000,30000];
-const factor=()=>(scr==='game'&&on())?S0*LV[lv].s:1;
-P.perf={get level(){return lv},get scale(){return factor()},set level(v){lv=Math.max(0,Math.min(4,v|0));rs()}};
-
+const P=window.PT8,cv=R.domElement,dpr=devicePixelRatio||1,O=()=>window.PTO||{};
+const PRE={
+ MINIMUM:{maxDensity:1,resolution:.75,shadows:true,shadowRate:4,shadowRes:512,effects:1},
+ LOW:{maxDensity:1,resolution:.9,shadows:true,shadowRate:3,shadowRes:1024,effects:1},
+ MEDIUM:{maxDensity:1.25,resolution:1,shadows:true,shadowRate:2,shadowRes:1024,effects:2},
+ HIGH:{maxDensity:1.5,resolution:1,shadows:true,shadowRate:2,shadowRes:1536,effects:2},
+ ULTRA:{maxDensity:2,resolution:1,shadows:true,shadowRate:1,shadowRes:2048,effects:2}};
+let lastPP=O().perfPreset;
+/* called at the top of the options apply(): applies a chosen preset, or flips to CUSTOM when a value is edited by hand */
+P.perfPre=()=>{const o=O(),pr=PRE[o.perfPreset];if(o.perfPreset!==lastPP){lastPP=o.perfPreset;if(pr)Object.assign(o,pr);return}
+ if(pr){for(const k in pr)if(o[k]!==pr[k]){o.perfPreset=lastPP='CUSTOM';break}}};
+P.PERF_PRESETS=PRE;
+/* render size = screen pixels x min(device density, cap) x render scale */
 const rs1=rs;
-rs=()=>{rs1();const f=factor();if(f<.999&&typeof PX!=='undefined'&&PX===1&&!(P.studioDbg&&P.studioDbg.on)&&!document.body.classList.contains('studio')){R.setSize(Math.max(2,Math.round(cv.width*f)),Math.max(2,Math.round(cv.height*f)),false);cv.style.imageRendering='auto'}
- else if(scr==='game'||f>=.999){if(!document.body.classList.contains('studio'))cv.style.imageRendering=''}};
-const sh1=show;show=function(n){const r=sh1.apply(this,arguments);try{rs()}catch(e){}return r};
-
-/* shadow throttling */
-const rr=R.render.bind(R);let curSz=2048;
-R.render=function(scene,cam){
- if(scr==='game'&&on()&&scene&&scene.userData&&scene.userData.sun){const L=LV[lv],sun=scene.userData.sun,single=!RACE||RACE.cars.filter(c=>c.human).length<=1;
-  if(sun.shadow&&sun.shadow.mapSize.x!==L.sz){sun.shadow.mapSize.set(L.sz,L.sz);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null}}
-  if(L.sh>1&&single){R.shadowMap.autoUpdate=false;if(fcount%L.sh===0)R.shadowMap.needsUpdate=true}else R.shadowMap.autoUpdate=true}
- else R.shadowMap.autoUpdate=true;
- return rr(scene,cam)};
-
-/* frame-time governor: 1.5 s windows; drop a level when the average frame is slow, climb back (one level, after 9 s) when it is comfortably fast */
-let wSum=0,wN=0,wStart=0,good=0;
-function loop(now){requestAnimationFrame(loop);fcount++;const dt=now-last;last=now;
- if(dt>1500||document.hidden||scr!=='game'||paused||!on()){wSum=wN=0;wStart=now;good=0;return}
- if(!wStart)wStart=now;wSum+=dt;wN++;
- if(now-wStart<1500||wN<6)return;const avg=wSum/wN;wSum=wN=0;wStart=now;
- if(avg>21.5&&lv<4){badUntil[lv]=now+badLen[lv];badLen[lv]=Math.min(120000,badLen[lv]*1.6);lv++;good=0;lastChange=now;rs()}
- else if(avg<18.2&&lv>0&&now-lastChange>9000&&now>badUntil[lv-1]){if(++good>=2){lv--;good=0;lastChange=now;rs()}}else if(avg>=18.2)good=0}
-requestAnimationFrame(loop);
-
+rs=()=>{rs1();if(document.body.classList.contains('studio')||(typeof PX!=='undefined'&&PX!==1))return;const o=O(),d2=Math.min(dpr,2),f=Math.min(dpr,o.maxDensity||1.5)/d2*(o.resolution||1);
+ if(Math.abs(f-1)>.002){R.setSize(Math.max(2,Math.round(cv.width*f)),Math.max(2,Math.round(cv.height*f)),false);cv.style.imageRendering='auto'}else cv.style.imageRendering=''};
+/* FPS counter */
+let fe=null,n=0,t0=performance.now(),worst=0,lt=t0;
+(function loop(now){requestAnimationFrame(loop);const d=now-lt;lt=now;n++;if(d>worst)worst=d;
+ if(now-t0>=500){const fps=n*1000/(now-t0);if(O().showFps){if(!fe){fe=document.createElement('div');fe.style.cssText='position:fixed;top:6px;left:50%;transform:translateX(-50%);z-index:99999;font:700 11px monospace;letter-spacing:.12em;color:#9fe8ff;background:#000a;padding:3px 8px;pointer-events:none';document.body.appendChild(fe)}
+  fe.style.display='';fe.textContent=Math.round(fps)+' FPS  '+(1000/fps).toFixed(1)+' ms  (worst '+Math.round(worst)+' ms)  '+R.domElement.width+'x'+R.domElement.height}else if(fe)fe.style.display='none';
+  n=0;t0=now;worst=0}})(performance.now());
 /* HUD: don't rebuild identical markup every frame (forces layout) */
 {const d=Object.getOwnPropertyDescriptor(Element.prototype,'innerHTML');
  Object.defineProperty(Element.prototype,'innerHTML',{get:d.get,configurable:true,set(v){const c=this.classList;if(c&&(c.contains('h8mode')||c.contains('cond')||c.contains('h8fin'))){if(this._ih===v)return;this._ih=v}d.set.call(this,v)}})}
+rs();
 })();

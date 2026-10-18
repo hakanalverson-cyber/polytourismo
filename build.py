@@ -70,9 +70,12 @@ src=src[:j0]+newcc+src[j1:]
 
 
 # ---- v9e: auto-shift option, reverse tracks ----
-src=rep(src,"hillHold:true,cameraDistance:1,","hillHold:true,autoShift:false,adaptive:true,cameraDistance:1,")
+src=rep(src,"hillHold:true,cameraDistance:1,","hillHold:true,autoShift:false,perfPreset:'HIGH',maxDensity:1.5,shadowRate:2,shadowRes:1536,showFps:false,cameraDistance:1,")
 src=rep(src,"['hillHold','HILL HOLD']","['hillHold','HILL HOLD'],\n  ['autoShift','AUTO SHIFT']")
-src=rep(src,"['resolution','RENDER SCALE',.5,1,.05],","['resolution','RENDER SCALE',.5,1,.05],\n  ['adaptive','ADAPTIVE QUALITY'],")
+src=rep(src,"\n AUDIO:[","\n PERFORMANCE:[\n  ['perfPreset','PRESET',['MINIMUM','LOW','MEDIUM','HIGH','ULTRA','CUSTOM']],\n  ['maxDensity','MAX PIXEL DENSITY',1,2,.25],\n  ['resolution','RENDER SCALE',.5,1,.05],\n  ['shadows','SHADOWS'],\n  ['shadowRate','SHADOW UPDATE EVERY N FRAMES',1,4,1],\n  ['shadowRes','SHADOW QUALITY',[512,1024,1536,2048]],\n  ['effects','PARTICLES',[0,1,2]],\n  ['fogReach','FOG DISTANCE',350,1100,50],\n  ['showFps','SHOW FPS']\n ],\n AUDIO:[")
+src=rep(src,"function apply(){\n  rs();","function apply(){\n  if(window.PT8&&PT8.perfPre)PT8.perfPre();\n  rs();")
+src=rep(src,"          apply();\n        };\n      }else{","          apply();if(tab==='PERFORMANCE')render();\n        };\n      }else{")
+src=rep(src,"          out.textContent=o[key];\n          apply();\n        };","          out.textContent=o[key];\n          apply();\n        };input.onchange=()=>{if(tab==='PERFORMANCE')render()};")
 src=rep(src,"if(d.city)for(let i=0;i<N;i++)if(T.y[i]>2.5){T.br[i]=1;T.wall[i]=1}","if(d.city)for(let i=0;i<N;i++)if(T.y[i]>2.5){T.br[i]=1;T.wall[i]=1}\nif(d.rev){const rv=a=>{const b=a.slice();for(let i=0;i<N;i++)a[i]=b[(N-i)%N]};['x','z','y','hw','bank','gap','wall','ice','br','wh'].forEach(k=>rv(T[k]));for(let i=0;i<N;i++){const a=(i+1)%N,b=(i-1+N)%N;T.psi[i]=Math.atan2(T.x[a]-T.x[b],T.z[a]-T.z[b]);T.bank[i]=-T.bank[i]}}")
 # ---- v9d: ground-aware barriers/posts/lamps, no gravel attitude snap, P4 keys ----
 src=rep(src,"const k=i%N,s=Math.sin(T.psi[k]),c=Math.cos(T.psi[k]),l=side*(T.hw[k]+.3),l2=side*(T.hw[k]+.3+TH),y=T.y[k]-l*T.bank[k],y2=T.y[k]-l2*T.bank[k],bot=T.br[k]?1.6:.3,h=T.wh[k],X1=T.x[k]+c*l,Z1=T.z[k]-s*l,X2=T.x[k]+c*l2,Z2=T.z[k]-s*l2,u=i*T.sp/4;\n  pos.push(X1,y-bot,Z1,X1,y+h,Z1, X1,y+h,Z1,X2,y2+h,Z2, X2,y2+h,Z2,X2,y2-bot,Z2);",
