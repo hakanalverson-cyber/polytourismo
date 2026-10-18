@@ -1,0 +1,12 @@
+{
+  "name": "poly-tourismo",
+  "version": "9.0.0",
+  "private": true,
+  "description": "Poly Tourismo - single-file 3D low-poly racing game (Three.js r128)",
+  "scripts": {
+    "build": "python3 build.py"
+  },
+  "devDependencies": {
+    "three": "0.128.0"
+  }
+}
