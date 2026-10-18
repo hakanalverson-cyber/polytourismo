@@ -1802,6 +1802,10 @@ body:after{background:repeating-linear-gradient(0deg,#00000010 0 1px,transparent
 .pp5 i.ctr{background:#39434d}
 .pp5 i.on{background:var(--ac)}
 .tune .tn{font-size:9px;letter-spacing:.08em;color:var(--dim);margin-top:8px;line-height:1.5;text-transform:none}
+
+/* showroom: panel backgrounds fade out instead of ending in a hard edge across the car */
+.stat{padding-bottom:30px;-webkit-mask-image:linear-gradient(180deg,#000 0,#000 88%,transparent 100%);mask-image:linear-gradient(180deg,#000 0,#000 88%,transparent 100%)}
+.lst{-webkit-mask-image:linear-gradient(180deg,#000 0,#000 90%,transparent 100%);mask-image:linear-gradient(180deg,#000 0,#000 90%,transparent 100%)}
 </style><script>
 /* ===== Poly Tourismo v8 layer: core (economy, gears, AI, race flow, modes) ===== */
 (function v8core(){
@@ -3027,6 +3031,7 @@ R.render=function(scene,cam){const sun=scene&&scene.userData&&scene.userData.sun
   cam.getWorldDirection(_d);_d.y=0;_d.normalize();_f.copy(cam.position).addScaledVector(_d,34);
   const q=2.5;_f.x=Math.round(_f.x/q)*q;_f.z=Math.round(_f.z/q)*q;_f.y=Math.round(_f.y/q)*q;
   sun.target.position.copy(_f);sun.target.updateMatrixWorld();sun.position.copy(_f).addScaledVector(sun.userData.d0,260)}}}
+ else R.shadowMap.autoUpdate=true; /* studio / menus: always refresh shadows (stale race shadow maps smeared over the showroom cars) */
  return r0(scene,cam)};
 })();
 

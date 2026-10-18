@@ -1,0 +1,2 @@
+from shot import run,W
+run(W+'/Poly-Tourismo.html',[('wait',1200),('js',"(()=>{PT8.launch({mode:'mp',track:0,laps:2,humans:[{id:'merc',alt:0}],ai:[]});for(let i=0;i<200;i++)step(1/60);return 1})()"),('wait',800),('shot','race'),('js',"(()=>{PT8.cleanupRace();PT8.ui.openShow('brand',{player:0,cap:null,ret:'menu'});return 1})()"),('wait',500),('js',"(()=>{PT8.ui.SR.ang=1.1;return 1})()"),('wait',2500),('shot','brand_after_race')],'br2')
