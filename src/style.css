@@ -355,4 +355,4 @@ body:after{background:repeating-linear-gradient(0deg,#00000010 0 1px,transparent
 .pp b{color:var(--gr)}
 .rt td.pl{color:var(--gr)}
 #mm{background:none!important;border:0!important;box-shadow:none!important;filter:drop-shadow(0 1px 3px #000a)}
-#mm{top:2px!important;right:2px!important}
+#mm{top:0!important;right:18px!important}
