@@ -312,9 +312,9 @@ body:after{background:repeating-linear-gradient(0deg,#00000010 0 1px,transparent
 /* v9 race2 */
 .h9ex{position:absolute;inset:0;pointer-events:none;font-family:var(--mn)}
 .h9ex .bars{position:absolute;left:16px;bottom:16px;width:170px;display:grid;gap:6px}
-.h9ex .tb small{display:block;font-size:8px;letter-spacing:.3em;color:var(--dim);margin-bottom:2px}
-.h9ex .tb i{display:block;height:6px;background:#232a33}.h9ex .tb u{display:block;height:100%;background:#9fd0e0;transition:width .2s}
-.h9ex .tb.mid u{background:#f2c76b}.h9ex .tb.lo u{background:#ef6a5a}
+.h9ex .tk small{display:block;font-size:8px;letter-spacing:.3em;color:var(--dim);margin-bottom:2px}
+.h9ex .tk i{display:block;height:6px;background:#232a33}.h9ex .tk u{display:block;height:100%;background:#9fd0e0;transition:width .2s}
+.h9ex .tk.mid u{background:#f2c76b}.h9ex .tk.lo u{background:#ef6a5a}
 .h9ex .dr{position:absolute;left:16px;bottom:66px;font:700 10px var(--mn);letter-spacing:.3em;color:#7fe0a6;opacity:0;transition:opacity .2s}
 .h9ex .pr{position:absolute;left:0;right:0;top:30%;text-align:center;font:italic 800 18px var(--hd,var(--mn));letter-spacing:.14em;color:#f2c76b;text-shadow:0 2px 0 #000a;opacity:0;white-space:nowrap}
 .h9ex .gd{position:absolute;left:16px;bottom:88px;font:700 12px var(--mn);letter-spacing:.2em;color:#9fe8ff;opacity:0}.h9ex .gd.up{color:#7fe0a6}.h9ex .gd.dn{color:#ef6a5a}
@@ -331,4 +331,18 @@ body:after{background:repeating-linear-gradient(0deg,#00000010 0 1px,transparent
 .sub{display:flex;justify-content:space-between;gap:6px;margin-top:3px;min-height:9px}
 .ghint{margin:0;min-height:0;font-size:8px;text-align:left}.cond{margin:0;font-size:8px;letter-spacing:.06em;white-space:nowrap;margin-left:auto}
 .ghint:not(:empty)+.cond{display:none}
-.h9ex .bars{width:120px;bottom:14px}.h9ex .tb i{height:4px}.h9ex .dr{bottom:68px}.h9ex .gd{bottom:86px}
+.h9ex .bars{width:120px;bottom:14px}.h9ex .tk i{height:4px}.h9ex .dr{bottom:68px}.h9ex .gd{bottom:86px}
+/* v9 minimal gauge: no panel, no terrain text */
+.h8spd{background:none!important;border:0!important;padding:0!important;gap:10px;align-items:flex-end;filter:drop-shadow(0 2px 3px #000b)}
+.gnum{border:0!important;padding:0!important;min-width:0}
+.gnum b{font-size:40px;line-height:.9;text-shadow:0 2px 0 #000a}
+.pips,.sub{display:none!important}
+.spdmain{width:172px;padding:0!important}
+.dg{gap:6px;justify-content:flex-end}
+.dg canvas{height:34px;filter:drop-shadow(0 2px 0 #000c)}
+.dg i{font-size:9px;color:#dfe8ee;letter-spacing:.16em;align-self:flex-end;margin-bottom:3px}
+.rdot{width:10px;height:10px;align-self:flex-start;margin-top:2px}
+.segs{height:6px;margin-top:4px;gap:1px}.segs i{background:#0009}
+.segs i.cur{box-shadow:0 2px 0 #fffc}
+.h9ex .bars{width:110px;gap:5px}.h9ex .dr{bottom:50px}.h9ex .gd{bottom:68px}
+.h9ex .dr{bottom:60px}.h9ex .gd{bottom:76px}.h9ex .tk small,.h9ex .dr,.h9ex .gd{text-shadow:0 1px 2px #000,0 0 3px #000}.h9ex .tk i{box-shadow:0 0 0 1px #0008}

@@ -71,7 +71,7 @@ P.aiPost=(c,dt)=>{const Rc=RACE;if(!endur(Rc)||c.human||!Rc.pit||c.fin)return;co
 const hudOld=hudUpdate;
 hudUpdate=()=>{hudOld();const Rc=RACE;if(!Rc)return;const en=endur(Rc);
  Rc.cars.forEach((c,i)=>{if(!c.human)return;const h=$('h'+i);if(!h||!c.rect)return;let e=h.querySelector('.h9ex');
-  if(!e){e=document.createElement('div');e.className='h9ex';e.innerHTML='<div class="pr"></div><div class="bars"><div class="tb"><small>TYRES</small><i><u></u></i></div><div class="tb"><small>FUEL</small><i><u></u></i></div></div><div class="dr">SLIPSTREAM</div>';h.appendChild(e)}
+  if(!e){e=document.createElement('div');e.className='h9ex';e.innerHTML='<div class="pr"></div><div class="bars"><div class="tk"><small>TYRES</small><i><u></u></i></div><div class="tk"><small>FUEL</small><i><u></u></i></div></div><div class="dr">SLIPSTREAM</div>';h.appendChild(e)}
   e.querySelector('.bars').style.display=en?'':'none';
   const us=e.querySelectorAll('.bars u');
   if(en){const t=c.tyre==null?1:c.tyre,f=c.fuel==null?1:c.fuel;us[0].style.width=(t*100)+'%';us[0].parentNode.className=t<.25?'lo':t<.5?'mid':'';us[1].style.width=(f*100)+'%';us[1].parentNode.className=f<.15?'lo':f<.35?'mid':''}
