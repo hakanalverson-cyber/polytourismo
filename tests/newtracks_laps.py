@@ -1,5 +1,5 @@
 from shot import run,W
-js="""(()=>{const res={};for(const tr of [9]){for(const rev of [false,true]){for(const id of ['merc','lr']){
+js="""(()=>{const res={};for(const tr of [8]){for(const rev of [false,true]){for(const id of ['merc','lr']){
   PT8.launch({mode:'ta',track:tr,laps:2,humans:[{id:id,alt:0}],ai:[],rev});
   const c=RACE.cars[0];c.forceAI=1;c.ai={skill:1,lat:0,name:'T'};
   let ex=0,rs=0,pe=false,pr=false,off=0;

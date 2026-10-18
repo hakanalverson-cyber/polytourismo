@@ -136,7 +136,7 @@ function drawTrack(cv,i,full){const T=tr(i),g=cv.getContext('2d'),W=cv.width,H=c
   g.fillStyle='#7b8594';g.font='9px monospace';g.textAlign='left';g.fillText('ELEV '+Math.round(y0)+'-'+Math.round(y1)+' M',16,py+12);g.textAlign='right';g.fillText(Math.round(T.L)+' M',W-16,py+12)}}
 
 /* ================= TIME OF DAY preview (small pixel render) ================= */
-const BIOME={grass:[90,150,82],sand:[214,178,122],snow:[226,234,244],city:[38,38,58],forest:[62,112,64],desert:[200,143,94],moor:[106,127,78]};
+const BIOME={grass:[90,150,82],sand:[214,178,122],snow:[226,234,244],city:[38,38,58],forest:[62,112,64],desert:[200,143,94],moor:[106,127,78],harbor:[168,170,168]};
 const rgb=h=>[(h>>16)&255,(h>>8)&255,h&255];
 const LIGHT={dawn:{t:[255,205,185],k:.9},day:{t:[255,255,255],k:1},sunset:{t:[255,150,100],k:.82},night:{t:[70,100,190],k:.34}};
 function drawTod(cv,trk,tod){const g=cv.getContext('2d'),W=cv.width,H=cv.height,d=D[trk],tp=P.TOD[tod];
