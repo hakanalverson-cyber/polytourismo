@@ -226,7 +226,7 @@ hudUpdate=()=>{const Rc=RACE,T=Rc.T;
   /* speed + gear */
   {const cv=q('.dg canvas'),tx=String(kmh).padStart(3,'0');if(cv._t!==tx){cv._t=tx;P.pxDraw(cv,tx,'#ffffff')}}
   const sgs=e.querySelectorAll('.segs i'),lit=Math.round(clamp(kmh/maxK,0,1)*SEGS);
-  sgs.forEach((x,k)=>{const v=(k+.5)/SEGS*maxK;let zi=0;while(zi<NG-1&&v>=gt[zi])zi++;const zb=Math.min(3,Math.floor(zi*4/NG));x.className=(k<lit?'on ':'')+'z'+zb+(gx===zi?' cur':'')});
+  sgs.forEach((x,k)=>{const v=(k+.5)/SEGS*maxK;let zi=0;while(zi<NG-1&&v>=gt[zi])zi++;const zb=Math.min(3,Math.floor(k*4/SEGS));x.className=(k<lit?'on ':'')+'z'+zb+(gx===zi?' cur':'')});
   q('.gnum b').textContent=gx+1;{const pp=q('.pips');if(pp.children.length!==NG){pp.innerHTML='<i></i>'.repeat(NG)}pp.querySelectorAll('i').forEach((x,k)=>x.className=k<=gx?'on':'')}
   q('.gnum').className='gnum'+(c.gearFlash>0?' fl':'');
   const ceilK=st.top*P.GT(st)[gx].top*((c.mt&&c.mt.top)||1)*3.6,upN=Rc.state==='race'&&!c.fin&&gx<NG-1&&kmh>=ceilK*.84,dnN=kmh<ceilK*.34;let hint='';if(Rc.state==='race'&&!c.fin){if(upN)hint='SHIFT UP';else if(gx>0&&dnN)hint='SHIFT DOWN'}

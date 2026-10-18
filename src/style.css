@@ -346,3 +346,11 @@ body:after{background:repeating-linear-gradient(0deg,#00000010 0 1px,transparent
 .segs i.cur{box-shadow:0 2px 0 #fffc}
 .h9ex .bars{width:110px;gap:5px}.h9ex .dr{bottom:50px}.h9ex .gd{bottom:68px}
 .h9ex .dr{bottom:60px}.h9ex .gd{bottom:76px}.h9ex .tk small,.h9ex .dr,.h9ex .gd{text-shadow:0 1px 2px #000,0 0 3px #000}.h9ex .tk i{box-shadow:0 0 0 1px #0008}
+
+/* v9 rev bar: classic tach colours; grey secondary text for contrast */
+.segs i.on.z0{background:#4fdc82}.segs i.on.z1{background:#ffd23f}.segs i.on.z2{background:#ff9a2f}.segs i.on.z3{background:#ff3b30}
+:root{--gr:#8e98a4}
+.hdr h2 em,#logo span,#menu .menuTop .brandMark,.h8pos i,.h8plate .bl,#s8res .sub,#menu .menuActions button:hover small,.rt th,.card h3 small{color:var(--gr)!important}
+.h8pos i{opacity:1}
+.pp b{color:var(--gr)}
+.rt td.pl{color:var(--gr)}
