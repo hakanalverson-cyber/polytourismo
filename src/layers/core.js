@@ -25,20 +25,20 @@ PT8.obbHit=(ax,az,ay,bx,bz,by,hx,hz)=>{hx=hx||.95;hz=hz||2.1;const dx=bx-ax,dz=b
 const CLS=['D','C','B','A','S'];
 const CLSCOL={D:'#9aa79c',C:'#6fd16f',B:'#37b8ff',A:'#ffb62e',S:'#ff4a4a'};
 const CARS=[
- {id:'lr',gears:5,name:'LAND ROVER',cls:'D',body:6,alt:10,top:34,acc:20,grip:.96,brk:.92,off:1.0,price:9000,altPrice:2500,type:'4X4 SUV',drive:'AWD',blurb:'Tall, heavy and unbothered by gravel. Slow on tarmac, a monster on loose ground.'},
- {id:'ford',gears:5,name:'FORD',cls:'C',body:4,alt:11,top:38,acc:24,grip:1,brk:1,off:.8,price:16000,altPrice:3000,type:'HOT HATCH',drive:'AWD',blurb:'A hot hatch with rally blood. Short on top speed, long on character.'},
- {id:'merc',gears:5,name:'MERCEDES',cls:'B',body:3,alt:9,top:42,acc:27,grip:1.03,brk:1.05,off:.5,price:34000,altPrice:4000,type:'PERFORMANCE SEDAN',drive:'RWD',blurb:'Fast, solid, refined. A proper all-rounder to start a career with.'},
- {id:'ster',gears:5,name:'STERRATO',cls:'A',body:1,alt:8,top:45,acc:29,grip:1.02,brk:1.08,off:.92,price:68000,altPrice:6000,type:'RAISED SUPERCAR',drive:'AWD',blurb:'Lifted, wide and loud. A supercar that does not care what is under the wheels.'},
- {id:'art',gears:5,name:'ARTURA',cls:'A',body:2,alt:13,top:47,acc:30,grip:1.06,brk:1.1,off:.45,price:88000,altPrice:6000,type:'HYBRID SUPERCAR',drive:'RWD',blurb:'Light, quick and precise. Electric punch with a V6 voice.'},
- {id:'ferr',gears:5,name:'FERRARI',cls:'S',body:5,alt:12,top:50,acc:33,grip:1.08,brk:1.14,off:.4,price:175000,altPrice:10000,type:'SUPERCAR',drive:'RWD',blurb:'Screaming, red and razor sharp. A poster on every wall.'},
- {id:'zen',gears:5,name:'ZENVO',cls:'S',body:0,alt:7,top:52,acc:34,grip:1.1,brk:1.16,off:.38,price:245000,altPrice:10000,type:'HYPERCAR',drive:'RWD',blurb:'Twin-charged and track-focused. Built to attack a lap.'},
- {id:'must',gears:5,name:'MUSTANG',cls:'B',body:18,alt:25,top:41.5,acc:26.5,grip:.99,brk:1,off:.42,price:28000,altPrice:3500,type:'MUSCLE COUPE',drive:'RWD',blurb:''},
- {id:'urus',gears:5,name:'URUS',cls:'B',body:15,alt:22,top:43,acc:27,grip:1,brk:1.04,off:.85,price:46000,altPrice:4500,type:'PERFORMANCE SUV',drive:'AWD',blurb:''},
- {id:'m8',gears:5,name:'BMW M8',cls:'A',body:14,alt:21,top:45.5,acc:29,grip:1.03,brk:1.09,off:.5,price:74000,altPrice:6000,type:'GRAND TOURER',drive:'AWD',blurb:''},
- {id:'amg',gears:5,name:'MERCEDES AMG',cls:'A',body:19,alt:26,top:46,acc:29.5,grip:1.04,brk:1.1,off:.46,price:82000,altPrice:6000,type:'SPORTS COUPE',drive:'RWD',blurb:''},
- {id:'gtr',gears:5,name:'GT-R',cls:'B',body:17,alt:24,top:43.5,acc:28.2,grip:1.045,brk:1.07,off:.6,price:52000,altPrice:5000,type:'SPORTS COUPE',drive:'AWD',blurb:''},
- {id:'por',gears:5,name:'PORSCHE',cls:'B',body:20,alt:27,top:44.5,acc:28.6,grip:1.055,brk:1.08,off:.42,price:58000,altPrice:5000,type:'SPORTS CAR',drive:'RWD',blurb:''},
- {id:'p1',gears:5,name:'P1 GTR',cls:'S',body:16,alt:23,top:53,acc:35,grip:1.11,brk:1.17,off:.3,price:310000,altPrice:12000,type:'HYBRID HYPERCAR',drive:'RWD',blurb:''}
+ {id:'lr',gears:3,name:'LAND ROVER',cls:'D',body:6,alt:10,top:34,acc:20,grip:.96,brk:.92,off:1.0,price:9000,altPrice:2500,type:'4X4 SUV',drive:'AWD',blurb:'Tall, heavy and unbothered by gravel. Slow on tarmac, a monster on loose ground.'},
+ {id:'ford',gears:3,name:'FORD',cls:'C',body:4,alt:11,top:38,acc:24,grip:1,brk:1,off:.8,price:16000,altPrice:3000,type:'HOT HATCH',drive:'AWD',blurb:'A hot hatch with rally blood. Short on top speed, long on character.'},
+ {id:'merc',gears:3,name:'MERCEDES',cls:'B',body:3,alt:9,top:42,acc:27,grip:1.03,brk:1.05,off:.5,price:34000,altPrice:4000,type:'PERFORMANCE SEDAN',drive:'RWD',blurb:'Fast, solid, refined. A proper all-rounder to start a career with.'},
+ {id:'ster',gears:3,name:'STERRATO',cls:'A',body:1,alt:8,top:45,acc:29,grip:1.02,brk:1.08,off:.92,price:68000,altPrice:6000,type:'RAISED SUPERCAR',drive:'AWD',blurb:'Lifted, wide and loud. A supercar that does not care what is under the wheels.'},
+ {id:'art',gears:3,name:'ARTURA',cls:'A',body:2,alt:13,top:47,acc:30,grip:1.06,brk:1.1,off:.45,price:88000,altPrice:6000,type:'HYBRID SUPERCAR',drive:'RWD',blurb:'Light, quick and precise. Electric punch with a V6 voice.'},
+ {id:'ferr',gears:3,name:'FERRARI',cls:'S',body:5,alt:12,top:50,acc:33,grip:1.08,brk:1.14,off:.4,price:175000,altPrice:10000,type:'SUPERCAR',drive:'RWD',blurb:'Screaming, red and razor sharp. A poster on every wall.'},
+ {id:'zen',gears:3,name:'ZENVO',cls:'S',body:0,alt:7,top:52,acc:34,grip:1.1,brk:1.16,off:.38,price:245000,altPrice:10000,type:'HYPERCAR',drive:'RWD',blurb:'Twin-charged and track-focused. Built to attack a lap.'},
+ {id:'must',gears:3,name:'MUSTANG',cls:'B',body:18,alt:25,top:41.5,acc:26.5,grip:.99,brk:1,off:.42,price:28000,altPrice:3500,type:'MUSCLE COUPE',drive:'RWD',blurb:''},
+ {id:'urus',gears:3,name:'URUS',cls:'B',body:15,alt:22,top:43,acc:27,grip:1,brk:1.04,off:.85,price:46000,altPrice:4500,type:'PERFORMANCE SUV',drive:'AWD',blurb:''},
+ {id:'m8',gears:3,name:'BMW M8',cls:'A',body:14,alt:21,top:45.5,acc:29,grip:1.03,brk:1.09,off:.5,price:74000,altPrice:6000,type:'GRAND TOURER',drive:'AWD',blurb:''},
+ {id:'amg',gears:3,name:'MERCEDES AMG',cls:'A',body:19,alt:26,top:46,acc:29.5,grip:1.04,brk:1.1,off:.46,price:82000,altPrice:6000,type:'SPORTS COUPE',drive:'RWD',blurb:''},
+ {id:'gtr',gears:3,name:'GT-R',cls:'B',body:17,alt:24,top:43.5,acc:28.2,grip:1.045,brk:1.07,off:.6,price:52000,altPrice:5000,type:'SPORTS COUPE',drive:'AWD',blurb:''},
+ {id:'por',gears:3,name:'PORSCHE',cls:'B',body:20,alt:27,top:44.5,acc:28.6,grip:1.055,brk:1.08,off:.42,price:58000,altPrice:5000,type:'SPORTS CAR',drive:'RWD',blurb:''},
+ {id:'p1',gears:3,name:'P1 GTR',cls:'S',body:16,alt:23,top:53,acc:35,grip:1.11,brk:1.17,off:.3,price:310000,altPrice:12000,type:'HYBRID HYPERCAR',drive:'RWD',blurb:''}
 ];
 const BYID={};CARS.forEach(c=>BYID[c.id]=c);
 const clsIdx=c=>CLS.indexOf(c.cls);
@@ -47,12 +47,12 @@ PT8.CARS=CARS;PT8.CLS=CLS;PT8.CLSCOL=CLSCOL;PT8.BYID=BYID;
 const SORTED=[...CARS].sort((a,b)=>clsIdx(a)-clsIdx(b)||a.price-b.price);
 PT8.SORTED=SORTED;
 /* gears */
-/* per-car gear tables (5 speeds). 1st has the strongest pull, the top gear keeps acc .66 */
+/* per-car gear tables (3 speeds). 1st has the strongest pull, the top gear keeps acc .66 */
 const _GT={};
-/* five-speed boxes: gear ratios (high number = short gear). Top-speed fraction of gear i = ratio[last]/ratio[i] */
-const RATIOS={std:[3.70,2.13,1.52,1.19,1.00],close:[3.45,2.10,1.55,1.22,1.00],wide:[3.90,2.25,1.55,1.18,.95]};
+/* three-speed boxes: gear ratios (high number = short gear). Top-speed fraction of gear i = ratio[last]/ratio[i] */
+const RATIOS={std:[2.45,1.40,1.00],close:[2.35,1.38,1.00],wide:[2.70,1.50,1.00]};
 const BOX={lr:'wide',urus:'wide',ford:'std',merc:'std',must:'std',ster:'close',art:'close',ferr:'close',zen:'close',m8:'close',amg:'close',gtr:'close',por:'close',p1:'close'};
-function GT(car){car=car||BYID.merc;let t=_GT[car.id];if(t)return t;const R=RATIOS[BOX[car.id]||'std'],N=R.length;t=_GT[car.id]=[];for(let i=0;i<N;i++){const u=i/(N-1);t.push({top:R[N-1]/R[i],acc:.66+.34*Math.pow(1-u,1.6)})}return t}
+function GT(car){car=car||BYID.merc;let t=_GT[car.id];if(t)return t;const R=RATIOS[BOX[car.id]||'std'],N=R.length;t=_GT[car.id]=[];for(let i=0;i<N;i++){const u=i/(N-1);t.push({top:R[N-1]/R[i],acc:.66+.44*Math.pow(1-u,1.5)})}return t}
 PT8.GT=GT;const GEARS=GT(null);
 /* power band: lugging below ~45% of a gear is weak, strongest 60-90%, falls off at the limiter */
 const band=r=>r<.45?.46+r/.45*.14:r<.9?.6+(r-.45)/.45*.4:Math.max(.5,1-(r-.9)/.12*.25);PT8.band=band;
