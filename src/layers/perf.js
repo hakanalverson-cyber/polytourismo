@@ -20,7 +20,7 @@ rs=()=>{rs1();if(document.body.classList.contains('studio')||(typeof PX!=='undef
 /* FPS counter */
 let fe=null,n=0,t0=performance.now(),worst=0,lt=t0;
 (function loop(now){requestAnimationFrame(loop);const d=now-lt;lt=now;n++;if(d>worst)worst=d;
- if(now-t0>=500){const fps=n*1000/(now-t0);if(O().showFps){if(!fe){fe=document.createElement('div');fe.style.cssText='position:fixed;top:6px;left:50%;transform:translateX(-50%);z-index:99999;font:700 11px monospace;letter-spacing:.12em;color:#9fe8ff;background:#000a;padding:3px 8px;pointer-events:none';document.body.appendChild(fe)}
+ if(now-t0>=500){const fps=n*1000/(now-t0);if(O().showFps){if(!fe){fe=document.createElement('div');fe.style.cssText='position:fixed;top:6px;left:50%;transform:translateX(-50%);z-index:99999;font:700 11px monospace;letter-spacing:.12em;color:#ffc9a0;background:#000a;padding:3px 8px;pointer-events:none';document.body.appendChild(fe)}
   fe.style.display='';fe.textContent=Math.round(fps)+' FPS  '+(1000/fps).toFixed(1)+' ms  (worst '+Math.round(worst)+' ms)  '+R.domElement.width+'x'+R.domElement.height}else if(fe)fe.style.display='none';
   n=0;t0=now;worst=0}})(performance.now());
 /* HUD: don't rebuild identical markup every frame (forces layout) */
