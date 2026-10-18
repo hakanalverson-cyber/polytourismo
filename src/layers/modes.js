@@ -240,7 +240,7 @@ hudUpdate=()=>{const Rc=RACE,T=Rc.T;
  /* minimap */
  const cv=$('mm'),m=cv.getContext('2d'),S_=cv.width;m.clearRect(0,0,S_,S_);
  let x0=Infinity,x1=-Infinity,z0=Infinity,z1=-Infinity;for(let i=0;i<T.N;i++){x0=Math.min(x0,T.x[i]);x1=Math.max(x1,T.x[i]);z0=Math.min(z0,T.z[i]);z1=Math.max(z1,T.z[i])}
- const scale=Math.min((S_-30)/(x1-x0),(S_-30)/(z1-z0)),ox=S_/2-(x0+x1)*.5*scale,oz=S_/2-(z0+z1)*.5*scale;
+ const scale=Math.min((S_-16)/(x1-x0),(S_-16)/(z1-z0)),ox=S_/2-(x0+x1)*.5*scale,oz=S_/2-(z0+z1)*.5*scale;
  /* section classes, built once per race: 1 medium, 2 hard, 3 hairpin corner, 4 jump */
  if(!Rc.mmCls){const K=P.kappa(T),cl=new Uint8Array(T.N);for(let i=0;i<T.N;i++){const R=1/Math.max(K[i],1e-4);cl[i]=R<35?3:R<55?2:R<80?1:0}
   for(const j of (T.jumps||[])){const a0=j-Math.round(26/T.sp),a1=j+Math.round(22/T.sp);for(let k=a0;k<=a1;k++)cl[((k%T.N)+T.N)%T.N]=4}Rc.mmCls=cl}
