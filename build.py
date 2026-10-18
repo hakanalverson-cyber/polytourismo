@@ -70,8 +70,9 @@ src=src[:j0]+newcc+src[j1:]
 
 
 # ---- v9e: auto-shift option, reverse tracks ----
-src=rep(src,"hillHold:true,cameraDistance:1,","hillHold:true,autoShift:false,cameraDistance:1,")
+src=rep(src,"hillHold:true,cameraDistance:1,","hillHold:true,autoShift:false,adaptive:true,cameraDistance:1,")
 src=rep(src,"['hillHold','HILL HOLD']","['hillHold','HILL HOLD'],\n  ['autoShift','AUTO SHIFT']")
+src=rep(src,"['resolution','RENDER SCALE',.5,1,.05],","['resolution','RENDER SCALE',.5,1,.05],\n  ['adaptive','ADAPTIVE QUALITY'],")
 src=rep(src,"if(d.city)for(let i=0;i<N;i++)if(T.y[i]>2.5){T.br[i]=1;T.wall[i]=1}","if(d.city)for(let i=0;i<N;i++)if(T.y[i]>2.5){T.br[i]=1;T.wall[i]=1}\nif(d.rev){const rv=a=>{const b=a.slice();for(let i=0;i<N;i++)a[i]=b[(N-i)%N]};['x','z','y','hw','bank','gap','wall','ice','br','wh'].forEach(k=>rv(T[k]));for(let i=0;i<N;i++){const a=(i+1)%N,b=(i-1+N)%N;T.psi[i]=Math.atan2(T.x[a]-T.x[b],T.z[a]-T.z[b]);T.bank[i]=-T.bank[i]}}")
 # ---- v9d: ground-aware barriers/posts/lamps, no gravel attitude snap, P4 keys ----
 src=rep(src,"const k=i%N,s=Math.sin(T.psi[k]),c=Math.cos(T.psi[k]),l=side*(T.hw[k]+.3),l2=side*(T.hw[k]+.3+TH),y=T.y[k]-l*T.bank[k],y2=T.y[k]-l2*T.bank[k],bot=T.br[k]?1.6:.3,h=T.wh[k],X1=T.x[k]+c*l,Z1=T.z[k]-s*l,X2=T.x[k]+c*l2,Z2=T.z[k]-s*l2,u=i*T.sp/4;\n  pos.push(X1,y-bot,Z1,X1,y+h,Z1, X1,y+h,Z1,X2,y2+h,Z2, X2,y2+h,Z2,X2,y2-bot,Z2);",
@@ -80,7 +81,7 @@ src=rep(src,"z=T.z[i]-Math.sin(T.psi[i])*l,y=T.y[i]-l*T.bank[i];posts.push(","z=
 src=rep(src,"const over=close.road&&c.y-close.h<1.65;","const over=!T.d.gravel&&close.road&&c.y-close.h<1.65;")
 src=rep(src,"{u:'Numpad8',d:'Numpad5',l:'Numpad4',r:'Numpad6',h:'Numpad0'}","{u:'KeyT',d:'KeyG',l:'KeyF',r:'KeyH',h:'KeyY'}")
 
-parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','audio','modes','tracks','extra','race2','tod','shade','ui']  if os.path.exists(f'{SRC}/layers/{n}.js')]
+parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','audio','modes','tracks','extra','race2','tod','shade','ui','perf']  if os.path.exists(f'{SRC}/layers/{n}.js')]
 css=open(f'{SRC}/style.css').read()
 import base64
 pk=base64.b64encode(open(W+'/assets/car_pack_2.glb','rb').read()).decode()
