@@ -163,7 +163,7 @@ P.showResults=function(){const Rc=RACE,cfg=Rc.cfg,N=Rc.T.N,humans=Rc.cars.filter
   if(cfg.ev){const t=cfg.ev.target,best=hs[0].score,ok=best>=t;res.goal={txt:'TARGET '+t.toLocaleString('en-US')+' PTS',ok};if(ok){const first=!sv.career.done[cfg.ev.id];const bonus=first?cfg.ev.prize:Math.round(cfg.ev.prize*.35);res.pay.push({l:first?'EVENT PRIZE':'REPLAY PRIZE',v:bonus});res.total+=bonus;if(first){sv.career.done[cfg.ev.id]={score:best};res.first=true}else if((sv.career.done[cfg.ev.id].score||0)<best)sv.career.done[cfg.ev.id].score=best}}
  }else{
   const order=rank(Rc.cars);
-  order.forEach((c,i)=>{res.rows.push({name:c.ptName,car:BYID[c.carId].name,time:c.fin?c.finT:null,place:i+1,human:c.human,col:CS[c.k],best:c.lapT&&c.lapT.length?Math.min(...c.lapT):null,loan:c.loan,lapsDown:c.fin?0:Math.max(0,Rc.laps-Math.floor(Math.max(0,c.unw)/N)-1)})});
+  order.forEach((c,i)=>{res.rows.push({name:c.ptName,car:BYID[c.carId].name,time:Rc.mode==='elim'?null:(c.fin?c.finT:null),txt:Rc.mode==='elim'?(c.txt||'OUT'):null,place:i+1,human:c.human,col:CS[c.k],best:c.lapT&&c.lapT.length?Math.min(...c.lapT):null,loan:c.loan,lapsDown:Rc.mode==='elim'||c.fin?0:Math.max(0,Rc.laps-Math.floor(Math.max(0,c.unw)/N)-1)})});
   const hrows=res.rows.filter(r=>r.human);
   const topCls=Math.max(...humans.map(c=>CLS.indexOf(BYID[c.carId].cls)));
   if(Rc.mode==='ta'){
@@ -178,14 +178,14 @@ P.showResults=function(){const Rc=RACE,cfg=Rc.cfg,N=Rc.T.N,humans=Rc.cars.filter
    if(c.fin&&(rec.total==null||c.finT<rec.total)){rec.total=c.finT}
    res.rows=[{name:c.ptName,car:BYID[c.carId].name,time:c.fin?c.finT:null,place:1,human:true,col:CS[c.k],best:bl,laps:c.lapT}];
   }else{
-   const base=cfg.ev?cfg.ev.prize:P.raceBase(Rc.laps,BYID[humans[0].carId]);
+   const base=cfg.ev?cfg.ev.prize:P.raceBase(Rc.mode==='elim'?4:Rc.laps,BYID[humans[0].carId]);
    hrows.forEach(r=>{const c=humans.find(h=>h.ptName===r.name),clean=!c.expl;const frac=PLACE_FRAC[Math.min(r.place-1,7)];let cr=Math.round(base*frac*1);
     if(cfg.ev){const done=sv.career.done[cfg.ev.id];const pod=r.place<=3;const first=pod&&!done;
      if(pod){cr=first?Math.round(base*frac+base*.5):Math.round(base*frac*.4)}else cr=Math.round(base*.06);
      if(first){sv.career.done[cfg.ev.id]={place:r.place};res.first=true}else if(pod&&done&&(done.place==null||r.place<done.place))done.place=r.place}
     r.cr=cr;res.pay.push({l:r.name+' / '+ord(r.place)+' PLACE',v:cr});res.total+=cr});
    const flb=Math.min(...res.rows.map(r=>r.best==null?1e9:r.best));
-   res.title=cfg.ev?(res.first?'EVENT CLEARED':'RACE FINISHED'):(Rc.mode==='mp'?'RACE FINISHED':'RACE FINISHED');res.sub=cfg.ev?cfg.ev.name:D[cfg.track].name.toUpperCase();
+   res.title=cfg.ev?(res.first?'EVENT CLEARED':'RACE FINISHED'):(Rc.mode==='elim'?'ELIMINATION':'RACE FINISHED');res.sub=cfg.ev?cfg.ev.name:D[cfg.track].name.toUpperCase();
    if(cfg.ev&&hrows[0].place>3)res.goal={txt:'PODIUM NEEDED TO CLEAR',ok:false};else if(cfg.ev)res.goal={txt:'PODIUM / CLEARED',ok:true};
   }
  }

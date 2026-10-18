@@ -207,6 +207,7 @@ startRace=()=>{if(PT8.lastCfg)launch(PT8.lastCfg)};
 
 /* ---------------- race end / finish ---------------- */
 function endRace(){const Rc=RACE;if(Rc.ending>0||Rc.state==='done')return;Rc.ending=Rc.mode==='cutup'?1.8:2.6;Rc.endAt=Rc.t}
+PT8.endRace=endRace;
 finishCheck=()=>{const Rc=RACE;if(Rc.ending>0)return;
  if(Rc.mode==='cutup'){if(Rc.timeLeft<=0)endRace();return}
  const N=Rc.T.N;

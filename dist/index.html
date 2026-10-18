@@ -1992,6 +1992,7 @@ startRace=()=>{if(PT8.lastCfg)launch(PT8.lastCfg)};
 
 /* ---------------- race end / finish ---------------- */
 function endRace(){const Rc=RACE;if(Rc.ending>0||Rc.state==='done')return;Rc.ending=Rc.mode==='cutup'?1.8:2.6;Rc.endAt=Rc.t}
+PT8.endRace=endRace;
 finishCheck=()=>{const Rc=RACE;if(Rc.ending>0)return;
  if(Rc.mode==='cutup'){if(Rc.timeLeft<=0)endRace();return}
  const N=Rc.T.N;
@@ -2324,7 +2325,7 @@ P.showResults=function(){const Rc=RACE,cfg=Rc.cfg,N=Rc.T.N,humans=Rc.cars.filter
   if(cfg.ev){const t=cfg.ev.target,best=hs[0].score,ok=best>=t;res.goal={txt:'TARGET '+t.toLocaleString('en-US')+' PTS',ok};if(ok){const first=!sv.career.done[cfg.ev.id];const bonus=first?cfg.ev.prize:Math.round(cfg.ev.prize*.35);res.pay.push({l:first?'EVENT PRIZE':'REPLAY PRIZE',v:bonus});res.total+=bonus;if(first){sv.career.done[cfg.ev.id]={score:best};res.first=true}else if((sv.career.done[cfg.ev.id].score||0)<best)sv.career.done[cfg.ev.id].score=best}}
  }else{
   const order=rank(Rc.cars);
-  order.forEach((c,i)=>{res.rows.push({name:c.ptName,car:BYID[c.carId].name,time:c.fin?c.finT:null,place:i+1,human:c.human,col:CS[c.k],best:c.lapT&&c.lapT.length?Math.min(...c.lapT):null,loan:c.loan,lapsDown:c.fin?0:Math.max(0,Rc.laps-Math.floor(Math.max(0,c.unw)/N)-1)})});
+  order.forEach((c,i)=>{res.rows.push({name:c.ptName,car:BYID[c.carId].name,time:Rc.mode==='elim'?null:(c.fin?c.finT:null),txt:Rc.mode==='elim'?(c.txt||'OUT'):null,place:i+1,human:c.human,col:CS[c.k],best:c.lapT&&c.lapT.length?Math.min(...c.lapT):null,loan:c.loan,lapsDown:Rc.mode==='elim'||c.fin?0:Math.max(0,Rc.laps-Math.floor(Math.max(0,c.unw)/N)-1)})});
   const hrows=res.rows.filter(r=>r.human);
   const topCls=Math.max(...humans.map(c=>CLS.indexOf(BYID[c.carId].cls)));
   if(Rc.mode==='ta'){
@@ -2339,14 +2340,14 @@ P.showResults=function(){const Rc=RACE,cfg=Rc.cfg,N=Rc.T.N,humans=Rc.cars.filter
    if(c.fin&&(rec.total==null||c.finT<rec.total)){rec.total=c.finT}
    res.rows=[{name:c.ptName,car:BYID[c.carId].name,time:c.fin?c.finT:null,place:1,human:true,col:CS[c.k],best:bl,laps:c.lapT}];
   }else{
-   const base=cfg.ev?cfg.ev.prize:P.raceBase(Rc.laps,BYID[humans[0].carId]);
+   const base=cfg.ev?cfg.ev.prize:P.raceBase(Rc.mode==='elim'?4:Rc.laps,BYID[humans[0].carId]);
    hrows.forEach(r=>{const c=humans.find(h=>h.ptName===r.name),clean=!c.expl;const frac=PLACE_FRAC[Math.min(r.place-1,7)];let cr=Math.round(base*frac*1);
     if(cfg.ev){const done=sv.career.done[cfg.ev.id];const pod=r.place<=3;const first=pod&&!done;
      if(pod){cr=first?Math.round(base*frac+base*.5):Math.round(base*frac*.4)}else cr=Math.round(base*.06);
      if(first){sv.career.done[cfg.ev.id]={place:r.place};res.first=true}else if(pod&&done&&(done.place==null||r.place<done.place))done.place=r.place}
     r.cr=cr;res.pay.push({l:r.name+' / '+ord(r.place)+' PLACE',v:cr});res.total+=cr});
    const flb=Math.min(...res.rows.map(r=>r.best==null?1e9:r.best));
-   res.title=cfg.ev?(res.first?'EVENT CLEARED':'RACE FINISHED'):(Rc.mode==='mp'?'RACE FINISHED':'RACE FINISHED');res.sub=cfg.ev?cfg.ev.name:D[cfg.track].name.toUpperCase();
+   res.title=cfg.ev?(res.first?'EVENT CLEARED':'RACE FINISHED'):(Rc.mode==='elim'?'ELIMINATION':'RACE FINISHED');res.sub=cfg.ev?cfg.ev.name:D[cfg.track].name.toUpperCase();
    if(cfg.ev&&hrows[0].place>3)res.goal={txt:'PODIUM NEEDED TO CLEAR',ok:false};else if(cfg.ev)res.goal={txt:'PODIUM / CLEARED',ok:true};
   }
  }
@@ -2781,6 +2782,77 @@ setInterval(()=>{if(typeof scr==='undefined'||scr==='game')return;let gs;try{gs=
   padSt[g.index]=st}},60);
 })();
 
+/* ===== Poly Tourismo v9 layer: elim (elimination mode, last-place catch-up boost) ===== */
+(function v9elim(){
+'use strict';
+const P=window.PT8,ord=P.ord;
+const BOOST=1.012;
+const isEl=Rc=>!!Rc&&Rc.mode==='elim';
+const alive=Rc=>Rc.cars.filter(c=>!c.out);
+const standings=Rc=>alive(Rc).sort((a,b)=>b.unw-a.unw);
+
+/* eliminated cars are frozen, hidden and never collide */
+const sc0=stepCar;stepCar=(c,dt)=>{if(c.out){c.vx=c.vy=c.vz=0;c.sp=0;c.in={th:0,br:1,st:0,hb:0};return}sc0(c,dt)};
+const cc0=carCollide;carCollide=(a,b)=>{if(a.out||b.out)return;cc0(a,b)};
+const uv0=updateVisual;updateVisual=(c,T,t)=>{uv0(c,T,t);if(c.out&&c.m){c.m.g.visible=false;if(c.m.sh)c.m.sh.visible=false}};
+
+/* last place alive gets +1.2% acceleration and top speed */
+const mul0=P.mul;
+P.mul=c=>{const m=mul0(c),Rc=RACE;if(isEl(Rc)&&Rc.elimLast===c){m.acc*=BOOST;m.top*=BOOST}return m};
+
+/* spectator camera: eliminated humans follow the leader */
+const sol0=soloCam;
+soloCam=(c,dt,out)=>{const Rc=RACE;if(c.out&&Rc){let b=null;for(const o of Rc.cars)if(!o.out&&(!b||o.unw>b.unw))b=o;if(b){sol0(b,dt,out);return}}sol0(c,dt,out)};
+
+/* the race never ends by lap count */
+const fc0=finishCheck;finishCheck=()=>{if(isEl(RACE))return;fc0()};
+
+const l0=P.launch;
+P.launch=cfg=>{if(cfg.mode==='elim'){cfg.laps=99;cfg.endur=false}
+ l0(cfg);const Rc=RACE;if(isEl(Rc)){const iv=cfg.interval||30;Rc.el={iv,next:iv+10,n:0,flash:0,last:null,beep:-1};Rc.elimLast=null;Rc.cars.forEach(c=>{c.out=0})}};
+
+function finish(Rc){
+ standings(Rc).forEach((c,i)=>{c.fin=1;c.finT=Rc.t+i*.001;c.place=i+1;c.txt=i===0?'WINNER':'SURVIVED';Rc.fin.push(c);
+  if(c.human&&i===0){c.cool=1;c.cine=null;c.finFlash=3.2;try{beep(900,.4,'triangle')}catch(e){}}});
+ P.endRace();
+}
+function eliminate(Rc){
+ const al=standings(Rc);if(al.length<2)return;
+ const v=al[al.length-1];
+ v.out=1;v.fin=1;v.place=al.length;v.finT=1e5-Rc.t;v.txt='OUT';Rc.el.n++;Rc.el.flash=2.4;Rc.el.last=v;Rc.fin.push(v);
+ try{fx(v.x,v.y+.8,v.z,0xef6a5a,18,9,.5,.2,10)}catch(e){}
+ try{beep(220,.35,'sawtooth',.8)}catch(e){}
+ if(v.human){v.pop='ELIMINATED';v.popT=3}
+}
+P.elimTick=(Rc,dt)=>{
+ const el=Rc.el;if(!el||Rc.ending>0)return;
+ if(el.flash>0)el.flash-=dt;
+ let al=standings(Rc);
+ if(!al.some(c=>c.human)||al.length<=1){finish(Rc);return}
+ const left=el.next-Rc.t;
+ if(left<=3.2&&left>0&&Math.ceil(left)!==el.beep){el.beep=Math.ceil(left);try{beep(700,.08)}catch(e){}}
+ if(Rc.t>=el.next){eliminate(Rc);el.next=Rc.t+el.iv;al=standings(Rc);if(!al.some(c=>c.human)||al.length<=1){finish(Rc);return}}
+ Rc.elimLast=al.length>=2?al[al.length-1]:null;
+};
+const mt0=P.modeTick;P.modeTick=(Rc,dt)=>{mt0(Rc,dt);if(isEl(Rc))P.elimTick(Rc,dt)};
+
+/* HUD: elimination status over the lap text */
+const hu0=hudUpdate;hudUpdate=()=>{hu0();const Rc=RACE;if(!isEl(Rc)||!Rc.el)return;
+ const al=alive(Rc),el=Rc.el,left=Math.max(0,el.next-Rc.t),st=standings(Rc);
+ Rc.cars.forEach((c,i)=>{if(!c.human)return;const e=document.getElementById('h'+i);if(!e||!e.dataset.b)return;
+  const q=k=>e.querySelector(k);
+  q('.lap').textContent=c.out?'OUT':'ELIMINATION';
+  const bl=q('.bl');bl.style.display='';bl.textContent=al.length+' CARS LEFT';
+  const md=q('.h8mode');
+  if(md.style.display!=='none'){
+   const last=Rc.elimLast===c,urgent=left<5&&Rc.state==='race';
+   md.innerHTML='<div class="cu"><div class="sc"><small>NEXT OUT</small><b'+(urgent?' style="color:#ef6a5a"':'')+'>'+(Rc.state==='race'?left.toFixed(1)+'s':'--')+'</b></div><div class="sc"><small>'+(last?'LAST / +1.2% SPEED':'ALIVE')+'</small><b'+(last?' style="color:#f2c76b"':'')+'>'+al.length+'/'+Rc.cars.length+'</b></div></div>'}
+  if(c.out){const fn=q('.h8fin');fn.innerHTML='<b style="font-size:.5em">OUT</b><span>SPECTATING / '+ord(c.place)+' PLACE</span>';fn.className='h8fin on'}
+  else if(!c.fin){const k=st.indexOf(c)+1;q('.h8pos b').textContent=k;q('.h8pos i').textContent=ord(k).replace(/\d/g,'');q('.h8pos span').textContent='/'+al.length}
+  if(el.flash>0&&el.last&&!c.out){const pp=q('.h8pop');pp.textContent=el.last.ptName+' ELIMINATED';pp.className='h8pop on'}
+ })};
+})();
+
 /* ===== Poly Tourismo v9 layer: time of day ===== */
 (function v9tod(){
 'use strict';
@@ -2892,6 +2964,13 @@ const IC={
   p.r(16,31,1,5,Y);p.r(28,33,1,5,Y);p.r(14,34,2,1,Y);p.r(28,36,2,1,Y);p.r(22,47,4,1,A);
   p.r(35,22,5,1,Y);p.r(36,24,4,1,Y);p.r(12,20,5,1,Y);
   return p.cv},
+ el(){const p=pxCanvas(48),W='#e6e9ee',A='#f1f3f5',R='#ef6a5a',T='#566070',G='#141a21';
+  p.r(0,0,48,48,G);
+  const car=(x,y,c)=>{p.r(x+1,y,6,12,c);p.r(x+2,y-1,4,1,c);p.r(x+2,y+12,4,1,c);p.r(x,y+2,1,3,'#000');p.r(x+7,y+2,1,3,'#000');p.r(x,y+8,1,3,'#000');p.r(x+7,y+8,1,3,'#000');p.r(x+2,y+3,4,3,'#0a1018')};
+  car(6,4,A);car(20,2,W);car(34,5,W);car(13,19,T);car(27,21,T);
+  /* last car, crossed out */
+  car(20,34,'#3a4452');for(let i=0;i<14;i++){p.r(14+i,30+i,2,2,R);p.r(14+i,43-i,2,2,R)}
+  return p.cv},
  ca(){const p=pxCanvas(40),W='#e6e9ee',Y='#f2c76b',A='#f1f3f5',D='#b8923f';
   p.r(12,6,16,2,Y);p.r(12,8,16,8,Y);p.r(13,16,14,3,Y);p.r(16,19,8,3,Y);p.r(18,22,4,6,D);p.r(14,28,12,3,Y);p.r(12,31,16,3,D);
   p.r(5,8,5,2,Y);p.r(5,10,2,6,Y);p.r(7,16,3,2,Y);p.r(30,8,5,2,Y);p.r(33,10,2,6,Y);p.r(30,16,3,2,Y);
@@ -2907,7 +2986,8 @@ root.innerHTML=`
  <div class="card" data-m="ta"><span class="num">01</span><div class="ico" data-i="ta"></div><div class="tx"><h3>Time Attack</h3><div class="sub">Solo / medals</div></div></div>
  <div class="card" data-m="mp"><span class="num">02</span><div class="ico" data-i="mp"></div><div class="tx"><h3>Local Multiplayer</h3><div class="sub">1-4 drivers / split screen</div></div></div>
  <div class="card" data-m="cutup"><span class="num">03</span><div class="ico" data-i="cu"></div><div class="tx"><h3>Cut-Up</h3><div class="sub">Traffic / combo score</div></div></div>
- <div class="card" data-m="career"><span class="num">04</span><div class="ico" data-i="ca"></div><div class="tx"><h3>Career</h3><div class="sub">Rookie to legend</div></div></div>
+ <div class="card" data-m="elim"><span class="num">04</span><div class="ico" data-i="el"></div><div class="tx"><h3>Elimination</h3><div class="sub">Last place is out / survive</div></div></div>
+ <div class="card" data-m="career"><span class="num">05</span><div class="ico" data-i="ca"></div><div class="tx"><h3>Career</h3><div class="sub">Rookie to legend</div></div></div>
 </div>
 <div class="foot8"><button class="btn" data-a="back"><span>&lt; Back</span></button><div class="hint8">Arrows / 1-4 select &middot; Enter confirm &middot; Esc back</div><span style="width:90px"></span></div></section>
 
@@ -3008,7 +3088,7 @@ function drawTod(cv,trk,tod){const g=cv.getContext('2d'),W=cv.width,H=cv.height,
  if(night){g.fillStyle='#10206a33';g.fillRect(0,0,W,H)}}
 
 /* ================= SETUP ================= */
-const MODE_NAME={ta:'TIME <em>ATTACK</em>',mp:'LOCAL <em>MULTIPLAYER</em>',cutup:'CUT<em>-UP</em>'};
+const MODE_NAME={ta:'TIME <em>ATTACK</em>',mp:'LOCAL <em>MULTIPLAYER</em>',cutup:'CUT<em>-UP</em>',elim:'<em>ELIMINATION</em>'};
 const selCar=p=>{const sv=P.SV();let s=sv.sel[p]||sv.sel[0];if(!P.owns(s.id,s.alt)){const o=P.ownedList()[0]||BYID.merc;s={id:o.id,alt:P.owns(o.id,0)?0:1};P.setSel(p,s.id,s.alt)}return s};
 const effTod=()=>ST.todUser||D[ST.track].tod0||'day';
 const seg=(items,cur)=>items.map(([v,l])=>`<button class="btn sm ${v===cur?'sel':''}" data-v="${v}"><span>${l}</span></button>`).join('');
@@ -3022,15 +3102,17 @@ function renderSetup(){const m=ST.mode;$('suTitle').innerHTML=MODE_NAME[m];
  if(m==='ta'){const tk=ST.rev?'r'+ST.track:ST.track,rec=P.SV().ta[tk]||{};ex=`<h4 style="margin:8px 0 4px">Medal times &middot; ${car.name}</h4><div class="medals">`+P.MEDALS.map((md,i)=>`<div class="${rec.medal!=null&&rec.medal<=i?'got':''}"><b style="color:${md.col}">${md.n}</b>${fmtT(P.medalTime(tk,car,i))}</div>`).join('')+`</div><div style="font-size:10px;letter-spacing:.16em;color:var(--dim)">BEST LAP <b style="color:var(--ac)">${fmtT(rec.best)}</b></div>`}
  $('trkExtra').innerHTML=ex;
  let cfg='';
+ if(m==='elim')cfg+=`<div class="row8"><b>Knockout every</b><span class="seg" id="cIv">${seg([[20,'20s'],[30,'30s'],[45,'45s']],ST.iv||30)}</span></div><div class="row8"><b>Direction</b><span class="seg" id="cRev">${seg([['0','Forward'],['1','Reverse']],ST.rev?'1':'0')}</span></div>`;
  if(m==='ta'||m==='mp')cfg+=`<div class="row8"><b>Laps</b><span class="seg" id="cLaps">${seg([[2,'2'],[3,'3'],[4,'4'],[5,'5'],[8,'8'],[10,'10']],ST.laps)}</span></div><div class="row8"><b>Direction</b><span class="seg" id="cRev">${seg([['0','Forward'],['1','Reverse']],ST.rev?'1':'0')}</span></div><div class="row8"><b>Tyres &amp; fuel</b><span class="seg" id="cEnd">${seg([['auto','Auto'],['1','On'],['0','Off']],ST.endurS||'auto')}</span></div>`;
- if(m==='mp'||m==='cutup')cfg+=`<div class="row8"><b>Drivers</b><span class="seg" id="cPl">${seg([[1,'1'],[2,'2'],[3,'3'],[4,'4']],ST.players)}</span></div>`;
+ if(m==='mp'||m==='cutup'||m==='elim')cfg+=`<div class="row8"><b>Drivers</b><span class="seg" id="cPl">${seg([[1,'1'],[2,'2'],[3,'3'],[4,'4']],ST.players)}</span></div>`;
+ if(m==='elim')cfg+=`<div class="row8"><b>CPU</b><span class="seg" id="cCpu">${seg([[1,'1'],[2,'2'],[3,'3'],[4,'4'],[5,'5'],[7,'7']].filter(a=>a[0]+ST.players<=8),Math.max(1,ST.cpus))}</span></div><div class="row8"><b>Level</b><span class="seg" id="cDif">${seg([[0,'Easy'],[1,'Normal'],[2,'Hard']],ST.diff)}</span></div>`;
  if(m==='mp')cfg+=`<div class="row8"><b>CPU</b><span class="seg" id="cCpu">${seg([[0,'0'],[2,'2'],[3,'3'],[4,'4']].filter(a=>a[0]+ST.players<=8),ST.cpus)}</span></div><div class="row8"><b>Level</b><span class="seg" id="cDif">${seg([[0,'Easy'],[1,'Normal'],[2,'Hard']],ST.diff)}</span></div>`;
  if(m==='cutup')cfg+=`<div class="row8"><b>Traffic</b><span class="seg" id="cTr">${seg([['light','Light'],['heavy','Heavy']],ST.traffic)}</span></div><div class="row8"><b>Clock</b><span class="seg" id="cTime">${seg([[90,'90s'],[120,'120s'],[180,'180s']],ST.time)}</span></div>`;
  $('suCfg').innerHTML=cfg;
  const td=effTod();$('suTod').innerHTML=`<div class="tod"><h4 style="margin:0 0 7px;font:700 10px var(--mn);letter-spacing:.3em;color:var(--dim)">TIME OF DAY</h4><canvas id="todPrev" width="168" height="70"></canvas><span class="seg" id="cTod">${seg(P.TOD_ORDER.map(k=>[k,P.TOD[k].n]),td)}</span></div>`;
  drawTod($('todPrev'),ST.track,td);
- const bind=(id,k,num)=>{const e=$(id);if(e)$$('button',e).forEach(b=>b.onclick=()=>{ST[k]=num?+b.dataset.v:b.dataset.v;if(k==='players'&&ST.mode==='mp'&&ST.players+ST.cpus>8)ST.cpus=8-ST.players;renderSetup()})};
- bind('cLaps','laps',1);bind('cEnd','endurS',0);{const e=$('cRev');if(e)$$('button',e).forEach(b=>b.onclick=()=>{ST.rev=b.dataset.v==='1';renderSetup()})}bind('cPl','players',1);bind('cCpu','cpus',1);bind('cDif','diff',1);bind('cTime','time',1);bind('cTr','traffic',0);bind('cTod','todUser',0);
+ const bind=(id,k,num)=>{const e=$(id);if(e)$$('button',e).forEach(b=>b.onclick=()=>{ST[k]=num?+b.dataset.v:b.dataset.v;if(k==='players'&&(ST.mode==='mp'||ST.mode==='elim')&&ST.players+ST.cpus>8)ST.cpus=8-ST.players;renderSetup()})};
+ bind('cLaps','laps',1);bind('cIv','iv',1);bind('cEnd','endurS',0);{const e=$('cRev');if(e)$$('button',e).forEach(b=>b.onclick=()=>{ST.rev=b.dataset.v==='1';renderSetup()})}bind('cPl','players',1);bind('cCpu','cpus',1);bind('cDif','diff',1);bind('cTime','time',1);bind('cTr','traffic',0);bind('cTod','todUser',0);
  const np=m==='ta'?1:ST.players;let dv='<h4 style="margin:6px 0 8px;font:700 10px var(--mn);letter-spacing:.3em;color:var(--dim)">VEHICLES</h4>';
  for(let p=0;p<np;p++){const s=selCar(p),c=BYID[s.id];dv+=`<div class="drv" style="border-left-color:${['#f1f3f5','#f2c76b','#7fd68a','#ef6a5a'][p]}"><div><b>${np>1?'P'+(p+1)+' &middot; ':''}${c.name}${s.alt?' ALT':''}</b><small>Class <span class="cls ${c.cls}">${c.cls}</span> &middot; ${c.type}</small><div class="fxrow">${fxChip(c,!!D[ST.track].gravel)}</div></div><button class="btn sm" data-p="${p}"><span>Garage</span></button></div>`}
  $('suDrv').innerHTML=dv;$$('#suDrv button',root).forEach(b=>b.onclick=()=>openShow('garage',{player:+b.dataset.p,cap:null,ret:'s8setup',rally:!!D[ST.track].gravel}));
@@ -3041,6 +3123,7 @@ $('suGo').onclick=()=>{
  const endur=ST.endurS==='1'?true:ST.endurS==='0'?false:undefined;
  if(m==='ta')cfg={mode:'ta',track:ST.track,laps:ST.laps,humans,ai:[],tod,endur,rev:!!ST.rev};
  else if(m==='mp'){const df=[{cl:['C','B'],sk:.78},{cl:['B','A'],sk:.88},{cl:['A','S'],sk:.97}][ST.diff];cfg={mode:'mp',track:ST.track,laps:ST.laps,humans,ai:ST.cpus?P.makeAI({n:ST.cpus,classes:df.cl,skill:df.sk,rally:!!d.gravel}):[],tod,endur,rev:!!ST.rev}}
+ else if(m==='elim'){const df=[{cl:['C','B'],sk:.78},{cl:['B','A'],sk:.88},{cl:['A','S'],sk:.97}][ST.diff],n=Math.max(1,Math.min(ST.cpus||3,8-ST.players));cfg={mode:'elim',track:ST.track,laps:99,humans,ai:P.makeAI({n,classes:df.cl,skill:df.sk,rally:!!d.gravel}),tod,endur:false,rev:!!ST.rev,interval:ST.iv||30}}
  else cfg={mode:'cutup',track:ST.track,time:ST.time,humans,ai:[],traffic:ST.traffic,tod};
  P.launch(cfg)};
 
@@ -3192,7 +3275,7 @@ P.renderResults=res=>{RES=res;const mode=res.mode;
  res.notes.forEach(n=>h+=`<span class="goal ok">${n}</span>`);
  if(mode==='cutup'){h+='<table class="rt"><tr><th>#</th><th>Driver</th><th>Car</th><th>Score</th><th>Detail</th><th>Cr.</th></tr>'+res.rows.map(r=>`<tr class="hum"><td class="pl">${r.place}</td><td><b style="color:${r.col}">${r.name}</b></td><td>${r.car}</td><td><b>${r.score.toLocaleString('en-US')}</b></td><td style="font-size:10px;color:var(--dim)">${r.extra}</td><td style="color:var(--ac2)">${fmtCr(r.cr)}</td></tr>`).join('')+'</table>'}
  else if(mode==='ta'){const r=res.rows[0];h+=`<table class="rt"><tr><th>Lap</th><th>Time</th></tr>`+(r.laps||[]).map((t,i)=>`<tr class="${t===r.best?'hum':''}"><td class="pl">${i+1}</td><td>${fmtT(t)}${t===r.best?'  best':''}</td></tr>`).join('')+`</table><div style="font-size:11px;letter-spacing:.16em;color:var(--dim)">TOTAL <b style="color:#fff">${fmtT(r.time)}</b></div>`}
- else h+='<table class="rt"><tr><th>Pos</th><th>Driver</th><th>Car</th><th>Time</th><th>Best lap</th></tr>'+res.rows.map(r=>`<tr class="${r.human?'hum':''}"><td class="pl">${r.place}</td><td><b style="${r.human?'color:'+r.col:''}">${r.name}${r.loan?' (loaner)':''}</b></td><td>${r.car}</td><td>${r.time!=null?fmtT(r.time):(r.lapsDown?'+'+r.lapsDown+' lap':'...')}</td><td style="color:var(--ac)">${r.best!=null?fmtT(r.best):'--'}</td></tr>`).join('')+'</table>';
+ else h+='<table class="rt"><tr><th>Pos</th><th>Driver</th><th>Car</th><th>Time</th><th>Best lap</th></tr>'+res.rows.map(r=>`<tr class="${r.human?'hum':''}"><td class="pl">${r.place}</td><td><b style="${r.human?'color:'+r.col:''}">${r.name}${r.loan?' (loaner)':''}</b></td><td>${r.car}</td><td>${r.time!=null?fmtT(r.time):(r.txt?r.txt:(r.lapsDown?'+'+r.lapsDown+' lap':'...'))}</td><td style="color:var(--ac)">${r.best!=null?fmtT(r.best):'--'}</td></tr>`).join('')+'</table>';
  h+='<div>'+res.pay.map(p=>`<div class="pay"><span>${p.l}</span><span>+${fmtCr(p.v)}</span></div>`).join('')+`<div class="pay tot"><span>Total earned</span><span>+${fmtCr(res.total)}</span></div><div class="pay"><span>Balance</span><span>${fmtCr(res.balance)}</span></div></div>`;
  const career=res.cfg&&res.cfg.ev;
  h+=`<div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap"><button class="btn go" id="rcCont"><span>${career?'Career hub':'Continue'}</span></button><button class="btn" id="rcRetry"><span>Retry</span></button><button class="btn" id="rcBrand"><span>Brand Central</span></button><button class="btn" id="rcMenu"><span>Main menu</span></button></div>`;
@@ -3203,7 +3286,7 @@ function resContinue(){const cfg=RES&&RES.cfg;P.cleanupRace();if(cfg&&cfg.ev){if
 /* ================= keys ================= */
 let cheatBuf='';
 addEventListener('keydown',e=>{
- if(scr==='s8cards'){if(e.code==='ArrowRight'||e.code==='KeyD')setFoc(foc+1);else if(e.code==='ArrowLeft'||e.code==='KeyA')setFoc(foc-1);else if(/^Digit[1-4]$/.test(e.code))pickMode($$('.card',root)[+e.code[5]-1].dataset.m);else if(e.code==='Enter'||e.code==='Space')pickMode($$('.card',root)[foc].dataset.m);return}
+ if(scr==='s8cards'){if(e.code==='ArrowRight'||e.code==='KeyD')setFoc(foc+1);else if(e.code==='ArrowLeft'||e.code==='KeyA')setFoc(foc-1);else if(/^Digit[1-5]$/.test(e.code))pickMode($$('.card',root)[+e.code[5]-1].dataset.m);else if(e.code==='Enter'||e.code==='Space')pickMode($$('.card',root)[foc].dataset.m);return}
  if(scr==='s8show'){if(SR.kind==='brand'){cheatBuf=(cheatBuf+(e.key.length===1?e.key.toLowerCase():'')).slice(-13);if(cheatBuf.endsWith('hakannowant')){cheatBuf='';const sv=P.SV();sv.owned={merc:1};sv.sel=sv.sel.map(()=>({id:'merc',alt:0}));P.save();SR.id='merc';SR.alt=0;renderShow();return}
   if(cheatBuf.endsWith('hakanwantsall')){cheatBuf='';const sv=P.SV();CARS.forEach(c=>{sv.owned[c.id]=3});P.save();renderShow();return}}
   const list=showList(),i=list.findIndex(c=>c.id===SR.id);if(e.code==='ArrowDown'){SR.id=list[Math.min(list.length-1,i+1)].id;SR.alt=P.owns(SR.id,SR.alt)?SR.alt:0;renderShow()}else if(e.code==='ArrowUp'){SR.id=list[Math.max(0,i-1)].id;SR.alt=P.owns(SR.id,SR.alt)?SR.alt:0;renderShow()}else if(e.code==='ArrowLeft')SR.vel-=3;else if(e.code==='ArrowRight')SR.vel+=3;else if(e.code==='KeyC'&&SR.kind==='garage'){SR.alt=SR.alt?0:1;renderShow()}else if(e.code==='Enter')$('shAct').click();return}
