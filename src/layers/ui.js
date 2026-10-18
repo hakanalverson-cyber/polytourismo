@@ -140,7 +140,7 @@ const BIOME={grass:[90,150,82],sand:[214,178,122],snow:[226,234,244],city:[38,38
 const rgb=h=>[(h>>16)&255,(h>>8)&255,h&255];
 const LIGHT={dawn:{t:[255,205,185],k:.9},day:{t:[255,255,255],k:1},sunset:{t:[255,150,100],k:.82},night:{t:[70,100,190],k:.34}};
 function drawTod(cv,trk,tod){const g=cv.getContext('2d'),W=cv.width,H=cv.height,d=D[trk],tp=P.TOD[tod];
- const city=d.id===3;let sk;
+ const city=(d.look!=null?d.look:d.id)===3;let sk;
  if(tod==='day')sk=city?[0x6aa4e8,0xcfe6ff]:d.sky;else sk=tp.sky;if(city&&tod==='night')sk=d.sky;
  const hz=Math.round(H*.56),lt=LIGHT[tod],L=(c,k)=>c.map((v,i)=>Math.min(255,v*(lt.t[i]/255)*lt.k*(k||1)));
  const gr=g.createLinearGradient(0,0,0,hz);gr.addColorStop(0,'#'+sk[0].toString(16).padStart(6,'0'));gr.addColorStop(1,'#'+sk[1].toString(16).padStart(6,'0'));g.fillStyle=gr;g.fillRect(0,0,W,hz);

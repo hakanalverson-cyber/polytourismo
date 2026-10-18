@@ -179,6 +179,7 @@ function launch(cfg){
  const trackDef=Object.assign({},D[cfg.track]);
  if(cfg.mode==='cutup'){trackDef.jumps=[];trackDef.ice=[]}
  if(cfg.rev){trackDef.rev=true;trackDef.jumps=[]}
+ if(trackDef.look!=null)trackDef.id=trackDef.look;
  const T=sampleTrack(trackDef);selT=cfg.track;
  const scene=buildWorld(T);FS=scene;FX=[];if(PT8.applyTod)PT8.applyTod(scene,T,cfg.tod||(D[cfg.track].tod0)||'day');if(PT8.shadeSetup)PT8.shadeSetup(scene);
  const laps=cfg.mode==='cutup'?1:cfg.laps;
