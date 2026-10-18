@@ -20,14 +20,18 @@ sampleTrack=d=>{const T=ps(d);if(!d.harbor)return T;
 
 /* ---------- textures ---------- */
 const T_ASPH=()=>ctex(32,32,(x,w,h)=>{x.fillStyle='#3b3e44';x.fillRect(0,0,w,h);const r=rngf(4);for(let i=0;i<70;i++){x.fillStyle=r()<.5?'#00000022':'#ffffff10';x.fillRect(r()*w|0,r()*h|0,1,1)}x.fillStyle='#ffffffb0';x.fillRect(1,0,1,h);x.fillRect(w-2,0,1,h);x.fillStyle='#e8e0b0';x.fillRect(w/2-1,0,2,h/2)});
-const T_PLANK=()=>ctex(32,32,(x,w,h)=>{const r=rngf(9);for(let i=0;i<8;i++){const t=r();x.fillStyle=`rgb(${150+t*34|0},${108+t*26|0},${66+t*18|0})`;x.fillRect(0,i*4,w,3);x.fillStyle='#2a1c10';x.fillRect(0,i*4+3,w,1);x.fillStyle='#00000018';x.fillRect((r()*w)|0,i*4,1,3)}x.fillStyle='#ffffffb0';x.fillRect(0,0,1,h);x.fillRect(w-1,0,1,h)});
+const T_PLANK=()=>ctex(32,32,(x,w,h)=>{const r=rngf(9);for(let i=0;i<4;i++){const t=r()*.5;x.fillStyle=`rgb(${176+t*26|0},${132+t*22|0},${86+t*16|0})`;x.fillRect(0,i*8,w,8);x.fillStyle='#7a5a3a';x.fillRect(0,i*8+7,w,1);x.fillStyle='#00000010';x.fillRect((r()*w)|0,i*8,1,7)}x.fillStyle='#ffffffa0';x.fillRect(0,0,1,h);x.fillRect(w-1,0,1,h)});
 const T_COBBLE=()=>ctex(32,32,(x,w,h)=>{const r=rngf(3);x.fillStyle='#4a4742';x.fillRect(0,0,w,h);for(let j=0;j<8;j++)for(let i=0;i<8;i++){const o=(j&1)*2,t=r();x.fillStyle=`rgb(${100+t*50|0},${96+t*46|0},${88+t*40|0})`;x.fillRect(i*4+o,j*4,3,3)}});
-const T_TILE=()=>ctex(16,16,(x,w,h)=>{for(let j=0;j<4;j++)for(let i=0;i<4;i++){x.fillStyle=(i+j)&1?'#e9dfcf':'#8a3b2c';x.fillRect(i*4,j*4,4,4)}});
+const T_TILE=()=>ctex(16,16,(x,w,h)=>{for(let j=0;j<4;j++)for(let i=0;i<4;i++){x.fillStyle=(i+j)&1?'#e2d6bf':'#b08a6e';x.fillRect(i*4,j*4,4,4)}});
 const T_FACADE=seed=>ctex(64,128,(x,w,h)=>{const r=rngf(seed),cols=['#d8b99a','#c9877a','#e3d6a5','#9db8a8','#b9a0b8','#d4a373'];x.fillStyle=cols[seed%cols.length];x.fillRect(0,0,w,h);
  x.fillStyle='#00000012';for(let y=0;y<h;y+=6)x.fillRect(0,y,w,1);
  x.fillStyle='#5a4636';x.fillRect(0,h-26,w,26);x.fillStyle='#2a2018';x.fillRect(8,h-24,14,24);x.fillStyle='#d9382a';x.fillRect(28,h-34,30,6);x.fillStyle='#fff';for(let i=0;i<30;i+=6)x.fillRect(28+i,h-34,3,6);
  for(let row=0;row<3;row++)for(let c=0;c<2;c++){const wx=8+c*30,wy=12+row*30;x.fillStyle='#2b3a4a';x.fillRect(wx,wy,18,20);x.fillStyle='#9fd0f0aa';x.fillRect(wx+1,wy+1,16,8);x.fillStyle='#e9e4d4';x.fillRect(wx-1,wy+20,20,2);x.fillStyle=r()<.5?'#6a8f4a':'#cf6a6a';x.fillRect(wx+2,wy+18,14,3);x.fillStyle='#4a5a3a';x.fillRect(wx-3,wy,3,20);x.fillRect(wx+18,wy,3,20)}});
-const T_CONC=()=>ctex(8,8,(x,w,h)=>{x.fillStyle='#b9bcbf';x.fillRect(0,0,w,h);x.fillStyle='#e7c93a';x.fillRect(0,0,w,2);x.fillStyle='#2a2a2a';for(let i=0;i<w;i+=4)x.fillRect(i,0,2,2);x.fillStyle='#0003';x.fillRect(0,h-2,w,2)});
+const T_FACADEW=()=>{const cols=['#d8b99a','#e3d6a5','#9db8a8','#a9bfd4','#e8e0d0','#c9877a'],TN=18;const t=ctex(64*TN,128,(x,w,h)=>{const r=rngf(5);for(let n=0;n<TN;n++){const ox=n*64;x.fillStyle=cols[Math.floor(n/3)%cols.length];x.fillRect(ox,0,64,h);
+  x.fillStyle='#00000010';for(let y=0;y<h;y+=6)x.fillRect(ox,y,64,1);
+  x.fillStyle='#5a4636';x.fillRect(ox,h-26,64,26);x.fillStyle='#2a2018';x.fillRect(ox+8,h-24,14,24);x.fillStyle='#b4574a';x.fillRect(ox+28,h-34,30,6);x.fillStyle='#e8dcc8';for(let i=0;i<30;i+=10)x.fillRect(ox+28+i,h-34,5,6);
+  for(let row=0;row<3;row++)for(let c=0;c<2;c++){const wx=ox+8+c*30,wy=12+row*30;x.fillStyle='#34475a';x.fillRect(wx,wy,18,20);x.fillStyle='#a9cde6';x.fillRect(wx+1,wy+1,16,8);x.fillStyle='#f0ebdc';x.fillRect(wx-1,wy+20,20,2);x.fillStyle=r()<.5?'#7a9a62':'#c98a7a';x.fillRect(wx+2,wy+18,14,3);x.fillStyle='#5a6a4a';x.fillRect(wx-3,wy,3,20);x.fillRect(wx+18,wy,3,20)}}});t.repeat.set(1/TN,1);return t};
+const T_CONC=()=>ctex(8,8,(x,w,h)=>{x.fillStyle='#b4b7ba';x.fillRect(0,0,w,h);x.fillStyle='#d9c25a';x.fillRect(0,1,w,1);x.fillStyle='#0000001c';x.fillRect(0,h-2,w,2)});
 const T_RAIL=()=>ctex(8,8,(x,w,h)=>{x.fillStyle='#8a5a34';x.fillRect(0,0,w,h);x.fillStyle='#d8c29a';x.fillRect(0,0,w,2);x.fillStyle='#0004';x.fillRect(0,h-2,w,2);x.fillRect(3,2,1,h-4)});
 const T_WALLB=()=>ctex(16,16,(x,w,h)=>{x.fillStyle='#c9b79c';x.fillRect(0,0,w,h);x.fillStyle='#00000018';for(let y=0;y<h;y+=4)x.fillRect(0,y,w,1)});
 const T_SIGN=txt=>ctex(256,48,(x,w,h)=>{x.fillStyle='#1a3a2c';x.fillRect(0,0,w,h);x.fillStyle='#f0d9a0';x.fillRect(3,3,w-6,h-6);x.fillStyle='#1a3a2c';x.fillRect(6,6,w-12,h-12);x.fillStyle='#f6e9c0';x.font='bold 28px monospace';x.textAlign='center';x.textBaseline='middle';x.fillText(txt,w/2,h/2+1)});
@@ -73,7 +77,7 @@ function buildHarbor(T){const d=T.d,N=T.N,r=rngf(8*77+5),sc=new THREE.Scene(),H=
  {const pil=[];for(let i=H.pier[0];i<=H.pier[1];i+=4)for(const sd of [-1,1]){const f=frame(T,i,sd*(hw(i)-.6));pil.push([f[0],-4.6,f[1],.55,8.8,.55])}instB(sc,new THREE.CylinderGeometry(1,1,1,6),flat(0x4a3a2a),pil)}
  /* ----- walls: concrete barrier on the quay, wooden rail on pier/restaurant, tall painted facades in the alleys ----- */
  const cat=new Uint8Array(N);for(let i=0;i<N;i++){cat[i]=(i>=H.alley[0]&&i<=H.alley[1])?2:((i>=H.pier[0]&&i<=H.pier[1])||(i>=H.rest[0]&&i<=H.rest[1]))?1:0}
- const mats=[new THREE.MeshStandardMaterial({map:T_CONC(),side:THREE.DoubleSide,roughness:.9}),new THREE.MeshStandardMaterial({map:T_RAIL(),side:THREE.DoubleSide,roughness:.9}),new THREE.MeshStandardMaterial({map:T_FACADE(1),side:THREE.DoubleSide,roughness:.95})];
+ const mats=[new THREE.MeshStandardMaterial({map:T_CONC(),side:THREE.DoubleSide,roughness:.9}),new THREE.MeshStandardMaterial({map:T_RAIL(),side:THREE.DoubleSide,roughness:.9}),new THREE.MeshStandardMaterial({map:T_FACADEW(),side:THREE.DoubleSide,roughness:.95})];
  for(let c=0;c<3;c++){const W=Object.create(T);W.wh=Float32Array.from(T.wh,(h,i)=>cat[i]===c?h:-.3);sc.add(wallMesh(W,1,mats[c]));sc.add(wallMesh(W,-1,mats[c]))}
  /* top trim along the alley walls */
  {const W=Object.create(T);W.wh=Float32Array.from(T.wh,(h,i)=>cat[i]===2?.0:-.3)}
