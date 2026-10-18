@@ -15,13 +15,13 @@ function pxCanvas(n){const cv=document.createElement('canvas');cv.width=cv.heigh
   circ:(cx,cy,rad,c,fill)=>{g.fillStyle=c;for(let y=-rad;y<=rad;y++)for(let x=-rad;x<=rad;x++){const d=Math.hypot(x,y);if(fill?d<=rad+.2:(d<=rad+.35&&d>=rad-1.0))g.fillRect(cx+x,cy+y,1,1)}},
   line:(x0,y0,x1,y1,c)=>{g.fillStyle=c;const dx=Math.abs(x1-x0),dy=Math.abs(y1-y0),sx=x0<x1?1:-1,sy=y0<y1?1:-1;let e=dx-dy;for(;;){g.fillRect(x0,y0,1,1);if(x0===x1&&y0===y1)break;const e2=2*e;if(e2>-dy){e-=dy;x0+=sx}if(e2<dx){e+=dx;y0+=sy}}}};return o}
 const IC={
- ta(){const p=pxCanvas(40),W='#e6e9ee',A='#ff7a2f',G='#2a3340',Y='#f2c76b';
+ ta(){const p=pxCanvas(40),W='#e6e9ee',A='#f1f3f5',G='#2a3340',Y='#f2c76b';
   p.circ(20,23,14,G,true);p.circ(20,23,14,W,false);p.circ(20,23,13,W,false);p.r(17,5,6,3,W);p.r(19,8,2,4,W);p.r(29,9,4,3,W);p.r(31,8,2,2,W);
   for(let i=0;i<12;i++){const a=i/12*6.283;const x=20+Math.round(Math.cos(a)*11),y=23+Math.round(Math.sin(a)*11);p.r(x,y,1,1,i%3?'#566070':W)}
   p.line(20,23,20,14,A);p.line(21,23,21,14,A);p.line(20,23,27,27,Y);p.circ(20,23,2,W,true);
   /* checker */p.r(2,31,2,2,W);p.r(4,33,2,2,W);p.r(6,31,2,2,W);p.r(2,35,2,2,'#566070');
   return p.cv},
- mp(){const p=pxCanvas(48),W='#e6e9ee',A='#ff7a2f',Y='#f2c76b',G='#161c24',L='#3a4452';
+ mp(){const p=pxCanvas(48),W='#e6e9ee',A='#f1f3f5',Y='#f2c76b',G='#161c24',L='#3a4452';
   /* two stacked screens (split view), each with a road + car */
   const scr=(y,col,cx)=>{p.r(2,y,44,20,G);p.r(2,y,44,1,L);p.r(2,y+19,44,1,L);p.r(2,y,1,20,L);p.r(45,y,1,20,L);
    p.r(2,y+12,44,8,'#232b36');for(let x=4;x<44;x+=8)p.r(x,y+15,4,1,'#59657a');
@@ -30,7 +30,7 @@ const IC={
   scr(3,A,22);scr(25,Y,12);
   p.r(2,23,44,2,W);/* divider */p.r(21,22,6,4,W);p.r(22,23,4,2,'#0a1018');
   return p.cv},
- cu(){const p=pxCanvas(48),W='#e6e9ee',A='#ff7a2f',Y='#f2c76b',R='#ef6a5a',T='#7b8696',G='#141a21';
+ cu(){const p=pxCanvas(48),W='#e6e9ee',A='#f1f3f5',Y='#f2c76b',R='#ef6a5a',T='#7b8696',G='#141a21';
   const car=(x,y,c,up)=>{p.r(x+1,y,6,14,c);p.r(x+2,y-1,4,1,c);p.r(x+2,y+14,4,1,c);p.r(x,y+3,1,3,'#000');p.r(x+7,y+3,1,3,'#000');p.r(x,y+9,1,3,'#000');p.r(x+7,y+9,1,3,'#000');
    p.r(x+2,y+(up?3:7),4,3,'#0a1018');p.r(x+2,y+(up?11:2),4,2,'#0a1018');if(up){p.r(x+1,y,2,1,'#fff6c0');p.r(x+5,y,2,1,'#fff6c0')}else{p.r(x+1,y+13,2,1,R);p.r(x+5,y+13,2,1,R)}};
   p.r(4,0,40,48,G);p.r(4,0,2,48,W);p.r(42,0,2,48,W);
@@ -41,14 +41,14 @@ const IC={
   p.r(16,31,1,5,Y);p.r(28,33,1,5,Y);p.r(14,34,2,1,Y);p.r(28,36,2,1,Y);p.r(22,47,4,1,A);
   p.r(35,22,5,1,Y);p.r(36,24,4,1,Y);p.r(12,20,5,1,Y);
   return p.cv},
- ca(){const p=pxCanvas(40),W='#e6e9ee',Y='#f2c76b',A='#ff7a2f',D='#b8923f';
+ ca(){const p=pxCanvas(40),W='#e6e9ee',Y='#f2c76b',A='#f1f3f5',D='#b8923f';
   p.r(12,6,16,2,Y);p.r(12,8,16,8,Y);p.r(13,16,14,3,Y);p.r(16,19,8,3,Y);p.r(18,22,4,6,D);p.r(14,28,12,3,Y);p.r(12,31,16,3,D);
   p.r(5,8,5,2,Y);p.r(5,10,2,6,Y);p.r(7,16,3,2,Y);p.r(30,8,5,2,Y);p.r(33,10,2,6,Y);p.r(30,16,3,2,Y);
   p.r(15,10,2,4,W);p.r(16,9,1,1,W);p.r(22,6,2,2,'#fff');p.r(2,36,36,1,'#566070');
   p.r(6,34,3,2,A);p.r(11,34,3,2,A);p.r(16,34,3,2,A);
   return p.cv}
 };
-const evIcon={race:'<svg class="ic" viewBox="0 0 22 22"><path d="M4 20V3h2v2h12l-3 4 3 4H6v7z" fill="#e6e9ee"/></svg>',rally:'<svg class="ic" viewBox="0 0 22 22"><path d="M2 18l7-11 4 6 3-3 4 8z" fill="#c9a36a"/><rect x="16" y="3" width="3" height="3" fill="#f2c76b"/></svg>',cutup:'<svg class="ic" viewBox="0 0 22 22"><rect x="2" y="8" width="8" height="5" fill="#6a7586"/><rect x="11" y="13" width="9" height="6" fill="#ff7a2f"/><path d="M12 4l6-2" stroke="#f2c76b" stroke-width="2"/></svg>'};
+const evIcon={race:'<svg class="ic" viewBox="0 0 22 22"><path d="M4 20V3h2v2h12l-3 4 3 4H6v7z" fill="#e6e9ee"/></svg>',rally:'<svg class="ic" viewBox="0 0 22 22"><path d="M2 18l7-11 4 6 3-3 4 8z" fill="#c9a36a"/><rect x="16" y="3" width="3" height="3" fill="#f2c76b"/></svg>',cutup:'<svg class="ic" viewBox="0 0 22 22"><rect x="2" y="8" width="8" height="5" fill="#6a7586"/><rect x="11" y="13" width="9" height="6" fill="#f1f3f5"/><path d="M12 4l6-2" stroke="#f2c76b" stroke-width="2"/></svg>'};
 
 root.innerHTML=`
 <section class="v8s" id="s8cards"><div class="hdr"><h2>SELECT <em>MODE</em></h2><div class="sp"></div>${crHTML}</div>
@@ -123,8 +123,8 @@ function drawTrack(cv,i,full){const T=tr(i),g=cv.getContext('2d'),W=cv.width,H=c
  g.fillStyle='#e6e9ee';g.fillRect(T.x[0]*s+ox-3,T.z[0]*s+oz-3,6,6);
  if(full){for(const j of T.jumps||[]){g.fillStyle='#e6e9ee';g.beginPath();g.arc(T.x[j]*s+ox,T.z[j]*s+oz,4,0,7);g.fill()}
   const ph=H*.24,py=H-ph-8;g.fillStyle='#0b0e12';g.fillRect(10,py,W-20,ph);g.strokeStyle='#2a3340';g.strokeRect(10.5,py+.5,W-21,ph-1);
-  g.fillStyle='#ff7a2f22';g.beginPath();g.moveTo(10,py+ph);for(let k=0;k<=T.N;k+=3){const q=Math.min(k,T.N-1),x=10+(W-20)*k/T.N,y=py+ph-3-(T.y[q]-y0)/yr*(ph-10);g.lineTo(x,y)}g.lineTo(W-10,py+ph);g.fill();
-  g.strokeStyle='#ff7a2f';g.lineWidth=1.6;g.beginPath();for(let k=0;k<T.N;k+=3){const x=10+(W-20)*k/T.N,y=py+ph-3-(T.y[k]-y0)/yr*(ph-10);k?g.lineTo(x,y):g.moveTo(x,y)}g.stroke();
+  g.fillStyle='#f1f3f522';g.beginPath();g.moveTo(10,py+ph);for(let k=0;k<=T.N;k+=3){const q=Math.min(k,T.N-1),x=10+(W-20)*k/T.N,y=py+ph-3-(T.y[q]-y0)/yr*(ph-10);g.lineTo(x,y)}g.lineTo(W-10,py+ph);g.fill();
+  g.strokeStyle='#f1f3f5';g.lineWidth=1.6;g.beginPath();for(let k=0;k<T.N;k+=3){const x=10+(W-20)*k/T.N,y=py+ph-3-(T.y[k]-y0)/yr*(ph-10);k?g.lineTo(x,y):g.moveTo(x,y)}g.stroke();
   g.fillStyle='#7b8594';g.font='9px monospace';g.textAlign='left';g.fillText('ELEV '+Math.round(y0)+'-'+Math.round(y1)+' M',16,py+12);g.textAlign='right';g.fillText(Math.round(T.L)+' M',W-16,py+12)}}
 
 /* ================= TIME OF DAY preview (small pixel render) ================= */
@@ -181,7 +181,7 @@ function renderSetup(){const m=ST.mode;$('suTitle').innerHTML=MODE_NAME[m];
  const bind=(id,k,num)=>{const e=$(id);if(e)$$('button',e).forEach(b=>b.onclick=()=>{ST[k]=num?+b.dataset.v:b.dataset.v;if(k==='players'&&ST.mode==='mp'&&ST.players+ST.cpus>8)ST.cpus=8-ST.players;renderSetup()})};
  bind('cLaps','laps',1);bind('cEnd','endurS',0);{const e=$('cRev');if(e)$$('button',e).forEach(b=>b.onclick=()=>{ST.rev=b.dataset.v==='1';renderSetup()})}bind('cPl','players',1);bind('cCpu','cpus',1);bind('cDif','diff',1);bind('cTime','time',1);bind('cTr','traffic',0);bind('cTod','todUser',0);
  const np=m==='ta'?1:ST.players;let dv='<h4 style="margin:6px 0 8px;font:700 10px var(--mn);letter-spacing:.3em;color:var(--dim)">VEHICLES</h4>';
- for(let p=0;p<np;p++){const s=selCar(p),c=BYID[s.id];dv+=`<div class="drv" style="border-left-color:${['#ff7a2f','#a78bff','#7fd68a','#ef6a5a'][p]}"><div><b>${np>1?'P'+(p+1)+' &middot; ':''}${c.name}${s.alt?' ALT':''}</b><small>Class <span class="cls ${c.cls}">${c.cls}</span> &middot; ${c.type}</small><div class="fxrow">${fxChip(c,!!D[ST.track].gravel)}</div></div><button class="btn sm" data-p="${p}"><span>Garage</span></button></div>`}
+ for(let p=0;p<np;p++){const s=selCar(p),c=BYID[s.id];dv+=`<div class="drv" style="border-left-color:${['#f1f3f5','#f2c76b','#7fd68a','#ef6a5a'][p]}"><div><b>${np>1?'P'+(p+1)+' &middot; ':''}${c.name}${s.alt?' ALT':''}</b><small>Class <span class="cls ${c.cls}">${c.cls}</span> &middot; ${c.type}</small><div class="fxrow">${fxChip(c,!!D[ST.track].gravel)}</div></div><button class="btn sm" data-p="${p}"><span>Garage</span></button></div>`}
  $('suDrv').innerHTML=dv;$$('#suDrv button',root).forEach(b=>b.onclick=()=>openShow('garage',{player:+b.dataset.p,cap:null,ret:'s8setup',rally:!!D[ST.track].gravel}));
  $('suHint').textContent=m==='ta'?'W / S + A / D &middot; double-tap W up, S down to shift':'P1 WASD &middot; P2 arrows &middot; P3 IJKL &middot; P4 TFGH';$('suHint').innerHTML=$('suHint').textContent}
 $('suGo').onclick=()=>{
