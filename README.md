@@ -28,7 +28,7 @@ src/layers/*.js              the v9 game code, applied on top of the base in thi
 src/style.css                v9 UI styles
 assets/car_pack_2.glb        car pack 2 (embedded as base64 at build time)
 build.py                     base + text patches + layers + css + pack 2  ->  dist/Poly-Tourismo.html
-dist/Poly-Tourismo.html      the built, playable game
+
 tests/                       Playwright simulation scripts (headless, software GL)
 ```
 

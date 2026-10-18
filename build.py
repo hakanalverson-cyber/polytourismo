@@ -91,3 +91,5 @@ src=src[:i]+add+src[i:]
 src=src.replace('<title>Poly Tourismo v7</title>','<title>Poly Tourismo v9</title>')
 out=sys.argv[1] if len(sys.argv)>1 else W+'/dist/Poly-Tourismo.html'
 open(out,'w').write(src);print('wrote',out,len(src))
+if not len(sys.argv)>1:
+    open(W+'/dist/index.html','w').write(src)  # so static hosts (Vercel, GitHub Pages) serve the game at /
