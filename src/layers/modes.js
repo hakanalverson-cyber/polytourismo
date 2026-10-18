@@ -238,10 +238,19 @@ hudUpdate=()=>{const Rc=RACE,T=Rc.T;
   const fn=q('.h8fin');if(c.fin&&!cut){fn.innerHTML='<b>'+ord(c.place)+'</b><span>'+(Rc.cars.filter(h=>h.human&&!h.fin).length?'WAITING FOR OTHER DRIVERS':'')+'</span>';fn.className='h8fin on'}else fn.className='h8fin';
  });
  /* minimap */
- const cv=$('mm'),m=cv.getContext('2d'),S_=cv.width;m.clearRect(0,0,S_,S_);m.fillStyle='#07090cd8';m.fillRect(0,0,S_,S_);m.fillStyle='#ffd23f';m.fillRect(0,0,S_,3);m.fillStyle='#e8e2d0';m.font='bold 10px "Courier New",monospace';m.fillText(D[RACE.cfg.track].name.toUpperCase(),10,19);
+ const cv=$('mm'),m=cv.getContext('2d'),S_=cv.width;m.clearRect(0,0,S_,S_);
  let x0=Infinity,x1=-Infinity,z0=Infinity,z1=-Infinity;for(let i=0;i<T.N;i++){x0=Math.min(x0,T.x[i]);x1=Math.max(x1,T.x[i]);z0=Math.min(z0,T.z[i]);z1=Math.max(z1,T.z[i])}
- const scale=Math.min((S_-42)/(x1-x0),(S_-60)/(z1-z0)),ox=S_/2-(x0+x1)*.5*scale,oz=S_/2+7-(z0+z1)*.5*scale;
- m.lineJoin='round';m.strokeStyle='#2b313a';m.lineWidth=7;m.beginPath();for(let i=0;i<T.N;i++){const x=T.x[i]*scale+ox,z=T.z[i]*scale+oz;i?m.lineTo(x,z):m.moveTo(x,z)}m.closePath();m.stroke();m.strokeStyle='#e8e2d0';m.lineWidth=1.6;m.stroke();m.fillStyle='#fff';m.fillRect(T.x[0]*scale+ox-3,T.z[0]*scale+oz-3,6,6);
+ const scale=Math.min((S_-30)/(x1-x0),(S_-30)/(z1-z0)),ox=S_/2-(x0+x1)*.5*scale,oz=S_/2-(z0+z1)*.5*scale;
+ /* section classes, built once per race: 1 medium, 2 hard, 3 hairpin corner, 4 jump */
+ if(!Rc.mmCls){const K=P.kappa(T),cl=new Uint8Array(T.N);for(let i=0;i<T.N;i++){const R=1/Math.max(K[i],1e-4);cl[i]=R<35?3:R<55?2:R<80?1:0}
+  for(const j of (T.jumps||[])){const a0=j-Math.round(26/T.sp),a1=j+Math.round(22/T.sp);for(let k=a0;k<=a1;k++)cl[((k%T.N)+T.N)%T.N]=4}Rc.mmCls=cl}
+ const cl=Rc.mmCls,pt=i=>{i=((i%T.N)+T.N)%T.N;return[T.x[i]*scale+ox,T.z[i]*scale+oz]};
+ m.lineJoin='round';m.lineCap='round';m.strokeStyle='#000000b0';m.lineWidth=8;m.beginPath();for(let i=0;i<T.N;i++){const [x,z]=pt(i);i?m.lineTo(x,z):m.moveTo(x,z)}m.closePath();m.stroke();
+ m.strokeStyle='#e9ecef';m.lineWidth=3.4;m.stroke();
+ const COL=['','#ffd23f','#ff9a2f','#ff3b30','#ff3b30'];m.lineWidth=3.8;
+ for(let i=0;i<T.N;){const c0=cl[i];if(!c0){i++;continue}let j=i;while(j+1<T.N&&cl[j+1]===c0)j++;m.strokeStyle=COL[c0];m.beginPath();for(let k=i;k<=j+1;k++){const [x,z]=pt(k);k===i?m.moveTo(x,z):m.lineTo(x,z)}m.stroke();i=j+1}
+ for(const j of (T.jumps||[])){const [x,z]=pt(j);m.fillStyle='#ff3b30';m.strokeStyle='#fff';m.lineWidth=1.6;m.beginPath();m.moveTo(x,z-5);m.lineTo(x+5,z);m.lineTo(x,z+5);m.lineTo(x-5,z);m.closePath();m.fill();m.stroke()}
+ m.fillStyle='#fff';m.fillRect(T.x[0]*scale+ox-3,T.z[0]*scale+oz-3,6,6);
  for(const c of Rc.cars){const x=c.x*scale+ox,z=c.z*scale+oz;m.fillStyle=c.human?CS[c.k]:'#8a909a';m.strokeStyle='#05070a';m.lineWidth=2;m.beginPath();m.arc(x,z,c.human?6:3.6,0,PI*2);m.fill();m.stroke();if(c.human){m.fillStyle='#05070a';m.font='bold 8px monospace';m.textAlign='center';m.textBaseline='middle';m.fillText(String(c.k+1),x,z+.5);m.textAlign='left';m.textBaseline='alphabetic'}}
  if(Rc.traffic){m.fillStyle='#ffffff55';for(const t of Rc.traffic){if(t.hit>0)continue;m.fillRect(t.x*scale+ox-1,t.z*scale+oz-1,2,2)}}
 };

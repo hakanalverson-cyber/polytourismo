@@ -15,23 +15,8 @@ P.mul=c=>{const Rc=RACE,m={acc:1,top:1,grip:1,brk:1};if(!Rc)return m;
  return m};
 
 /* ---------- pit zone on the start straight ---------- */
-function pitSetup(Rc){const T=Rc.T,a=14,b=a+Math.ceil(64/T.sp);Rc.pit={a,b,mid:Math.round((a+b)/2)};
- const pos=[],uv=[],ind=[],cols=[];const W=T.hw[0];
- const strip=(i0,i1,l0,l1,tex)=>{const base=pos.length/3,nI=i1-i0;for(let i=i0;i<=i1;i++){const sn=Math.sin(T.psi[i]),cs=Math.cos(T.psi[i]);for(let k=0;k<2;k++){const lat=k?l1:l0;pos.push(T.x[i]+cs*lat,T.y[i]-lat*T.bank[i]+.05,T.z[i]-sn*lat);uv.push(k,(i-i0)*T.sp/(tex||3))}}
-  for(let i=0;i<nI;i++){const q=base+i*2;ind.push(q,q+1,q+2,q+1,q+3,q+2)}};
- return{strip,pos,uv,ind,W}}
-function buildPit(Rc){const T=Rc.T,pz=pitSetup(Rc),{a,b}=Rc.pit,W=pz.W;
- const mk=(draw,w,h)=>{const cv=document.createElement('canvas');cv.width=w;cv.height=h;draw(cv.getContext('2d'),w,h);const t=new THREE.CanvasTexture(cv);t.wrapS=t.wrapT=THREE.RepeatWrapping;return t};
- const hazard=mk((g,w,h)=>{const im=g.createImageData(w,h);for(let y=0;y<h;y++)for(let x=0;x<w;x++){const d=((x+y)%32)<12,o=(y*w+x)*4;im.data[o]=d?30:226;im.data[o+1]=d?32:176;im.data[o+2]=d?36:34;im.data[o+3]=255}g.putImageData(im,0,0)},64,64);
- const white=mk((g,w,h)=>{g.fillStyle='#f3f3ee';g.fillRect(0,0,w,h)},4,4);
- const out=[];
- /* hazard-stripe service lane on the right half */
- const s1=pitSetup(Rc);s1.strip(a,b,W*.42,W*.92,6);
- const s2=pitSetup(Rc);s2.strip(a,a+1,-W,W,2);const s3=pitSetup(Rc);s3.strip(b-1,b,-W,W,2);
- for(const [s,tex] of [[s1,hazard],[s2,white],[s3,white]]){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(s.pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(s.uv,2));g.setIndex(s.ind);g.computeVertexNormals();
-  const m=new THREE.Mesh(g,new THREE.MeshLambertMaterial({map:tex,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3}));m.frustumCulled=false;m.userData.pit=1;Rc.scene.add(m)}
-}
-P.pitSetup=Rc=>{if(endur(Rc)){try{buildPit(Rc)}catch(e){console.warn('pit',e)}}};
+function pitSetup(Rc){const T=Rc.T,a=14,b=a+Math.ceil(64/T.sp);Rc.pit={a,b,mid:Math.round((a+b)/2)}}
+P.pitSetup=Rc=>{if(endur(Rc))pitSetup(Rc)};
 
 /* ---------- per-frame state ---------- */
 const needOf=c=>Math.max(1-(c.tyre==null?1:c.tyre),1-(c.fuel==null?1:c.fuel));
@@ -50,10 +35,11 @@ function tick(Rc,dt){const T=Rc.T,en=endur(Rc),pit=Rc.pit,N=T.N;
   if(live){c.tyre=Math.max(0,c.tyre-rate*dt*(c.human?1:.6));c.fuel=Math.max(0,c.fuel-.0019*(.35+.65*inp.th)*dt*(c.human?1:.8))}
   /* pit zone */
   const inZ=pit&&c.idx>=pit.a&&c.idx<=pit.b&&c.sp<80;c.inPit=inZ;
-  if(inZ&&c.human){
+  if(c.human){
    if(c.pitSvc){c.pitT+=dt;if(c.pitT>=c.pitNeed){c.tyre=1;c.fuel=1;c.pitSvc=false;c.pitDone=true;c.pitCount=(c.pitCount||0)+1;P.sfx('buy')}}
    else if(!c.pitDone&&c.sp<2.2&&needOf(c)>.04){c.pitSvc=true;c.pitT=0;c.pitNeed=1.3+needOf(c)*3.2;P.sfx('click')}
-  }else if(!inZ){c.pitSvc=false;c.pitDone=false}
+   if(c.sp>6)c.pitDone=false;
+  }
   if(c.pitSvc&&!c.human)c.pitSvc=false;
  }}
 P.raceTick=tick;
@@ -78,11 +64,10 @@ hudUpdate=()=>{hudOld();const Rc=RACE;if(!Rc)return;const en=endur(Rc);
   const dr=e.querySelector('.dr');dr.style.opacity=c.draft>.12?Math.min(1,c.draft*1.6):0;
   let msg='';
   if(en&&Rc.state==='race'&&!c.fin){
-   if(c.fuel<=0)msg='OUT OF FUEL - PIT';
+   if(c.fuel<=0)msg='OUT OF FUEL - STOP TO REFUEL';
    else if(c.pitSvc)msg='SERVICING '+Math.max(0,c.pitNeed-c.pitT).toFixed(1)+'s';
-   else if(c.inPit&&needOf(c)>.04&&!c.pitDone)msg='STOP IN THE LANE TO SERVICE';
-   else if(c.tyre<.2)msg='TYRES GONE - PIT';
-   else if(c.fuel<.12)msg='LOW FUEL - PIT';}
+   else if(c.tyre<.2)msg='TYRES GONE - STOP TO CHANGE';
+   else if(c.fuel<.12)msg='LOW FUEL - STOP TO REFUEL';}
   const pr=e.querySelector('.pr');pr.textContent=msg;pr.style.opacity=msg?1:0})};
 
 /* ---------- engage ---------- */
