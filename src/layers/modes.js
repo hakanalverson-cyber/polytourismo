@@ -201,7 +201,7 @@ P.showResults=function(){const Rc=RACE,cfg=Rc.cfg,N=Rc.T.N,humans=Rc.cars.filter
 const SEGS=36;
 const HUDHTML=`<div class="h8top"><div class="h8pos"><b>1</b><i>ST</i><span>/6</span></div><div class="h8plate"><div class="lap"></div><div class="raceTime"></div><div class="bl"></div></div></div>
 <div class="h8mode"></div>
-<div class="h8spd"><div class="gnum"><small>GEAR</small><b>1</b><div class="pips"><i></i><i></i><i></i><i></i></div></div><div class="spdmain"><div class="dg"><b class="rdot"></b><canvas width="17" height="7"></canvas><i>KM/H</i></div><div class="segs"></div><div class="ghint"></div><div class="cond"></div></div></div>
+<div class="h8spd"><div class="gnum"><small>GEAR</small><b>1</b><div class="pips"><i></i><i></i><i></i><i></i></div></div><div class="spdmain"><div class="dg"><b class="rdot"></b><canvas width="17" height="7"></canvas><i>KM/H</i></div><div class="segs"></div><div class="sub"><div class="ghint"></div><div class="cond"></div></div></div></div>
 <div class="h8warn raceWarning"></div><div class="h8pop"></div><div class="h8fin"></div>`;
 hudUpdate=()=>{const Rc=RACE,T=Rc.T;
  const order=[...Rc.cars].sort((a,b)=>(b.fin?1e6-b.finT:0)-(a.fin?1e6-a.finT:0)||b.unw-a.unw);
@@ -211,7 +211,7 @@ hudUpdate=()=>{const Rc=RACE,T=Rc.T;
   const s=clamp(Math.min(r[2]*innerWidth/860,r[3]*innerHeight/580),.46,1.15);e.style.setProperty('--s',s);
   const q=k=>e.querySelector(k),st=c.cs,mt=c.mt||MATS.road;
   const gt=P.gearTops(st).map(v=>v*3.6),NG=gt.length,topH=gt[NG-1],kmh=Math.round(c.sp*3.6),maxK=Math.ceil(topH/10)*10+10,gx=c.gear|0;
-  q('.h8top').style.top=(10+gi*94*s)+'px';{const sp=e.querySelector('.h8spd');sp.style.right=(12+(gi%2)*(390*s))+'px';sp.style.bottom=(12+Math.floor(gi/2)*130*s)+'px'}
+  q('.h8top').style.top=(10+gi*94*s)+'px';{const sp=e.querySelector('.h8spd');sp.style.right=(12+(gi%2)*(236*s))+'px';sp.style.bottom=(12+Math.floor(gi/2)*84*s)+'px'}
   const cut=Rc.mode==='cutup',lap=clamp(Math.floor(c.unw/T.N)+1,1,Rc.laps);
   q('.h8pos').style.display=cut?'none':'';
   if(!cut){const pl=order.indexOf(c)+1,fp=c.fin?c.place:pl;q('.h8pos b').textContent=fp;q('.h8pos i').textContent=ord(fp).replace(/\d/g,'');q('.h8pos span').textContent='/'+Rc.cars.length}

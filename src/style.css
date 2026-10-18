@@ -318,3 +318,17 @@ body:after{background:repeating-linear-gradient(0deg,#00000010 0 1px,transparent
 .h9ex .dr{position:absolute;left:16px;bottom:66px;font:700 10px var(--mn);letter-spacing:.3em;color:#7fe0a6;opacity:0;transition:opacity .2s}
 .h9ex .pr{position:absolute;left:0;right:0;top:30%;text-align:center;font:italic 800 18px var(--hd,var(--mn));letter-spacing:.14em;color:#f2c76b;text-shadow:0 2px 0 #000a;opacity:0;white-space:nowrap}
 .h9ex .gd{position:absolute;left:16px;bottom:88px;font:700 12px var(--mn);letter-spacing:.2em;color:#9fe8ff;opacity:0}.h9ex .gd.up{color:#7fe0a6}.h9ex .gd.dn{color:#ef6a5a}
+
+/* v9 compact gauge */
+.h8spd{padding:4px 9px 5px 6px;gap:8px;border-bottom:2px solid var(--ac);align-items:center}
+.gnum{padding:0 9px 0 3px;min-width:34px;display:flex;flex-direction:column;align-items:center}
+.gnum small{display:none}.gnum b{font-size:30px;line-height:1}
+.pips{margin-top:3px;gap:2px;width:100%}.pips i{height:3px}
+.spdmain{padding:0;width:148px}
+.dg{gap:6px}.dg canvas{height:26px}.dg i{font-size:8px;letter-spacing:.14em}
+.segs{height:5px;margin-top:3px;gap:1px}
+.rdot{width:9px;height:9px;margin-right:auto}.rdot.on{box-shadow:0 0 7px #ff3b30}
+.sub{display:flex;justify-content:space-between;gap:6px;margin-top:3px;min-height:9px}
+.ghint{margin:0;min-height:0;font-size:8px;text-align:left}.cond{margin:0;font-size:8px;letter-spacing:.06em;white-space:nowrap;margin-left:auto}
+.ghint:not(:empty)+.cond{display:none}
+.h9ex .bars{width:120px;bottom:14px}.h9ex .tb i{height:4px}.h9ex .dr{bottom:68px}.h9ex .gd{bottom:86px}

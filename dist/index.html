@@ -1744,6 +1744,20 @@ body:after{background:repeating-linear-gradient(0deg,#00000010 0 1px,transparent
 .h9ex .dr{position:absolute;left:16px;bottom:66px;font:700 10px var(--mn);letter-spacing:.3em;color:#7fe0a6;opacity:0;transition:opacity .2s}
 .h9ex .pr{position:absolute;left:0;right:0;top:30%;text-align:center;font:italic 800 18px var(--hd,var(--mn));letter-spacing:.14em;color:#f2c76b;text-shadow:0 2px 0 #000a;opacity:0;white-space:nowrap}
 .h9ex .gd{position:absolute;left:16px;bottom:88px;font:700 12px var(--mn);letter-spacing:.2em;color:#9fe8ff;opacity:0}.h9ex .gd.up{color:#7fe0a6}.h9ex .gd.dn{color:#ef6a5a}
+
+/* v9 compact gauge */
+.h8spd{padding:4px 9px 5px 6px;gap:8px;border-bottom:2px solid var(--ac);align-items:center}
+.gnum{padding:0 9px 0 3px;min-width:34px;display:flex;flex-direction:column;align-items:center}
+.gnum small{display:none}.gnum b{font-size:30px;line-height:1}
+.pips{margin-top:3px;gap:2px;width:100%}.pips i{height:3px}
+.spdmain{padding:0;width:148px}
+.dg{gap:6px}.dg canvas{height:26px}.dg i{font-size:8px;letter-spacing:.14em}
+.segs{height:5px;margin-top:3px;gap:1px}
+.rdot{width:9px;height:9px;margin-right:auto}.rdot.on{box-shadow:0 0 7px #ff3b30}
+.sub{display:flex;justify-content:space-between;gap:6px;margin-top:3px;min-height:9px}
+.ghint{margin:0;min-height:0;font-size:8px;text-align:left}.cond{margin:0;font-size:8px;letter-spacing:.06em;white-space:nowrap;margin-left:auto}
+.ghint:not(:empty)+.cond{display:none}
+.h9ex .bars{width:120px;bottom:14px}.h9ex .tb i{height:4px}.h9ex .dr{bottom:68px}.h9ex .gd{bottom:86px}
 </style><script>
 /* ===== Poly Tourismo v8 layer: core (economy, gears, AI, race flow, modes) ===== */
 (function v8core(){
@@ -2324,7 +2338,7 @@ P.showResults=function(){const Rc=RACE,cfg=Rc.cfg,N=Rc.T.N,humans=Rc.cars.filter
 const SEGS=36;
 const HUDHTML=`<div class="h8top"><div class="h8pos"><b>1</b><i>ST</i><span>/6</span></div><div class="h8plate"><div class="lap"></div><div class="raceTime"></div><div class="bl"></div></div></div>
 <div class="h8mode"></div>
-<div class="h8spd"><div class="gnum"><small>GEAR</small><b>1</b><div class="pips"><i></i><i></i><i></i><i></i></div></div><div class="spdmain"><div class="dg"><b class="rdot"></b><canvas width="17" height="7"></canvas><i>KM/H</i></div><div class="segs"></div><div class="ghint"></div><div class="cond"></div></div></div>
+<div class="h8spd"><div class="gnum"><small>GEAR</small><b>1</b><div class="pips"><i></i><i></i><i></i><i></i></div></div><div class="spdmain"><div class="dg"><b class="rdot"></b><canvas width="17" height="7"></canvas><i>KM/H</i></div><div class="segs"></div><div class="sub"><div class="ghint"></div><div class="cond"></div></div></div></div>
 <div class="h8warn raceWarning"></div><div class="h8pop"></div><div class="h8fin"></div>`;
 hudUpdate=()=>{const Rc=RACE,T=Rc.T;
  const order=[...Rc.cars].sort((a,b)=>(b.fin?1e6-b.finT:0)-(a.fin?1e6-a.finT:0)||b.unw-a.unw);
@@ -2334,7 +2348,7 @@ hudUpdate=()=>{const Rc=RACE,T=Rc.T;
   const s=clamp(Math.min(r[2]*innerWidth/860,r[3]*innerHeight/580),.46,1.15);e.style.setProperty('--s',s);
   const q=k=>e.querySelector(k),st=c.cs,mt=c.mt||MATS.road;
   const gt=P.gearTops(st).map(v=>v*3.6),NG=gt.length,topH=gt[NG-1],kmh=Math.round(c.sp*3.6),maxK=Math.ceil(topH/10)*10+10,gx=c.gear|0;
-  q('.h8top').style.top=(10+gi*94*s)+'px';{const sp=e.querySelector('.h8spd');sp.style.right=(12+(gi%2)*(390*s))+'px';sp.style.bottom=(12+Math.floor(gi/2)*130*s)+'px'}
+  q('.h8top').style.top=(10+gi*94*s)+'px';{const sp=e.querySelector('.h8spd');sp.style.right=(12+(gi%2)*(236*s))+'px';sp.style.bottom=(12+Math.floor(gi/2)*84*s)+'px'}
   const cut=Rc.mode==='cutup',lap=clamp(Math.floor(c.unw/T.N)+1,1,Rc.laps);
   q('.h8pos').style.display=cut?'none':'';
   if(!cut){const pl=order.indexOf(c)+1,fp=c.fin?c.place:pl;q('.h8pos b').textContent=fp;q('.h8pos i').textContent=ord(fp).replace(/\d/g,'');q('.h8pos span').textContent='/'+Rc.cars.length}
