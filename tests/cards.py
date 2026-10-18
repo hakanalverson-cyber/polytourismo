@@ -1,0 +1,2 @@
+from shot import run,W
+run(W+'/Poly-Tourismo.html',[('wait',1200),('js',"(()=>{show('s8cards');return 1})()"),('wait',500),('js',"(()=>{document.querySelector('[data-m=ta]').dispatchEvent(new MouseEvent('mouseenter'));return 1})()"),('wait',400),('shot','ta'),('js',"(()=>{document.querySelector('[data-m=elim]').dispatchEvent(new MouseEvent('mouseenter'));return 1})()"),('wait',400),('shot','elim')],'cd')
