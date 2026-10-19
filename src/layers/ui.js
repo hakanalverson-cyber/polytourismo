@@ -48,11 +48,13 @@ const IC={
  ca(){const p=pxCanvas(48),W='#e6e9ee',Y='#f2c76b',D='#b8923f',S='#566070',B='#c98a5a',L='#c9d1db';
   /* winding road with three milestone medals (bronze, silver, gold) and a finish flag */
   const pts=[[6,42],[10,40],[16,39],[22,38],[28,35],[32,30],[30,25],[24,22],[18,19],[16,14],[20,9],[26,7],[32,6]];
-  for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1];for(let t=0;t<=1;t+=.1){const x=Math.round(a[0]+(b[0]-a[0])*t),y=Math.round(a[1]+(b[1]-a[1])*t);p.r(x-2,y-2,5,5,'#2a3340')}}
+  for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1];for(let t=0;t<=1;t+=.1){const x=Math.round(a[0]+(b[0]-a[0])*t),y=Math.round(a[1]+(b[1]-a[1])*t);p.r(x-1,y-1,3,3,'#3a4556')}}
   for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1];if(i%2===0){const x=Math.round((a[0]+b[0])/2),y=Math.round((a[1]+b[1])/2);p.r(x,y,2,2,'#7b8696')}}
   const medal=(x,y,c)=>{p.circ(x,y,4,c,true);p.r(x-1,y-1,2,2,'#ffffff55')};
   medal(22,38,B);medal(30,25,L);medal(18,19,Y);
-  p.r(34,3,1,12,W);p.r(35,3,6,3,Y);p.r(35,6,5,3,Y);p.r(35,9,3,2,Y);
+  p.r(33,2,2,16,W);p.r(33,17,2,1,S);
+  p.r(34,1,12,10,'#ffffff');
+  for(let j=0;j<4;j++)for(let i=0;i<5;i++){const wv=i===1||i===3?1:0;p.r(35+i*2,2+j*2+wv,2,2,(i+j)&1?'#05070a':'#ffffff')}
   return p.cv}
 };
 const evIcon={race:'<svg class="ic" viewBox="0 0 22 22"><path d="M4 20V3h2v2h12l-3 4 3 4H6v7z" fill="#e6e9ee"/></svg>',rally:'<svg class="ic" viewBox="0 0 22 22"><path d="M2 18l7-11 4 6 3-3 4 8z" fill="#c9a36a"/><rect x="16" y="3" width="3" height="3" fill="#f2c76b"/></svg>',cutup:'<svg class="ic" viewBox="0 0 22 22"><rect x="2" y="8" width="8" height="5" fill="#6a7586"/><rect x="11" y="13" width="9" height="6" fill="#f1f3f5"/><path d="M12 4l6-2" stroke="#f2c76b" stroke-width="2"/></svg>'};
