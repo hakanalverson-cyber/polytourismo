@@ -88,7 +88,7 @@ Tests: `tests/stages_check.py` (geometry), `tests/stages_laps.py` (AI laps), `te
 - Replay after each run (chase / hood / TV / heli cameras, scrub, speed 0.25-4x).
 
 ### Rally controls and terrain (v9)
-- Rally cars use real gearboxes (6-9 speeds, manual): P1 `E` up / `Q` down, `Space` handbrake, `C` camera (chase, hood, bumper, far chase). P2: `.` `,` shift, Right Shift handbrake, `/` camera. P3: `O` `U`, `M`, `P`. P4: `Y` `R`, `B`, `V`. Auto-shift in Settings still works.
+- Rally cars use real gearboxes (6-9 speeds, manual): `E` up / `Q` down, `Space` handbrake, `C` camera (chase, hood, bumper, far chase). Everyone uses these same keys because drivers take turns. Auto-shift in Settings still works.
 - Softer suspension in Rally (body heave over dips, more roll).
 - Stages have dips, crests and bumps, short pinch points (~4.4 m wide), mountains pushed clear of the roads, and the start line and checkpoints sit on straight, flat ground.
 - Tutorial part 2 covers the rally controls; the briefing and prep screens list them per player.
