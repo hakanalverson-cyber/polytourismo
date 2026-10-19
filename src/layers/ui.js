@@ -219,7 +219,7 @@ function renderSetup(){const m=ST.mode;$('suTitle').innerHTML=MODE_NAME[m];
  $('suHint').textContent=m==='rally'?'One car on the stage at a time &middot; pass the controller between runs &middot; fastest total wins':m==='ta'?'W / S + A / D &middot; double-tap W up, S down to shift':'P1 WASD &middot; P2 arrows &middot; P3 IJKL &middot; P4 TFGH';$('suHint').innerHTML=$('suHint').textContent}
 /* custom driver names: trimmed, 12 chars, unique across players */
 function cleanName(p,np){const nm=(ST.names||[])[p];let v=(nm||'').replace(/[<>&"]/g,'').trim().slice(0,12);if(!v)return null;for(let q=0;q<p;q++){const o=((ST.names||[])[q]||'').trim().slice(0,12);if(o&&o.toLowerCase()===v.toLowerCase())v=v.slice(0,10)+(p+1)}return v}
-$('suGo').onclick=()=>{if(ST.mode==='rally'&&ST.rstep!==2){ST.rstep=2;P.sfx('select');renderSetup();return}
+$('suGo').onclick=()=>{if(ST.mode==='rally'&&ST.rstep!==2){P.sfx('select');openShow('garage',{player:0,cap:null,ret:'s8setup',rally:true,flow:true});return}
  const m=ST.mode,d=D[ST.track],np=m==='ta'?1:ST.players,humans=[];for(let p=0;p<np;p++){const s=selCar(p);humans.push({id:s.id,alt:s.alt,name:cleanName(p)})}
  const tod=effTod();let cfg;
  const endur=ST.endurS==='1'?true:ST.endurS==='0'?false:undefined;
@@ -331,9 +331,10 @@ function drawShow(dt){studioOn();ensureStudio();const car=BYID[SR.id],idx=P.mode
  const key=idx+'|'+(window.PT7&&window.PT7.photos[idx]?1:0);if(key!==lastPhotoKey&&CAR_MODELS[idx]){lastPhotoKey=key;fillPhotos(idx)}}
 function fillPhotos(idx){const box=$('shPhotos');if(!box)return;let ph=window.PT7&&(window.PT7.photos[idx]||(()=>{try{return window.PT7.makePhotos(idx)}catch(e){return null}})());box.innerHTML='';
  for(let i=0;i<3;i++){const cv=document.createElement('canvas');cv.width=96;cv.height=60;const g=cv.getContext('2d');g.fillStyle='#14181d';g.fillRect(0,0,96,60);if(ph&&ph[i]){try{g.drawImage(ph[i],0,0,96,60)}catch(e){}}box.appendChild(cv)}}
-function openShow(kind,o){SR.sec=0;P._ro=!!o.rally&&kind==='garage';SR.lv=false;SR.kind=kind;SR.player=o.player||0;SR.cap=o.cap==null?null:o.cap;SR.ret=o.ret||'menu';SR.rally=!!o.rally;
+function openShow(kind,o){SR.sec=0;P._ro=!!o.rally&&kind==='garage';SR.lv=false;SR.kind=kind;SR.player=o.player||0;SR.cap=o.cap==null?null:o.cap;SR.ret=o.ret||'menu';SR.rally=!!o.rally;SR.flow=!!o.flow;
  const list=showList();if(kind==='garage'){const s=SR.rally?P.rallySel(SR.player):P.SV().sel[SR.player];const ok=list.find(c=>c.id===s.id&&!c.off);const f=ok||list.find(c=>!c.off)||list[0];SR.id=f.id;SR.alt=(ok&&P.owns(f.id,s.alt))?s.alt:(P.owns(f.id,0)?0:1)}
  else{if(!BYID[SR.id])SR.id='merc';if(SR.alt&&!P.owns(SR.id,1))SR.alt=0}
+ if(SR.flow){SR.cat=BYID[SR.id].rdiv||'WRC';SR.sec=1}
  renderShow();show('s8show');}
 function showList(){const sv=P.SV();let l=SORTED.map(c=>({...c,off:false}));if(SR.rally&&SR.kind==='garage')return l.filter(c=>P.RALLY_CARS.includes(c.id));l=l.filter(c=>!c.rallyOnly);if(SR.kind==='garage'){l=l.filter(c=>(sv.owned[c.id]||0)>0);l.forEach(c=>{c.off=SR.cap!=null&&CLS.indexOf(c.cls)>CLS.indexOf(SR.cap)});if(!l.length)l=[{...BYID.merc,off:false}]}return l}
 function statBars(c,tn){const f=tn?P.tuneFx(tn,false):{top:1,acc:1,grip:1,brk:1},fg=tn?P.tuneFx(tn,true):{grip:1};
@@ -353,7 +354,7 @@ function tuneHTML(car){const t=P.tuneGet(car.id,SR.alt);
  return `<div class="tune"><div class="th"><b>TUNING</b><button class="btn sm" id="tuReset"><span>Reset</span></button></div>`+P.TUNE.map(d=>{const v=t[d.k],pips=[];for(let i=-d.r;i<=d.r;i++)pips.push(`<i class="${i===0?'ctr ':''}${(v>0&&i>0&&i<=v)||(v<0&&i<0&&i>=v)?'on':''}"></i>`);
   return `<div class="tr"><span>${d.n}</span><button class="btn sm" data-k="${d.k}" data-d="-1"><span>&lsaquo;</span></button><div class="pp5">${pips.join('')}</div><button class="btn sm" data-k="${d.k}" data-d="1"><span>&rsaquo;</span></button><em>${v===0?'STOCK':v<0?d.lo:d.hi}${v&&d.r>1?' '+Math.abs(v):''}</em></div>`}).join('')+`<div class="tn">Applies to races &amp; events. Time Attack always runs stock so medals stay fair.</div></div>`}
 function renderShow(){SR.alt=0;const kind=SR.kind,sv=P.SV(),list=showList(),car=BYID[SR.id],owned=P.owns(car.id,0),ownAlt=P.owns(car.id,1);
- $('shTitle').innerHTML=kind==='garage'?(SR.rally?'RALLY <em>GARAGE</em>':'YOUR <em>GARAGE</em>'):'BRAND <em>CENTRAL</em>';$('shSub').textContent=kind==='garage'?(SR.rally?'Rally-spec all-wheel-drive cars with gravel tyres / free to use':(SR.cap?'Class '+SR.cap+' and below':'')):'Buy cars';
+ $('shTitle').innerHTML=kind==='garage'?(SR.rally?'RALLY <em>GARAGE</em>':'YOUR <em>GARAGE</em>'):'BRAND <em>CENTRAL</em>';$('shSub').textContent=kind==='garage'?(SR.flow?(D[ST.track].name+' · '+(Math.round(tr(ST.track).L)*(ST.rlaps||1)/1000).toFixed(1)+' km · '+(ST.rlaps||1)+' lap'+((ST.rlaps||1)>1?'s':'')+' · '+((P.WX[ST.wx||'clear']||{n:'CLEAR'}).n)+' · '+((P.TOD[effTod()]||{n:''}).n)+' · '+ST.players+' driver'+(ST.players>1?'s':'')):SR.rally?'Rally-spec all-wheel-drive cars with gravel tyres / free to use':(SR.cap?'Class '+SR.cap+' and below':'')):'Buy cars';
  const RG=SR.rally&&kind==='garage',dc=c=>RG?c.rdiv:c.cat,cats=RG?['WRC','CASUAL']:['ALL',...(P.CATS||[]),...(kind==='brand'?['OWNED']:[])],cnt=k=>list.filter(c=>k==='ALL'||(k==='OWNED'?(sv.owned[c.id]||0)>0:dc(c)===k)).length;
  if(!cats.includes(SR.cat))SR.cat=cats[0];
  const vis=list.filter(c=>SR.cat==='ALL'||(SR.cat==='OWNED'?(sv.owned[c.id]||0)>0:dc(c)===SR.cat));
@@ -369,7 +370,7 @@ const secMode=true;let h='',last=null;
  $$('#shList .secback',root).forEach(b=>b.onclick=()=>{SR.sec=0;P.sfx('select');renderShow();$('shList').scrollTop=0});
  const sel=$$('#shList .ci.sel',root)[0];if(sel)sel.scrollIntoView({block:'nearest'});
  const tn=kind==='garage'&&owned?P.tuneGet(car.id,SR.alt):null,sb=statBars(car,tn),bars=sb.bars,gt=sb.gt;
- $('shStat').innerHTML=`<div class="nm">${car.name}${SR.alt?' <span style="color:var(--ac2);font-size:.6em">ALT</span>':''}</div><div class="tp">${car.type} &middot; ${car.drive}</div>
+ $('shStat').innerHTML=`<div class="nm">${car.name}${SR.alt?' <span style="color:var(--ac2);font-size:.6em">ALT</span>':''}</div><div class="tp">${car.type} &middot; ${car.drive}</div>${SR.flow?`<input id="shNm" class="nmi" maxlength="12" spellcheck="false" placeholder="Name (P${SR.player+1})" value="${((ST.names||[])[SR.player]||'').replace(/[<>&"]/g,'')}">`:''}
  <div class="pp"><small>Perf.<br>points</small><b>${P.pp(car)}</b><span class="cls ${car.cls}">${car.cls}</span></div>
  ${bars.map(barHTML).join('')}
  ${fxBoth(car)}
@@ -389,11 +390,14 @@ const secMode=true;let h='',last=null;
   if(altOwn){act.innerHTML='<span>Owned</span>';act.classList.add('off')}
   else if(SR.alt&&!owned){act.innerHTML='<span>Buy car first</span>';act.classList.add('off')}
   else{act.innerHTML='<span>Buy '+fmtCr(price)+'</span>';if(sv.cr<price){act.classList.add('off');act.innerHTML='<span>Need '+fmtCr(price-sv.cr)+' more</span>'}}}
- else{const off=list.find(c=>c.id===car.id).off;act.classList.toggle('off',off||!altOwn);act.innerHTML='<span>'+(off?'Class cap':altOwn?'Select':'Locked')+'</span>'}
+ else{const off=list.find(c=>c.id===car.id).off;act.classList.toggle('off',off||!altOwn);act.innerHTML='<span>'+(off?'Class cap':altOwn?(SR.flow?(SR.player<ST.players-1?'Next driver >':'Start stage'):'Select'):'Locked')+'</span>'}
  $$('.crv',root).forEach(e=>e.textContent=fmtCr(sv.cr))}
+$('shStat').addEventListener('input',e=>{if(e.target.id==='shNm')(ST.names=ST.names||[])[SR.player]=e.target.value});
 $('shAct').onclick=()=>{const car=BYID[SR.id];
  if(SR.kind==='brand'){if(P.buy(car.id,SR.alt)){P.sfx('buy');const f=$('shFlash');f.textContent='Purchased / '+car.name+(SR.alt?' alt':'');f.classList.remove('on');void f.offsetWidth;f.classList.add('on');renderShow()}}
- else{const it=showList().find(c=>c.id===car.id);if(it.off||!P.owns(car.id,SR.alt))return;if(SR.rally){const sv=P.SV();(sv.rsel=sv.rsel||[])[SR.player]={id:car.id,alt:SR.alt?1:0};P.save()}else P.setSel(SR.player,car.id,SR.alt);P.sfx('select');goBack.s8show();}};
+ else{const it=showList().find(c=>c.id===car.id);if(it.off||!P.owns(car.id,SR.alt))return;if(SR.rally){const sv=P.SV();(sv.rsel=sv.rsel||[])[SR.player]={id:car.id,alt:SR.alt?1:0};P.save()}else P.setSel(SR.player,car.id,SR.alt);P.sfx('select');
+  if(SR.flow){if(SR.player<ST.players-1){openShow('garage',{player:SR.player+1,cap:null,ret:'s8setup',rally:true,flow:true});return}ST.rstep=2;$('suGo').click();ST.rstep=1;return}
+  goBack.s8show();}};
 (function(){const el=$('s8show');let lx=0;el.addEventListener('pointerdown',e=>{if(e.target.closest('.lst,.stat,.bot,.hdr'))return;SR.drag=true;lx=e.clientX;el.setPointerCapture(e.pointerId)});el.addEventListener('pointermove',e=>{if(!SR.drag)return;const d=e.clientX-lx;lx=e.clientX;SR.ang+=d*.01;SR.vel=d*.5});el.addEventListener('pointerup',()=>{SR.drag=false});el.addEventListener('pointercancel',()=>{SR.drag=false})})();
 
 /* ================= RESULTS ================= */
@@ -418,7 +422,7 @@ function resContinue(){const cfg=RES&&RES.cfg;P.cleanupRace();if(cfg&&cfg.ev){if
 let cheatBuf='';
 addEventListener('keydown',e=>{
  if(scr==='s8cards'){if(e.code==='ArrowRight'||e.code==='KeyD')setFoc(foc+1);else if(e.code==='ArrowLeft'||e.code==='KeyA')setFoc(foc-1);else if(/^Digit[1-6]$/.test(e.code))pickMode($$('.card',root)[+e.code[5]-1].dataset.m);else if(e.code==='Enter'||e.code==='Space')pickMode($$('.card',root)[foc].dataset.m);return}
- if(scr==='s8show'){if(SR.kind==='brand'){cheatBuf=(cheatBuf+(e.key.length===1?e.key.toLowerCase():'')).slice(-13);if(cheatBuf.endsWith('hakannowant')){cheatBuf='';const sv=P.SV();sv.owned={merc:1};sv.sel=sv.sel.map(()=>({id:'merc',alt:0}));P.save();SR.id='merc';SR.alt=0;renderShow();return}
+ if(scr==='s8show'){if(e.target&&e.target.tagName==='INPUT')return;if(SR.kind==='brand'){cheatBuf=(cheatBuf+(e.key.length===1?e.key.toLowerCase():'')).slice(-13);if(cheatBuf.endsWith('hakannowant')){cheatBuf='';const sv=P.SV();sv.owned={merc:1};sv.sel=sv.sel.map(()=>({id:'merc',alt:0}));P.save();SR.id='merc';SR.alt=0;renderShow();return}
   if(cheatBuf.endsWith('hakanwantsall')){cheatBuf='';const sv=P.SV();CARS.forEach(c=>{sv.owned[c.id]=3});P.save();renderShow();return}}
   const list=showList().filter(c=>!SR.sec||SR.cat==='ALL'||(SR.cat==='OWNED'?(P.SV().owned[c.id]||0)>0:(SR.rally&&SR.kind==='garage'?c.rdiv:c.cat)===SR.cat)),i=Math.max(0,list.findIndex(c=>c.id===SR.id));if(!list.length)return;if(e.code==='ArrowDown'){SR.id=list[Math.min(list.length-1,i+1)].id;SR.alt=P.owns(SR.id,SR.alt)?SR.alt:0;renderShow()}else if(e.code==='ArrowUp'){SR.id=list[Math.max(0,i-1)].id;SR.alt=P.owns(SR.id,SR.alt)?SR.alt:0;renderShow()}else if(e.code==='ArrowLeft')SR.vel-=3;else if(e.code==='ArrowRight')SR.vel+=3;else if(e.code==='Enter')$('shAct').click();return}
  if(scr==='s8setup'&&e.code==='Enter'){$('suGo').click();return}

@@ -400,42 +400,53 @@ P.stageRender=idx=>{if(RC[idx])return Promise.resolve(RC[idx]);
 /* ---------------- loading animation between the play cards and the rally setup ---------------- */
 const PR={};const sr_=P.stageRender;
 P.stageRender=idx=>{if(RC[idx])return Promise.resolve(RC[idx]);return PR[idx]||(PR[idx]=sr_(idx).then(v=>{delete PR[idx];return v}))};
-/* Urus jump scene: camera lies in the creek bed looking up while the Urus flies over the gap */
+/* loading scene: helicopter shot of your rally car running a gravel loop */
 let JS=null;
 function jumpInit(box){
  if(JS){box.appendChild(JS.cv);return JS}
- const cv=document.createElement('canvas'),r=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});r.outputEncoding=THREE.sRGBEncoding;r.setClearColor(0,0);r.setPixelRatio(1);
- const sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(80,16/9,.3,200);cam.up.set(0,0,1);cam.position.set(0,-2.8,2.2);cam.lookAt(0,8,-.5);
- sc.add(new THREE.HemisphereLight(0xffd9b0,0xb88a5a,.7));const dl=new THREE.DirectionalLight(0xffe2b8,.6);dl.position.set(-10,20,8);sc.add(dl);
- const ul=new THREE.DirectionalLight(0xffc890,2.2);ul.position.set(2,-14,4);sc.add(ul);
- const M=(c)=>new THREE.MeshStandardMaterial({color:c,roughness:.95,metalness:0,flatShading:true});
- const bed=new THREE.Mesh(new THREE.BoxGeometry(14,1,14),M(0x4a3a2a));bed.position.set(0,-3.8,0);sc.add(bed);
- const water=new THREE.Mesh(new THREE.BoxGeometry(12,.1,9),new THREE.MeshStandardMaterial({color:0x3c6f86,roughness:.25,metalness:.2,transparent:true,opacity:.85}));water.position.set(0,-3.2,-1);sc.add(water);
- const bank=(sx)=>{const g=new THREE.Mesh(new THREE.BoxGeometry(30,3.2,30),M(0x40301e));g.position.set(sx*(4.2+15),-1.6,0);sc.add(g);const tp=new THREE.Mesh(new THREE.BoxGeometry(30,.4,30),M(0x44602c));tp.position.set(sx*(4.2+15),.1,0);sc.add(tp)};bank(-1);bank(1);
- for(let i=0;i<10;i++){const k=new THREE.Mesh(new THREE.DodecahedronGeometry(.35+Math.random()*.5,0),M(0x8a8478));k.position.set((Math.random()-.5)*7,-3,-3+Math.random()*5);k.rotation.set(Math.random()*3,Math.random()*3,0);sc.add(k)}
- for(let i=0;i<14;i++){const t=new THREE.Mesh(new THREE.ConeGeometry(.07,1+Math.random()*.8,4),M(0x4d6a30));const sx=i%2?1:-1;t.position.set(sx*(3.9+Math.random()*.4),.9,-4+Math.random()*8);t.rotation.z=sx*.15;sc.add(t)}
- const car=mkCar(0xdddddd,0);car.modelIndex=15;try{attachCarModel(car)}catch(e){}
- const piv=new THREE.Group();car.g.rotation.y=Math.PI/2;piv.add(car.g);sc.add(piv);
- if(car.sh)car.sh.visible=false;
- JS={cv,r,sc,cam,piv,t:0,last:0,raf:0};box.appendChild(cv);return JS}
-const JT=2.8,JK=.06;
+ const cv=document.createElement('canvas');cv.style.cssText='width:100%;height:100%;display:block';
+ const r=new THREE.WebGLRenderer({canvas:cv,antialias:true});r.outputEncoding=THREE.sRGBEncoding;r.setPixelRatio(1);
+ const SKY=0xa9cde8,sc=new THREE.Scene();sc.background=new THREE.Color(SKY);sc.fog=new THREE.Fog(SKY,70,380);
+ const cam=new THREE.PerspectiveCamera(50,16/9,.5,1200);
+ sc.add(new THREE.HemisphereLight(0xdfeeff,0x55663a,.38));const dl=new THREE.DirectionalLight(0xffe9c4,.85);dl.position.set(60,90,40);sc.add(dl);
+ const M=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.95,metalness:0,flatShading:true},o||{}));
+ const rnd=(()=>{let x=7;return()=>{x=(x*16807)%2147483647;return x/2147483647}})();
+ const gr=new THREE.Mesh(new THREE.PlaneGeometry(1600,1600),M(0x5f8741));gr.rotation.x=-Math.PI/2;sc.add(gr);
+ const gc=[0x6a9448,0x557a3a,0x7a9a4e,0x4f7036];for(let i=0;i<70;i++){const m=new THREE.Mesh(new THREE.CircleGeometry(12+rnd()*30,7),M(gc[i%4]));m.rotation.x=-Math.PI/2;m.position.set((rnd()-.5)*520,.03+i*.0005,(rnd()-.5)*520);sc.add(m)}
+ const pts=[];const NP=9;for(let i=0;i<NP;i++){const a=i/NP*Math.PI*2,rad=75+((i*37)%5)*10;pts.push(new THREE.Vector3(Math.cos(a)*rad*1.25,0,Math.sin(a)*rad))}
+ const curve=new THREE.CatmullRomCurve3(pts,true,'catmullrom',.5),CL=curve.getLength();
+ const ribbon=(w,y,col,off)=>{const N=360,pos=[],idx=[];for(let i=0;i<=N;i++){const u=i/N,p=curve.getPointAt(u%1),t=curve.getTangentAt(u%1),nx=-t.z,nz=t.x;pos.push(p.x+nx*(off-w/2),y,p.z+nz*(off-w/2),p.x+nx*(off+w/2),y,p.z+nz*(off+w/2));if(i<N){const k=i*2;idx.push(k,k+2,k+1,k+1,k+2,k+3)}}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();const m=new THREE.Mesh(g,M(col,{side:THREE.DoubleSide}));sc.add(m)};
+ ribbon(9.5,.05,0x8b7a52,0);ribbon(7.2,.07,0xb89c6a,0);ribbon(1.1,.09,0x8d7448,-1.6);ribbon(1.1,.09,0x8d7448,1.6);ribbon(.5,.11,0xd8c595,0);
+ const samp=[];for(let i=0;i<160;i++)samp.push(curve.getPointAt(i/160));
+ const far=p=>{for(const q of samp){const dx=q.x-p.x,dz=q.z-p.z;if(dx*dx+dz*dz<110)return false}return true};
+ const TN=260,fol=new THREE.InstancedMesh(new THREE.ConeGeometry(2.2,7,6),M(0x2f5f2e),TN),fol2=new THREE.InstancedMesh(new THREE.ConeGeometry(1.7,5,6),M(0x3f7a38),TN),trk=new THREE.InstancedMesh(new THREE.CylinderGeometry(.25,.3,1.6,5),M(0x4a3524),TN),mt=new THREE.Matrix4();
+ let n=0;for(let tries=0;tries<2000&&n<TN;tries++){const x=(rnd()-.5)*520,z=(rnd()-.5)*520,p={x,z};if(!far(p))continue;const s=.8+rnd()*.9;mt.makeScale(s,s,s);mt.setPosition(x,3.9*s,z);fol.setMatrixAt(n,mt);mt.makeScale(s,s,s);mt.setPosition(x,7.2*s,z);fol2.setMatrixAt(n,mt);mt.makeScale(s,s,s);mt.setPosition(x,.8*s,z);trk.setMatrixAt(n,mt);n++}
+ fol.count=fol2.count=trk.count=n;sc.add(fol,fol2,trk);
+ for(let i=0;i<30;i++){const a=rnd()*Math.PI*2,d=90+rnd()*220,p={x:Math.cos(a)*d,z:Math.sin(a)*d};if(!far(p))continue;const k=new THREE.Mesh(new THREE.DodecahedronGeometry(.8+rnd()*1.8,0),M(0x8a8a84));k.position.set(p.x,.5,p.z);k.rotation.set(rnd()*3,rnd()*3,0);sc.add(k)}
+ for(let i=0;i<16;i++){const a=i/16*Math.PI*2+rnd()*.3,d=560+rnd()*160,h=90+rnd()*120;const m=new THREE.Mesh(new THREE.ConeGeometry(70+rnd()*60,h,6),M(i%2?0x7f8c9b:0x8c97a3));m.position.set(Math.cos(a)*d,h/2-4,Math.sin(a)*d);sc.add(m)}
+ const car=mkCar(0xdddddd,0);car.modelIndex=-1;sc.add(car.g);
+ JS={cv,r,sc,cam,curve,CL,car,t:0,last:0,raf:0,w:0,h:0};
+ JS.setCar=mi=>{if(car.modelIndex===mi)return;if(car.visualModel)car.g.remove(car.visualModel);if(car.exhaustRig)car.g.remove(car.exhaustRig);if(car.ptRig)car.g.remove(car.ptRig);car.visualModel=null;car.ptWheels=null;car.modelIndex=mi;attachCarModel(car)};
+ box.appendChild(cv);return JS}
+function jumpDraw(J,dt){
+ const sp=26,u=(((J.t*sp)/J.CL)%1+1)%1,p=J.curve.getPointAt(u),tg=J.curve.getTangentAt(u),tg2=J.curve.getTangentAt((u+.004)%1),car=J.car;
+ const k=(tg.x*tg2.z-tg.z*tg2.x)/.004/ J.CL;
+ car.g.position.set(p.x,.8,p.z);car.g.rotation.set(0,Math.atan2(tg.x,tg.z),0);
+ try{if(typeof wheels==='function')wheels(car,sp,Math.max(-1,Math.min(1,k*140)),dt||1/60)}catch(e){}
+ const a=J.t*.32+.9,R=15,H=8.5;J.cam.position.set(p.x+Math.sin(a)*R,H,p.z+Math.cos(a)*R);J.cam.lookAt(p.x+tg.x*3,1.2,p.z+tg.z*3);
+ J.r.render(J.sc,J.cam)}
 function jumpFrame(now){
  const J=JS;if(!J||!J.on)return;J.raf=requestAnimationFrame(jumpFrame);
- const dt=Math.min(.05,(now-J.last)/1000||0);J.last=now;J.t+=dt;if(J.t>JT)J.t=0;
+ const dt=Math.max(0,Math.min(.05,(now-J.last)/1000||0));J.last=now;J.t+=dt;
  const w=J.cv.parentNode.clientWidth|0,h=J.cv.parentNode.clientHeight|0;if(w&&(J.w!==w||J.h!==h)){J.w=w;J.h=h;J.r.setSize(w,h,false);J.cam.aspect=w/h;J.cam.updateProjectionMatrix()}
- /* run-up and ramp on the left bank, flight across the creek, landing on the right bank */
- const x=-26+52*(J.t/JT);let y,pitch;const d=x+4.2;
- if(x<-9){y=0;pitch=0}else if(x<-4.2){y=(x+9)*.1;pitch=Math.atan(.1)}
- else if(x<4.4){y=.5+.6*d-.0786*d*d;pitch=Math.atan(.6-2*.0786*d)}
- else{const e=x-4.4;y=.32*Math.exp(-e*.8)*Math.abs(Math.sin(e*2.2));pitch=-.55*Math.exp(-e*.8)}
- J.piv.position.set(x,y,0);J.piv.rotation.z=pitch;J.piv.children[0].position.y=.72;
- J.r.render(J.sc,J.cam)}
-P._jumpAt=t=>{const J=JS;if(!J)return 0;J.on=false;cancelAnimationFrame(J.raf);J.t=t;J.last=performance.now();J.on=true;jumpFrame(performance.now()+16);J.on=false;cancelAnimationFrame(J.raf);return 1};
+ if(!J.w)return;jumpDraw(J,dt)}
+P._jumpAt=t=>{const J=JS;if(!J)return 0;J.on=false;cancelAnimationFrame(J.raf);const w=J.cv.parentNode.clientWidth|0,h=J.cv.parentNode.clientHeight|0;if(w){J.w=w;J.h=h;J.r.setSize(w,h,false);J.cam.aspect=w/h;J.cam.updateProjectionMatrix()}J.t=t;jumpDraw(J,1/60);return 1};
 P.rallyIntro=(open,track)=>{let e=$i('rlLoad');
  if(!e){e=document.createElement('div');e.id='rlLoad';let st='';for(let i=0;i<26;i++)st+=`<i style="top:${(Math.random()*100).toFixed(1)}%;width:${(14+Math.random()*34).toFixed(0)}vw;animation-duration:${(.55+Math.random()*.9).toFixed(2)}s;animation-delay:-${(Math.random()*1.4).toFixed(2)}s;opacity:${(.18+Math.random()*.5).toFixed(2)}"></i>`;
   e.innerHTML=`<div class="rl-streaks">${st}</div><div class="rl-jump"></div><div class="rl-lt"><small>PREPARING</small><h2>RALLY</h2><p>LOADING STAGES</p><div class="rl-pb"><u></u></div></div>`;document.body.appendChild(e)}
  e.classList.remove('on','done');void e.offsetWidth;e.classList.add('on');const t0=performance.now();
- let J=null;try{J=jumpInit(e.querySelector('.rl-jump'));J.on=true;J.t=0;J.landed=false;J.last=performance.now();cancelAnimationFrame(J.raf);J.raf=requestAnimationFrame(jumpFrame)}catch(err){console.error('jump',err)}
+ let J=null;try{J=jumpInit(e.querySelector('.rl-jump'));try{const sel=P.rallySel(0);J.setCar(P.modelOf(sel.id,0))}catch(er){console.error('loadcar',er)}J.on=true;J.t=0;J.last=performance.now();cancelAnimationFrame(J.raf);J.raf=requestAnimationFrame(jumpFrame)}catch(err){console.error('jump',err)}
  setTimeout(()=>{try{open()}catch(err){console.error(err)}
   (P.stageRender?P.stageRender(track):Promise.resolve()).catch(()=>{}).then(()=>{setTimeout(()=>{e.classList.add('done');setTimeout(()=>{e.classList.remove('on','done');if(J){J.on=false;cancelAnimationFrame(J.raf)}},650)},Math.max(0,1700-(performance.now()-t0)))})},420)};
 P.RALLYSESSION=()=>S;

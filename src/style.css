@@ -600,3 +600,9 @@ body.rallyhud .h8spd,body.rallyhud .h8pos{display:none!important}
 #s8setup .rrecap{margin:0 0 12px;padding:10px 12px;background:#f1f3f50f;border-left:3px solid #f1f3f5}
 #s8setup .rrecap b{display:block;font:700 13px var(--mn);letter-spacing:.12em;text-transform:uppercase}
 #s8setup .rrecap small{display:block;margin-top:4px;font-size:10px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase}
+
+#shStat .nmi{display:block;width:100%;margin:8px 0 2px;box-sizing:border-box;background:#0a0d11;border:1px solid #2a313b;color:#fff;font:700 11px var(--mn);letter-spacing:.14em;padding:7px 9px;text-transform:uppercase;outline:none}
+#shStat .nmi:focus{border-color:#f1f3f5}
+
+#rlLoad:before{content:"";position:absolute;inset:0 0 auto 0;height:48%;z-index:1;background:linear-gradient(180deg,#0b0f16d9,#0b0f1600);pointer-events:none}
+#rlLoad .rl-lt{z-index:2;text-shadow:0 2px 14px #000a}
