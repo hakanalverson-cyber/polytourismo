@@ -1,0 +1,4 @@
+from shot import run,W
+steps=[('wait',800),('js',"""(()=>{PT8.ui.openCards();document.querySelector('[data-m=rally]').click();PT8.ui.ST.players=1;PT8.ui.ST.track=11;PT8.ui.renderSetup();document.getElementById('suGo').click();return 1})()"""),('wait',9000),
+('js',"""(()=>{document.getElementById('rlPlay').click();const c=RACE.cars[0];c.forceAI=1;c.ai={skill:1,lat:0,name:'T'};const T=RACE.T,cp=PT8.cpsOf(T)[0]*T.sp;for(let i=0;i<60*400;i++){step(1/60);if(c.unw*T.sp>cp+15)break}return (RACE.splits||[]).length})()"""),('wait',900),('js',"""(()=>{const e=document.getElementById('rlCp');const r=e.getBoundingClientRect();return e.style.cssText+' | '+JSON.stringify([r.left,r.top,r.width,r.height])+' | '+getComputedStyle(e).opacity+' '+e.innerHTML.slice(0,80)+' tops '+[...document.querySelectorAll('.h8top')].map(x=>JSON.stringify(x.getBoundingClientRect().toJSON()).slice(0,60))})()"""),('shot','cps')]
+run(W+'/Poly-Tourismo.html',steps,'cp')

@@ -11,7 +11,7 @@ const ow0=P.owns;P.owns=(id,alt)=>P._ro&&P.RALLY_CARS.includes(id)?true:ow0(id,a
 P.rallySel=p=>{const sv=P.SV();sv.rsel=sv.rsel||[];let s=sv.rsel[p];if(!s||!P.RALLY_CARS.includes(s.id))s=sv.rsel[p]={id:P.RALLY_CARS[p%P.RALLY_CARS.length],alt:0};return s};
 /* water: grip / speed drag */
 const mul0=P.mul;
-P.mul=c=>{const m=mul0(c);if(c.human&&RACE&&RACE.cfg&&RACE.cfg.rally){const o=(c.cs&&c.cs.off)||0;if(o<.9){m.grip*=(.5+.45*.9)/(.5+.45*o);m.top*=(.78+.22*.9)/(.78+.22*o);m.acc*=(.6+.37*.9)/(.6+.37*o)}m.grip*=1.04;m.brk*=.52;if(c._hb){m.grip*=.3;m.brk*=.85;m.acc*=.8}}if(c._wet>0){const k=Math.min(1,c._wet);m.top*=1-.1*k;m.acc*=1-.18*k;m.grip*=1-.22*k;m.brk*=1-.12*k}return m};
+P.mul=c=>{const m=mul0(c);if(c.human&&RACE&&RACE.cfg&&RACE.cfg.rally){const o=(c.cs&&c.cs.off)||0;if(o<.9){m.grip*=(.5+.45*.9)/(.5+.45*o);m.top*=(.78+.22*.9)/(.78+.22*o);m.acc*=(.6+.37*.9)/(.6+.37*o)}m.grip*=.74*(1-Math.min(.2,c.sp/110));m.top*=1.06;m.acc*=1.1;m.brk*=.52;{const dm=c.dmg||0;if(dm>0){m.acc*=1-.5*Math.pow(dm,1.2);m.top*=1-.32*dm;m.grip*=1-.14*dm;m.brk*=1-.3*dm}}if(c._hb){m.grip*=.3;m.brk*=.85;m.acc*=.8}}if(c._wet>0){const k=Math.min(1,c._wet);m.top*=1-.1*k;m.acc*=1-.18*k;m.grip*=1-.22*k;m.brk*=1-.12*k}return m};
 function waterDepth(T,c){const F=T.fords;if(!F||!F.length)return 0;
  for(const f of F){const dx=c.x-f.x,dz=c.z-f.z,s=dx*f.s+dz*f.c;if(s>f.w+3||s<-f.w-3)continue;const l=dx*f.c-dz*f.s;if(Math.abs(l)>f.L*.8)continue;
   const g=T.terr?T.terr(c.x,c.z):f.y;const d=f.yw-Math.min(g,c.onRoad&&c.idx!=null?T.y[c.idx]:g);if(d>.1&&c.y-f.yw<1.1)return Math.min(1,d/.6)}
@@ -47,7 +47,7 @@ function roost(c,Rc,dt){const T=Rc.T;if(!c.human||!T.d.gravel||c.exp>0||c.respT>
   const x=c.x+cy*WL[wi][0]+sy*WL[wi][1],z=c.z-sy*WL[wi][0]+cy*WL[wi][1],y=(w.s?w.s.h:c.y-1)+.25,b=1+(Math.random()-.5)*.2,sp=c.sp;
   P.puff(x,y,z,-sy*sp*.2+(Math.random()-.5)*3+c.vx*.1,rnd(1.2,3.2)+slide*2,-cy*sp*.2+(Math.random()-.5)*3+c.vz*.1,[bs[0]*b*1.3,bs[1]*b*1.3,bs[2]*b*1.3],rnd(1.5,2.9)*(1+slide*.5),rnd(1.4,2.5),rnd(.38,.58),-.2);
   if(Math.random()<.55)for(let k=0;k<2;k++)P.puff(x,y,z,-sy*sp*.3+(Math.random()-.5)*6,rnd(2.8,6.5),-cy*sp*.3+(Math.random()-.5)*6,dk,rnd(.14,.26),rnd(.6,1.1),.95,16)}}
-function fxStep(c,Rc,dt){roost(c,Rc,dt);const T=Rc.T;if(T.fords&&T.fords.length){const dep=waterDepth(T,c),was=c._wet>0;c._wet=dep;
+function fxStep(c,Rc,dt){roost(c,Rc,dt);if(c.human)smokeFx(c,Rc,dt);const T=Rc.T;if(T.fords&&T.fords.length){const dep=waterDepth(T,c),was=c._wet>0;c._wet=dep;
   if(dep>0){c._wet=dep;if(c.sp>3)splash(c,T,dt,dep);
    if(!was&&c.sp>6){if(c.human){P.sfx&&P.sfx('splash',Math.min(1,c.sp/45));Rc.shake=Math.max(Rc.shake||0,.1*Math.min(1,c.sp/40))}}
    if(c.human&&c.sp>10){c._wS=(c._wS||0)-dt;if(c._wS<=0){c._wS=.28;P.sfx&&P.sfx('splash',.18+Math.min(.3,c.sp/150))}}}
@@ -118,7 +118,7 @@ let tEl=null,tH=0;function toast(t){if(!tEl){tEl=document.createElement('div');t
 const so0=soloCam;
 soloCam=(c,dt,out)=>{so0(c,dt,out);const Rc=RACE;if(!(Rc&&Rc.cfg&&Rc.cfg.rally&&c.human)||!c.camMode||c.fin)return;
  const m=c.camMode,sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);
- if(m===1){out.p.set(c.x+sy*.55,c.y+.62,c.z+cy*.55);out.l.set(out.p.x+sy*30,out.p.y-.9,out.p.z+cy*30);out.f=78}
+ if(m===1){out.p.set(c.x+sy*1.7,c.y+.14,c.z+cy*1.7);out.l.set(out.p.x+sy*30,out.p.y-.7,out.p.z+cy*30);out.f=78}
  else if(m===2){out.p.set(c.x+sy*2.5,c.y+.12,c.z+cy*2.5);out.l.set(c.x+sy*40,c.y-.3,c.z+cy*40);out.f=84}
  else{const s_=Math.sin(c.cy),co=Math.cos(c.cy),d=13+c.sp*.12,h=5.2+c.sp*.04;out.p.set(c.x-s_*d,c.camY+h,c.z-co*d);out.l.set(c.x+s_*8,c.camY+1.2,c.z+co*8);out.f=62}};
 const sh0=show;show=function(id){if(id==='menu')rallyGears(false);if(id!=='s8show')P._ro=false;return sh0.apply(this,arguments)};
@@ -143,9 +143,9 @@ function liveElev(Rc,dt){return;const c=human(Rc);if(!c||Rc.state==='done')retur
 /* ---------------- one-player dashboard (centre bottom) ---------------- */
 let dash=null;const q$=id=>document.getElementById(id);
 function mkDash(){if(dash)return dash;dash=document.createElement('div');dash.id='rlDash';
- dash.innerHTML=`<div class="rd-row"><div class="rd-side rd-l"><div class="rd-k"><small>STAGE</small><b id="rdPct">0%</b><i class="rd-bar"><u id="rdBar"></u></i><em id="rdRem">-</em></div><div class="rd-k"><small>NEXT CHECKPOINT</small><b id="rdCp">-</b></div><div class="rd-k"><small>ELAPSED</small><b id="rdT">0:00.0</b></div></div>
- <div class="rd-c"><canvas id="rdG" width="360" height="215"></canvas><div class="rd-chips"><span id="rdHb">HANDBRAKE</span><span id="rdSh">SHIFT UP</span><span id="rdWt">WATER</span><span id="rdDr">DRIFT</span></div></div>
- <div class="rd-side rd-r"><div class="rd-k"><small>ROAD GRADE</small><b id="rdGr">0%</b></div><div class="rd-k"><small>ALTITUDE</small><b id="rdAl">0 m</b></div><div class="rd-k"><small>SURFACE</small><b id="rdSf">-</b><em id="rdCm">-</em></div></div></div>
+ dash.innerHTML=`<div class="rd-row"><div class="rd-side rd-l"><div class="rd-k"><small>STAGE</small><b id="rdPct">0%</b><i class="rd-bar"><u id="rdBar"></u></i><em id="rdRem">-</em></div><div class="rd-k"><small>NEXT CHECKPOINT</small><b id="rdCp">-</b></div></div>
+ <div class="rd-c"><canvas id="rdG" width="360" height="215"></canvas><div class="rd-chips"><span id="rdHb">HANDBRAKE</span><span id="rdSh">SHIFT UP</span><span id="rdWt">WATER</span><span id="rdDr">DRIFT</span><span id="rdPn">PENALTY</span><span id="rdDm">DAMAGE</span></div></div>
+ <div class="rd-side rd-r"><div class="rd-k"><small>ALTITUDE</small><b id="rdAl">0 m</b></div><div class="rd-k"><small>SURFACE</small><b id="rdSf">-</b><em id="rdCm">-</em></div></div></div>
  <div class="rd-bars"><label>THR<i><u id="rdTh"></u></i></label><label>BRK<i><u id="rdBr"></u></i></label><label>STR<i class="rd-st"><u id="rdSt"></u></i></label></div>`;
  document.body.appendChild(dash);return dash}
 function drawGauge(cv,o){const g=cv.getContext('2d'),w=cv.width,h=cv.height,cx=w/2,cy=h*.5,R=h*.43,a0=Math.PI*(150/180),sw=Math.PI*(240/180);g.clearRect(0,0,w,h);
@@ -161,10 +161,10 @@ function dashUpdate(Rc,c){const d=mkDash(),on=scr==='game'&&!Rc.prep&&!Rc.replay
  drawGauge(q$('rdG'),{rev,kmh,gear:gi+1,gi,NG:G.length,lim:Math.round(lim*3.6),flash:c.gearFlash>0});
  const tot=N*Rc.laps,pr=Math.max(0,Math.min(1,c.unw/tot));q$('rdPct').textContent=Math.round(pr*100)+'%';q$('rdBar').style.width=pr*100+'%';q$('rdRem').textContent=Math.max(0,(tot-c.unw)*T.sp/1000).toFixed(1)+' km left';
  const cps=P.cpsOf(T),K=cps.length,n=(Rc.splits||[]).length,lapI=Math.floor(n/K);let cpT='FINISH',cd=(Rc.laps*N-c.unw)*T.sp;if(lapI<Rc.laps&&K&&n<K*Rc.laps){cpT='CP '+(n%K+1)+' / '+(K+1);cd=(lapI*N+cps[n%K]-c.unw)*T.sp}q$('rdCp').textContent=cpT+'  '+Math.max(0,Math.round(cd))+' m';
- q$('rdT').textContent=fmt(Rc.t);const i0=c.idx||0,gr=(T.y[(i0+4)%N]-T.y[(i0-4+N)%N])/(8*T.sp)*100;q$('rdGr').textContent=(gr>=0?'+':'')+gr.toFixed(0)+'%';q$('rdGr').className=gr>6?'up':gr<-6?'dn':'';q$('rdAl').textContent=Math.round(c.y)+' m';
+ const i0=c.idx||0;q$('rdAl').textContent=Math.round(c.y)+' m';
  q$('rdSf').textContent=c._wet>0?'WATER':c.onRoad?'GRAVEL':'OFF ROAD';q$('rdCm').textContent='CAM / '+CAMS[c.camMode||0]+'  GRIP '+Math.round(((c.mt&&c.mt.grip)||1)*100)+'%';
  q$('rdTh').style.width=(c.in&&c.in.th||0)*100+'%';q$('rdBr').style.width=(c.in&&c.in.br||0)*100+'%';{const st=c.in?c.in.st:0;const u=q$('rdSt');u.style.width=Math.abs(st)*50+'%';u.style.left=st>=0?'50%':(50-Math.abs(st)*50)+'%'}
- const sh=rev>.93&&gi<G.length-1&&Rc.state==='race';q$('rdSh').className=sh?'on':'';q$('rdHb').className=c._hb?'on':'';q$('rdWt').className=c._wet>0?'on':'';q$('rdDr').className=c.drifting?'on':'';
+ const sh=rev>.93&&gi<G.length-1&&Rc.state==='race';q$('rdSh').className=sh?'on':'';q$('rdHb').className=c._hb?'on':'';q$('rdWt').className=c._wet>0?'on':'';q$('rdDr').className=c.drifting?'on':'';{const dm=q$('rdDm'),dv=Math.round((c.dmg||0)*100);dm.textContent='DAMAGE '+dv+'%';dm.style.display=dv>0?'':'none';dm.className=dv>=50?'on pn':dv>=20?'on':'';const pn=q$('rdPn');pn.textContent='PENALTY +'+(Rc.pen||0).toFixed(0)+'s';pn.style.display=Rc.pen?'':'none';pn.className='on pn'}
 }
 /* ---------------- take-turns session ---------------- */
 const lh=P.launch;let S=null;
@@ -207,11 +207,11 @@ function briefing(i){const d=S.drv[i],car=BYID[d.id],st=D[S.cfg.track];paused=tr
 function sorted(){return S.drv.filter(d=>d.time!=null).sort((a,b)=>a.time-b.time)}
 function standingsHTML(fin){const done=sorted(),lead=done.length?done[0].time:0;
  return `<table class="rt"><tr><th>Pos</th><th>Driver</th><th>Car</th><th>Time</th><th>${fin?'Gap':'Best lap'}</th></tr>`+done.map((d,i)=>`<tr class="${i===0?'hum':''}"><td class="pl">${i+1}</td><td><b style="color:${PCOL[d.p%4]}">${d.name.replace(/</g,'')}</b></td><td>${BYID[d.id].name}${d.medal>=0?` <span class="rl-med" style="background:${P.MEDALS[d.medal].col}" title="${P.MEDALS[d.medal].n}"></span>`:''}</td><td>${fmt(d.time)}</td><td style="color:var(--ac)">${fin?(i?'+'+(d.time-lead).toFixed(2):'--'):(d.best!=null?fmt(d.best):'--')}</td></tr>`).join('')+'</table>'}
-const splitsHTML=d=>d.splits&&d.splits.length?`<div class="rl-spl">${d.splits.map((t,k)=>`<span>CP${k+1}<b>${fmt(t)}</b></span>`).join('')}</div>`:'';
+const splitsHTML=d=>(d.pen?`<div class="rl-note">CUT PENALTIES / +${d.pen.toFixed(1)} s (${Math.round(d.pen/5)} cut${d.pen>5?'s':''}) included in the time</div>`:'')+(d.splits&&d.splits.length?`<div class="rl-spl">${d.splits.map((t,k)=>`<span>CP${k+1}<b>${fmt(t)}</b></span>`).join('')}</div>`:'');
 const sr0=P.showResults;
 P.showResults=function(){const Rc=RACE;if(!(Rc&&Rc.cfg&&Rc.cfg.rally&&S))return sr0.apply(this,arguments);
- const c=human(Rc),d=S.drv[S.i];d.time=c&&c.fin?c.finT:null;d.laps=(c&&c.lapT)||[];d.best=d.laps.length?Math.min(...d.laps):null;d.splits=(Rc.splits||[]).slice();
- if(d.time==null){d.time=(c&&c.finT)||9999}
+ const c=human(Rc),d=S.drv[S.i];d.pen=Rc.pen||0;d.time=c&&c.fin?c.finT+d.pen:null;d.laps=(c&&c.lapT)||[];d.best=d.laps.length?Math.min(...d.laps):null;d.splits=(Rc.splits||[]).slice();
+ if(d.time==null){d.time=((c&&c.finT)||9999)+d.pen}
  const sv=P.SV(),key=S.cfg.track+':'+S.cfg.laps;sv.ral=sv.ral||{};const rec=sv.ral[key];
  if(!rec||d.time<rec.t){sv.ral[key]={t:d.time,s:d.splits};P.save();d.pb=true}
  if(d.time<S.refT){S.refT=d.time;S.ref=d.splits}
@@ -245,15 +245,44 @@ function showFinal(){const sv=P.SV(),cfg=S.cfg,tr=cfg.track,F=S.fin,N=S.drv.leng
  $i('rlMenu').onclick=()=>{leaveFx();P.cleanupRace();S=null;show('menu')};
  const r=$i('rlRep1');if(r)r.onclick=()=>startReplay(showFinal)}
 
+/* ---------------- collisions and damage: trees, rocks and posts hurt; a hurt car smokes, pulls and loses power ---------------- */
+function crashStep(Rc,dt){const c=human(Rc);if(!c)return;const T=Rc.T;if(!T.solids||Rc.state!=='race'||c.fin||c.respT>0||c.exp>0)return;
+ if(!T._sg){const g=new Map();T.solids.forEach(s=>{const k=Math.floor(s[0]/8)+','+Math.floor(s[1]/8);if(!g.has(k))g.set(k,[]);g.get(k).push(s)});T._sg=g}
+ c.cdT=(c.cdT||0)-dt;const cx=Math.floor(c.x/8),cz=Math.floor(c.z/8);
+ for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const l=T._sg.get((cx+a)+','+(cz+b));if(!l)continue;
+  for(const s of l){const dx=c.x-s[0],dz=c.z-s[1],d=Math.hypot(dx,dz),R=s[2]+1.05;if(d>=R||d<.001)continue;const nx=dx/d,nz=dz/d,vn=c.vx*nx+c.vz*nz;
+   if(Math.abs(c.y-(T.terr?T.terr(s[0],s[1]):c.y))>3.5)continue;c.x+=nx*(R-d);c.z+=nz*(R-d);
+   if(vn<0){c.vx-=1.28*vn*nx;c.vz-=1.28*vn*nz;c.vx*=.82;c.vz*=.82;if(-vn>2.2&&c.cdT<=0){c.cdT=.35;hurt(Rc,c,-vn,nx,nz)}}}}}
+function hurt(Rc,c,v,nx,nz){const was=c.dmg||0,add=Math.min(.55,Math.pow(v/26,1.55)*.85);c.dmg=Math.min(1,was+add);c.hits=(c.hits||0)+1;Rc.shake=Math.max(Rc.shake||0,Math.min(1.2,v/14));
+ c.yaw+=(Math.random()<.5?-1:1)*Math.min(.5,v*.02);if(!c._pull)c._pull=(Math.random()<.5?-1:1);
+ if(P.sfx)P.sfx('crash');const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);
+ for(let k=0;k<10;k++)P.puff(c.x-nx*1.1,c.y+.2,c.z-nz*1.1,-nx*rnd(1,6)+rnd(-2,2),rnd(1,5),-nz*rnd(1,6)+rnd(-2,2),k%2?[1,.7,.2]:[.55,.5,.45],rnd(.12,.3),rnd(.4,.9),.95,14);
+ const lv=c.dmg>=.8?'ENGINE FAILING':c.dmg>=.5?'HEAVY DAMAGE':c.dmg>=.2?(was<.2?'ENGINE DAMAGED':''):'';if(lv&&(was<.2&&c.dmg>=.2||was<.5&&c.dmg>=.5||was<.8&&c.dmg>=.8))toast(lv)}
+function smokeFx(c,Rc,dt){const dm=c.dmg||0;if(dm<.18||c.exp>0||c.respT>0)return;const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);
+ const rate=(4+dm*26)*(c.sp>3?1:.6);c._smA=(c._smA||0)+dt*rate;
+ while(c._smA>=1){c._smA--;const dark=Math.min(1,(dm-.18)/.6),g=.62-.5*dark,hot=dm>.75;
+  P.puff(c.x+sy*1.7+rnd(-.35,.35)+(Rc.T?0:0),c.y+.25,c.z+cy*1.7+rnd(-.35,.35),c.vx*.55+rnd(-.5,.5),rnd(1.2,2.6)+dark*1.2,c.vz*.55+rnd(-.5,.5),[g,g,g*1.02],rnd(.7,1.3)*(1+dark*.9),rnd(1.1,1.8)+dark*.8,.34+dark*.3,-.35);
+  if(hot&&Math.random()<.35)P.puff(c.x+sy*1.6,c.y+.35,c.z+cy*1.6,c.vx*.5+rnd(-1,1),rnd(2,4),c.vz*.5+rnd(-1,1),[1,.55,.12],rnd(.12,.24),rnd(.5,.9),.9,-3)}
+ /* damaged steering alignment: the car pulls to one side */
+ if(dm>.25&&c.sp>8&&Rc.state==='race'&&!c.fin)c.yaw+=(c._pull||1)*dm*.045*Math.min(1,c.sp/30)*dt*8}
+/* ---------------- cut penalty: running well off the road and gaining ground adds time ---------------- */
+const CUT={gain:30,pen:5,cool:8};
+function cutCheck(Rc,dt){const c=human(Rc);if(!c||Rc.state!=='race'||c.fin||c.respT>0||c.exp>0)return;const T=Rc.T,N=T.N,i=c.idx||0;
+ const lat=(c.x-T.x[i])*Math.cos(T.psi[i])-(c.z-T.z[i])*Math.sin(T.psi[i]),off=Math.abs(lat)>T.hw[i]+2.5&&!c.onRoad,k=Rc.cut||(Rc.cut={last:c.unw,acc:0,ok:0,cd:0,n:0});
+ const d=(c.unw-k.last)*T.sp;k.last=c.unw;if(k.cd>0)k.cd-=dt;
+ let air=0;for(const w of c.m.wheels)if(!w.g)air++;
+ if(off&&air<3){if(d>0&&d<20)k.acc+=d;k.ok=0}else{k.ok+=dt;if(k.ok>1.5)k.acc=0}
+ if(k.acc>=CUT.gain&&k.cd<=0){k.acc=0;k.cd=CUT.cool;k.n++;Rc.pen=(Rc.pen||0)+CUT.pen;toast('CUT / +'+CUT.pen.toFixed(1)+' s PENALTY');if(P.sfx)P.sfx('back')}}
 /* ---------------- checkpoints ---------------- */
 function cpBox(){let e=$i('rlCp');if(!e){e=document.createElement('div');e.id='rlCp';document.body.appendChild(e)}return e}
 function cpCheck(Rc){const c=human(Rc);if(!c||Rc.state!=='race'||c.fin)return;const T=Rc.T,cps=P.cpsOf(T),K=cps.length,N=T.N;if(!K)return;
  Rc.splits=Rc.splits||[];const n=Rc.splits.length,lapI=Math.floor(n/K);if(lapI>=Rc.laps)return;const target=lapI*N+cps[n%K];
- if(c.unw>=target&&c.unw<target+N*.45){Rc.splits.push(Rc.t);
+ if(c.unw>=target&&c.unw<target+N*.45){Rc.splits.push(Rc.t+(Rc.pen||0));
   const sv=P.SV(),saved=sv.ral&&sv.ral[Rc.cfg.track+':'+Rc.cfg.laps],ref=(S&&S.ref)||(saved&&saved.s)||null,rt=ref&&ref[n];
   const el=cpBox(),k=n%K+1,lab=Rc.laps>1?` &middot; LAP ${lapI+1}`:'';
-  let dl='';if(rt!=null){const dd=Rc.t-rt;dl=`<em class="${dd<=0?'ok':'bad'}">${dd<=0?'-':'+'}${Math.abs(dd).toFixed(2)}</em>`}
-  el.innerHTML=`<small>CHECKPOINT ${k} / ${K+1}${lab}</small><b>${fmt(Rc.t)}</b>${dl}`;el.style.opacity=1;clearTimeout(el._h);el._h=setTimeout(()=>{el.style.opacity=0},3800);
+  let dl='';if(rt!=null){const dd=Rc.t+(Rc.pen||0)-rt;dl=`<em class="${dd<=0?'ok':'bad'}">${dd<=0?'-':'+'}${Math.abs(dd).toFixed(2)}</em>`}
+  const ht=document.querySelector('.h8top');if(ht){const rc=ht.getBoundingClientRect();el.style.left=rc.left+'px';el.style.top=(rc.bottom+6)+'px';const pv=ht.parentNode.style.getPropertyValue('--s');if(pv)el.style.setProperty('--s',pv)}else{el.style.left='16px';el.style.top='84px'}
+  el.innerHTML=`<div class="h8top"><div class="h8plate"><div class="lap">CHECKPOINT ${k} / ${K+1}${lab}</div><div class="raceTime">${fmt(Rc.t+(Rc.pen||0))}</div><div class="bl" style="${rt!=null?'color:'+(Rc.t+(Rc.pen||0)-rt<=0?'#7fd68a':'#ef6a5a'):''}">${rt!=null?'SPLIT '+(Rc.t+(Rc.pen||0)-rt<=0?'-':'+')+Math.abs(Rc.t+(Rc.pen||0)-rt).toFixed(2):'SPLIT --'}</div></div></div>`;el.style.opacity=1;clearTimeout(el._h);el._h=setTimeout(()=>{el.style.opacity=0},3800);
   if(c.human)P.sfx&&P.sfx('select')}}
 
 /* ---------------- prep: start-line scene with free cameras until Play ---------------- */
@@ -261,9 +290,9 @@ const prepCam=new THREE.PerspectiveCamera(48,1,.2,3500);
 function enterPrep(d,i){const Rc=RACE;if(!Rc)return;Rc.prep=true;Rc.prepT=0;Rc.shot0=(Math.random()*5)|0;Rc.shot=-1;const T=Rc.T,st=T.d,cps=P.cpsOf(T);
  let e=$i('rlPrep');if(!e){e=document.createElement('div');e.id='rlPrep';document.body.appendChild(e)}
  const car=BYID[d.id],wx=Rc.wx?Rc.wx.n:'Clear',tod=(P.TOD&&Rc.todKey&&P.TOD[Rc.todKey])?P.TOD[Rc.todKey].n:'';
- e.innerHTML=`<div class="rp-l"><small>RALLY &middot; ${S.drv.length>1?'RUN '+(i+1)+' OF '+S.drv.length:'SOLO RUN'}</small><h2>${st.name}</h2><div class="rp-c"><span>${(T.L/1000).toFixed(1)} km</span><span>${S.cfg.laps} lap${S.cfg.laps>1?'s':''}</span><span>${cps.length} checkpoints</span>${T.fords&&T.fords.length?`<span class="hot">${T.fords.length} fords</span>`:''}${T.jumps&&T.jumps.length?'<span>jump</span>':''}<span>${wx}</span></div>${ctlHTML(0)}<div id="rpElev"></div><div class="rp-d"><i style="background:${PCOL[d.p%4]}"></i><b>${d.name.replace(/</g,'')}</b><small>${car.name}${d.alt?' ALT':''} &middot; ${keyHint(0)}</small></div></div>
+ e.innerHTML=`<div class="rp-l"><small>RALLY &middot; ${S.drv.length>1?'RUN '+(i+1)+' OF '+S.drv.length:'SOLO RUN'}</small><h2>${st.name}</h2><div class="rp-c"><span>${(T.L/1000).toFixed(1)} km</span><span>${S.cfg.laps} lap${S.cfg.laps>1?'s':''}</span><span>${cps.length} checkpoints</span>${T.fords&&T.fords.length?`<span class="hot">${T.fords.length} fords</span>`:''}${T.jumps&&T.jumps.length?'<span>jump</span>':''}<span>${wx}</span></div>${ctlHTML(0)}<div class="rp-d"><i style="background:${PCOL[d.p%4]}"></i><b>${d.name.replace(/</g,'')}</b><small>${car.name}${d.alt?' ALT':''} &middot; ${keyHint(0)}</small></div></div>
  <div class="rp-r"><button class="btn go" id="rlPlay"><span>Start stage</span></button><small>Enter to start &middot; Esc to leave</small></div>`;
- e.style.display='flex';{const h=$i('rpElev');if(h)h.appendChild(P.elevGraph(T,440,92))}bodyCls('rprep',true);$i('rlPlay').onclick=startStage}
+ e.style.display='flex';bodyCls('rprep',true);$i('rlPlay').onclick=startStage}
 function startStage(){const Rc=RACE;if(!Rc||!Rc.prep)return;const hc=human(Rc);if(hc)hc.camMode=camPref[curP]||0;Rc.prep=false;bodyCls('rprep',false);const e=$i('rlPrep');if(e)e.style.display='none';dip();beep(700,.1)}
 function prepDraw(Rc,dt){const c=human(Rc),W=R.domElement.width,H=R.domElement.height;Rc.prepT+=dt;
  const sh=Math.floor(Rc.prepT/6),u=(Rc.prepT%6)/6,e=u*u*(3-2*u);if(sh!==Rc.shot){Rc.shot=sh;if(sh>0)dip()}
@@ -305,7 +334,7 @@ function replayTick(Rc,dt){const R_=Rc.replay,c=human(Rc),rec=Rc.rec,t0=rec[0][0
  if(!R_.paused&&P.dustTick)P.dustTick(Rc,dt*R_.speed);
  const f=$i('rrFill');if(f)f.style.width=(100*(R_.t-t0)/Math.max(.01,t1-t0))+'%'}
 function replayDraw(Rc,dt){const R_=Rc.replay,c=human(Rc),W=R.domElement.width,H=R.domElement.height,T=Rc.T,sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);let p,l,fov=60;
- if(R_.cam===1){p=[c.x+sy*.5,c.y+.45,c.z+cy*.5];l=[p[0]+sy*20,p[1]-.5,p[2]+cy*20];fov=74}
+ if(R_.cam===1){p=[c.x+sy*1.7,c.y+.14,c.z+cy*1.7];l=[p[0]+sy*20,p[1]-.5,p[2]+cy*20];fov=74}
  else if(R_.cam===2){const near=R_.tv&&Math.hypot(c.x-R_.tv[0],c.z-R_.tv[2])<150&&((c.x-R_.tv[0])*sy+(c.z-R_.tv[2])*cy)<32;
   if(!near){const j=(c.idx+Math.round(60/T.sp))%T.N;R_.tvs=-R_.tvs;const o=T.hw[j]+8+Math.random()*5;R_.tv=[T.x[j]+Math.cos(T.psi[j])*R_.tvs*o,T.y[j]+2.4+Math.random()*2.5,T.z[j]-Math.sin(T.psi[j])*R_.tvs*o]}
   p=R_.tv;l=[c.x,c.y+.4,c.z];fov=36}
@@ -317,23 +346,36 @@ const dr0=drawRace;
 drawRace=function(dt){const Rc=RACE;if(Rc&&Rc.prep){prepDraw(Rc,dt);return}if(Rc&&Rc.replay&&Rc.replay.cam>0){replayDraw(Rc,dt);return}return dr0.apply(this,arguments)};
 const st0=step;
 step=dt=>{const Rc=RACE;if(Rc&&Rc.prep){if(P.dustTick)P.dustTick(Rc,dt);return}if(Rc&&Rc.replay){replayTick(Rc,dt);return}
- st0(dt);if(Rc&&RACE===Rc&&Rc.cfg&&Rc.cfg.rally){record(Rc);cpCheck(Rc);liveElev(Rc,dt)}};
+ st0(dt);if(Rc&&RACE===Rc&&Rc.cfg&&Rc.cfg.rally){record(Rc);cpCheck(Rc);cutCheck(Rc,dt);crashStep(Rc,dt);liveElev(Rc,dt)}};
 addEventListener('keydown',e=>{const Rc=RACE;if(!Rc)return;
  if(Rc.prep){if(e.code==='Enter'||e.code==='Space'){e.preventDefault();e.stopImmediatePropagation();startStage()}else if(e.code==='Escape'){e.stopImmediatePropagation();const multi=S&&S.drv.length>1;leaveFx();P.cleanupRace();keysReset();if(multi){S=null;show('menu')}else{S=null;P.ui.renderSetup();show('s8setup')}}return}
  if(Rc.replay){const R_=Rc.replay;let h=true;if(e.code==='Space')$i('rrPlay').click();else if(e.code==='KeyC')cycleCam();else if(e.code==='Escape'||e.code==='Enter')exitReplay();else if(e.code==='ArrowRight')R_.t+=5;else if(e.code==='ArrowLeft')R_.t=Math.max(Rc.rec[0][0],R_.t-5);else if(/^Digit[1-5]$/.test(e.code)){$i('rlRep').querySelectorAll('[data-s]')[+e.code[5]-1].click()}else h=false;if(h){e.preventDefault();e.stopImmediatePropagation()}}},true);
 
 /* ---------------- stage map render (3D aerial of the whole stage with the route marked) ---------------- */
 const RC={};let rr=null;
-P.prewarmStages=()=>P.STAGES.reduce((p,i)=>p.then(()=>P.stageRender(i)),Promise.resolve());
+function rrInit(){if(!rr){rr=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});rr.outputEncoding=THREE.sRGBEncoding;rr.toneMapping=THREE.ACESFilmicToneMapping;rr.toneMappingExposure=1.05;rr.setPixelRatio(1)}}
+/* little pictures of the interesting places on a stage: start, fords, jump, pinch, sharpest corner, high point */
+function poiShots(sc,T){const out=[];try{rrInit();rr.setSize(320,180,false);const N=T.N,sp=T.sp,cam=new THREE.PerspectiveCamera(58,16/9,.5,6000),pl=[['START LINE',0,26,3.4,30]];
+ (T.fords||[]).slice(0,2).forEach(f=>pl.push(['WATER FORD',f.i,34,4.2,26]));
+ if(T.jumps&&T.jumps.length)pl.push(['JUMP',T.jumps[0],34,3.6,20]);
+ if(T.pinch&&T.pinch.length)pl.push(['PINCH POINT',T.pinch[0].i,24,2.6,30]);
+ const cr=corners(T).slice().sort((a,b)=>a.R-b.R)[0];if(cr)pl.push([cr.R<20?'HAIRPIN':'TIGHT CORNER',(cr.s+Math.round(cr.len/2))%N,38,12,18]);
+ let hi=0;for(let i=0;i<N;i++)if(T.y[i]>T.y[hi])hi=i;pl.push(['HIGH POINT',hi,36,6,40]);
+ for(const [n,i,back,up,ahead] of pl.slice(0,6)){const a=((i-Math.round(back/sp))%N+N)%N,b=(i+Math.round(ahead/sp))%N;cam.position.set(T.x[a],T.y[a]+up,T.z[a]);cam.lookAt(T.x[b],T.y[b]+1.2,T.z[b]);cam.updateMatrixWorld();
+  rr.render(sc,cam);const cv=document.createElement('canvas');cv.width=320;cv.height=180;cv.getContext('2d').drawImage(rr.domElement,0,0);out.push({n,c:cv})}}catch(e){console.error('poi',e)}
+ return out}
+P.poiStrip=(idx,host)=>{host.innerHTML='';P.stageRender(idx).then(img=>{if(!img||!img.pois||!host.isConnected)return;host.innerHTML='';img.pois.forEach(p=>{const f=document.createElement('figure'),c=document.createElement('canvas');c.width=320;c.height=180;c.getContext('2d').drawImage(p.c,0,0);const cap=document.createElement('figcaption');cap.textContent=p.n;f.append(c,cap);host.appendChild(f)})})};
+
+P.prewarmStages=()=>P.STAGES.reduce((p,i)=>p.then(()=>P.stageRender(i)).then(()=>new Promise(r=>setTimeout(r,700))),Promise.resolve());
 P.stageCached=idx=>RC[idx]||null;
 P.stageRender=idx=>{if(RC[idx])return Promise.resolve(RC[idx]);
  return new Promise(res=>setTimeout(()=>{let sc=null;try{
-  const def=Object.assign({},D[idx]);if(def.look!=null)def.id=def.look;const T=sampleTrack(def);sc=buildWorld(T);sc.fog=null;
+  const def=Object.assign({},D[idx]);if(def.look!=null)def.id=def.look;const T=sampleTrack(def);sc=buildWorld(T);const pois=poiShots(sc,T);sc.fog=null;
   sc.traverse(o=>{const g=o.geometry&&o.geometry.parameters;if(!g)return;if((o.geometry.type==='SphereGeometry'&&g.radius===1500)||(o.geometry.type==='CylinderGeometry'&&g.radiusTop===1300)||(o.geometry.type==='ConeGeometry'&&g.radius>=80&&g.height>=60))o.visible=false});
   sc.background=new THREE.Color(0x0c1218);
   const b=T.bounds,cx=(b[0]+b[1])/2,cz=(b[2]+b[3])/2,Dm=Math.max(b[1]-b[0],b[3]-b[2]);let y0=1e9,y1=-1e9;for(let i=0;i<T.N;i++){y0=Math.min(y0,T.y[i]);y1=Math.max(y1,T.y[i])}
   const cam=new THREE.PerspectiveCamera(36,16/9,10,12000);cam.position.set(cx-Dm*.1,y1+Dm*.78,cz+Dm*.86);cam.lookAt(cx,(y0+y1)/2,cz-Dm*.02);cam.updateMatrixWorld();
-  if(!rr){rr=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});rr.outputEncoding=THREE.sRGBEncoding;rr.toneMapping=THREE.ACESFilmicToneMapping;rr.toneMappingExposure=1.05;rr.setPixelRatio(1);rr.setSize(960,540,false)}
+  rrInit();rr.setSize(960,540,false);
   rr.render(sc,cam);
   const cv=document.createElement('canvas');cv.width=960;cv.height=540;const g=cv.getContext('2d');g.drawImage(rr.domElement,0,0);
   const v=new THREE.Vector3(),pj=(x,y,z)=>{v.set(x,y,z).project(cam);return[(v.x*.5+.5)*960,(1-(v.y*.5+.5))*540]};
@@ -343,7 +385,7 @@ P.stageRender=idx=>{if(RC[idx])return Promise.resolve(RC[idx]);
   P.cpsOf(T).forEach((i,k)=>{const q=pj(T.x[i],T.y[i]+3,T.z[i]);g.fillStyle='#0b3a44';g.strokeStyle='#7fe3f2';g.lineWidth=2;g.beginPath();g.arc(q[0],q[1],9,0,7);g.fill();g.stroke();g.fillStyle='#fff';g.fillText(k+1,q[0],q[1]+1)});
   for(const f of T.fords||[]){const q=pj(f.x,f.yw+3,f.z);g.fillStyle='#1b5a7a';g.strokeStyle='#bfe8ff';g.lineWidth=2;g.beginPath();g.rect(q[0]-14,q[1]-8,28,16);g.fill();g.stroke();g.fillStyle='#fff';g.font='bold 9px monospace';g.fillText('FORD',q[0],q[1]+1)}
   {const q=pj(T.x[0],T.y[0]+3,T.z[0]);g.fillStyle='#fff';g.fillRect(q[0]-5,q[1]-5,10,10);g.fillStyle='#111';g.fillRect(q[0]-5,q[1]-5,5,5);g.fillRect(q[0],q[1],5,5);g.font='bold 10px monospace';g.fillStyle='#fff';g.fillText('START',q[0],q[1]-13)}
-  RC[idx]=cv;res(cv)}catch(e){console.error('stage render',e);res(null)}
+  cv.pois=pois;RC[idx]=cv;res(cv)}catch(e){console.error('stage render',e);res(null)}
   finally{if(sc){try{disposeWorld(sc)}catch(e){}}}},40))};
 
 P.RALLYSESSION=()=>S;

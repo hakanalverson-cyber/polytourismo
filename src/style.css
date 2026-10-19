@@ -29,7 +29,7 @@
 .btn>span{display:inline-block}
 .seg{display:inline-flex;gap:3px;flex-wrap:wrap}
 .seg .btn{padding:6px 11px;font-size:10px}
-.chip{display:inline-block;font:700 10px var(--mn);padding:3px 8px;border:1px solid var(--ln2);letter-spacing:.14em;color:var(--dim);text-transform:uppercase;margin:0 5px 4px 0}
+.chip{display:inline-block;font:700 10px var(--mn);padding:2px 6px;border:1px solid var(--ln2);letter-spacing:.14em;color:var(--dim);text-transform:uppercase;margin:0 5px 4px 0}
 .cls{display:inline-block;min-width:1.6em;text-align:center;font:700 .95em var(--mn);padding:0 .3em;color:#05090b;letter-spacing:0}
 .cls.D{background:#9aa5a0}.cls.C{background:#7fd68a}.cls.B{background:#f1f3f5}.cls.A{background:#f2c76b}.cls.S{background:#ef6a5a}
 .foot8{position:absolute!important;left:3.4vw;right:3.4vw;bottom:3.4vh;display:flex;align-items:center;justify-content:space-between;gap:20px;z-index:3}
@@ -476,11 +476,8 @@ body:after{background:repeating-linear-gradient(0deg,#00000010 0 1px,transparent
 #rlPrep .rp-r small{display:block;margin-top:8px;color:#cfd6dc}
 #rlPrep .btn{font-size:20px;padding:14px 34px}
 body.rprep #hud,body.rprep .hud,body.rprep #h8pace,body.rprep .h8pace,body.rprep #mini,body.rprep #touch{display:none!important}
-#rlCp{position:fixed;top:35%;left:50%;transform:translateX(-50%);text-align:center;color:#fff;opacity:0;transition:opacity .4s;pointer-events:none;z-index:20;text-shadow:0 2px 8px #000}
-#rlCp small{display:block;letter-spacing:.2em;font-size:12px;color:#cfd6dc}
-#rlCp b{font-size:34px;letter-spacing:.04em}
-#rlCp em{display:block;font-style:normal;font-size:22px;margin-top:2px}
-#rlCp em.ok{color:#7fd68a}#rlCp em.bad{color:#ef6a5a}
+#rlCp{position:fixed;z-index:20;opacity:0;transition:opacity .6s;pointer-events:none}
+#rlCp .h8top{position:static;transform:scale(var(--s,1));transform-origin:top left}
 .rl-spl{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
 .rl-spl span{border:1px solid var(--ln,#444);padding:4px 9px;font-size:12px;border-radius:3px;color:#aab}
 .rl-spl b{margin-left:6px;color:#fff;font-weight:600}
@@ -506,26 +503,37 @@ body.rreplay #hud,body.rreplay .hud,body.rreplay .h8pace,body.rreplay #mini,body
 body.rprep #rlElevLive,body.rreplay #rlElevLive{display:none!important}
 
 body.rallyhud .h8spd,body.rallyhud .h8pos{display:none!important}
-#rlDash{position:fixed;left:50%;bottom:1.2vh;transform:translateX(-50%);width:min(620px,96vw);display:none;flex-direction:column;align-items:center;gap:5px;z-index:14;pointer-events:none;font-family:var(--mn,monospace);color:#fff;text-shadow:0 1px 4px #000}
+#rlDash{position:fixed;left:50%;bottom:1.2vh;transform:translateX(-50%);width:min(470px,96vw);display:none;flex-direction:column;align-items:center;gap:5px;z-index:14;pointer-events:none;font-family:var(--mn,monospace);color:#fff;text-shadow:0 1px 4px #000}
 #rlDash .rd-row{display:flex;align-items:flex-end;justify-content:center;gap:8px;width:100%}
-#rlDash .rd-c{position:relative;flex:0 0 auto;display:flex;flex-direction:column;width:min(250px,34vw)}
+#rlDash .rd-c{position:relative;flex:0 0 auto;display:flex;flex-direction:column;width:min(190px,30vw)}
 #rlDash canvas#rdG{width:100%;height:auto;display:block}
 #rlDash .rd-side{flex:1;display:flex;flex-direction:column;gap:5px;margin-bottom:6px}
-#rlDash .rd-k{background:#0a0d11d9;border:1px solid var(--ln2,#333);padding:3px 8px;clip-path:var(--cut,none)}
+#rlDash .rd-k{background:#0a0d11d9;border:1px solid var(--ln2,#333);padding:2px 6px;clip-path:var(--cut,none)}
 #rlDash .rd-l .rd-k{text-align:left}#rlDash .rd-r .rd-k{text-align:right}
-#rlDash small{display:block;font-size:9px;letter-spacing:.2em;color:#9aa4ad}
-#rlDash .rd-k b{font-size:14px;letter-spacing:.06em}#rlDash .rd-k em{display:block;font-style:normal;font-size:10px;letter-spacing:.12em;color:#9aa4ad}
+#rlDash small{display:block;font-size:7px;letter-spacing:.2em;color:#9aa4ad}
+#rlDash .rd-k b{font-size:11px;letter-spacing:.06em}#rlDash .rd-k em{display:block;font-style:normal;font-size:8px;letter-spacing:.12em;color:#9aa4ad}
 #rlDash .rd-k b.up{color:#ef9a5a}#rlDash .rd-k b.dn{color:#8fd3f2}
 #rlDash .rd-bar,#rlDash .rd-bars i{display:block;position:relative;height:5px;background:rgba(255,255,255,.16);border-radius:3px;overflow:hidden;margin:3px 0}
 #rlDash .rd-bar u,#rlDash .rd-bars u{display:block;height:100%;background:#f1f3f5;width:0;text-decoration:none}
 #rlDash .rd-chips{display:flex;justify-content:center;gap:5px;margin-top:2px}
-#rlDash .rd-chips span{font-size:9px;letter-spacing:.14em;padding:2px 6px;border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.28);background:#0a0d11d9}
+#rlDash .rd-chips span{font-size:7px;letter-spacing:.12em;padding:1px 4px;border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.28);background:#0a0d11d9}
 #rlDash .rd-chips span.on{color:#05080b;background:#f1f3f5;border-color:#f1f3f5}
 #rlDash .rd-chips #rdSh.on{background:#ff4d3d;border-color:#ff4d3d;color:#fff}
 #rlDash .rd-chips #rdWt.on{background:#7fc8ff;border-color:#7fc8ff}
-#rlDash .rd-bars{display:flex;gap:10px;width:min(340px,80%)}
-#rlDash .rd-bars label{flex:1;font-size:9px;letter-spacing:.18em;color:#9aa4ad}
+#rlDash .rd-bars{display:flex;gap:8px;width:min(250px,70%)}
+#rlDash .rd-bars label{flex:1;font-size:7px;letter-spacing:.18em;color:#9aa4ad}
 #rlDash .rd-bars #rdBr{background:#ef6a5a}#rlDash .rd-bars #rdTh{background:#7fd68a}
 #rlDash .rd-st u{position:absolute;left:50%;top:0;background:#f2c76b}
 #rdElev{width:min(520px,90%)}
 @media(max-width:700px){#rlDash .rd-side{display:none}}
+
+.rl-poi{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;min-height:92px}
+.rl-poi figure{margin:0;flex:0 0 auto;width:132px}
+.rl-poi canvas{width:100%;height:auto;display:block;border:1px solid rgba(255,255,255,.22);border-radius:3px}
+.rl-poi figcaption{font:700 9px var(--mn,monospace);letter-spacing:.14em;color:#cfd6dc;margin-top:3px}
+#rpPoi{margin-top:12px;max-width:min(720px,62vw)}
+#rpPoi figure{width:112px}
+
+#rlDash .rd-chips #rdPn.on{background:#ef6a5a;border-color:#ef6a5a;color:#fff}
+
+#rlDash .rd-chips #rdDm.on{background:#f2c76b;border-color:#f2c76b;color:#05080b}#rlDash .rd-chips #rdDm.pn{background:#ef6a5a;border-color:#ef6a5a;color:#fff}
