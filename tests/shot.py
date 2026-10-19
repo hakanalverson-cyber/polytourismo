@@ -23,6 +23,9 @@ def run(html,steps,out_prefix='s',size=(1280,720)):
             if s[0]=='js': 
                 try: print('JS->',pg.evaluate(s[1]))
                 except Exception as e: print('JSERR',e)
+            elif s[0]=='img':
+                import base64
+                d=pg.evaluate(s[2]);open(OUT+'/'+out_prefix+'_'+s[1]+'.png','wb').write(base64.b64decode(d.split(',')[1]))
             elif s[0]=='wait': pg.wait_for_timeout(s[1])
             elif s[0]=='shot': pg.screenshot(path=OUT+'/'+out_prefix+'_'+s[1]+'.png')
             elif s[0]=='key': pg.keyboard.press(s[1])

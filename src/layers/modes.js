@@ -100,10 +100,11 @@ P.modeTick=(Rc,dt)=>{
  if(Rc.mode==='ta'&&P.ghostTick)P.ghostTick(Rc,dt)};
 
 /* ================= AI field builder ================= */
-P.makeAI=function({n,classes,skill,rally,cap,seed}){
+P.makeAI=function({n,classes,skill,rally,cap,seed,ids}){
  const RALLY=['lr','urus','ford','ster'],capOk=c=>cap==null||CLS.indexOf(c.cls)<=CLS.indexOf(cap);
  let pool=rally?CARS.filter(c=>RALLY.includes(c.id)&&classes.includes(c.cls)&&capOk(c)):CARS.filter(c=>classes.includes(c.cls)&&capOk(c));
  if(rally&&!pool.length)pool=CARS.filter(c=>RALLY.includes(c.id)&&capOk(c));if(rally&&!pool.length)pool=CARS.filter(c=>RALLY.includes(c.id));
+ if(ids&&ids.length){const q=CARS.filter(c=>ids.includes(c.id));if(q.length)pool=q}
  const list=pool.length?pool:[BYID.merc];
  const out=[],names=NAMES.slice().sort(()=>Math.random()-.5);
  for(let i=0;i<n;i++){let c;if(rally){const w=list.map(x=>.4+x.off*1.6);let r=Math.random()*w.reduce((a,b)=>a+b,0),k=0;while(k<list.length-1&&(r-=w[k])>0)k++;c=list[k]}else c=list[Math.floor(Math.random()*list.length)];
