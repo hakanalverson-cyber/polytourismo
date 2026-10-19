@@ -2801,6 +2801,9 @@ function tick(Rc,dt){const T=Rc.T,en=endur(Rc),pit=Rc.pit,N=T.N;
   /* slipstream */
   const fx=Math.sin(c.yaw),fz=Math.cos(c.yaw),rx=Math.cos(c.yaw),rz=-Math.sin(c.yaw);let best=0;
   if(c.sp>22){for(const o of Rc.cars){if(o===c||o.exp>0||o.respT>0)continue;const dx=o.x-c.x,dz=o.z-c.z,lon=dx*fx+dz*fz;if(lon<3||lon>32)continue;const lat=Math.abs(dx*rx+dz*rz);if(lat>2.3||o.sp<c.sp*.7)continue;best=Math.max(best,(1-lon/32)*(1-lat/2.3))}}
+  /* you must sit in the tow for a while before it bites: 1.6s delay, then ramps in over 1s */
+  c.dwait=best>0?(c.dwait||0)+dt:Math.max(0,(c.dwait||0)-dt*2.5);if(best>0)c.dbest=best;
+  best=best>0&&c.dwait>1.6?best*Math.min(1,(c.dwait-1.6)/1)  :0;
   c.draft=(c.draft||0)+(best-(c.draft||0))*Math.min(1,dt*3);if(c.draft<.01)c.draft=0;
   if(!en)continue;
   if(c.tyre==null){c.tyre=1;c.fuel=1}
@@ -3590,19 +3593,20 @@ function addTags(Rc){const hs=Rc.cars.filter(c=>c.human);if(hs.length<2)return;
 
 /* ---------- slipstream: sonic-boom rings + streaking wind lines on whoever is sitting in another car's wind ---------- */
 const WM=()=>new THREE.MeshBasicMaterial({color:0xeaf4ff,transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide,fog:false});
-function mkDraft(Rc,c){const d={rings:[],lines:[],rt:0,lt:0};
- for(let i=0;i<4;i++){const m=new THREE.Mesh(new THREE.RingGeometry(.86,1,28),WM());m.visible=false;m.frustumCulled=false;Rc.scene.add(m);d.rings.push({m,life:9})}
- for(let i=0;i<18;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(.045,.045,1),WM());m.visible=false;m.frustumCulled=false;Rc.scene.add(m);d.lines.push({m,life:9})}
+function mkDraft(Rc,c){const d={lines:[],lt:0};
+ const cone=new THREE.Mesh(new THREE.ConeGeometry(1.25,5,20,1,true),WM());cone.geometry.rotateX(-Math.PI/2);cone.geometry.translate(0,0,-2.5);cone.visible=false;cone.frustumCulled=false;Rc.scene.add(cone);d.cone=cone;
+ for(let i=0;i<14;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(.03,.03,1),WM());m.visible=false;m.frustumCulled=false;Rc.scene.add(m);d.lines.push({m,life:9})}
  c.dfx=d;return d}
 function draftFx(Rc,dt){for(const c of Rc.cars){if(c.out)continue;const dr=c.draft||0;let d=c.dfx;
- if(dr>.14&&!c.fin){if(!d)d=mkDraft(Rc,c);
-  const fx=Math.sin(c.yaw),fz=Math.cos(c.yaw),rx=Math.cos(c.yaw),rz=-Math.sin(c.yaw);
-  d.rt-=dt;d.lt-=dt;
-  if(d.rt<=0&&dr>.25){d.rt=.2;const r=d.rings.find(q=>q.life>=.5);if(r){r.life=0;r.m.position.set(c.x+fx*2.7,c.y+.7,c.z+fz*2.7);r.m.rotation.set(0,c.yaw,0);r.m.visible=true}}
-  if(d.lt<=0){d.lt=.8/(10+dr*30);const l=d.lines.find(q=>q.life>=.4);if(l){l.life=0;const lat=(Math.random()*2-1)*1.5,h=.15+Math.random()*1.2,fw=-.5+Math.random()*2.6;
-   l.m.position.set(c.x+fx*fw+rx*lat,c.y+h,c.z+fz*fw+rz*lat);l.m.rotation.set(0,c.yaw,0);l.m.scale.set(1,1,2+c.sp*.06);l.m.visible=true}}}
- if(d){for(const r of d.rings){if(r.life<.5){r.life+=dt;const t=r.life/.5;r.m.scale.setScalar(.9+t*2.4);r.m.material.opacity=.55*(1-t)*(1-t);if(r.life>=.5)r.m.visible=false}}
-  for(const l of d.lines){if(l.life<.4){l.life+=dt;const t=l.life/.4;l.m.material.opacity=.5*Math.sin(t*3.14);if(l.life>=.4)l.m.visible=false}}}}}
+ const on=dr>.2&&!c.fin;
+ if(on&&!d)d=mkDraft(Rc,c);
+ if(d){const fx=Math.sin(c.yaw),fz=Math.cos(c.yaw),rx=Math.cos(c.yaw),rz=-Math.sin(c.yaw);
+  /* faint translucent cone, apex at the nose, opening backwards over the car */
+  d.cone.visible=on;if(on){d.cone.position.set(c.x+fx*2.6,c.y+.75,c.z+fz*2.6);d.cone.rotation.set(0,c.yaw,0);d.cone.material.opacity=.07*Math.min(1,dr*1.4)*(.85+.15*Math.sin(Rc.t*9))}
+  d.lt-=dt;
+  if(on&&d.lt<=0){d.lt=.16/(.3+dr);const l=d.lines.find(q=>q.life>=.5);if(l){l.life=0;const lat=(Math.random()*2-1)*1.6,h=.15+Math.random()*1.1,fw=-.5+Math.random()*2.4;
+   l.m.position.set(c.x+fx*fw+rx*lat,c.y+h,c.z+fz*fw+rz*lat);l.m.rotation.set(0,c.yaw,0);l.m.scale.set(1,1,2+c.sp*.06);l.m.visible=true}}
+  for(const l of d.lines){if(l.life<.5){l.life+=dt;const t=l.life/.5;l.m.material.opacity=.13*Math.sin(t*3.14);if(l.life>=.5)l.m.visible=false}}}}}
 
 const l0=P.launch;P.launch=cfg=>{l0(cfg);if(RACE)addTags(RACE)};
 const st0=step;step=dt=>{st0(dt);const Rc=RACE;if(Rc&&Rc.scene&&Rc.state!=='done')draftFx(Rc,dt)};

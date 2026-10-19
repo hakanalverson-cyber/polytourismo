@@ -25,6 +25,9 @@ function tick(Rc,dt){const T=Rc.T,en=endur(Rc),pit=Rc.pit,N=T.N;
   /* slipstream */
   const fx=Math.sin(c.yaw),fz=Math.cos(c.yaw),rx=Math.cos(c.yaw),rz=-Math.sin(c.yaw);let best=0;
   if(c.sp>22){for(const o of Rc.cars){if(o===c||o.exp>0||o.respT>0)continue;const dx=o.x-c.x,dz=o.z-c.z,lon=dx*fx+dz*fz;if(lon<3||lon>32)continue;const lat=Math.abs(dx*rx+dz*rz);if(lat>2.3||o.sp<c.sp*.7)continue;best=Math.max(best,(1-lon/32)*(1-lat/2.3))}}
+  /* you must sit in the tow for a while before it bites: 1.6s delay, then ramps in over 1s */
+  c.dwait=best>0?(c.dwait||0)+dt:Math.max(0,(c.dwait||0)-dt*2.5);if(best>0)c.dbest=best;
+  best=best>0&&c.dwait>1.6?best*Math.min(1,(c.dwait-1.6)/1)  :0;
   c.draft=(c.draft||0)+(best-(c.draft||0))*Math.min(1,dt*3);if(c.draft<.01)c.draft=0;
   if(!en)continue;
   if(c.tyre==null){c.tyre=1;c.fuel=1}
