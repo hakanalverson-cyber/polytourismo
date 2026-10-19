@@ -247,7 +247,7 @@ const oldEng=engineSnd;engineSnd=(c,i)=>{if(c.human)oldEng(c,i)};
 
 /* ---------------- clusters: finished cars never merge ---------------- */
 clusters=function(R_){const hs=R_.cars.filter(c=>c.human),n=hs.length,par=hs.map((_,i)=>i),f=i=>par[i]==i?i:(par[i]=f(par[i]));
- for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){const d=Math.hypot(hs[i].x-hs[j].x,hs[i].z-hs[j].z),key=i+'-'+j,was=R_.conn[key];const fin=hs[i].fin||hs[j].fin,tn=R_.T.tn&&(R_.T.tn[hs[i].idx|0]||R_.T.tn[hs[j].idx|0]);const on=!fin&&!tn&&(d<MERGE||(was&&d<SPLIT));R_.conn[key]=on;if(on)par[f(i)]=f(j)}
+ for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){const d=Math.hypot(hs[i].x-hs[j].x,hs[i].z-hs[j].z),key=i+'-'+j,was=R_.conn[key];const fin=hs[i].fin||hs[j].fin,tn=R_.T.tn&&(R_.T.tn[hs[i].idx|0]||R_.T.tn[hs[j].idx|0]);const on=!(window.PTO&&PTO.splitAlways===false)?false:!fin&&!tn&&(d<MERGE||(was&&d<SPLIT));R_.conn[key]=on;if(on)par[f(i)]=f(j)}
  const groups=new Map();hs.forEach((c,i)=>{const r=f(i);if(!groups.has(r))groups.set(r,[]);groups.get(r).push(c)});return[...groups.values()].sort((a,b)=>a[0].k-b[0].k)};
 
 /* ---------------- cinematic camera for finished humans ---------------- */

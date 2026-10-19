@@ -22,11 +22,14 @@ hudUpdate=()=>{hu0();const Rc=RACE;if(!Rc)return;
 
 /* ---------- floating Smash-style player tags (only with 2+ humans; fade near the viewing camera) ---------- */
 function tagTex(c){const cv=document.createElement('canvas');cv.width=256;cv.height=128;const g=cv.getContext('2d');
- const col=PC[c.k%4],n='P'+(c.pnum||c.k+1),custom=c.ptName&&c.ptName!==n?c.ptName:'';
- g.fillStyle='#0a0d11';g.strokeStyle=col;g.lineWidth=7;g.beginPath();const w=custom?232:132,x0=128-w/2;
+ const col=PC[c.k%4],n='P'+(c.pnum||c.k+1),custom=c.ptName&&c.ptName!==n?c.ptName.toUpperCase():'';
+ g.font='900 44px sans-serif';const nw=g.measureText(n).width;
+ let fs=26,cw=0;if(custom){g.font='700 '+fs+'px sans-serif';cw=g.measureText(custom).width;const room=236-32-nw-14;if(cw>room){fs=Math.max(14,Math.floor(fs*room/cw));g.font='700 '+fs+'px sans-serif';cw=g.measureText(custom).width}}
+ const w=custom?Math.min(244,Math.ceil(32+nw+14+cw)):132,x0=128-w/2;
+ g.fillStyle='#0a0d11';g.strokeStyle=col;g.lineWidth=7;g.beginPath();
  g.moveTo(x0+16,10);g.lineTo(x0+w-16,10);g.quadraticCurveTo(x0+w,10,x0+w,26);g.lineTo(x0+w,64);g.quadraticCurveTo(x0+w,80,x0+w-16,80);g.lineTo(150,80);g.lineTo(128,108);g.lineTo(106,80);g.lineTo(x0+16,80);g.quadraticCurveTo(x0,80,x0,64);g.lineTo(x0,26);g.quadraticCurveTo(x0,10,x0+16,10);g.closePath();g.fill();g.stroke();
- g.textBaseline='middle';g.fillStyle=col;g.font='900 44px sans-serif';g.textAlign=custom?'left':'center';
- if(custom){g.fillText(n,x0+16,47);g.fillStyle='#e8ecf1';g.font='700 26px sans-serif';g.fillText(custom.toUpperCase(),x0+16+g.measureText(n).width+0,47)}else g.fillText(n,128,47);
+ g.textBaseline='middle';g.fillStyle=col;g.font='900 44px sans-serif';g.textAlign='left';
+ if(custom){g.fillText(n,x0+16,47);g.fillStyle='#e8ecf1';g.font='700 '+fs+'px sans-serif';g.fillText(custom,x0+16+nw+14,48)}else{g.textAlign='center';g.fillText(n,128,47)}
  const t=new THREE.CanvasTexture(cv);t.minFilter=THREE.LinearFilter;return t}
 function addTags(Rc){const hs=Rc.cars.filter(c=>c.human);if(hs.length<2)return;
  for(const c of hs){if(!c.m||!c.m.g)continue;const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tagTex(c),transparent:true,depthTest:false,depthWrite:false,fog:false}));

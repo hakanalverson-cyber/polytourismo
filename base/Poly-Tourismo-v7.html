@@ -451,7 +451,7 @@ const defaults = {
   steering:1,driftAssist:.7,drifts:true,driftSpeed:76,
   hillHold:true,cameraDistance:1,fov:58,shake:true,
   boostFov:true,minimap:true,timer:true,hudScale:1,
-  units:'kmh',showroom:true
+  units:'kmh',showroom:true,splitAlways:true
 };
 
 const o = {...defaults};
@@ -1004,6 +1004,7 @@ const pages={
   ['menuMotion','CINEMATIC CAMERA']
  ],
  INTERFACE:[
+  ['splitAlways','ALWAYS SPLIT SCREEN'],
   ['minimap','MINIMAP'],
   ['timer','RACE TIMER'],
   ['hudScale','HUD SCALE',.75,1.25,.05],

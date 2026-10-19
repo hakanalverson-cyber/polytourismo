@@ -120,7 +120,7 @@ soloCam=(c,dt,out)=>{so0(c,dt,out);const Rc=RACE;if(!(Rc&&Rc.cfg&&Rc.cfg.rally&&
  const m=c.camMode,sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);
  if(m===1){out.p.set(c.x+sy*1.7,c.y+.14,c.z+cy*1.7);out.l.set(out.p.x+sy*30,out.p.y-.7,out.p.z+cy*30);out.f=78}
  else{const s_=Math.sin(c.cy),co=Math.cos(c.cy),d=13+c.sp*.12,h=5.2+c.sp*.04;out.p.set(c.x-s_*d,c.camY+h,c.z-co*d);out.l.set(c.x+s_*8,c.camY+1.2,c.z+co*8);out.f=62}};
-const sh0=show;show=function(id){if(id==='menu')rallyGears(false);if(id!=='s8show')P._ro=false;return sh0.apply(this,arguments)};
+const sh0=show;show=function(id){if(id!=='game'&&id!=='pause'&&(document.body.classList.contains('rallyhud')||(dash&&dash.style.display!=='none')))leaveFx();if(id==='menu')rallyGears(false);if(id!=='s8show')P._ro=false;return sh0.apply(this,arguments)};
 
 /* ---------------- elevation profile ---------------- */
 P.elevGraph=(T,w,h,at)=>{const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.className='rl-elev';P.elevDraw(cv,T,at);return cv};
