@@ -63,12 +63,12 @@ let SV=defSave();
 try{const j=JSON.parse(localStorage.getItem(SKEY)||'null');if(j&&j.v===1){SV=Object.assign(defSave(),j);SV.career=Object.assign({done:{}},j.career||{});SV.stats=Object.assign(defSave().stats,j.stats||{})}}catch(e){}
 const save=()=>{try{localStorage.setItem(SKEY,JSON.stringify(SV))}catch(e){}};
 PT8.SV=()=>SV;PT8.save=save;
-PT8.owns=(id,alt)=>((SV.owned[id]||0)&(alt?2:1))!==0;
+PT8.owns=(id,alt)=>alt?false:((SV.owned[id]||0)&1)!==0;
 PT8.ownedList=()=>SORTED.filter(c=>(SV.owned[c.id]||0)>0);
 PT8.earn=n=>{SV.cr+=n;SV.stats.earned+=Math.max(0,n);save()};
 PT8.spend=n=>{if(SV.cr<n)return false;SV.cr-=n;save();return true};
 PT8.buy=(id,alt)=>{const c=BYID[id];const price=alt?c.altPrice:c.price;if(alt&&!PT8.owns(id,0))return false;if(PT8.owns(id,alt))return false;if(!PT8.spend(price))return false;SV.owned[id]=(SV.owned[id]||0)|(alt?2:1);save();return true};
-PT8.modelOf=(id,alt)=>alt?BYID[id].alt:BYID[id].body;
+PT8.modelOf=(id,alt)=>BYID[id].body;
 PT8.setSel=(p,id,alt)=>{SV.sel[p]={id,alt:alt?1:0};save()};
 PT8.resetSave=()=>{SV=defSave();save()};
 /* ---- tuning: per car (+alt) setups. gear/susp/aero/brake -3..3, tyre -1..1 ---- */
