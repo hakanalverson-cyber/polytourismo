@@ -2338,7 +2338,9 @@ const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
 function altRGB(k){const d=META[k].paint;for(let i=0;i<ALT.length;i++){const c=ALT[(k+i)%ALT.length];if(dist(c,d)>140)return c}return ALT[0]}
 C10.altRGB=altRGB;C10.stockRGB=k=>META[k].paint;
 /* in-game length (m): the pack's real proportions, eased towards the 4.5 m the physics boxes assume */
-const gameLen=m=>{const k=Math.min(4.3/m.len,1.95/m.wid,1.4/m.hgt);return Math.max(m.len,m.wid)*k};
+const MV=META.reduce((t,m)=>t+m.len*m.wid*m.hgt,0)/META.length;
+/* population-normalised size: pull every car's volume 75% of the way to the mean, keep the rest of its natural size order */
+const gameLen=m=>{const k=Math.pow(MV/(m.len*m.wid*m.hgt),.25);return Math.min(4.65,Math.max(m.len,m.wid)*k)};
 let buf=null;const geo={},cache={};
 const bodyMat=new THREE.MeshStandardMaterial({map:tex,roughness:.62,metalness:.12,flatShading:true});
 function geoms(k){if(geo[k])return geo[k];const out={};
