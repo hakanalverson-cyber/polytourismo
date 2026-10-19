@@ -90,10 +90,13 @@ import base64
 b64=lambda f:base64.b64encode(open(W+'/assets/'+f,'rb').read()).decode()
 CARS10='<script>const CAR10_BIN_B64="'+b64('cars_v10.bin.gz')+'",CAR10_TEX_B64="'+b64('cars_v10_tex.png')+'",CAR10_META='+open(W+'/assets/cars_v10.json').read()+';</script>'
 src=rep(src,"bins[k].tire=true;","bins[k].tire=true;(bins[k].tp||(bins[k].tp=[])).push(part);")
-src=rep(src,"    for(const [g,m] of b.parts){\n      g.translate(-center.x,-center.y,-center.z);\n      spin.add(new THREE.Mesh(g,m));\n    }","""    let yaw=0;
-    if(b.tp){let sxx=0,szz=0,sxz=0;for(const t of b.tp){const p=t.attributes.position;for(let n=0;n<p.count;n++){const x=p.getX(n)-center.x,z=p.getZ(n)-center.z;sxx+=x*x;szz+=z*z;sxz+=x*z}}
-      const ay=.5*Math.atan2(2*sxz,sxx-szz)+Math.PI/2;yaw=((ay+Math.PI/2)%Math.PI+Math.PI)%Math.PI-Math.PI/2;if(Math.abs(yaw)<.03||Math.abs(yaw)>.7)yaw=0}
-    for(const [g] of b.parts){g.translate(-center.x,-center.y,-center.z);if(yaw)g.rotateY(yaw)}
+src=rep(src,"    for(const [g,m] of b.parts){\n      g.translate(-center.x,-center.y,-center.z);\n      spin.add(new THREE.Mesh(g,m));\n    }","""    for(const [g] of b.parts)g.translate(-center.x,-center.y,-center.z);
+    if(b.tp)for(let it=0;it<4;it++){
+      const minor=(ia,ib)=>{let sa=0,sb=0,sc=0,mx=0,mu=0,N=0;for(const [t] of b.parts){const p=t.attributes.position;for(let n=0;n<p.count;n++){const u=ia?p.getZ(n):p.getY(n),x=p.getX(n);sa+=x*x;sb+=u*u;sc+=x*u;mx+=x;mu+=u;N++}}mx/=N;mu/=N;sa-=N*mx*mx;sb-=N*mu*mu;sc-=N*mx*mu;
+        const ay=.5*Math.atan2(2*sc,sa-sb)+Math.PI/2;return ((ay+Math.PI/2)%Math.PI+Math.PI)%Math.PI-Math.PI/2};
+      const yw=minor(1),tl=minor(0);
+      if(Math.abs(yw)<.7)for(const [g] of b.parts){g.rotateY(yw)}
+      if(Math.abs(tl)<.7)for(const [g] of b.parts){g.rotateZ(-tl)}}
     let fx=0,fy=0,fz=0;
     if(b.tp){let a=0,bb=0,c=0,d=0,e=0,g1=0,h=0,sz=0,N=0,x0=1e9,x1=-1e9;for(const t of b.tp){const p=t.attributes.position;for(let n=0;n<p.count;n++){const y=p.getY(n),z=p.getZ(n),r=y*y+z*z;a+=y*y;bb+=y*z;c+=y;d+=z*z;e+=z;g1+=y*r;h+=z*r;sz+=r;N++;x0=Math.min(x0,p.getX(n));x1=Math.max(x1,p.getX(n))}}
       const M=[[2*a,2*bb,c],[2*bb,2*d,e],[2*c,2*e,N]],R=[g1,h,sz],det=m=>m[0][0]*(m[1][1]*m[2][2]-m[1][2]*m[2][1])-m[0][1]*(m[1][0]*m[2][2]-m[1][2]*m[2][0])+m[0][2]*(m[1][0]*m[2][1]-m[1][1]*m[2][0]),D=det(M);
