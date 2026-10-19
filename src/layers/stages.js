@@ -20,7 +20,7 @@ const terr={id:11,look:5,name:'Terrace Run',desc:'vineyard switchbacks / hillsid
 /* ashfall: crater rim ring with a causeway spur that dives into the crater and U-turns */
 const ap=[],pol=(a,r,y)=>ap.push([Math.round(Math.cos(a*PI/180)*r),Math.round(Math.sin(a*PI/180)*r),y]);
 [[0,265,14],[30,255,20],[60,275,28],[90,260,36],[120,270,42],[150,255,44],[170,250,40],[182,185,33],[184,138,29],[187,100,26],[193,70,24],[205,70,24],[211,100,26],[214,138,29],[216,185,33],[238,262,36],[265,258,28],[300,268,22],[330,255,17]].forEach(q=>pol(q[0],q[1],q[2]));
-const ash={id:12,look:6,name:'Ashfall Stage',desc:'volcano crater rim / lava causeway / ash storm',hw:5.8,off:'sand',idw:.9,offs:0,amp:6,up:26,biome:'none',tod0:'dusk',crater:1,
+const ash={id:12,look:6,name:'Ashfall Stage',desc:'volcano crater rim / lava causeway / ash storm',hw:5.8,off:'sand',idw:.9,offs:0,amp:6,up:26,biome:'none',tod0:'sunset',crater:1,
  sky:[0x2c2631,0xc9774e],fog:0x70524c,sun:0xffa468,hemi:[0xd09a82,0x2a2220],road:'#4f4944',dust:0x6f655e,dirt:0x2a2422,pts:ap};
 const autu={id:13,look:4,name:'Autumn Ridge',desc:'golden forest ridge / two stream fords / leaf fall',hw:5.6,off:'dirt',idw:.88,offs:0,amp:5.5,up:28,biome:'forest',tod0:'dawn',fords:[9,16],fordW:9,water:[0x0f2e40,.76],
  sky:[0x7d9bbb,0xf2dfba],fog:0xe3cfae,sun:0xffd49a,hemi:[0xfbe5c8,0x6a4a2a],road:'#8c7050',dust:0xb99b6a,dirt:0x4b3421,
