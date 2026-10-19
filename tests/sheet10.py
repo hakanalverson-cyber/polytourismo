@@ -1,11 +1,11 @@
 import base64,sys
 from shot import *
 JS="""(async n0=>{const C=PT8.C10;while(!C.ready)await new Promise(r=>setTimeout(r,100));
-const r=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true,alpha:true});const TW=260,TH=170,COL=6,ROW=6;r.setSize(TW,TH);
+const r=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true,alpha:true});const TW=260,TH=200,COL=6,ROW=5;r.setSize(TW,TH);
 const sc=new THREE.Scene();sc.background=new THREE.Color(0x2a3038);sc.add(new THREE.HemisphereLight(0xffffff,0x555555,1.1));const dl=new THREE.DirectionalLight(0xffffff,1.1);dl.position.set(5,8,6);sc.add(dl);
 const cam=new THREE.PerspectiveCamera(30,TW/TH,.1,100);
 const cv=document.createElement('canvas');cv.width=TW*COL;cv.height=TH*ROW;const g=cv.getContext('2d');
-for(let i=0;i<COL*ROW;i++){const k=n0+i;if(k>=C.n)break;const m=C.model(k,1).clone(true);const bb=new THREE.Box3().setFromObject(m),c=bb.getCenter(new THREE.Vector3()),s=bb.getSize(new THREE.Vector3());m.position.sub(c);const w=new THREE.Group();w.add(m);w.rotation.y=-.6;sc.add(w);
+for(let i=0;i<COL*ROW;i++){const k=n0+i;if(k>=C.n)break;const m=C.model(k,0).clone(true);const bb=new THREE.Box3().setFromObject(m),c=bb.getCenter(new THREE.Vector3()),s=bb.getSize(new THREE.Vector3());m.position.sub(c);const w=new THREE.Group();w.add(m);w.rotation.y=2.55;sc.add(w);
 cam.position.set(0,s.y*.8+1.0,Math.max(s.x,s.z)*1.25+1.2);cam.lookAt(0,0,0);r.render(sc,cam);sc.remove(w);g.drawImage(r.domElement,(i%COL)*TW,((i/COL)|0)*TH);g.fillStyle='#fff';g.font='bold 18px sans-serif';g.fillText(k+'  '+C.meta[k].len.toFixed(1)+'m',(i%COL)*TW+6,((i/COL)|0)*TH+20)}
 return cv.toDataURL('image/png')})(__N__)"""
 N=int(sys.argv[1])

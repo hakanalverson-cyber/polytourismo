@@ -65,23 +65,43 @@ for c in range(ncar):
     if cand.sum()<20:cand=~glass
     uk,ik=np.unique(key[cand],return_inverse=True);ar=np.bincount(ik,weights=area[cand]);dom=uk[ar.argmax()];dcol=[int(dom>>16),int(dom>>8&255),int(dom&255)]
     ptri=key==dom
+    # ---- wheels: cylinder-like components touching the ground + everything sitting inside them (rims, discs) ----
+    tcomp=vl[Tc[:,0]];wheel_tri=np.zeros(len(Tc),bool);ucomp=np.unique(tcomp);cinfo={}
+    for cmp in ucomp:
+        vv=np.nonzero((vl==cmp)&m)[0];q=pp[vv];cinfo[cmp]=(q.min(0),q.max(0))
+    wc=[]
+    for cmp,(lo_,hi_) in cinfo.items():
+        sx,sy,sz=hi_-lo_
+        if 45<sy<100 and 45<sz<100 and abs(sy-sz)<.18*max(sy,sz) and sx<.95*sy and lo_[1]<10 and sx>12:wc.append(cmp)
+    inside=[]
+    for cmp,(lo_,hi_) in cinfo.items():
+        if cmp in wc:continue
+        ctr_=(lo_+hi_)/2;sz_=hi_-lo_
+        for w in wc:
+            a_,b_=cinfo[w]
+            if np.all(ctr_>a_-1)&np.all(ctr_<b_+1) and sz_[1]<(b_[1]-a_[1])*1.02:inside.append(cmp);break
+    wsel=set(wc)|set(inside);wheel_tri=np.isin(tcomp,list(wsel)) if wsel else wheel_tri
+    nwheel=len(set((round(float(((cinfo[w][0]+cinfo[w][1])/2)[0])/40),round(float(((cinfo[w][0]+cinfo[w][1])/2)[2])/40)) for w in wc))
+    wheels_ok=nwheel==4
+    if not wheels_ok:wheel_tri[:]=False
+    lowest=0
     # roof position along length (-1 front .. +1 rear) from the highest quarter of vertices
     hv=pp[vids];top=hv[hv[:,1]>hv[:,1].max()*.9];roof=float(top[:,2].mean()/(size[2]/2+1e-6))
     zr=hv[:,2]/(size[2]/2+1e-6);rear=hv[zr>.78];wingR=float(rear[:,1].max()/hv[:,1].max()) if len(rear) else 0
     parts=[]
     pq_all=np.clip(np.round(pp*10),-32000,32000)
-    for name,sel in (('paint',ptri),('body',~ptri)):
+    for name,sel in (('tires',wheel_tri),('paint',ptri&~wheel_tri),('body',~ptri&~wheel_tri)):
         t=Tc[sel]
         if len(t)==0:parts.append({'n':name,'nv':0,'nt':0});continue
         allv=np.unique(t.reshape(-1));pqv=pq_all[allv].astype(np.int16)
-        if name=='paint':rec=pqv.view(np.uint8).reshape(len(allv),6);w=6
+        if name in('paint',):rec=pqv.view(np.uint8).reshape(len(allv),6);w=6
         else:
             uqv=np.round(np.clip(U[allv],0,1)*65535).astype(np.uint16);rec=np.concatenate([pqv.view(np.uint8).reshape(len(allv),6),uqv.view(np.uint8).reshape(len(allv),4)],1);w=10
         rv=np.ascontiguousarray(rec).view(np.dtype((np.void,w))).reshape(-1);_,fi,iv=np.unique(rv,return_index=True,return_inverse=True);iv=iv.reshape(-1)
         remap=np.zeros(len(P),np.int64);remap[allv]=iv;ti=remap[t].astype(np.uint16);nv=len(fi);assert nv<65535
-        o1=put(pqv[fi]);o3=put(uqv[fi]) if name=='body' else 0;o4=put(ti.reshape(-1))
+        o1=put(pqv[fi]);o3=put(uqv[fi]) if name!='paint' else 0;o4=put(ti.reshape(-1))
         parts.append({'n':name,'nv':int(nv),'nt':int(len(t)),'p':o1,'u':o3,'i':o4})
-    cars.append({'len':round(float(size[2])/100,3),'wid':round(float(size[0])/100,3),'hgt':round(float(size[1])/100,3),'roof':round(roof,3),'wing':round(wingR,3),'paint':dcol,'parts':parts,'cx':float(ctr[0]),'cy':float(ctr[1])})
+    cars.append({'len':round(float(size[2])/100,3),'wid':round(float(size[0])/100,3),'hgt':round(float(size[1])/100,3),'roof':round(roof,3),'wing':round(wingR,3),'paint':dcol,'parts':parts,'wheels':int(nwheel),'cx':float(ctr[0]),'cy':float(ctr[1])})
 # order cars by position on the sheet spiral (stable): sort by angle
 cars_idx=sorted(range(len(cars)),key=lambda k:(round(np.arctan2(cars[k]['cy'],cars[k]['cx']),3)))
 import gzip;raw=b''.join(blobs);open(OUT+'cars_v10.bin.gz','wb').write(gzip.compress(raw,9))
