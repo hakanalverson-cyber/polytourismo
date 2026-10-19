@@ -325,7 +325,7 @@ function drawShow(dt){studioOn();ensureStudio();const car=BYID[SR.id],idx=P.mode
  const key=idx+'|'+(window.PT7&&window.PT7.photos[idx]?1:0);if(key!==lastPhotoKey&&CAR_MODELS[idx]){lastPhotoKey=key;fillPhotos(idx)}}
 function fillPhotos(idx){const box=$('shPhotos');if(!box)return;let ph=window.PT7&&(window.PT7.photos[idx]||(()=>{try{return window.PT7.makePhotos(idx)}catch(e){return null}})());box.innerHTML='';
  for(let i=0;i<3;i++){const cv=document.createElement('canvas');cv.width=96;cv.height=60;const g=cv.getContext('2d');g.fillStyle='#14181d';g.fillRect(0,0,96,60);if(ph&&ph[i]){try{g.drawImage(ph[i],0,0,96,60)}catch(e){}}box.appendChild(cv)}}
-function openShow(kind,o){P._ro=!!o.rally&&kind==='garage';SR.lv=false;SR.kind=kind;SR.player=o.player||0;SR.cap=o.cap==null?null:o.cap;SR.ret=o.ret||'menu';SR.rally=!!o.rally;
+function openShow(kind,o){SR.sec=0;P._ro=!!o.rally&&kind==='garage';SR.lv=false;SR.kind=kind;SR.player=o.player||0;SR.cap=o.cap==null?null:o.cap;SR.ret=o.ret||'menu';SR.rally=!!o.rally;
  const list=showList();if(kind==='garage'){const s=SR.rally?P.rallySel(SR.player):P.SV().sel[SR.player];const ok=list.find(c=>c.id===s.id&&!c.off);const f=ok||list.find(c=>!c.off)||list[0];SR.id=f.id;SR.alt=(ok&&P.owns(f.id,s.alt))?s.alt:(P.owns(f.id,0)?0:1)}
  else{if(!BYID[SR.id])SR.id='merc';if(SR.alt&&!P.owns(SR.id,1))SR.alt=0}
  renderShow();show('s8show');}
@@ -351,9 +351,16 @@ function renderShow(){SR.alt=0;const kind=SR.kind,sv=P.SV(),list=showList(),car=
  const cats=['ALL',...(P.CATS||[]),...(kind==='brand'?['OWNED']:[])],cnt=k=>list.filter(c=>k==='ALL'||(k==='OWNED'?(sv.owned[c.id]||0)>0:c.cat===k)).length;
  if(!cats.includes(SR.cat))SR.cat='ALL';
  const vis=list.filter(c=>SR.cat==='ALL'||(SR.cat==='OWNED'?(sv.owned[c.id]||0)>0:c.cat===SR.cat));
- let h='<div class="cats">'+cats.filter(k=>cnt(k)||k==='ALL').map(k=>`<button class="${k===SR.cat?'sel':''}" data-cat="${k}">${k==='ALL'?'ALL':k==='OWNED'?'OWNED':k}<i>${cnt(k)}</i></button>`).join('')+'</div>',last=null;for(const c of vis){if(c.cls!==last){last=c.cls;h+=`<div class="ch"><span class="cls ${c.cls}">${c.cls}</span> &nbsp;Class ${c.cls}</div>`}const o=(sv.owned[c.id]||0)>0;
-  h+=`<div class="ci ${c.id===SR.id?'sel':''} ${c.off?'off':''}" data-id="${c.id}"><b>${c.name}</b><small>${kind==='brand'?(o?'Owned':fmtCr(c.price)):(c.off?'Class cap':c.type)}</small></div>`}
+const secMode=!(SR.rally&&kind==='garage');let h='',last=null;
+ if(secMode&&!SR.sec){h='<div class="secs">'+cats.filter(k=>k!=='ALL'&&cnt(k)).concat(['ALL']).map(k=>{const v=list.filter(c=>k==='ALL'||(k==='OWNED'?(sv.owned[c.id]||0)>0:c.cat===k));const lo=Math.min(...v.map(c=>c.price));return `<button class="sect" data-cat="${k}"><b>${k==='ALL'?'ALL CARS':k}</b><small>${v.length} cars${kind==='brand'&&k!=='OWNED'?' &middot; from '+fmtCr(lo):''}</small></button>`}).join('')+'</div>'}
+ else{
+  if(secMode)h+=`<button class="secback" data-back="1"><span>&lsaquo; SECTIONS</span><i>${SR.cat==='ALL'?'ALL CARS':SR.cat} &middot; ${vis.length}</i></button>`;
+  else h+='<div class="cats">'+cats.filter(k=>cnt(k)||k==='ALL').map(k=>`<button class="${k===SR.cat?'sel':''}" data-cat="${k}">${k==='ALL'?'ALL':k==='OWNED'?'OWNED':k}<i>${cnt(k)}</i></button>`).join('')+'</div>';
+  for(const c of vis){if(c.cls!==last){last=c.cls;h+=`<div class="ch"><span class="cls ${c.cls}">${c.cls}</span> &nbsp;Class ${c.cls}</div>`}const o=(sv.owned[c.id]||0)>0;
+   h+=`<div class="ci ${c.id===SR.id?'sel':''} ${c.off?'off':''}" data-id="${c.id}"><b>${c.name}</b><small>${kind==='brand'?(o?'Owned':fmtCr(c.price)):(c.off?'Class cap':c.type)}</small></div>`}}
  $('shList').innerHTML=h;$$('#shList .cats button',root).forEach(b=>b.onclick=()=>{SR.cat=b.dataset.cat;const v=list.filter(c=>SR.cat==='ALL'||(SR.cat==='OWNED'?(sv.owned[c.id]||0)>0:c.cat===SR.cat));if(v.length&&!v.some(c=>c.id===SR.id)){SR.id=v[0].id;SR.alt=0}P.sfx('select');renderShow();$('shList').scrollTop=0});$$('#shList .ci',root).forEach(e=>e.onclick=()=>{SR.id=e.dataset.id;if(!P.owns(SR.id,SR.alt))SR.alt=0;renderShow()});
+ $$('#shList .sect',root).forEach(b=>b.onclick=()=>{SR.cat=b.dataset.cat;SR.sec=1;const v=list.filter(c=>SR.cat==='ALL'||(SR.cat==='OWNED'?(sv.owned[c.id]||0)>0:c.cat===SR.cat));if(v.length&&!v.some(c=>c.id===SR.id)){SR.id=v[0].id;SR.alt=0}P.sfx('select');renderShow();$('shList').scrollTop=0});
+ $$('#shList .secback',root).forEach(b=>b.onclick=()=>{SR.sec=0;P.sfx('select');renderShow();$('shList').scrollTop=0});
  const sel=$$('#shList .ci.sel',root)[0];if(sel)sel.scrollIntoView({block:'nearest'});
  const tn=kind==='garage'&&owned?P.tuneGet(car.id,SR.alt):null,sb=statBars(car,tn),bars=sb.bars,gt=sb.gt;
  $('shStat').innerHTML=`<div class="nm">${car.name}${SR.alt?' <span style="color:var(--ac2);font-size:.6em">ALT</span>':''}</div><div class="tp">${car.type} &middot; ${car.drive}</div>
@@ -361,7 +368,7 @@ function renderShow(){SR.alt=0;const kind=SR.kind,sv=P.SV(),list=showList(),car=
  ${bars.map(barHTML).join('')}
  ${fxBoth(car)}
  <div class="gears9" style="grid-template-columns:repeat(${gt.length<=6?3:gt.length<=8?4:5},1fr)">${gt.map((v,i)=>`<div><small>GEAR ${i+1}</small>${Math.round(v)}</div>`).join('')}</div>
- <div class="spec">${kind==='brand'?'Price<b>'+fmtCr(car.price)+'</b><br>Alt color<b>'+fmtCr(car.altPrice)+'</b>':'Status<b>'+(owned?'Owned':'Not owned')+'</b>'}</div>${kind==='garage'&&owned?tuneHTML(car):'<div class="photos" id="shPhotos"></div>'}`;
+ <div class="spec">${kind==='brand'?'Price<b>'+fmtCr(car.price)+'</b>':'Status<b>'+(owned?'Owned':'Not owned')+'</b>'}</div>${kind==='garage'&&owned?tuneHTML(car):'<div class="photos" id="shPhotos"></div>'}`;
  if(kind==='garage'&&owned){$$('#shStat .tr button',root).forEach(b=>b.onclick=()=>{const k=b.dataset.k;P.tuneSet(car.id,SR.alt,k,P.tuneGet(car.id,SR.alt)[k]+ +b.dataset.d);P.sfx('select');renderShow()});$('tuReset').onclick=()=>{P.tuneReset(car.id,SR.alt);P.sfx('select');renderShow()}}
  const lvb=$('shLv');const lvOk=kind==='garage'&&owned&&P.owns(car.id,SR.alt)&&!!P.LV;lvb.style.display=lvOk?'':'none';if(!lvOk)SR.lv=false;lvb.querySelector('span').textContent=SR.lv?'Stats':'Livery';lvb.onclick=()=>{SR.lv=!SR.lv;P.sfx('select');renderShow()};
  if(SR.lv&&lvOk)P.LV.panel($('shStat'),SR);
@@ -407,7 +414,7 @@ addEventListener('keydown',e=>{
  if(scr==='s8cards'){if(e.code==='ArrowRight'||e.code==='KeyD')setFoc(foc+1);else if(e.code==='ArrowLeft'||e.code==='KeyA')setFoc(foc-1);else if(/^Digit[1-6]$/.test(e.code))pickMode($$('.card',root)[+e.code[5]-1].dataset.m);else if(e.code==='Enter'||e.code==='Space')pickMode($$('.card',root)[foc].dataset.m);return}
  if(scr==='s8show'){if(SR.kind==='brand'){cheatBuf=(cheatBuf+(e.key.length===1?e.key.toLowerCase():'')).slice(-13);if(cheatBuf.endsWith('hakannowant')){cheatBuf='';const sv=P.SV();sv.owned={merc:1};sv.sel=sv.sel.map(()=>({id:'merc',alt:0}));P.save();SR.id='merc';SR.alt=0;renderShow();return}
   if(cheatBuf.endsWith('hakanwantsall')){cheatBuf='';const sv=P.SV();CARS.forEach(c=>{sv.owned[c.id]=3});P.save();renderShow();return}}
-  const list=showList(),i=list.findIndex(c=>c.id===SR.id);if(e.code==='ArrowDown'){SR.id=list[Math.min(list.length-1,i+1)].id;SR.alt=P.owns(SR.id,SR.alt)?SR.alt:0;renderShow()}else if(e.code==='ArrowUp'){SR.id=list[Math.max(0,i-1)].id;SR.alt=P.owns(SR.id,SR.alt)?SR.alt:0;renderShow()}else if(e.code==='ArrowLeft')SR.vel-=3;else if(e.code==='ArrowRight')SR.vel+=3;else if(e.code==='Enter')$('shAct').click();return}
+  const list=showList().filter(c=>!(SR.sec&&!(SR.rally&&SR.kind==='garage'))||SR.cat==='ALL'||(SR.cat==='OWNED'?(P.SV().owned[c.id]||0)>0:c.cat===SR.cat)),i=Math.max(0,list.findIndex(c=>c.id===SR.id));if(!list.length)return;if(e.code==='ArrowDown'){SR.id=list[Math.min(list.length-1,i+1)].id;SR.alt=P.owns(SR.id,SR.alt)?SR.alt:0;renderShow()}else if(e.code==='ArrowUp'){SR.id=list[Math.max(0,i-1)].id;SR.alt=P.owns(SR.id,SR.alt)?SR.alt:0;renderShow()}else if(e.code==='ArrowLeft')SR.vel-=3;else if(e.code==='ArrowRight')SR.vel+=3;else if(e.code==='Enter')$('shAct').click();return}
  if(scr==='s8setup'&&e.code==='Enter'){$('suGo').click();return}
  if(scr==='menu'&&e.code==='Enter'){openCards();return}
  if(scr==='s8res'&&e.code==='Enter'){resContinue()}});
