@@ -84,7 +84,7 @@ src=rep(src,"z=T.z[i]-Math.sin(T.psi[i])*l,y=T.y[i]-l*T.bank[i];posts.push(","z=
 src=rep(src,"const over=close.road&&c.y-close.h<1.65;","const over=!T.d.gravel&&close.road&&c.y-close.h<1.65;")
 src=rep(src,"{u:'Numpad8',d:'Numpad5',l:'Numpad4',r:'Numpad6',h:'Numpad0'}","{u:'KeyT',d:'KeyG',l:'KeyF',r:'KeyH',h:'KeyY'}")
 
-parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','audio','modes','tracks','tracks2','extra','race2','elim','tod','harbor','props','weather','ambience','shade','ui','perf']  if os.path.exists(f'{SRC}/layers/{n}.js')]
+parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','audio','modes','tracks','tracks2','extra','race2','elim','tod','harbor','props','weather','ambience','tutorial','shade','ui','perf']  if os.path.exists(f'{SRC}/layers/{n}.js')]
 css=open(f'{SRC}/style.css').read()
 import base64
 pk=base64.b64encode(open(W+'/assets/car_pack_2.glb','rb').read()).decode()

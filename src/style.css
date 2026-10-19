@@ -382,3 +382,14 @@ body:after{background:repeating-linear-gradient(0deg,#00000010 0 1px,transparent
 .lst{-webkit-mask-image:linear-gradient(180deg,#000 0,#000 90%,transparent 100%);mask-image:linear-gradient(180deg,#000 0,#000 90%,transparent 100%)}
 
 .card[data-m=ta]{--mc:#4aa3ff}.card[data-m=elim]{--mc:#a96bff}
+/* ---- tutorial ---- */
+#tut{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);width:min(580px,92vw);z-index:60;background:rgba(10,12,16,.88);border:1px solid #2a313b;border-left:3px solid var(--ac,#f1f3f5);padding:14px 16px 12px;font-family:inherit;color:#d8dde3;backdrop-filter:blur(6px)}
+#tut .th{display:flex;align-items:center;gap:10px;font-size:10px;letter-spacing:.18em;color:#8a94a2}
+#tut .th b{color:var(--ac,#f1f3f5)}#tut .th i{flex:1;height:2px;background:#222a33;position:relative}#tut .th i u{position:absolute;left:0;top:0;height:2px;background:var(--ac,#f1f3f5);transition:width .4s}
+#tut .tt{font-size:20px;font-weight:700;margin:8px 0 4px;letter-spacing:.02em}#tut.ok .tt{color:#6fd48a}
+#tut .tx{font-size:13.5px;line-height:1.5;color:#b9c1cb}#tut .tx b{color:#f1f3f5}
+#tut .tbt{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+#tut button,#tutOffer button{background:transparent;border:1px solid #3a4350;color:#c8ced6;padding:6px 14px;font:600 11px inherit;letter-spacing:.12em;text-transform:uppercase;cursor:pointer}
+#tut button:hover,#tutOffer button:hover{border-color:#f1f3f5;color:#fff}#tut button.pri,#tutOffer button.pri{background:#f1f3f5;color:#0b0d10;border-color:#f1f3f5}
+#tutOffer{position:absolute;right:5vw;bottom:12vh;width:min(340px,80vw);background:rgba(10,12,16,.88);border:1px solid #2a313b;border-left:3px solid #f1f3f5;padding:14px 16px;display:flex;flex-wrap:wrap;gap:8px;color:#b9c1cb;font-size:13px;line-height:1.45}
+#tutOffer b{color:#fff;width:100%;font-size:15px}#tutOffer span{width:100%}

@@ -55,3 +55,8 @@ Typing `hakanwantsall` unlocks every car, `hakannowant` resets to the starter ca
 
 ## Assets & licence
 The car models come from low-poly car packs; confirm the licence of each pack before publishing this repository publicly, and add a `LICENSE` file for your own code.
+
+## v9 additions: scenery, ambience, tutorial
+- `src/layers/props.js`: rooted props on all 10 maps. Each prop stands on measured terrain with a buried foundation/skirt, stacked items rest on each other, boats/buoys sit on the water plane, nothing on the road or inside existing scenery. `tests/props_check.py` raycasts every prop against the real ground mesh.
+- `src/layers/ambience.js`: speed wind, surface rumble, per-map beds and wildlife/bells/horns, crowds at tents and the start line (follows the SFX volume and M mute).
+- `src/layers/tutorial.js`: menu entry "Tutorial" plus a one-time first-run offer; guided lesson on the Quarry.
