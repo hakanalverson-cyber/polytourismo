@@ -12,7 +12,7 @@ const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
 function altRGB(k){const d=META[k].paint;for(let i=0;i<ALT.length;i++){const c=ALT[(k+i)%ALT.length];if(dist(c,d)>140)return c}return ALT[0]}
 C10.altRGB=altRGB;C10.stockRGB=k=>META[k].paint;
 /* in-game length (m): the pack's real proportions, eased towards the 4.5 m the physics boxes assume */
-const gameLen=m=>4.5;
+const gameLen=m=>Math.max(m.len,m.wid);
 let buf=null;const geo={},cache={};
 const bodyMat=new THREE.MeshStandardMaterial({map:tex,roughness:.62,metalness:.12,flatShading:true});
 function geoms(k){if(geo[k])return geo[k];const out={};
@@ -59,13 +59,13 @@ const NAMES={
 /* the 14 original ids -> pack models (stats and ids unchanged, so saves keep working) */
 const PWR={37:.97,73:.99,0:.93,104:.92,106:.91,127:.94,116:.93,98:.92,36:.9,115:.97,35:.86,42:.86,38:.82,123:.84,86:.8,124:.82,77:.9,15:.9,30:.74,33:.8,43:.88,44:.7,94:.78,112:.75,1:.78,66:.76,63:.7,78:.8,135:.76,88:.8,130:.66,69:.66,7:.72,92:.8,99:.72,49:.64,105:.7,74:.74,20:.72,46:.8,118:.78,
  76:.3,26:.22,91:.12,67:.26,50:.2,93:.2,96:.14,100:.34,65:.4,51:.34,120:.42,52:.46,68:.5,57:.4,111:.42,28:.34};
-const LIFT={WAGON:.12};
-const OLD={lr:{k:133,cat:'WAGON',type:'RALLY WAGON'},ford:{k:76,cat:'HATCHBACK'},merc:{k:119,cat:'SEDAN'},ster:{k:100,cat:'HATCHBACK',type:'RAISED HATCH'},
+const LIFT={};
+const OLD={lr:{k:133,cat:'WAGON',type:'RALLY WAGON'},ford:{k:76,cat:'HATCHBACK'},merc:{k:119,cat:'SEDAN'},ster:{k:100,cat:'HATCHBACK',type:'RALLY HATCH'},
  art:{k:49,cat:'SUPERCAR',type:'HYBRID SUPERCAR'},ferr:{k:38,cat:'SUPERCAR'},zen:{k:0,cat:'HYPERCAR'},must:{k:72,cat:'MUSCLE'},
  urus:{k:113,cat:'WAGON',type:'RALLY WAGON'},m8:{k:105,cat:'COUPE',type:'GRAND TOURER'},amg:{k:74,cat:'COUPE'},gtr:{k:118,cat:'SPORTS'},por:{k:103,cat:'SPORTS'},p1:{k:115,cat:'HYPERCAR',type:'HYPERCAR'}};
 function catalogue(){
  for(let k=0;k<N;k++){const c=catOf(k);META[k].lift=LIFT[c]||0}
- META[100].lift=.1;
+ 
  const used=new Set();for(const id in OLD){const o=OLD[id],c=P.BYID[id];if(!c)continue;const nc=CATFIX[o.k]||o.cat;Object.assign(c,{body:o.k*2,alt:o.k*2+1,name:REALN[o.k],cat:nc,k10:o.k});if(o.type&&nc===o.cat)c.type=o.type;else c.type=TYPE[nc];c.eng=c.eng||ENG[nc][0];used.add(o.k)}
  /* fix up per-id tables the other layers read */
  const byCat={};

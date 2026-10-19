@@ -6,7 +6,8 @@ const rnd=(a,b)=>a+Math.random()*(b-a);
 const PCOL=['#f1f3f5','#f2c76b','#7fd68a','#ef6a5a'];
 
 /* ---------------- rally fleet: free rally-spec all-wheel-drive cars with gravel tyres ---------------- */
-P.RALLY_CARS=['ford','lr','urus','gtr','ster','m8'];P.CARS.forEach(c=>{if(c.rallyOnly||(c.cat==='HATCHBACK'||c.cat==='WAGON')&&!P.RALLY_CARS.includes(c.id))P.RALLY_CARS.push(c.id)});
+P.RALLY_CARS=['ford','lr','urus','gtr','ster'];P.CARS.forEach(c=>{if(c.rallyOnly||((c.cat==='HATCHBACK'||c.cat==='WAGON')&&!P.RALLY_CARS.includes(c.id)))P.RALLY_CARS.push(c.id)});
+const WRCX=['c21','c53','c61','c5','c132'];WRCX.forEach(id=>{if(P.BYID[id]&&!P.RALLY_CARS.includes(id))P.RALLY_CARS.push(id)});P.CARS.forEach(c=>{c.rdiv=P.RALLY_CARS.includes(c.id)?(c.rallyOnly||WRCX.includes(c.id)?'WRC':'CASUAL'):null;if(c.rdiv==='WRC'){c.type='WRC RALLY CAR';c.drive='AWD'}});
 const ow0=P.owns;P.owns=(id,alt)=>P._ro&&P.RALLY_CARS.includes(id)?true:ow0(id,alt);
 P.rallySel=p=>{const sv=P.SV();sv.rsel=sv.rsel||[];let s=sv.rsel[p];if(!s||!P.RALLY_CARS.includes(s.id))s=sv.rsel[p]={id:P.RALLY_CARS[p%P.RALLY_CARS.length],alt:0};return s};
 /* water: grip / speed drag */
