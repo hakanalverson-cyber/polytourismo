@@ -77,11 +77,15 @@ sampleTrack=d=>{const T=ps(d);T.fords=[];if(!d.fords&&!d.crater)return T;const N
 /* dips, crests and bumps along the whole stage; calm near the start, fords and jumps so those stay clean */
 function undulate(T,d){const N=T.N,sp=T.sp,TP=Math.PI*2;let sd=(N*104729+d.id*977)%2147483647||1;const rr=()=>(sd=(sd*48271)%2147483647)/2147483647;
  const circ=(a,b)=>{const q=Math.abs(a-b);return Math.min(q,N-q)*sp};
- const big=[],small=[];for(let k=0;k<4;k++)big.push({A:1.0+rr()*1.3,w:75+rr()*85,p:rr()*TP});for(let k=0;k<3;k++)small.push({A:.07+rr()*.1,w:11+rr()*14,p:rr()*TP});
- const cpl=P.cpsOf(T),e1=rr()*TP,e2=rr()*TP,e3=rr()*TP,e4=rr()*TP,ssm=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t)};
+ const small=[];for(let k=0;k<3;k++)small.push({A:.06+rr()*.08,w:11+rr()*14,p:rr()*TP});
+ const e3=rr()*TP,e4=rr()*TP,ssm=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t)};const cpl=P.cpsOf(T);
+ /* ground profile built from slope: stretches of flat road, then easy, medium and steep climbs and drops that blend into each other */
+ const prof=new Float32Array(N),slopes=[0,0,0,0,.025,.03,.05,.06,.08,.1,.12],bigK=d.id===10?1.2:1;{let g=0,y=0,tgt=0,next=0;
+  for(let i=0;i<N;i++){const s=i*sp;if(s>=next){next=s+45+rr()*130;tgt=slopes[(rr()*slopes.length)|0]*(rr()<.5?-1:1)*bigK}g+=(tgt-g)*(1-Math.exp(-sp/20));y+=g*sp;prof[i]=y}
+  const end=prof[N-1];let mean=0;for(let i=0;i<N;i++){prof[i]-=end*i/(N-1);mean+=prof[i]}mean/=N;const A=d.id===10?10:8;for(let i=0;i<N;i++)prof[i]=A*Math.tanh((prof[i]-mean)/A)}
  for(let i=0;i<N;i++){const s=i*sp;let tp=ssm(150,350,circ(i,0));for(const f of T.fords||[])tp=Math.min(tp,ssm(f.w+90,f.w+230,circ(i,f.i)));for(const j of T.jumps||[])tp=Math.min(tp,ssm(160,280,circ(i,j)));for(const q of cpl)tp=Math.min(tp,ssm(60,170,circ(i,q)));
-  if(tp<=0)continue;const env=ssm(-.15,.5,.5*Math.sin(s/330+e1)+.5*Math.sin(s/191+e2)),env2=ssm(0,.6,.5*Math.sin(s/260+e3)+.5*Math.sin(s/143+e4));
-  let dy=0;for(const w of big)dy+=w.A*Math.sin(TP*s/w.w+w.p);dy*=env*.7*(d.id===10?1.9:1.25);let bp=0;for(const w of small)bp+=w.A*Math.sin(TP*s/w.w+w.p);dy+=bp*env2;T.y[i]+=dy*tp}
+  if(tp<=0)continue;const env2=ssm(0,.6,.5*Math.sin(s/260+e3)+.5*Math.sin(s/143+e4));
+  let bp=0;for(const w of small)bp+=w.A*Math.sin(TP*s/w.w+w.p);T.y[i]+=(prof[i]+bp*env2)*tp}
  T.cpts=[];for(let i=0;i<N;i+=6)T.cpts.push([T.x[i],T.z[i],T.y[i]]);delete T.kap;delete T.kz;delete T.flat;delete T.cor}
 /* ---------------- pinch points: the road shrinks to barely wider than a car ---------------- */
 /* flat/straight measures per sample (radius and steepest grade within +-half metres) */

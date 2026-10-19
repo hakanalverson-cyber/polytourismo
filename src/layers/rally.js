@@ -5,9 +5,13 @@ const P=window.PT8,PI=Math.PI,BYID=P.BYID;
 const rnd=(a,b)=>a+Math.random()*(b-a);
 const PCOL=['#f1f3f5','#f2c76b','#7fd68a','#ef6a5a'];
 
-/* ---------------- water: grip / speed drag ---------------- */
+/* ---------------- rally fleet: free rally-spec all-wheel-drive cars with gravel tyres ---------------- */
+P.RALLY_CARS=['ford','lr','urus','gtr','ster','m8'];
+const ow0=P.owns;P.owns=(id,alt)=>P._ro&&P.RALLY_CARS.includes(id)?true:ow0(id,alt);
+P.rallySel=p=>{const sv=P.SV();sv.rsel=sv.rsel||[];let s=sv.rsel[p];if(!s||!P.RALLY_CARS.includes(s.id))s=sv.rsel[p]={id:P.RALLY_CARS[p%P.RALLY_CARS.length],alt:0};return s};
+/* water: grip / speed drag */
 const mul0=P.mul;
-P.mul=c=>{const m=mul0(c);if(c.human&&RACE&&RACE.cfg&&RACE.cfg.rally){m.grip*=1.04;if(c._hb){m.grip*=.3;m.brk*=.85;m.acc*=.8}}if(c._wet>0){const k=Math.min(1,c._wet);m.top*=1-.1*k;m.acc*=1-.18*k;m.grip*=1-.22*k;m.brk*=1-.12*k}return m};
+P.mul=c=>{const m=mul0(c);if(c.human&&RACE&&RACE.cfg&&RACE.cfg.rally){const o=(c.cs&&c.cs.off)||0;if(o<.9){m.grip*=(.5+.45*.9)/(.5+.45*o);m.top*=(.78+.22*.9)/(.78+.22*o);m.acc*=(.6+.37*.9)/(.6+.37*o)}m.grip*=1.04;m.brk*=.52;if(c._hb){m.grip*=.3;m.brk*=.85;m.acc*=.8}}if(c._wet>0){const k=Math.min(1,c._wet);m.top*=1-.1*k;m.acc*=1-.18*k;m.grip*=1-.22*k;m.brk*=1-.12*k}return m};
 function waterDepth(T,c){const F=T.fords;if(!F||!F.length)return 0;
  for(const f of F){const dx=c.x-f.x,dz=c.z-f.z,s=dx*f.s+dz*f.c;if(s>f.w+3||s<-f.w-3)continue;const l=dx*f.c-dz*f.s;if(Math.abs(l)>f.L*.8)continue;
   const g=T.terr?T.terr(c.x,c.z):f.y;const d=f.yw-Math.min(g,c.onRoad&&c.idx!=null?T.y[c.idx]:g);if(d>.1&&c.y-f.yw<1.1)return Math.min(1,d/.6)}
@@ -36,7 +40,14 @@ function stageFx(c,T,dt){const nm=T.d.name,sc=RACE.scene,sy=Math.sin(c.yaw),cy=M
   while(c._fA>=1){c._fA--;const a=rnd(0,6.283),r=rnd(3,26);P.puff(c.x+Math.cos(a)*r+sy*c.sp*.6,c.y+rnd(.5,5),c.z+Math.sin(a)*r+cy*c.sp*.6,rnd(.2,1),rnd(.1,.5),rnd(-.5,.5),[1,.88,.5],rnd(.08,.15),rnd(3,4.5),.55,.12)}}
  else if(nm==='Mangrove Ford'){c._fA=(c._fA||0)+dt*5;
   while(c._fA>=1){c._fA--;const a=rnd(0,6.283),r=rnd(4,28);P.puff(c.x+Math.cos(a)*r+sy*c.sp*.6,c.y+rnd(.4,3),c.z+Math.sin(a)*r+cy*c.sp*.6,rnd(-.3,.3),rnd(.1,.4),rnd(-.3,.3),[1,.97,.7],rnd(.08,.14),rnd(2.5,4),.7,-.05)}}}
-function fxStep(c,Rc,dt){const T=Rc.T;if(T.fords&&T.fords.length){const dep=waterDepth(T,c),was=c._wet>0;c._wet=dep;
+function roost(c,Rc,dt){const T=Rc.T;if(!c.human||!T.d.gravel||c.exp>0||c.respT>0||!c.onRoad||c.sp<5||c._wet>0||!Rc.dust)return;
+ const slide=Math.abs(wrp(Math.atan2(c.vx,c.vz)-c.yaw)),rate=Math.min(1,(c.sp-4)/14)*(24+c.sp*.7)*(1+Math.min(1.8,slide*3)+(c._hb?1.2:0)+Math.max(0,c.in&&c.in.th||0)*.3);
+ c._gA=(c._gA||0)+dt*rate;const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw),hx=T.d.dust||0xb89c70,bs=[((hx>>16)&255)/255,((hx>>8)&255)/255,(hx&255)/255].map(v=>v*v),dh=T.d.dirt||0x5a4630,dk=[((dh>>16)&255)/255,((dh>>8)&255)/255,(dh&255)/255].map(v=>v*v);
+ while(c._gA>=1){c._gA--;const wi=2+(Math.random()<.5?0:1),w=c.m.wheels[wi];if(!w||!w.g)continue;
+  const x=c.x+cy*WL[wi][0]+sy*WL[wi][1],z=c.z-sy*WL[wi][0]+cy*WL[wi][1],y=(w.s?w.s.h:c.y-1)+.25,b=1+(Math.random()-.5)*.2,sp=c.sp;
+  P.puff(x,y,z,-sy*sp*.2+(Math.random()-.5)*3+c.vx*.1,rnd(1.2,3.2)+slide*2,-cy*sp*.2+(Math.random()-.5)*3+c.vz*.1,[bs[0]*b*1.3,bs[1]*b*1.3,bs[2]*b*1.3],rnd(1.5,2.9)*(1+slide*.5),rnd(1.4,2.5),rnd(.38,.58),-.2);
+  if(Math.random()<.55)for(let k=0;k<2;k++)P.puff(x,y,z,-sy*sp*.3+(Math.random()-.5)*6,rnd(2.8,6.5),-cy*sp*.3+(Math.random()-.5)*6,dk,rnd(.14,.26),rnd(.6,1.1),.95,16)}}
+function fxStep(c,Rc,dt){roost(c,Rc,dt);const T=Rc.T;if(T.fords&&T.fords.length){const dep=waterDepth(T,c),was=c._wet>0;c._wet=dep;
   if(dep>0){c._wet=dep;if(c.sp>3)splash(c,T,dt,dep);
    if(!was&&c.sp>6){if(c.human){P.sfx&&P.sfx('splash',Math.min(1,c.sp/45));Rc.shake=Math.max(Rc.shake||0,.1*Math.min(1,c.sp/40))}}
    if(c.human&&c.sp>10){c._wS=(c._wS||0)-dt;if(c._wS<=0){c._wS=.28;P.sfx&&P.sfx('splash',.18+Math.min(.3,c.sp/150))}}}
@@ -75,6 +86,7 @@ function arrow(g,dir){const [ang,col]=GR[g]||GR[3],a=ang*PI/180,sx=dir==='L'?-1:
 const hu0=hudUpdate;
 hudUpdate=()=>{hu0();const Rc=RACE;if(!Rc||!Rc.cfg||!Rc.cfg.rally)return;
  Rc.cars.forEach((c,i)=>{if(!c.human)return;const e=document.getElementById('h'+i);if(!e||!e.dataset.b)return;let el=e.querySelector('.h8pace');if(!el){el=document.createElement('div');el.className='h8pace';e.appendChild(el)}
+  try{dashUpdate(Rc,c)}catch(e){if(!P._rdErr){P._rdErr=1;console.error('dash',e)}}
   if(Rc.state==='count'){el.style.opacity=0;return}
   const n=note(c,Rc.T);let txt='',cls='';
   if(n.ev&&(!n.cor||n.ev.d<n.cor.d+15)){txt=`<b>${n.ev.t}</b><span>${Math.round(n.ev.d/10)*10} m</span>`;cls=n.ev.t==='NARROW'?'ev nr':'ev'}
@@ -109,7 +121,7 @@ soloCam=(c,dt,out)=>{so0(c,dt,out);const Rc=RACE;if(!(Rc&&Rc.cfg&&Rc.cfg.rally&&
  if(m===1){out.p.set(c.x+sy*.55,c.y+.62,c.z+cy*.55);out.l.set(out.p.x+sy*30,out.p.y-.9,out.p.z+cy*30);out.f=78}
  else if(m===2){out.p.set(c.x+sy*2.5,c.y+.12,c.z+cy*2.5);out.l.set(c.x+sy*40,c.y-.3,c.z+cy*40);out.f=84}
  else{const s_=Math.sin(c.cy),co=Math.cos(c.cy),d=13+c.sp*.12,h=5.2+c.sp*.04;out.p.set(c.x-s_*d,c.camY+h,c.z-co*d);out.l.set(c.x+s_*8,c.camY+1.2,c.z+co*8);out.f=62}};
-const sh0=show;show=function(id){if(id==='menu')rallyGears(false);return sh0.apply(this,arguments)};
+const sh0=show;show=function(id){if(id==='menu')rallyGears(false);if(id!=='s8show')P._ro=false;return sh0.apply(this,arguments)};
 
 /* ---------------- elevation profile ---------------- */
 P.elevGraph=(T,w,h,at)=>{const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.className='rl-elev';P.elevDraw(cv,T,at);return cv};
@@ -125,9 +137,35 @@ P.elevDraw=(cv,T,at)=>{const g=cv.getContext('2d'),w=cv.width,h=cv.height,N=T.N,
  g.fillStyle='#9aa4ad';g.font='9px monospace';g.textAlign='left';g.fillText(Math.round(y1)+' m',pad+2,top+8);g.textAlign='right';g.fillText(Math.round(y0)+' m',w-pad-2,h-bot-3);g.textAlign='left';g.fillText('0',pad,h-3);g.textAlign='right';g.fillText((T.L/1000).toFixed(1)+' km',w-pad,h-3);
  if(at!=null){const i=((at%N)+N)%N,x=X(i),y=Y(T.y[Math.floor(i)]);g.fillStyle='#fff';g.strokeStyle='#05080b';g.lineWidth=2;g.beginPath();g.arc(x,y,4.2,0,7);g.fill();g.stroke()}};
 let elT=0,elC=null;
-function liveElev(Rc,dt){const c=human(Rc);if(!c||Rc.state==='done')return;elT-=dt;if(elT>0)return;elT=.25;
+function liveElev(Rc,dt){return;const c=human(Rc);if(!c||Rc.state==='done')return;elT-=dt;if(elT>0)return;elT=.25;
  if(!elC||elC._R!==Rc){if(!elC){elC=document.createElement('canvas');elC.id='rlElevLive';elC.width=360;elC.height=70;document.body.appendChild(elC)}elC._R=Rc}
- elC.style.display=(Rc.prep||Rc.replay||scr!=='game')?'none':'block';P.elevDraw(elC,Rc.T,c.unw)}
+ elC.style.display=(Rc.prep||Rc.replay||scr!=='game')?'none':'block';{const eh=document.getElementById('rdElev');if(eh&&elC.parentNode!==eh)eh.appendChild(elC)}P.elevDraw(elC,Rc.T,c.unw)}
+/* ---------------- one-player dashboard (centre bottom) ---------------- */
+let dash=null;const q$=id=>document.getElementById(id);
+function mkDash(){if(dash)return dash;dash=document.createElement('div');dash.id='rlDash';
+ dash.innerHTML=`<div class="rd-row"><div class="rd-side rd-l"><div class="rd-k"><small>STAGE</small><b id="rdPct">0%</b><i class="rd-bar"><u id="rdBar"></u></i><em id="rdRem">-</em></div><div class="rd-k"><small>NEXT CHECKPOINT</small><b id="rdCp">-</b></div><div class="rd-k"><small>ELAPSED</small><b id="rdT">0:00.0</b></div></div>
+ <div class="rd-c"><canvas id="rdG" width="360" height="215"></canvas><div class="rd-chips"><span id="rdHb">HANDBRAKE</span><span id="rdSh">SHIFT UP</span><span id="rdWt">WATER</span><span id="rdDr">DRIFT</span></div></div>
+ <div class="rd-side rd-r"><div class="rd-k"><small>ROAD GRADE</small><b id="rdGr">0%</b></div><div class="rd-k"><small>ALTITUDE</small><b id="rdAl">0 m</b></div><div class="rd-k"><small>SURFACE</small><b id="rdSf">-</b><em id="rdCm">-</em></div></div></div>
+ <div class="rd-bars"><label>THR<i><u id="rdTh"></u></i></label><label>BRK<i><u id="rdBr"></u></i></label><label>STR<i class="rd-st"><u id="rdSt"></u></i></label></div>`;
+ document.body.appendChild(dash);return dash}
+function drawGauge(cv,o){const g=cv.getContext('2d'),w=cv.width,h=cv.height,cx=w/2,cy=h*.5,R=h*.43,a0=Math.PI*(150/180),sw=Math.PI*(240/180);g.clearRect(0,0,w,h);
+ g.fillStyle='rgba(8,12,16,.78)';g.beginPath();g.arc(cx,cy,R+16,0,7);g.fill();g.strokeStyle='rgba(255,255,255,.14)';g.lineWidth=1.5;g.beginPath();g.arc(cx,cy,R+16,0,7);g.stroke();
+ const r=Math.min(1.04,o.rev),N=40;for(let i=0;i<=N;i++){const u=i/N,a=a0+sw*u,on=u<=r,c=u>.9?'#ff4d3d':u>.75?'#f2c76b':'#f1f3f5',big=i%5===0;g.strokeStyle=on?c:'rgba(255,255,255,.16)';g.lineWidth=big?3.4:2.2;const r1=R-(big?12:8),r2=R+2;g.beginPath();g.moveTo(cx+Math.cos(a)*r1,cy+Math.sin(a)*r1);g.lineTo(cx+Math.cos(a)*r2,cy+Math.sin(a)*r2);g.stroke()}
+ g.beginPath();g.arc(cx,cy,R-18,a0,a0+sw*Math.min(1,r));g.strokeStyle=r>.9?'#ff4d3d':r>.75?'#f2c76b':'#f1f3f5';g.lineWidth=5;g.lineCap='round';g.stroke();g.lineCap='butt';
+ g.textAlign='center';g.fillStyle='#fff';g.font='bold 54px monospace';g.fillText(String(o.kmh).padStart(3,'0'),cx,cy+6);g.font='bold 11px monospace';g.fillStyle='#9aa4ad';g.fillText('KM/H',cx,cy+24);
+ g.font='bold 10px monospace';g.fillText('GEAR',cx,cy+R*.62-14);g.font='bold 40px monospace';g.fillStyle=o.flash?'#7fe3f2':'#fff';g.fillText(o.gear,cx,cy+R*.62+22);
+ for(let i=0;i<o.NG;i++){const x=cx+(i-(o.NG-1)/2)*11,y=cy+R*.62+34;g.fillStyle=i===o.gi?'#fff':i<o.gi?'rgba(255,255,255,.4)':'rgba(255,255,255,.14)';g.fillRect(x-3.5,y-(i===o.gi?7:4),7,i===o.gi?7:4)}
+ g.fillStyle='#9aa4ad';g.font='10px monospace';g.fillText('MAX '+o.lim+' KM/H IN GEAR',cx,cy-R*.52)}
+function dashUpdate(Rc,c){const d=mkDash(),on=scr==='game'&&!Rc.prep&&!Rc.replay&&!c.fin;d.style.display=on?'flex':'none';bodyCls('rallyhud',on);if(!on)return;
+ const T=Rc.T,car=c.cs||BYID.merc,G=P.GT(car),gi=Math.min(c.gear|0,G.length-1),mt=(c.mt&&c.mt.top)||1,lim=car.top*G[gi].top*mt,rev=.2+.8*Math.min(1.05,c.sp/Math.max(1,lim)),kmh=Math.round(c.sp*3.6),N=T.N;
+ drawGauge(q$('rdG'),{rev,kmh,gear:gi+1,gi,NG:G.length,lim:Math.round(lim*3.6),flash:c.gearFlash>0});
+ const tot=N*Rc.laps,pr=Math.max(0,Math.min(1,c.unw/tot));q$('rdPct').textContent=Math.round(pr*100)+'%';q$('rdBar').style.width=pr*100+'%';q$('rdRem').textContent=Math.max(0,(tot-c.unw)*T.sp/1000).toFixed(1)+' km left';
+ const cps=P.cpsOf(T),K=cps.length,n=(Rc.splits||[]).length,lapI=Math.floor(n/K);let cpT='FINISH',cd=(Rc.laps*N-c.unw)*T.sp;if(lapI<Rc.laps&&K&&n<K*Rc.laps){cpT='CP '+(n%K+1)+' / '+(K+1);cd=(lapI*N+cps[n%K]-c.unw)*T.sp}q$('rdCp').textContent=cpT+'  '+Math.max(0,Math.round(cd))+' m';
+ q$('rdT').textContent=fmt(Rc.t);const i0=c.idx||0,gr=(T.y[(i0+4)%N]-T.y[(i0-4+N)%N])/(8*T.sp)*100;q$('rdGr').textContent=(gr>=0?'+':'')+gr.toFixed(0)+'%';q$('rdGr').className=gr>6?'up':gr<-6?'dn':'';q$('rdAl').textContent=Math.round(c.y)+' m';
+ q$('rdSf').textContent=c._wet>0?'WATER':c.onRoad?'GRAVEL':'OFF ROAD';q$('rdCm').textContent='CAM / '+CAMS[c.camMode||0]+'  GRIP '+Math.round(((c.mt&&c.mt.grip)||1)*100)+'%';
+ q$('rdTh').style.width=(c.in&&c.in.th||0)*100+'%';q$('rdBr').style.width=(c.in&&c.in.br||0)*100+'%';{const st=c.in?c.in.st:0;const u=q$('rdSt');u.style.width=Math.abs(st)*50+'%';u.style.left=st>=0?'50%':(50-Math.abs(st)*50)+'%'}
+ const sh=rev>.93&&gi<G.length-1&&Rc.state==='race';q$('rdSh').className=sh?'on':'';q$('rdHb').className=c._hb?'on':'';q$('rdWt').className=c._wet>0?'on':'';q$('rdDr').className=c.drifting?'on':'';
+}
 /* ---------------- take-turns session ---------------- */
 const lh=P.launch;let S=null;
 const KMo=KM.map(k=>Object.assign({},k));
@@ -145,7 +183,7 @@ P.launch=cfg=>{
  if(cfg.mode==='rally'&&!cfg.rally){startSession(cfg);return}
  if(!cfg.rally){keysReset();S=null;leaveFx()}
  lh(cfg)};
-function leaveFx(){if(elC)elC.style.display='none';rallyGears(false);bodyCls('rprep',false);bodyCls('rreplay',false);const a=$i('rlPrep'),b=$i('rlRep'),c=$i('rlCp');if(a)a.style.display='none';if(b)b.style.display='none';if(c)c.style.opacity=0}
+function leaveFx(){if(elC)elC.style.display='none';if(dash)dash.style.display='none';bodyCls('rallyhud',false);rallyGears(false);bodyCls('rprep',false);bodyCls('rreplay',false);const a=$i('rlPrep'),b=$i('rlRep'),c=$i('rlCp');if(a)a.style.display='none';if(b)b.style.display='none';if(c)c.style.opacity=0}
 function startSession(cfg){const hs=cfg.humans;
  S={cfg,drv:hs.map((h,i)=>({name:(h.name||'P'+(i+1)).slice(0,12),id:h.id,alt:h.alt,p:i,time:null,best:null,laps:[],medal:-1,splits:[]})),i:0,ref:null,refT:1e9};
  if(S.drv.length>1)briefing(0);else turn(0)}
@@ -286,6 +324,8 @@ addEventListener('keydown',e=>{const Rc=RACE;if(!Rc)return;
 
 /* ---------------- stage map render (3D aerial of the whole stage with the route marked) ---------------- */
 const RC={};let rr=null;
+P.prewarmStages=()=>P.STAGES.reduce((p,i)=>p.then(()=>P.stageRender(i)),Promise.resolve());
+P.stageCached=idx=>RC[idx]||null;
 P.stageRender=idx=>{if(RC[idx])return Promise.resolve(RC[idx]);
  return new Promise(res=>setTimeout(()=>{let sc=null;try{
   const def=Object.assign({},D[idx]);if(def.look!=null)def.id=def.look;const T=sampleTrack(def);sc=buildWorld(T);sc.fog=null;
