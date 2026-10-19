@@ -2784,7 +2784,7 @@ const endur=Rc=>!!(Rc&&Rc.cfg&&Rc.cfg.endur&&Rc.mode!=='cutup');
 
 /* ---------- physics multipliers (read every physics step by the stepCar wrapper) ---------- */
 P.mul=c=>{const Rc=RACE,m={acc:1,top:1,grip:1,brk:1};if(!Rc)return m;
- const d=c.draft||0;if(d>0){m.acc+=.10*d;m.top+=.05*d}
+ const d=c.draft||0;if(d>0){m.acc+=.10*d;m.top+=.10*d}
  if(endur(Rc)){const t=c.tyre==null?1:c.tyre,f=c.fuel==null?1:c.fuel;
   m.grip*=1-.30*Math.pow(1-t,1.2)-(t<.15?.08*(1-t/.15):0);m.brk*=1-.18*Math.pow(1-t,1.2);
   m.acc*=1+.05*(1-f);if(f<=0){m.acc*=.12;m.top*=.45}}
@@ -3595,8 +3595,11 @@ function addTags(Rc){const hs=Rc.cars.filter(c=>c.human);if(hs.length<2)return;
 const WM=()=>new THREE.MeshBasicMaterial({color:0xeaf4ff,transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide,fog:false});
 function mkDraft(Rc,c){const d={rings:[],lines:[],rt:0,lt:0};
  for(let i=0;i<5;i++){const m=new THREE.Mesh(new THREE.RingGeometry(.9,1,40),WM());m.visible=false;m.frustumCulled=false;Rc.scene.add(m);d.rings.push({m,life:9,vx:0,vz:0})}
- for(let i=0;i<16;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(.03,.03,1),WM());m.visible=false;m.frustumCulled=false;Rc.scene.add(m);d.lines.push({m,life:9,vx:0,vz:0,len:2})}
+ for(let i=0;i<18;i++){const mat=new THREE.MeshBasicMaterial({map:streakTex(),color:0xf2f8ff,transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide,fog:false}),m=new THREE.Group();
+  const g1=new THREE.PlaneGeometry(.13,1);g1.rotateX(-Math.PI/2);const g2=new THREE.PlaneGeometry(.13,1);g2.rotateZ(Math.PI/2);g2.rotateY(Math.PI/2);
+  m.add(new THREE.Mesh(g1,mat),new THREE.Mesh(g2,mat));m.children.forEach(o=>o.frustumCulled=false);m.visible=false;m.frustumCulled=false;Rc.scene.add(m);d.lines.push({m,mat,life:9,vx:0,vz:0,len:2})}
  c.dfx=d;return d}
+let _st=null;function streakTex(){if(_st)return _st;const cv=document.createElement('canvas');cv.width=4;cv.height=64;const g=cv.getContext('2d'),gr=g.createLinearGradient(0,0,0,64);gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.35,'rgba(255,255,255,.9)');gr.addColorStop(.6,'rgba(255,255,255,.5)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,4,64);_st=new THREE.CanvasTexture(cv);return _st}
 const easeOut=t=>1-Math.pow(1-t,3),RL=.75,LL=.55;
 function draftFx(Rc,dt){for(const c of Rc.cars){if(c.out)continue;const dr=c.draft||0;let d=c.dfx;
  const on=dr>.2&&!c.fin;if(on&&!d)d=mkDraft(Rc,c);
@@ -3611,7 +3614,7 @@ function draftFx(Rc,dt){for(const c of Rc.cars){if(c.out)continue;const dr=c.dra
  for(const r of d.rings){if(r.life<RL){r.life+=dt;const t=Math.min(1,r.life/RL);r.m.position.x+=r.vx*dt;r.m.position.z+=r.vz*dt;
    r.m.scale.setScalar(.8+easeOut(t)*2.6);const fade=t<.15?t/.15:Math.pow(1-(t-.15)/.85,1.6);r.m.material.opacity=.17*fade*(r.k||1);if(r.life>=RL){r.m.visible=false;r.m.material.opacity=0}}}
  for(const l of d.lines){if(l.life<LL){l.life+=dt;const t=Math.min(1,l.life/LL);l.m.position.x+=l.vx*dt;l.m.position.z+=l.vz*dt;
-   l.m.scale.set(1,1,Math.max(.01,l.len*Math.sin(t*Math.PI)));l.m.material.opacity=.14*Math.sin(t*Math.PI)*(l.k||1);if(l.life>=LL){l.m.visible=false;l.m.material.opacity=0}}}}}
+   l.m.scale.set(1,1,Math.max(.01,l.len*Math.sin(t*Math.PI)));l.mat.opacity=.32*Math.sin(t*Math.PI)*(l.k||1);if(l.life>=LL){l.m.visible=false;l.mat.opacity=0}}}}}
 
 const l0=P.launch;P.launch=cfg=>{l0(cfg);if(RACE)addTags(RACE)};
 const st0=step;step=dt=>{st0(dt);const Rc=RACE;if(Rc&&Rc.scene&&Rc.state!=='done')draftFx(Rc,dt)};

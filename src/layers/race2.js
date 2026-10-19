@@ -8,7 +8,7 @@ const endur=Rc=>!!(Rc&&Rc.cfg&&Rc.cfg.endur&&Rc.mode!=='cutup');
 
 /* ---------- physics multipliers (read every physics step by the stepCar wrapper) ---------- */
 P.mul=c=>{const Rc=RACE,m={acc:1,top:1,grip:1,brk:1};if(!Rc)return m;
- const d=c.draft||0;if(d>0){m.acc+=.10*d;m.top+=.05*d}
+ const d=c.draft||0;if(d>0){m.acc+=.10*d;m.top+=.10*d}
  if(endur(Rc)){const t=c.tyre==null?1:c.tyre,f=c.fuel==null?1:c.fuel;
   m.grip*=1-.30*Math.pow(1-t,1.2)-(t<.15?.08*(1-t/.15):0);m.brk*=1-.18*Math.pow(1-t,1.2);
   m.acc*=1+.05*(1-f);if(f<=0){m.acc*=.12;m.top*=.45}}
