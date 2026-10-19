@@ -4,7 +4,7 @@ setup="""(()=>{window.KK=(t,c)=>window.dispatchEvent(new KeyboardEvent(t,{code:c
 drive="""(()=>{const KK=window.KK,FF=window.FF,out=[];const T=()=>document.getElementById('tutT').textContent.replace('✓ ','');
  const until=(name,act,max)=>{for(let k=0;k<(max||40);k++){if(T()!==name)return true;act();}return false};
  const seq=[];
- /* Welcome -> Throttle */ FF(90);seq.push(T());
+ /* Welcome -> Throttle */ FF(90);seq.push(T());window.W8=()=>{};
  KK('keydown','KeyW');until('Throttle',()=>FF(30));seq.push(T());
  until('Steering',()=>{KK('keydown','KeyA');FF(15);KK('keyup','KeyA');KK('keydown','KeyD');FF(15);KK('keyup','KeyD');FF(30)});seq.push(T());
  until('Gears',()=>{KK('keyup','KeyW');KK('keydown','KeyW');FF(3);KK('keyup','KeyW');KK('keydown','KeyW');FF(50)});seq.push(T()+' g'+RACE.cars[0].gear);
