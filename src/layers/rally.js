@@ -161,7 +161,7 @@ function statUpdate(Rc,c){if(!stEl){stEl=document.createElement('div');stEl.id='
  const dv=Math.round((c.dmg||0)*100),pen=Rc.pen||0;if(!dv&&!pen){stEl.style.display='none';stEl._k='';return}
  const key=dv+'|'+pen;if(stEl._k!==key){stEl._k=key;const plate=(l,v,sub,col)=>`<div class="h8top"><div class="h8plate"><div class="lap">${l}</div><div class="raceTime" style="${col?'color:'+col:''}">${v}</div><div class="bl" style="${col?'color:'+col:''}">${sub}</div></div></div>`;
   stEl.innerHTML=(dv?plate('DAMAGE',dv+'%',dv>=80?'ENGINE FAILING':dv>=50?'HEAVY':dv>=20?'ENGINE HURT':'MINOR',dv>=50?'#ef6a5a':dv>=20?'#f2c76b':''):'')+(pen?plate('PENALTY','+'+pen.toFixed(1)+' s',(Math.round(pen/5))+' CUT'+(pen>5?'S':''),'#ef6a5a'):'')}
- const ht=document.querySelector('#h0 .h8top');if(ht){const rc=ht.getBoundingClientRect();stEl.style.left=(rc.right+8)+'px';stEl.style.top=rc.top+'px';const pv=ht.parentNode.style.getPropertyValue('--s');if(pv)stEl.style.setProperty('--s',pv)}else{stEl.style.left='210px';stEl.style.top='12px'}
+ const ht=document.querySelector('#h0 .h8top');if(ht){const rc=ht.getBoundingClientRect();stEl.style.left=(rc.right+8)+'px';stEl.style.top=rc.top+'px';stEl.style.setProperty('--pw',ht.offsetWidth+'px');stEl.style.setProperty('--ph',ht.offsetHeight+'px');const pv=ht.parentNode.style.getPropertyValue('--s');if(pv)stEl.style.setProperty('--s',pv)}else{stEl.style.left='210px';stEl.style.top='12px'}
  stEl.style.display='flex'}
 function dashUpdate(Rc,c){const d=mkDash(),on=scr==='game'&&!Rc.prep&&!Rc.replay&&!c.fin;d.style.display=on?'flex':'none';bodyCls('rallyhud',on);if(!on){if(stEl)stEl.style.display='none';return}
  const T=Rc.T,car=c.cs||BYID.merc,G=P.GT(car),gi=Math.min(c.gear|0,G.length-1),mt=(c.mt&&c.mt.top)||1,lim=car.top*G[gi].top*mt,rev=.2+.8*Math.min(1.05,c.sp/Math.max(1,lim)),kmh=Math.round(c.sp*3.6),N=T.N;
@@ -288,7 +288,7 @@ function cpCheck(Rc){const c=human(Rc);if(!c||Rc.state!=='race'||c.fin)return;co
   const sv=P.SV(),saved=sv.ral&&sv.ral[Rc.cfg.track+':'+Rc.cfg.laps],ref=(S&&S.ref)||(saved&&saved.s)||null,rt=ref&&ref[n];
   const el=cpBox(),k=n%K+1,lab=Rc.laps>1?` &middot; LAP ${lapI+1}`:'';
   let dl='';if(rt!=null){const dd=Rc.t+(Rc.pen||0)-rt;dl=`<em class="${dd<=0?'ok':'bad'}">${dd<=0?'-':'+'}${Math.abs(dd).toFixed(2)}</em>`}
-  const ht=document.querySelector('#h0 .h8top');if(ht){const rc=ht.getBoundingClientRect();el.style.left=rc.left+'px';el.style.top=(rc.bottom+6)+'px';const pv=ht.parentNode.style.getPropertyValue('--s');if(pv)el.style.setProperty('--s',pv)}else{el.style.left='16px';el.style.top='84px'}
+  const ht=document.querySelector('#h0 .h8top');if(ht){const rc=ht.getBoundingClientRect();el.style.left=rc.left+'px';el.style.top=(rc.bottom+6)+'px';el.style.setProperty('--pw',ht.offsetWidth+'px');el.style.setProperty('--ph',ht.offsetHeight+'px');const pv=ht.parentNode.style.getPropertyValue('--s');if(pv)el.style.setProperty('--s',pv)}else{el.style.left='16px';el.style.top='84px'}
   el.innerHTML=`<div class="h8top"><div class="h8plate"><div class="lap">CHECKPOINT ${k} / ${K+1}${lab}</div><div class="raceTime">${fmt(Rc.t+(Rc.pen||0))}</div><div class="bl" style="${rt!=null?'color:'+(Rc.t+(Rc.pen||0)-rt<=0?'#7fd68a':'#ef6a5a'):''}">${rt!=null?'SPLIT '+(Rc.t+(Rc.pen||0)-rt<=0?'-':'+')+Math.abs(Rc.t+(Rc.pen||0)-rt).toFixed(2):'SPLIT --'}</div></div></div>`;el.style.opacity=1;clearTimeout(el._h);el._h=setTimeout(()=>{el.style.opacity=0},3800);
   if(c.human)P.sfx&&P.sfx('select')}}
 
@@ -398,11 +398,43 @@ P.stageRender=idx=>{if(RC[idx])return Promise.resolve(RC[idx]);
 /* ---------------- loading animation between the play cards and the rally setup ---------------- */
 const PR={};const sr_=P.stageRender;
 P.stageRender=idx=>{if(RC[idx])return Promise.resolve(RC[idx]);return PR[idx]||(PR[idx]=sr_(idx).then(v=>{delete PR[idx];return v}))};
+/* Urus jump scene: camera lies in the creek bed looking up while the Urus flies over the gap */
+let JS=null;
+function jumpInit(box){
+ if(JS){box.appendChild(JS.cv);return JS}
+ const cv=document.createElement('canvas'),r=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});r.outputEncoding=THREE.sRGBEncoding;r.setClearColor(0,0);r.setPixelRatio(1);
+ const sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(80,16/9,.3,200);cam.up.set(0,0,1);cam.position.set(0,-2.8,2.2);cam.lookAt(0,8,-.5);
+ sc.add(new THREE.HemisphereLight(0xffd9b0,0xb88a5a,.7));const dl=new THREE.DirectionalLight(0xffe2b8,.6);dl.position.set(-10,20,8);sc.add(dl);
+ const ul=new THREE.DirectionalLight(0xffc890,2.2);ul.position.set(2,-14,4);sc.add(ul);
+ const M=(c)=>new THREE.MeshStandardMaterial({color:c,roughness:.95,metalness:0,flatShading:true});
+ const bed=new THREE.Mesh(new THREE.BoxGeometry(14,1,14),M(0x4a3a2a));bed.position.set(0,-3.8,0);sc.add(bed);
+ const water=new THREE.Mesh(new THREE.BoxGeometry(12,.1,9),new THREE.MeshStandardMaterial({color:0x3c6f86,roughness:.25,metalness:.2,transparent:true,opacity:.85}));water.position.set(0,-3.2,-1);sc.add(water);
+ const bank=(sx)=>{const g=new THREE.Mesh(new THREE.BoxGeometry(30,3.2,30),M(0x40301e));g.position.set(sx*(4.2+15),-1.6,0);sc.add(g);const tp=new THREE.Mesh(new THREE.BoxGeometry(30,.4,30),M(0x44602c));tp.position.set(sx*(4.2+15),.1,0);sc.add(tp)};bank(-1);bank(1);
+ for(let i=0;i<10;i++){const k=new THREE.Mesh(new THREE.DodecahedronGeometry(.35+Math.random()*.5,0),M(0x8a8478));k.position.set((Math.random()-.5)*7,-3,-3+Math.random()*5);k.rotation.set(Math.random()*3,Math.random()*3,0);sc.add(k)}
+ for(let i=0;i<14;i++){const t=new THREE.Mesh(new THREE.ConeGeometry(.07,1+Math.random()*.8,4),M(0x4d6a30));const sx=i%2?1:-1;t.position.set(sx*(3.9+Math.random()*.4),.9,-4+Math.random()*8);t.rotation.z=sx*.15;sc.add(t)}
+ const car=mkCar(0xdddddd,0);car.modelIndex=15;try{attachCarModel(car)}catch(e){}
+ const piv=new THREE.Group();car.g.rotation.y=Math.PI/2;piv.add(car.g);sc.add(piv);
+ if(car.sh)car.sh.visible=false;
+ JS={cv,r,sc,cam,piv,t:0,last:0,raf:0};box.appendChild(cv);return JS}
+const JT=2.8,JK=.06;
+function jumpFrame(now){
+ const J=JS;if(!J||!J.on)return;J.raf=requestAnimationFrame(jumpFrame);
+ const dt=Math.min(.05,(now-J.last)/1000||0);J.last=now;J.t+=dt;if(J.t>JT)J.t=0;
+ const w=J.cv.parentNode.clientWidth|0,h=J.cv.parentNode.clientHeight|0;if(w&&(J.w!==w||J.h!==h)){J.w=w;J.h=h;J.r.setSize(w,h,false);J.cam.aspect=w/h;J.cam.updateProjectionMatrix()}
+ /* run-up and ramp on the left bank, flight across the creek, landing on the right bank */
+ const x=-26+52*(J.t/JT);let y,pitch;const d=x+4.2;
+ if(x<-9){y=0;pitch=0}else if(x<-4.2){y=(x+9)*.1;pitch=Math.atan(.1)}
+ else if(x<4.4){y=.5+.6*d-.0786*d*d;pitch=Math.atan(.6-2*.0786*d)}
+ else{const e=x-4.4;y=.32*Math.exp(-e*.8)*Math.abs(Math.sin(e*2.2));pitch=-.55*Math.exp(-e*.8)}
+ J.piv.position.set(x,y,0);J.piv.rotation.z=pitch;J.piv.children[0].position.y=.72;
+ J.r.render(J.sc,J.cam)}
+P._jumpAt=t=>{const J=JS;if(!J)return 0;J.on=false;cancelAnimationFrame(J.raf);J.t=t;J.last=performance.now();J.on=true;jumpFrame(performance.now()+16);J.on=false;cancelAnimationFrame(J.raf);return 1};
 P.rallyIntro=(open,track)=>{let e=$i('rlLoad');
  if(!e){e=document.createElement('div');e.id='rlLoad';let st='';for(let i=0;i<26;i++)st+=`<i style="top:${(Math.random()*100).toFixed(1)}%;width:${(14+Math.random()*34).toFixed(0)}vw;animation-duration:${(.55+Math.random()*.9).toFixed(2)}s;animation-delay:-${(Math.random()*1.4).toFixed(2)}s;opacity:${(.18+Math.random()*.5).toFixed(2)}"></i>`;
-  e.innerHTML=`<div class="rl-streaks">${st}</div><div class="rl-ring"><svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="86" class="a"/><circle cx="100" cy="100" r="70" class="b"/><circle cx="100" cy="100" r="54" class="c"/></svg></div><div class="rl-lt"><small>PREPARING</small><h2>RALLY</h2><p>LOADING STAGES</p><div class="rl-pb"><u></u></div></div>`;document.body.appendChild(e)}
+  e.innerHTML=`<div class="rl-streaks">${st}</div><div class="rl-jump"></div><div class="rl-lt"><small>PREPARING</small><h2>RALLY</h2><p>LOADING STAGES</p><div class="rl-pb"><u></u></div></div>`;document.body.appendChild(e)}
  e.classList.remove('on','done');void e.offsetWidth;e.classList.add('on');const t0=performance.now();
+ let J=null;try{J=jumpInit(e.querySelector('.rl-jump'));J.on=true;J.t=0;J.landed=false;J.last=performance.now();cancelAnimationFrame(J.raf);J.raf=requestAnimationFrame(jumpFrame)}catch(err){console.error('jump',err)}
  setTimeout(()=>{try{open()}catch(err){console.error(err)}
-  (P.stageRender?P.stageRender(track):Promise.resolve()).catch(()=>{}).then(()=>{setTimeout(()=>{e.classList.add('done');setTimeout(()=>e.classList.remove('on','done'),650)},Math.max(0,1700-(performance.now()-t0)))})},420)};
+  (P.stageRender?P.stageRender(track):Promise.resolve()).catch(()=>{}).then(()=>{setTimeout(()=>{e.classList.add('done');setTimeout(()=>{e.classList.remove('on','done');if(J){J.on=false;cancelAnimationFrame(J.raf)}},650)},Math.max(0,1700-(performance.now()-t0)))})},420)};
 P.RALLYSESSION=()=>S;
 })();

@@ -540,22 +540,23 @@ body.rallyhud .h8spd,body.rallyhud .h8pos{display:none!important}
 
 #rlStat{position:fixed;z-index:20;display:none;flex-direction:column;gap:6px;pointer-events:none}
 #rlStat .h8top{position:static;transform:scale(var(--s,1));transform-origin:top left;margin-bottom:calc((var(--s,1) - 1) * 56px)}
-#rlStat .h8plate{min-width:110px}
-#rlStat .h8plate .raceTime{font-size:18px}
+#rlStat .h8top,#rlCp .h8top{width:var(--pw,auto);box-sizing:border-box}#rlStat .h8top{height:var(--ph,auto)}#rlStat .h8plate,#rlCp .h8plate{flex:1;min-width:0}
+
 #rlDash .rd-bars{width:min(300px,76%)}
 
-#rlLoad{position:fixed;inset:0;z-index:70;background:radial-gradient(ellipse at 50% 60%,#2a1a12 0%,#0b0e12 70%);opacity:0;pointer-events:none;transition:opacity .4s;overflow:hidden}
+#rlLoad{position:fixed;inset:0;z-index:70;background:linear-gradient(180deg,#141b2a 0%,#3d3a4a 38%,#b8704a 78%,#f0b070 100%);opacity:0;pointer-events:none;transition:opacity .4s;overflow:hidden}
 #rlLoad.on{opacity:1;pointer-events:auto}#rlLoad.on.done{opacity:0;transition:opacity .6s}
-#rlLoad .rl-streaks i{position:absolute;left:0;height:2px;background:linear-gradient(90deg,transparent,#f2c76b,transparent);transform:translateX(-120vw);animation:rlStreak linear infinite;will-change:transform}
+#rlLoad .rl-streaks{display:none}#rlLoad .rl-streaks i{position:absolute;left:0;height:2px;background:linear-gradient(90deg,transparent,#f2c76b,transparent);transform:translateX(-120vw);animation:rlStreak linear infinite;will-change:transform}
 @keyframes rlStreak{to{transform:translateX(130vw)}}
-#rlLoad .rl-ring{position:absolute;left:50%;top:50%;width:min(60vh,70vw);height:min(60vh,70vw);margin:calc(min(60vh,70vw)/-2) 0 0 calc(min(60vh,70vw)/-2);opacity:.55}
+#rlLoad .rl-jump{position:absolute;inset:0}#rlLoad .rl-jump canvas{width:100%;height:100%;display:block}
+#rlLoad .rl-ring{display:none;position:absolute;left:50%;top:50%;width:min(60vh,70vw);height:min(60vh,70vw);margin:calc(min(60vh,70vw)/-2) 0 0 calc(min(60vh,70vw)/-2);opacity:.55}
 #rlLoad .rl-ring svg{width:100%;height:100%;animation:rlSpin 6s linear infinite}
 #rlLoad .rl-ring circle{fill:none;stroke:#f1f3f5;stroke-width:2;stroke-linecap:round;transform-origin:100px 100px}
 #rlLoad .rl-ring .a{stroke-dasharray:90 450;animation:rlSpin 2.4s linear infinite}
 #rlLoad .rl-ring .b{stroke:#f2c76b;stroke-dasharray:40 400;animation:rlSpin 1.7s linear infinite reverse}
 #rlLoad .rl-ring .c{stroke-dasharray:20 320;opacity:.6;animation:rlSpin 1.1s linear infinite}
 @keyframes rlSpin{to{transform:rotate(360deg)}}
-#rlLoad .rl-lt{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;color:#fff;font-family:var(--mn,monospace)}
+#rlLoad .rl-lt{position:absolute;left:50%;top:22%;transform:translate(-50%,-50%);text-align:center;color:#fff;font-family:var(--mn,monospace)}
 #rlLoad .rl-lt small{display:block;letter-spacing:.5em;font-size:12px;color:#9aa4ad;animation:rlFade 1.1s ease-out both}
 #rlLoad .rl-lt h2{margin:6px 0;font-size:clamp(46px,9vw,110px);letter-spacing:.18em;font-style:italic;animation:rlTrack 1.4s cubic-bezier(.2,.8,.2,1) both}
 @keyframes rlTrack{from{letter-spacing:.9em;opacity:0}to{letter-spacing:.18em;opacity:1}}
