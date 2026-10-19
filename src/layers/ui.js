@@ -21,38 +21,41 @@ const IC={
   p.line(20,23,20,14,A);p.line(21,23,21,14,A);p.line(20,23,27,27,Y);p.circ(20,23,2,W,true);
   /* checker */p.r(2,31,2,2,W);p.r(4,33,2,2,W);p.r(6,31,2,2,W);p.r(2,35,2,2,'#566070');
   return p.cv},
- mp(){const p=pxCanvas(48),W='#e6e9ee',A='#f1f3f5',Y='#f2c76b',G='#161c24',L='#3a4452';
-  /* two stacked screens (split view), each with a road + car */
-  const scr=(y,col,cx)=>{p.r(2,y,44,20,G);p.r(2,y,44,1,L);p.r(2,y+19,44,1,L);p.r(2,y,1,20,L);p.r(45,y,1,20,L);
-   p.r(2,y+12,44,8,'#232b36');for(let x=4;x<44;x+=8)p.r(x,y+15,4,1,'#59657a');
-   p.r(cx,y+9,10,5,col);p.r(cx+2,y+7,5,3,col);p.r(cx+3,y+8,3,2,'#0a1018');p.r(cx+1,y+13,2,2,'#000');p.r(cx+7,y+13,2,2,'#000');p.r(cx+9,y+10,1,2,W);
-   p.r(4,y+3,3,2,col);p.r(9,y+3,12,1,L)};
-  scr(3,A,22);scr(25,Y,12);
-  p.r(2,23,44,2,W);/* divider */p.r(21,22,6,4,W);p.r(22,23,4,2,'#0a1018');
+ mp(){const p=pxCanvas(48),W='#e6e9ee',A='#f1f3f5',Y='#f2c76b',K='#0a1018';
+  /* two cars side by side, split line between them, P1 / P2 pips */
+  const car=(x,y,c,hl)=>{p.r(x+2,y,10,26,c);p.r(x+3,y-2,8,2,c);p.r(x+3,y+26,8,2,c);p.r(x,y+4,2,6,'#000');p.r(x+12,y+4,2,6,'#000');p.r(x,y+17,2,6,'#000');p.r(x+12,y+17,2,6,'#000');
+   p.r(x+3,y+7,8,6,K);p.r(x+3,y+21,8,3,K);p.r(x+3,y,2,2,hl);p.r(x+9,y,2,2,hl);p.r(x+6,y+14,2,5,'#00000033')};
+  car(6,8,A,'#fff6c0');car(28,12,Y,'#fff6c0');
+  for(let y=2;y<46;y+=6)p.r(23,y,2,3,'#59657a');
+  p.r(8,38,4,4,A);p.r(30,40,4,4,Y);p.r(36,40,1,4,Y);p.r(14,40,0,0,A);
+  p.r(9,4,2,1,A);p.r(31,4,2,1,Y);p.r(32,3,0,0,Y);
   return p.cv},
- cu(){const p=pxCanvas(48),W='#e6e9ee',A='#f1f3f5',Y='#f2c76b',R='#ef6a5a',T='#7b8696',G='#141a21';
-  const car=(x,y,c,up)=>{p.r(x+1,y,6,14,c);p.r(x+2,y-1,4,1,c);p.r(x+2,y+14,4,1,c);p.r(x,y+3,1,3,'#000');p.r(x+7,y+3,1,3,'#000');p.r(x,y+9,1,3,'#000');p.r(x+7,y+9,1,3,'#000');
-   p.r(x+2,y+(up?3:7),4,3,'#0a1018');p.r(x+2,y+(up?11:2),4,2,'#0a1018');if(up){p.r(x+1,y,2,1,'#fff6c0');p.r(x+5,y,2,1,'#fff6c0')}else{p.r(x+1,y+13,2,1,R);p.r(x+5,y+13,2,1,R)}};
-  p.r(4,0,40,48,G);p.r(4,0,2,48,W);p.r(42,0,2,48,W);
-  for(let y=2;y<48;y+=10){p.r(17,y,2,5,'#59657a');p.r(29,y,2,5,'#59657a')}
-  car(7,6,T,0);car(31,2,T,0);car(19,18,'#5b6677',0);
-  car(19,32,A,1);
-  /* near-miss sparks + trail */
-  p.r(16,31,1,5,Y);p.r(28,33,1,5,Y);p.r(14,34,2,1,Y);p.r(28,36,2,1,Y);p.r(22,47,4,1,A);
-  p.r(35,22,5,1,Y);p.r(36,24,4,1,Y);p.r(12,20,5,1,Y);
+ cu(){const p=pxCanvas(48),W='#e6e9ee',A='#f1f3f5',Y='#f2c76b',R='#ef6a5a',T='#7b8696',K='#0a1018';
+  /* player car cutting diagonally between two traffic cars, with spark burst */
+  const car=(x,y,c)=>{p.r(x+1,y,6,14,c);p.r(x+2,y-1,4,1,c);p.r(x+2,y+14,4,1,c);p.r(x,y+3,1,3,'#000');p.r(x+7,y+3,1,3,'#000');p.r(x,y+9,1,3,'#000');p.r(x+7,y+9,1,3,'#000');p.r(x+2,y+3,4,3,K);p.r(x+2,y+11,4,2,K)};
+  car(6,4,T);car(34,22,T);car(20,20,A);
+  for(let i=0;i<6;i++){p.r(24-i*2,36+i*2,2,2,i%2?Y:A)}
+  /* burst between cars */
+  p.r(16,26,3,1,Y);p.r(14,24,2,1,Y);p.r(15,28,2,1,Y);p.r(30,28,3,1,Y);p.r(32,26,2,1,Y);p.r(31,30,2,1,Y);
+  p.r(38,6,2,6,Y);p.r(36,8,6,2,Y);p.r(10,38,2,4,R);p.r(9,39,4,2,R);
   return p.cv},
  el(){const p=pxCanvas(48),W='#e6e9ee',A='#f1f3f5',R='#ef6a5a',T='#566070',G='#141a21';
-  p.r(0,0,48,48,G);
   const car=(x,y,c)=>{p.r(x+1,y,6,12,c);p.r(x+2,y-1,4,1,c);p.r(x+2,y+12,4,1,c);p.r(x,y+2,1,3,'#000');p.r(x+7,y+2,1,3,'#000');p.r(x,y+8,1,3,'#000');p.r(x+7,y+8,1,3,'#000');p.r(x+2,y+3,4,3,'#0a1018')};
   car(6,4,A);car(20,2,W);car(34,5,W);car(13,19,T);car(27,21,T);
   /* last car, crossed out */
   car(20,34,'#3a4452');for(let i=0;i<14;i++){p.r(14+i,30+i,2,2,R);p.r(14+i,43-i,2,2,R)}
   return p.cv},
- ca(){const p=pxCanvas(40),W='#e6e9ee',Y='#f2c76b',A='#f1f3f5',D='#b8923f';
-  p.r(12,6,16,2,Y);p.r(12,8,16,8,Y);p.r(13,16,14,3,Y);p.r(16,19,8,3,Y);p.r(18,22,4,6,D);p.r(14,28,12,3,Y);p.r(12,31,16,3,D);
-  p.r(5,8,5,2,Y);p.r(5,10,2,6,Y);p.r(7,16,3,2,Y);p.r(30,8,5,2,Y);p.r(33,10,2,6,Y);p.r(30,16,3,2,Y);
-  p.r(15,10,2,4,W);p.r(16,9,1,1,W);p.r(22,6,2,2,'#fff');p.r(2,36,36,1,'#566070');
-  p.r(6,34,3,2,A);p.r(11,34,3,2,A);p.r(16,34,3,2,A);
+ ca(){const p=pxCanvas(48),W='#e6e9ee',Y='#f2c76b',D='#b8923f',A='#f1f3f5',S='#566070',R='#ef6a5a';
+  /* road climbing a staircase of ranks to a flag */
+  p.r(4,40,10,4,S);p.r(14,32,10,12,S);p.r(24,24,10,20,S);p.r(34,16,10,28,S);
+  p.r(4,40,10,1,W);p.r(14,32,10,1,W);p.r(24,24,10,1,W);p.r(34,16,10,1,Y);
+  p.r(7,42,4,1,'#2a3340');p.r(17,38,4,1,'#2a3340');p.r(27,34,4,1,'#2a3340');
+  /* little car on the second step */
+  p.r(15,28,7,3,A);p.r(17,26,4,2,A);p.r(16,31,2,2,'#000');p.r(20,31,2,2,'#000');
+  /* flag */
+  p.r(38,2,2,14,W);p.r(40,2,6,3,Y);p.r(40,5,5,3,Y);p.r(40,8,3,2,Y);p.r(41,3,2,2,A);
+  /* sparkles */
+  p.r(28,12,1,5,Y);p.r(26,14,5,1,Y);p.r(8,24,1,3,Y);p.r(7,25,3,1,Y);
   return p.cv}
 };
 const evIcon={race:'<svg class="ic" viewBox="0 0 22 22"><path d="M4 20V3h2v2h12l-3 4 3 4H6v7z" fill="#e6e9ee"/></svg>',rally:'<svg class="ic" viewBox="0 0 22 22"><path d="M2 18l7-11 4 6 3-3 4 8z" fill="#c9a36a"/><rect x="16" y="3" width="3" height="3" fill="#f2c76b"/></svg>',cutup:'<svg class="ic" viewBox="0 0 22 22"><rect x="2" y="8" width="8" height="5" fill="#6a7586"/><rect x="11" y="13" width="9" height="6" fill="#f1f3f5"/><path d="M12 4l6-2" stroke="#f2c76b" stroke-width="2"/></svg>'};
@@ -61,7 +64,7 @@ root.innerHTML=`
 <section class="v8s" id="s8cards"><div class="hdr"><h2>SELECT <em>MODE</em></h2><div class="sp"></div>${crHTML}</div>
 <div class="cards">
  <div class="card" data-m="ta"><span class="num">01</span><div class="ico" data-i="ta"></div><div class="tx"><h3>Time Attack</h3><div class="sub">Solo / medals</div></div></div>
- <div class="card" data-m="mp"><span class="num">02</span><div class="ico" data-i="mp"></div><div class="tx"><h3>Local Multiplayer</h3><div class="sub">1-4 drivers / split screen</div></div></div>
+ <div class="card" data-m="mp"><span class="num">02</span><div class="ico" data-i="mp"></div><div class="tx"><h3>Multiplayer</h3><div class="sub">1-4 drivers / split screen</div></div></div>
  <div class="card" data-m="cutup"><span class="num">03</span><div class="ico" data-i="cu"></div><div class="tx"><h3>Cut-Up</h3><div class="sub">Traffic / combo score</div></div></div>
  <div class="card" data-m="elim"><span class="num">04</span><div class="ico" data-i="el"></div><div class="tx"><h3>Elimination</h3><div class="sub">Last place is out / survive</div></div></div>
  <div class="card" data-m="career"><span class="num">05</span><div class="ico" data-i="ca"></div><div class="tx"><h3>Career</h3><div class="sub">Rookie to legend</div></div></div>
