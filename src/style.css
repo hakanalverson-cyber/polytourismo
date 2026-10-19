@@ -606,3 +606,9 @@ body.rallyhud .h8spd,body.rallyhud .h8pos{display:none!important}
 
 #rlLoad:before{content:"";position:absolute;inset:0 0 auto 0;height:48%;z-index:1;background:linear-gradient(180deg,#0b0f16d9,#0b0f1600);pointer-events:none}
 #rlLoad .rl-lt{z-index:2;text-shadow:0 2px 14px #000a}
+
+#rlLoad .rl-pb u{width:100%;transform:scaleX(0);transform-origin:0 50%;animation:rlBarC 9s cubic-bezier(.08,.6,.2,1) forwards}
+@keyframes rlBarC{to{transform:scaleX(.88)}}
+#rlLoad.ready .rl-pb u{animation:rlBarF 1.7s cubic-bezier(.3,.6,.3,1) forwards}
+@keyframes rlBarF{from{transform:scaleX(.88)}to{transform:scaleX(1)}}
+#rlLoad.done .rl-pb u{animation:none;transform:scaleX(1)}

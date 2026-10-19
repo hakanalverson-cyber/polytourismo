@@ -406,48 +406,70 @@ function jumpInit(box){
  if(JS){box.appendChild(JS.cv);return JS}
  const cv=document.createElement('canvas');cv.style.cssText='width:100%;height:100%;display:block';
  const r=new THREE.WebGLRenderer({canvas:cv,antialias:true});r.outputEncoding=THREE.sRGBEncoding;r.setPixelRatio(1);
- const SKY=0xa9cde8,sc=new THREE.Scene();sc.background=new THREE.Color(SKY);sc.fog=new THREE.Fog(SKY,70,380);
- const cam=new THREE.PerspectiveCamera(50,16/9,.5,1200);
- sc.add(new THREE.HemisphereLight(0xdfeeff,0x55663a,.38));const dl=new THREE.DirectionalLight(0xffe9c4,.85);dl.position.set(60,90,40);sc.add(dl);
+ const HZ=0xd9e3d2,sc=new THREE.Scene();sc.fog=new THREE.Fog(HZ,90,520);
+ {const c=document.createElement('canvas');c.width=4;c.height=256;const g=c.getContext('2d'),gd=g.createLinearGradient(0,0,0,256);gd.addColorStop(0,'#3f78c4');gd.addColorStop(.45,'#7fb1e0');gd.addColorStop(.8,'#c7dcea');gd.addColorStop(1,'#f0e4c8');g.fillStyle=gd;g.fillRect(0,0,4,256);const tx=new THREE.CanvasTexture(c);tx.encoding=THREE.sRGBEncoding;sc.background=tx}
+ const cam=new THREE.PerspectiveCamera(52,16/9,.5,1800);
+ sc.add(new THREE.HemisphereLight(0xdfeeff,0x55663a,.4));const dl=new THREE.DirectionalLight(0xffe2b0,.95);dl.position.set(-80,60,70);sc.add(dl);
  const M=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.95,metalness:0,flatShading:true},o||{}));
- const rnd=(()=>{let x=7;return()=>{x=(x*16807)%2147483647;return x/2147483647}})();
- const gr=new THREE.Mesh(new THREE.PlaneGeometry(1600,1600),M(0x5f8741));gr.rotation.x=-Math.PI/2;sc.add(gr);
- const gc=[0x6a9448,0x557a3a,0x7a9a4e,0x4f7036];for(let i=0;i<70;i++){const m=new THREE.Mesh(new THREE.CircleGeometry(12+rnd()*30,7),M(gc[i%4]));m.rotation.x=-Math.PI/2;m.position.set((rnd()-.5)*520,.03+i*.0005,(rnd()-.5)*520);sc.add(m)}
+ const rnd=(()=>{let x=11;return()=>{x=(x*16807)%2147483647;return x/2147483647}})();
+ const gr=new THREE.Mesh(new THREE.PlaneGeometry(2400,2400),M(0x5f8741));gr.rotation.x=-Math.PI/2;sc.add(gr);
+ const gc=[0x6a9448,0x557a3a,0x7a9a4e,0x4f7036,0x8aa456];for(let i=0;i<90;i++){const m=new THREE.Mesh(new THREE.CircleGeometry(14+rnd()*40,7),M(gc[i%5]));m.rotation.x=-Math.PI/2;m.position.set((rnd()-.5)*640,.03+i*.0005,(rnd()-.5)*640);sc.add(m)}
  const pts=[];const NP=9;for(let i=0;i<NP;i++){const a=i/NP*Math.PI*2,rad=75+((i*37)%5)*10;pts.push(new THREE.Vector3(Math.cos(a)*rad*1.25,0,Math.sin(a)*rad))}
  const curve=new THREE.CatmullRomCurve3(pts,true,'catmullrom',.5),CL=curve.getLength();
  const ribbon=(w,y,col,off)=>{const N=360,pos=[],idx=[];for(let i=0;i<=N;i++){const u=i/N,p=curve.getPointAt(u%1),t=curve.getTangentAt(u%1),nx=-t.z,nz=t.x;pos.push(p.x+nx*(off-w/2),y,p.z+nz*(off-w/2),p.x+nx*(off+w/2),y,p.z+nz*(off+w/2));if(i<N){const k=i*2;idx.push(k,k+2,k+1,k+1,k+2,k+3)}}
-  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();const m=new THREE.Mesh(g,M(col,{side:THREE.DoubleSide}));sc.add(m)};
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();sc.add(new THREE.Mesh(g,M(col,{side:THREE.DoubleSide})))};
  ribbon(9.5,.05,0x8b7a52,0);ribbon(7.2,.07,0xb89c6a,0);ribbon(1.1,.09,0x8d7448,-1.6);ribbon(1.1,.09,0x8d7448,1.6);ribbon(.5,.11,0xd8c595,0);
  const samp=[];for(let i=0;i<160;i++)samp.push(curve.getPointAt(i/160));
- const far=p=>{for(const q of samp){const dx=q.x-p.x,dz=q.z-p.z;if(dx*dx+dz*dz<110)return false}return true};
- const TN=260,fol=new THREE.InstancedMesh(new THREE.ConeGeometry(2.2,7,6),M(0x2f5f2e),TN),fol2=new THREE.InstancedMesh(new THREE.ConeGeometry(1.7,5,6),M(0x3f7a38),TN),trk=new THREE.InstancedMesh(new THREE.CylinderGeometry(.25,.3,1.6,5),M(0x4a3524),TN),mt=new THREE.Matrix4();
- let n=0;for(let tries=0;tries<2000&&n<TN;tries++){const x=(rnd()-.5)*520,z=(rnd()-.5)*520,p={x,z};if(!far(p))continue;const s=.8+rnd()*.9;mt.makeScale(s,s,s);mt.setPosition(x,3.9*s,z);fol.setMatrixAt(n,mt);mt.makeScale(s,s,s);mt.setPosition(x,7.2*s,z);fol2.setMatrixAt(n,mt);mt.makeScale(s,s,s);mt.setPosition(x,.8*s,z);trk.setMatrixAt(n,mt);n++}
- fol.count=fol2.count=trk.count=n;sc.add(fol,fol2,trk);
- for(let i=0;i<30;i++){const a=rnd()*Math.PI*2,d=90+rnd()*220,p={x:Math.cos(a)*d,z:Math.sin(a)*d};if(!far(p))continue;const k=new THREE.Mesh(new THREE.DodecahedronGeometry(.8+rnd()*1.8,0),M(0x8a8a84));k.position.set(p.x,.5,p.z);k.rotation.set(rnd()*3,rnd()*3,0);sc.add(k)}
- for(let i=0;i<16;i++){const a=i/16*Math.PI*2+rnd()*.3,d=560+rnd()*160,h=90+rnd()*120;const m=new THREE.Mesh(new THREE.ConeGeometry(70+rnd()*60,h,6),M(i%2?0x7f8c9b:0x8c97a3));m.position.set(Math.cos(a)*d,h/2-4,Math.sin(a)*d);sc.add(m)}
+ const far=(p,d)=>{for(const q of samp){const dx=q.x-p.x,dz=q.z-p.z;if(dx*dx+dz*dz<d*d)return false}return true};
+ /* forest clumps: pines in three greens, denser near a few centres */
+ const TN=520,cols=[0x2b5a2c,0x376b32,0x2f5a3a],fol=cols.map(c=>new THREE.InstancedMesh(new THREE.ConeGeometry(2.3,7,6),M(c),TN)),fol2=cols.map(c=>new THREE.InstancedMesh(new THREE.ConeGeometry(1.7,5,6),M(c),TN)),trk=new THREE.InstancedMesh(new THREE.CylinderGeometry(.25,.3,1.6,5),M(0x4a3524),TN*3),mt=new THREE.Matrix4(),cnt=[0,0,0];let tn=0;
+ const centres=[];for(let i=0;i<9;i++)centres.push([(rnd()-.5)*420,(rnd()-.5)*420]);
+ for(let tries=0;tries<6000&&tn<TN*3-3;tries++){const c=centres[tries%9],x=c[0]+(rnd()-.5)*110,z=c[1]+(rnd()-.5)*110,p={x,z};if(!far(p,9))continue;const k=tn%3,s=.75+rnd()*1.1,n=cnt[k]++;mt.makeScale(s,s,s);mt.setPosition(x,3.9*s,z);fol[k].setMatrixAt(n,mt);mt.makeScale(s,s,s);mt.setPosition(x,7.2*s,z);fol2[k].setMatrixAt(n,mt);mt.makeScale(s,s,s);mt.setPosition(x,.8*s,z);trk.setMatrixAt(tn,mt);tn++}
+ fol.forEach((f,k)=>{f.count=fol2[k].count=cnt[k];sc.add(f,fol2[k])});trk.count=tn;sc.add(trk);
+ for(let i=0;i<46;i++){const a=rnd()*Math.PI*2,d=70+rnd()*260,p={x:Math.cos(a)*d,z:Math.sin(a)*d};if(!far(p,8))continue;const k=new THREE.Mesh(new THREE.DodecahedronGeometry(.8+rnd()*1.8,0),M(0x8a8a84));k.position.set(p.x,.5,p.z);k.rotation.set(rnd()*3,rnd()*3,0);sc.add(k)}
+ for(let i=0;i<40;i++){const a=rnd()*Math.PI*2,d=60+rnd()*280,p={x:Math.cos(a)*d,z:Math.sin(a)*d};if(!far(p,7))continue;const b=new THREE.Mesh(new THREE.IcosahedronGeometry(1+rnd()*1.2,0),M(i%2?0x4d7a38:0x5f8f3f));b.scale.y=.7;b.position.set(p.x,.7,p.z);sc.add(b)}
+ /* rolling hills and snow-capped mountains for depth */
+ for(let i=0;i<26;i++){const a=i/26*Math.PI*2+rnd()*.2,d=330+rnd()*160,h=22+rnd()*34;const m=new THREE.Mesh(new THREE.IcosahedronGeometry(1,1),M(i%3?0x5b8a43:0x6a9a4a));m.scale.set(80+rnd()*70,h,70+rnd()*60);m.position.set(Math.cos(a)*d,h*.3-4,Math.sin(a)*d);sc.add(m)}
+ for(let i=0;i<18;i++){const a=i/18*Math.PI*2+rnd()*.3,d=720+rnd()*220,h=170+rnd()*200,rr_=90+rnd()*80;const m=new THREE.Mesh(new THREE.ConeGeometry(rr_,h,7),M(i%2?0x77808f:0x8a93a0));m.position.set(Math.cos(a)*d,h/2-6,Math.sin(a)*d);sc.add(m);const cap=new THREE.Mesh(new THREE.ConeGeometry(rr_*.36,h*.3,7),M(0xf2f5f8));cap.position.set(m.position.x,h*.85-6,m.position.z);sc.add(cap)}
+ for(let i=0;i<14;i++){const cl=new THREE.Group();for(let j=0;j<4;j++){const b=new THREE.Mesh(new THREE.IcosahedronGeometry(14+rnd()*14,0),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.92,fog:false}));b.scale.y=.45;b.position.set(j*18-27,rnd()*4,rnd()*12);cl.add(b)}cl.position.set((rnd()-.5)*1400,150+rnd()*120,(rnd()-.5)*1400);sc.add(cl)}
+ const sun=new THREE.Mesh(new THREE.CircleGeometry(26,24),new THREE.MeshBasicMaterial({color:0xfff1c8,fog:false}));sun.position.set(-520,230,430);sun.lookAt(0,0,0);sc.add(sun);
+ /* dust puffs */
+ const dust=[],dg=new THREE.IcosahedronGeometry(1,0);for(let i=0;i<90;i++){const m=new THREE.Mesh(dg,new THREE.MeshBasicMaterial({color:0xcdb994,transparent:true,opacity:0,depthWrite:false}));m.visible=false;sc.add(m);dust.push({m,age:9,vx:0,vy:0,vz:0,life:1})}
  const car=mkCar(0xdddddd,0);car.modelIndex=-1;sc.add(car.g);
- JS={cv,r,sc,cam,curve,CL,car,t:0,last:0,raf:0,w:0,h:0};
+ JS={cv,r,sc,cam,curve,CL,car,dust,t:0,acc:0,di:0,last:0,raf:0,w:0,h:0,on:false};
  JS.setCar=mi=>{if(car.modelIndex===mi)return;if(car.visualModel)car.g.remove(car.visualModel);if(car.exhaustRig)car.g.remove(car.exhaustRig);if(car.ptRig)car.g.remove(car.ptRig);car.visualModel=null;car.ptWheels=null;car.modelIndex=mi;attachCarModel(car)};
+ JS.size=()=>{const J=JS,w=J.cv.parentNode.clientWidth|0,h=J.cv.parentNode.clientHeight|0;if(w&&(J.w!==w||J.h!==h)){J.w=w;J.h=h;J.r.setSize(w,h,false);J.cam.aspect=w/h;J.cam.updateProjectionMatrix()}return !!J.w};
  box.appendChild(cv);return JS}
-function jumpDraw(J,dt){
- const sp=26,u=(((J.t*sp)/J.CL)%1+1)%1,p=J.curve.getPointAt(u),tg=J.curve.getTangentAt(u),tg2=J.curve.getTangentAt((u+.004)%1),car=J.car;
- const k=(tg.x*tg2.z-tg.z*tg2.x)/.004/ J.CL;
- car.g.position.set(p.x,.8,p.z);car.g.rotation.set(0,Math.atan2(tg.x,tg.z),0);
- try{if(typeof wheels==='function')wheels(car,sp,Math.max(-1,Math.min(1,k*140)),dt||1/60)}catch(e){}
- const a=J.t*.32+.9,R=15,H=8.5;J.cam.position.set(p.x+Math.sin(a)*R,H,p.z+Math.cos(a)*R);J.cam.lookAt(p.x+tg.x*3,1.2,p.z+tg.z*3);
+const SPD=26;
+function jumpUpdate(J,dt){
+ J.t+=dt;const u=(((J.t*SPD)/J.CL)%1+1)%1,p=J.curve.getPointAt(u),tg=J.curve.getTangentAt(u),tg2=J.curve.getTangentAt((u+.004)%1),car=J.car;
+ const k=(tg.x*tg2.z-tg.z*tg2.x)/.004/J.CL;
+ car.g.position.set(p.x,.8,p.z);car.g.rotation.set(0,Math.atan2(tg.x,tg.z),0);car.g.updateMatrixWorld(true);
+ try{if(typeof wheels==='function')wheels(car,SPD,Math.max(-1,Math.min(1,k*140)),dt||1/60)}catch(e){}
+ J.acc+=dt;const V=new THREE.Vector3();
+ while(J.acc>1/45){J.acc-=1/45;for(const sx of[-.85,.85]){const d=J.dust[J.di=(J.di+1)%J.dust.length];V.set(sx,.25,-2).applyMatrix4(car.g.matrixWorld);d.m.position.copy(V);d.age=0;d.life=1.1+Math.random()*.7;d.vx=(Math.random()-.5)*2.4-tg.x*3;d.vz=(Math.random()-.5)*2.4-tg.z*3;d.vy=.8+Math.random()*1.1;d.s0=.35+Math.random()*.3;d.m.visible=true}}
+ for(const d of J.dust){if(!d.m.visible)continue;d.age+=dt;if(d.age>d.life){d.m.visible=false;continue}const q=d.age/d.life;d.m.position.x+=d.vx*dt;d.m.position.y+=d.vy*dt*(1-q*.7);d.m.position.z+=d.vz*dt;d.m.scale.setScalar(d.s0+q*2.6);d.m.material.opacity=.5*(1-q)*(1-q*.3)}
+ J.pt=p;J.tg=tg}
+function jumpDraw(J){
+ const p=J.pt,tg=J.tg,a=J.t*.3+.9,R=15+Math.sin(J.t*.5)*2.5,H=8.5+Math.sin(J.t*.37)*2.2;
+ J.cam.position.set(p.x+Math.sin(a)*R,H,p.z+Math.cos(a)*R);J.cam.up.set(Math.sin(J.t*.8)*.025,1,0);J.cam.lookAt(p.x+tg.x*3,1.2,p.z+tg.z*3);
  J.r.render(J.sc,J.cam)}
 function jumpFrame(now){
  const J=JS;if(!J||!J.on)return;J.raf=requestAnimationFrame(jumpFrame);
- const dt=Math.max(0,Math.min(.05,(now-J.last)/1000||0));J.last=now;J.t+=dt;
- const w=J.cv.parentNode.clientWidth|0,h=J.cv.parentNode.clientHeight|0;if(w&&(J.w!==w||J.h!==h)){J.w=w;J.h=h;J.r.setSize(w,h,false);J.cam.aspect=w/h;J.cam.updateProjectionMatrix()}
- if(!J.w)return;jumpDraw(J,dt)}
-P._jumpAt=t=>{const J=JS;if(!J)return 0;J.on=false;cancelAnimationFrame(J.raf);const w=J.cv.parentNode.clientWidth|0,h=J.cv.parentNode.clientHeight|0;if(w){J.w=w;J.h=h;J.r.setSize(w,h,false);J.cam.aspect=w/h;J.cam.updateProjectionMatrix()}J.t=t;jumpDraw(J,1/60);return 1};
+ const dt=Math.max(0,Math.min(.05,(now-J.last)/1000||0));J.last=now;
+ if(!J.size())return;jumpUpdate(J,dt);jumpDraw(J)}
+P._jumpAt=t=>{const J=JS;if(!J)return 0;J.on=false;cancelAnimationFrame(J.raf);J.size();J.t=0;J.dust.forEach(d=>d.m.visible=false);for(let i=0;i<Math.round(t*30);i++)jumpUpdate(J,1/30);jumpDraw(J);return 1};
 P.rallyIntro=(open,track)=>{let e=$i('rlLoad');
- if(!e){e=document.createElement('div');e.id='rlLoad';let st='';for(let i=0;i<26;i++)st+=`<i style="top:${(Math.random()*100).toFixed(1)}%;width:${(14+Math.random()*34).toFixed(0)}vw;animation-duration:${(.55+Math.random()*.9).toFixed(2)}s;animation-delay:-${(Math.random()*1.4).toFixed(2)}s;opacity:${(.18+Math.random()*.5).toFixed(2)}"></i>`;
-  e.innerHTML=`<div class="rl-streaks">${st}</div><div class="rl-jump"></div><div class="rl-lt"><small>PREPARING</small><h2>RALLY</h2><p>LOADING STAGES</p><div class="rl-pb"><u></u></div></div>`;document.body.appendChild(e)}
- e.classList.remove('on','done');void e.offsetWidth;e.classList.add('on');const t0=performance.now();
- let J=null;try{J=jumpInit(e.querySelector('.rl-jump'));try{const sel=P.rallySel(0);J.setCar(P.modelOf(sel.id,0))}catch(er){console.error('loadcar',er)}J.on=true;J.t=0;J.last=performance.now();cancelAnimationFrame(J.raf);J.raf=requestAnimationFrame(jumpFrame)}catch(err){console.error('jump',err)}
- setTimeout(()=>{try{open()}catch(err){console.error(err)}
-  (P.stageRender?P.stageRender(track):Promise.resolve()).catch(()=>{}).then(()=>{setTimeout(()=>{e.classList.add('done');setTimeout(()=>{e.classList.remove('on','done');if(J){J.on=false;cancelAnimationFrame(J.raf)}},650)},Math.max(0,1700-(performance.now()-t0)))})},420)};
+ if(!e){e=document.createElement('div');e.id='rlLoad';e.innerHTML=`<div class="rl-jump"></div><div class="rl-lt"><small>PREPARING</small><h2>RALLY</h2><p>LOADING STAGES</p><div class="rl-pb"><u></u></div></div>`;document.body.appendChild(e)}
+ e.classList.remove('on','done','ready');void e.offsetWidth;e.classList.add('on');const t0=performance.now();
+ let J=null;
+ /* 1) get everything ready and paint one still frame; nothing animates while the heavy work runs */
+ try{J=jumpInit(e.querySelector('.rl-jump'));try{const sel=P.rallySel(0);J.setCar(P.modelOf(sel.id,0))}catch(er){console.error('loadcar',er)}J.on=false;J.size();J.dust.forEach(d=>d.m.visible=false);J.t=0;J.acc=0;for(let i=0;i<40;i++)jumpUpdate(J,1/30);jumpDraw(J)}catch(err){console.error('jump',err);J=null}
+ const finish=()=>{
+  /* 2) all loaded: now play the shot smoothly, then fade out */
+  e.classList.add('ready');if(J){try{J.on=true;J.last=performance.now();cancelAnimationFrame(J.raf);J.raf=requestAnimationFrame(jumpFrame)}catch(er){}}
+  setTimeout(()=>{e.classList.add('done');setTimeout(()=>{e.classList.remove('on','done','ready');if(J){J.on=false;cancelAnimationFrame(J.raf)}},650)},1900)};
+ requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(()=>{try{open()}catch(err){console.error(err)}
+  (P.stageRender?P.stageRender(track):Promise.resolve()).catch(()=>{}).then(()=>setTimeout(finish,60))},80)))};
 P.RALLYSESSION=()=>S;
 })();
