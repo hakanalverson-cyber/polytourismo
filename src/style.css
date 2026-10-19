@@ -582,3 +582,21 @@ body.rallyhud .h8spd,body.rallyhud .h8pos{display:none!important}
 .lst .sect:hover{background:#ffffff1c}
 .lst .secback{position:sticky;top:-8px;z-index:3;width:100%;display:flex;justify-content:space-between;align-items:center;font:700 10px var(--mn);letter-spacing:.14em;color:#0b0e12;background:#f1f3f5;border:0;padding:9px 10px;margin:0 0 4px;cursor:pointer;text-transform:uppercase}
 .lst .secback i{font-style:normal;font-weight:600;opacity:.65;font-size:9px}
+
+/* rally two-step setup */
+#s8setup .steps{display:inline-flex;gap:6px;margin-left:18px;vertical-align:middle}
+#s8setup .steps i{font:700 9px var(--mn);letter-spacing:.18em;text-transform:uppercase;font-style:normal;color:var(--dim);padding:5px 9px;border:1px solid #ffffff14}
+#s8setup .steps i.on{background:#f1f3f5;color:#0b0e12;border-color:#f1f3f5}
+#s8setup.rs1 #suDrv,#s8setup.rs2 #suCfg,#s8setup.rs2 #suTod{display:none}
+#s8setup.rs2 .cols{grid-template-columns:minmax(0,760px);justify-content:center}
+#s8setup.rs2 .cols>.pnl:nth-child(-n+2){display:none}
+#s8setup .rcfg{margin-bottom:12px;padding:12px 14px;background:#ffffff08;border:1px solid #ffffff14;border-top:3px solid #f1f3f5}
+#s8setup .rcfg h4{margin:0 0 12px}
+#s8setup .rsum{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:14px 0 8px}
+#s8setup .rsum div{background:#0a0d11;border:1px solid #ffffff10;padding:7px 8px;min-width:0}
+#s8setup .rsum small{display:block;font:700 8px var(--mn);letter-spacing:.2em;color:var(--dim);text-transform:uppercase;margin-bottom:3px}
+#s8setup .rsum b{font:700 11px var(--mn);letter-spacing:.06em;color:#f1f3f5;text-transform:uppercase;overflow-wrap:anywhere}
+#s8setup .rnote{display:block;font-size:10px;letter-spacing:.08em;color:var(--dim);line-height:1.5}
+#s8setup .rrecap{margin:0 0 12px;padding:10px 12px;background:#f1f3f50f;border-left:3px solid #f1f3f5}
+#s8setup .rrecap b{display:block;font:700 13px var(--mn);letter-spacing:.12em;text-transform:uppercase}
+#s8setup .rrecap small{display:block;margin-top:4px;font-size:10px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase}

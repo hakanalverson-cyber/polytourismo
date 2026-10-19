@@ -103,7 +103,7 @@ show=n=>{const was=scr;rawShow(n);if(was!==n&&P.sfx&&['s8cards','s8setup','s8car
  if(['menu','s8cards','s8setup','s8career','s8res'].includes(n))refreshMenuCars();
  if(n==='menu'&&P.menuStats)P.menuStats()};
 function refreshMenuCars(){const sv=P.SV();for(let i=0;i<4;i++){const s=sv.sel[i];carChoices[i]=P.modelOf(s.id,s.alt)}}
-const goBack={s8cards:()=>show('menu'),s8setup:()=>show(ST.ret),s8career:()=>show('s8cards'),s8res:()=>resContinue()};
+const goBack={s8cards:()=>show('menu'),s8setup:()=>{if(ST.mode==='rally'&&ST.rstep===2){ST.rstep=1;renderSetup();return}show(ST.ret)},s8career:()=>show('s8cards'),s8res:()=>resContinue()};
 goBack.s8show=()=>{const r=SR.ret;if(r==='s8res_back'){renderSetup();show('s8setup');return}show(r);if(r==='s8setup')renderSetup();if(r==='s8career')renderCareer()};
 root.addEventListener('click',e=>{const b=e.target.closest('[data-a="back"]');if(b){(goBack[scr]||(()=>{}))()}});
 const rawEsc=esc;esc=()=>{if(goBack[scr]){goBack[scr]();return}rawEsc()};
@@ -114,7 +114,7 @@ let foc=0;
 function setFoc(i){const cs=$$('.card',root);foc=(i+cs.length)%cs.length;cs.forEach((c,k)=>c.classList.toggle('foc',k===foc))}
 $$('.card',root).forEach((c,k)=>{c.onmouseenter=()=>setFoc(k);c.onclick=()=>pickMode(c.dataset.m)});
 const isStg=i=>P.STAGES.indexOf(i)>=0;
-function pickMode(m){if(m==='career'){ST.crank=null;ST.cev=null;openCareer()}else{ST.mode=m;if(m==='rally'?!isStg(ST.track):isStg(ST.track))ST.track=m==='rally'?P.STAGES[0]:0;ST.ret='s8cards';if(m==='rally'&&P.rallyIntro){P.rallyIntro(()=>{renderSetup();show('s8setup');if(P.prewarmStages)setTimeout(P.prewarmStages,1500)},ST.track)}else{renderSetup();show('s8setup')}}}
+function pickMode(m){if(m==='career'){ST.crank=null;ST.cev=null;openCareer()}else{ST.mode=m;if(m==='rally')ST.rstep=1;if(m==='rally'?!isStg(ST.track):isStg(ST.track))ST.track=m==='rally'?P.STAGES[0]:0;ST.ret='s8cards';if(m==='rally'&&P.rallyIntro){P.rallyIntro(()=>{renderSetup();show('s8setup');if(P.prewarmStages)setTimeout(P.prewarmStages,1500)},ST.track)}else{renderSetup();show('s8setup')}}}
 
 /* ---- main menu ---- */
 (function(){const ma=document.querySelector('.menuActions'),bt=ma.querySelectorAll('button');
@@ -196,12 +196,12 @@ function renderSetup(){const m=ST.mode;$('suTitle').innerHTML=MODE_NAME[m];
  let cfg='';
  if(m==='elim')cfg+=`<div class="row8"><b>Knockout every</b><span class="seg" id="cIv">${seg([[20,'20s'],[30,'30s'],[45,'45s']],ST.iv||30)}</span></div><div class="row8"><b>Direction</b><span class="seg" id="cRev">${seg([['0','Forward'],['1','Reverse']],ST.rev?'1':'0')}</span></div>`;
  if(m==='ta'||m==='mp')cfg+=`<div class="row8"><b>Laps</b><span class="seg" id="cLaps">${seg([[2,'2'],[3,'3'],[4,'4'],[5,'5'],[8,'8'],[10,'10']],ST.laps)}</span></div><div class="row8"><b>Direction</b><span class="seg" id="cRev">${seg([['0','Forward'],['1','Reverse']],ST.rev?'1':'0')}</span></div><div class="row8"><b>Fuel &amp; pits</b><span class="seg" id="cEnd">${seg([['auto','Auto'],['1','On'],['0','Off']],ST.endurS||'auto')}</span></div>`;
- if(m==='rally')cfg+=`<div class="row8"><b>Stage laps</b><span class="seg" id="cRL">${seg([[1,'1'],[2,'2'],[3,'3']],ST.rlaps)}</span></div><div class="row8"><b>Drivers (take turns)</b><span class="seg" id="cPl">${seg([[1,'1'],[2,'2'],[3,'3'],[4,'4']],ST.players)}</span></div>`;
+ if(m==='rally'){const Tn=tr(ST.track),dist=Tn.L*(ST.rlaps||1),wxn=(P.WX[ST.wx||'clear']||{n:'CLEAR'}).n;cfg+=`<div class="rcfg"><h4>Stage configuration</h4><div class="row8"><b>Stage laps</b><span class="seg" id="cRL">${seg([[1,'1'],[2,'2'],[3,'3']],ST.rlaps)}</span></div><div class="row8"><b>Drivers</b><span class="seg" id="cPl">${seg([[1,'1'],[2,'2'],[3,'3'],[4,'4']],ST.players)}</span></div><div class="row8"><b>Weather</b><span class="seg" id="cWx">${seg(P.WX_ORDER.map(k=>[k,P.WX[k].n[0]+P.WX[k].n.slice(1).toLowerCase()]),ST.wx||'clear')}</span></div><div class="rsum"><div><small>Distance</small><b>${(dist/1000).toFixed(1)} km</b></div><div><small>Drivers</small><b>${ST.players}</b></div><div><small>Conditions</small><b>${wxn} &middot; ${(P.TOD[effTod()]||{n:''}).n}</b></div></div><small class="rnote">Drivers take turns, one car on the stage at a time. Fastest total wins.</small></div>`}
  if(m==='mp'||m==='cutup'||m==='elim')cfg+=`<div class="row8"><b>Drivers</b><span class="seg" id="cPl">${seg([[1,'1'],[2,'2'],[3,'3'],[4,'4']],ST.players)}</span></div>`;
  if(m==='elim')cfg+=`<div class="row8"><b>CPU</b><span class="seg" id="cCpu">${seg([[1,'1'],[2,'2'],[3,'3'],[4,'4'],[5,'5'],[7,'7']].filter(a=>a[0]+ST.players<=8),Math.max(1,ST.cpus))}</span></div><div class="row8"><b>Level</b><span class="seg" id="cDif">${seg([[0,'Easy'],[1,'Normal'],[2,'Hard']],ST.diff)}</span></div><div class="row8"><b>CPU class</b><span class="seg" id="cCc">${seg([['auto','Auto'],['C','C'],['B','B'],['A','A'],['S','S']],ST.cc||'auto')}</span></div>`;
  if(m==='mp')cfg+=`<div class="row8"><b>CPU</b><span class="seg" id="cCpu">${seg([[0,'0'],[2,'2'],[3,'3'],[4,'4']].filter(a=>a[0]+ST.players<=8),ST.cpus)}</span></div><div class="row8"><b>Level</b><span class="seg" id="cDif">${seg([[0,'Easy'],[1,'Normal'],[2,'Hard']],ST.diff)}</span></div><div class="row8"><b>CPU class</b><span class="seg" id="cCc">${seg([['auto','Auto'],['C','C'],['B','B'],['A','A'],['S','S']],ST.cc||'auto')}</span></div>`;
  if(m==='cutup')cfg+=`<div class="row8"><b>Traffic</b><span class="seg" id="cTr">${seg([['light','Light'],['heavy','Heavy']],ST.traffic)}</span></div><div class="row8"><b>Clock</b><span class="seg" id="cTime">${seg([[90,'90s'],[120,'120s'],[180,'180s']],ST.time)}</span></div>`;
- if(m==='mp'||m==='elim'||m==='rally')cfg+=`<div class="row8"><b>Weather</b><span class="seg" id="cWx">${seg(P.WX_ORDER.map(k=>[k,P.WX[k].n[0]+P.WX[k].n.slice(1).toLowerCase()]),ST.wx||'clear')}</span></div>`;
+ if(m==='mp'||m==='elim')cfg+=`<div class="row8"><b>Weather</b><span class="seg" id="cWx">${seg(P.WX_ORDER.map(k=>[k,P.WX[k].n[0]+P.WX[k].n.slice(1).toLowerCase()]),ST.wx||'clear')}</span></div>`;
  $('suCfg').innerHTML=cfg;
  const td=effTod();$('suTod').innerHTML=`<div class="tod"><h4 style="margin:0 0 7px;font:700 10px var(--mn);letter-spacing:.3em;color:var(--dim)">TIME OF DAY</h4><canvas id="todPrev" width="168" height="70"></canvas><span class="seg" id="cTod">${seg(P.TOD_ORDER.map(k=>[k,P.TOD[k].n]),td)}</span></div>`;
  drawTod($('todPrev'),ST.track,td);
@@ -210,10 +210,16 @@ function renderSetup(){const m=ST.mode;$('suTitle').innerHTML=MODE_NAME[m];
  const np=m==='ta'?1:ST.players;let dv='<h4 style="margin:6px 0 8px;font:700 10px var(--mn);letter-spacing:.3em;color:var(--dim)">VEHICLES</h4>';
  for(let p=0;p<np;p++){const s=selCar(p),c=BYID[s.id];dv+=`<div class="drv" style="border-left-color:${['#f1f3f5','#f2c76b','#7fd68a','#ef6a5a'][p]}"><div><b>${np>1?'P'+(p+1)+' &middot; ':''}${c.name}${s.alt?' ALT':''}</b><input class="nm" data-p="${p}" maxlength="12" spellcheck="false" placeholder="Name (P${p+1})" value="${((ST.names||[])[p]||'').replace(/[<>&"]/g,'')}"><small>Class <span class="cls ${c.cls}">${c.cls}</span> &middot; ${c.type}${m==='rally'?' &middot; RALLY SPEC':''}</small><div class="fxrow">${fxChip(m==='rally'?{...c,off:Math.max(c.off,.9)}:c,!!D[ST.track].gravel)}</div></div><span class="lvth" data-id="${s.id}" data-alt="${s.alt?1:0}"></span><button class="btn sm" data-p="${p}"><span>Garage</span></button></div>`}
  $('suDrv').innerHTML=dv;$$('#suDrv .lvth',root).forEach(e=>{const t=P.livThumb&&P.livThumb(e.dataset.id,+e.dataset.alt,84);if(t)e.appendChild(t)});$$('#suDrv input.nm',root).forEach(i=>i.oninput=()=>{(ST.names=ST.names||[])[+i.dataset.p]=i.value});$$('#suDrv button',root).forEach(b=>b.onclick=()=>openShow('garage',{player:+b.dataset.p,cap:null,ret:'s8setup',rally:ST.mode==='rally'}));
+{const sec=$('s8setup'),r2=m==='rally'&&ST.rstep===2;sec.classList.toggle('rs1',m==='rally'&&!r2);sec.classList.toggle('rs2',r2);
+  let st=$('suSteps');if(!st){st=document.createElement('div');st.id='suSteps';st.className='steps';$('suTitle').after(st)}
+  st.style.display=m==='rally'?'':'none';st.innerHTML=`<i class="${r2?'':'on'}">1 &middot; Stage</i><i class="${r2?'on':''}">2 &middot; Car</i>`;
+  if(m==='rally')$('suTitle').innerHTML='<em>RALLY</em> '+(r2?'CAR SELECTION':'STAGE SETUP');
+  $('suGo').querySelector('span').textContent=m==='rally'&&!r2?'Next: Car >':'Start';
+  if(r2){const wxn=(P.WX[ST.wx||'clear']||{n:'CLEAR'}).n;$('suDrv').insertAdjacentHTML('afterbegin',`<div class="rrecap"><b>${D[ST.track].name}</b><small>${(Math.round(T.L)*(ST.rlaps||1)/1000).toFixed(1)} km &middot; ${ST.rlaps||1} lap${(ST.rlaps||1)>1?'s':''} &middot; ${wxn} &middot; ${(P.TOD[effTod()]||{n:''}).n}</small></div>`)}}
  $('suHint').textContent=m==='rally'?'One car on the stage at a time &middot; pass the controller between runs &middot; fastest total wins':m==='ta'?'W / S + A / D &middot; double-tap W up, S down to shift':'P1 WASD &middot; P2 arrows &middot; P3 IJKL &middot; P4 TFGH';$('suHint').innerHTML=$('suHint').textContent}
 /* custom driver names: trimmed, 12 chars, unique across players */
 function cleanName(p,np){const nm=(ST.names||[])[p];let v=(nm||'').replace(/[<>&"]/g,'').trim().slice(0,12);if(!v)return null;for(let q=0;q<p;q++){const o=((ST.names||[])[q]||'').trim().slice(0,12);if(o&&o.toLowerCase()===v.toLowerCase())v=v.slice(0,10)+(p+1)}return v}
-$('suGo').onclick=()=>{
+$('suGo').onclick=()=>{if(ST.mode==='rally'&&ST.rstep!==2){ST.rstep=2;P.sfx('select');renderSetup();return}
  const m=ST.mode,d=D[ST.track],np=m==='ta'?1:ST.players,humans=[];for(let p=0;p<np;p++){const s=selCar(p);humans.push({id:s.id,alt:s.alt,name:cleanName(p)})}
  const tod=effTod();let cfg;
  const endur=ST.endurS==='1'?true:ST.endurS==='0'?false:undefined;
