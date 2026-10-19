@@ -48,12 +48,23 @@ stepCar=function(c,dt){sc0.apply(this,arguments);const Rc=RACE;if(!Rc||!Rc.T||!R
 
 /* ---------------- pace notes ---------------- */
 const wrp=a=>{while(a>PI)a-=2*PI;while(a<-PI)a+=2*PI;return a};
-function note(c,T){const N=T.N,sp=T.sp,K=P.kappa(T),i0=c.idx||0,max=Math.round(180/sp);let ev=null;
+function corners(T){if(T.cor)return T.cor;const N=T.N,sp=T.sp,sg=new Float32Array(N);
+ for(let i=0;i<N;i++)sg[i]=wrp(T.psi[(i+3)%N]-T.psi[(i-3+N)%N])/(6*sp);
+ let st=0;for(let i=0;i<N;i++)if(Math.abs(sg[i])<1/200){st=i;break}
+ const out=[],MAXL=Math.round(110/sp);let cur=null,low=0;
+ const close=()=>{if(cur&&Math.abs(cur.ang)>.35)out.push({s:cur.s,len:Math.max(2,cur.len),R:1/Math.max(cur.mk,1e-4),dir:cur.ang>0?'L':'R'});cur=null;low=0};
+ for(let u=0;u<N;u++){const i=(st+u)%N,v=sg[i],a=Math.abs(v);
+  if(cur){if(a>1/180&&Math.sign(v)!==Math.sign(cur.ang)&&a>1/120){close()}else if(a<1/180){if(++low>=5){close()}}else low=0;if(cur&&cur.len>=MAXL)close()}
+  if(!cur&&a>1/120)cur={s:i,len:0,mk:0,ang:0};
+  if(cur){cur.len++;cur.mk=Math.max(cur.mk,a);cur.ang+=wrp(T.psi[(i+1)%N]-T.psi[i])}}
+ close();T.cor=out;return out}
+function note(c,T){const N=T.N,sp=T.sp,i0=c.idx||0;let ev=null;
  for(const f of T.fords||[]){const d=((f.i-i0-Math.round(f.w/sp)+N)%N)*sp;if(d<170&&(!ev||d<ev.d))ev={d,t:'WATER',s:'FORD'}}
  for(const j of T.jumps||[]){const d=((j-i0-Math.round(10/sp)+N)%N)*sp;if(d<170&&(!ev||d<ev.d))ev={d,t:'JUMP',s:'CREST'}}
- let j=0;for(;j<max;j++){if(K[(i0+j)%N]>1/95)break}
- let cor=null;if(j<max){let mk=0,sg=0;for(let u=0;u<70;u++){const r=(i0+j+u)%N;if(u>4&&K[r]<1/150)break;if(K[r]>mk)mk=K[r];sg+=wrp(T.psi[(r+3)%N]-T.psi[(r-3+N)%N])}
-  const R=1/Math.max(mk,1e-4),g=R<15?'HAIRPIN':R<26?'1':R<40?'2':R<60?'3':R<85?'4':'5';cor={d:j*sp,t:g==='HAIRPIN'?'HAIRPIN':'TURN '+g,g,dir:sg>0?'L':'R'}}
+ for(const q of T.pinch||[]){const a=(q.i-i0+N)%N,d=Math.max(0,a-Math.round(q.core/2/sp+4))*sp,past=((i0-q.i+N)%N)*sp;if(a>N/2&&past>q.core/2+10)continue;if(d<170&&(!ev||d<ev.d))ev={d:a>N/2?0:d,t:'NARROW',s:'PINCH'}}
+ let cor=null;for(const k of corners(T)){const fw=(k.s-i0+N)%N,inside=(i0-k.s+N)%N,prog=inside/k.len;let d;
+  if(inside<k.len*.75&&inside<N/2)d=0;else if(fw*sp<=180)d=fw*sp;else continue;
+  if(!cor||d<cor.d){const R=k.R,g=R<15?'HAIRPIN':R<26?'1':R<40?'2':R<60?'3':R<85?'4':'5';cor={d,t:g==='HAIRPIN'?'HAIRPIN':'TURN '+g,g,dir:k.dir}}}
  return{ev,cor}}
 /* arrow bends the way the corner turns; angle and colour follow severity (hairpin = hot red, grade 5 = cool green) */
 const GR={HAIRPIN:[150,'#ff3b30'],1:[115,'#ff5a2a'],2:[88,'#ff9a2a'],3:[62,'#f2c76b'],4:[42,'#c8dc6a'],5:[26,'#8fd68a']};
@@ -64,7 +75,7 @@ hudUpdate=()=>{hu0();const Rc=RACE;if(!Rc||!Rc.cfg||!Rc.cfg.rally)return;
  Rc.cars.forEach((c,i)=>{if(!c.human)return;const e=document.getElementById('h'+i);if(!e||!e.dataset.b)return;let el=e.querySelector('.h8pace');if(!el){el=document.createElement('div');el.className='h8pace';e.appendChild(el)}
   if(Rc.state==='count'){el.style.opacity=0;return}
   const n=note(c,Rc.T);let txt='',cls='';
-  if(n.ev&&(!n.cor||n.ev.d<n.cor.d+15)){txt=`<b>${n.ev.t}</b><span>${Math.round(n.ev.d/10)*10} m</span>`;cls='ev'}
+  if(n.ev&&(!n.cor||n.ev.d<n.cor.d+15)){txt=`<b>${n.ev.t}</b><span>${Math.round(n.ev.d/10)*10} m</span>`;cls=n.ev.t==='NARROW'?'ev nr':'ev'}
   else if(n.cor){txt=`<i>${arrow(n.cor.t==='HAIRPIN'?'HAIRPIN':n.cor.g,n.cor.dir)}</i><b style="color:${(GR[n.cor.t==='HAIRPIN'?'HAIRPIN':n.cor.g]||GR[3])[1]}">${n.cor.t}</b><span>${Math.round(n.cor.d/10)*10} m</span>`;cls=n.cor.t==='HAIRPIN'?'hp':''}
   if(el._t!==txt){el._t=txt;el.innerHTML=txt}el.className='h8pace '+cls;el.style.opacity=txt?1:0})};
 

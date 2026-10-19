@@ -73,6 +73,18 @@ sampleTrack=d=>{const T=ps(d);T.fords=[];if(!d.fords&&!d.crater)return T;const N
   return h};
  return T};
 
+/* ---------------- pinch points: the road shrinks to barely wider than a car ---------------- */
+const sf0=sampleTrack;
+sampleTrack=d=>{const T=sf0(d);T.pinch=[];if(!d.hard)return T;const N=T.N,sp=T.sp,n=Math.max(4,Math.round(T.L/1250)),HWm=2.2;let sd=(N*7919+(d.fords?d.fords.length:0)*131)%2147483647||1;const rr=()=>(sd=(sd*48271)%2147483647)/2147483647;
+ const circ=(a,b)=>{const q=Math.abs(a-b);return Math.min(q,N-q)*sp};
+ for(let j=0;j<n;j++){const core=50+rr()*40,ramp=42;let best=-1;
+  for(let t=0;t<40&&best<0;t++){const i=Math.round(N*((j+.5)/n)+(rr()-.5)*N/n*.7+N)%N;let ok=circ(i,0)>260;
+   for(const f of T.fords||[])if(circ(i,f.i)<f.w+core+ramp+30)ok=false;for(const q of d.jumps||[])if(circ(i,q)<core+ramp+120)ok=false;for(const q of T.pinch)if(circ(i,q.i)<core+ramp*2+160)ok=false;
+   for(let k=-12;k<=12&&ok;k++)if(T.gap[(i+k*6+N)%N])ok=false;if(ok)best=i}
+  if(best<0)continue;const c=best,m=Math.min(HWm+rr()*.15,T.hw[c]);T.pinch.push({i:c,core,ramp});
+  for(let i=0;i<N;i++){const a=circ(i,c);if(a<core/2+ramp){const pf=1-sm(core/2,core/2+ramp,a);T.hw[i]=Math.min(T.hw[i],lerp(T.hw[i],m,pf))}}}
+ return T};
+
 /* ---------------- helpers ---------------- */
 const roadPts=T=>{const a=[];for(let i=0;i<T.N;i+=3)a.push([T.x[i],T.z[i],T.hw[i]]);return a};
 const rdist=(rp,x,z)=>{let b=1e9;for(const p of rp){const dd=Math.hypot(x-p[0],z-p[1])-p[2];if(dd<b)b=dd}return b};
@@ -203,17 +215,23 @@ buildWorld=T=>{const sc=bw(T),d=T.d;
 /* ---------------- checkpoints (gates every ~900 m; split times are kept per run) ---------------- */
 P.cpsOf=T=>{if(T.cps)return T.cps;const N=T.N,K=Math.max(5,Math.round(T.L/950)),out=[];
  const circ=(a,b)=>{const d=Math.abs(a-b);return Math.min(d,N-d)*T.sp};
- const bad=i=>{if(T.gap[i])return true;for(const j of T.jumps||[])if(circ(i,j)<70)return true;for(const f of T.fords||[])if(circ(i,f.i)<f.w+50)return true;return false};
+ const bad=i=>{if(T.gap[i])return true;for(const j of T.jumps||[])if(circ(i,j)<70)return true;for(const f of T.fords||[])if(circ(i,f.i)<f.w+50)return true;for(const q of T.pinch||[])if(circ(i,q.i)<q.core/2+q.ramp+15)return true;return false};
  for(let k=1;k<K;k++){const base=Math.round(N*k/K);let pick=base;for(let o=0;o<260;o+=3){const a=(base+o)%N,b=(base-o+N)%N;if(!bad(a)){pick=a;break}if(!bad(b)){pick=b;break}}out.push(pick)}
  T.cps=out;T.cpK=K;return out};
+function post(T,i,sd,hw,mat_,beam,g,top){const lx=sd*(hw+1.2),wx=T.x[i]+Math.cos(T.psi[i])*lx,wz=T.z[i]-Math.sin(T.psi[i])*lx,yr=T.y[i]-lx*T.bank[i],gr=T.terr(wx,wz),bot=Math.min(gr,yr)-1.2,h=yr+top-bot;
+ const p=new THREE.Mesh(new THREE.BoxGeometry(.55,h,.55),mat_);p.position.set(lx,bot+h/2-T.y[i],0);g.add(p);return{lx,yr}}
 function gate(T,i,n,tot){const g=new THREE.Group(),hw=T.hw[i],c=document.createElement('canvas');c.width=512;c.height=64;const x=c.getContext('2d');
  x.fillStyle='#0b3a44';x.fillRect(0,0,512,64);x.fillStyle='#7fe3f2';for(let k=0;k<512;k+=32)x.fillRect(k,0,16,6),x.fillRect(k+16,58,16,6);x.fillStyle='#fff';x.font='bold 34px monospace';x.textAlign='center';x.textBaseline='middle';x.fillText('CHECKPOINT '+n+' / '+tot,256,33);
- const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;const mb=new THREE.MeshBasicMaterial({map:t}),post=new THREE.MeshStandardMaterial({color:S(0xdfe9ec),roughness:.8,flatShading:true}),beam=new THREE.MeshBasicMaterial({color:S(0x5fd8ee),transparent:true,opacity:.28,depthWrite:false,fog:true});
- for(const sd of[-1,1]){const p=new THREE.Mesh(new THREE.BoxGeometry(.55,7,.55),post);p.position.set(sd*(hw+1.2),3.5,0);g.add(p);const b=new THREE.Mesh(new THREE.CylinderGeometry(.16,.16,34,6),beam);b.position.set(sd*(hw+1.2),17,0);g.add(b)}
+ const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;const mb=new THREE.MeshBasicMaterial({map:t}),pm=new THREE.MeshStandardMaterial({color:S(0xdfe9ec),roughness:.8,flatShading:true}),beam=new THREE.MeshBasicMaterial({color:S(0x5fd8ee),transparent:true,opacity:.28,depthWrite:false,fog:true});
+ for(const sd of[-1,1]){const q=post(T,i,sd,hw,pm,beam,g,7.2);const b=new THREE.Mesh(new THREE.CylinderGeometry(.16,.16,34,6),beam);b.position.set(q.lx,q.yr-T.y[i]+17,0);g.add(b)}
  const bn=new THREE.Mesh(new THREE.BoxGeometry(hw*2+2.4,1.5,.3),mb);bn.position.set(0,6.9,0);g.add(bn);
  g.position.set(T.x[i],T.y[i],T.z[i]);g.rotation.y=T.psi[i];return g}
+/* the start arch from the base track layers stands on the road edge; give each post a footing that reaches the terrain */
+function footing(T,sc){const hw=T.hw[0],pm=new THREE.MeshStandardMaterial({color:S(0xe8e3d4),roughness:.8,flatShading:true});
+ for(const sd of[-1,1]){const lx=sd*(hw+1.15),wx=T.x[0]+Math.cos(T.psi[0])*lx,wz=T.z[0]-Math.sin(T.psi[0])*lx,yr=T.y[0]-lx*T.bank[0],gr=T.terr(wx,wz),bot=Math.min(gr,yr)-1.4,h=yr+.3-bot;
+  const m=new THREE.Mesh(new THREE.BoxGeometry(1.0,h,1.0),pm);m.position.set(wx,bot+h/2,wz);m.rotation.y=T.psi[0];sc.add(m)}}
 const bwG=buildWorld;
-buildWorld=T=>{const sc=bwG(T);if(!T.d.hard)return sc;const cps=P.cpsOf(T);cps.forEach((i,k)=>sc.add(gate(T,i,k+1,cps.length+1)));return sc};
+buildWorld=T=>{const sc=bwG(T);if(!T.d.hard)return sc;const cps=P.cpsOf(T);cps.forEach((i,k)=>sc.add(gate(T,i,k+1,cps.length+1)));footing(T,sc);return sc};
 /* medal references: filled by the AI-lap test (tests/stages_laps.py) */
 Object.assign(P.MEDAL_REF,{10:224.2,11:219.2,12:242.1,13:213.6});
 })();
