@@ -100,5 +100,5 @@ document.addEventListener('mouseover',e=>{const t=e.target.closest&&e.target.clo
 document.addEventListener('pointerdown',e=>{const t=e.target.closest&&e.target.closest(HOV);if(!t)return;ctx();if(t.disabled||t.classList.contains('off')){SFX.err();return}
  if(t.dataset&&t.dataset.a==='back')SFX.back();else if(t.classList.contains('go'))SFX.ok();else if(t.id==='shAct'||t.id==='evGo')return;else SFX.click()},true);
 addEventListener('keydown',e=>{if(e.repeat)return;if(scr==='game'||!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD','Enter','Escape','Space'].includes(e.code))return;if(e.code==='Escape')SFX.back();else if(e.code==='Enter'||e.code==='Space')SFX.ok();else SFX.move()});
-P.audioReady=ctx;
+P.audioReady=ctx;P.aud={ctx,mg:()=>MG,nb:()=>NB,on,vol,tone,hiss};
 })();
