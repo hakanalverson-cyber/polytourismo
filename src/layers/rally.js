@@ -36,14 +36,15 @@ function stageFx(c,T,dt){const nm=T.d.name,sc=RACE.scene,sy=Math.sin(c.yaw),cy=M
   while(c._fA>=1){c._fA--;const a=rnd(0,6.283),r=rnd(3,26);P.puff(c.x+Math.cos(a)*r+sy*c.sp*.6,c.y+rnd(.5,5),c.z+Math.sin(a)*r+cy*c.sp*.6,rnd(.2,1),rnd(.1,.5),rnd(-.5,.5),[1,.88,.5],rnd(.08,.15),rnd(3,4.5),.55,.12)}}
  else if(nm==='Mangrove Ford'){c._fA=(c._fA||0)+dt*5;
   while(c._fA>=1){c._fA--;const a=rnd(0,6.283),r=rnd(4,28);P.puff(c.x+Math.cos(a)*r+sy*c.sp*.6,c.y+rnd(.4,3),c.z+Math.sin(a)*r+cy*c.sp*.6,rnd(-.3,.3),rnd(.1,.4),rnd(-.3,.3),[1,.97,.7],rnd(.08,.14),rnd(2.5,4),.7,-.05)}}}
+function fxStep(c,Rc,dt){const T=Rc.T;if(T.fords&&T.fords.length){const dep=waterDepth(T,c),was=c._wet>0;c._wet=dep;
+  if(dep>0){c._wet=dep;if(c.sp>3)splash(c,T,dt,dep);
+   if(!was&&c.sp>6){if(c.human){P.sfx&&P.sfx('splash',Math.min(1,c.sp/45));Rc.shake=Math.max(Rc.shake||0,.1*Math.min(1,c.sp/40))}}
+   if(c.human&&c.sp>10){c._wS=(c._wS||0)-dt;if(c._wS<=0){c._wS=.28;P.sfx&&P.sfx('splash',.18+Math.min(.3,c.sp/150))}}}
+  else if(was&&c.human&&c.sp>6)P.sfx&&P.sfx('splash',Math.min(.8,c.sp/60))}
+ if(c.human&&Rc.cfg&&!Rc.cfg.noFx)stageFx(c,T,dt)}
 const sc0=stepCar;
 stepCar=function(c,dt){sc0.apply(this,arguments);const Rc=RACE;if(!Rc||!Rc.T||!Rc.dust)return;
- try{const T=Rc.T;if(T.fords&&T.fords.length){const dep=waterDepth(T,c),was=c._wet>0;c._wet=dep;
-   if(dep>0){c._wet=dep;if(c.sp>3)splash(c,T,dt,dep);
-    if(!was&&c.sp>6){if(c.human){P.sfx&&P.sfx('splash',Math.min(1,c.sp/45));Rc.shake=Math.max(Rc.shake||0,.1*Math.min(1,c.sp/40))}}
-    if(c.human&&c.sp>10){c._wS=(c._wS||0)-dt;if(c._wS<=0){c._wS=.28;P.sfx&&P.sfx('splash',.18+Math.min(.3,c.sp/150))}}}
-   else if(was&&c.human&&c.sp>6)P.sfx&&P.sfx('splash',Math.min(.8,c.sp/60))}
-  if(c.human&&Rc.cfg&&!Rc.cfg.noFx)stageFx(c,T,dt)}catch(e){if(!P._rfxErr){P._rfxErr=1;console.error('rally fx',e)}}};
+ try{fxStep(c,Rc,dt)}catch(e){if(!P._rfxErr){P._rfxErr=1;console.error('rally fx',e)}}};
 
 /* ---------------- pace notes ---------------- */
 const wrp=a=>{while(a>PI)a-=2*PI;while(a<-PI)a+=2*PI;return a};
@@ -72,57 +73,177 @@ const lh=P.launch;let S=null;
 const KMo=KM.map(k=>Object.assign({},k));
 const keysFor=p=>{Object.assign(KM[0],KMo[Math.min(p,KMo.length-1)])};
 const keysReset=()=>{Object.assign(KM[0],KMo[0])};
+const $i=id=>document.getElementById(id);
+const fade=document.createElement('div');fade.id='rlFade';document.body.appendChild(fade);
+const dipEl=document.createElement('div');dipEl.id='rlDip';document.body.appendChild(dipEl);
+const fadeTo=(a,ms)=>new Promise(r=>{fade.style.transitionDuration=ms+'ms';fade.style.opacity=a;setTimeout(r,ms+30)});
+const dip=()=>{dipEl.style.transition='none';dipEl.style.opacity=.9;requestAnimationFrame(()=>requestAnimationFrame(()=>{dipEl.style.transition='opacity .6s';dipEl.style.opacity=0}))};
+const human=Rc=>Rc&&Rc.cars.find(q=>q.human);
+const fmt=t=>P.fmtT(t);
+const bodyCls=(c,on)=>document.body.classList.toggle(c,on);
 P.launch=cfg=>{
  if(cfg.mode==='rally'&&!cfg.rally){startSession(cfg);return}
- if(!cfg.rally){keysReset();S=null}
+ if(!cfg.rally){keysReset();S=null;leaveFx()}
  lh(cfg)};
+function leaveFx(){bodyCls('rprep',false);bodyCls('rreplay',false);const a=$i('rlPrep'),b=$i('rlRep'),c=$i('rlCp');if(a)a.style.display='none';if(b)b.style.display='none';if(c)c.style.opacity=0}
 function startSession(cfg){const hs=cfg.humans;
- S={cfg,drv:hs.map((h,i)=>({name:(h.name||'P'+(i+1)).slice(0,12),id:h.id,alt:h.alt,p:i,time:null,best:null,laps:[],medal:-1})),i:0,done:false};
+ S={cfg,drv:hs.map((h,i)=>({name:(h.name||'P'+(i+1)).slice(0,12),id:h.id,alt:h.alt,p:i,time:null,best:null,laps:[],medal:-1,splits:[]})),i:0,ref:null,refT:1e9};
  if(S.drv.length>1)briefing(0);else turn(0)}
-function turn(i){S.i=i;const d=S.drv[i],cfg=S.cfg;keysFor(d.p);
- lh(Object.assign({},cfg,{mode:'mp',rally:true,rallyTurn:i,humans:[{id:d.id,alt:d.alt,name:d.name}],ai:[],grid:'fixed'}))}
-const box=()=>document.getElementById('resBox');
-const fmt=t=>P.fmtT(t);
+async function turn(i){S.i=i;const d=S.drv[i],cfg=S.cfg;keysFor(d.p);
+ await fadeTo(1,450);
+ lh(Object.assign({},cfg,{mode:'mp',rally:true,rallyTurn:i,humans:[{id:d.id,alt:d.alt,name:d.name}],ai:[],grid:'fixed'}));
+ enterPrep(d,i);
+ await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+ await fadeTo(0,800)}
+const box=()=>$i('resBox');
 const keyHint=p=>['W A S D','arrow keys','I J K L','T F G H'][p]||'';
+const quitRally=()=>{S=null;keysReset();leaveFx();P.cleanupRace();show('menu')};
 function briefing(i){const d=S.drv[i],car=BYID[d.id],st=D[S.cfg.track];paused=true;
- const nxt=S.drv.length-i;
  box().innerHTML=`<h1>UP NEXT</h1><div class="sub">${st.name.toUpperCase()} &middot; ${S.cfg.laps} LAP${S.cfg.laps>1?'S':''} &middot; RUN ${i+1} OF ${S.drv.length}</div>
  <div class="rl-pass"><span class="rl-dot" style="background:${PCOL[d.p%4]}"></span><b>${d.name.replace(/</g,'')}</b><small>${car.name}${d.alt?' ALT':''} &middot; ${keyHint(d.p)}</small></div>
  ${i?standingsHTML(false):''}
  <div class="rl-note">Pass the controller. Fastest total time wins; the stage is the same for everyone.</div>
- <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap"><button class="btn go" id="rlGo"><span>Start run</span></button><button class="btn" id="rlQuit"><span>Quit rally</span></button></div>`;
- show('s8res');document.getElementById('rlGo').onclick=()=>{turn(i)};document.getElementById('rlQuit').onclick=()=>{S=null;keysReset();P.cleanupRace();show('menu')}}
+ <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap"><button class="btn go" id="rlGo"><span>Ready</span></button><button class="btn" id="rlQuit"><span>Quit rally</span></button></div>`;
+ show('s8res');$i('rlGo').onclick=()=>{turn(i)};$i('rlQuit').onclick=quitRally}
 function sorted(){return S.drv.filter(d=>d.time!=null).sort((a,b)=>a.time-b.time)}
 function standingsHTML(fin){const done=sorted(),lead=done.length?done[0].time:0;
  return `<table class="rt"><tr><th>Pos</th><th>Driver</th><th>Car</th><th>Time</th><th>${fin?'Gap':'Best lap'}</th></tr>`+done.map((d,i)=>`<tr class="${i===0?'hum':''}"><td class="pl">${i+1}</td><td><b style="color:${PCOL[d.p%4]}">${d.name.replace(/</g,'')}</b></td><td>${BYID[d.id].name}${d.medal>=0?` <span class="rl-med" style="background:${P.MEDALS[d.medal].col}" title="${P.MEDALS[d.medal].n}"></span>`:''}</td><td>${fmt(d.time)}</td><td style="color:var(--ac)">${fin?(i?'+'+(d.time-lead).toFixed(2):'--'):(d.best!=null?fmt(d.best):'--')}</td></tr>`).join('')+'</table>'}
+const splitsHTML=d=>d.splits&&d.splits.length?`<div class="rl-spl">${d.splits.map((t,k)=>`<span>CP${k+1}<b>${fmt(t)}</b></span>`).join('')}</div>`:'';
 const sr0=P.showResults;
 P.showResults=function(){const Rc=RACE;if(!(Rc&&Rc.cfg&&Rc.cfg.rally&&S))return sr0.apply(this,arguments);
- const c=Rc.cars.find(q=>q.human),d=S.drv[S.i];d.time=c&&c.fin?c.finT:null;d.laps=(c&&c.lapT)||[];d.best=d.laps.length?Math.min(...d.laps):null;
+ const c=human(Rc),d=S.drv[S.i];d.time=c&&c.fin?c.finT:null;d.laps=(c&&c.lapT)||[];d.best=d.laps.length?Math.min(...d.laps):null;d.splits=(Rc.splits||[]).slice();
  if(d.time==null){d.time=(c&&c.finT)||9999}
- if(S.i+1<S.drv.length){interim()}else finish()};
+ const sv=P.SV(),key=S.cfg.track+':'+S.cfg.laps;sv.ral=sv.ral||{};const rec=sv.ral[key];
+ if(!rec||d.time<rec.t){sv.ral[key]={t:d.time,s:d.splits};P.save();d.pb=true}
+ if(d.time<S.refT){S.refT=d.time;S.ref=d.splits}
+ leaveFx();bodyCls('rreplay',false);
+ if(S.i+1<S.drv.length)interim();else finish()};
+const replayBtn=()=>RACE&&RACE.rec&&RACE.rec.length>30?'<button class="btn" id="rlRep1"><span>Watch replay</span></button>':'';
 function interim(){const d=S.drv[S.i],pos=sorted().indexOf(d)+1;paused=true;
- box().innerHTML=`<h1>RUN COMPLETE</h1><div class="sub">${d.name.toUpperCase()} &middot; ${fmt(d.time)} &middot; ${pos===1?'LEADING':'P'+pos+' SO FAR'}</div>${standingsHTML(false)}
- <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap"><button class="btn go" id="rlNext"><span>Next: ${S.drv[S.i+1].name.replace(/</g,'')}</span></button><button class="btn" id="rlQuit"><span>Quit rally</span></button></div>`;
- show('s8res');document.getElementById('rlNext').onclick=()=>briefing(S.i+1);document.getElementById('rlQuit').onclick=()=>{S=null;keysReset();P.cleanupRace();show('menu')}}
+ box().innerHTML=`<h1>RUN COMPLETE</h1><div class="sub">${d.name.toUpperCase().replace(/</g,'')} &middot; ${fmt(d.time)} &middot; ${pos===1?'LEADING':'P'+pos+' SO FAR'}</div>${d.pb?'<span class="goal ok">NEW STAGE RECORD</span>':''}${standingsHTML(false)}${splitsHTML(d)}
+ <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap"><button class="btn go" id="rlNext"><span>Next: ${S.drv[S.i+1].name.replace(/</g,'')}</span></button>${replayBtn()}<button class="btn" id="rlQuit"><span>Quit rally</span></button></div>`;
+ show('s8res');$i('rlNext').onclick=()=>briefing(S.i+1);$i('rlQuit').onclick=quitRally;const r=$i('rlRep1');if(r)r.onclick=()=>startReplay(interim)}
 function finish(){const sv=P.SV(),cfg=S.cfg,tr=cfg.track,tk=tr,rec=sv.ta[tk]||(sv.ta[tk]={}),order=sorted(),N=S.drv.length,pay=[];let total=0,notes=[];
  keysReset();
  const FR=[1,.6,.4,.3];
- order.forEach((d,i)=>{const car=BYID[d.id],base=P.raceBase(Math.max(2,cfg.laps+1),car),fr=N===1?.75:FR[Math.min(i,3)],cr=Math.round(base*fr);pay.push({l:d.name+(N>1?' / '+P.ord(i+1)+' PLACE':' / STAGE CLEARED'),v:cr});total+=cr;
-  if(d.best!=null){const m=P.medalFor(tk,car,d.best);d.medal=m>=0&&m<P.MEDALS.length?m:-1;const prevM=rec.medal==null?P.MEDALS.length:rec.medal;
-   if(d.medal>=0&&d.medal<prevM){let g=0;for(let q=d.medal;q<prevM&&q<P.MEDALS.length;q++)g+=P.MEDALS[q].cr;pay.push({l:d.name+' / '+P.MEDALS[d.medal].n+' MEDAL',v:g});total+=g;rec.medal=d.medal}
-   if(rec.best==null||d.best<rec.best){rec.best=d.best;notes.push('NEW STAGE BEST LAP '+fmt(d.best)+(N>1?' / '+d.name:''))}}
+ order.forEach((d,i)=>{const car=BYID[d.id],base=P.raceBase(Math.max(3,cfg.laps*4),car),fr=N===1?.75:FR[Math.min(i,3)],cr=Math.round(base*fr);pay.push({l:d.name+(N>1?' / '+P.ord(i+1)+' PLACE':' / STAGE CLEARED'),v:cr});total+=cr;
+  const m=P.medalFor(tk,car,d.time/cfg.laps);d.medal=m>=0&&m<P.MEDALS.length?m:-1;const prevM=rec.medal==null?P.MEDALS.length:rec.medal;
+  if(d.medal>=0&&d.medal<prevM){let g=0;for(let q=d.medal;q<prevM&&q<P.MEDALS.length;q++)g+=P.MEDALS[q].cr;pay.push({l:d.name+' / '+P.MEDALS[d.medal].n+' MEDAL',v:g});total+=g;rec.medal=d.medal}
+  if(d.best!=null&&(rec.best==null||d.best<rec.best)){rec.best=d.best;notes.push('NEW STAGE BEST LAP '+fmt(d.best)+(N>1?' / '+d.name:''))}
+  if(d.pb)notes.push('STAGE RECORD '+fmt(d.time)+(N>1?' / '+d.name:''));
   if(rec.total==null||d.time<rec.total)rec.total=d.time});
  P.earn(total);sv.stats.races++;if(N>1)sv.stats.wins++;P.save();
- const win=order[0];paused=true;
+ const win=order[0];S.fin={pay,total,notes,win};showFinal()}
+function showFinal(){const sv=P.SV(),cfg=S.cfg,tr=cfg.track,F=S.fin,N=S.drv.length,win=F.win;paused=true;
  box().innerHTML=`<h1>${N>1?'RALLY RESULT':'STAGE COMPLETE'}</h1><div class="sub">${D[tr].name.toUpperCase()} &middot; ${cfg.laps} LAP${cfg.laps>1?'S':''}${N>1?' &middot; WINNER '+win.name.toUpperCase().replace(/</g,''):''}</div>
- ${notes.map(n=>`<span class="goal ok">${n}</span>`).join('')}${standingsHTML(true)}
- <div>${pay.map(p=>`<div class="pay"><span>${p.l}</span><span>+${P.fmtCr(p.v)}</span></div>`).join('')}<div class="pay tot"><span>Total earned</span><span>+${P.fmtCr(total)}</span></div><div class="pay"><span>Balance</span><span>${P.fmtCr(sv.cr)}</span></div></div>
- <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap"><button class="btn go" id="rlAgain"><span>Run it again</span></button><button class="btn" id="rlSetup"><span>Stage select</span></button><button class="btn" id="rlBrand"><span>Brand Central</span></button><button class="btn" id="rlMenu"><span>Main menu</span></button></div>`;
+ ${F.notes.map(n=>`<span class="goal ok">${n}</span>`).join('')}${standingsHTML(true)}${N===1?splitsHTML(win):''}
+ <div>${F.pay.map(p=>`<div class="pay"><span>${p.l}</span><span>+${P.fmtCr(p.v)}</span></div>`).join('')}<div class="pay tot"><span>Total earned</span><span>+${P.fmtCr(F.total)}</span></div><div class="pay"><span>Balance</span><span>${P.fmtCr(sv.cr)}</span></div></div>
+ <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap"><button class="btn go" id="rlAgain"><span>Run it again</span></button>${replayBtn()}<button class="btn" id="rlSetup"><span>Stage select</span></button><button class="btn" id="rlBrand"><span>Brand Central</span></button><button class="btn" id="rlMenu"><span>Main menu</span></button></div>`;
  show('s8res');
- document.getElementById('rlAgain').onclick=()=>{P.cleanupRace();startSession(S.cfg)};
- document.getElementById('rlSetup').onclick=()=>{P.cleanupRace();S=null;P.ui.renderSetup();show('s8setup')};
- document.getElementById('rlBrand').onclick=()=>{P.cleanupRace();S=null;P.ui.openShow('brand',{player:0,cap:null,ret:'s8res_back'})};
- document.getElementById('rlMenu').onclick=()=>{P.cleanupRace();S=null;show('menu')}}
-/* pause > restart mid-turn replays just this driver's run (launch keeps rally:true in lastCfg) */
+ $i('rlAgain').onclick=()=>{P.cleanupRace();startSession(S.cfg)};
+ $i('rlSetup').onclick=()=>{leaveFx();P.cleanupRace();S=null;P.ui.renderSetup();show('s8setup')};
+ $i('rlBrand').onclick=()=>{leaveFx();P.cleanupRace();S=null;P.ui.openShow('brand',{player:0,cap:null,ret:'s8res_back'})};
+ $i('rlMenu').onclick=()=>{leaveFx();P.cleanupRace();S=null;show('menu')};
+ const r=$i('rlRep1');if(r)r.onclick=()=>startReplay(showFinal)}
+
+/* ---------------- checkpoints ---------------- */
+function cpBox(){let e=$i('rlCp');if(!e){e=document.createElement('div');e.id='rlCp';document.body.appendChild(e)}return e}
+function cpCheck(Rc){const c=human(Rc);if(!c||Rc.state!=='race'||c.fin)return;const T=Rc.T,cps=P.cpsOf(T),K=cps.length,N=T.N;if(!K)return;
+ Rc.splits=Rc.splits||[];const n=Rc.splits.length,lapI=Math.floor(n/K);if(lapI>=Rc.laps)return;const target=lapI*N+cps[n%K];
+ if(c.unw>=target&&c.unw<target+N*.45){Rc.splits.push(Rc.t);
+  const sv=P.SV(),saved=sv.ral&&sv.ral[Rc.cfg.track+':'+Rc.cfg.laps],ref=(S&&S.ref)||(saved&&saved.s)||null,rt=ref&&ref[n];
+  const el=cpBox(),k=n%K+1,lab=Rc.laps>1?` &middot; LAP ${lapI+1}`:'';
+  let dl='';if(rt!=null){const dd=Rc.t-rt;dl=`<em class="${dd<=0?'ok':'bad'}">${dd<=0?'-':'+'}${Math.abs(dd).toFixed(2)}</em>`}
+  el.innerHTML=`<small>CHECKPOINT ${k} / ${K+1}${lab}</small><b>${fmt(Rc.t)}</b>${dl}`;el.style.opacity=1;clearTimeout(el._h);el._h=setTimeout(()=>{el.style.opacity=0},3800);
+  if(c.human)P.sfx&&P.sfx('select')}}
+
+/* ---------------- prep: start-line scene with free cameras until Play ---------------- */
+const prepCam=new THREE.PerspectiveCamera(48,1,.2,3500);
+function enterPrep(d,i){const Rc=RACE;if(!Rc)return;Rc.prep=true;Rc.prepT=0;Rc.shot0=(Math.random()*5)|0;Rc.shot=-1;const T=Rc.T,st=T.d,cps=P.cpsOf(T);
+ let e=$i('rlPrep');if(!e){e=document.createElement('div');e.id='rlPrep';document.body.appendChild(e)}
+ const car=BYID[d.id],wx=Rc.wx?Rc.wx.n:'Clear',tod=(P.TOD&&Rc.todKey&&P.TOD[Rc.todKey])?P.TOD[Rc.todKey].n:'';
+ e.innerHTML=`<div class="rp-l"><small>RALLY &middot; ${S.drv.length>1?'RUN '+(i+1)+' OF '+S.drv.length:'SOLO RUN'}</small><h2>${st.name}</h2><div class="rp-c"><span>${(T.L/1000).toFixed(1)} km</span><span>${S.cfg.laps} lap${S.cfg.laps>1?'s':''}</span><span>${cps.length} checkpoints</span>${T.fords&&T.fords.length?`<span class="hot">${T.fords.length} fords</span>`:''}${T.jumps&&T.jumps.length?'<span>jump</span>':''}<span>${wx}</span></div><div class="rp-d"><i style="background:${PCOL[d.p%4]}"></i><b>${d.name.replace(/</g,'')}</b><small>${car.name}${d.alt?' ALT':''} &middot; ${keyHint(d.p)}</small></div></div>
+ <div class="rp-r"><button class="btn go" id="rlPlay"><span>Start stage</span></button><small>Enter to start &middot; Esc to leave</small></div>`;
+ e.style.display='flex';bodyCls('rprep',true);$i('rlPlay').onclick=startStage}
+function startStage(){const Rc=RACE;if(!Rc||!Rc.prep)return;Rc.prep=false;bodyCls('rprep',false);const e=$i('rlPrep');if(e)e.style.display='none';dip();beep(700,.1)}
+function prepDraw(Rc,dt){const c=human(Rc),W=R.domElement.width,H=R.domElement.height;Rc.prepT+=dt;
+ const sh=Math.floor(Rc.prepT/6),u=(Rc.prepT%6)/6,e=u*u*(3-2*u);if(sh!==Rc.shot){Rc.shot=sh;if(sh>0)dip()}
+ const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw),fx=sy,fz=cy,lx=cy,lz=-sy,g0=c.y-.6,T0_=Rc.prepT,k=(sh+Rc.shot0)%5,mix=(a,b,t)=>a+(b-a)*t;let p,l,fov=48;
+ if(k===0){const a=T0_*.3+1;p=[c.x+Math.sin(a)*7.8,g0+2.3,c.z+Math.cos(a)*7.8];l=[c.x,g0+.9,c.z]}
+ else if(k===1){const lat=mix(6.5,-6.5,e);p=[c.x+fx*9+lx*lat,g0+.8,c.z+fz*9+lz*lat];l=[c.x+fx*1.4,g0+.7,c.z+fz*1.4];fov=44}
+ else if(k===2){const b=mix(12,36,e),lt=mix(-4,6,e);p=[c.x-fx*b+lx*lt,g0+mix(1.6,16,e),c.z-fz*b+lz*lt];const a=mix(2,28,e);l=[c.x+fx*a,g0+mix(1,3,e),c.z+fz*a];fov=52}
+ else if(k===3){const a=mix(-13,11,e);p=[c.x+lx*8+fx*a,g0+1.4,c.z+lz*8+fz*a];l=[c.x+fx*mix(-4,3,e),g0+.8,c.z+fz*mix(-4,3,e)];fov=42}
+ else{const a=mix(2.8,1.3,e);p=[c.x+lx*3.2+fx*a,g0+.55,c.z+lz*3.2+fz*a];l=[c.x+lx*.9+fx*1.7,g0+.45,c.z+lz*.9+fz*1.7];fov=36}
+ const gh=Rc.T.surf(p[0],p[2],p[1]+2).h+.5;if(p[1]<gh)p[1]=gh;
+ prepCam.position.set(p[0],p[1],p[2]);prepCam.lookAt(l[0],l[1],l[2]);prepCam.fov=fov;prepCam.aspect=Math.max(.1,W/H);prepCam.updateProjectionMatrix();
+ R.setScissorTest(false);R.setViewport(0,0,W,H);R.clear();R.render(Rc.scene,prepCam)}
+
+/* ---------------- replay ---------------- */
+const rcam=new THREE.PerspectiveCamera(60,1,.2,3500);
+function record(Rc){if(Rc.state!=='race')return;const c=human(Rc);if(!c)return;let m=0;c.m.wheels.forEach((w,i)=>{if(w.g)m|=1<<i});
+ (Rc.rec=Rc.rec||[]).push([Rc.t,c.x,c.y,c.z,c.yaw,c.pitch,c.roll,c.vx,c.vy,c.vz,c.st,c.sp,c.idx,c.in&&c.in.br||0,m,c.onRoad?1:0,c.drifting?1:0])}
+let replayBack=null;
+function startReplay(back){const Rc=RACE;if(!Rc||!Rc.rec||Rc.rec.length<30)return;replayBack=back;const c=human(Rc);
+ Rc.replay={t:Rc.rec[0][0],speed:1,cam:0,paused:false,tv:null,tvs:1};c.fin=0;c.respT=0;c.exp=0;paused=false;
+ let e=$i('rlRep');if(!e){e=document.createElement('div');e.id='rlRep';document.body.appendChild(e)}
+ e.innerHTML=`<div class="rr-top"><b>REPLAY</b><span id="rrCam">CHASE</span></div><div class="rr-bar" id="rrBar"><i id="rrFill"></i></div><div class="rr-btns"><button id="rrPlay">Pause</button><button data-s=".25">.25x</button><button data-s=".5">.5x</button><button data-s="1" class="on">1x</button><button data-s="2">2x</button><button data-s="4">4x</button><button id="rrCamB">Camera</button><button id="rrRst">Restart</button><button id="rrExit">Done</button></div>`;
+ e.style.display='block';bodyCls('rreplay',true);show('game');
+ const R_=Rc.replay;
+ $i('rrPlay').onclick=()=>{R_.paused=!R_.paused;$i('rrPlay').textContent=R_.paused?'Play':'Pause'};
+ e.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{R_.speed=+b.dataset.s;e.querySelectorAll('[data-s]').forEach(x=>x.classList.toggle('on',x===b))});
+ $i('rrCamB').onclick=cycleCam;$i('rrRst').onclick=()=>{R_.t=Rc.rec[0][0];R_.paused=false;$i('rrPlay').textContent='Pause'};$i('rrExit').onclick=exitReplay;
+ $i('rrBar').onclick=ev=>{const r=$i('rrBar').getBoundingClientRect(),f=(ev.clientX-r.left)/r.width,t0=Rc.rec[0][0],t1=Rc.rec[Rc.rec.length-1][0];R_.t=t0+(t1-t0)*Math.min(1,Math.max(0,f))}}
+const CAMN=['CHASE','HOOD','TV','HELI'];
+function cycleCam(){const Rc=RACE;if(!Rc||!Rc.replay)return;Rc.replay.cam=(Rc.replay.cam+1)%CAMN.length;Rc.replay.tv=null;$i('rrCam').textContent=CAMN[Rc.replay.cam];dip()}
+function exitReplay(){const Rc=RACE;if(!Rc||!Rc.replay)return;Rc.replay=null;bodyCls('rreplay',false);const e=$i('rlRep');if(e)e.style.display='none';paused=true;stopEng&&stopEng();const b=replayBack;replayBack=null;if(b)b()}
+function replayTick(Rc,dt){const R_=Rc.replay,c=human(Rc),rec=Rc.rec,t0=rec[0][0],t1=rec[rec.length-1][0];
+ if(!R_.paused)R_.t+=dt*R_.speed;if(R_.t>=t1){R_.t=t1;if(!R_.paused){R_.paused=true;$i('rrPlay').textContent='Play'}}
+ let lo=0,hi=rec.length-1;while(hi-lo>1){const m=(lo+hi)>>1;if(rec[m][0]<=R_.t)lo=m;else hi=m}
+ const a=rec[lo],b=rec[Math.min(rec.length-1,lo+1)],u=b[0]>a[0]?Math.min(1,Math.max(0,(R_.t-a[0])/(b[0]-a[0]))):0,L=i=>a[i]+(b[i]-a[i])*u,A=i=>a[i]+wrp(b[i]-a[i])*u;
+ c.x=L(1);c.y=L(2);c.z=L(3);c.yaw=A(4);c.pitch=A(5);c.roll=A(6);c.vx=L(7);c.vy=L(8);c.vz=L(9);c.st=L(10);c.sp=L(11);c.idx=a[12];c.in={th:1,br:a[13],st:0,hb:0};c.onRoad=!!a[15];c.drifting=!!a[16];c.respT=0;c.exp=0;c.dts=0;c.fin=0;
+ c.m.wheels.forEach((w,i)=>{w.g=!!(a[14]&(1<<i));w.s={h:c.y-1,road:c.onRoad}});
+ Rc.shake=0;try{updateVisual(c,Rc.T,T0);fxStep(c,Rc,R_.paused?0:dt*R_.speed)}catch(e){}
+ if(!R_.paused&&P.dustTick)P.dustTick(Rc,dt*R_.speed);
+ const f=$i('rrFill');if(f)f.style.width=(100*(R_.t-t0)/Math.max(.01,t1-t0))+'%'}
+function replayDraw(Rc,dt){const R_=Rc.replay,c=human(Rc),W=R.domElement.width,H=R.domElement.height,T=Rc.T,sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);let p,l,fov=60;
+ if(R_.cam===1){p=[c.x+sy*.5,c.y+.45,c.z+cy*.5];l=[p[0]+sy*20,p[1]-.5,p[2]+cy*20];fov=74}
+ else if(R_.cam===2){const near=R_.tv&&Math.hypot(c.x-R_.tv[0],c.z-R_.tv[2])<150&&((c.x-R_.tv[0])*sy+(c.z-R_.tv[2])*cy)<32;
+  if(!near){const j=(c.idx+Math.round(60/T.sp))%T.N;R_.tvs=-R_.tvs;const o=T.hw[j]+8+Math.random()*5;R_.tv=[T.x[j]+Math.cos(T.psi[j])*R_.tvs*o,T.y[j]+2.4+Math.random()*2.5,T.z[j]-Math.sin(T.psi[j])*R_.tvs*o]}
+  p=R_.tv;l=[c.x,c.y+.4,c.z];fov=36}
+ else{const a=performance.now()*.00018;p=[c.x+Math.sin(a)*40,c.y+26,c.z+Math.cos(a)*40];l=[c.x+sy*6,c.y,c.z+cy*6];fov=52}
+ const gh=T.surf(p[0],p[2],p[1]+2).h+.8;if(p[1]<gh)p[1]=gh;
+ rcam.position.set(p[0],p[1],p[2]);rcam.lookAt(l[0],l[1],l[2]);rcam.fov=fov;rcam.aspect=Math.max(.1,W/H);rcam.updateProjectionMatrix();
+ R.setScissorTest(false);R.setViewport(0,0,W,H);R.clear();R.render(Rc.scene,rcam)}
+const dr0=drawRace;
+drawRace=function(dt){const Rc=RACE;if(Rc&&Rc.prep){prepDraw(Rc,dt);return}if(Rc&&Rc.replay&&Rc.replay.cam>0){replayDraw(Rc,dt);return}return dr0.apply(this,arguments)};
+const st0=step;
+step=dt=>{const Rc=RACE;if(Rc&&Rc.prep){if(P.dustTick)P.dustTick(Rc,dt);return}if(Rc&&Rc.replay){replayTick(Rc,dt);return}
+ st0(dt);if(Rc&&RACE===Rc&&Rc.cfg&&Rc.cfg.rally){record(Rc);cpCheck(Rc)}};
+addEventListener('keydown',e=>{const Rc=RACE;if(!Rc)return;
+ if(Rc.prep){if(e.code==='Enter'||e.code==='Space'){e.preventDefault();e.stopImmediatePropagation();startStage()}else if(e.code==='Escape'){e.stopImmediatePropagation();const multi=S&&S.drv.length>1;leaveFx();P.cleanupRace();keysReset();if(multi){S=null;show('menu')}else{S=null;P.ui.renderSetup();show('s8setup')}}return}
+ if(Rc.replay){const R_=Rc.replay;let h=true;if(e.code==='Space')$i('rrPlay').click();else if(e.code==='KeyC')cycleCam();else if(e.code==='Escape'||e.code==='Enter')exitReplay();else if(e.code==='ArrowRight')R_.t+=5;else if(e.code==='ArrowLeft')R_.t=Math.max(Rc.rec[0][0],R_.t-5);else if(/^Digit[1-5]$/.test(e.code)){$i('rlRep').querySelectorAll('[data-s]')[+e.code[5]-1].click()}else h=false;if(h){e.preventDefault();e.stopImmediatePropagation()}}},true);
+
+/* ---------------- stage map render (3D aerial of the whole stage with the route marked) ---------------- */
+const RC={};let rr=null;
+P.stageRender=idx=>{if(RC[idx])return Promise.resolve(RC[idx]);
+ return new Promise(res=>setTimeout(()=>{let sc=null;try{
+  const def=Object.assign({},D[idx]);if(def.look!=null)def.id=def.look;const T=sampleTrack(def);sc=buildWorld(T);sc.fog=null;
+  sc.traverse(o=>{const g=o.geometry&&o.geometry.parameters;if(!g)return;if((o.geometry.type==='SphereGeometry'&&g.radius===1500)||(o.geometry.type==='CylinderGeometry'&&g.radiusTop===1300)||(o.geometry.type==='ConeGeometry'&&g.radius>=80&&g.height>=60))o.visible=false});
+  sc.background=new THREE.Color(0x0c1218);
+  const b=T.bounds,cx=(b[0]+b[1])/2,cz=(b[2]+b[3])/2,Dm=Math.max(b[1]-b[0],b[3]-b[2]);let y0=1e9,y1=-1e9;for(let i=0;i<T.N;i++){y0=Math.min(y0,T.y[i]);y1=Math.max(y1,T.y[i])}
+  const cam=new THREE.PerspectiveCamera(36,16/9,10,12000);cam.position.set(cx-Dm*.1,y1+Dm*.78,cz+Dm*.86);cam.lookAt(cx,(y0+y1)/2,cz-Dm*.02);cam.updateMatrixWorld();
+  if(!rr){rr=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});rr.outputEncoding=THREE.sRGBEncoding;rr.toneMapping=THREE.ACESFilmicToneMapping;rr.toneMappingExposure=1.05;rr.setPixelRatio(1);rr.setSize(960,540,false)}
+  rr.render(sc,cam);
+  const cv=document.createElement('canvas');cv.width=960;cv.height=540;const g=cv.getContext('2d');g.drawImage(rr.domElement,0,0);
+  const v=new THREE.Vector3(),pj=(x,y,z)=>{v.set(x,y,z).project(cam);return[(v.x*.5+.5)*960,(1-(v.y*.5+.5))*540]};
+  g.lineJoin='round';g.lineCap='round';
+  for(const [w,col] of [[7,'#0b0e12'],[3.4,'#f2c76b']]){g.strokeStyle=col;g.lineWidth=w;g.beginPath();for(let i=0;i<=T.N;i+=3){const q=pj(T.x[i%T.N],T.y[i%T.N]+3,T.z[i%T.N]);i?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1])}g.stroke()}
+  g.font='bold 12px monospace';g.textAlign='center';g.textBaseline='middle';
+  P.cpsOf(T).forEach((i,k)=>{const q=pj(T.x[i],T.y[i]+3,T.z[i]);g.fillStyle='#0b3a44';g.strokeStyle='#7fe3f2';g.lineWidth=2;g.beginPath();g.arc(q[0],q[1],9,0,7);g.fill();g.stroke();g.fillStyle='#fff';g.fillText(k+1,q[0],q[1]+1)});
+  for(const f of T.fords||[]){const q=pj(f.x,f.yw+3,f.z);g.fillStyle='#1b5a7a';g.strokeStyle='#bfe8ff';g.lineWidth=2;g.beginPath();g.rect(q[0]-14,q[1]-8,28,16);g.fill();g.stroke();g.fillStyle='#fff';g.font='bold 9px monospace';g.fillText('FORD',q[0],q[1]+1)}
+  {const q=pj(T.x[0],T.y[0]+3,T.z[0]);g.fillStyle='#fff';g.fillRect(q[0]-5,q[1]-5,10,10);g.fillStyle='#111';g.fillRect(q[0]-5,q[1]-5,5,5);g.fillRect(q[0],q[1],5,5);g.font='bold 10px monospace';g.fillStyle='#fff';g.fillText('START',q[0],q[1]-13)}
+  RC[idx]=cv;res(cv)}catch(e){console.error('stage render',e);res(null)}
+  finally{if(sc){try{disposeWorld(sc)}catch(e){}}}},40))};
+
 P.RALLYSESSION=()=>S;
 })();

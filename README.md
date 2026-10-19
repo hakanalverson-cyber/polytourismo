@@ -79,3 +79,10 @@ Four brand-new stages (`src/layers/stages.js`), each with its own ground palette
 
 Fords are real: the stream bed is carved into the terrain, the road dips through it, water slows the car (grip, top speed, acceleration, braking) and throws spray from every wheel, with a splash sound on entry and exit. Pace notes (`src/layers/rally.js`) call upcoming corners (grade 1-5 or hairpin), fords and jumps. Stage-wide effects: falling ash and rising embers/steam (Ashfall), leaf fall (Autumn), pollen (Terrace), fireflies (Mangrove).
 Tests: `tests/stages_check.py` (geometry), `tests/stages_laps.py` (AI laps), `tests/rally_flow.py` (menu, turns, results), `tests/stg_*.py` (screenshots).
+
+## Rally stages (v9)
+- Rally uses only the four stages (Mangrove Ford, Terrace Run, Ashfall Stage, Autumn Ridge); they are hidden from every other mode, and Rally lists nothing else.
+- Each stage is 6.4-6.9 km (about 3x a regular track), narrow and kinked, with water fords, a jump, and 6 checkpoints (gates, split banner with delta vs best/leader).
+- Stage select shows a 3D render of the whole stage with route, checkpoints, fords and start marked.
+- Prep stage: fade to the start line with cinematic cameras, nothing starts until Start stage / Enter.
+- Replay after each run (chase / hood / TV / heli cameras, scrub, speed 0.25-4x).

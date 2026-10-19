@@ -458,3 +458,37 @@ body:after{background:repeating-linear-gradient(0deg,#00000010 0 1px,transparent
 .rl-dot{width:14px;height:14px;border-radius:50%}
 .rl-note{margin-top:14px;font-size:11px;letter-spacing:.12em;color:var(--dim);line-height:1.6}
 .rl-med{display:inline-block;width:9px;height:9px;border-radius:50%;margin-left:6px;vertical-align:middle}
+
+/* rally v9: prep / replay / checkpoints */
+#rlFade{position:fixed;inset:0;background:#05080b;opacity:0;pointer-events:none;z-index:60;transition:opacity .5s}
+#rlDip{position:fixed;inset:0;background:#05080b;opacity:0;pointer-events:none;z-index:55}
+#rlPrep{position:fixed;inset:0;display:none;z-index:30;justify-content:space-between;align-items:flex-end;padding:5vh 5vw;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.45),transparent 22%,transparent 62%,rgba(0,0,0,.65))}
+#rlPrep .rp-l small{letter-spacing:.2em;color:#cfd6dc;font-size:12px}
+#rlPrep h2{margin:4px 0 10px;font-size:clamp(28px,5vw,54px);letter-spacing:.06em;color:#fff;text-transform:uppercase}
+#rlPrep .rp-c{display:flex;gap:8px;flex-wrap:wrap}
+#rlPrep .rp-c span{padding:4px 10px;border:1px solid rgba(255,255,255,.35);border-radius:3px;font-size:12px;letter-spacing:.08em;color:#fff;background:rgba(0,0,0,.35)}
+#rlPrep .rp-c .hot{border-color:#7fe3f2;color:#7fe3f2}
+#rlPrep .rp-d{display:flex;align-items:center;gap:8px;margin-top:12px;color:#fff}
+#rlPrep .rp-d i{width:10px;height:10px;border-radius:50%}
+#rlPrep .rp-d small{color:#cfd6dc}
+#rlPrep .rp-r{text-align:right;pointer-events:auto}
+#rlPrep .rp-r small{display:block;margin-top:8px;color:#cfd6dc}
+#rlPrep .btn{font-size:20px;padding:14px 34px}
+body.rprep #hud,body.rprep .hud,body.rprep #h8pace,body.rprep .h8pace,body.rprep #mini,body.rprep #touch{display:none!important}
+#rlCp{position:fixed;top:17%;left:50%;transform:translateX(-50%);text-align:center;color:#fff;opacity:0;transition:opacity .4s;pointer-events:none;z-index:20;text-shadow:0 2px 8px #000}
+#rlCp small{display:block;letter-spacing:.2em;font-size:12px;color:#cfd6dc}
+#rlCp b{font-size:34px;letter-spacing:.04em}
+#rlCp em{display:block;font-style:normal;font-size:22px;margin-top:2px}
+#rlCp em.ok{color:#7fd68a}#rlCp em.bad{color:#ef6a5a}
+.rl-spl{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.rl-spl span{border:1px solid var(--ln,#444);padding:4px 9px;font-size:12px;border-radius:3px;color:#aab}
+.rl-spl b{margin-left:6px;color:#fff;font-weight:600}
+#rlRep{position:fixed;inset:0;display:none;z-index:30;pointer-events:none}
+#rlRep .rr-top{position:absolute;top:3vh;left:3vw;color:#fff;letter-spacing:.2em;font-size:13px;display:flex;gap:14px;text-shadow:0 1px 6px #000}
+#rlRep .rr-top span{color:#cfd6dc}
+#rlRep .rr-bar{position:absolute;left:3vw;right:3vw;bottom:9vh;height:8px;background:rgba(255,255,255,.2);border-radius:4px;pointer-events:auto;cursor:pointer}
+#rlRep .rr-bar i{display:block;height:100%;width:0;background:#f1f3f5;border-radius:4px}
+#rlRep .rr-btns{position:absolute;left:0;right:0;bottom:2.5vh;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;pointer-events:auto}
+#rlRep button{background:rgba(0,0,0,.55);color:#fff;border:1px solid rgba(255,255,255,.35);padding:7px 12px;border-radius:3px;cursor:pointer;font:inherit;font-size:12px}
+#rlRep button.on{background:#f1f3f5;color:#111}
+body.rreplay #hud,body.rreplay .hud,body.rreplay .h8pace,body.rreplay #mini,body.rreplay #touch{display:none!important}

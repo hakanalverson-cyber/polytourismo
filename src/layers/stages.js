@@ -20,6 +20,8 @@ const terr={id:11,look:5,name:'Terrace Run',desc:'vineyard switchbacks / hillsid
 /* ashfall: crater rim ring with a causeway spur that dives into the crater and U-turns */
 const ap=[],pol=(a,r,y)=>ap.push([Math.round(Math.cos(a*PI/180)*r),Math.round(Math.sin(a*PI/180)*r),y]);
 [[0,265,14],[30,255,20],[60,275,28],[90,260,36],[120,270,42],[150,255,44],[170,250,40],[182,185,33],[184,138,29],[187,100,26],[193,70,24],[205,70,24],[211,100,26],[214,138,29],[216,185,33],[238,262,36],[265,258,28],[300,268,22],[330,255,17]].forEach(q=>pol(q[0],q[1],q[2]));
+{const q=ap.slice(),n=q.length;ap.length=0;for(let i=0;i<n;i++){const a=q[i],b=q[(i+1)%n];ap.push(a);const ra=Math.hypot(a[0],a[1]),rb=Math.hypot(b[0],b[1]);
+ if(ra>240&&rb>240){const ang=(Math.atan2(a[1],a[0])+Math.atan2(b[1],b[0]))/2+(Math.abs(Math.atan2(a[1],a[0])-Math.atan2(b[1],b[0]))>3?PI:0),r=(ra+rb)/2+(i%2?-14:14);ap.push([Math.round(Math.cos(ang)*r),Math.round(Math.sin(ang)*r),+((a[2]+b[2])/2).toFixed(1)])}}}
 const ash={id:12,look:6,name:'Ashfall Stage',desc:'volcano crater rim / lava causeway / ash storm',hw:5.8,off:'sand',idw:.9,offs:0,amp:6,up:26,biome:'none',tod0:'sunset',crater:1,
  sky:[0x2c2631,0xc9774e],fog:0x70524c,sun:0xffa468,hemi:[0xd09a82,0x2a2220],road:'#4f4944',dust:0x6f655e,dirt:0x2a2422,pts:ap};
 const autu={id:13,look:4,name:'Autumn Ridge',desc:'golden forest ridge / two stream fords / leaf fall',hw:5.6,off:'dirt',idw:.88,offs:0,amp:5.5,up:28,biome:'forest',tod0:'dawn',fords:[9,16],fordW:9,water:[0x0f2e40,.76],
@@ -27,16 +29,22 @@ const autu={id:13,look:4,name:'Autumn Ridge',desc:'golden forest ridge / two str
  pts:[[-330,-60,30],[-250,-115,34],[-160,-105,38],[-80,-60,42],[10,-90,46],[100,-135,48],[190,-105,44],[255,-45,36],[300,35,28],[305,100,22],[300,165,23],[250,240,30],[160,270,36],[70,230,40],[-10,165,38],[-100,175,32],[-175,215,26],[-250,255,24],[-320,205,28],[-345,120,32],[-290,40,34]]};
 terr.pts=terr.pts.map(q=>[Math.round(q[0]*.75),Math.round(q[1]*.75),+(5+(q[2]-5)*.62).toFixed(1)]);
 [mang,terr,ash,autu].forEach(d=>Object.assign(d,gb,{shoulder:6}));
-/* longer and tighter: stretch each stage, then add an alternating sideways kink mid-segment (skipping fords, jump runs and the crater spur) */
-function tighten(d,amp,skip,grow){const p=d.pts.map(q=>[Math.round(q[0]*grow),Math.round(q[1]*grow),q[2]]),out=[],n=p.length,map=[];
- for(let i=0;i<n;i++){map[i]=out.length;const a=p[i],b=p[(i+1)%n];out.push(a);if(skip&&skip(i))continue;const dx=b[0]-a[0],dz=b[1]-a[1],L=Math.hypot(dx,dz);if(L<55)continue;
-  const sg=(i%2?1:-1)*amp*L;out.push([Math.round((a[0]+b[0])/2-dz/L*sg),Math.round((a[1]+b[1])/2+dx/L*sg),+((a[2]+b[2])/2).toFixed(1)])}
- d.pts=out;if(d.fords)d.fords=d.fords.map(k=>map[k]);return map}
-const nearF=(d)=>i=>(d.fords||[]).some(k=>k===i||k===i+1);
-tighten(mang,.17,nearF(mang),1.2);
-tighten(terr,.2,null,1);
-tighten(ash,.15,i=>i>=6&&i<=16,1.2);
-{const m=tighten(autu,.17,i=>nearF(autu)(i)||i===4,1.2);autu.jumps=[[m[4],.5]]}
+/* longer and tighter: stretch each stage, then keep adding alternating sideways kinks mid-segment until it is over triple a regular track.
+   Locked points (fords, the jump run-up, the crater spur) keep their neighbouring segments straight. */
+const polyLen=p=>{let L=0;for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length];L+=Math.hypot(a[0]-b[0],a[1]-b[1])}return L};
+function lengthen(d,target,amp,grow,lockIdx,jumpAt){const lock=new Set();let p=d.pts.map(q=>[Math.round(q[0]*grow),Math.round(q[1]*grow),q[2]]);
+ lockIdx.forEach(i=>lock.add(p[i]));const fr=(d.fords||[]).map(k=>p[k]),jr=jumpAt!=null?p[jumpAt]:null;
+ for(let pass=0;pass<5&&polyLen(p)*1.1<target;pass++){const out=[];
+  for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length];out.push(a);if(lock.has(a)||lock.has(b))continue;const dx=b[0]-a[0],dz=b[1]-a[1],L=Math.hypot(dx,dz);if(L<95)continue;
+   const sg=((i+pass)%2?1:-1)*Math.min(amp*L,d.kc||34);out.push([Math.round((a[0]+b[0])/2-dz/L*sg),Math.round((a[1]+b[1])/2+dx/L*sg),+((a[2]+b[2])/2).toFixed(1)])}
+  p=out}
+ d.pts=p;if(d.fords)d.fords=fr.map(r=>p.indexOf(r));if(jr)d.jumps=[[p.indexOf(jr),.5]]}
+const TARGET=7600;autu.kc=52;ash.kc=46;ash.cs=2.9;
+lengthen(mang,TARGET,.4,2.2,[...mang.fords.flatMap(k=>[k-1,k,k+1])]);
+lengthen(terr,TARGET,.22,1.9,[]);
+{const lk=[];ash.pts.forEach((q,i)=>{if(Math.hypot(q[0],q[1])<235){lk.push(i-1,i,i+1)}});lengthen(ash,TARGET,.5,2.9,lk.map(i=>(i+ash.pts.length)%ash.pts.length))}
+lengthen(autu,TARGET,.5,2.8,[...autu.fords.flatMap(k=>[k-1,k,k+1]),4,5],4);
+mang.hw=5;terr.hw=4.8;ash.hw=5;autu.hw=4.8;[mang,terr,ash,autu].forEach(d=>{d.hard=1});
 D.push(mang,terr,ash,autu);
 const J0=D.length-4;
 [[J0+1,{l:50,a:.75,t:1.6,r:100,f:.12}],[J0+2,{l:50,a:.75,t:1.6,r:100,f:.12}],[J0+3,{l:50,a:.75,t:1.6,r:100,f:.12}]].forEach(([i,rx])=>{const j=P.pickJumps(D[i],1,rx);D[i].jumps=j.length?j:[]});
@@ -54,7 +62,7 @@ sampleTrack=d=>{const T=ps(d);T.fords=[];if(!d.fords&&!d.crater)return T;const N
  T.cpts=[];for(let i=0;i<N;i+=6)T.cpts.push([T.x[i],T.z[i],T.y[i]]);
  const to=T.terr,hwm=d.hw,crater=d.crater;
  T.terr=(x,z)=>{let h=to(x,z);
-  if(crater){const r=Math.hypot(x,z);if(r<240){let dd=40;const cx=Math.floor(x/16),cz=Math.floor(z/16);
+  if(crater){const r=Math.hypot(x,z)/d.cs;if(r<240){let dd=40;const cx=Math.floor(x/16),cz=Math.floor(z/16);
     for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const l=T.grid.get((cx+a)*8192+cz+b);if(!l)continue;for(const i of l){const q=Math.hypot(x-T.x[i],z-T.z[i]);if(q<dd)dd=q}}
     const k=(1-sm(120,235,r))*sm(hwm+2,hwm+22,dd);h=lerp(h,-1.5+T.nz(x*.05,z*.05)*1.2,k*.97)}}
   for(const f of T.fords){const dx=x-f.x,dz=z-f.z,s=dx*f.s+dz*f.c,as=Math.abs(s);if(as>f.w+62)continue;const l=dx*f.c-dz*f.s,al=Math.abs(l);if(al>f.L)continue;
@@ -186,11 +194,26 @@ buildWorld=T=>{const sc=bw(T),d=T.d;
   const m4=new THREE.Matrix4(),v=new THREE.Vector3(),z0=new THREE.Matrix4().makeScale(0,0,0);
   sc.traverse(o=>{if(!o.isInstancedMesh||o.userData.keepAll)return;let ch=0;for(let i=0;i<o.count;i++){o.getMatrixAt(i,m4);v.setFromMatrixPosition(m4);for(const f of T.fords){const dx=v.x-f.x,dz=v.z-f.z,s=dx*f.s+dz*f.c,l=dx*f.c-dz*f.s;if(Math.abs(s)<f.w+12&&Math.abs(l)<f.L&&v.y<f.yw+1.6){o.setMatrixAt(i,z0);ch=1;break}}}if(ch)o.instanceMatrix.needsUpdate=true})}
  /* lava lake */
- if(k==='ash'){const g=new THREE.RingGeometry(1,215,48,12),pa=g.attributes.position,col=new Float32Array(pa.count*3);
-  for(let i=0;i<pa.count;i++){const x=pa.getX(i),y=pa.getY(i),n=T.nz(x*.09,y*.09)*.5+.5,n2=T.nz(x*.31+9,y*.31)*.5+.5,hot=Math.min(1,n*.7+n2*.45),c=mix3([.42,.05,.01],[.78,.2,.02],hot);col[i*3]=c[0];col[i*3+1]=c[1];col[i*3+2]=c[2]}
+ if(k==='ash'){const g=new THREE.RingGeometry(1,215*d.cs,64,16),pa=g.attributes.position,col=new Float32Array(pa.count*3);
+  for(let i=0;i<pa.count;i++){const x=pa.getX(i),y=pa.getY(i),n=T.nz(x*.09/d.cs,y*.09/d.cs)*.5+.5,n2=T.nz(x*.31+9,y*.31)*.5+.5,hot=Math.min(1,n*.7+n2*.45),c=mix3([.42,.05,.01],[.78,.2,.02],hot);col[i*3]=c[0];col[i*3+1]=c[1];col[i*3+2]=c[2]}
   g.setAttribute('color',new THREE.BufferAttribute(col,3));const lv=new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,fog:false}));lv.rotation.x=-PI/2;lv.position.set(0,3.2,0);sc.add(lv);sc.userData.lava=lv}
  sc.userData.stage=k;return sc};
 
+
+/* ---------------- checkpoints (gates every ~900 m; split times are kept per run) ---------------- */
+P.cpsOf=T=>{if(T.cps)return T.cps;const N=T.N,K=Math.max(5,Math.round(T.L/950)),out=[];
+ const circ=(a,b)=>{const d=Math.abs(a-b);return Math.min(d,N-d)*T.sp};
+ const bad=i=>{if(T.gap[i])return true;for(const j of T.jumps||[])if(circ(i,j)<70)return true;for(const f of T.fords||[])if(circ(i,f.i)<f.w+50)return true;return false};
+ for(let k=1;k<K;k++){const base=Math.round(N*k/K);let pick=base;for(let o=0;o<260;o+=3){const a=(base+o)%N,b=(base-o+N)%N;if(!bad(a)){pick=a;break}if(!bad(b)){pick=b;break}}out.push(pick)}
+ T.cps=out;T.cpK=K;return out};
+function gate(T,i,n,tot){const g=new THREE.Group(),hw=T.hw[i],c=document.createElement('canvas');c.width=512;c.height=64;const x=c.getContext('2d');
+ x.fillStyle='#0b3a44';x.fillRect(0,0,512,64);x.fillStyle='#7fe3f2';for(let k=0;k<512;k+=32)x.fillRect(k,0,16,6),x.fillRect(k+16,58,16,6);x.fillStyle='#fff';x.font='bold 34px monospace';x.textAlign='center';x.textBaseline='middle';x.fillText('CHECKPOINT '+n+' / '+tot,256,33);
+ const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;const mb=new THREE.MeshBasicMaterial({map:t}),post=new THREE.MeshStandardMaterial({color:S(0xdfe9ec),roughness:.8,flatShading:true}),beam=new THREE.MeshBasicMaterial({color:S(0x5fd8ee),transparent:true,opacity:.28,depthWrite:false,fog:true});
+ for(const sd of[-1,1]){const p=new THREE.Mesh(new THREE.BoxGeometry(.55,7,.55),post);p.position.set(sd*(hw+1.2),3.5,0);g.add(p);const b=new THREE.Mesh(new THREE.CylinderGeometry(.16,.16,34,6),beam);b.position.set(sd*(hw+1.2),17,0);g.add(b)}
+ const bn=new THREE.Mesh(new THREE.BoxGeometry(hw*2+2.4,1.5,.3),mb);bn.position.set(0,6.9,0);g.add(bn);
+ g.position.set(T.x[i],T.y[i],T.z[i]);g.rotation.y=T.psi[i];return g}
+const bwG=buildWorld;
+buildWorld=T=>{const sc=bwG(T);if(!T.d.hard)return sc;const cps=P.cpsOf(T);cps.forEach((i,k)=>sc.add(gate(T,i,k+1,cps.length+1)));return sc};
 /* medal references: filled by the AI-lap test (tests/stages_laps.py) */
-Object.assign(P.MEDAL_REF,{10:113.1,11:119.7,12:74.8,13:83.5});
+Object.assign(P.MEDAL_REF,{10:224.2,11:219.2,12:242.1,13:213.6});
 })();
