@@ -3624,16 +3624,13 @@ const IC={
   /* last car, crossed out */
   car(20,34,'#2c333d');  p.circ(24,37,9,R,false);p.circ(24,37,8,R,false);for(let i=-6;i<=6;i++){p.r(23+i,36+i,2,2,R)}
   return p.cv},
- ca(){const p=pxCanvas(48),Y='#f2c76b',D='#b8923f',Sv='#c9d1db',Sd='#8a94a2',B='#c98a5a',Bd='#8f5e3a',K='#10151b';
-  const G={1:['010','110','010','010','111'],2:['111','001','111','100','111'],3:['111','001','111','001','111']};
-  const dg=(n,x,y,c)=>G[n].forEach((r,j)=>[...r].forEach((v,i)=>{if(v==='1')p.r(x+i*2,y+j*2,2,2,c)}));
-  /* podium: 2nd | 1st | 3rd */
-  p.r(4,30,13,14,Sv);p.r(4,30,13,2,'#e6e9ee');p.r(4,42,13,2,Sd);dg(2,7,34,K);
-  p.r(17,22,14,22,Y);p.r(17,22,14,2,'#ffe3a0');p.r(17,42,14,2,D);dg(1,21,27,K);
-  p.r(31,35,13,9,B);p.r(31,35,13,2,'#e0a97c');p.r(31,42,13,2,Bd);dg(3,34,37,K);
-  p.r(2,44,44,2,'#3a4452');
-  /* star over the winner */
-  p.r(23,5,2,4,Y);p.r(23,13,2,4,Y);p.r(15,10,18,3,Y);p.r(19,8,10,3,Y);p.r(19,13,10,3,Y);p.r(21,7,6,1,Y);p.r(21,16,6,1,Y);p.r(17,16,4,2,Y);p.r(27,16,4,2,Y);
+ ca(){const p=pxCanvas(48),Y='#f2c76b',D='#b8923f',K='#10151b',R='#c0392b';
+  const star=(cx,cy,c)=>{p.r(cx-1,cy-4,2,3,c);p.r(cx-4,cy-1,8,2,c);p.r(cx-3,cy-2,6,4,c);p.r(cx-2,cy+1,2,3,c);p.r(cx,cy+1,2,3,c);p.r(cx-1,cy-1,2,3,c)};
+  /* medal on a ribbon: three rank chevrons and a star */
+  p.r(13,28,8,16,R);p.r(27,28,8,16,R);p.r(13,42,3,3,K);p.r(18,42,3,3,K);p.r(27,42,3,3,K);p.r(32,42,3,3,K);
+  p.circ(24,20,17,D,true);p.circ(24,20,15,Y,true);
+  star(24,9,K);
+  for(let k=0;k<3;k++){const base=19+k*5;for(let x=-9;x<=9;x++){p.r(24+x,base-Math.round((9-Math.abs(x))*.6),1,3,K)}}
   return p.cv}
 };
 const evIcon={race:'<svg class="ic" viewBox="0 0 22 22"><path d="M4 20V3h2v2h12l-3 4 3 4H6v7z" fill="#e6e9ee"/></svg>',rally:'<svg class="ic" viewBox="0 0 22 22"><path d="M2 18l7-11 4 6 3-3 4 8z" fill="#c9a36a"/><rect x="16" y="3" width="3" height="3" fill="#f2c76b"/></svg>',cutup:'<svg class="ic" viewBox="0 0 22 22"><rect x="2" y="8" width="8" height="5" fill="#6a7586"/><rect x="11" y="13" width="9" height="6" fill="#f1f3f5"/><path d="M12 4l6-2" stroke="#f2c76b" stroke-width="2"/></svg>'};
