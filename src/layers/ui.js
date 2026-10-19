@@ -27,35 +27,31 @@ const IC={
    p.r(x+3,y+7,8,6,K);p.r(x+3,y+21,8,3,K);p.r(x+3,y,2,2,hl);p.r(x+9,y,2,2,hl);p.r(x+6,y+14,2,5,'#00000033')};
   car(6,8,A,'#fff6c0');car(28,12,Y,'#fff6c0');
   for(let y=2;y<46;y+=6)p.r(23,y,2,3,'#59657a');
-  p.r(8,38,4,4,A);p.r(30,40,4,4,Y);p.r(36,40,1,4,Y);p.r(14,40,0,0,A);
-  p.r(9,4,2,1,A);p.r(31,4,2,1,Y);p.r(32,3,0,0,Y);
   return p.cv},
- cu(){const p=pxCanvas(48),W='#e6e9ee',A='#f1f3f5',Y='#f2c76b',R='#ef6a5a',T='#7b8696',K='#0a1018';
-  /* player car cutting diagonally between two traffic cars, with spark burst */
-  const car=(x,y,c)=>{p.r(x+1,y,6,14,c);p.r(x+2,y-1,4,1,c);p.r(x+2,y+14,4,1,c);p.r(x,y+3,1,3,'#000');p.r(x+7,y+3,1,3,'#000');p.r(x,y+9,1,3,'#000');p.r(x+7,y+9,1,3,'#000');p.r(x+2,y+3,4,3,K);p.r(x+2,y+11,4,2,K)};
-  car(6,4,T);car(34,22,T);car(20,20,A);
-  for(let i=0;i<6;i++){p.r(24-i*2,36+i*2,2,2,i%2?Y:A)}
-  /* burst between cars */
-  p.r(16,26,3,1,Y);p.r(14,24,2,1,Y);p.r(15,28,2,1,Y);p.r(30,28,3,1,Y);p.r(32,26,2,1,Y);p.r(31,30,2,1,Y);
-  p.r(38,6,2,6,Y);p.r(36,8,6,2,Y);p.r(10,38,2,4,R);p.r(9,39,4,2,R);
+ cu(){const p=pxCanvas(48),W='#e6e9ee',A='#f1f3f5',Y='#f2c76b',T='#7b8696',K='#0a1018',D='#4a5566';
+  /* box truck in the slow lane, player squeezing past it, close-pass bracket + multiplier */
+  p.r(5,10,13,26,D);p.r(5,10,13,2,T);p.r(6,36,11,9,T);p.r(8,38,7,3,K);p.r(6,44,2,2,'#000');p.r(15,44,2,2,'#000');p.r(4,14,1,6,'#000');p.r(18,14,1,6,'#000');p.r(4,28,1,6,'#000');p.r(18,28,1,6,'#000');
+  p.r(27,14,8,16,A);p.r(28,13,6,1,A);p.r(28,30,6,1,A);p.r(26,17,1,4,'#000');p.r(35,17,1,4,'#000');p.r(26,25,1,4,'#000');p.r(35,25,1,4,'#000');p.r(28,17,6,4,K);p.r(28,26,6,3,K);p.r(28,14,2,1,'#fff6c0');p.r(32,14,2,1,'#fff6c0');
+  p.r(20,18,1,10,Y);p.r(21,18,2,1,Y);p.r(21,27,2,1,Y);p.r(24,18,1,10,Y);p.r(22,18,2,1,Y);p.r(22,27,2,1,Y);
+  /* x3 */
+  const gl={x:['101','010','101'],3:['111','001','111','001','111']};
+  const dr=(g,x,y,c)=>g.forEach((r,j)=>[...r].forEach((v,i)=>{if(v==='1')p.r(x+i*2,y+j*2,2,2,c)}));
+  dr(gl.x,35,5,Y);dr(gl[3],42,3,Y);
+  p.r(30,36,12,1,'#59657a');p.r(33,39,9,1,'#59657a');p.r(36,42,6,1,'#59657a');
   return p.cv},
  el(){const p=pxCanvas(48),W='#e6e9ee',A='#f1f3f5',R='#ef6a5a',T='#566070',G='#141a21';
   const car=(x,y,c)=>{p.r(x+1,y,6,12,c);p.r(x+2,y-1,4,1,c);p.r(x+2,y+12,4,1,c);p.r(x,y+2,1,3,'#000');p.r(x+7,y+2,1,3,'#000');p.r(x,y+8,1,3,'#000');p.r(x+7,y+8,1,3,'#000');p.r(x+2,y+3,4,3,'#0a1018')};
   car(6,4,A);car(20,2,W);car(34,5,W);car(13,19,T);car(27,21,T);
   /* last car, crossed out */
-  car(20,34,'#3a4452');for(let i=0;i<14;i++){p.r(14+i,30+i,2,2,R);p.r(14+i,43-i,2,2,R)}
+  car(20,34,'#2c333d');  p.circ(24,37,9,R,false);p.circ(24,37,8,R,false);for(let i=-6;i<=6;i++){p.r(23+i,36+i,2,2,R)}
   return p.cv},
- ca(){const p=pxCanvas(48),W='#e6e9ee',Y='#f2c76b',D='#b8923f',A='#f1f3f5',S='#566070',R='#ef6a5a';
-  /* road climbing a staircase of ranks to a flag */
-  p.r(4,40,10,4,S);p.r(14,32,10,12,S);p.r(24,24,10,20,S);p.r(34,16,10,28,S);
-  p.r(4,40,10,1,W);p.r(14,32,10,1,W);p.r(24,24,10,1,W);p.r(34,16,10,1,Y);
-  p.r(7,42,4,1,'#2a3340');p.r(17,38,4,1,'#2a3340');p.r(27,34,4,1,'#2a3340');
-  /* little car on the second step */
-  p.r(15,28,7,3,A);p.r(17,26,4,2,A);p.r(16,31,2,2,'#000');p.r(20,31,2,2,'#000');
-  /* flag */
-  p.r(38,2,2,14,W);p.r(40,2,6,3,Y);p.r(40,5,5,3,Y);p.r(40,8,3,2,Y);p.r(41,3,2,2,A);
-  /* sparkles */
-  p.r(28,12,1,5,Y);p.r(26,14,5,1,Y);p.r(8,24,1,3,Y);p.r(7,25,3,1,Y);
+ ca(){const p=pxCanvas(48),W='#e6e9ee',Y='#f2c76b',D='#b8923f',G='#161c24',S='#566070';
+  /* rank shield with three chevrons and a star */
+  const hw=y=>y<26?16:Math.max(0,16-(y-26)*.78);
+  for(let y=4;y<44;y++){const w=Math.round(hw(y));if(w<=0)break;p.r(24-w,y,w*2,1,S);if(w>2)p.r(25-w,y,w*2-2,1,G)}
+  p.r(8,4,32,1,W);
+  for(let k=0;k<3;k++){const y0=19+k*7;for(let x=-10;x<=10;x++){const y=y0+Math.round(Math.abs(x)*.6);p.r(24+x,y,1,3,k===0?Y:D)}}
+  p.r(23,7,2,6,Y);p.r(21,9,6,2,Y);p.r(22,8,4,4,Y);
   return p.cv}
 };
 const evIcon={race:'<svg class="ic" viewBox="0 0 22 22"><path d="M4 20V3h2v2h12l-3 4 3 4H6v7z" fill="#e6e9ee"/></svg>',rally:'<svg class="ic" viewBox="0 0 22 22"><path d="M2 18l7-11 4 6 3-3 4 8z" fill="#c9a36a"/><rect x="16" y="3" width="3" height="3" fill="#f2c76b"/></svg>',cutup:'<svg class="ic" viewBox="0 0 22 22"><rect x="2" y="8" width="8" height="5" fill="#6a7586"/><rect x="11" y="13" width="9" height="6" fill="#f1f3f5"/><path d="M12 4l6-2" stroke="#f2c76b" stroke-width="2"/></svg>'};

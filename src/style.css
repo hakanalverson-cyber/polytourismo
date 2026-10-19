@@ -394,3 +394,9 @@ body:after{background:repeating-linear-gradient(0deg,#00000010 0 1px,transparent
 #tutOffer{position:absolute;right:5vw;bottom:12vh;width:min(340px,80vw);background:rgba(10,12,16,.88);border:1px solid #2a313b;border-left:3px solid #f1f3f5;padding:14px 16px;display:flex;flex-wrap:wrap;gap:8px;color:#b9c1cb;font-size:13px;line-height:1.45}
 #tutOffer b{color:#fff;width:100%;font-size:15px}#tutOffer span{width:100%}
 #tutBody{transition:opacity .25s ease}#tut .tt{transition:color .25s}
+
+/* card shapes: parallelogram clipped inside its own box (no overhang into neighbours) */
+.card{--off:9.7vh}
+.card::before{transform:none!important;clip-path:polygon(var(--off) 0,100% 0,calc(100% - var(--off)) 100%,0 100%);border-right:0!important}
+.card::after{transform:scaleX(0)!important;left:0;right:var(--off);transform-origin:left}
+.card.foc::after,.card:hover::after{transform:scaleX(1)!important}
