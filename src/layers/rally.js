@@ -52,15 +52,19 @@ function note(c,T){const N=T.N,sp=T.sp,K=P.kappa(T),i0=c.idx||0,max=Math.round(1
  for(const j of T.jumps||[]){const d=((j-i0-Math.round(10/sp)+N)%N)*sp;if(d<170&&(!ev||d<ev.d))ev={d,t:'JUMP',s:'CREST'}}
  let j=0;for(;j<max;j++){if(K[(i0+j)%N]>1/95)break}
  let cor=null;if(j<max){let mk=0,sg=0;for(let u=0;u<70;u++){const r=(i0+j+u)%N;if(u>4&&K[r]<1/150)break;if(K[r]>mk)mk=K[r];sg+=wrp(T.psi[(r+3)%N]-T.psi[(r-3+N)%N])}
-  const R=1/Math.max(mk,1e-4),g=R<15?'HAIRPIN':R<26?'1':R<40?'2':R<60?'3':R<85?'4':'5';cor={d:j*sp,t:g==='HAIRPIN'?'HAIRPIN':'TURN '+g,dir:sg>0?'R':'L'}}
+  const R=1/Math.max(mk,1e-4),g=R<15?'HAIRPIN':R<26?'1':R<40?'2':R<60?'3':R<85?'4':'5';cor={d:j*sp,t:g==='HAIRPIN'?'HAIRPIN':'TURN '+g,g,dir:sg>0?'L':'R'}}
  return{ev,cor}}
+/* arrow bends the way the corner turns; angle and colour follow severity (hairpin = hot red, grade 5 = cool green) */
+const GR={HAIRPIN:[150,'#ff3b30'],1:[115,'#ff5a2a'],2:[88,'#ff9a2a'],3:[62,'#f2c76b'],4:[42,'#c8dc6a'],5:[26,'#8fd68a']};
+function arrow(g,dir){const [ang,col]=GR[g]||GR[3],a=ang*PI/180,sx=dir==='L'?-1:1,x0=20,y0=36,y1=22,L=15,ex=x0+sx*Math.sin(a)*L,ey=y1-Math.cos(a)*L,dx=sx*Math.sin(a),dy=-Math.cos(a),px=-dy,py=dx,hx=ex+dx*5,hy=ey+dy*5;
+ return `<svg viewBox="0 0 40 40" width="46" height="46"><path d="M${x0} ${y0}L${x0} ${y1}L${ex.toFixed(1)} ${ey.toFixed(1)}" fill="none" stroke="${col}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M${hx.toFixed(1)} ${hy.toFixed(1)}L${(ex+px*5.5).toFixed(1)} ${(ey+py*5.5).toFixed(1)}L${(ex-px*5.5).toFixed(1)} ${(ey-py*5.5).toFixed(1)}Z" fill="${col}"/></svg>`}
 const hu0=hudUpdate;
 hudUpdate=()=>{hu0();const Rc=RACE;if(!Rc||!Rc.cfg||!Rc.cfg.rally)return;
  Rc.cars.forEach((c,i)=>{if(!c.human)return;const e=document.getElementById('h'+i);if(!e||!e.dataset.b)return;let el=e.querySelector('.h8pace');if(!el){el=document.createElement('div');el.className='h8pace';e.appendChild(el)}
   if(Rc.state==='count'){el.style.opacity=0;return}
   const n=note(c,Rc.T);let txt='',cls='';
   if(n.ev&&(!n.cor||n.ev.d<n.cor.d+15)){txt=`<b>${n.ev.t}</b><span>${Math.round(n.ev.d/10)*10} m</span>`;cls='ev'}
-  else if(n.cor){txt=`<i>${n.cor.dir==='L'?'&#9664;':'&#9654;'}</i><b>${n.cor.t}</b><span>${Math.round(n.cor.d/10)*10} m</span>`;cls=n.cor.t==='HAIRPIN'?'hp':''}
+  else if(n.cor){txt=`<i>${arrow(n.cor.t==='HAIRPIN'?'HAIRPIN':n.cor.g,n.cor.dir)}</i><b style="color:${(GR[n.cor.t==='HAIRPIN'?'HAIRPIN':n.cor.g]||GR[3])[1]}">${n.cor.t}</b><span>${Math.round(n.cor.d/10)*10} m</span>`;cls=n.cor.t==='HAIRPIN'?'hp':''}
   if(el._t!==txt){el._t=txt;el.innerHTML=txt}el.className='h8pace '+cls;el.style.opacity=txt?1:0})};
 
 /* ---------------- take-turns session ---------------- */

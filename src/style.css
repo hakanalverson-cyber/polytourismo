@@ -447,7 +447,7 @@ body:after{background:repeating-linear-gradient(0deg,#00000010 0 1px,transparent
 
 /* ===== rally (v9) ===== */
 .h8pace{position:absolute;left:50%;top:15%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;padding:7px 16px;background:#0a0d11d9;border:1px solid var(--ln2);clip-path:var(--cut);font:700 15px var(--mn);letter-spacing:.2em;color:#fff;transition:opacity .2s;pointer-events:none;white-space:nowrap}
-.h8pace i{font-style:normal;color:var(--ac);font-size:18px}
+.h8pace i{font-style:normal;display:flex}
 .h8pace b{font-weight:700}
 .h8pace span{color:var(--dim);font-size:12px;letter-spacing:.14em}
 .h8pace.ev b{color:#8fd3f2}

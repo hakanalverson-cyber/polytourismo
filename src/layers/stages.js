@@ -25,12 +25,22 @@ const ash={id:12,look:6,name:'Ashfall Stage',desc:'volcano crater rim / lava cau
 const autu={id:13,look:4,name:'Autumn Ridge',desc:'golden forest ridge / two stream fords / leaf fall',hw:5.6,off:'dirt',idw:.88,offs:0,amp:5.5,up:28,biome:'forest',tod0:'dawn',fords:[9,16],fordW:9,water:[0x0f2e40,.76],
  sky:[0x7d9bbb,0xf2dfba],fog:0xe3cfae,sun:0xffd49a,hemi:[0xfbe5c8,0x6a4a2a],road:'#8c7050',dust:0xb99b6a,dirt:0x4b3421,
  pts:[[-330,-60,30],[-250,-115,34],[-160,-105,38],[-80,-60,42],[10,-90,46],[100,-135,48],[190,-105,44],[255,-45,36],[300,35,28],[305,100,22],[300,165,23],[250,240,30],[160,270,36],[70,230,40],[-10,165,38],[-100,175,32],[-175,215,26],[-250,255,24],[-320,205,28],[-345,120,32],[-290,40,34]]};
-terr.pts=terr.pts.map(q=>[Math.round(q[0]*.6),Math.round(q[1]*.6),+(5+(q[2]-5)*.62).toFixed(1)]);
+terr.pts=terr.pts.map(q=>[Math.round(q[0]*.75),Math.round(q[1]*.75),+(5+(q[2]-5)*.62).toFixed(1)]);
 [mang,terr,ash,autu].forEach(d=>Object.assign(d,gb,{shoulder:6}));
+/* longer and tighter: stretch each stage, then add an alternating sideways kink mid-segment (skipping fords, jump runs and the crater spur) */
+function tighten(d,amp,skip,grow){const p=d.pts.map(q=>[Math.round(q[0]*grow),Math.round(q[1]*grow),q[2]]),out=[],n=p.length,map=[];
+ for(let i=0;i<n;i++){map[i]=out.length;const a=p[i],b=p[(i+1)%n];out.push(a);if(skip&&skip(i))continue;const dx=b[0]-a[0],dz=b[1]-a[1],L=Math.hypot(dx,dz);if(L<55)continue;
+  const sg=(i%2?1:-1)*amp*L;out.push([Math.round((a[0]+b[0])/2-dz/L*sg),Math.round((a[1]+b[1])/2+dx/L*sg),+((a[2]+b[2])/2).toFixed(1)])}
+ d.pts=out;if(d.fords)d.fords=d.fords.map(k=>map[k]);return map}
+const nearF=(d)=>i=>(d.fords||[]).some(k=>k===i||k===i+1);
+tighten(mang,.17,nearF(mang),1.2);
+tighten(terr,.2,null,1);
+tighten(ash,.15,i=>i>=6&&i<=16,1.2);
+{const m=tighten(autu,.17,i=>nearF(autu)(i)||i===4,1.2);autu.jumps=[[m[4],.5]]}
 D.push(mang,terr,ash,autu);
 const J0=D.length-4;
 [[J0+1,{l:50,a:.75,t:1.6,r:100,f:.12}],[J0+2,{l:50,a:.75,t:1.6,r:100,f:.12}],[J0+3,{l:50,a:.75,t:1.6,r:100,f:.12}]].forEach(([i,rx])=>{const j=P.pickJumps(D[i],1,rx);D[i].jumps=j.length?j:[]});
-D[J0].jumps=[];D[J0+3].jumps=[[4,.5]];/* fords flatten the road near them, so Autumn Ridge's crest jump sits on the far ridge instead */
+D[J0].jumps=[];/* fords flatten the road near them, so Autumn Ridge's crest jump sits on the far ridge instead */
 P.TRACK_INFO.push({s:'GRAVEL',tags:['WATER FORDS','SWAMP','PALMS']},{s:'GRAVEL',tags:['VINEYARDS','SWITCHBACKS','CLIMB']},{s:'GRAVEL',tags:['CRATER','LAVA','ASH']},{s:'GRAVEL',tags:['AUTUMN','FORDS','LEAF FALL']});
 P.STAGES=[J0,J0+1,J0+2,J0+3];
 
@@ -182,5 +192,5 @@ buildWorld=T=>{const sc=bw(T),d=T.d;
  sc.userData.stage=k;return sc};
 
 /* medal references: filled by the AI-lap test (tests/stages_laps.py) */
-Object.assign(P.MEDAL_REF,{10:84.4,11:84.9,12:63.1,13:64.8});
+Object.assign(P.MEDAL_REF,{10:113.1,11:119.7,12:74.8,13:83.5});
 })();
