@@ -157,7 +157,7 @@ function buildRally(T){const d=T.d,sc=new THREE.Scene(),r=rngf(d.id*91+13),N=T.N
   /* telegraph poles along a stretch */
   const poles=[];for(let i=0;i<N;i+=11){const p=side(i,T.hw[i]+7);poles.push([p[0],p[1]+4,p[2],1])}
   instC(sc,new THREE.CylinderGeometry(.14,.17,8,5),flat(0x5a4330),poles);instC(sc,new THREE.BoxGeometry(2.4,.14,.14),flat(0x4a3626),poles.map(p=>[p[0],p[1]+3.6,p[2],1]));
- }else{
+ }else if(d.biome!=='none'){
   const hb=scatter(560,T.hw[0]+2.5,120,(x,h,z,o)=>{o.push([x,h+.2,z,.6+r()*1.0,.4+r()*.4,0,r()*6]);return 0});
   instC(sc,new THREE.IcosahedronGeometry(1,0),flat(0xffffff),hb,[0x6a4a7a,0x7a5a88,0x5a3f6a,0x6f8a3a,0x59753a]);
   const rk=scatter(260,T.hw[0]+2.5,160,(x,h,z,o)=>{o.push([x,h+.35,z,.5+r()*1.8,.4+r()*1.2,.5+r()*1.8,r()*6]);return 0});

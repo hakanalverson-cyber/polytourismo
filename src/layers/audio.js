@@ -40,6 +40,7 @@ const SFX={
  crash:()=>{noise(.5,.8,1000);tone(120,40,.4,'sawtooth',.6)},
  hit:(k)=>{const v=Math.min(1,k||.5);hiss(.18,.5*v,1400,400,.6,'lowpass');tone(110,45,.2,'sine',1.1*v)},
  scrape:()=>hiss(.12,.2,3200,2200,2,'bandpass'),
+ splash:(k)=>{const v=Math.min(1,k||.6);hiss(.4,.34*v,3000,700,.7,'bandpass');hiss(.55,.24*v,1100,260,.6,'lowpass');tone(170,60,.12,'sine',.2*v)},
  land:(k)=>{tone(90,40,.18,'sine',Math.min(1.2,(k||.6)));hiss(.12,.25*(k||.6),900,300,.5,'lowpass')},
  medal:()=>{[659,830,988,1318].forEach((f,i)=>tone(f,f,.28,'triangle',.5,i*.12))},
  promo:()=>{[523,659,784,1046,1318].forEach((f,i)=>tone(f,f,.3,'triangle',.5,i*.1))},

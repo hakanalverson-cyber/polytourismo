@@ -14,7 +14,12 @@ const PROF={
  'Highmoor Stage':{wind:1.1,bed:['gust',.8],ev:['curlew','bell']},
  'Coastal Run':{wind:.8,bed:['sea',.9],ev:['gull','gull','bell']},
  'Harbor Lights':{wind:.4,bed:['sea',.55],ev:['gull','horn','clank','bell']},
- 'Frostline Stage':{wind:1.1,bed:['gust',.7],ev:['creak','bird']}};
+ 'Frostline Stage':{wind:1.1,bed:['gust',.7],ev:['creak','bird']},
+ 'Mangrove Ford':{wind:.3,bed:['stream',.7],ev:['frog','frog','bird','gull']},
+ 'Terrace Run':{wind:.5,bed:['leaves',.35],ev:['cricket','bell','bird']},
+ 'Ashfall Stage':{wind:1.2,bed:['rumbleBed',.8],ev:['rumble','crow','creak']},
+ 'Autumn Ridge':{wind:.7,bed:['leaves',.6],ev:['crow','woodpecker','bird']}};
+P.AMBPROF=PROF;
 function init(){if(A)return A;const ac=P.audioReady&&P.audioReady(),nb=P.aud&&P.aud.nb();if(!ac||!nb)return null;
  const mg=P.aud.mg();A={ac,nb,bus:ac.createGain(),g:{}};A.bus.gain.value=0;A.bus.connect(mg);
  const src=(type,f,q,name,pan)=>{const s=ac.createBufferSource();s.buffer=nb;s.loop=true;const fl=ac.createBiquadFilter();fl.type=type;fl.frequency.value=f;fl.Q.value=q;const g=ac.createGain();g.gain.value=0;s.connect(fl);fl.connect(g);g.connect(A.bus);s.start(0,Math.random()*1.5);A.g[name]={g,f:fl};return A.g[name]};
@@ -41,8 +46,13 @@ const EV={
  siren(t,p){for(let i=0;i<4;i++)osc(t+i*.55,i%2?640:880,i%2?640:880,.55,'sine',.12,p,1500)},
  clank(t,p){burst(t,900,6,.18,.5,p);osc(t,330,300,.4,'triangle',.25,p,1400)},
  beeper(t,p){for(let i=0;i<5;i++)osc(t+i*.5,1000,1000,.22,'square',.07,p,2200)},
- creak(t,p){osc(t,150,95,1.2,'sawtooth',.1,p,380)}};
-const BEDS={sea:{f:520,q:.4,lfo:.1,depth:.55},gust:{f:380,q:.5,lfo:.07,depth:.8},machine:{f:140,q:.9,lfo:.4,depth:.25},city:{f:260,q:.5,lfo:.05,depth:.2},leaves:{f:1900,q:.6,lfo:.12,depth:.5}};
+ creak(t,p){osc(t,150,95,1.2,'sawtooth',.1,p,380)},
+ frog(t,p){const n=2+Math.random()*3|0;for(let i=0;i<n;i++)osc(t+i*.17,300,190,.12,'square',.1,p,800)},
+ crow(t,p){const n=2+Math.random()*2|0;for(let i=0;i<n;i++)osc(t+i*.34,720,470,.22,'sawtooth',.16,p,1900)},
+ rumble(t,p){burst(t,80,1.2,2.4,.8,p,38);osc(t,52,34,2.2,'sine',.45,p)}};
+P.AMBEV=EV;
+const BEDS={sea:{f:520,q:.4,lfo:.1,depth:.55},gust:{f:380,q:.5,lfo:.07,depth:.8},machine:{f:140,q:.9,lfo:.4,depth:.25},city:{f:260,q:.5,lfo:.05,depth:.2},leaves:{f:1900,q:.6,lfo:.12,depth:.5},stream:{f:1300,q:.5,lfo:.2,depth:.4},rumbleBed:{f:110,q:.7,lfo:.05,depth:.5}};
+P.AMBBEDS=BEDS;
 let prof=null,nextEv=3,tun=0,crowdT=0;
 const lastP=P.launch;
 P.launch=cfg=>{lastP(cfg);const Rc=RACE;if(!Rc)return;prof=PROF[Rc.T.d.name]||{wind:.6,bed:['gust',.4],ev:[]};nextEv=2+Math.random()*4;

@@ -66,3 +66,16 @@ The car models come from low-poly car packs; confirm the licence of each pack be
 - Rendering: each car's paint mesh gets baked car-frame coordinates (`aLp`/`aLn`); a generated 1024px canvas (top, right and left maps) is sampled in the paint shader, so one design fits all 28 models. Number text is mirrored on the left map so it reads correctly on both sides.
 - CPU rivals get a random curated preset and race number each race.
 - Starting grid is now random. Career events can pin the player with `ev.startPos`; `cfg.grid='fixed'` keeps the old order.
+
+
+## Rally mode (v9)
+A new **Rally** card (05; Career is now 06). One car is on the stage at a time and drivers take turns: pick 1-4 drivers, 1-3 stage laps, weather and time of day, then pass the controller between runs. Each driver uses their own key set (P1 WASD, P2 arrows, P3 IJKL, P4 TFGH), lowest total time wins, and everyone is paid by finishing position plus medals against the stage reference times (shared with Time Attack records).
+
+Four brand-new stages (`src/layers/stages.js`), each with its own ground palette, scenery, props, backdrop and ambience:
+- **Mangrove Ford** — tropical swamp, three water fords, palms, mangroves, stilt huts, reeds.
+- **Terrace Run** — golden-hour vineyard switchbacks, cypress and olive groves, stone huts.
+- **Ashfall Stage** — crater rim with a causeway that dives into the crater and U-turns, lava lake, vents, obsidian, falling ash and embers.
+- **Autumn Ridge** — gold and red forest ridge, two stream fords, leaf fall, pumpkin patches, scarecrows.
+
+Fords are real: the stream bed is carved into the terrain, the road dips through it, water slows the car (grip, top speed, acceleration, braking) and throws spray from every wheel, with a splash sound on entry and exit. Pace notes (`src/layers/rally.js`) call upcoming corners (grade 1-5 or hairpin), fords and jumps. Stage-wide effects: falling ash and rising embers/steam (Ashfall), leaf fall (Autumn), pollen (Terrace), fireflies (Mangrove).
+Tests: `tests/stages_check.py` (geometry), `tests/stages_laps.py` (AI laps), `tests/rally_flow.py` (menu, turns, results), `tests/stg_*.py` (screenshots).

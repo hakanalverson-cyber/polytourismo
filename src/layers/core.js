@@ -215,7 +215,7 @@ function launch(cfg){
  RACE.cars.forEach(c=>{c.lapT=[];c.lapStart=0;c.curLap=0});
 }
 PT8.launch=launch;
-startRace=()=>{if(PT8.lastCfg)launch(PT8.lastCfg)};
+startRace=()=>{if(PT8.lastCfg)PT8.launch(PT8.lastCfg)};
 
 /* ---------------- race end / finish ---------------- */
 function endRace(){const Rc=RACE;if(Rc.ending>0||Rc.state==='done')return;Rc.ending=Rc.mode==='cutup'?1.8:2.6;Rc.endAt=Rc.t}

@@ -196,5 +196,5 @@ function decorate(T,sc){const d=T.d,N=T.N,name=d.name,plan=PLAN[name];if(!plan)r
  sc.userData.props=log;sc.userData.propCount=log.length}
 
 const bw=buildWorld;buildWorld=T=>{const sc=bw(T);try{decorate(T,sc)}catch(e){console.error('props failed',e);sc.userData.propError=String(e&&e.stack||e)}return sc};
-P.PROPLIB=LIB;
+P.PROPLIB=LIB;P.PROPKIT={part,Bx,Cy,Sp,Dd,mk,def,PLAN,LIB,bar,V3,MAT};
 })();
