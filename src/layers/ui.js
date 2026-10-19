@@ -311,7 +311,7 @@ function ensureStudio(){if(S)return S;
 function setStudioCar(idx){ensureStudio();if(S.idx===idx)return;const src=CAR_MODELS[idx];if(!src)return;
  if(S.car){S.turn.remove(S.car)}
  const model=src.clone(true),car=new THREE.Group(),centered=new THREE.Group();centered.add(model);car.add(centered);centered.updateMatrixWorld(true);
- const bb=new THREE.Box3().setFromObject(model),size=bb.getSize(new THREE.Vector3()),ctr=bb.getCenter(new THREE.Vector3()),sc=4.7/Math.max(size.x,size.z,.001),h=size.y*sc;
+ const bb=new THREE.Box3().setFromObject(model),size=bb.getSize(new THREE.Vector3()),ctr=bb.getCenter(new THREE.Vector3()),sc=(src.userData.gl?src.userData.gl*1.093:4.7)/Math.max(size.x,size.z,.001),h=size.y*sc;
  centered.position.copy(ctr).multiplyScalar(-1);car.scale.setScalar(sc);car.rotation.y=(size.x>size.z?Math.PI/2:0)+Math.PI;
  const wrap=new THREE.Group();wrap.add(car);car.position.y=h/2-(ctr.y-bb.min.y)*0+0;
  /* put the lowest point on the floor */ wrap.position.y=0;car.position.y=0;centered.position.y=-bb.min.y;centered.position.x=-ctr.x;centered.position.z=-ctr.z;
