@@ -12,7 +12,7 @@ const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
 function altRGB(k){const d=META[k].paint;for(let i=0;i<ALT.length;i++){const c=ALT[(k+i)%ALT.length];if(dist(c,d)>140)return c}return ALT[0]}
 C10.altRGB=altRGB;C10.stockRGB=k=>META[k].paint;
 /* in-game length (m): the pack's real proportions, eased towards the 4.5 m the physics boxes assume */
-const gameLen=m=>Math.max(m.len,m.wid);
+let VC=0;const gameLen=m=>{if(!VC){const a=META.map(x=>Math.cbrt(x.len*x.wid*x.hgt)).sort((p,q)=>p-q);VC=a[a.length>>1]}return Math.max(m.len,m.wid)*VC/Math.cbrt(m.len*m.wid*m.hgt)};
 let buf=null;const geo={},cache={};
 const bodyMat=new THREE.MeshStandardMaterial({map:tex,roughness:.62,metalness:.12,flatShading:true});
 function geoms(k){if(geo[k])return geo[k];const out={};
