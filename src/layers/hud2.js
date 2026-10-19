@@ -36,20 +36,25 @@ function addTags(Rc){const hs=Rc.cars.filter(c=>c.human);if(hs.length<2)return;
 
 /* ---------- slipstream: sonic-boom rings + streaking wind lines on whoever is sitting in another car's wind ---------- */
 const WM=()=>new THREE.MeshBasicMaterial({color:0xeaf4ff,transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide,fog:false});
-function mkDraft(Rc,c){const d={lines:[],lt:0};
- const cone=new THREE.Mesh(new THREE.ConeGeometry(1.25,5,20,1,true),WM());cone.geometry.rotateX(-Math.PI/2);cone.geometry.translate(0,0,-2.5);cone.visible=false;cone.frustumCulled=false;Rc.scene.add(cone);d.cone=cone;
- for(let i=0;i<14;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(.03,.03,1),WM());m.visible=false;m.frustumCulled=false;Rc.scene.add(m);d.lines.push({m,life:9})}
+function mkDraft(Rc,c){const d={rings:[],lines:[],rt:0,lt:0};
+ for(let i=0;i<5;i++){const m=new THREE.Mesh(new THREE.RingGeometry(.9,1,40),WM());m.visible=false;m.frustumCulled=false;Rc.scene.add(m);d.rings.push({m,life:9,vx:0,vz:0})}
+ for(let i=0;i<16;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(.03,.03,1),WM());m.visible=false;m.frustumCulled=false;Rc.scene.add(m);d.lines.push({m,life:9,vx:0,vz:0,len:2})}
  c.dfx=d;return d}
+const easeOut=t=>1-Math.pow(1-t,3),RL=.75,LL=.55;
 function draftFx(Rc,dt){for(const c of Rc.cars){if(c.out)continue;const dr=c.draft||0;let d=c.dfx;
- const on=dr>.2&&!c.fin;
- if(on&&!d)d=mkDraft(Rc,c);
- if(d){const fx=Math.sin(c.yaw),fz=Math.cos(c.yaw),rx=Math.cos(c.yaw),rz=-Math.sin(c.yaw);
-  /* faint translucent cone, apex at the nose, opening backwards over the car */
-  d.cone.visible=on;if(on){d.cone.position.set(c.x+fx*2.6,c.y+.75,c.z+fz*2.6);d.cone.rotation.set(0,c.yaw,0);d.cone.material.opacity=.07*Math.min(1,dr*1.4)*(.85+.15*Math.sin(Rc.t*9))}
-  d.lt-=dt;
-  if(on&&d.lt<=0){d.lt=.16/(.3+dr);const l=d.lines.find(q=>q.life>=.5);if(l){l.life=0;const lat=(Math.random()*2-1)*1.6,h=.15+Math.random()*1.1,fw=-.5+Math.random()*2.4;
-   l.m.position.set(c.x+fx*fw+rx*lat,c.y+h,c.z+fz*fw+rz*lat);l.m.rotation.set(0,c.yaw,0);l.m.scale.set(1,1,2+c.sp*.06);l.m.visible=true}}
-  for(const l of d.lines){if(l.life<.5){l.life+=dt;const t=l.life/.5;l.m.material.opacity=.13*Math.sin(t*3.14);if(l.life>=.5)l.m.visible=false}}}}}
+ const on=dr>.2&&!c.fin;if(on&&!d)d=mkDraft(Rc,c);
+ if(!d)continue;
+ const fx=Math.sin(c.yaw),fz=Math.cos(c.yaw),rx=Math.cos(c.yaw),rz=-Math.sin(c.yaw),k=Math.min(1,dr*1.4);
+ d.rt-=dt;d.lt-=dt;
+ /* sonic-boom rings: born at the nose, carried along at ~60% of car speed so they peel away behind, expanding with ease-out */
+ if(on&&d.rt<=0){d.rt=.34;const r=d.rings.find(q=>q.life>=RL);if(r){r.life=0;r.m.position.set(c.x+fx*2.7,c.y+.7,c.z+fz*2.7);r.m.rotation.set(0,c.yaw,0);r.vx=c.vx*.6;r.vz=c.vz*.6;r.k=k;r.m.visible=true}}
+ /* wind lines: spawn along the flanks, drift backwards relative to the car, stretch in then shrink out */
+ if(on&&d.lt<=0){d.lt=.1/(.3+dr);const l=d.lines.find(q=>q.life>=LL);if(l){l.life=0;const side=Math.random()<.5?-1:1,lat=side*(1.0+Math.random()*.9),h=.2+Math.random()*1.0,fw=.6+Math.random()*2.2;
+   l.m.position.set(c.x+fx*fw+rx*lat,c.y+h,c.z+fz*fw+rz*lat);l.m.rotation.set(0,c.yaw,0);l.vx=c.vx*.35;l.vz=c.vz*.35;l.len=2.2+c.sp*.07;l.k=k;l.m.visible=true}}
+ for(const r of d.rings){if(r.life<RL){r.life+=dt;const t=Math.min(1,r.life/RL);r.m.position.x+=r.vx*dt;r.m.position.z+=r.vz*dt;
+   r.m.scale.setScalar(.8+easeOut(t)*2.6);const fade=t<.15?t/.15:Math.pow(1-(t-.15)/.85,1.6);r.m.material.opacity=.17*fade*(r.k||1);if(r.life>=RL){r.m.visible=false;r.m.material.opacity=0}}}
+ for(const l of d.lines){if(l.life<LL){l.life+=dt;const t=Math.min(1,l.life/LL);l.m.position.x+=l.vx*dt;l.m.position.z+=l.vz*dt;
+   l.m.scale.set(1,1,Math.max(.01,l.len*Math.sin(t*Math.PI)));l.m.material.opacity=.14*Math.sin(t*Math.PI)*(l.k||1);if(l.life>=LL){l.m.visible=false;l.m.material.opacity=0}}}}}
 
 const l0=P.launch;P.launch=cfg=>{l0(cfg);if(RACE)addTags(RACE)};
 const st0=step;step=dt=>{st0(dt);const Rc=RACE;if(Rc&&Rc.scene&&Rc.state!=='done')draftFx(Rc,dt)};
