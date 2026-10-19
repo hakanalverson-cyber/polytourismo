@@ -114,7 +114,7 @@ let foc=0;
 function setFoc(i){const cs=$$('.card',root);foc=(i+cs.length)%cs.length;cs.forEach((c,k)=>c.classList.toggle('foc',k===foc))}
 $$('.card',root).forEach((c,k)=>{c.onmouseenter=()=>setFoc(k);c.onclick=()=>pickMode(c.dataset.m)});
 const isStg=i=>P.STAGES.indexOf(i)>=0;
-function pickMode(m){if(m==='career'){ST.crank=null;ST.cev=null;openCareer()}else{ST.mode=m;if(m==='rally'?!isStg(ST.track):isStg(ST.track))ST.track=m==='rally'?P.STAGES[0]:0;ST.ret='s8cards';renderSetup();show('s8setup');if(m==='rally'&&P.prewarmStages)setTimeout(P.prewarmStages,700)}}
+function pickMode(m){if(m==='career'){ST.crank=null;ST.cev=null;openCareer()}else{ST.mode=m;if(m==='rally'?!isStg(ST.track):isStg(ST.track))ST.track=m==='rally'?P.STAGES[0]:0;ST.ret='s8cards';if(m==='rally'&&P.rallyIntro){P.rallyIntro(()=>{renderSetup();show('s8setup');if(P.prewarmStages)setTimeout(P.prewarmStages,1500)},ST.track)}else{renderSetup();show('s8setup')}}}
 
 /* ---- main menu ---- */
 (function(){const ma=document.querySelector('.menuActions'),bt=ma.querySelectorAll('button');

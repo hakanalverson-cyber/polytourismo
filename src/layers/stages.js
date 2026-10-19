@@ -265,13 +265,15 @@ function footing(T,sc){const hw=T.hw[0],pm=new THREE.MeshStandardMaterial({color
   const m=new THREE.Mesh(new THREE.BoxGeometry(1.0,h,1.0),pm);m.position.set(wx,bot+h/2,wz);m.rotation.y=T.psi[0];sc.add(m)}}
 /* solid scenery near the road (tree trunks, rocks, posts, huts): the rally layer turns these into crash obstacles */
 function collectSolids(sc,T){const rp=roadPts(T),out=[],seen=new Set(),box=new THREE.Box3(),m4=new THREE.Matrix4(),x0=T.x[0],z0=T.z[0];
- const test=(bb,mat)=>{box.copy(bb).applyMatrix4(mat);const w=Math.max(box.max.x-box.min.x,box.max.z-box.min.z),h=box.max.y-box.min.y;if(h<1.4||w>9||w<.2)return;
+ const test=(bb,mat,g0,o0)=>{box.copy(bb).applyMatrix4(mat);const w=Math.max(box.max.x-box.min.x,box.max.z-box.min.z),h=box.max.y-box.min.y;if(h<1.4||w>9||w<.2)return;
+  /* weeds, reeds, grass and shrubs are not obstacles */
+  if(o0.userData.keepAll||(g0.type==='ConeGeometry'&&g0.parameters.radius<1)||(g0.type==='BufferGeometry'&&h<4.2&&w<3.2))return;
   const cx=(box.max.x+box.min.x)/2,cz=(box.max.z+box.min.z)/2;if(Math.hypot(cx-x0,cz-z0)<16)return;const d=rdist(rp,cx,cz);if(d>14||d<-.6)return;
   if(box.min.y>T.terr(cx,cz)+1.7)return;const key=Math.round(cx/1.1)+','+Math.round(cz/1.1);if(seen.has(key))return;seen.add(key);out.push([cx,cz,Math.max(.35,Math.min(2.2,w*.4))])};
  sc.updateMatrixWorld(true);
  sc.traverse(o=>{if(!o.isMesh||!o.geometry)return;const g=o.geometry,t=g.type;if(t==='PlaneGeometry'||t==='RingGeometry'||t==='SphereGeometry'||t==='CircleGeometry')return;
   if(!g.boundingBox)g.computeBoundingBox();const bb=g.boundingBox;
-  if(o.isInstancedMesh){for(let i=0;i<o.count;i++){o.getMatrixAt(i,m4);m4.premultiply(o.matrixWorld);test(bb,m4)}}else test(bb,o.matrixWorld)});
+  if(o.isInstancedMesh){for(let i=0;i<o.count;i++){o.getMatrixAt(i,m4);m4.premultiply(o.matrixWorld);test(bb,m4,g,o)}}else test(bb,o.matrixWorld,g,o)});
  T.solids=out}
 const bwG=buildWorld;
 buildWorld=T=>{const sc=bwG(T);if(!T.d.hard)return sc;try{collectSolids(sc,T)}catch(e){console.error('solids',e);T.solids=[]}const cps=P.cpsOf(T);cps.forEach((i,k)=>sc.add(gate(T,i,k+1,cps.length+1)));footing(T,sc);return sc};
