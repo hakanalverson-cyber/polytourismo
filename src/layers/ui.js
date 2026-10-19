@@ -79,7 +79,7 @@ root.innerHTML=`
 
 <section class="v8s clear" id="s8show"><div class="hdr"><h2 id="shTitle">GARAGE</h2><small id="shSub"></small><div class="sp"></div>${crHTML}</div>
 <div class="lst" id="shList"></div><div class="stat" id="shStat"></div><div class="drag">Drag to rotate</div>
-<div class="bot"><button class="btn" data-a="back"><span>&lt; Back</span></button><div class="ptabs" id="shTabs"></div><div class="sw" id="shSw"></div><div style="flex:1"></div><button class="btn go" id="shAct"><span>Select</span></button></div><div class="flash8" id="shFlash"></div></section>
+<div class="bot"><button class="btn" data-a="back"><span>&lt; Back</span></button><div class="ptabs" id="shTabs"></div><div class="sw" id="shSw"></div><button class="btn" id="shLv" style="display:none"><span>Livery</span></button><div style="flex:1"></div><button class="btn go" id="shAct"><span>Select</span></button></div><div class="flash8" id="shFlash"></div></section>
 
 <section class="v8s" id="s8res"><div class="box" id="resBox"></div></section>`;
 $$('.ico',root).forEach(e=>{e.appendChild(IC[e.dataset.i]())});
@@ -191,8 +191,8 @@ function renderSetup(){const m=ST.mode;$('suTitle').innerHTML=MODE_NAME[m];
  const bind=(id,k,num)=>{const e=$(id);if(e)$$('button',e).forEach(b=>b.onclick=()=>{ST[k]=num?+b.dataset.v:b.dataset.v;if(k==='players'&&(ST.mode==='mp'||ST.mode==='elim')&&ST.players+ST.cpus>8)ST.cpus=8-ST.players;renderSetup()})};
  bind('cLaps','laps',1);bind('cIv','iv',1);bind('cWx','wx',0);bind('cEnd','endurS',0);{const e=$('cRev');if(e)$$('button',e).forEach(b=>b.onclick=()=>{ST.rev=b.dataset.v==='1';renderSetup()})}bind('cPl','players',1);bind('cCpu','cpus',1);bind('cDif','diff',1);bind('cCc','cc',0);bind('cTime','time',1);bind('cTr','traffic',0);bind('cTod','todUser',0);
  const np=m==='ta'?1:ST.players;let dv='<h4 style="margin:6px 0 8px;font:700 10px var(--mn);letter-spacing:.3em;color:var(--dim)">VEHICLES</h4>';
- for(let p=0;p<np;p++){const s=selCar(p),c=BYID[s.id];dv+=`<div class="drv" style="border-left-color:${['#f1f3f5','#f2c76b','#7fd68a','#ef6a5a'][p]}"><div><b>${np>1?'P'+(p+1)+' &middot; ':''}${c.name}${s.alt?' ALT':''}</b><input class="nm" data-p="${p}" maxlength="12" spellcheck="false" placeholder="Name (P${p+1})" value="${((ST.names||[])[p]||'').replace(/[<>&"]/g,'')}"><small>Class <span class="cls ${c.cls}">${c.cls}</span> &middot; ${c.type}</small><div class="fxrow">${fxChip(c,!!D[ST.track].gravel)}</div></div><button class="btn sm" data-p="${p}"><span>Garage</span></button></div>`}
- $('suDrv').innerHTML=dv;$$('#suDrv input.nm',root).forEach(i=>i.oninput=()=>{(ST.names=ST.names||[])[+i.dataset.p]=i.value});$$('#suDrv button',root).forEach(b=>b.onclick=()=>openShow('garage',{player:+b.dataset.p,cap:null,ret:'s8setup',rally:!!D[ST.track].gravel}));
+ for(let p=0;p<np;p++){const s=selCar(p),c=BYID[s.id];dv+=`<div class="drv" style="border-left-color:${['#f1f3f5','#f2c76b','#7fd68a','#ef6a5a'][p]}"><div><b>${np>1?'P'+(p+1)+' &middot; ':''}${c.name}${s.alt?' ALT':''}</b><input class="nm" data-p="${p}" maxlength="12" spellcheck="false" placeholder="Name (P${p+1})" value="${((ST.names||[])[p]||'').replace(/[<>&"]/g,'')}"><small>Class <span class="cls ${c.cls}">${c.cls}</span> &middot; ${c.type}</small><div class="fxrow">${fxChip(c,!!D[ST.track].gravel)}</div></div><span class="lvth" data-id="${s.id}" data-alt="${s.alt?1:0}"></span><button class="btn sm" data-p="${p}"><span>Garage</span></button></div>`}
+ $('suDrv').innerHTML=dv;$$('#suDrv .lvth',root).forEach(e=>{const t=P.livThumb&&P.livThumb(e.dataset.id,+e.dataset.alt,84);if(t)e.appendChild(t)});$$('#suDrv input.nm',root).forEach(i=>i.oninput=()=>{(ST.names=ST.names||[])[+i.dataset.p]=i.value});$$('#suDrv button',root).forEach(b=>b.onclick=()=>openShow('garage',{player:+b.dataset.p,cap:null,ret:'s8setup',rally:!!D[ST.track].gravel}));
  $('suHint').textContent=m==='ta'?'W / S + A / D &middot; double-tap W up, S down to shift':'P1 WASD &middot; P2 arrows &middot; P3 IJKL &middot; P4 TFGH';$('suHint').innerHTML=$('suHint').textContent}
 /* custom driver names: trimmed, 12 chars, unique across players */
 function cleanName(p,np){const nm=(ST.names||[])[p];let v=(nm||'').replace(/[<>&"]/g,'').trim().slice(0,12);if(!v)return null;for(let q=0;q<p;q++){const o=((ST.names||[])[q]||'').trim().slice(0,12);if(o&&o.toLowerCase()===v.toLowerCase())v=v.slice(0,10)+(p+1)}return v}
@@ -299,6 +299,7 @@ function sizeStudio(){const d=Math.min(devicePixelRatio||1,2);R.setPixelRatio(1)
 function studioOff(){if(!STU.on)return;STU.on=false;document.body.classList.remove('studio');$('c').style.imageRendering='';R.toneMapping=STU.tm;R.setRenderTarget(null);rs()}
 const rs0=rs;rs=()=>{if(STU.on)sizeStudio();else rs0()};
 function drawShow(dt){studioOn();ensureStudio();const car=BYID[SR.id],idx=P.modelOf(SR.id,SR.alt);if(S.idx!==idx&&CAR_MODELS[idx])setStudioCar(idx);
+ if(P.LV)P.LV.studio(S,SR);
  SR.ang+=dt*(SR.drag?0:.35)+SR.vel*dt;SR.vel*=Math.pow(.05,dt);S.turn.rotation.y=SR.ang;
  const W=R.domElement.width,H=R.domElement.height;S.cam.aspect=W/H;const ca=.55+Math.sin(T0*.17)*.12;S.cam.position.set(Math.sin(ca)*10.2,2.5+Math.sin(T0*.23)*.15,Math.cos(ca)*10.2);S.cam.lookAt(0,.75,0);
  S.cam.setViewOffset(W,H,-W*.0,H*.02,W,H);S.cam.updateProjectionMatrix();
@@ -306,7 +307,7 @@ function drawShow(dt){studioOn();ensureStudio();const car=BYID[SR.id],idx=P.mode
  const key=idx+'|'+(window.PT7&&window.PT7.photos[idx]?1:0);if(key!==lastPhotoKey&&CAR_MODELS[idx]){lastPhotoKey=key;fillPhotos(idx)}}
 function fillPhotos(idx){const box=$('shPhotos');if(!box)return;let ph=window.PT7&&(window.PT7.photos[idx]||(()=>{try{return window.PT7.makePhotos(idx)}catch(e){return null}})());box.innerHTML='';
  for(let i=0;i<3;i++){const cv=document.createElement('canvas');cv.width=96;cv.height=60;const g=cv.getContext('2d');g.fillStyle='#14181d';g.fillRect(0,0,96,60);if(ph&&ph[i]){try{g.drawImage(ph[i],0,0,96,60)}catch(e){}}box.appendChild(cv)}}
-function openShow(kind,o){SR.kind=kind;SR.player=o.player||0;SR.cap=o.cap==null?null:o.cap;SR.ret=o.ret||'menu';SR.rally=!!o.rally;
+function openShow(kind,o){SR.lv=false;SR.kind=kind;SR.player=o.player||0;SR.cap=o.cap==null?null:o.cap;SR.ret=o.ret||'menu';SR.rally=!!o.rally;
  const list=showList();if(kind==='garage'){const s=P.SV().sel[SR.player];const ok=list.find(c=>c.id===s.id&&!c.off);const f=ok||list.find(c=>!c.off)||list[0];SR.id=f.id;SR.alt=(ok&&P.owns(f.id,s.alt))?s.alt:(P.owns(f.id,0)?0:1)}
  else{if(!BYID[SR.id])SR.id='merc';if(SR.alt&&!P.owns(SR.id,1))SR.alt=0}
  renderShow();show('s8show');}
@@ -341,6 +342,8 @@ function renderShow(){const kind=SR.kind,sv=P.SV(),list=showList(),car=BYID[SR.i
  <div class="gears9" style="grid-template-columns:repeat(${gt.length<=6?3:gt.length<=8?4:5},1fr)">${gt.map((v,i)=>`<div><small>GEAR ${i+1}</small>${Math.round(v)}</div>`).join('')}</div>
  <div class="spec">${kind==='brand'?'Price<b>'+fmtCr(car.price)+'</b><br>Alt color<b>'+fmtCr(car.altPrice)+'</b>':'Status<b>'+(owned?'Owned':'Not owned')+'</b>'}</div>${kind==='garage'&&owned?tuneHTML(car):'<div class="photos" id="shPhotos"></div>'}`;
  if(kind==='garage'&&owned){$$('#shStat .tr button',root).forEach(b=>b.onclick=()=>{const k=b.dataset.k;P.tuneSet(car.id,SR.alt,k,P.tuneGet(car.id,SR.alt)[k]+ +b.dataset.d);P.sfx('select');renderShow()});$('tuReset').onclick=()=>{P.tuneReset(car.id,SR.alt);P.sfx('select');renderShow()}}
+ const lvb=$('shLv');const lvOk=kind==='garage'&&owned&&P.owns(car.id,SR.alt)&&!!P.LV;lvb.style.display=lvOk?'':'none';if(!lvOk)SR.lv=false;lvb.querySelector('span').textContent=SR.lv?'Stats':'Livery';lvb.onclick=()=>{SR.lv=!SR.lv;P.sfx('select');renderShow()};
+ if(SR.lv&&lvOk)P.LV.panel($('shStat'),SR);
  lastPhotoKey='';
  const m0=P.modelOf(car.id,0),m1=P.modelOf(car.id,1);
  $('shSw').innerHTML=`<div class="swb ${SR.alt?'':'sel'}" data-alt="0"><i style="background:${bodyColor(m0)}"></i><span>Standard${kind==='brand'&&owned?' &middot; owned':''}</span></div><div class="swb ${SR.alt?'sel':''}" data-alt="1"><i style="background:${bodyColor(m1)}"></i><span>Alt${kind==='brand'?(ownAlt?' &middot; owned':' &middot; '+fmtCr(car.altPrice)):(ownAlt?'':' &middot; locked')}</span></div>`;

@@ -187,7 +187,10 @@ function launch(cfg){
  const entries=[...cfg.humans.map((h,i)=>({human:true,p:i,id:h.id,alt:h.alt,loan:h.loan,name:h.name})),...(cfg.ai||[]).map((a,i)=>({human:false,p:4+i,id:a.id,alt:a.alt,skill:a.skill,name:a.name,lat:a.lat}))];
  const nh=cfg.humans.length,total=entries.length;
  /* grid: CPUs in front, humans behind in career/race, humans first in multiplayer */
+ /* random grid order; career events may pin the human via ev.startPos (1 = pole); cfg.grid==='fixed' keeps the old order */
  const slots=entries.map((e,i)=>i);
+ const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+ if(cfg.grid!=='fixed'){shuffle(slots);const sp=cfg.ev&&cfg.ev.startPos;if(sp&&cfg.mode==='career'){const want=Math.min(Math.max(sp,1),total)-1,hi=Math.max(0,entries.findIndex(e=>e.human)),j=slots.indexOf(want);[slots[hi],slots[j]]=[slots[j],slots[hi]]}}
  const humanFirst=cfg.mode==='mp'&&total<=nh+1;
  entries.forEach((e,i)=>{
   const k=i;
@@ -196,7 +199,7 @@ function launch(cfg){
   carChoices[k]=PT8.modelOf(car.id,e.alt);
   const c=newCar(T,k,e.human);c.cs=car;c.carId=car.id;c.alt=e.alt?1:0;c.gear=0;c.shiftT=0;c.gearFlash=0;c.tune=e.human&&cfg.mode!=='ta'?PT8.tuneGet(e.id,e.alt):null;if(c.tune){const f=PT8.tuneFx(c.tune,!!T.d.gravel);c.cs=Object.assign({},car,{top:car.top*f.top,acc:car.acc*f.acc,grip:car.grip*f.grip,brk:car.brk*f.brk})}c.loan=!!e.loan;c.pnum=e.human?e.p+1:0;c.ptName=e.human?(e.name||('P'+(e.p+1))):(e.name||NAMES[(k*7)%NAMES.length]);
   if(!e.human){c.ai={skill:e.skill||.85,lat:e.lat!=null?e.lat:(((k*37)%7)-3)/4,name:c.ptName};c.m.drv.visible=false}
-  const nAI=total-nh;c.slot=e.human?(humanFirst?e.p:nAI+e.p):(humanFirst?nh+(i-nh):i-nh);
+  c.slot=cfg.grid==='fixed'?(e.human?(humanFirst?e.p:(total-nh)+e.p):(humanFirst?nh+(i-nh):i-nh)):slots[i];
   gridSlot(T,c,c.slot);
   RACE.cars.push(c);scene.add(c.m.g);scene.add(c.m.sh);
  });

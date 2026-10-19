@@ -60,3 +60,9 @@ The car models come from low-poly car packs; confirm the licence of each pack be
 - `src/layers/props.js`: rooted props on all 10 maps. Each prop stands on measured terrain with a buried foundation/skirt, stacked items rest on each other, boats/buoys sit on the water plane, nothing on the road or inside existing scenery. `tests/props_check.py` raycasts every prop against the real ground mesh.
 - `src/layers/ambience.js`: speed wind, surface rumble, per-map beds and wildlife/bells/horns, crowds at tents and the start line (follows the SFX volume and M mute).
 - `src/layers/tutorial.js`: menu entry "Tutorial" plus a one-time first-run offer; guided lesson on the Quarry.
+
+## Liveries (v9)
+- Garage > pick a car > **Livery**. 16 patterns, 3 colours (body / accent / trim), 4 finishes, wheel colours, race number, 16 presets, Random and Stock. Saved per car and per colour variant (`SV.liv`).
+- Rendering: each car's paint mesh gets baked car-frame coordinates (`aLp`/`aLn`); a generated 1024px canvas (top, right and left maps) is sampled in the paint shader, so one design fits all 28 models. Number text is mirrored on the left map so it reads correctly on both sides.
+- CPU rivals get a random curated preset and race number each race.
+- Starting grid is now random. Career events can pin the player with `ev.startPos`; `cfg.grid='fixed'` keeps the old order.
