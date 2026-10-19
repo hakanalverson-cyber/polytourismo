@@ -799,9 +799,9 @@ function wheels(car,speed,steer,dt){
   if(!car.ptWheels)return;
   car.ptRig.position.y=car.visualModel.position.y-car.ptBase;
   for(const w of car.ptWheels){
-    w.angle=(w.angle+speed/w.radius*dt)%(PI*2);
+    {const stp=speed/w.radius*dt;w.angle=(w.angle+Math.max(-.3,Math.min(.3,stp)))%(PI*2)}
     w.spin.rotation.x=w.angle;
-    w.pivot.rotation.y=w.front?steer*.35:0;
+    w.sa=(w.sa||0)+((w.front?steer*.35:0)-(w.sa||0))*.3;w.pivot.rotation.y=w.sa;
   }
 }
 

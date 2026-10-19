@@ -89,6 +89,7 @@ css=open(f'{SRC}/style.css').read()
 import base64
 b64=lambda f:base64.b64encode(open(W+'/assets/'+f,'rb').read()).decode()
 CARS10='<script>const CAR10_BIN_B64="'+b64('cars_v10.bin.gz')+'",CAR10_TEX_B64="'+b64('cars_v10_tex.png')+'",CAR10_META='+open(W+'/assets/cars_v10.json').read()+';</script>'
+src=rep(src,"w.angle=(w.angle+speed/w.radius*dt)%(PI*2);\n    w.spin.rotation.x=w.angle;\n    w.pivot.rotation.y=w.front?steer*.35:0;","{const stp=speed/w.radius*dt;w.angle=(w.angle+Math.max(-.3,Math.min(.3,stp)))%(PI*2)}\n    w.spin.rotation.x=w.angle;\n    w.sa=(w.sa||0)+((w.front?steer*.35:0)-(w.sa||0))*.3;w.pivot.rotation.y=w.sa;")
 src=rep(src,"function loadEmbeddedCarPack(){\n try{","function loadEmbeddedCarPack(){return;\n try{")
 src=rep(src,"scale=4.5/Math.max(size.x,size.z,.001)","scale=(source.userData.gl||4.5)/Math.max(size.x,size.z,.001)")
 src=src.replace("const compile = s => eval('('+s+')');","const compile = s => eval('('+s+')');window.PTO=o;",1)
