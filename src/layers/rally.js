@@ -6,7 +6,7 @@ const rnd=(a,b)=>a+Math.random()*(b-a);
 const PCOL=['#f1f3f5','#f2c76b','#7fd68a','#ef6a5a'];
 
 /* ---------------- rally fleet: free rally-spec all-wheel-drive cars with gravel tyres ---------------- */
-P.RALLY_CARS=['ford','lr','urus','gtr','ster','m8'];
+P.RALLY_CARS=['ford','lr','urus','gtr','ster','m8'];P.CARS.forEach(c=>{if((c.cat==='HATCHBACK'||c.cat==='WAGON')&&!P.RALLY_CARS.includes(c.id))P.RALLY_CARS.push(c.id)});
 const ow0=P.owns;P.owns=(id,alt)=>P._ro&&P.RALLY_CARS.includes(id)?true:ow0(id,alt);
 P.rallySel=p=>{const sv=P.SV();sv.rsel=sv.rsel||[];let s=sv.rsel[p];if(!s||!P.RALLY_CARS.includes(s.id))s=sv.rsel[p]={id:P.RALLY_CARS[p%P.RALLY_CARS.length],alt:0};return s};
 /* water: grip / speed drag */
@@ -94,7 +94,7 @@ hudUpdate=()=>{hu0();const Rc=RACE;if(!Rc||!Rc.cfg||!Rc.cfg.rally)return;
   if(el._t!==txt){el._t=txt;el.innerHTML=txt}el.className='h8pace '+cls;el.style.opacity=txt?1:0})};
 
 /* ---------------- rally controls: real gearboxes (shift keys), handbrake, camera ---------------- */
-const REAL={lr:6,ford:6,merc:7,ster:7,art:8,ferr:7,zen:7,must:6,urus:8,m8:8,amg:9,gtr:6,por:7,p1:7};
+const REAL0={lr:6,ford:6,merc:7,ster:7,art:8,ferr:7,zen:7,must:6,urus:8,m8:8,amg:9,gtr:6,por:7,p1:7};const REAL=new Proxy(REAL0,{get:(t,k)=>t[k]||(P.BYID[k]&&P.BYID[k].real)||6});
 const gtOrig={};
 function gearTable(n){const R0=n>=8?3.4:n>=6?3.1:2.7,t=[];for(let i=0;i<n;i++){const u=i/(n-1);t.push({top:Math.pow(R0,-(1-u)),acc:.66+.44*Math.pow(1-u,1.5)})}return t}
 function rallyGears(on){for(const id in REAL){const car=BYID[id];if(!car)continue;const arr=P.GT(car);

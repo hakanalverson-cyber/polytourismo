@@ -6,7 +6,7 @@ const $$=(s,r)=>[...(r||document).querySelectorAll(s)];
 const root=document.createElement('div');root.id='v8';document.body.appendChild(root);
 const SCREENS=['s8cards','s8setup','s8career','s8show','s8res'];
 const ST={mode:'ta',track:0,laps:3,rlaps:1,players:1,cpus:3,diff:1,time:120,traffic:'light',todUser:null,ret:'s8cards',cev:null,crank:null};
-const SR={kind:'garage',player:0,cap:null,ret:'s8setup',id:'merc',alt:0,ang:.6,vel:0,drag:false,rally:false};
+const SR={cat:'ALL',kind:'garage',player:0,cap:null,ret:'s8setup',id:'merc',alt:0,ang:.6,vel:0,drag:false,rally:false};
 const crHTML='<div class="crbox"><small>BALANCE</small><b class="crv"></b></div>';
 
 /* ================= pixel icons (drawn at 40x40, shown crisp) ================= */
@@ -253,7 +253,7 @@ function renderCareer(){const cr=P.careerRank(),rk=ST.crank==null?cr:Math.min(ST
 /* ================= STUDIO (garage + Brand Central) : native res, MSAA, bloom ================= */
 let S=null,STU={on:false},lastPhotoKey='';
 const colCache={};
-function bodyColor(idx){if(colCache[idx])return colCache[idx];const m=CAR_MODELS[idx];let best=null,bn=-1;if(m)m.traverse(o=>{if(o.isMesh&&o.material){const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(mm=>{const n=(mm.name||'')+(o.name||'');if(/glass|window|tire|tyre|wheel|rim|light|lamp|interior|chrome|grill|brake|plate|logo/i.test(n))return;const c=mm.color;if(!c)return;const l=c.r*.3+c.g*.59+c.b*.11;if(l<.05)return;const cnt=o.geometry&&o.geometry.attributes.position?o.geometry.attributes.position.count:0;if(cnt>bn){bn=cnt;best=c}})}});
+function bodyColor(idx){if(colCache[idx])return colCache[idx];const m=CAR_MODELS[idx];let best=null,bn=-1;if(m)m.traverse(o=>{if(o.isMesh&&o.material){const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(mm=>{const n=(mm.name||'')+(o.name||'');if(/glass|window|tire|tyre|wheel|rim|light|lamp|interior|chrome|grill|brake|plate|logo/i.test(n))return;const c=mm.color;if(!c)return;const l=c.r*.3+c.g*.59+c.b*.11;if(l<.05)return;const cnt=(o.geometry&&o.geometry.attributes.position?o.geometry.attributes.position.count:0)+(o.name==='paint'?1e9:0);if(cnt>bn){bn=cnt;best=o.name==='paint'?c.clone().convertLinearToSRGB():c}})}});
  return colCache[idx]=best?'#'+best.getHexString():'#888'}
 function wallTex(){const cv=document.createElement('canvas');cv.width=4;cv.height=256;const g=cv.getContext('2d'),gr=g.createLinearGradient(0,0,0,256);gr.addColorStop(0,'#0b0d11');gr.addColorStop(.45,'#1f242c');gr.addColorStop(.8,'#313843');gr.addColorStop(1,'#232830');g.fillStyle=gr;g.fillRect(0,0,4,256);const t=new THREE.CanvasTexture(cv);t.encoding=THREE.sRGBEncoding;return t}
 function makePost(){
@@ -348,9 +348,12 @@ function tuneHTML(car){const t=P.tuneGet(car.id,SR.alt);
   return `<div class="tr"><span>${d.n}</span><button class="btn sm" data-k="${d.k}" data-d="-1"><span>&lsaquo;</span></button><div class="pp5">${pips.join('')}</div><button class="btn sm" data-k="${d.k}" data-d="1"><span>&rsaquo;</span></button><em>${v===0?'STOCK':v<0?d.lo:d.hi}${v&&d.r>1?' '+Math.abs(v):''}</em></div>`}).join('')+`<div class="tn">Applies to races &amp; events. Time Attack always runs stock so medals stay fair.</div></div>`}
 function renderShow(){const kind=SR.kind,sv=P.SV(),list=showList(),car=BYID[SR.id],owned=P.owns(car.id,0),ownAlt=P.owns(car.id,1);
  $('shTitle').innerHTML=kind==='garage'?(SR.rally?'RALLY <em>GARAGE</em>':'YOUR <em>GARAGE</em>'):'BRAND <em>CENTRAL</em>';$('shSub').textContent=kind==='garage'?(SR.rally?'Rally-spec all-wheel-drive cars with gravel tyres / free to use':(SR.cap?'Class '+SR.cap+' and below':'')):'Buy cars / alt colors';
- let h='',last=null;for(const c of list){if(c.cls!==last){last=c.cls;h+=`<div class="ch"><span class="cls ${c.cls}">${c.cls}</span> &nbsp;Class ${c.cls}</div>`}const o=(sv.owned[c.id]||0)>0;
+ const cats=['ALL',...(P.CATS||[]),...(kind==='brand'?['OWNED']:[])],cnt=k=>list.filter(c=>k==='ALL'||(k==='OWNED'?(sv.owned[c.id]||0)>0:c.cat===k)).length;
+ if(!cats.includes(SR.cat))SR.cat='ALL';
+ const vis=list.filter(c=>SR.cat==='ALL'||(SR.cat==='OWNED'?(sv.owned[c.id]||0)>0:c.cat===SR.cat));
+ let h='<div class="cats">'+cats.filter(k=>cnt(k)||k==='ALL').map(k=>`<button class="${k===SR.cat?'sel':''}" data-cat="${k}">${k==='ALL'?'ALL':k==='OWNED'?'OWNED':k}<i>${cnt(k)}</i></button>`).join('')+'</div>',last=null;for(const c of vis){if(c.cls!==last){last=c.cls;h+=`<div class="ch"><span class="cls ${c.cls}">${c.cls}</span> &nbsp;Class ${c.cls}</div>`}const o=(sv.owned[c.id]||0)>0;
   h+=`<div class="ci ${c.id===SR.id?'sel':''} ${c.off?'off':''}" data-id="${c.id}"><b>${c.name}</b><small>${kind==='brand'?(o?'Owned':fmtCr(c.price)):(c.off?'Class cap':c.type)}</small></div>`}
- $('shList').innerHTML=h;$$('#shList .ci',root).forEach(e=>e.onclick=()=>{SR.id=e.dataset.id;if(!P.owns(SR.id,SR.alt))SR.alt=0;renderShow()});
+ $('shList').innerHTML=h;$$('#shList .cats button',root).forEach(b=>b.onclick=()=>{SR.cat=b.dataset.cat;const v=list.filter(c=>SR.cat==='ALL'||(SR.cat==='OWNED'?(sv.owned[c.id]||0)>0:c.cat===SR.cat));if(v.length&&!v.some(c=>c.id===SR.id)){SR.id=v[0].id;SR.alt=0}P.sfx('select');renderShow();$('shList').scrollTop=0});$$('#shList .ci',root).forEach(e=>e.onclick=()=>{SR.id=e.dataset.id;if(!P.owns(SR.id,SR.alt))SR.alt=0;renderShow()});
  const sel=$$('#shList .ci.sel',root)[0];if(sel)sel.scrollIntoView({block:'nearest'});
  const tn=kind==='garage'&&owned?P.tuneGet(car.id,SR.alt):null,sb=statBars(car,tn),bars=sb.bars,gt=sb.gt;
  $('shStat').innerHTML=`<div class="nm">${car.name}${SR.alt?' <span style="color:var(--ac2);font-size:.6em">ALT</span>':''}</div><div class="tp">${car.type} &middot; ${car.drive}</div>

@@ -92,3 +92,11 @@ Tests: `tests/stages_check.py` (geometry), `tests/stages_laps.py` (AI laps), `te
 - Softer suspension in Rally (body heave over dips, more roll).
 - Stages have dips, crests and bumps, short pinch points (~4.4 m wide), mountains pushed clear of the roads, and the start line and checkpoints sit on straight, flat ground.
 - Tutorial part 2 covers the rally controls; the briefing and prep screens list them per player.
+
+
+## Cars (v10)
+All 136 cars come from the *Low Poly Cars - Mega Pack* sheet. `tools/build_pack.py <glb>` splits the sheet into individual cars and writes
+`assets/cars_v10.bin.gz` (quantised geometry), `cars_v10_tex.png` (shared palette) and `cars_v10.json` (sizes + body colour).
+`src/layers/cars10.js` builds each model lazily: a `paint` mesh (plain colour, so liveries and the alt colour work) plus a palette-textured `body` mesh,
+and generates the catalogue (category, class, stats, price). The 14 original ids keep their saves and stats but wear pack models.
+Brand Central and the garage filter by category: hatchback, wagon, sedan, coupe, muscle, sports, supercar, hypercar and track.

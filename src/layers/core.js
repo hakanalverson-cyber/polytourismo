@@ -8,16 +8,6 @@ PT8.fmtCr=fmtCr;PT8.ord=ord;
 const fmtT=t=>{if(t==null||!isFinite(t))return'--:--.--';const m=Math.floor(t/60);return String(m).padStart(2,'0')+':'+(t-m*60).toFixed(2).padStart(5,'0')};
 PT8.fmtT=fmtT;
 
-/* ---------------- second car pack (7 cars x 2 colours) -> CAR_MODELS[14..27] ---------------- */
-(function(){const N=['M8','Urus','P1GTR','GTR','Mustang','Mercedes','Porsche','M8.001','Urus.001','P1GTR.001','GTR.001','Mustang.001','Mercedes.001','Porsche.001'];
- /* index map: body 14..20 = M8,Urus,P1GTR,GTR,Mustang,Mercedes,Porsche ; alt 21..27 same order */
- const nm=x=>x.replace(/[^a-z0-9]/gi,'').toLowerCase();
- function load(){try{if(typeof CAR_PACK2_B64==='undefined'||!window.THREE||!THREE.GLTFLoader)return;const raw=atob(CAR_PACK2_B64),b=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)b[i]=raw.charCodeAt(i);
-  new THREE.GLTFLoader().parse(b.buffer,'',g=>{const rs=g.scene;rs.updateMatrixWorld(true);
-   N.forEach((name,k)=>{let root=null;rs.traverse(o=>{if(!root&&nm(o.name)===nm(name))root=o});if(!root)return;root.updateWorldMatrix(true,true);const m=root.clone(true);m.matrix.copy(root.matrixWorld);m.matrixAutoUpdate=false;CAR_MODELS[14+k]=m});
-   ALL_CARS.forEach(attachCarModel);console.info('pack2 loaded',CAR_MODELS.filter(Boolean).length)},e=>console.error('pack2',e))}catch(e){console.error('pack2 decode',e)}}
- PT8.loadPack2=load;load()})();
-
 /* oriented-box overlap (cars are ~1.9 x 4.3 m) */
 PT8.obbHit=(ax,az,ay,bx,bz,by,hx,hz)=>{hx=hx||.95;hz=hz||2.1;const dx=bx-ax,dz=bz-az;if(dx*dx+dz*dz>25)return false;const sa=Math.sin(ay),ca=Math.cos(ay),sb=Math.sin(by),cb=Math.cos(by);
  for(const [nx,nz] of [[ca,-sa],[sa,ca],[cb,-sb],[sb,cb]]){const ra=hx*Math.abs(nx*ca-nz*sa)+hz*Math.abs(nx*sa+nz*ca),rb=hx*Math.abs(nx*cb-nz*sb)+hz*Math.abs(nx*sb+nz*cb);if(Math.abs(dx*nx+dz*nz)>=ra+rb)return false}return true};
@@ -52,7 +42,7 @@ const _GT={};
 /* three-speed boxes: gear ratios (high number = short gear). Top-speed fraction of gear i = ratio[last]/ratio[i] */
 const RATIOS={std:[2.45,1.40,1.00],close:[2.35,1.38,1.00],wide:[2.70,1.50,1.00]};
 const BOX={lr:'wide',urus:'wide',ford:'std',merc:'std',must:'std',ster:'close',art:'close',ferr:'close',zen:'close',m8:'close',amg:'close',gtr:'close',por:'close',p1:'close'};
-function GT(car){car=car||BYID.merc;let t=_GT[car.id];if(t)return t;const R=RATIOS[BOX[car.id]||'std'],N=R.length;t=_GT[car.id]=[];for(let i=0;i<N;i++){const u=i/(N-1);t.push({top:R[N-1]/R[i],acc:.66+.44*Math.pow(1-u,1.5)})}return t}
+function GT(car){car=car||BYID.merc;let t=_GT[car.id];if(t)return t;const R=RATIOS[BOX[car.id]||car.box||'std'],N=R.length;t=_GT[car.id]=[];for(let i=0;i<N;i++){const u=i/(N-1);t.push({top:R[N-1]/R[i],acc:.66+.44*Math.pow(1-u,1.5)})}return t}
 PT8.GT=GT;const GEARS=GT(null);
 /* power band: lugging below ~45% of a gear is weak, strongest 60-90%, falls off at the limiter */
 const band=r=>r<.45?.46+r/.45*.14:r<.9?.6+(r-.45)/.45*.4:Math.max(.5,1-(r-.9)/.12*.25);PT8.band=band;

@@ -84,16 +84,19 @@ src=rep(src,"z=T.z[i]-Math.sin(T.psi[i])*l,y=T.y[i]-l*T.bank[i];posts.push(","z=
 src=rep(src,"const over=close.road&&c.y-close.h<1.65;","const over=!T.d.gravel&&close.road&&c.y-close.h<1.65;")
 src=rep(src,"{u:'Numpad8',d:'Numpad5',l:'Numpad4',r:'Numpad6',h:'Numpad0'}","{u:'KeyT',d:'KeyG',l:'KeyF',r:'KeyH',h:'KeyY'}")
 
-parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','audio','modes','tracks','tracks2','extra','race2','elim','tod','harbor','props','stages','weather','ambience','tutorial','hud2','shade','liveries','ui','rally','perf']  if os.path.exists(f'{SRC}/layers/{n}.js')]
+parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','cars10','audio','modes','tracks','tracks2','extra','race2','elim','tod','harbor','props','stages','weather','ambience','tutorial','hud2','shade','liveries','ui','rally','perf']  if os.path.exists(f'{SRC}/layers/{n}.js')]
 css=open(f'{SRC}/style.css').read()
 import base64
-pk=base64.b64encode(open(W+'/assets/car_pack_2.glb','rb').read()).decode()
+b64=lambda f:base64.b64encode(open(W+'/assets/'+f,'rb').read()).decode()
+CARS10='<script>const CAR10_BIN_B64="'+b64('cars_v10.bin.gz')+'",CAR10_TEX_B64="'+b64('cars_v10_tex.png')+'",CAR10_META='+open(W+'/assets/cars_v10.json').read()+';</script>'
+src=rep(src,"function loadEmbeddedCarPack(){\n try{","function loadEmbeddedCarPack(){return;\n try{")
+src=rep(src,"scale=4.5/Math.max(size.x,size.z,.001)","scale=(source.userData.gl||4.5)/Math.max(size.x,size.z,.001)")
 src=src.replace("const compile = s => eval('('+s+')');","const compile = s => eval('('+s+')');window.PTO=o;",1)
 BOOT_CSS='<style id="ptBootCss">html,body{background:#0b0e12!important}body>*:not(#ptBoot){visibility:hidden!important}#ptBoot{position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#0b0e12;color:#e8eef2;font:italic 800 34px/1 Arial Black,Impact,sans-serif;letter-spacing:.06em;visibility:visible!important;transition:opacity .25s}#ptBoot small{font:700 10px/1 monospace;letter-spacing:.4em;color:#f1f3f5;font-style:normal}#ptBoot i{display:block;width:140px;height:3px;background:#1d252d;position:relative;overflow:hidden}#ptBoot i:after{content:"";position:absolute;inset:0;width:40%;background:#f1f3f5;animation:ptb 1s linear infinite}@keyframes ptb{from{left:-40%}to{left:100%}}</style>'
 src=src.replace('<title>Poly Tourismo v7</title>','<title>Poly Tourismo</title>'+BOOT_CSS)
 src=src.replace('<body>','<body><div id="ptBoot">POLY TOURISMO<i></i><small>LOADING</small></div>',1)
 BOOT_JS='<script>(function(){function done(){var b=document.getElementById("ptBoot"),c=document.getElementById("ptBootCss");if(!b)return;b.style.opacity=0;setTimeout(function(){if(c)c.remove();b.remove()},260)}function go(){requestAnimationFrame(function(){requestAnimationFrame(function(){setTimeout(done,350)})})}if(document.readyState==="complete")go();else addEventListener("load",go);setTimeout(done,8000)})();</script>'
-add='<script>const CAR_PACK2_B64="'+pk+'";</script><style id="v8css">'+css+'</style><script>\n'+'\n'.join(parts)+'\n</script>'
+add=CARS10+'<style id="v8css">'+css+'</style><script>\n'+'\n'.join(parts)+'\n</script>'
 i=src.rindex('</body>') if '</body>' in src else len(src)
 src=src[:i]+add+BOOT_JS+src[i:]
 

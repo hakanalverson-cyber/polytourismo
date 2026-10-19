@@ -65,7 +65,7 @@ const EP={
  f6:{w:[['sawtooth',1,.44],['square',1.5,.22],['triangle',.5,.3],['sawtooth',3,.12]],f0:46,f1:195,c0:460,c1:2200,q:3.0,lf:.2,lr:[14,40]}
 };
 const EPID={lr:'i6',ford:'i4t',merc:'v8',ster:'v10',art:'v6h',ferr:'v12',zen:'v8t',must:'v8',urus:'v8t',m8:'v8t',amg:'v8t',gtr:'v6t',por:'f6',p1:'v8h'};
-const profOf=car=>EP[EPID[car.id]||'v8'];
+const profOf=car=>EP[EPID[car.id]||car.eng||'v8'];
 function mkEng(car){const a=ctx(),pr=profOf(car),e={id:car.id,pr,os:[]};
  e.f=a.createBiquadFilter();e.f.type='lowpass';e.f.Q.value=pr.q;e.am=a.createGain();e.am.gain.value=1;e.g=a.createGain();e.g.gain.value=0;
  e.f.connect(e.am);e.am.connect(e.g);e.g.connect(MG);
