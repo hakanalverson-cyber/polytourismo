@@ -28,11 +28,9 @@ function tick(Rc,dt){const T=Rc.T,en=endur(Rc),pit=Rc.pit,N=T.N;
   c.draft=(c.draft||0)+(best-(c.draft||0))*Math.min(1,dt*3);if(c.draft<.01)c.draft=0;
   if(!en)continue;
   if(c.tyre==null){c.tyre=1;c.fuel=1}
-  const k=c.sp/40,slide=c.sp>8?Math.abs(wr(Math.atan2(c.vx,c.vz)-c.yaw)):0,inp=c.in||{th:0,br:0};
-  let rate=.0011*k+.010*Math.min(1,slide*2.5)*k+(inp.br?.0025*k:0)+(inp.th>.9&&c.sp<15?.002:0);
-  if(c.tune)rate*=P.tuneFx(c.tune,!!T.d.gravel).wear;if(T.d.gravel)rate*=1.25;if(c.onRoad===false)rate*=1.5;
+  const inp=c.in||{th:0,br:0};
   const live=Rc.state==='race';
-  if(live){c.tyre=Math.max(0,c.tyre-rate*dt*(c.human?1:.6));c.fuel=Math.max(0,c.fuel-.0019*(.35+.65*inp.th)*dt*(c.human?1:.8))}
+  c.tyre=1;if(live){c.fuel=Math.max(0,c.fuel-.0019*(.35+.65*inp.th)*dt*(c.human?1:.8))}
   /* pit zone */
   const inZ=pit&&c.idx>=pit.a&&c.idx<=pit.b&&c.sp<80;c.inPit=inZ;
   if(c.human){
@@ -57,16 +55,15 @@ P.aiPost=(c,dt)=>{const Rc=RACE;if(!endur(Rc)||c.human||!Rc.pit||c.fin)return;co
 const hudOld=hudUpdate;
 hudUpdate=()=>{hudOld();const Rc=RACE;if(!Rc)return;const en=endur(Rc);
  Rc.cars.forEach((c,i)=>{if(!c.human)return;const h=$('h'+i);if(!h||!c.rect)return;let e=h.querySelector('.h9ex');
-  if(!e){e=document.createElement('div');e.className='h9ex';e.innerHTML='<div class="pr"></div><div class="bars"><div class="tk"><small>TYRES</small><i><u></u></i></div><div class="tk"><small>FUEL</small><i><u></u></i></div></div><div class="dr">SLIPSTREAM</div>';h.appendChild(e)}
+  if(!e){e=document.createElement('div');e.className='h9ex';e.innerHTML='<div class="pr"></div><div class="bars"><div class="tk"><small>FUEL</small><i><u></u></i></div></div><div class="dr">SLIPSTREAM</div>';h.appendChild(e)}
   e.querySelector('.bars').style.display=en?'':'none';
   const us=e.querySelectorAll('.bars u');
-  if(en){const t=c.tyre==null?1:c.tyre,f=c.fuel==null?1:c.fuel;us[0].style.width=(t*100)+'%';us[0].parentNode.className=t<.25?'lo':t<.5?'mid':'';us[1].style.width=(f*100)+'%';us[1].parentNode.className=f<.15?'lo':f<.35?'mid':''}
+  if(en){const f=c.fuel==null?1:c.fuel;us[0].style.width=(f*100)+'%';us[0].parentNode.className=f<.15?'lo':f<.35?'mid':''}
   const dr=e.querySelector('.dr');dr.style.opacity=c.draft>.12?Math.min(1,c.draft*1.6):0;
   let msg='';
   if(en&&Rc.state==='race'&&!c.fin){
    if(c.fuel<=0)msg='OUT OF FUEL - STOP TO REFUEL';
    else if(c.pitSvc)msg='SERVICING '+Math.max(0,c.pitNeed-c.pitT).toFixed(1)+'s';
-   else if(c.tyre<.2)msg='TYRES GONE - STOP TO CHANGE';
    else if(c.fuel<.12)msg='LOW FUEL - STOP TO REFUEL';}
   const pr=e.querySelector('.pr');pr.textContent=msg;pr.style.opacity=msg?1:0})};
 

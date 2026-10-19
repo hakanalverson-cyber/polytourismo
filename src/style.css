@@ -404,3 +404,11 @@ body:after{background:repeating-linear-gradient(0deg,#00000010 0 1px,transparent
 .card::before{clip-path:none!important;transform:none!important;border-right:0!important;border:1px solid #ffffff14!important}
 .card.foc::before,.card:hover::before{border-color:var(--mc)!important}
 .card::after{left:0!important;right:0!important}
+/* driver name box + merged-view labels + round-info list */
+.drv input.nm{display:block;margin:6px 0 2px;width:150px;background:#0a0d11;border:1px solid #2a313b;color:#fff;font:700 11px var(--mn);letter-spacing:.12em;padding:5px 8px;text-transform:uppercase;outline:none}
+.drv input.nm:focus{border-color:var(--ac)}
+.h8list{position:absolute;left:16px;display:flex;flex-direction:column;gap:6px;transform:scale(var(--s));transform-origin:top left;pointer-events:none}
+.h8list .h8mode{position:static;transform:none}
+.h8who{position:absolute;right:0;top:-24px;display:flex;align-items:center;gap:7px;font:700 10px var(--mn);letter-spacing:.2em;color:#fff;background:#080a0de6;border:1px solid #ffffff44;padding:3px 9px;text-transform:uppercase;white-space:nowrap}
+.h8who i{width:9px;height:9px;display:block}
+.h8plate .tag{font:700 9px var(--mn);letter-spacing:.2em;text-transform:uppercase;margin-bottom:2px;white-space:nowrap}

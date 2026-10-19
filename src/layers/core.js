@@ -184,7 +184,7 @@ function launch(cfg){
  const scene=buildWorld(T);FS=scene;FX=[];if(PT8.applyTod)PT8.applyTod(scene,T,cfg.tod||(D[cfg.track].tod0)||'day');if(PT8.shadeSetup)PT8.shadeSetup(scene);
  const laps=cfg.mode==='cutup'?1:cfg.laps;
  RACE={T,scene,cars:[],state:'count',cd:3.99,t:0,conn:{},shake:0,laps,fin:[],endT:0,mode:cfg.mode,cfg,ending:0,doneT:0,shown:1,sess:{cr:0}};
- const entries=[...cfg.humans.map((h,i)=>({human:true,p:i,id:h.id,alt:h.alt,loan:h.loan})),...(cfg.ai||[]).map((a,i)=>({human:false,p:4+i,id:a.id,alt:a.alt,skill:a.skill,name:a.name,lat:a.lat}))];
+ const entries=[...cfg.humans.map((h,i)=>({human:true,p:i,id:h.id,alt:h.alt,loan:h.loan,name:h.name})),...(cfg.ai||[]).map((a,i)=>({human:false,p:4+i,id:a.id,alt:a.alt,skill:a.skill,name:a.name,lat:a.lat}))];
  const nh=cfg.humans.length,total=entries.length;
  /* grid: CPUs in front, humans behind in career/race, humans first in multiplayer */
  const slots=entries.map((e,i)=>i);
@@ -194,7 +194,7 @@ function launch(cfg){
   const car=BYID[e.id]||BYID.merc;
   while(COLS.length<=k){COLS.push([0xd4ded8,0x8a9fab,0xb2a28c,0x9a8c9e,0xc77,0x7c7,0x77c,0xcc7,0x7cc,0xc7c][COLS.length%10]);CS.push('#'+COLS[COLS.length-1].toString(16).padStart(6,'0'))}
   carChoices[k]=PT8.modelOf(car.id,e.alt);
-  const c=newCar(T,k,e.human);c.cs=car;c.carId=car.id;c.alt=e.alt?1:0;c.gear=0;c.shiftT=0;c.gearFlash=0;c.tune=e.human&&cfg.mode!=='ta'?PT8.tuneGet(e.id,e.alt):null;if(c.tune){const f=PT8.tuneFx(c.tune,!!T.d.gravel);c.cs=Object.assign({},car,{top:car.top*f.top,acc:car.acc*f.acc,grip:car.grip*f.grip,brk:car.brk*f.brk})}c.loan=!!e.loan;c.ptName=e.human?('P'+(e.p+1)):(e.name||NAMES[(k*7)%NAMES.length]);
+  const c=newCar(T,k,e.human);c.cs=car;c.carId=car.id;c.alt=e.alt?1:0;c.gear=0;c.shiftT=0;c.gearFlash=0;c.tune=e.human&&cfg.mode!=='ta'?PT8.tuneGet(e.id,e.alt):null;if(c.tune){const f=PT8.tuneFx(c.tune,!!T.d.gravel);c.cs=Object.assign({},car,{top:car.top*f.top,acc:car.acc*f.acc,grip:car.grip*f.grip,brk:car.brk*f.brk})}c.loan=!!e.loan;c.pnum=e.human?e.p+1:0;c.ptName=e.human?(e.name||('P'+(e.p+1))):(e.name||NAMES[(k*7)%NAMES.length]);
   if(!e.human){c.ai={skill:e.skill||.85,lat:e.lat!=null?e.lat:(((k*37)%7)-3)/4,name:c.ptName};c.m.drv.visible=false}
   const nAI=total-nh;c.slot=e.human?(humanFirst?e.p:nAI+e.p):(humanFirst?nh+(i-nh):i-nh);
   gridSlot(T,c,c.slot);

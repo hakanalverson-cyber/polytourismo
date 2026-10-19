@@ -36,6 +36,7 @@ const SFX={
  fin:()=>{[784,988,1175,1568].forEach((f,i)=>tone(f,f,.22,'triangle',.55,i*.1))},
  near:()=>{hiss(.2,.28,700,3000,.9,'bandpass');tone(900,1500,.08,'square',.14)},
  combo:(n)=>tone(700+Math.min(12,n||1)*70,1000+Math.min(12,n||1)*70,.09,'triangle',.4),
+ boom:()=>{hiss(1,1,420,50,.5,'lowpass');tone(88,26,.9,'sine',1.7);tone(170,48,.55,'sawtooth',.5);hiss(.4,.55,3200,400,.8,'bandpass')},
  crash:()=>{noise(.5,.8,1000);tone(120,40,.4,'sawtooth',.6)},
  hit:(k)=>{const v=Math.min(1,k||.5);hiss(.18,.5*v,1400,400,.6,'lowpass');tone(110,45,.2,'sine',1.1*v)},
  scrape:()=>hiss(.12,.2,3200,2200,2,'bandpass'),

@@ -2,7 +2,7 @@
 (function v9elim(){
 'use strict';
 const P=window.PT8,ord=P.ord;
-const BOOST=1.012;
+const BOOST=1.0125;
 const isEl=Rc=>!!Rc&&Rc.mode==='elim';
 const alive=Rc=>Rc.cars.filter(c=>!c.out);
 const standings=Rc=>alive(Rc).sort((a,b)=>b.unw-a.unw);
@@ -12,7 +12,7 @@ const sc0=stepCar;stepCar=(c,dt)=>{if(c.out){c.vx=c.vy=c.vz=0;c.sp=0;c.in={th:0,
 const cc0=carCollide;carCollide=(a,b)=>{if(a.out||b.out)return;cc0(a,b)};
 const uv0=updateVisual;updateVisual=(c,T,t)=>{uv0(c,T,t);if(c.out&&c.m){c.m.g.visible=false;if(c.m.sh)c.m.sh.visible=false}};
 
-/* last place alive gets +1.2% acceleration and top speed */
+/* last place alive gets +1.25% acceleration and top speed */
 const mul0=P.mul;
 P.mul=c=>{const m=mul0(c),Rc=RACE;if(isEl(Rc)&&Rc.elimLast===c){m.acc*=BOOST;m.top*=BOOST}return m};
 
@@ -37,7 +37,8 @@ function eliminate(Rc){
  const v=al[al.length-1];
  v.out=1;v.fin=1;v.place=al.length;v.finT=1e5-Rc.t;v.txt='OUT';Rc.el.n++;Rc.el.flash=2.4;Rc.el.last=v;Rc.fin.push(v);
  try{fx(v.x,v.y+.8,v.z,0xef6a5a,18,9,.5,.2,10)}catch(e){}
- try{beep(220,.35,'sawtooth',.8)}catch(e){}
+ try{P.sfx('boom')}catch(e){}
+ try{fx(v.x,v.y+.6,v.z,0xff9a3c,34,13,.8,.3,14);fx(v.x,v.y+1.4,v.z,0x2c2c30,22,6,1.3,.5,10)}catch(e){}
  if(v.human){v.pop='ELIMINATED';v.popT=3}
 }
 P.elimTick=(Rc,dt)=>{
@@ -62,7 +63,7 @@ const hu0=hudUpdate;hudUpdate=()=>{hu0();const Rc=RACE;if(!isEl(Rc)||!Rc.el)retu
   const md=q('.h8mode');
   if(md.style.display!=='none'){
    const last=Rc.elimLast===c,urgent=left<5&&Rc.state==='race';
-   md.innerHTML='<div class="cu"><div class="sc"><small>NEXT OUT</small><b'+(urgent?' style="color:#ef6a5a"':'')+'>'+(Rc.state==='race'?left.toFixed(1)+'s':'--')+'</b></div><div class="sc"><small>'+(last?'LAST / +1.2% SPEED':'ALIVE')+'</small><b'+(last?' style="color:#f2c76b"':'')+'>'+al.length+'/'+Rc.cars.length+'</b></div></div>'}
+   md.innerHTML='<div class="cu"><div class="sc"><small>NEXT OUT</small><b'+(urgent?' style="color:#ef6a5a"':'')+'>'+(Rc.state==='race'?left.toFixed(1)+'s':'--')+'</b></div><div class="sc"><small>'+(last?'LAST / +1.25% SPEED':'ALIVE')+'</small><b'+(last?' style="color:#f2c76b"':'')+'>'+al.length+'/'+Rc.cars.length+'</b></div></div><div class="cu" style="margin-top:5px"><div class="sc" style="min-width:190px"><small>NEXT TO GO</small><b'+(Rc.elimLast===c?' style="color:#ef6a5a"':'')+'>'+(Rc.elimLast?(Rc.elimLast===c?'YOU':Rc.elimLast.ptName):'--')+'</b></div></div>'}
   if(c.out){const fn=q('.h8fin');fn.innerHTML='<b style="font-size:.5em">OUT</b><span>SPECTATING / '+ord(c.place)+' PLACE</span>';fn.className='h8fin on'}
   else if(!c.fin){const k=st.indexOf(c)+1;q('.h8pos b').textContent=k;q('.h8pos i').textContent=ord(k).replace(/\d/g,'');q('.h8pos span').textContent='/'+al.length}
   if(el.flash>0&&el.last&&!c.out){const pp=q('.h8pop');pp.textContent=el.last.ptName+' ELIMINATED';pp.className='h8pop on'}
