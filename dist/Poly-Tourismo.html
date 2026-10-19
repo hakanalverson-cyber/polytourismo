@@ -4915,6 +4915,7 @@ const PCOL=['#f1f3f5','#f2c76b','#7fd68a','#ef6a5a'];
 /* ---------------- rally fleet: free rally-spec all-wheel-drive cars with gravel tyres ---------------- */
 P.RALLY_CARS=['ford','lr','urus','gtr','ster'];P.CARS.forEach(c=>{if(c.rallyOnly||((c.cat==='HATCHBACK'||c.cat==='WAGON')&&!P.RALLY_CARS.includes(c.id)))P.RALLY_CARS.push(c.id)});
 const WRCX=['c21','c53','c61','c5','c132'];WRCX.forEach(id=>{if(P.BYID[id]&&!P.RALLY_CARS.includes(id))P.RALLY_CARS.push(id)});P.CARS.forEach(c=>{c.rdiv=P.RALLY_CARS.includes(c.id)?(c.rallyOnly||WRCX.includes(c.id)?'WRC':'CASUAL'):null;if(c.rdiv==='WRC'){c.type='WRC RALLY CAR';c.drive='AWD'}});
+{const setS=(id,sc,cl)=>{const c=P.BYID[id];if(!c)return;c.cls=cl;c.top=+(34+19*sc).toFixed(1);c.acc=+(20+15*sc).toFixed(1);c.grip=+(.96+.15*sc).toFixed(3);c.brk=+(.92+.25*sc).toFixed(3)};setS('c51',.88,'S');setS('c120',.86,'S');setS('c65',.84,'S');setS('c108',.74,'A');P.SORTED.sort((a,b)=>P.CLS.indexOf(a.cls)-P.CLS.indexOf(b.cls)||a.price-b.price)}
 const ow0=P.owns;P.owns=(id,alt)=>P._ro&&P.RALLY_CARS.includes(id)?true:ow0(id,alt);
 P.rallySel=p=>{const sv=P.SV();sv.rsel=sv.rsel||[];let s=sv.rsel[p];if(!s||!P.RALLY_CARS.includes(s.id))s=sv.rsel[p]={id:P.RALLY_CARS[p%P.RALLY_CARS.length],alt:0};return s};
 /* water: grip / speed drag */
