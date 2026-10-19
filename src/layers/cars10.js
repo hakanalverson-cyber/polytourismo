@@ -78,13 +78,13 @@ function catalogue(){
   c.box=c.off>=.8?'wide':s<.5?'std':'close';if(RALLYONLY.includes(k))c.rallyOnly=true;P.CARS.push(c);P.BYID[id]=c;made++})}
  P.CARS.forEach(c=>{c.cat=c.cat||'COUPE';c.real=REALG[c.cat]||6;if(!c.box)c.box=P.BYID[c.id]&&({lr:'wide',urus:'wide',ford:'std',merc:'std',must:'std'})[c.id]||'close'});
  const clsIdx=c=>P.CLS.indexOf(c.cls);P.SORTED.length=0;P.SORTED.push(...[...P.CARS].sort((a,b)=>clsIdx(a)-clsIdx(b)||a.price-b.price));
- P.CATS=CATS;console.info('catalogue',P.CARS.length,'cars');
+ P.CATS=CATS;
 }
 catalogue();
 function install(){const L=N*2;
  for(let i=0;i<L;i++)Object.defineProperty(CAR_MODELS,i,{configurable:true,enumerable:true,get(){return cache[i]||(cache[i]=build(i>>1,i&1))},set(v){cache[i]=v}});
  C10.ready=true;ALL_CARS.forEach(attachCarModel);if(typeof $==='function'&&$('loadState'))$('loadState').textContent=N+' cars';
- console.info('cars10 ready',N,'cars');if(P.onCars10)P.onCars10()}
+ if(P.onCars10)P.onCars10()}
 C10.model=(k,alt)=>CAR_MODELS[k*2+(alt?1:0)];
 async function init(){try{
  const raw=atob(CAR10_BIN_B64),b=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)b[i]=raw.charCodeAt(i);

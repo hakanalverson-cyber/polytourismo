@@ -94,7 +94,7 @@ function loadEmbeddedCarPack(){
    });
    if(!CAR_MODELS.length){console.error('No car models found in embedded pack.');return;}
    ALL_CARS.forEach(attachCarModel);if($('loadState'))$('loadState').textContent=CAR_MODELS.filter(Boolean).length+' / 14';
-   console.info('SystemParty98 loaded',CAR_MODELS.length,'car models from embedded pack.');
+   
   },err=>console.error('Could not parse embedded car pack:',err));
  }catch(err){console.error('Could not decode embedded car pack:',err);}
 }
