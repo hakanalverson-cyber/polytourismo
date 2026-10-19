@@ -25,7 +25,7 @@ function build(k,alt){const m=META[k],G=geoms(k),g=new THREE.Group();g.name='car
  const lift=(META[k].lift||0);
  if(G.body){const b=new THREE.Mesh(G.body,bodyMat);b.name='body';b.position.y=lift;g.add(b)}
  if(G.tires){const t=new THREE.Mesh(G.tires,bodyMat);t.name='tires';g.add(t)}
- if(G.paint){const c=alt?altRGB(k):m.paint,pm=new THREE.MeshStandardMaterial({color:srgb(c[0],c[1],c[2]),roughness:.42,metalness:.32,flatShading:true});const p=new THREE.Mesh(G.paint,pm);p.name='paint';p.position.y=lift;g.add(p)}
+ if(G.paint){const c=alt?altRGB(k):m.paint,pm=new THREE.MeshStandardMaterial({color:srgb(c[0],c[1],c[2]),roughness:.58,metalness:.18,flatShading:true});const p=new THREE.Mesh(G.paint,pm);p.name='paint';p.position.y=lift;g.add(p)}
  /* invisible nose / tail markers so the livery baker knows which way the car faces (front is -Z in model space) */
  const mk=(n,z)=>{const t=new THREE.BufferGeometry();t.setAttribute('position',new THREE.BufferAttribute(new Float32Array([0,.5,z,0,.5,z,0,.5,z]),3));const q=new THREE.Mesh(t,new THREE.MeshBasicMaterial());q.name=n;q.visible=false;g.add(q)};
  mk('front',-m.len/2*.98);mk('rear',m.len/2*.98);
