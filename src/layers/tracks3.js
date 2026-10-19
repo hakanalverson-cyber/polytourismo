@@ -21,6 +21,8 @@ function dressRA(T,sc){
  const lerp=(a,b,t)=>a+(b-a)*t;
  const at=(k,l,dy)=>{k=((k%N)+N)%N;const c=Math.cos(T.psi[k]),s=Math.sin(T.psi[k]);return[T.x[k]+c*l,T.y[k]-l*T.bank[k]+(dy||0),T.z[k]-s*l]};
  const g=new THREE.Group();g.name='raDress';
+ /* backdrop mountains were laid out for a ~600 m world: push them out so nothing stands in or over this much bigger circuit */
+ sc.traverse(o=>{const q=o.geometry&&o.geometry.parameters;if(q&&o.geometry.type==='ConeGeometry'&&q.radius>=80&&q.height>=60){o.position.x*=2.0;o.position.z*=2.0}});
  /* corner indices on the sampled track */
  const M={};for(const k in RA.marks){const p=RA.pts[RA.marks[k]];M[k]=near(T,p[0],p[1])}
  /* curvature per sample (positive = turning left for the car, because lateral +l is the car's left) */
