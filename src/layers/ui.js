@@ -329,7 +329,7 @@ function openShow(kind,o){P._ro=!!o.rally&&kind==='garage';SR.lv=false;SR.kind=k
  const list=showList();if(kind==='garage'){const s=SR.rally?P.rallySel(SR.player):P.SV().sel[SR.player];const ok=list.find(c=>c.id===s.id&&!c.off);const f=ok||list.find(c=>!c.off)||list[0];SR.id=f.id;SR.alt=(ok&&P.owns(f.id,s.alt))?s.alt:(P.owns(f.id,0)?0:1)}
  else{if(!BYID[SR.id])SR.id='merc';if(SR.alt&&!P.owns(SR.id,1))SR.alt=0}
  renderShow();show('s8show');}
-function showList(){const sv=P.SV();let l=SORTED.map(c=>({...c,off:false}));if(SR.rally&&SR.kind==='garage')return l.filter(c=>P.RALLY_CARS.includes(c.id));if(SR.kind==='garage'){l=l.filter(c=>(sv.owned[c.id]||0)>0);l.forEach(c=>{c.off=SR.cap!=null&&CLS.indexOf(c.cls)>CLS.indexOf(SR.cap)});if(!l.length)l=[{...BYID.merc,off:false}]}return l}
+function showList(){const sv=P.SV();let l=SORTED.map(c=>({...c,off:false}));if(SR.rally&&SR.kind==='garage')return l.filter(c=>P.RALLY_CARS.includes(c.id));l=l.filter(c=>!c.rallyOnly);if(SR.kind==='garage'){l=l.filter(c=>(sv.owned[c.id]||0)>0);l.forEach(c=>{c.off=SR.cap!=null&&CLS.indexOf(c.cls)>CLS.indexOf(SR.cap)});if(!l.length)l=[{...BYID.merc,off:false}]}return l}
 function statBars(c,tn){const f=tn?P.tuneFx(tn,false):{top:1,acc:1,grip:1,brk:1},fg=tn?P.tuneFx(tn,true):{grip:1};
  const gt=P.gearTops(c).map(v=>v*3.6*f.top),hi=gt[gt.length-1];const n=(v,a,b)=>clamp((v-a)/(b-a),0,1);
  /* [label, tuned bar, text, ratio vs stock, stock bar] */

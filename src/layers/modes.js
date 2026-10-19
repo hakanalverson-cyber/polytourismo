@@ -144,7 +144,7 @@ P.careerRank=()=>{const d=P.SV().career.done;let r=0;while(r<RANKS.length-1&&d['
 P.careerDone=id=>P.SV().career.done[id];
 P.eventLocked=ev=>{const d=P.SV().career.done,r=P.careerRank();if(ev.rank>r)return'RANK LOCKED';if(ev.final){let n=0;for(let i=0;i<4;i++)if(d['r'+ev.rank+'e'+i])n++;if(n<3)return'WIN '+(3-n)+' MORE EVENTS'}return''};
 P.eligibleCars=cap=>P.ownedList().filter(c=>cap==null||CLS.indexOf(c.cls)<=CLS.indexOf(cap));
-P.loanerFor=(cap,rally)=>{const pool=CARS.filter(c=>cap==null||CLS.indexOf(c.cls)<=CLS.indexOf(cap));pool.sort((a,b)=>CLS.indexOf(b.cls)-CLS.indexOf(a.cls)||(rally?b.off-a.off:b.top-a.top));return pool[0]||BYID.merc};
+P.loanerFor=(cap,rally)=>{const pool=CARS.filter(c=>(rally||!c.rallyOnly)&&(cap==null||CLS.indexOf(c.cls)<=CLS.indexOf(cap)));pool.sort((a,b)=>CLS.indexOf(b.cls)-CLS.indexOf(a.cls)||(rally?b.off-a.off:b.top-a.top));return pool[0]||BYID.merc};
 P.eventCfg=(ev,humanPick)=>{const rk=RANKS[ev.rank],rally=ev.type==='rally';
  const cfg={mode:'career',ev,track:ev.track,laps:ev.laps||1,humans:[humanPick],cap:ev.cap};
  if(ev.type==='cutup'){cfg.mode='cutup';cfg.cutup=true;cfg.time=120+ev.rank*5;cfg.ai=[]}
