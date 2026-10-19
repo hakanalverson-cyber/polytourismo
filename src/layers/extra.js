@@ -15,17 +15,20 @@ updateVisual=(c,T,t)=>{prev(c,T,t);const m=c.m;if(!m||!RACE)return;const dt=Math
  /* --- low-pass the body attitude: removes one-frame spikes when wheels hop between dirt and road --- */
  {const g=m.g,k=1-Math.exp(-dt*24);if(c.respT>0||c.exp>0||c.svx===undefined||c.lastSmT!==RACE){c.svx=g.rotation.x;c.svz=g.rotation.z}else{const dx=g.rotation.x-c.svx,dz=g.rotation.z-c.svz;c.svx+=dx*k;c.svz+=dz*k;g.rotation.x=c.svx;g.rotation.z=c.svz}c.lastSmT=RACE}
  /* --- sway (visual only) --- */
- const cls=(c.cs&&c.cs.cls)||'B',amt=SWAY[cls]||0;
+ const cls=(c.cs&&c.cs.cls)||'B',RL=!!(RACE.cfg&&RACE.cfg.rally),amt=RL?Math.max(SWAY[cls]||0,.9)*1.7:(SWAY[cls]||0);
  if(amt>0&&c.respT<=0&&!(c.exp>0)&&!c.cool0){
   const yawR=wr(c.yaw-(c.pyaw===undefined?c.yaw:c.pyaw))/dt;c.pyaw=c.yaw;
   const al=clamp(c.sp*yawR,-26,26),ac=((c.sp-(c.psp===undefined?c.sp:c.psp))/dt);c.psp=c.sp;
   const rough=(c.mt&&c.mt!==undefined&&(c.mt.grip<.9||T.d.gravel))?clamp(c.sp/30,0,1):0;
-  const tr=clamp(al*.0032*amt,-.11,.11)+(rough?(Math.random()-.5)*.03*rough*amt:0),tp=clamp(-ac*.0021*amt,-.07,.07)+(rough?(Math.random()-.5)*.02*rough*amt:0);
-  const w0=10.5,zt=.3+.15*(1-amt);c.swr=c.swr||0;c.swp=c.swp||0;c.swvr=c.swvr||0;c.swvp=c.swvp||0;
+  const lim=RL?2.2:1,tr=clamp(al*.0032*amt,-.11*lim,.11*lim)+(rough?(Math.random()-.5)*.03*rough*amt:0),tp=clamp(-ac*.0021*amt,-.07*lim,.07*lim)+(rough?(Math.random()-.5)*.02*rough*amt:0);
+  const w0=RL?7.4:10.5,zt=RL?.2:.3+.15*(1-amt);c.swr=c.swr||0;c.swp=c.swp||0;c.swvr=c.swvr||0;c.swvp=c.swvp||0;
   /* semi-implicit spring: underdamped so the body rocks */
   c.swvr+=(-w0*w0*(c.swr-tr)-2*zt*w0*c.swvr)*dt;c.swr+=c.swvr*dt;
   c.swvp+=(-w0*w0*(c.swp-tp)-2*zt*w0*c.swvp)*dt;c.swp+=c.swvp*dt;
   m.g.rotation.x+=c.swp;m.g.rotation.z+=c.swr;
+  if(RL){/* heave: the body rides over dips and bumps on soft springs */
+   const ay=(c.vy-(c.pvy===undefined?c.vy:c.pvy))/dt;c.pvy=c.vy;c.hvy=c.hvy||0;c.hh=c.hh||0;const tg=clamp(-ay*.012,-.32,.32);
+   c.hvy+=(-52*(c.hh-tg)-2*.22*7.2*c.hvy)*dt;c.hh+=c.hvy*dt;m.g.position.y+=clamp(c.hh,-.4,.4);m.g.rotation.x+=clamp(c.hh*.12,-.05,.05)}
   if(m.visualModel)m.visualModel.position.y+=Math.abs(c.swr)*.35;
  }else{c.swr=c.swp=c.swvr=c.swvp=0;c.pyaw=c.yaw;c.psp=c.sp}
  /* --- shadow --- */

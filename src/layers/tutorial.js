@@ -13,6 +13,9 @@ const S=[
  {t:'Elimination',info:1,x:'In <b>Elimination</b> the car in last place is knocked out on every timer. Last place also gets a small speed boost, so staying out of the back is the job. Setup lets you change the interval and CPU level.'},
  {t:'Weather',info:1,x:'Rain, storm and fog change the grip and visibility. Set it in the <b>Weather</b> row of Multiplayer or Elimination setup. In the wet, brake earlier and be gentle with the throttle.'},
  {t:'Tuning',info:1,x:'In the <b>Garage</b> you can tune <b>gearing, aero, tyres and more</b>. Changes show on the performance chart with a green <b>+</b> bar. Tuning applies in Multiplayer, Elimination and Career (not Time Attack).'},
+ {t:'Rally gearbox',part:2,info:1,x:'Rally uses <b>real gearboxes</b>: every car has the number of gears it has in real life (6 to 9). Shifting is manual: <b>E</b> up, <b>Q</b> down, <b>W/S</b> throttle and brake, <b>A/D</b> steer. Short gears pull hard, tall gears go fast. Upshift near the limit, drop a gear before a corner. (Auto-shift in Settings still works.)'},
+ {t:'Handbrake and camera',part:2,info:1,x:'Hold <b>Space</b> to lock the rear wheels and swing the tail round hairpins and junctions, then release to get grip back. Press <b>C</b> to cycle the camera: chase, hood, bumper, far chase. The suspension is much softer in Rally, so cars ride dips and crests.'},
+ {t:'Pace notes and checkpoints',part:2,info:1,x:'The arrow shows the next corner, turning the way it turns, and hotter colours mean tighter (hairpin is red). <b>WATER</b>, <b>JUMP</b> and <b>NARROW</b> warn you about fords, crests and pinch points. Each stage has gates that show your split time, and you can watch a replay at the end. Players 2 to 4 have their own shift, handbrake and camera keys on the briefing screen.'},
  {t:'Lesson complete',done:1,x:'That is the basics. Keep driving as long as you like, or head back to the menu.'}];
 let st=null;
 const el=()=>document.getElementById('tut');
@@ -23,7 +26,7 @@ function mkEl(){let e=el();if(e)return e;e=document.createElement('div');e.id='t
  e.querySelector('#tutQuit').onclick=()=>{P.sfx('back');P.cleanupRace();show('menu');st=null;e.style.display='none'};return e}
 function paint(){const e=mkEl(),s=S[st.i],last=!!s.done;e.style.display='';e.classList.toggle('ok',!!st.okT);e.querySelector('#tutBody').style.opacity=1;
  e.querySelector('#tutN').textContent=(st.i+1)+' / '+S.length;e.querySelector('#tutBar u').style.width=((st.i+(st.okT?1:0))/S.length*100)+'%';
- e.querySelector('#tutT').textContent=(st.okT?'✓ ':'')+s.t;e.querySelector('#tutX').innerHTML=typeof s.x==='function'?s.x():s.x;
+ e.querySelector('#tutT').textContent=(st.okT?'✓ ':'')+(s.part?'PART 2 / RALLY · ':'')+s.t;e.querySelector('#tutX').innerHTML=typeof s.x==='function'?s.x():s.x;
  const b=e.querySelector('#tutSkip');b.textContent=last?'Back to menu':s.info?'Next':'Skip step';b.className=(s.info||last)?'pri':'';
  e.querySelector('#tutQuit').style.display=last?'none':''}
 function next(){if(st.hold)return;P.sfx('click');const e=mkEl(),bd=e.querySelector('#tutBody'),mine=st;bd.style.opacity=0;st.i=Math.min(S.length-1,st.i+1);st.okT=0;st.s={};st.hold=1;setTimeout(()=>{if(st!==mine)return;st.hold=0;paint();bd.style.opacity=1},260);if(S[st.i].done){try{const sv=P.SV();sv.tutDone=1;P.save()}catch(e){}P.sfx('medal')}}

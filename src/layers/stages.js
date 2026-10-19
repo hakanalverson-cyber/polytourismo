@@ -39,11 +39,12 @@ function lengthen(d,target,amp,grow,lockIdx,jumpAt){const lock=new Set();let p=d
    const sg=((i+pass)%2?1:-1)*Math.min(amp*L,d.kc||34);out.push([Math.round((a[0]+b[0])/2-dz/L*sg),Math.round((a[1]+b[1])/2+dx/L*sg),+((a[2]+b[2])/2).toFixed(1)])}
   p=out}
  d.pts=p;if(d.fords)d.fords=fr.map(r=>p.indexOf(r));if(jr)d.jumps=[[p.indexOf(jr),.5]]}
-const TARGET=7600;autu.kc=52;ash.kc=46;ash.cs=2.9;
-lengthen(mang,TARGET,.4,2.2,[...mang.fords.flatMap(k=>[k-1,k,k+1])]);
-lengthen(terr,TARGET,.22,1.9,[]);
-{const lk=[];ash.pts.forEach((q,i)=>{if(Math.hypot(q[0],q[1])<235){lk.push(i-1,i,i+1)}});lengthen(ash,TARGET,.5,2.9,lk.map(i=>(i+ash.pts.length)%ash.pts.length))}
-lengthen(autu,TARGET,.5,2.8,[...autu.fords.flatMap(k=>[k-1,k,k+1]),4,5],4);
+const TARGET=7600;autu.kc=52;ash.kc=46;ash.cs=3.0;
+const ev=d=>d.pts.map((q,i)=>i).filter(i=>i%5===2);
+lengthen(mang,TARGET,.4,2.3,[...mang.fords.flatMap(k=>[k-1,k,k+1]),...ev(mang)]);
+lengthen(terr,TARGET,.24,2.0,ev(terr));
+{const lk=[];ash.pts.forEach((q,i)=>{if(Math.hypot(q[0],q[1])<235){lk.push(i-1,i,i+1)}});lengthen(ash,TARGET,.5,3.0,[...lk.map(i=>(i+ash.pts.length)%ash.pts.length),...ev(ash).filter(i=>Math.hypot(ash.pts[i][0],ash.pts[i][1])>240)])}
+lengthen(autu,TARGET,.5,3.0,[...autu.fords.flatMap(k=>[k-1,k,k+1]),4,5,...ev(autu)],4);
 mang.hw=5;terr.hw=4.8;ash.hw=5;autu.hw=4.8;[mang,terr,ash,autu].forEach(d=>{d.hard=1});
 D.push(mang,terr,ash,autu);
 const J0=D.length-4;
@@ -73,9 +74,34 @@ sampleTrack=d=>{const T=ps(d);T.fords=[];if(!d.fords&&!d.crater)return T;const N
   return h};
  return T};
 
+/* dips, crests and bumps along the whole stage; calm near the start, fords and jumps so those stay clean */
+function undulate(T,d){const N=T.N,sp=T.sp,TP=Math.PI*2;let sd=(N*104729+d.id*977)%2147483647||1;const rr=()=>(sd=(sd*48271)%2147483647)/2147483647;
+ const circ=(a,b)=>{const q=Math.abs(a-b);return Math.min(q,N-q)*sp};
+ const big=[],small=[];for(let k=0;k<4;k++)big.push({A:1.0+rr()*1.3,w:75+rr()*85,p:rr()*TP});for(let k=0;k<3;k++)small.push({A:.07+rr()*.1,w:11+rr()*14,p:rr()*TP});
+ const cpl=P.cpsOf(T),e1=rr()*TP,e2=rr()*TP,e3=rr()*TP,e4=rr()*TP,ssm=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t)};
+ for(let i=0;i<N;i++){const s=i*sp;let tp=ssm(150,350,circ(i,0));for(const f of T.fords||[])tp=Math.min(tp,ssm(f.w+90,f.w+230,circ(i,f.i)));for(const j of T.jumps||[])tp=Math.min(tp,ssm(160,280,circ(i,j)));for(const q of cpl)tp=Math.min(tp,ssm(60,170,circ(i,q)));
+  if(tp<=0)continue;const env=ssm(-.15,.5,.5*Math.sin(s/330+e1)+.5*Math.sin(s/191+e2)),env2=ssm(0,.6,.5*Math.sin(s/260+e3)+.5*Math.sin(s/143+e4));
+  let dy=0;for(const w of big)dy+=w.A*Math.sin(TP*s/w.w+w.p);dy*=env*.7*(d.id===10?1.9:1.25);let bp=0;for(const w of small)bp+=w.A*Math.sin(TP*s/w.w+w.p);dy+=bp*env2;T.y[i]+=dy*tp}
+ T.cpts=[];for(let i=0;i<N;i+=6)T.cpts.push([T.x[i],T.z[i],T.y[i]]);delete T.kap;delete T.kz;delete T.flat;delete T.cor}
 /* ---------------- pinch points: the road shrinks to barely wider than a car ---------------- */
+/* flat/straight measures per sample (radius and steepest grade within +-half metres) */
+function flatMap(T,half){if(T.flat&&T.flat.h===half)return T.flat;const N=T.N,sp=T.sp,K=P.kappa(T),r=Math.round(half/sp),R=new Float32Array(N),G=new Float32Array(N),gs=new Float32Array(N);
+ for(let i=0;i<N;i++)gs[i]=Math.abs(T.y[(i+1)%N]-T.y[i])/sp*100;
+ for(let i=0;i<N;i++){let m=0,g=0;for(let k=-r;k<=r;k++){const a=(i+k+N)%N;if(K[a]>m)m=K[a];if(gs[a]>g)g=gs[a]}R[i]=1/Math.max(m,1e-5);G[i]=g}
+ return T.flat={h:half,R,G}}
+function rotateTrack(T,s){const N=T.N;if(!s)return;
+ for(const k of['x','z','y','hw','psi','bank','gap','wall','ice','br','wh','tn']){const a=T[k];if(!a||a.length!==N)continue;const c=a.slice();for(let i=0;i<N;i++)a[i]=c[(i+s)%N]}
+ const sh=i=>((i-s)%N+N)%N;
+ T.jumps=(T.jumps||[]).map(sh);T.jumpCaps=(T.jumpCaps||[]).map(sh);(T.pads||[]).forEach(p=>{p.i=sh(p.i)});(T.fords||[]).forEach(f=>{f.i=sh(f.i)});(T.tunnels||[]).forEach(t=>{t[0]=sh(t[0]);t[1]=sh(t[1])});
+ const g=[];T.grid.forEach((ids,k)=>g.push([k,Array.from(ids).map(sh)]));T.grid.clear();g.forEach(q=>T.grid.set(q[0],q[1]));
+ delete T.kap;delete T.kz;delete T.cor;delete T.flat;delete T.cps}
+/* the start line goes on the straightest, flattest piece of road that is clear of fords and jumps */
+function pickStart(T){const N=T.N,sp=T.sp,fm=flatMap(T,60),circ=(a,b)=>{const q=Math.abs(a-b);return Math.min(q,N-q)*sp};
+ const ok=i=>{for(const f of T.fords||[])if(circ(i,f.i)<f.w+110)return false;for(const j of T.jumps||[])if(circ(i,j)<150)return false;const r=Math.round(70/sp);for(let k=-r;k<=r;k++){const a=(i+k+N)%N;if(T.gap[a]||(T.tn&&T.tn[a]))return false}return true};
+ for(const [Rm,Gm] of [[260,1.8],[200,2],[150,2.3],[120,2.6],[100,3],[80,3.5],[60,4.5]]){let best=-1,bs=-1;for(let i=0;i<N;i+=2){if(fm.R[i]<Rm||fm.G[i]>Gm||!ok(i))continue;const sc=fm.R[i]-fm.G[i]*40;if(sc>bs){bs=sc;best=i}}if(best>=0)return best}
+ return 0}
 const sf0=sampleTrack;
-sampleTrack=d=>{const T=sf0(d);T.pinch=[];if(!d.hard)return T;const N=T.N,sp=T.sp,n=Math.max(4,Math.round(T.L/1250)),HWm=2.2;let sd=(N*7919+(d.fords?d.fords.length:0)*131)%2147483647||1;const rr=()=>(sd=(sd*48271)%2147483647)/2147483647;
+sampleTrack=d=>{const T=sf0(d);T.pinch=[];if(!d.hard)return T;if(!T.rooted){T.rooted=1;rotateTrack(T,pickStart(T))}const N=T.N,sp=T.sp,n=Math.max(4,Math.round(T.L/1250)),HWm=2.2;let sd=(N*7919+(d.fords?d.fords.length:0)*131)%2147483647||1;const rr=()=>(sd=(sd*48271)%2147483647)/2147483647;
  const circ=(a,b)=>{const q=Math.abs(a-b);return Math.min(q,N-q)*sp};
  for(let j=0;j<n;j++){const core=50+rr()*40,ramp=42;let best=-1;
   for(let t=0;t<40&&best<0;t++){const i=Math.round(N*((j+.5)/n)+(rr()-.5)*N/n*.7+N)%N;let ok=circ(i,0)>260;
@@ -83,7 +109,7 @@ sampleTrack=d=>{const T=sf0(d);T.pinch=[];if(!d.hard)return T;const N=T.N,sp=T.s
    for(let k=-12;k<=12&&ok;k++)if(T.gap[(i+k*6+N)%N])ok=false;if(ok)best=i}
   if(best<0)continue;const c=best,m=Math.min(HWm+rr()*.15,T.hw[c]);T.pinch.push({i:c,core,ramp});
   for(let i=0;i<N;i++){const a=circ(i,c);if(a<core/2+ramp){const pf=1-sm(core/2,core/2+ramp,a);T.hw[i]=Math.min(T.hw[i],lerp(T.hw[i],m,pf))}}}
- return T};
+ undulate(T,d);return T};
 
 /* ---------------- helpers ---------------- */
 const roadPts=T=>{const a=[];for(let i=0;i<T.N;i+=3)a.push([T.x[i],T.z[i],T.hw[i]]);return a};
@@ -193,7 +219,7 @@ buildWorld=T=>{const sc=bw(T),d=T.d;
   const sh=scatterW(T,sc,r,120,5,100,rp,(x,h,z,o)=>{o.push([x,h+1.3,z,.8+r()*.9,1+r()*1.4,.8+r()*.9,r()*6])});inst(sc,new THREE.ConeGeometry(.9,2.6,4),sh,[0x1b1c22,0x24252c]);}
  /* mountains ring: tint to the stage */
  const mcol={mang:0x5b8a76,terr:0xb8a06a,ash:0x3d3233,autu:0xab6b3c}[k];
- sc.traverse(o=>{if(o.isMesh&&o.geometry&&o.geometry.type==='ConeGeometry'&&o.geometry.parameters.radius>=80&&o.geometry.parameters.height>=60){o.material=o.material.clone();o.material.color.setHex(S(mcol)).multiplyScalar(.85+.3*Math.abs(Math.sin(o.position.x*.01)));if(k==='ash')o.scale.y=1.35;o.position.x*=1.35;o.position.z*=1.35}});
+ sc.traverse(o=>{if(o.isMesh&&o.geometry&&o.geometry.type==='ConeGeometry'&&o.geometry.parameters.radius>=80&&o.geometry.parameters.height>=60){o.material=o.material.clone();o.material.color.setHex(S(mcol)).multiplyScalar(.85+.3*Math.abs(Math.sin(o.position.x*.01)));if(k==='ash')o.scale.y=1.35;{const rad=o.geometry.parameters.radius,x=o.position.x*1.35,z=o.position.z*1.35,L0=Math.hypot(x,z)||1,ux=x/L0,uz=z/L0;let L=L0;for(let n=0;n<90&&rdist(rp,ux*L,uz*L)<rad+50;n++)L+=30;o.position.x=ux*L;o.position.z=uz*L}}});
  /* backdrop */
  sc.traverse(o=>{if(o.isMesh&&o.geometry&&o.geometry.type==='CylinderGeometry'&&o.geometry.parameters.radiusTop===1300&&o.material.map){const t=pano(T,k);o.material.map.dispose();o.material.map=t;o.material.needsUpdate=true}});
  /* water */
@@ -213,10 +239,13 @@ buildWorld=T=>{const sc=bw(T),d=T.d;
 
 
 /* ---------------- checkpoints (gates every ~900 m; split times are kept per run) ---------------- */
-P.cpsOf=T=>{if(T.cps)return T.cps;const N=T.N,K=Math.max(5,Math.round(T.L/950)),out=[];
+P.cpsOf=T=>{if(T.cps)return T.cps;const N=T.N,K=Math.max(5,Math.round(T.L/950)),out=[],fm=flatMap(T,55);
  const circ=(a,b)=>{const d=Math.abs(a-b);return Math.min(d,N-d)*T.sp};
- const bad=i=>{if(T.gap[i])return true;for(const j of T.jumps||[])if(circ(i,j)<70)return true;for(const f of T.fords||[])if(circ(i,f.i)<f.w+50)return true;for(const q of T.pinch||[])if(circ(i,q.i)<q.core/2+q.ramp+15)return true;return false};
- for(let k=1;k<K;k++){const base=Math.round(N*k/K);let pick=base;for(let o=0;o<260;o+=3){const a=(base+o)%N,b=(base-o+N)%N;if(!bad(a)){pick=a;break}if(!bad(b)){pick=b;break}}out.push(pick)}
+ const bad=i=>{if(T.gap[i])return true;if(circ(i,0)<260)return true;for(const j of T.jumps||[])if(circ(i,j)<70)return true;for(const f of T.fords||[])if(circ(i,f.i)<f.w+50)return true;for(const q of T.pinch||[])if(circ(i,q.i)<q.core/2+q.ramp+15)return true;return false};
+ let prev=0;
+ for(let k=1;k<K;k++){const base=Math.round(N*k/K);let pick=-1;
+  for(const [Rm,Gm] of [[220,3],[160,4],[110,5],[80,7],[50,10],[0,99]]){let bo=1e9;for(let o=-170;o<=170;o+=2){const a=((base+o)%N+N)%N;if(bad(a)||fm.R[a]<Rm||fm.G[a]>Gm)continue;if(circ(a,prev)<380)continue;if(Math.abs(o)<bo){bo=Math.abs(o);pick=a}}if(pick>=0)break}
+  if(pick<0)pick=base;out.push(pick);prev=pick}
  T.cps=out;T.cpK=K;return out};
 function post(T,i,sd,hw,mat_,beam,g,top){const lx=sd*(hw+1.2),wx=T.x[i]+Math.cos(T.psi[i])*lx,wz=T.z[i]-Math.sin(T.psi[i])*lx,yr=T.y[i]-lx*T.bank[i],gr=T.terr(wx,wz),bot=Math.min(gr,yr)-1.2,h=yr+top-bot;
  const p=new THREE.Mesh(new THREE.BoxGeometry(.55,h,.55),mat_);p.position.set(lx,bot+h/2-T.y[i],0);g.add(p);return{lx,yr}}
@@ -233,5 +262,5 @@ function footing(T,sc){const hw=T.hw[0],pm=new THREE.MeshStandardMaterial({color
 const bwG=buildWorld;
 buildWorld=T=>{const sc=bwG(T);if(!T.d.hard)return sc;const cps=P.cpsOf(T);cps.forEach((i,k)=>sc.add(gate(T,i,k+1,cps.length+1)));footing(T,sc);return sc};
 /* medal references: filled by the AI-lap test (tests/stages_laps.py) */
-Object.assign(P.MEDAL_REF,{10:224.2,11:219.2,12:242.1,13:213.6});
+Object.assign(P.MEDAL_REF,{10:213,11:232.6,12:218.3,13:218.9});
 })();
