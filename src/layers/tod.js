@@ -14,7 +14,7 @@ P.resetTod=()=>{if(U)setU([1,1,1],[0,0,0],1);R.toneMappingExposure=P.baseExpo||R
 const hex=h=>'#'+h.toString(16).padStart(6,'0');
 function skyTex(t){return ctex(2,64,(x,w,h)=>{const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,hex(t.sky[0]));g.addColorStop(.5,hex(t.sky[1]));g.addColorStop(1,hex(t.sky[1]));x.fillStyle=g;x.fillRect(0,0,w,h)})}
 P.applyTod=(sc,T,key)=>{const t=key==='day'&&T.d.id===3?{sky:[0x6aa4e8,0xcfe6ff],fog:0xbcd2e6,hemi:[0xdfeaff,0x5a5a78,1.05],sun:[0xfff2d6,.95,[-150,250,100]],mul:[1,1,1],add:[0,0,0],sat:.95,exp:1,stars:0}:TOD[key];P.curTod=key;const d=T.d;
- if(!t||(key==='day'&&d.id!==3)||(key==='night'&&d.id===3)){P.resetTod();return}
+ if(!t||(key==='day'&&d.id!==3)){P.resetTod();return}
  for(const o of sc.children){
   if(o.isHemisphereLight){o.color.setHex(t.hemi[0]);o.groundColor.setHex(t.hemi[1]);o.intensity=t.hemi[2]*(d.id==3?.78:1)}
   else if(o.isDirectionalLight){o.color.setHex(t.sun[0]);o.intensity=t.sun[1]*(d.id==3?.7:1);o.position.set(t.sun[2][0],t.sun[2][1],t.sun[2][2])}
