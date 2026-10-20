@@ -7383,7 +7383,7 @@ function harborTunnels(sc,T,H){
 /* ---------- level dressing assembled from the CC0 model pack (Kenney ships/vehicles, KayKit city + cargo bits) ---------- */
 function harborDress(sc,T,H,X){const HP=P.HP;if(!HP||!HP.ready){console.warn('harbor: model pack not ready');return}
  const {r,rd,WATER,occ,frame,cat}=X,N=T.N,L={},D=n=>HP.defs[n];
- const put=(n,x,z,yaw,s,o)=>{const d=D(n);if(!d)return;o=o||{};(L[n]=L[n]||[]).push([x,o.y!=null?o.y:0,z,yaw,s,o.tint,o.sy])};
+ const put=(n,x,z,yaw,s,o)=>{const d=D(n);if(!d)return;o=o||{};(L[n]=L[n]||[]).push([x,o.y!=null?o.y:(/^bld_/.test(n)?-d.min.y*s*(o.sy||1)-.2:0),z,yaw,s,o.tint,o.sy])};
  const fit=(n,h)=>D(n)?h/D(n).h:1, fitW=(n,w)=>D(n)?w/Math.max(D(n).w,D(n).d):1;
  const free=(x,z,rad)=>{for(const q of occ)if(Math.hypot(q[0]-x,q[1]-z)<q[2]+rad)return false;return true};
  const land=(x,z,m)=>!WATER(x,z)&&!WATER(x+m,z)&&!WATER(x-m,z)&&!WATER(x,z+m)&&!WATER(x,z-m)&&Math.abs(x)<690&&Math.abs(z)<690;
@@ -7395,7 +7395,7 @@ function harborDress(sc,T,H,X){const HP=P.HP;if(!HP||!HP.ready){console.warn('ha
    const hwk=T.hw[k],lat=sd*(hwk+2.4+dp/2),f=frame(T,k,lat),yaw=Math.atan2(-Math.cos(T.psi[k])*sd,Math.sin(T.psi[k])*sd);
    const half=Math.hypot(wp,dp)/2*.92;
    if(rd(f[0],f[1])-half>=hwk+2.2&&free(f[0],f[1],half*.8)&&land(f[0],f[1],4)){put(nm,f[0],f[1],yaw,s,{sy,tint:pick(ROOF)});occ.push([f[0],f[1],half*.8]);if(r()<.14)smk.push([f[0]+Math.sin(yaw)*1,D(nm).h*s*sy+.2,f[1]+Math.cos(yaw)*1])}
-   k+=Math.max(2,Math.round((wp+.4)/T.sp))}}
+   k+=Math.max(2,Math.round((wp*.97)/T.sp))}}
  /* 2) pavement furniture in the alleys: bins, hydrants, boxes, benches stay on the kerb strip, never on the asphalt */
  const FUR=[['dumpster',1.3],['firehydrant',.9],['trash_A',.8],['trash_A',.8],['box_A',.9],['box_B',.8],['barrel',.9],['bench',.85],['bush',1.4]];
  for(const [a0,a1] of H.alleys)for(let k=a0+3;k<a1-2;k+=Math.round(11/T.sp)+((r()*4)|0)){const sd=r()<.5?-1:1,[nm,h]=pick(FUR);if(!D(nm))continue;
@@ -7432,7 +7432,7 @@ function harborDress(sc,T,H,X){const HP=P.HP;if(!HP||!HP.ready){console.warn('ha
   while(k<N-2){if(!openK(k)){k+=2;continue}
    const nm=pick(BLDS);if(!nm)break;const w0=D(nm).w,d0=D(nm).d,wt=(row?12:8.5)+r()*(row?9:6),s=wt/w0,wp=w0*s,dp=d0*s,sy=(row?1.5:1.0)+r()*(row?1.4:.8);
    const hwk=T.hw[k],lat=sd*(hwk+8+row*17+dp/2+r()*2),f=frame(T,k,lat),yaw=Math.atan2(-Math.cos(T.psi[k])*sd,Math.sin(T.psi[k])*sd),half=Math.hypot(wp,dp)/2*.9;
-   if(rd(f[0],f[1])-half>=hwk+6&&free(f[0],f[1],half*.85)&&land(f[0],f[1],half*.7)){put(nm,f[0],f[1],yaw,s,{sy,tint:pick(ROOF)});occ.push([f[0],f[1],half*.85]);if(r()<.1)smk.push([f[0],D(nm).h*s*sy+.2,f[1]]);k+=Math.max(1,Math.round((wp+(r()<.22?3+r()*7:.5))/T.sp))}
+   if(rd(f[0],f[1])-half>=hwk+6&&free(f[0],f[1],half*.85)&&land(f[0],f[1],half*.7)){put(nm,f[0],f[1],yaw,s,{sy,tint:pick(ROOF)});occ.push([f[0],f[1],half*.85]);if(r()<.1)smk.push([f[0],D(nm).h*s*sy+.2,f[1]]);k+=Math.max(1,Math.round((wp*.97+(r()<.06?1.5+r()*2:0))/T.sp))}
    else k+=2}}
  /* trees and hedges along the pavement edge (pack models, not pots) */
  {const pkInst=(nm,rows)=>{const q=P.BLD&&P.BLD[nm];if(!q||!P.PROPKIT||!rows.length)return;const im=new THREE.InstancedMesh(q.g.clone(),P.PROPKIT.MAT,rows.length),o=new THREE.Object3D();rows.forEach((w,i)=>{o.position.set(w[0],w[1],w[2]);o.rotation.set(0,w[3],0);o.scale.setScalar(w[4]);o.updateMatrix();im.setMatrixAt(i,o.matrix)});im.frustumCulled=false;im.userData.ptProp=nm;sc.add(im)};
