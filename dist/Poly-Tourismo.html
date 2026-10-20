@@ -291,7 +291,7 @@ car.sh=mesh(new THREE.CircleGeometry(1.3,12),new THREE.MeshBasicMaterial({color:
 loadEmbeddedCarPack();
 /* ---------------- race state ---------------- */
 let scr='menu',RACE=null,paused=false,selP=1,selL=3,selT=0,T0=0,dtf=.016;const COLS=[0xd4ded8,0x8a9fab,0xb2a28c,0x9a8c9e],CS=['#d4ded8','#8a9fab','#b2a28c','#9a8c9e'];
-let G0=26,K=46,DM=3.6,L0=.62,RW=.38,WX=.98,WZ=1.65,IP=1.5,IR=.8,TOP=38,TOPB=52,ACC=24,BRK=40,REV=16,ROLL=3.5,DRAG=.0007,GRIP=9;
+let G0=26,K=80,DM=7,L0=.62,RW=.38,WX=.98,WZ=1.65,IP=1.5,IR=.8,TOP=38,TOPB=52,ACC=24,BRK=40,REV=16,ROLL=3.5,DRAG=.0007,GRIP=9;
 const WL=[[-WX,WZ],[WX,WZ],[-WX,-WZ],[WX,-WZ]],_q=new THREE.Quaternion(),_e=new THREE.Euler(0,0,0,'YXZ'),_v=new V();
 function show(n){scr=n;for(const i of['menu','setup','game','pause','res'])$(i).classList.toggle('on',i==n)}
 function newCar(T,k,human){const col=COLS[k],m=mkCar(col,k),idx0=-(5+(k>>1)*5),i=(T.N+idx0)%T.N,lat=(k&1?1:-1)*T.hw[0]*.35,s=Math.sin(T.psi[i]),c=Math.cos(T.psi[i]);
@@ -315,7 +315,7 @@ if(nG>=2){const topv=(c.boost>0?TOPB:TOP)*mt.top;if(th>0)vf+=ACC*th*Math.max(0,1
 if(br>0){if(vf>1)vf-=BRK*br*(hb?.35:1)*dt;else vf=Math.max(vf-REV*br*dt,-14)}if(!th&&!br)vf-=Math.sign(vf)*Math.min(Math.abs(vf),ROLL*dt);
 vf-=vf*Math.abs(vf)*DRAG*dt;if(c.boost>0)vf+=34*dt;vr*=Math.exp(-GRIP*mt.grip*(hb?.2:1)*(.5+nG/8)*dt);
 const sF=((gy[0]+gy[1])-(gy[2]+gy[3]))/(4*WZ),sR=((gy[1]+gy[3])-(gy[0]+gy[2]))/(4*WX);vf-=G0*sF*.8*dt;vr-=G0*sR*.8*dt}
-c.vx=fx_*vf+rx*vr;c.vz=fz_*vf+rz*vr;c.vy+=(sumF-G0)*dt;c.wpt+=tP/IP*dt;c.wrl+=tR/IR*dt;const dmp=Math.exp(-1.3*dt);c.wpt*=dmp;c.wrl*=dmp;
+c.vx=fx_*vf+rx*vr;c.vz=fz_*vf+rz*vr;c.vy+=(sumF-G0)*dt;c.wpt+=tP/IP*dt;c.wrl+=tR/IR*dt;const dmp=Math.exp(-3.4*dt);c.wpt*=dmp;c.wrl*=dmp;
 c.pitch=clamp(c.pitch+c.wpt*dt,-.7,.7);c.roll=clamp(c.roll+c.wrl*dt,-.7,.7);
 if(RACE.state!='race'||c.fin){c.vx*=.9;c.vz*=.9;if(RACE.state!='race'){c.vx=c.vz=0}}
 c.x+=c.vx*dt;c.y+=c.vy*dt;c.z+=c.vz*dt;if(c.y<sc.h+.3){c.y=sc.h+.3;if(c.vy<0)c.vy=0}
@@ -462,7 +462,7 @@ const defaults = {
   garageRotate:true,mapOrbit:true,
   master:.7,engine:.55,sfx:.65,sound:true,
   steering:1,driftAssist:.7,drifts:true,driftMph:47,
-  hillHold:true,autoShift:false,perfPreset:'HIGH',maxDensity:1.5,shadowRate:2,shadowRes:1536,showFps:false,cameraDistance:1,fov:58,shake:true,
+  hillHold:true,autoShift:false,p2numpad:false,perfPreset:'HIGH',maxDensity:1.5,shadowRate:2,shadowRes:1536,showFps:false,cameraDistance:1,fov:58,shake:true,
   boostFov:true,minimap:true,timer:true,hudScale:1,
   units:'mph',showroom:true,splitAlways:true
 };
@@ -1030,7 +1030,8 @@ const pages={
   ['driftMph','DRIFT SPEED MPH',37,62,1],
   ['driftAssist','DRIFT ASSIST',0,1,.05],
   ['hillHold','HILL HOLD'],
-  ['autoShift','AUTO SHIFT']
+  ['autoShift','AUTO SHIFT'],
+  ['p2numpad','PLAYER 2 NUMPAD KEYS']
  ],
  CAMERA:[
   ['cameraDistance','CHASE DISTANCE',.8,1.4,.05],
@@ -1092,6 +1093,7 @@ rs=()=>{
 
 function apply(){
   if(window.PT8&&PT8.perfPre)PT8.perfPre();
+  if(window.PT8&&PT8.syncP2)PT8.syncP2();
   rs();
   R.toneMappingExposure=o.brightness;
   MUTE=!o.sound;
@@ -2084,16 +2086,16 @@ body.rallyhud .h8spd,body.rallyhud .h8pos{display:none!important}
 .p2kb{margin-top:14px}
 .p2kb h4{margin:0 0 8px;font-size:11px;letter-spacing:.2em;color:var(--dim)}
 .p2kb h4 small{letter-spacing:.12em;margin-left:8px;opacity:.7}
-.p2kb .kbs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.p2kb .kbo{all:unset;box-sizing:border-box;cursor:pointer;padding:12px;border:1px solid rgba(255,255,255,.14);background:rgba(8,12,16,.55);display:flex;flex-direction:column;gap:6px;align-items:center;text-align:center}
+.p2kb .kbs{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.p2kb .kbo{all:unset;box-sizing:border-box;cursor:pointer;padding:10px 6px;min-width:0;border:1px solid rgba(255,255,255,.14);background:rgba(8,12,16,.55);display:flex;flex-direction:column;gap:6px;align-items:center;text-align:center}
 .p2kb .kbo:hover{border-color:rgba(255,255,255,.4)}
 .p2kb .kbo.on{border-color:#f1f3f5;background:rgba(241,243,245,.1);box-shadow:inset 0 0 0 1px #f1f3f5}
-.p2kb .kg{display:grid;grid-template-columns:repeat(3,44px);gap:5px}
-.p2kb .kc{display:flex;align-items:center;justify-content:center;height:40px;border:1px solid rgba(255,255,255,.3);border-bottom-width:3px;border-radius:5px;font:bold 14px monospace;font-style:normal;color:#e9edf0;background:rgba(255,255,255,.07)}
+.p2kb .kg{display:grid;grid-template-columns:repeat(3,minmax(0,34px));gap:4px}
+.p2kb .kc{display:flex;align-items:center;justify-content:center;height:32px;border:1px solid rgba(255,255,255,.3);border-bottom-width:3px;border-radius:5px;font:bold 12px monospace;font-style:normal;color:#e9edf0;background:rgba(255,255,255,.07)}
 .p2kb .kc.sh{color:#7fe3f2;border-color:rgba(127,227,242,.6)}
 .p2kb .kc.gas{border-color:rgba(127,214,138,.7)}
 .p2kb .kc.br{border-color:rgba(239,106,90,.7)}
-.p2kb .kbo b{font-size:12px;letter-spacing:.14em}
+.p2kb .kbo b{font-size:11px;letter-spacing:.08em}
 .p2kb .kbo small{font-size:10px;letter-spacing:.1em;color:var(--dim)}
 </style><script>
 /* ===== Poly Tourismo v8 layer: core (economy, gears, AI, race flow, modes) ===== */
@@ -2376,10 +2378,11 @@ PT8.SHIFTK.forEach(k=>{GAME_KEYS.add(k.dn);GAME_KEYS.add(k.up)});
 PT8.noHb=()=>!!(RACE&&RACE.cfg&&RACE.cfg.humans&&RACE.cfg.humans.length>1);
 /* player 2 can use the arrow keys or the numpad (8 4 5 6, 7 / 9 shift) */
 {const AR={u:'ArrowUp',d:'ArrowDown',l:'ArrowLeft',r:'ArrowRight',h:'ShiftRight'},NP={u:'Numpad8',d:'Numpad5',l:'Numpad4',r:'Numpad6',h:'Numpad0'};
- PT8.p2Keys='arrows';try{if(localStorage.getItem('pt9-p2keys')==='numpad')PT8.p2Keys='numpad'}catch(e){}
+ PT8.p2Keys=(window.PTO&&PTO.p2numpad)?'numpad':'arrows';
  PT8.setP2Keys=v=>{PT8.p2Keys=v==='numpad'?'numpad':'arrows';const np=PT8.p2Keys==='numpad';Object.assign(KM[1],np?NP:AR);Object.values(KM[1]).forEach(k=>GAME_KEYS.add(k));
   Object.assign(PT8.SHIFTK[1],np?{dn:'Numpad7',up:'Numpad9',n:['7','9']}:{dn:'PageUp',up:'PageDown',n:['PAGE UP','PAGE DOWN']});GAME_KEYS.add('Numpad7');GAME_KEYS.add('Numpad9');
-  if(PT8.rallyP2)PT8.rallyP2(np);try{localStorage.setItem('pt9-p2keys',PT8.p2Keys)}catch(e){}};
+  if(PT8.rallyP2)PT8.rallyP2(np);if(window.PTO&&PTO.p2numpad!==np){PTO.p2numpad=np;try{localStorage.setItem('pt7-options',JSON.stringify(PTO))}catch(e){}}};
+ PT8.syncP2=()=>{const v=(window.PTO&&PTO.p2numpad)?'numpad':'arrows';if(v!==PT8.p2Keys)PT8.setP2Keys(v)};
  PT8.p2Name=()=>PT8.p2Keys==='numpad'?'numpad 8 4 5 6':'arrows'}
 addEventListener('keydown',e=>{if(e.repeat||!RACE||RACE.cfg.rally||scr!=='game')return;PT8.SHIFTK.forEach((k,p)=>{if(e.code===k.dn)taps[p].qd=1;else if(e.code===k.up)taps[p].qu=1})});
 PT8.setP2Keys(PT8.p2Keys);
@@ -4025,7 +4028,8 @@ function dressRA(T,sc){
  const N=T.N,wrp=a=>{while(a>PI)a-=2*PI;while(a<-PI)a+=2*PI;return a};
  const rr=(()=>{let s=1234567;return()=>((s=(s*1664525+1013904223)>>>0)/4294967296)})();
  const lerp=(a,b,t)=>a+(b-a)*t;
- const at=(k,l,dy)=>{k=((k%N)+N)%N;const c=Math.cos(T.psi[k]),s=Math.sin(T.psi[k]);return[T.x[k]+c*l,T.y[k]-l*T.bank[k]+(dy||0),T.z[k]-s*l]};
+ /* off the paving, everything sits on the real ground (never floats, never sinks under the grass) */
+ const at=(k,l,dy)=>{k=((k%N)+N)%N;const c=Math.cos(T.psi[k]),s=Math.sin(T.psi[k]),x=T.x[k]+c*l,z=T.z[k]-s*l,ry=T.y[k]-l*T.bank[k],ex=Math.abs(l)-T.hw[k];if(ex>1.2){const ty=T.terr(x,z);return[x,(ex<5?Math.max(ty,ry):ty)+(dy||0)+(ex<5?.05:0),z]}return[x,ry+(dy||0),z]};
  const g=new THREE.Group();g.name='raDress';
  /* backdrop mountains were laid out for a ~600 m world: push them out so nothing stands in or over this much bigger circuit */
  sc.traverse(o=>{const q=o.geometry&&o.geometry.parameters;if(q&&o.geometry.type==='ConeGeometry'&&q.radius>=80&&q.height>=60){o.position.x*=2.0;o.position.z*=2.0}});
