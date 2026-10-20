@@ -89,7 +89,7 @@ function trafficTick(Rc,dt){const T=Rc.T,N=T.N;spaceTraffic(Rc,dt);
     const rel=Math.hypot(c.vx-(Math.sin(t.yaw)*t.v),c.vz-(Math.cos(t.yaw)*t.v));
     t.hit=2.4;t.vx=c.vx*.9+rnd(-3,3);t.vz=c.vz*.9+rnd(-3,3);t.vy=rnd(7,12);t.spin=0;
     c.vx*=.4;c.vz*=.4;c.combo=0;c.comboT=0;c.crashes++;Rc.shake=Math.max(Rc.shake,.9);popTxt(c,'CRASH / COMBO LOST');
-    c.score=Math.max(0,c.score-Math.round(rel*4));fx(c.x+fx_*2,c.y+.6,c.z+fz_*2,0xffe080,10,7,.35,.2,8);noise(.2,.4,900);beep(120,.25,'sawtooth',.8);continue}
+    if(P.hitFx)P.hitFx(Rc,c,Math.min(20,rel),c.x+fx_*1.8,c.y+.5,c.z+fz_*1.8,-fx_*.6,-fz_*.6);c.score=Math.max(0,c.score-Math.round(rel*4));fx(c.x+fx_*2,c.y+.6,c.z+fz_*2,0xffe080,10,7,.35,.2,8);noise(.2,.4,900);beep(120,.25,'sawtooth',.8);continue}
    if(prev!==undefined&&prev>0&&lon<=0&&lat<3.9&&c.sp>16){ /* passed it */
     if(lat>=2.15){const gap=lat-2.15,close=gap<(Rc.heavy?1.25:1.1);c.passes++;
      if(close){c.combo=Math.min(12,c.combo+1);c.comboT=4;c.nm++;c.bestCombo=Math.max(c.bestCombo,c.combo);const pts=Math.round((50+c.sp*1.6)*(t.dir<0?2:1)*(1+(1.7-gap)*.4)*c.combo*(Rc.tmul||1));c.score+=pts;Rc.timeLeft=Math.min(Rc.timeMax,Rc.timeLeft+(Rc.heavy?.5:.4));popTxt(c,(t.dir<0?'ONCOMING ':'NEAR MISS ')+'+'+pts);beep(700+c.combo*50,.07,'triangle',.6)}

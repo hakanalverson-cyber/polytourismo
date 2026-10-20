@@ -267,7 +267,7 @@ function crashStep(Rc,dt){const c=human(Rc);if(!c)return;const T=Rc.T;if(!T.soli
   for(const s of l){const dx=c.x-s[0],dz=c.z-s[1],d=Math.hypot(dx,dz),R=s[2]+1.05;if(d>=R||d<.001)continue;const nx=dx/d,nz=dz/d,vn=c.vx*nx+c.vz*nz;
    if(Math.abs(c.y-(T.terr?T.terr(s[0],s[1]):c.y))>3.5)continue;c.x+=nx*(R-d);c.z+=nz*(R-d);
    if(vn<0){c.vx-=1.28*vn*nx;c.vz-=1.28*vn*nz;c.vx*=.82;c.vz*=.82;if(-vn>2.2&&c.cdT<=0){c.cdT=.7;hurt(Rc,c,-vn,nx,nz)}}}}}
-function hurt(Rc,c,v,nx,nz){if(!P.dmgOn(Rc)){Rc.shake=Math.max(Rc.shake||0,Math.min(1,v/16));if(P.sfx)P.sfx('crash');return}if(v<4){if(P.sfx&&v>2.6)P.sfx('crash');return}const was=c.dmg||0,add=Math.min(.5,Math.pow((v-3.5)/24,1.5)*.9);c.dmg=Math.min(1,was+add);c.hits=(c.hits||0)+1;Rc.shake=Math.max(Rc.shake||0,Math.min(1.2,v/14));
+function hurt(Rc,c,v,nx,nz){if(P.hitFx)P.hitFx(Rc,c,v,c.x-nx*.9,c.y+.35,c.z-nz*.9,nx,nz);if(!P.dmgOn(Rc)){Rc.shake=Math.max(Rc.shake||0,Math.min(1,v/16));if(P.sfx)P.sfx('crash');return}if(v<4){if(P.sfx&&v>2.6)P.sfx('crash');return}const was=c.dmg||0,add=Math.min(.5,Math.pow((v-3.5)/24,1.5)*.9);c.dmg=Math.min(1,was+add);c.hits=(c.hits||0)+1;Rc.shake=Math.max(Rc.shake||0,Math.min(1.2,v/14));
  c.yaw+=(Math.random()<.5?-1:1)*Math.min(.5,v*.02);if(!c._pull)c._pull=(Math.random()<.5?-1:1);
  if(P.sfx)P.sfx('crash');const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);
  for(let k=0;k<10;k++)P.puff(c.x-nx*1.1,c.y+.2,c.z-nz*1.1,-nx*rnd(1,6)+rnd(-2,2),rnd(1,5),-nz*rnd(1,6)+rnd(-2,2),k%2?[1,.7,.2]:[.55,.5,.45],rnd(.12,.3),rnd(.4,.9),.95,14);
@@ -276,7 +276,7 @@ P.hurt=(Rc,c,v,nx,nz)=>hurt(Rc,c,v,nx,nz);P.smokeFx=(c,Rc,dt)=>smokeFx(c,Rc,dt);
 function smokeFx(c,Rc,dt){const dm=c.dmg||0;if(dm<.18||c.exp>0||c.respT>0)return;const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);
  const rate=(4+dm*26)*(c.sp>3?1:.6);c._smA=(c._smA||0)+dt*rate;
  while(c._smA>=1){c._smA--;const dark=Math.min(1,(dm-.18)/.6),g=.62-.5*dark,hot=dm>.75;
-  P.puff(c.x+sy*1.7+rnd(-.35,.35)+(Rc.T?0:0),c.y+.25,c.z+cy*1.7+rnd(-.35,.35),c.vx*.55+rnd(-.5,.5),rnd(1.2,2.6)+dark*1.2,c.vz*.55+rnd(-.5,.5),[g,g,g*1.02],rnd(.7,1.3)*(1+dark*.9),rnd(1.1,1.8)+dark*.8,.34+dark*.3,-.35);
+  P.puff(c.x+sy*1.15+rnd(-.35,.35),c.y+.55,c.z+cy*1.15+rnd(-.35,.35),c.vx*.55+rnd(-.5,.5),rnd(1.2,2.6)+dark*1.2,c.vz*.55+rnd(-.5,.5),[g,g,g*1.02],rnd(.7,1.3)*(1+dark*.9),rnd(1.1,1.8)+dark*.8,.34+dark*.3,-.35);
   if(hot&&Math.random()<.35)P.puff(c.x+sy*1.6,c.y+.35,c.z+cy*1.6,c.vx*.5+rnd(-1,1),rnd(2,4),c.vz*.5+rnd(-1,1),[1,.55,.12],rnd(.12,.24),rnd(.5,.9),.9,-3)}
  /* damaged steering alignment: the car pulls to one side */
  if(dm>.25&&c.sp>8&&Rc.state==='race'&&!c.fin)c.yaw+=(c._pull||1)*dm*.045*Math.min(1,c.sp/30)*dt*8}
