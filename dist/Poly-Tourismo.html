@@ -7314,7 +7314,8 @@ def('lighthouse',(()=>{const a=[Cy(3.6,4.6,5,0x8a8f94,0,-3,0,null,10)];const col
  a.push(Cy(0,1,1.0,c,0,2.4,0,{r:ROOF,s:[2.7,1,2.7]},4),Bx(2.2,.08,.8,0x8a6a48,0,.8,-.8),Bx(.08,.8,.08,0x6a5038,-.9,0,-.8),Bx(.08,.8,.08,0x6a5038,.9,0,-.8));
  [[-.8,.3],[0,.5],[.8,.2]].forEach((p,i)=>{a.push(Cy(.2,.25,.9,[0x3a6aa8,0xd2a63a,0x4a8a58][(i+(c&3))%3],p[0],0,p[1],null,6),Sp(.19,0xe0b890,p[0],1.1,p[1]))});
  def(n,a,2.5,.5,{face:1,crowd:1})});[['bbA',0xe94f37,0xf4d35e],['bbB',0x2a7de1,0xffffff],['bbC',0x2f9e6e,0xf2e9d8]].forEach(([n,a,b])=>def(n,[Cy(.18,.2,5.6,0x5a6068,-2.2,-.6,0,null,6),Cy(.18,.2,5.6,0x5a6068,2.2,-.6,0,null,6),Bx(7,3,.25,0x2f3338,0,4.4,0),Bx(6.6,2.6,.05,a,0,4.6,.14),Bx(4.2,.5,.06,b,-.8,5.4,.18),Bx(2,.3,.06,b,1.6,4.8,.18),Bx(7,.2,.5,0x4a5058,0,4.2,.2)],3.2,.8,{face:1}));
-def('lamp',[Cy(.1,.14,7.8,0x4a4f55,0,-.5,0,null,6),Bx(.1,.1,1.7,0x4a4f55,0,7.1,.8),Bx(.5,.16,.9,0x3a3f45,0,6.95,1.6),Bx(.4,.05,.7,0xfff0b8,0,6.9,1.6)],.3,.5,{face:1});
+P.lampParts=()=>[Cy(.2,.27,.7,0x2f3338,0,-.55,0,null,8),Cy(.07,.12,7.1,0x4d535a,0,.1,0,null,8),Cy(.16,.16,.14,0x2f3338,0,1.4,0,null,8),Cy(.1,.1,.14,0x2f3338,0,6.5,0,null,8),Bx(.1,.1,3.9,0x4d535a,0,6.95,1.95),Bx(.06,.06,2.05,0x4d535a,0,6.4,.95,{r:[-.46,0,0]}),Bx(.5,.14,1.15,0x32373d,0,6.84,3.55),Bx(.4,.03,.95,0xfff2c8,0,6.79,3.58)];
+def('lamp',P.lampParts(),.3,.5,{face:1});
 def('busstop',[Bx(3.6,2.3,.08,0x9fc9dc,0,0,-.55),Bx(3.9,.12,1.6,0x44505c,0,2.3,0),Cy(.05,.05,2.3,0x44505c,-1.8,0,.7,null,5),Cy(.05,.05,2.3,0x44505c,1.8,0,.7,null,5),Bx(2.6,.1,.5,0x8a6a48,0,.5,-.2),Bx(.1,.5,.4,0x44505c,-1.1,0,-.2),Bx(.1,.5,.4,0x44505c,1.1,0,-.2),Bx(.8,1.1,.08,0xf2c230,1.5,1.0,-.5)],2.3,.4,{face:1});
 def('dumpster',[Bx(2.4,1.2,1.2,0x3b6b4a,0,.25,0),Bx(2.5,.12,1.3,0x2c4f38,0,1.45,0),Bx(.25,.25,.2,0x222,-1,0,.4),Bx(.25,.25,.2,0x222,1,0,.4),Bx(.25,.25,.2,0x222,-1,0,-.4),Bx(.25,.25,.2,0x222,1,0,-.4)],1.4,.35,{face:1});
 def('cones',(()=>{const a=[];for(let i=0;i<4;i++){a.push(Bx(.55,.05,.55,0x24242a,i*1.6-2.4,0,0),Cy(.04,.22,.7,0xf06a1a,i*1.6-2.4,.05,0,null,6),Cy(.17,.19,.12,0xf2f2f2,i*1.6-2.4,.3,0,null,6))}return a})(),2.8,.2);
@@ -7351,7 +7352,7 @@ const PLAN={
  'Quarry Circuit':   {edge:[['pole',1,60,10],['post',0,42,2.4]],field:[['truckY',3,26,150],['truckO',2,26,150],['officeC',3,18,90],['barrels',6,10,90],['cones',5,7,40],['bbA',2,18,120],['boulderG',16,14,230],['cairn',3,12,80],['tentR',2,12,40],['tentB',2,12,40]],fence:[0x8a8f94,2]},
  'Canyon Viaduct':{edge:[['pole',-1,70,10]],field:[['hoodoo',9,30,260],['arch',2,30,260],['boulderR',20,14,230],['cactus',14,10,150],['truckO',1,24,120],['bbB',2,20,120],['tentG',2,12,40],['tentR',1,12,40],['cairn',4,12,90]]},
  'Alpine Pass':{edge:[['snowpole',0,24,3.4],['post',0,42,2.4]],field:[['chalet',8,16,150],['cairn',8,10,120],['sheepA',0,0,0],['boulderG',10,14,200],['tentB',2,12,40],['tentR',1,12,40],['bbB',1,20,120]],flock:[['sheepA',6,4,18,130]],fence:[0x9a7a52,2]},
- 'Afterhours Loop':{edge:[['lamp',2,64,5.5]],field:[['bbA',3,14,100],['bbB',3,14,100],['bbC',3,14,100],['busstop',4,6,40],['dumpster',6,6,60],['cones',6,6,40],['officeC',2,14,70]]},
+ 'Afterhours Loop':{edge:[],field:[['bbA',3,14,100],['bbB',3,14,100],['bbC',3,14,100],['busstop',4,6,40],['dumpster',6,6,60],['cones',6,6,40],['officeC',2,14,70]]},
  'Pinewood Stage':{edge:[['pole',1,60,9],['post',0,42,2.4]],field:[['cabinW',4,14,110],['cabinR',2,14,110],['barn',1,16,120],['logs',7,8,70],['stump',16,5,60],['bale',6,6,40],['tentR',2,12,40],['tentB',2,12,40],['boulderG',8,12,160]],fence:[0x9a7a52,2]},
  'Redrock Stage':{edge:[['pole',-1,70,10]],field:[['cactus',36,7,170],['hoodoo',9,30,260],['arch',2,30,260],['pump',4,20,150],['cabinA',3,14,120],['boulderR',14,12,200],['tentG',2,12,40],['tentR',1,12,40]]},
  'Highmoor Stage':{edge:[['post',0,42,2.4]],field:[['cabinS',5,14,130],['turbine',4,40,260],['cairn',8,8,100],['bale',4,6,40],['boulderG',12,12,180],['tentB',2,12,40],['tentG',2,12,40]],flock:[['sheepA',9,4,22,170]]},
@@ -7384,7 +7385,7 @@ function decorate(T,sc){const d=T.d,N=T.N,name=d.name,plan=PLAN[name];if(!plan)r
  const near=(x,z)=>{let b=1e9,bi=0;for(let i=0;i<px.length;i++){const dd=Math.hypot(x-px[i],z-pz[i])-ph[i];if(dd<b){b=dd;bi=i}}return[b,bi*2]};
  const land=(x,z)=>H?!WATER(x,z):(!d.sea||gnd(x,z)>seaY+1.4);
  const ring=(x,z,fr)=>{let mn=1e9,mx=-1e9,ok=true;for(let a=-1;a<8;a++){const xx=a<0?x:x+Math.cos(a*.7854)*fr,zz=a<0?z:z+Math.sin(a*.7854)*fr,h=gnd(xx,zz);if(!land(xx,zz))ok=false;mn=Math.min(mn,h);mx=Math.max(mx,h)}return[mn,mx,ok]};
- const add=(n,x,y,z,yaw,s,extra)=>{(groups[n]=groups[n]||[]).push([x,y,z,yaw,s]);const L=LIB[n];log.push(Object.assign({n,x,z,y,s,fr:L.fr*s,sk:L.sk*s},extra||{}));if(L.crowd)(sc.userData.crowd=sc.userData.crowd||[]).push([x,z])};
+ const add=(n,x,y,z,yaw,s,extra)=>{(groups[n]=groups[n]||[]).push([x,y,z,yaw,s]);const L=LIB[n];log.push(Object.assign({n,x,z,y,s,yaw,fr:L.fr*s,sk:L.sk*s},extra||{}));if(L.crowd)(sc.userData.crowd=sc.userData.crowd||[]).push([x,z])};
  /* try to put prop n at x,z; returns true on success */
  const tryPut=(n,x,z,yaw,s,lo_,hi_)=>{const L=LIB[n];if(!L)return false;const fr=L.fr*s;
   const [cl,bi]=near(x,z);if(cl<Math.max(lo_,fr+1.2)||(hi_&&cl>hi_))return false;
@@ -9643,25 +9644,60 @@ const WIN={value:0};
 const glowTex=(rgb,hard)=>{const cv=document.createElement('canvas');cv.width=cv.height=64;const c=cv.getContext('2d'),g=c.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,`rgba(${rgb},1)`);g.addColorStop(hard||.25,`rgba(${rgb},.55)`);g.addColorStop(1,`rgba(${rgb},0)`);c.fillStyle=g;c.fillRect(0,0,64,64);const t=new THREE.CanvasTexture(cv);return t};
 let TXH=null,TXP=null;
 function lamps(sc,T){
- TXH=TXH||glowTex('255,226,170',.18);TXP=TXP||glowTex('255,214,150',.35);
- const log=sc.userData.props||[],have=log.filter(p=>/^lamp/.test(p.n)),L=[];
+ TXH=TXH||(()=>{const cv=document.createElement('canvas');cv.width=cv.height=64;const c=cv.getContext('2d'),g=c.createRadialGradient(32,32,0,32,32,32);[[0,.95],[.08,.7],[.2,.34],[.4,.12],[.7,.03],[1,0]].forEach(([o,a])=>g.addColorStop(o,`rgba(255,226,170,${a})`));c.fillStyle=g;c.fillRect(0,0,64,64);return new THREE.CanvasTexture(cv)})();
+ const N=T.N,K=P.PROPKIT,log=sc.userData.props||[],have=log.filter(p=>p.n==='lamp'&&isFinite(p.yaw)),L=[];
  const grp=new THREE.Group();grp.visible=false;grp.userData.noChunk=1;sc.add(grp);sc.userData.lamps=grp;
- if(have.length){for(const p of have)L.push({x:p.x,y:(p.y||T.terr(p.x,p.z))+5.6,z:p.z,px:p.x,pz:p.z,py:(p.y||T.terr(p.x,p.z)),own:0})}
- else if(!T.d.gravel){const N=T.N,st=Math.max(2,Math.round(36/(T.sp||6)));let side=1;
-  for(let i=Math.floor(st/2);i<N;i+=st){if((T.gap&&T.gap[i])||(T.tn&&T.tn[i])||(T.wall&&T.wall[i]&&!T.br[i]))continue;side=-side;const c=Math.cos(T.psi[i]),s=Math.sin(T.psi[i]),lo=side*(T.hw[i]+3.2),x=T.x[i]+c*lo,z=T.z[i]-s*lo,y=T.br&&T.br[i]?T.y[i]-lo*T.bank[i]:T.terr(x,z);
-   const li=side*(T.hw[i]+1.6),hx=T.x[i]+c*li,hz=T.z[i]-s*li;L.push({x:hx,y:y+6.2,z:hz,px:x,pz:z,py:y,own:1,rx:T.x[i]+c*side*T.hw[i]*.45,rz:T.z[i]-s*side*T.hw[i]*.45,ry:T.y[i]-side*T.hw[i]*.45*T.bank[i]+.07})}}
+ const AX=3.7,HY=6.8;
+ if(have.length){for(const p of have){const y=isFinite(p.y)?p.y:T.terr(p.x,p.z);L.push({hx:p.x+Math.sin(p.yaw)*AX,hy:y+HY,hz:p.z+Math.cos(p.yaw)*AX})}}
+ else if(!T.d.gravel&&K&&P.lampParts){const st=Math.max(2,Math.round(40/(T.sp||6)));let side=1;const own=[];
+  for(let i=Math.floor(st/2);i<N;i+=st){if((T.gap&&T.gap[i])||(T.tn&&T.tn[i])||(!T.d.city&&T.wall&&T.wall[i]&&!(T.br&&T.br[i])))continue;side=-side;const c=Math.cos(T.psi[i]),s_=Math.sin(T.psi[i]),lo=side*(T.hw[i]+3.2),x=T.x[i]+c*lo,z=T.z[i]-s_*lo,y=T.br&&T.br[i]?T.y[i]-lo*T.bank[i]:T.terr(x,z),yaw=Math.atan2(-c*side,s_*side);
+   own.push([x,y,z,yaw]);L.push({hx:x+Math.sin(yaw)*AX,hy:y+HY,hz:z+Math.cos(yaw)*AX})}
+  if(own.length){const im=new THREE.InstancedMesh(K.mk(P.lampParts()),K.MAT,own.length),dm=new THREE.Object3D();const wc=new THREE.Color(1,1,1);own.forEach((q,i)=>{dm.position.set(q[0],q[1],q[2]);dm.rotation.set(0,q[3],0);dm.updateMatrix();im.setMatrixAt(i,dm.matrix);im.setColorAt(i,wc)});im.frustumCulled=false;im.userData.ptProp='lamp';sc.add(im)}}
  if(!L.length)return;
- const dm=new THREE.Object3D(),own=L.filter(l=>l.own);
- if(own.length){const pole=new THREE.InstancedMesh(new THREE.CylinderGeometry(.07,.1,6.2,6),new THREE.MeshStandardMaterial({color:0x2a2f36,roughness:.7}),own.length),head=new THREE.InstancedMesh(new THREE.BoxGeometry(.9,.14,.38),new THREE.MeshBasicMaterial({color:0xffe9bd}),own.length);
-  own.forEach((l,i)=>{dm.position.set(l.px,l.py+3.1,l.pz);dm.rotation.set(0,0,0);dm.updateMatrix();pole.setMatrixAt(i,dm.matrix);dm.position.set(l.x,l.y,l.z);dm.rotation.y=Math.atan2(l.px-l.x,l.pz-l.z)+1.5708;dm.updateMatrix();head.setMatrixAt(i,dm.matrix)});
-  pole.frustumCulled=head.frustumCulled=false;grp.add(pole,head)}
- /* halos: one Points draw call */
- const pp=[];L.forEach(l=>pp.push(l.x,l.y,l.z));const hg=new THREE.BufferGeometry();hg.setAttribute('position',new THREE.Float32BufferAttribute(pp,3));
- const hp=new THREE.Points(hg,new THREE.PointsMaterial({map:TXH,size:2.2,sizeAttenuation:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,fog:false,color:0xffe0a8}));hp.frustumCulled=false;grp.add(hp);
- /* light pools on the road */
- const pools=L.filter(l=>l.own);if(pools.length){const pm=new THREE.InstancedMesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:TXP,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2,color:0xffc98a,opacity:.8,fog:false}),pools.length);
-  pools.forEach((l,i)=>{dm.position.set(l.rx,l.ry,l.rz);dm.rotation.set(0,0,0);dm.scale.set(15,1,15);dm.updateMatrix();pm.setMatrixAt(i,dm.matrix)});dm.scale.set(1,1,1);pm.frustumCulled=false;grp.add(pm)}
+ /* locate each lamp head over the road: nearest sample + signed lateral offset */
+ const rx=[],rz=[],ri=[];for(let i=0;i<N;i+=1){rx.push(T.x[i]);rz.push(T.z[i]);ri.push(i)}
+ for(const l of L){let b=1e9,k=0;for(let i=0;i<N;i++){const d=(rx[i]-l.hx)**2+(rz[i]-l.hz)**2;if(d<b){b=d;k=i}}l.k=k;const c=Math.cos(T.psi[k]),s_=Math.sin(T.psi[k]);l.lat=(l.hx-T.x[k])*c-(l.hz-T.z[k])*s_}
+ sc.userData.lampPos=L.map(l=>[l.hx,l.hy,l.hz]);sc.userData.lampDbg=L.map(l=>[+l.lat.toFixed(1),+T.hw[l.k].toFixed(1),l.k]);
+ /* halo sprite on each lamp head (small, so it never balloons up close) */
+ const pp=[];L.forEach(l=>pp.push(l.hx,l.hy-.1,l.hz));const hg=new THREE.BufferGeometry();hg.setAttribute('position',new THREE.Float32BufferAttribute(pp,3));
+ const hp=new THREE.Points(hg,new THREE.PointsMaterial({map:TXH,size:26,sizeAttenuation:false,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,fog:false,color:0xffe0a8}));hp.frustumCulled=false;grp.add(hp);
+ /* light pools: one merged sheet per lamp, built from the actual road samples so it follows grade, bank and curvature exactly; soft gaussian falloff via vertex colour */
+ const pos=[],col=[],idx=[];let vi=0;const LX=11,LW=5,SX=(T.sp||3);
+ for(const l of L){if(!(l.lat===l.lat)||Math.abs(l.lat)>T.hw[l.k]+1.5)continue;const jr=Math.max(2,Math.round(LX/SX)),rows=2*jr+1,cols=13,w=Math.min(T.hw[l.k]*1.05,7);
+  for(let r=0;r<rows;r++){const j=((l.k-jr+r)%N+N)%N,c=Math.cos(T.psi[j]),s_=Math.sin(T.psi[j]),dx=(r-jr)*SX;
+   for(let q=0;q<cols;q++){const lt=-w+2*w*q/(cols-1),dl=lt-l.lat,I=Math.exp(-(dx*dx/(2*5.2*5.2)+dl*dl/(2*3.3*3.3)))*(Math.abs(dx)>LX-1?0:1);
+    pos.push(T.x[j]+c*lt,T.y[j]-lt*T.bank[j]+.045,T.z[j]-s_*lt);const v=I*.62;col.push(v,v*.8,v*.5)}}
+  for(let r=0;r<rows-1;r++)for(let q=0;q<cols-1;q++){const a=vi+r*cols+q;idx.push(a,a+cols,a+1,a+1,a+cols,a+cols+1)}vi+=rows*cols}
+ if(idx.length){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.setIndex(idx);
+  const pm=new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,fog:false}));pm.frustumCulled=false;grp.add(pm);sc.userData.lampPool=pm}
 }
+/* real light from the nearest lamps: a small fixed pool of point lights follows the lead car, and the car's blob shadow leans away from the closest lamp */
+/* ---------- daytime skyline for the city backdrop (the original backdrop is a night silhouette that reads black in daylight) ---------- */
+let dayTex=null;
+function dayPano(){if(dayTex)return dayTex;const W=4096,H=512,hz=352,cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');let sd=77;const r=()=>((sd=(sd*1664525+1013904223)>>>0)/4294967296);
+ g.clearRect(0,0,W,H);
+ const layers=[['#b9c9dc',.55,70,170,34,60],['#9fb2c9',.7,55,140,30,56],['#8497b2',.85,40,105,26,50]];
+ for(const[c,al,hmin,hmax,wmin,wmax]of layers){let x=-20;while(x<W+40){const w=wmin+r()*(wmax-wmin),h=hmin+r()*(hmax-hmin);g.globalAlpha=al;g.fillStyle=c;g.fillRect(x,hz-h,w,h+4);
+   g.globalAlpha=al*.55;g.fillStyle='#dfeaf6';for(let yy=hz-h+8;yy<hz-6;yy+=9)for(let xx=x+4;xx<x+w-5;xx+=8)if(r()<.38)g.fillRect(xx,yy,3,4);
+   if(r()<.12){g.globalAlpha=al;g.fillStyle=c;g.fillRect(x+w*.5,hz-h-18,2,18)}x+=w+(r()<.3?2+r()*10:0)}}
+ g.globalAlpha=1;const gr=g.createLinearGradient(0,hz-40,0,hz+30);gr.addColorStop(0,'rgba(207,224,242,0)');gr.addColorStop(1,'rgba(207,224,242,.95)');g.fillStyle=gr;g.fillRect(0,hz-40,W,H-hz+40);
+ g.fillStyle='#c9d9ea';g.fillRect(0,hz+28,W,H-hz-28);
+ dayTex=new THREE.CanvasTexture(cv);dayTex.encoding=THREE.sRGBEncoding;dayTex.wrapS=THREE.RepeatWrapping;dayTex.magFilter=dayTex.minFilter=THREE.LinearFilter;dayTex.generateMipmaps=false;return dayTex}
+function setPano(sc,key){let m=null;sc.children.forEach(o=>{if(o.isMesh&&o.geometry&&o.geometry.type==='CylinderGeometry'&&o.geometry.parameters.radiusTop===1300)m=o});if(!m||!m.material)return;
+ const ud=m.userData;if(!ud.nightMap)ud.nightMap=m.material.map;
+ if(key==='night'){m.material.map=ud.nightMap;m.material.color.setRGB(1,1,1)}else{m.material.map=dayPano();m.material.color.setRGB(...(key==='sunset'?[1,.78,.66]:key==='dawn'?[.95,.84,.82]:[1,1,1]))}
+ m.material.needsUpdate=true}
+
+const LTS=[];let lampSc=null;
+function ensureLights(sc){if(LTS.length&&lampSc===sc)return;LTS.length=0;lampSc=sc;for(let i=0;i<4;i++){const l=new THREE.PointLight(0xffd29a,0,36,1.6);l.userData.lampLight=1;sc.add(l);LTS.push(l)}}
+function lampFrame(){const Rc=RACE;if(!Rc||!Rc.scene)return;const sc=Rc.scene,g=sc.userData&&sc.userData.lamps,pos=sc.userData&&sc.userData.lampPos;
+ if(!g||!pos||!LTS.length||lampSc!==sc)return;const on=g.visible,c0=Rc.cars.find(c=>c.human)||Rc.cars[0];if(!c0)return;
+ const best=[];for(let i=0;i<pos.length;i++){const d=Math.hypot(pos[i][0]-c0.x,pos[i][2]-c0.z);if(d<60)best.push([d,i])}best.sort((a,b)=>a[0]-b[0]);
+ for(let q=0;q<LTS.length;q++){const b=best[q],l=LTS[q];if(!on||!b){l.intensity+=(0-l.intensity)*.2;continue}const p=pos[b[1]];l.position.set(p[0],p[1]-.4,p[2]);l.intensity+=((3.4*Math.max(0,1-b[0]/55))-l.intensity)*.25}
+ }
+function leanShadow(c){const Rc=RACE;if(!Rc||!Rc.scene)return;const sc=Rc.scene,g=sc.userData&&sc.userData.lamps,pos=sc.userData&&sc.userData.lampPos;if(!g||!g.visible||!pos||!c.m||!c.m.sh||!c.m.sh.visible)return;
+ let bd=1e9,bi=-1;for(let i=0;i<pos.length;i++){const d=Math.hypot(pos[i][0]-c.x,pos[i][2]-c.z);if(d<bd){bd=d;bi=i}}if(bi<0||bd>30)return;
+ const dx=c.x-pos[bi][0],dz=c.z-pos[bi][2],dl=Math.hypot(dx,dz)||1,k=Math.min(1,bd/6)*(1-bd/30)*1.5+.2,sh=c.m.sh;sh.position.x+=dx/dl*k;sh.position.z+=dz/dl*k;sh.rotation.z=Math.atan2(dx,dz);sh.scale.x*=1+k*.5;sh.scale.y*=1+k*.2}
 
 /* ---------- Afterhours Loop: the box skyscrapers are replaced by the pack's buildings, scaled up into a proper skyline ---------- */
 function city(sc,T){
@@ -9763,7 +9799,7 @@ function tunnel(sc,T){
   /* pack buildings straddling the roof */
   const log=sc.userData.props||[],names=['CompanyBuilding_01','CompanyBuilding_02','CompanyBuilding_03','CompanyBuilding_04','CommercialBuilding_01','ResidentBuilding_04'].filter(n=>P.BLD[n]);
   const out={};let sd0=T.d.id*31+5;const r=()=>((sd0=(sd0*1664525+1013904223)>>>0)/4294967296);
-  for(let k=a+8;k<b-8;k+=34){const i=k%N,nm=names[Math.floor(r()*names.length)],sc_=1.1+r()*.5;(out[nm]=out[nm]||[]).push([T.x[i],T.y[i]+7.5,T.z[i],T.psi[i]+(r()<.5?0:Math.PI),sc_]);log.push({n:nm,x:T.x[i],z:T.z[i],y:T.y[i],fr:12,sk:.5,s:sc_})}
+  for(let k=a+8;k<b-8;k+=34){const i=k%N,nm=names[Math.floor(r()*names.length)],sc_=1.1+r()*.5;(out[nm]=out[nm]||[]).push([T.x[i],T.y[i]+7.9+2.6*sc_,T.z[i],T.psi[i]+(r()<.5?0:Math.PI),sc_]);log.push({n:nm,x:T.x[i],z:T.z[i],y:T.y[i],fr:12,sk:.5,s:sc_})}
   for(const nm in out){const g=P.BLD[nm],L2=out[nm],im=new THREE.InstancedMesh(g.g.clone(),P.PROPKIT.MAT,L2.length),col=new THREE.Color();L2.forEach((q,i)=>{dum.position.set(q[0],q[1],q[2]);dum.rotation.set(0,q[3],0);dum.scale.setScalar(q[4]);dum.updateMatrix();im.setMatrixAt(i,dum.matrix);col.setHSL(.55+r()*.3,.2+r()*.2,.7+r()*.25);im.setColorAt(i,col)});im.frustumCulled=false;sc.add(im)}
  }
  const mk=(geo,mat,arr,fn)=>{if(!arr.length)return;const im=new THREE.InstancedMesh(geo,mat,arr.length);arr.forEach((q,i)=>{dum.position.set(q[0],q[1],q[2]);dum.rotation.set(0,q[3],0);dum.scale.set(1,1,1);if(fn)fn(q);dum.updateMatrix();im.setMatrixAt(i,dum.matrix)});im.frustumCulled=false;sc.add(im)};
@@ -9831,7 +9867,8 @@ function cover(sc,T){
  if(!cfg.nf)mk(new THREE.IcosahedronGeometry(.5,0),Math.round(cfg.nt*.35),cfg.t,1.0,1.9,.35);
  if(cfg.nf)mk(new THREE.OctahedronGeometry(.13,0),cfg.nf*2,cfg.f,1.1,1.9,.5)}
 const bw0=buildWorld;buildWorld=function(T){const sc=bw0.apply(this,arguments);try{city(sc,T)}catch(e){console.warn('city',e)}try{tunnel(sc,T)}catch(e){console.warn('tunnel',e)}try{lotsAll(sc,T)}catch(e){console.warn('lots',e)}try{cover(sc,T)}catch(e){console.warn('cover',e)}try{lamps(sc,T)}catch(e){console.warn('lamps',e)}return sc};
-const at0=P.applyTod;P.applyTod=function(sc,T,key){const r=at0.apply(this,arguments);try{WIN.value=key==='night'?1.5:(key==='sunset'||key==='dawn')?.3:0;const g=sc&&sc.userData&&sc.userData.lamps;if(g)g.visible=key==='night'||key==='dawn'||key==='sunset'}catch(e){}return r};
+const at0=P.applyTod;P.applyTod=function(sc,T,key){const r=at0.apply(this,arguments);try{if(T&&T.d&&T.d.city)setPano(sc,key)}catch(e){console.warn('pano',e)}try{WIN.value=key==='night'?1.5:(key==='sunset'||key==='dawn')?.3:0;const g=sc&&sc.userData&&sc.userData.lamps;if(g){g.visible=key==='night'||key==='dawn'||key==='sunset';const pm=sc.userData.lampPool;if(pm)pm.material.color.setScalar(key==='night'?1:key==='dawn'||key==='sunset'?.45:0);if(g.visible&&sc.userData.lampPos&&sc.userData.lampPos.length)ensureLights(sc)}}catch(e){console.warn('lampTod',e)}return r};
+const uv0=updateVisual;updateVisual=function(c,T,t){const r=uv0.apply(this,arguments);try{if(c===(RACE&&(RACE.cars.find(q=>q.human)||RACE.cars[0])))lampFrame();leanShadow(c)}catch(e){if(!window._lfw){window._lfw=1;console.warn('lampFrame',e&&e.stack||e)}}return r};
 })();
 
 /* ===== Poly Tourismo v9 layer: perf (performance options: presets, pixel density cap, FPS counter, HUD DOM caching) ===== */

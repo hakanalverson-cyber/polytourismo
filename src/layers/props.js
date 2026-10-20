@@ -58,7 +58,8 @@ def('lighthouse',(()=>{const a=[Cy(3.6,4.6,5,0x8a8f94,0,-3,0,null,10)];const col
  a.push(Cy(0,1,1.0,c,0,2.4,0,{r:ROOF,s:[2.7,1,2.7]},4),Bx(2.2,.08,.8,0x8a6a48,0,.8,-.8),Bx(.08,.8,.08,0x6a5038,-.9,0,-.8),Bx(.08,.8,.08,0x6a5038,.9,0,-.8));
  [[-.8,.3],[0,.5],[.8,.2]].forEach((p,i)=>{a.push(Cy(.2,.25,.9,[0x3a6aa8,0xd2a63a,0x4a8a58][(i+(c&3))%3],p[0],0,p[1],null,6),Sp(.19,0xe0b890,p[0],1.1,p[1]))});
  def(n,a,2.5,.5,{face:1,crowd:1})});[['bbA',0xe94f37,0xf4d35e],['bbB',0x2a7de1,0xffffff],['bbC',0x2f9e6e,0xf2e9d8]].forEach(([n,a,b])=>def(n,[Cy(.18,.2,5.6,0x5a6068,-2.2,-.6,0,null,6),Cy(.18,.2,5.6,0x5a6068,2.2,-.6,0,null,6),Bx(7,3,.25,0x2f3338,0,4.4,0),Bx(6.6,2.6,.05,a,0,4.6,.14),Bx(4.2,.5,.06,b,-.8,5.4,.18),Bx(2,.3,.06,b,1.6,4.8,.18),Bx(7,.2,.5,0x4a5058,0,4.2,.2)],3.2,.8,{face:1}));
-def('lamp',[Cy(.1,.14,7.8,0x4a4f55,0,-.5,0,null,6),Bx(.1,.1,1.7,0x4a4f55,0,7.1,.8),Bx(.5,.16,.9,0x3a3f45,0,6.95,1.6),Bx(.4,.05,.7,0xfff0b8,0,6.9,1.6)],.3,.5,{face:1});
+P.lampParts=()=>[Cy(.2,.27,.7,0x2f3338,0,-.55,0,null,8),Cy(.07,.12,7.1,0x4d535a,0,.1,0,null,8),Cy(.16,.16,.14,0x2f3338,0,1.4,0,null,8),Cy(.1,.1,.14,0x2f3338,0,6.5,0,null,8),Bx(.1,.1,3.9,0x4d535a,0,6.95,1.95),Bx(.06,.06,2.05,0x4d535a,0,6.4,.95,{r:[-.46,0,0]}),Bx(.5,.14,1.15,0x32373d,0,6.84,3.55),Bx(.4,.03,.95,0xfff2c8,0,6.79,3.58)];
+def('lamp',P.lampParts(),.3,.5,{face:1});
 def('busstop',[Bx(3.6,2.3,.08,0x9fc9dc,0,0,-.55),Bx(3.9,.12,1.6,0x44505c,0,2.3,0),Cy(.05,.05,2.3,0x44505c,-1.8,0,.7,null,5),Cy(.05,.05,2.3,0x44505c,1.8,0,.7,null,5),Bx(2.6,.1,.5,0x8a6a48,0,.5,-.2),Bx(.1,.5,.4,0x44505c,-1.1,0,-.2),Bx(.1,.5,.4,0x44505c,1.1,0,-.2),Bx(.8,1.1,.08,0xf2c230,1.5,1.0,-.5)],2.3,.4,{face:1});
 def('dumpster',[Bx(2.4,1.2,1.2,0x3b6b4a,0,.25,0),Bx(2.5,.12,1.3,0x2c4f38,0,1.45,0),Bx(.25,.25,.2,0x222,-1,0,.4),Bx(.25,.25,.2,0x222,1,0,.4),Bx(.25,.25,.2,0x222,-1,0,-.4),Bx(.25,.25,.2,0x222,1,0,-.4)],1.4,.35,{face:1});
 def('cones',(()=>{const a=[];for(let i=0;i<4;i++){a.push(Bx(.55,.05,.55,0x24242a,i*1.6-2.4,0,0),Cy(.04,.22,.7,0xf06a1a,i*1.6-2.4,.05,0,null,6),Cy(.17,.19,.12,0xf2f2f2,i*1.6-2.4,.3,0,null,6))}return a})(),2.8,.2);
@@ -95,7 +96,7 @@ const PLAN={
  'Quarry Circuit':   {edge:[['pole',1,60,10],['post',0,42,2.4]],field:[['truckY',3,26,150],['truckO',2,26,150],['officeC',3,18,90],['barrels',6,10,90],['cones',5,7,40],['bbA',2,18,120],['boulderG',16,14,230],['cairn',3,12,80],['tentR',2,12,40],['tentB',2,12,40]],fence:[0x8a8f94,2]},
  'Canyon Viaduct':{edge:[['pole',-1,70,10]],field:[['hoodoo',9,30,260],['arch',2,30,260],['boulderR',20,14,230],['cactus',14,10,150],['truckO',1,24,120],['bbB',2,20,120],['tentG',2,12,40],['tentR',1,12,40],['cairn',4,12,90]]},
  'Alpine Pass':{edge:[['snowpole',0,24,3.4],['post',0,42,2.4]],field:[['chalet',8,16,150],['cairn',8,10,120],['sheepA',0,0,0],['boulderG',10,14,200],['tentB',2,12,40],['tentR',1,12,40],['bbB',1,20,120]],flock:[['sheepA',6,4,18,130]],fence:[0x9a7a52,2]},
- 'Afterhours Loop':{edge:[['lamp',2,64,5.5]],field:[['bbA',3,14,100],['bbB',3,14,100],['bbC',3,14,100],['busstop',4,6,40],['dumpster',6,6,60],['cones',6,6,40],['officeC',2,14,70]]},
+ 'Afterhours Loop':{edge:[],field:[['bbA',3,14,100],['bbB',3,14,100],['bbC',3,14,100],['busstop',4,6,40],['dumpster',6,6,60],['cones',6,6,40],['officeC',2,14,70]]},
  'Pinewood Stage':{edge:[['pole',1,60,9],['post',0,42,2.4]],field:[['cabinW',4,14,110],['cabinR',2,14,110],['barn',1,16,120],['logs',7,8,70],['stump',16,5,60],['bale',6,6,40],['tentR',2,12,40],['tentB',2,12,40],['boulderG',8,12,160]],fence:[0x9a7a52,2]},
  'Redrock Stage':{edge:[['pole',-1,70,10]],field:[['cactus',36,7,170],['hoodoo',9,30,260],['arch',2,30,260],['pump',4,20,150],['cabinA',3,14,120],['boulderR',14,12,200],['tentG',2,12,40],['tentR',1,12,40]]},
  'Highmoor Stage':{edge:[['post',0,42,2.4]],field:[['cabinS',5,14,130],['turbine',4,40,260],['cairn',8,8,100],['bale',4,6,40],['boulderG',12,12,180],['tentB',2,12,40],['tentG',2,12,40]],flock:[['sheepA',9,4,22,170]]},
@@ -128,7 +129,7 @@ function decorate(T,sc){const d=T.d,N=T.N,name=d.name,plan=PLAN[name];if(!plan)r
  const near=(x,z)=>{let b=1e9,bi=0;for(let i=0;i<px.length;i++){const dd=Math.hypot(x-px[i],z-pz[i])-ph[i];if(dd<b){b=dd;bi=i}}return[b,bi*2]};
  const land=(x,z)=>H?!WATER(x,z):(!d.sea||gnd(x,z)>seaY+1.4);
  const ring=(x,z,fr)=>{let mn=1e9,mx=-1e9,ok=true;for(let a=-1;a<8;a++){const xx=a<0?x:x+Math.cos(a*.7854)*fr,zz=a<0?z:z+Math.sin(a*.7854)*fr,h=gnd(xx,zz);if(!land(xx,zz))ok=false;mn=Math.min(mn,h);mx=Math.max(mx,h)}return[mn,mx,ok]};
- const add=(n,x,y,z,yaw,s,extra)=>{(groups[n]=groups[n]||[]).push([x,y,z,yaw,s]);const L=LIB[n];log.push(Object.assign({n,x,z,y,s,fr:L.fr*s,sk:L.sk*s},extra||{}));if(L.crowd)(sc.userData.crowd=sc.userData.crowd||[]).push([x,z])};
+ const add=(n,x,y,z,yaw,s,extra)=>{(groups[n]=groups[n]||[]).push([x,y,z,yaw,s]);const L=LIB[n];log.push(Object.assign({n,x,z,y,s,yaw,fr:L.fr*s,sk:L.sk*s},extra||{}));if(L.crowd)(sc.userData.crowd=sc.userData.crowd||[]).push([x,z])};
  /* try to put prop n at x,z; returns true on success */
  const tryPut=(n,x,z,yaw,s,lo_,hi_)=>{const L=LIB[n];if(!L)return false;const fr=L.fr*s;
   const [cl,bi]=near(x,z);if(cl<Math.max(lo_,fr+1.2)||(hi_&&cl>hi_))return false;
