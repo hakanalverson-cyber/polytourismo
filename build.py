@@ -27,7 +27,6 @@ src=rep(src,"m.onBeforeCompile=shader=>{shader.fragmentShader=shader.fragmentSha
 src=rep(src," gl_FragColor.rgb=clamp((gl_FragColor.rgb-0.5)*1.045+0.5,0.0,1.0);\n `)};m.customProgramCacheKey=()=> 'street-matte-v3'"," gl_FragColor.rgb=clamp((gl_FragColor.rgb-0.5)*1.045+0.5,0.0,1.0);\n float tl=dot(gl_FragColor.rgb,vec3(0.2126,0.7152,0.0722));gl_FragColor.rgb=mix(vec3(tl),gl_FragColor.rgb,uTodSat)*uTodMul+uTodAdd;\n `)};m.customProgramCacheKey=()=> 'street-matte-v4'")
 
 # car sits ON the road: physics rest height is road+1.02 but the model bottom was drawn at -0.72 (0.3 m of float)
-src=rep(src,"visual.position.y=-.72+height/2;","visual.position.y=-.95+height/2;")
 src=rep(src,"v.position.y=-.72+m.visualHeight/2;const close","v.position.y=-.95+m.visualHeight/2;const close")
 src=rep(src,"m.g.localToWorld(new V(x,-.72,z))","m.g.localToWorld(new V(x,-.95,z))")
 # road height: in tight / climbing corners neighbouring segments overlap on the inside; picking the highest one made the car pop upward. Take the segment you are actually over (smallest lateral offset) within the same road level.

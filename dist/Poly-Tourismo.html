@@ -70,7 +70,7 @@ function attachCarModel(car){
  const source=CAR_MODELS[car.modelIndex??carChoices[car.pi]??car.pi%14];if(!source)return;
  const model=source.clone(true),visual=new THREE.Group(),centered=new THREE.Group();visual.add(centered);centered.add(model);centered.updateMatrixWorld(true);
  const box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3()),scale=(source.userData.gl||4.5)/Math.max(size.x,size.z,.001),height=size.y*scale;
- centered.position.copy(center).multiplyScalar(-1);visual.scale.setScalar(scale);visual.rotation.y=(size.x>size.z?PI/2:0)+PI;visual.position.y=-.95+height/2;
+ centered.position.copy(center).multiplyScalar(-1);visual.scale.setScalar(scale);visual.rotation.y=(size.x>size.z?PI/2:0)+PI;visual.position.y=-.72+height/2;
  visual.traverse(o=>{if(o.isMesh){const alter=m=>{const q=m.clone();if(q.color){const c=q.color,l=c.r*.2126+c.g*.7152+c.b*.0722;c.lerp(new THREE.Color(l,l,l),.68)}q.roughness=Math.max(.32,q.roughness||.4);q.metalness=Math.min(.45,q.metalness||.1);return q};o.material=Array.isArray(o.material)?o.material.map(alter):alter(o.material);}});
  car.g.children.forEach(ch=>{if(ch!==car.sh)ch.visible=false});styleScene(visual);car.g.add(visual);car.visualModel=visual;car.visualHeight=height;car.wheels.forEach(w=>w.sp.visible=false);
  car.exhaustRig=new THREE.Group();car.exhaustRig.position.y=visual.position.y;car.g.add(car.exhaustRig);car.fl=[];
@@ -2733,7 +2733,7 @@ function spaceTraffic(Rc,dt){const T=Rc.T,N=T.N,sp=T.sp,L=Rc.traffic;
 const laneClear=(Rc,t,lat)=>{const T=Rc.T,hw=T.hw[Math.floor(t.idx)%T.N]||6;for(const u of Rc.traffic){if(u===t||u.dir!==t.dir)continue;if(Math.abs(u.tl-lat)*hw>2.7&&Math.abs(u.lat-lat)*hw>2.7)continue;const d=Math.abs(((u.idx-t.idx)*t.dir+T.N*1.5)%T.N-T.N*.5)*T.sp;if(d<20)return false}return true};
 function trafficTick(Rc,dt){const T=Rc.T,N=T.N;spaceTraffic(Rc,dt);
  for(const t of Rc.traffic){const m=t.m;
-  if(m.visualModel&&!t.vm){m.visualModel.position.y=-.95+m.visualHeight/2;t.vm=1}
+  if(m.visualModel&&!t.vm){m.visualModel.position.y=-.72+m.visualHeight/2;t.vm=1}
   if(t.hit>0){t.hit-=dt;t.vy-=22*dt;t.x+=t.vx*dt;t.y+=t.vy*dt;t.z+=t.vz*dt;t.spin+=dt*9;
    m.g.position.set(t.x,Math.max(t.y,T.surf(t.x,t.z,t.y+3).h+.9),t.z);m.g.rotation.set(t.spin*.6,t.yaw+t.spin*.3,t.spin);
    if(t.hit<=0){t.idx=(Rc.cars.find(c=>c.human).idx+90+Math.random()*60)%N;for(let q=0;q<10&&!laneClear(Rc,t,t.tl);q++)t.idx=(t.idx+9)%N;t.seen={};t.vb=t.v=rnd(t.lane.v[0],t.lane.v[1])}
