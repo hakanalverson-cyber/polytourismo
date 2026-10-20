@@ -3,14 +3,12 @@
 'use strict';
 const P=window.PT8;
 P.LOG=[
- {v:'0.04',d:'Oct 20, 2026',t:'New track: Broken Span',items:[
-  'Harbor Lights is gone, replaced by Broken Span, the first track of a brand-new roster: a long orange suspension bridge with two towers, hangers and cables, snapped in half.',
-  'Floor it up the ramp and jump the 18 m gap. Fall short and you are sent back to a long run-up, so you can try again at full speed.',
-  'You land on City Island, a walled island city built from the building pack and KayKit buildings: unbroken rows of buildings face every shore, corner towers, brick gate houses over both roads, shopfronts, trees, hydrants, bins and rooftop water towers.',
-  'Any gap between buildings is a tiny alley with dumpsters, bins, crates and bags; larger leftovers become pocket parks.',
-  'A low causeway on concrete piers brings you home across the bay, then a hairpin on the mainland and back up the bridge approach.',
-  'Wreckage lies in the water under the gap, with dangling cables, bent truss ends, rebar and hazard boards; the whole map works at dawn, day, sunset and night.',
-  'Jumps can now have their own gap length and ramp height, and respawns near a long gap start well back so you can build speed again.']},
+ {v:'0.04',d:'Oct 20, 2026',t:'New track: Grand Valley',items:[
+  'Harbor Lights is gone, replaced by Grand Valley, the first track of a brand-new roster: a short, low orange suspension bridge with two towers, hangers and cables, leading to a walled island city.',
+  'City Island is built from the building pack and KayKit buildings: unbroken rows of buildings face every shore, corner towers, brick gate houses over both roads, shopfronts, trees, hydrants, bins and rooftop water towers. Any gap between buildings is a tiny alley with dumpsters, bins and crates; larger leftovers become pocket parks.',
+  'Leave the city through the west gate and the race runs on into a forest valley: a winding, hilly road with real terrain, timber fences, pine and broadleaf trees, bushes, boulders, logs, stumps, wild flowers, chevron boards on the sharp bends, and farm and camp sites with houses, barns, wells, haystacks and fences.',
+  'The road swings round the valley and comes back to the start straight, with overhead signs, buoys and boats in the channel; the whole map works at dawn, day, sunset and night.',
+  'Jumps can now have their own gap length and ramp height.']},
  {v:'0.03',d:'Oct 20, 2026',t:'New streetlights',items:[
   'All streetlights on every map: new lamp model, a much wider and softer pool of light, a smoother glow, and lights that fade in and out instead of popping.',
   'Only the rally mode has a loading screen now; everything else launches straight in. The loader car\'s front wheels point straight.',

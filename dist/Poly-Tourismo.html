@@ -6892,7 +6892,7 @@ HP.add=(sc,name,list,o)=>{o=o||{};const d=HP.defs[name];if(!d||!list.length)retu
 HP.make=name=>{const d=HP.defs[name];if(!d)return null;const g=new THREE.Group();d.parts.forEach(p=>g.add(new THREE.Mesh(p.geo,p.mat)));return g};
 })();
 
-/* ===== Poly GT v9 layer: tracks2 (Coastal Run, Broken Span, Frostline Stage) ===== */
+/* ===== Poly GT v9 layer: tracks2 (Coastal Run, Grand Valley, Frostline Stage) ===== */
 (function v9tracks2(){
 'use strict';
 const P=window.PT8;
@@ -6900,14 +6900,13 @@ const P=window.PT8;
 const coast={id:7,look:0,name:'Coastal Run',desc:'sea cliffs / sweepers / sunset',hw:8,bank:10,off:'grass',idw:.95,offs:0,amp:2.5,up:-46,shoulder:8,
  sky:[0x4f86c8,0xf2c9a0],fog:0xe8c7a8,sun:0xffd9a8,hemi:[0xd8e4f0,0x5e6a5a],road:'#34363b',sea:1,tod0:'sunset',
  pts:[[-300,-120,18],[-230,-190,22],[-120,-215,26],[-10,-185,30],[80,-210,34],[185,-240,30],[290,-200,22],[345,-110,14],[310,-20,10],[220,30,12],[130,10,16],[60,60,20],[90,140,16],[190,185,10],[260,250,8],[180,300,8],[60,285,12],[-60,240,18],[-150,170,22],[-170,80,24],[-250,60,22],[-320,0,20]]};
-/* Broken Span: control points [x,z,y,halfwidth]. Mainland start, suspension bridge (snapped at index 7), island city streets, low causeway home */
-const sp=[[-760,30,2],[-700,30,2.6],[-640,30,5],[-585,30,8.8],[-535,30,13],[-490,30,17.5],[-455,30,20],[-425,30,20],
- [-380,30,16.5],[-330,30,15.5],[-280,30,14],[-235,30,12.4],[-190,30,10.2],[-145,30,7.6],[-105,30,4.6],[-70,30,2.2,7.5],
+/* Grand Valley: control points [x,z,y,halfwidth]. Mainland start, short low suspension bridge, island city streets, then a winding forest valley road home */
+const sp=[[-470,30,2],[-420,30,3.2],[-375,30,5],[-330,30,6.4],[-300,30,7.1],[-262,30,7.6],[-200,30,7.7],[-122,30,7.3],[-90,30,5.6],[-70,30,2.8,7.5],
  [-35,30,.8,6.5],[20,30,.8,6.5],[75,30,.8,6.5],[130,42,.8,6.5],[185,80,.8,6.5],[235,100,.8,6.5],[265,60,.8,6.5],[265,5,.8,6.5],[240,-35,.8,6.5],[195,-52,.8,6.5],[150,-28,.8,6.5],[105,-55,.8,6.5],[60,-92,.8,6.5],[10,-100,.8,6.5],[-35,-92,.8,6.5],
- [-90,-90,.9,7],[-170,-90,1.1,7],[-260,-90,1.3,7],[-350,-92,1.5,7],[-440,-92,1.7,7],[-530,-92,1.9,7],[-610,-92,2,7],[-680,-92,2],
- [-740,-92,2],[-800,-90,2],[-842,-72,2],[-860,-30,2],[-842,12,2],[-800,30,2]];
-const span={id:8,name:'Broken Span',desc:'suspension bridge / snapped span jump / island city',hw:8,bank:0,off:'city',idw:0,offs:0,amp:0,up:0,shoulder:8,flat:1,allWalls:1,span:1,biome:'harbor',tod0:'day',
- sky:[0x3a82d6,0xb6dcf4],fog:0xbcd6e8,sun:0xfff4de,hemi:[0xdcecff,0x6a6a60],road:'#3b3e44',walls:[],ice:[],boost:[],jumps:[[7,0,18,7.5]],pts:sp};
+ [-75,-92,1.1,7],[-125,-100,1.9,7],[-170,-128,3.2,7],[-195,-175,4.8,7],[-175,-225,6.5,7],[-215,-270,8,7],[-285,-285,8.8,7],[-345,-262,8,7],[-365,-215,6.4,7],[-335,-170,5,7],[-370,-128,4,7],
+ [-430,-130,3.4,7],[-490,-165,4.4,7],[-550,-200,6,7],[-615,-190,7,7],[-660,-145,6.2,7],[-665,-90,4.8,7],[-640,-55,3.8,7],[-615,0,3,7],[-570,40,2.4,7],[-520,45,2.1,7.5]];
+const span={id:8,name:'Grand Valley',desc:'suspension bridge / island city / forest valley',hw:8,bank:0,off:'city',idw:0,offs:0,amp:0,up:0,shoulder:8,flat:1,allWalls:1,span:1,biome:'harbor',tod0:'day',
+ sky:[0x3a82d6,0xb6dcf4],fog:0xbcd6e8,sun:0xfff4de,hemi:[0xdcecff,0x6a6a60],road:'#3b3e44',walls:[],ice:[],boost:[],jumps:[],pts:sp};
 const frost={id:9,look:4,name:'Frostline Stage',desc:'frozen forest / ice ruts / hairpins',hw:5.5,bank:8,shoulder:6,gravel:1,ice:[],walls:[],boost:[],off:'snow',idw:.86,offs:0,amp:6.5,up:36,biome:'forest',frost:1,tod0:'dawn',
  sky:[0x8fb0d0,0xe9f1f8],fog:0xd6e3ee,sun:0xfff4e0,hemi:[0xe6f0fa,0x7a8a9a],road:'#a3a9b0',dust:0xf2f6fa,dirt:0xdfe6ee,
  pts:[[-120,-240,10],[0,-255,14],[110,-225,22],[200,-250,30],[290,-190,36],[310,-100,30],[250,-40,24],[160,-70,28],[100,-10,34],[150,60,40],[250,90,36],[300,160,28],[250,230,20],[150,250,14],[60,200,10],[-30,240,6],[-120,215,8],[-190,150,14],[-140,80,20],[-210,20,26],[-290,-30,22],[-290,-120,16],[-220,-190,12]],tunnels:0};
@@ -6915,7 +6914,7 @@ D.push(coast,span,frost);
 [7,9].forEach(i=>{const j=P.pickJumps(D[i],1,i===9?{l:50,a:.75,t:1.6,r:100,f:.12}:undefined);D[i].jumps=j.length?j:[]});
 /* snowier gravel stage: bigger hills like the other rally stages */
 {const p=D[9].pts,mean=p.reduce((a,q)=>a+q[2],0)/p.length;p.forEach(q=>{q[2]=+(mean+(q[2]-mean)*1.25).toFixed(1)});D[9].up=Math.round(D[9].up*1.15)}
-P.TRACK_INFO.push({s:'TARMAC',tags:['SEA CLIFFS','SWEEPERS','SUNSET']},{s:'TARMAC',tags:['SUSPENSION BRIDGE','BIG JUMP','ISLAND CITY']},{s:'GRAVEL',tags:['SNOW','HAIRPINS','CRESTS']});
+P.TRACK_INFO.push({s:'TARMAC',tags:['SEA CLIFFS','SWEEPERS','SUNSET']},{s:'TARMAC',tags:['SUSPENSION BRIDGE','ISLAND CITY','FOREST VALLEY']},{s:'GRAVEL',tags:['SNOW','HAIRPINS','CRESTS']});
 
 /* world decoration: sea for the coast, frost for the stage */
 const bw0=buildWorld;
@@ -6931,7 +6930,7 @@ buildWorld=T=>{const sc=bw0(T),d=T.d;
    else if(o.isMesh&&o.geometry&&o.geometry.attributes&&o.geometry.attributes.color&&o.geometry.attributes.position.count>2000){const a=o.geometry.attributes.color.array,c=new THREE.Color();for(let i=0;i<a.length;i+=3){c.setRGB(a[i],a[i+1],a[i+2]).lerp(W,.82);a[i]=c.r;a[i+1]=c.g;a[i+2]=c.b}o.geometry.attributes.color.needsUpdate=true}})}
  return sc};
 /* medal references: Mercedes AI first lap (tests/newtracks_laps.py) */
-Object.assign(P.MEDAL_REF,{7:67.3,8:76.8,9:81.1,r7:66.6,r8:76.7,r9:78.8});
+Object.assign(P.MEDAL_REF,{7:67.3,8:70,9:81.1,r7:66.6,r8:69.1,r9:78.8});
 })();
 
 /* ===== Poly GT v9 layer: suspension sway, ground-hugging shadows ===== */
@@ -7205,7 +7204,7 @@ P.todPost=Rc=>{const key=P.curTod;if(key!=='night')return;
  for(const c of Rc.cars){if(!c.human)continue;const sp=new THREE.SpotLight(0xfff0cf,2.4,130,.5,.55,1.2);sp.position.set(0,.55,1.9);const tg=new THREE.Object3D();tg.position.set(0,-.2,34);c.m.g.add(sp);c.m.g.add(tg);sp.target=tg}}
 })();
 
-/* ===== Poly GT layer: Broken Span (suspension bridge snapped in half, a jump, then a walled island city) ===== */
+/* ===== Poly GT layer: Grand Valley (a short low suspension bridge, a walled island city, then a winding forest valley road home) ===== */
 (function ptBridge(){
 'use strict';
 const P=window.PT8;
@@ -7215,28 +7214,57 @@ const frame=(T,k,l)=>{k=((k%T.N)+T.N)%T.N;const s=Math.sin(T.psi[k]),c=Math.cos(
 
 /* ---------- layout (world metres) ---------- */
 const SEA=-1.2,GY=.8,LAND=1.9;
+const GX0=-1122.5,GX1=-50.5,GZ0=-650,GZ1=330,GCS=8;   /* terrain grid (everything west of the island) */
 const ISL={x0:-50,x1:310,z0:-150,z1:170};      /* the island city */
-const COAST=-620,MAINX=-1180;                    /* mainland shore */
-const TOWX=[-520,-306],TOWH=34,DECK0=20,BZ=30;  /* two towers, nominal deck height, bridge centre line */
+const COAST=-330;                                 /* the bridge starts at the mainland shore */
+const TOWX=[-262,-122],TOWH=22,DECK0=7.6,BZ=30;  /* two towers, nominal deck height, bridge centre line */
 const GATE=[30,-92],GATEW=10.5;                  /* z of the two gates in the island's west wall */
 const onIsland=(x,z)=>x>=ISL.x0&&x<=ISL.x1&&z>=ISL.z0&&z<=ISL.z1;
-const GROUND=(x,z)=>onIsland(x,z)?GY:(x<COAST&&x>MAINX&&Math.abs(z)<460)?LAND:-3.2;
+const sstep=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)};
+const hills=(x,z)=>.5+.5*(.55*Math.sin(x*.0113+1.3)*Math.sin(z*.0131+.4)+.3*Math.sin(x*.0231+z*.0173+2)+.2*Math.sin(x*.041-z*.037+.7));
+/* distance to the shore: >0 on land (the mainland west of the bridge, and the forest land north of the channel) */
+const shoreD=(x,z)=>Math.min(Math.max(COAST+4-x,Math.min(-30-x,-52-z)),x-GX0-6,z-GZ0-6,GZ1-6-z);
 
 /* ---------- track hook: classify samples, walls, lamps, ground ---------- */
 const ps=sampleTrack;
 sampleTrack=d=>{const T=ps(d);if(!d.span)return T;
  const N=T.N;T.sg=new Uint8Array(N);T.lampOff=new Float32Array(N);
  for(let i=0;i<N;i++){const x=T.x[i],z=T.z[i];let sg;
-  if(x>=ISL.x0+.5)sg=2;else if(x<COAST)sg=0;else sg=z>-30?1:3;
-  T.sg[i]=sg;T.wall[i]=1;T.wh[i]=sg===1||sg===3?1.15:1.0;if(sg!==2)T.br[i]=1;
-  T.lampOff[i]=sg===1||sg===3?.95:sg===2?1.9:3.2}
+  if(x>=ISL.x0+.5)sg=2;else if(x>=COAST&&z>-30)sg=1;else if(z<-45||x<-485)sg=3;else sg=0;
+  T.sg[i]=sg;T.wall[i]=1;T.wh[i]=sg===1?1.15:1.0;if(sg!==2)T.br[i]=1;
+  T.lampOff[i]=sg===1?.95:sg===2?1.9:3.2}
  /* flare: within 30 m of the island the deck widens to the pavement width and the barrier slopes away to nothing */
  {const isl=[];for(let i=0;i<N;i++)if(T.sg[i]===2)isl.push(i);T.fl=new Float32Array(N);T.vh=new Float32Array(N);const base=new Float32Array(N);
-  for(let i=0;i<N;i++){base[i]=T.sg[i]===0?1.0:1.15;if(T.sg[i]===2)continue;let dm=1e9;for(const j of isl){const dd=Math.min((i-j+N)%N,(j-i+N)%N);if(dd<dm)dm=dd;if(dm<=1)break}
-   const u=Math.max(0,Math.min(1,1-(dm-1)*T.sp/30));T.fl[i]=u*u*(3-2*u)}
+  for(let i=0;i<N;i++){base[i]=T.sg[i]===1?1.15:1.0;if(T.sg[i]===2)continue;let dm=1e9;for(const j of isl){const dd=Math.min((i-j+N)%N,(j-i+N)%N);if(dd<dm)dm=dd;if(dm<=1)break}
+   const u=T.sg[i]===1?Math.max(0,Math.min(1,1-(dm-1)*T.sp/30)):(dm<=Math.round(40/T.sp)?Math.max(0,Math.min(1,1-(dm-1)*T.sp/30)):0);T.fl[i]=u*u*(3-2*u)}
   for(let i=0;i<N;i++){let a=0,n=0;for(let k=-8;k<=8;k++){a+=base[(i+k+N)%N];n++}T.vh[i]=(a/n)*(1-T.fl[i])+.04}}
- T.terr=GROUND;T.jgl=0;if(T.jumps&&T.jumps.length){const c=T.jumps[0];for(let k=0;k<60&&T.gap[(c+k)%N];k++)T.jgl++}
+ makeTerrain(T);T.jgl=0;
  return T};
+/* ---------- terrain: valley floor, hills, road benches, farm pads, shore ---------- */
+function makeTerrain(T){const N=T.N,rx=[],rz=[],ry=[],rh=[];
+ for(let i=0;i<N;i+=2)if(T.sg[i]===0||T.sg[i]===3){rx.push(T.x[i]);rz.push(T.z[i]);ry.push(T.y[i]);rh.push(T.hw[i])}
+ const M=rx.length;
+ /* farm / camp pads, a little way off the road */
+ const sites=[];
+ for(const [tx,tz] of[[-148,-112],[-262,-286],[-430,-130],[-640,-130]]){let bi=0,bd=1e9;for(let k=0;k<M;k++){const dd=Math.hypot(rx[k]-tx,rz[k]-tz);if(dd<bd){bd=dd;bi=k}}
+  const k=bi,k2=Math.min(M-1,k+1),k1=Math.max(0,k-1),ang=Math.atan2(rx[k2]-rx[k1],rz[k2]-rz[k1]),lx=Math.cos(ang),lz=-Math.sin(ang);let best=null,bc=-1;
+  for(const sd of[-1,1]){const off=rh[k]+27,x=rx[k]+lx*off*sd,z=rz[k]+lz*off*sd;let cl=1e9;for(let q=0;q<M;q++){if(Math.abs(q-k)<14)continue;cl=Math.min(cl,Math.hypot(rx[q]-x,rz[q]-z))}if(shoreD(x,z)>24&&cl>bc){bc=cl;best={x,z,y:ry[k]+.1,yaw:Math.atan2(rx[k]-x,rz[k]-z),side:sd}}}
+  if(best&&bc>38)sites.push(best)}
+ T.sites=sites;
+ const nx=Math.round((GX1-GX0)/GCS)+1,nz=Math.round((GZ1-GZ0)/GCS)+1,H=new Float32Array(nx*nz),DM=new Float32Array(nx*nz),LO=-3.4;
+ for(let iz=0;iz<nz;iz++)for(let ix=0;ix<nx;ix++){const x=GX0+ix*GCS,z=GZ0+iz*GCS;
+  let sw=0,sy=0,dm2=1e9,ym=0,hwm=7;
+  for(let k=0;k<M;k++){const dx=rx[k]-x,dz=rz[k]-z,d2=dx*dx+dz*dz;if(d2<dm2){dm2=d2;ym=ry[k];hwm=rh[k]}if(d2<6400){const d=Math.sqrt(d2),w=1/((d+3)*(d+3)*(d+3));sw+=w;sy+=w*ry[k]}}
+  const dmin=Math.sqrt(dm2),fR=1-sstep(hwm+3.5,hwm+3.5+34,dmin),yI=sw>0?sy/sw:ym,yN=ym-.25,yR=yN+(yI-yN)*sstep(hwm+3.5,hwm+10,dmin);
+  const g=sstep(22,100,dmin);let base=LAND+g*hills(x,z)*44;
+  base=GY+.1+(base-GY-.1)*sstep(0,70,-50-x);
+  let h=base+(yR-base)*fR;
+  for(const st of sites){const dd=Math.hypot(x-st.x,z-st.z);if(dd<28){const f=1-sstep(15,28,dd);h=h+(st.y-h)*f}}
+  const sd=shoreD(x,z),sh=Math.max(sstep(2,16,sd),fR*fR);
+  h=LO+(h-LO)*sh;
+  H[iz*nx+ix]=h;DM[iz*nx+ix]=dmin}
+ T._tg={nx,nz,H,DM};
+ T.terr=(x,z)=>{if(onIsland(x,z))return GY;const u=(x-GX0)/GCS,v=(z-GZ0)/GCS;if(u<0||v<0||u>=nx-1||v>=nz-1)return LO;const i=Math.floor(u),j=Math.floor(v),fu=u-i,fv=v-j,a=H[j*nx+i],b=H[j*nx+i+1],c=H[(j+1)*nx+i],e=H[(j+1)*nx+i+1];return a+(b-a)*fu+(c-a)*fv+(a-b-c+e)*fu*fv}}
 /* a respawn or crash recovery near the snapped span goes back to a long run-up, so the jump can be made again */
 P.jumpBack=(T,i)=>{const J=T.jumps||[],N=T.N;if(!T.jgl||T.jgl*T.sp<15)return 0;const rl=Math.round(60/T.sp);
  for(const j of J){const dd=(i-j+N)%N;if(dd<T.jgl+rl+14||(N-dd)<rl+12){const target=(j-Math.round(240/T.sp)+N)%N;return(i-target+N)%N}}return 0};
@@ -7246,12 +7274,13 @@ const T_ASPH=()=>ctex(32,32,(x,w,h)=>{x.fillStyle='#3b3e44';x.fillRect(0,0,w,h);
 const T_PAVE=()=>ctex(16,16,(x,w,h)=>{x.fillStyle='#8f9296';x.fillRect(0,0,w,h);x.fillStyle='#00000026';x.fillRect(0,0,w,1);x.fillRect(0,0,1,h);x.fillRect(8,0,1,h);x.fillRect(0,8,w,1)});
 const T_CONC=()=>ctex(8,8,(x,w,h)=>{x.fillStyle='#b4b7ba';x.fillRect(0,0,w,h);x.fillStyle='#d9c25a';x.fillRect(0,1,w,1);x.fillStyle='#0000001c';x.fillRect(0,h-2,w,2)});
 const T_SLAB=()=>ctex(16,16,(x,w,h)=>{x.fillStyle='#8b8e90';x.fillRect(0,0,w,h);x.fillStyle='#0000001c';x.fillRect(0,0,w,1);x.fillRect(0,0,1,h);const r=rngf(2);for(let i=0;i<20;i++){x.fillStyle=r()<.5?'#ffffff10':'#00000014';x.fillRect(r()*w|0,r()*h|0,2,1)}});
+const T_FENCE=()=>ctex(32,16,(x,w,h)=>{x.fillStyle='#4b3622';x.fillRect(0,0,w,h);x.fillStyle='#93714a';for(const y of[1,6,11])x.fillRect(0,y,w,4);x.fillStyle='#ffffff18';for(const y of[1,6,11])x.fillRect(0,y,w,1);x.fillStyle='#5a4128';x.fillRect(0,0,3,h);x.fillStyle='#00000030';x.fillRect(w-1,0,1,h)});
 const T_GRASS=()=>ctex(16,16,(x,w,h)=>{x.fillStyle='#6f9a4e';x.fillRect(0,0,w,h);const r=rngf(8);for(let i=0;i<60;i++){x.fillStyle=r()<.5?'#5a8840':'#82ac5e';x.fillRect(r()*w|0,r()*h|0,1,1)}});
 const T_ALLEY=()=>ctex(16,16,(x,w,h)=>{x.fillStyle='#4d4b48';x.fillRect(0,0,w,h);const r=rngf(6);for(let i=0;i<40;i++){x.fillStyle=r()<.5?'#00000030':'#ffffff10';x.fillRect(r()*w|0,r()*h|0,2,2)}});
 /* orange X-braced truss, transparent between the members */
 const T_TRUSS=()=>{const t=ctex(64,64,(x,w,h)=>{x.clearRect(0,0,w,h);x.strokeStyle='#bf4426';x.lineWidth=5;x.beginPath();x.moveTo(2,2);x.lineTo(w-2,h-2);x.moveTo(w-2,2);x.lineTo(2,h-2);x.stroke();x.fillStyle='#c94b2a';x.fillRect(0,0,w,7);x.fillRect(0,h-7,w,7);x.fillRect(0,0,5,h);x.fillRect(w-5,0,5,h)});return t};
 const T_ORANGE=()=>ctex(8,8,(x,w,h)=>{x.fillStyle='#c0482a';x.fillRect(0,0,w,h);x.fillStyle='#00000020';x.fillRect(0,h-2,w,2);x.fillStyle='#ffffff18';x.fillRect(0,0,w,1)});
-const T_SIGN=(txt,bg,fg)=>ctex(256,64,(x,w,h)=>{x.fillStyle=fg||'#f4f0e4';x.fillRect(0,0,w,h);x.fillStyle=bg||'#1d4d34';x.fillRect(4,4,w-8,h-8);x.fillStyle=fg||'#f4f0e4';x.font='bold 30px monospace';x.textAlign='center';x.textBaseline='middle';x.fillText(txt,w/2,h/2+2)});
+const T_SIGN=(txt,bg,fg)=>ctex(256,64,(x,w,h)=>{x.fillStyle=fg||'#f4f0e4';x.fillRect(0,0,w,h);x.fillStyle=bg||'#1d4d34';x.fillRect(4,4,w-8,h-8);x.fillStyle=fg||'#f4f0e4';x.font='bold 30px monospace';x.textAlign='center';x.textBaseline='middle';x.fillText(txt,w/2,h/2+2,w-16)});
 const T_CHEV=()=>ctex(32,32,(x,w,h)=>{x.fillStyle='#f2c61c';x.fillRect(0,0,w,h);x.fillStyle='#16181c';for(let i=-2;i<4;i++){x.beginPath();x.moveTo(i*10,h);x.lineTo(i*10+6,h);x.lineTo(i*10+6+h,0);x.lineTo(i*10+h,0);x.fill()}});
 const T_GATE=()=>ctex(64,64,(x,w,h)=>{x.fillStyle='#a7694f';x.fillRect(0,0,w,h);const r=rngf(3);for(let j=0;j<h/4;j++)for(let i=0;i<w/8;i++){x.fillStyle=r()<.5?'#9a5d45':'#b27659';x.fillRect(i*8+(j&1)*4,j*4,7,3)}x.fillStyle='#d9cdb4';x.fillRect(0,0,w,5);x.fillRect(0,h-6,w,6);for(let i=0;i<3;i++){x.fillStyle='#26323f';x.fillRect(6+i*20,14,12,26);x.fillStyle='#9ac3df';x.fillRect(7+i*20,15,10,9)}});
 
@@ -7292,12 +7321,8 @@ function buildSpan(T){const d=T.d,N=T.N,r=rngf(8*77+11),sc=new THREE.Scene();
  const wm=new THREE.MeshStandardMaterial({color:0x14709f,roughness:1,metalness:0,flatShading:true});U.water=wm;
  const sea=mesh(new THREE.PlaneGeometry(7000,7000),wm,0,SEA,0,sc);sea.rotation.x=-Math.PI/2;
  const bed=mesh(new THREE.PlaneGeometry(7000,7000),flat(0x1a4a5e),0,-12,0,sc);bed.rotation.x=-Math.PI/2;
- /* mainland */
- {const gm=new THREE.MeshStandardMaterial({map:T_GRASS(),roughness:1});gm.map.repeat.set(90,90);
-  const top=mesh(new THREE.PlaneGeometry(COAST-MAINX,920),gm,(COAST+MAINX)/2,LAND-.02,0,sc);top.rotation.x=-Math.PI/2;
-  mesh(new THREE.BoxGeometry(COAST-MAINX,14,920),flat(0x6a6358),(COAST+MAINX)/2,LAND-7.05,0,sc);
-  /* rocky headland hills behind the start */
-  const hm=flat(0x5c7d46);for(let t=0,n=0;t<200&&n<14;t++){const hx=MAINX+40+r()*380,hz=(r()-.5)*860,hr=60+r()*80;let ok=true;for(let i=0;i<N&&ok;i+=2)if(Math.hypot(T.x[i]-hx,T.z[i]-hz)<hr+55)ok=false;if(!ok)continue;n++;const c=mesh(new THREE.ConeGeometry(hr,24+r()*40,7),hm,hx,LAND+4,hz,sc);c.rotation.y=r()*6}}
+ /* ----- terrain: valley floor, hills, verges ----- */
+ terrain(sc,T,r,U);
  /* island slab: concrete sea wall, paved top */
  {const w=ISL.x1-ISL.x0,h=ISL.z1-ISL.z0,cx=(ISL.x0+ISL.x1)/2,cz=(ISL.z0+ISL.z1)/2;
   const sm=new THREE.MeshStandardMaterial({map:T_SLAB(),roughness:1});sm.map.repeat.set(w/4,1);
@@ -7322,24 +7347,18 @@ function buildSpan(T){const d=T.d,N=T.N,r=rngf(8*77+11),sc=new THREE.Scene();
   /* cross beams under the deck */
   const cb=[];for(let k=a;k<=b;k+=Math.max(1,Math.round(8/T.sp))){if(T.gap[k])continue;const f=frame(T,k,0);cb.push([f[0],T.y[k]-1.2,f[1],DW(k)*2,.5,.6,f[2]])}
   instB(sc,new THREE.BoxGeometry(1,1,1),steelM,cb)}
- /* shore abutment skirts: embankment sides where the road climbs over land */
- for(const [a,b] of runs(T,i=>T.sg[i]===0&&T.y[i]>LAND+.35&&T.z[i]>0)){for(const sd of[-1,1])sc.add(vstrip(T,a,b,k=>sd*(T.hw[k]+.1),k=>LAND-T.y[k],0,flat(0x77705f,{side:THREE.DoubleSide}),8,1))}
- /* ----- low causeway: concrete deck on piers ----- */
- {const pil=[];for(const [a,b] of runs(T,i=>T.sg[i]===3)){
-   sc.add(strip(T,a,b,k=>-DW(k),k=>DW(k),-.02,concM,6,2));sc.add(strip(T,a,b,k=>-DW(k),k=>DW(k),-1.5,steelM,6,2));
-   for(const sd of[-1,1])sc.add(vstrip(T,a,b,k=>sd*DW(k),-1.5,0,concM,4,1));
-   for(let k=a;k<=b;k+=Math.max(1,Math.round(18/T.sp))){const f=frame(T,k,0);pil.push([f[0],(T.y[k]-1.5-10)/2,f[1],2.6,T.y[k]+8.5,(T.hw[k]+1.2)*2-1,f[2]])}}
-  instB(sc,new THREE.BoxGeometry(1,1,1),flat(0x8a8d8f),pil)}
- /* ----- walls: visible concrete barrier on bridge and causeway, plain guardrail on land, invisible kerb walls on the island ----- */
+ /* ----- walls: concrete barrier on the bridge and its approach, timber fence in the forest, invisible kerb walls on the island ----- */
  {const mt=new THREE.MeshStandardMaterial({map:T_CONC(),side:THREE.DoubleSide,roughness:.9});
   /* one continuous barrier from the island gate round the whole loop; its height eases between land and bridge and slopes away to nothing at the gates */
-  const W=Object.create(T);W.wall=Uint8Array.from(T.sg,sg=>sg===2?0:1);W.wh=T.vh;sc.add(wallMesh(W,1,mt));sc.add(wallMesh(W,-1,mt))}
+  const W=Object.create(T);W.wall=Uint8Array.from(T.sg,sg=>sg===2||sg===3?0:1);W.wh=T.vh;sc.add(wallMesh(W,1,mt));sc.add(wallMesh(W,-1,mt));
+  /* in the forest the barrier is a timber rail fence */
+  const fm=new THREE.MeshStandardMaterial({map:T_FENCE(),side:THREE.DoubleSide,roughness:1}),F=Object.create(T);F.wall=Uint8Array.from(T.sg,sg=>sg===3?1:0);F.wh=T.vh;sc.add(wallMesh(F,1,fm));sc.add(wallMesh(F,-1,fm))}
  /* ----- bridge structure ----- */
  const deckY=(x)=>{let best=1e9,y=DECK0;for(let i=0;i<N;i++){if(T.sg[i]!==1||Math.abs(T.z[i]-BZ)>3)continue;const dd=Math.abs(T.x[i]-x);if(dd<best){best=dd;y=T.y[i]}}return y};
  const HW=T.hw[Math.max(0,T.sg.indexOf(1))]||8,LAT=HW+1.3;
  const cabM=flat(0x7a2a16),ropeM=flat(0x6a2a1a);
  {const cab=[],rop=[],LATC=LAT;
-  const TOPY=DECK0+TOWH,mid=(TOWX[0]+TOWX[1])/2,half=(TOWX[1]-TOWX[0])/2,hmin=3.6;
+  const TOPY=DECK0+TOWH,mid=(TOWX[0]+TOWX[1])/2,half=(TOWX[1]-TOWX[0])/2,hmin=2.4;
   const cy=x=>{const u=(x-mid)/half;return DECK0+hmin+(TOPY-DECK0-hmin)*u*u};
   /* gap edges from the actual track */
   let gA=-425,gB=-401;if(broken){const c=jumps[0];let gl=0;for(let k=0;k<40;k++)if(T.gap[(c+k)%N])gl++;gA=T.x[c];gB=T.x[(c+gl)%N]}
@@ -7366,12 +7385,12 @@ function buildSpan(T){const d=T.d,N=T.N,r=rngf(8*77+11),sc=new THREE.Scene();
   for(const sd of[-1,1]){const lz=sd*(LAT+2.1);
    /* stepped legs: wide plinth in the water, shaft, tapered top */
    mesh(new THREE.BoxGeometry(7.6,SEA+3.2+9,6.6),flat(0x6d7073),0,(-9+SEA+3.2)/2,lz,g);
-   const segs=[[-4,y+4,4.4,3.6],[y+4,y+16,3.9,3.2],[y+16,y+26,3.4,2.8],[y+26,TOPY,3.0,2.4]];
+   const segs=[[-4,y+3,4.4,3.6],[y+3,y+10,3.9,3.2],[y+10,y+16,3.4,2.8],[y+16,TOPY,3.0,2.4]];
    for(const [ya,yb,w,dd] of segs)mesh(new THREE.BoxGeometry(w,yb-ya,dd),orgM,0,(ya+yb)/2,lz,g);
-   mesh(new THREE.BoxGeometry(3.3,1.0,2.7),flat(0x8f3220),0,TOPY+.5,lz,g)}
+   mesh(new THREE.BoxGeometry(3.3,1.0,2.7),flat(0x8f3220),0,TOPY+.5,lz,g);mesh(new THREE.SphereGeometry(.45,8,6),new THREE.MeshBasicMaterial({color:0xff2a1a}),0,TOPY+1.4,lz,g)}
   /* portal beams between the legs (clear of the roadway) */
-  if(tx===TOWX[0]){const sg=mesh(new THREE.PlaneGeometry(13,2.1),new THREE.MeshBasicMaterial({map:T_SIGN('BRIDGE OUT','#9b1c1c','#f6f1e6')}),-1.34,y+11.5,0,g);sg.rotation.y=-Math.PI/2}
-  for(const [by,bh] of[[y+11.5,2.4],[y+21,2.2],[y+TOWH-3,3.2]]){mesh(new THREE.BoxGeometry(2.6,bh,(LAT+2.1)*2),orgM,0,by,0,g);
+  if(tx===TOWX[0]){const sg=mesh(new THREE.PlaneGeometry(13,2.1),new THREE.MeshBasicMaterial({map:T_SIGN('GRAND VALLEY BRIDGE','#1d4d34','#f6f1e6')}),-1.34,y+7.5,0,g);sg.rotation.y=-Math.PI/2}
+  for(const [by,bh] of[[y+7.5,2.4],[y+13.5,2.0],[y+TOWH-2.5,2.8]]){mesh(new THREE.BoxGeometry(2.6,bh,(LAT+2.1)*2),orgM,0,by,0,g);
    const x=mesh(new THREE.PlaneGeometry((LAT+.2)*2,bh*.0+4.6),new THREE.MeshStandardMaterial({map:T_TRUSS(),side:THREE.DoubleSide,alphaTest:.5,roughness:.8}),0,by-bh/2-2.3,0,g);x.rotation.y=Math.PI/2}}
  /* ----- broken ends, fallen deck, warning boards ----- */
  if(broken){const c=jumps[0];let gl=0;for(let k=0;k<40;k++)if(T.gap[(c+k)%N])gl++;
@@ -7416,6 +7435,86 @@ function buildSpan(T){const d=T.d,N=T.N,r=rngf(8*77+11),sc=new THREE.Scene();
  {const [dome,pano,sunM]=U.follow;U.follow=null;const sx=-500,sy=420,sz=-1000;
   dome.onBeforeRender=(rd,sce,cam)=>{const p=cam.position;dome.position.set(p.x,0,p.z);dome.updateMatrixWorld();pano.position.set(p.x,90,p.z);pano.updateMatrixWorld();sunM.position.set(p.x+sx,sy,p.z+sz);sunM.updateMatrixWorld()}}
  return sc}
+
+/* ---------- the valley: terrain mesh, verges, trees, rocks, farms, signs ---------- */
+function terrain(sc,T,r,U){const g=T._tg,nx=g.nx,nz=g.nz,H=g.H,DM=g.DM,pos=[],col=[],idx=[],c=new THREE.Color();
+ const hash=(i,j)=>{const s=Math.sin(i*127.1+j*311.7)*43758.5453;return s-Math.floor(s)};
+ const GR=[0x24451d,0x2a4d20,0x203f1c,0x2f5624,0x1b3a18];
+ for(let iz=0;iz<nz;iz++)for(let ix=0;ix<nx;ix++){const k=iz*nx+ix,h=H[k],x=GX0+ix*GCS,z=GZ0+iz*GCS;pos.push(x,h,z);
+  const hx=H[iz*nx+Math.min(nx-1,ix+1)]-H[iz*nx+Math.max(0,ix-1)],hz=H[Math.min(nz-1,iz+1)*nx+ix]-H[Math.max(0,iz-1)*nx+ix],sl=Math.hypot(hx,hz)/(2*GCS),d=DM[k];
+  c.setHex(GR[(hash(ix,iz)*5)|0]);
+  if(h>16)c.lerp(new THREE.Color(0x55662f),Math.min(.6,(h-16)/30));
+  if(sl>.55)c.lerp(new THREE.Color(0x5a5348),Math.min(1,(sl-.55)/.35));
+  if(d<10.5)c.lerp(new THREE.Color(0x6b5b3c),1-sstep(7,10.5,d));
+  if(h<SEA+1.15)c.lerp(new THREE.Color(0xb5a574),Math.min(1,(SEA+1.15-h)/.9));
+  col.push(c.r,c.g,c.b)}
+ for(let iz=0;iz<nz-1;iz++)for(let ix=0;ix<nx-1;ix++){const a=iz*nx+ix,b=a+1,cc=a+nx,d=cc+1;if((ix+iz)&1)idx.push(a,cc,b,b,cc,d);else idx.push(a,cc,d,a,d,b)}
+ const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));geo.setAttribute('color',new THREE.Float32BufferAttribute(col,3));geo.setIndex(idx);geo.computeVertexNormals();
+ sc.add(new THREE.Mesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true})));
+ forest(sc,T,r,U)}
+
+function forest(sc,T,r,U){const N=T.N,g=T._tg,B=P.BLD,MAT=P.PROPKIT&&P.PROPKIT.MAT,HP=P.HP;
+ const dAt=(x,z)=>{const u=(x-GX0)/GCS,v=(z-GZ0)/GCS;if(u<0||v<0||u>=g.nx-1||v>=g.nz-1)return 999;const i=Math.floor(u),j=Math.floor(v),fu=u-i,fv=v-j,a=g.DM[j*g.nx+i],b=g.DM[j*g.nx+i+1],c=g.DM[(j+1)*g.nx+i],e=g.DM[(j+1)*g.nx+i+1];return a+(b-a)*fu+(c-a)*fv+(a-b-c+e)*fu*fv};
+ const slope=(x,z)=>Math.max(Math.abs(T.terr(x+3,z)-T.terr(x-3,z)),Math.abs(T.terr(x,z+3)-T.terr(x,z-3)))/6;
+ const land=[];for(let i=0;i<N;i+=2)if(T.sg[i]===0||T.sg[i]===3)land.push(i);
+ const nearSite=(x,z,R)=>{for(const s of T.sites||[])if(Math.hypot(x-s.x,z-s.z)<R)return true;return false};
+ const o=new THREE.Object3D(),col=new THREE.Color();
+ /* a scatter point: beside the road at lateral distance lo..hi, clear of the verge and farm pads */
+ const spot=(lo,hi,pw,maxSl,minH)=>{for(let t=0;t<12;t++){const i=land[(r()*land.length)|0],u=lo+(hi-lo)*Math.pow(r(),pw),sd=r()<.5?-1:1,c=Math.cos(T.psi[i]),s=Math.sin(T.psi[i]),al=(r()-.5)*7,
+   x=T.x[i]+c*u*sd+Math.sin(T.psi[i])*al,z=T.z[i]-s*u*sd+Math.cos(T.psi[i])*al;
+   if(x<GX0+20||x>GX1-6||shoreD(x,z)<14)continue;const h=T.terr(x,z);if(h<SEA+(minH||1.6))continue;if(dAt(x,z)<T.hw[i]+lo-1.5)continue;if(nearSite(x,z,27))continue;if(slope(x,z)>maxSl)continue;return[x,h,z,i]}return null};
+ /* instanced meshes are cut into 128 m cells with a hand-set bounding sphere, so only the cells in view are drawn */
+ const mk=(geo0,mat,rows,fn,colored)=>{if(!rows.length)return;const cells=new Map();for(const w of rows){const key=Math.floor(w[0]/128)+','+Math.floor(w[2]/128);let l=cells.get(key);if(!l){l=[];cells.set(key,l)}l.push(w)}
+  for(const l of cells.values()){const geo=geo0.clone(),cx=Math.floor(l[0][0]/128)*128+64,cz=Math.floor(l[0][2]/128)*128+64;geo.boundingSphere=new THREE.Sphere(new THREE.Vector3(cx,10,cz),110);
+   const im=new THREE.InstancedMesh(geo,mat,l.length);l.forEach((w,i)=>{fn(w);o.updateMatrix();im.setMatrixAt(i,o.matrix);if(colored)im.setColorAt(i,col.setHex(colored(w)))});im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true;sc.add(im)}};
+ const packInst=(nm,rows)=>{if(!rows.length||!B[nm])return;mk(B[nm].g,MAT,rows,w=>{o.position.set(w[0],w[1],w[2]);o.rotation.set(0,w[3],0);o.scale.set(w[4],w[5],w[6])},w=>w[7]===undefined?0xffffff:w[7])};
+ const TREES=['Tree_02','Tree_04','Tree_05','Tree_07'].filter(n=>B&&B[n]),BUSH=['Bush_01','Bush_02'].filter(n=>B&&B[n]);
+ const TT=[0xa4c488,0x98bc80,0xaccc84,0xa0bf88,0xc0b878,0x8cb078],BT=[0x9cc084,0x90b47c,0xacc47c,0xc4ac7c];
+ const stats={trees:0,bushes:0,rocks:0};
+ if(MAT&&TREES.length){const tr={};for(let n=0,t=0;n<1500&&t<12000;t++){const p=spot(12.5,85,1.35,.95,1.8);if(!p)continue;n++;const nm=TREES[(r()*TREES.length)|0],sc2=1.5+r()*1.7;(tr[nm]=tr[nm]||[]).push([p[0],p[1]-.2,p[2],r()*6.28,sc2*(.85+r()*.3),sc2*(.9+r()*.35),sc2*(.85+r()*.3),TT[(r()*TT.length)|0]]);stats.trees++}
+  for(const nm in tr)packInst(nm,tr[nm]);
+  if(BUSH.length){const bs={};for(let n=0,t=0;n<200&&t<6000;t++){const p=spot(8,34,1.3,1.1,1.5);if(!p)continue;n++;const nm=BUSH[(r()*BUSH.length)|0],sc2=1.1+r()*1.3;(bs[nm]=bs[nm]||[]).push([p[0],p[1]-.1,p[2],r()*6.28,sc2,sc2*(.8+r()*.5),sc2,BT[(r()*BT.length)|0]]);stats.bushes++}
+   for(const nm in bs)packInst(nm,bs[nm])}}
+ /* rocks, boulders, logs, stumps and wild flowers */
+ {const rk=[],rc=[0x8a8c8e,0x7c7e80,0x9a948a,0x6f7173,0x97806a],lg=[],st=[],fl=[];
+  for(let n=0,t=0;n<240&&t<4000;t++){const p=spot(7.5,70,1.5,2,1.6);if(!p)continue;n++;const big=r()<.16,s=big?2.2+r()*2.6:.5+r()*1.3;rk.push([p[0],p[1]+s*.15,p[2],r()*6.28,s*(.9+r()*.5),s*(.6+r()*.35),s*(.9+r()*.5),rc[(r()*rc.length)|0]]);stats.rocks++}
+  for(let n=0,t=0;n<80&&t<1200;t++){const p=spot(8,60,1.4,.5,1.7);if(!p)continue;n++;lg.push([p[0],p[1]+.3,p[2],r()*6.28,.7+r()*.8])}
+  for(let n=0,t=0;n<70&&t<1200;t++){const p=spot(8,45,1.4,.5,1.7);if(!p)continue;n++;st.push([p[0],p[1]+.1,p[2],r()*6.28,.8+r()*.9])}
+  const FC=[0xf2d43a,0xf4f1e6,0xe86f9a,0xa579d8,0xf08a30];for(let n=0,t=0;n<420&&t<4000;t++){const p=spot(8.5,26,1.1,.35,1.7);if(!p)continue;const cl=FC[(r()*FC.length)|0];for(let q=0;q<5;q++){const a=r()*6.28,rr=r()*2.2,x=p[0]+Math.cos(a)*rr,z=p[2]+Math.sin(a)*rr;fl.push([x,T.terr(x,z)+.18,z,cl])}n++}
+  mk(new THREE.DodecahedronGeometry(1,0),new THREE.MeshStandardMaterial({roughness:1,flatShading:true}),rk,w=>{o.position.set(w[0],w[1],w[2]);o.rotation.set(r()*.5,w[3],r()*.5);o.scale.set(w[4],w[5],w[6])},w=>w[7]);
+  mk(new THREE.CylinderGeometry(.34,.38,4,7),new THREE.MeshStandardMaterial({color:0x6f5033,roughness:1,flatShading:true}),lg,w=>{o.position.set(w[0],w[1],w[2]);o.rotation.set(0,w[3],Math.PI/2);o.scale.set(w[4],w[4],w[4])});
+  mk(new THREE.CylinderGeometry(.5,.62,.8,8),new THREE.MeshStandardMaterial({color:0x7a5a38,roughness:1,flatShading:true}),st,w=>{o.position.set(w[0],w[1],w[2]);o.rotation.set(0,w[3],0);o.scale.set(w[4],w[4],w[4])});
+  mk(new THREE.OctahedronGeometry(.17,0),new THREE.MeshStandardMaterial({roughness:.8,flatShading:true}),fl,w=>{o.position.set(w[0],w[1],w[2]);o.rotation.set(0,0,0);o.scale.set(1,1,1)},w=>w[3])}
+ /* farm, cabin and camp sites on their level pads */
+ (T.sites||[]).forEach((s,k)=>{const L=[],yawR=s.yaw,gy=s.y,add=(nm,dx,dz,yaw,sc2)=>{if(!B[nm])return;const ca=Math.cos(s.yaw),sa=Math.sin(s.yaw),x=s.x+dx*ca+dz*sa,z=s.z-dx*sa+dz*ca;packInst(nm,[[x,gy+.02,z,s.yaw+yaw,sc2,sc2,sc2]])};
+  const kinds=[['FarmerHouse','Silo_01'],['Barn_01','AnimalFeeder_01'],['ResidentBuilding_01','Well_02'],['Outhouses','Well_02']][k%4];
+  if(k===0){add('FarmerHouse',0,-2,Math.PI,1.1);add('Silo_01',8,-6,0,1.1);add('Haystack_04',-8,5,.5,1.3);add('Haystack_01',-6.5,7.5,-.3,1.3);add('WoodenCrates_01',6,5,.2,1.2);add('Well_02',-7,-6,0,1.2)}
+  else if(k===1){add('Barn_01',0,-3,Math.PI,1.15);add('AnimalFeeder_01',-7,5,.3,1.4);add('Haystack_02',7,4,.4,1.3);add('Haystack_01',8.8,6,-.2,1.3);add('Silo_02',9,-5,0,1.1);add('WoodenCrates_01',-5,6.5,0,1.2)}
+  else if(k===2){add('ResidentBuilding_01',0,-2,Math.PI,1.15);add('Well_02',-6.5,3.5,0,1.3);add('Outhouses',8,-6,.6,1.3);add('ChickenCoop',-8,-5,.4,1.2);add('Haystack_04',6,6,.2,1.2);add('WoodenCrates_01',4,5,.4,1.2)}
+  else{add('Outhouses',-7,-5,.4,1.3);add('Well_02',6,-5,0,1.3);add('WoodenCrates_01',-3,4,.3,1.3);add('WoodenCrates_01',-1.8,5.2,-.4,1.3);add('Haystack_01',4,5,.4,1.4);add('Haystack_02',6,3.3,-.3,1.3)}
+  /* split-rail fence round the pad, open at the road side */
+  if(B.WoodFence_02){const ring=[],hs=12.5;for(let q=-hs;q<hs;q+=3){ring.push([q+1.5,-hs,0],[q+1.5,hs,0],[-hs,q+1.5,Math.PI/2],[hs,q+1.5,Math.PI/2])}
+   const ca=Math.cos(s.yaw),sa=Math.sin(s.yaw),rows=[];for(const [dx,dz,yw] of ring){if(dz>hs-.1&&Math.abs(dx)<5)continue;const x=s.x+dx*ca+dz*sa,z=s.z-dx*sa+dz*ca;rows.push([x,T.terr(x,z)-.08,z,s.yaw+yw,1.1,1.1,1.1])}packInst('WoodFence_02',rows)}
+  if(HP&&HP.ready){if(k===0&&HP.defs.tractor)HP.add(sc,'tractor',[[s.x+Math.cos(s.yaw)*9-Math.sin(s.yaw)*3,gy+.02,s.z-Math.sin(s.yaw)*9-Math.cos(s.yaw)*3,s.yaw+1.2,1.5]]);if(k===3&&HP.defs.van)HP.add(sc,'van',[[s.x+Math.cos(s.yaw)*3,gy+.02,s.z-Math.sin(s.yaw)*3,s.yaw+.5,1.2]])}
+  /* a rough gravel drive from the pad to the road */
+  {const dr=new THREE.Mesh(new THREE.PlaneGeometry(4.5,27),new THREE.MeshStandardMaterial({color:0x6e5f44,roughness:1,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}));
+   dr.rotation.x=-Math.PI/2;dr.rotation.z=-s.yaw;dr.position.set(s.x+Math.sin(s.yaw)*13.5,gy+.06,s.z+Math.cos(s.yaw)*13.5);sc.add(dr)}});
+ /* chevron boards on the outside of the sharp bends */
+ {const bd=[],po=[],cm=new THREE.MeshStandardMaterial({map:T_CHEV(),roughness:.8});
+  for(let i=0;i<N;i+=2){if(T.sg[i]!==3)continue;const a=T.psi[(i+9)%N],b=T.psi[(i-9+N)%N];let dp=a-b;while(dp>Math.PI)dp-=6.2832;while(dp<-Math.PI)dp+=6.2832;if(Math.abs(dp)<.62)continue;if(((i/2)|0)%3)continue;
+   const sd=dp>0?-1:1,f=frame(T,i,sd*(T.hw[i]+1.6));bd.push([f[0],T.y[i]+1.35,f[1],1.7,1.0,.1,f[2]]);po.push([f[0],T.y[i]+.55,f[1],.12,1.3,.12,f[2]])}
+  if(bd.length){instB(sc,new THREE.BoxGeometry(1,1,1),cm,bd);instB(sc,new THREE.BoxGeometry(1,1,1),flat(0x4a4036),po)}}
+ /* overhead sign gantries: bridge approach and the forest road leaving the island */
+ const gantry=(tx,tz,txt,bg)=>{let bi=0,bd=1e9;for(let i=0;i<N;i++){const d=Math.hypot(T.x[i]-tx,T.z[i]-tz);if(d<bd){bd=d;bi=i}}
+  const f=frame(T,bi,0),gp=new THREE.Group();gp.position.set(f[0],T.y[bi],f[1]);gp.rotation.y=f[2];sc.add(gp);const W2=T.hw[bi]+2.2,steel=flat(0x6a6f76);
+  for(const sd of[-1,1])mesh(new THREE.BoxGeometry(.7,7.4,.7),steel,sd*W2,3.7,0,gp);mesh(new THREE.BoxGeometry(W2*2+.7,.7,.7),steel,0,7.2,0,gp);
+  const sm=new THREE.MeshBasicMaterial({map:T_SIGN(txt,bg,'#f6f1e6')});for(const dz of[-.45,.45]){const pl=mesh(new THREE.PlaneGeometry(10,2.5),sm,0,5.7,dz,gp);if(dz>0)pl.rotation.y=0;else pl.rotation.y=Math.PI}};
+ gantry(-395,30,'GRAND VALLEY BRIDGE','#1d4d34');gantry(-105,-96,'FOREST ROAD','#5a3a1e');
+ /* the channel: buoys and a few boats */
+ {const bu=[];for(let n=0,t=0;n<16&&t<200;t++){const x=-318+r()*250,z=-48+r()*170;if(Math.abs(z-BZ)<17)continue;bu.push([x,SEA+.25,z,.55,1.1,.55,0])}
+  instB(sc,new THREE.CylinderGeometry(1,1,1,8),flat(0xd23a2a),bu);instB(sc,new THREE.CylinderGeometry(1,1,1,8),flat(0xf3f3f3),bu.map(q=>[q[0],q[1]+.7,q[2],.4,.45,.4,0]));
+  if(HP&&HP.ready){const bt=[[-200,-14,.4,5],[-285,78,2.1,4.2],[-150,92,5.2,5],[-235,-38,3.3,4.4]],rows={boat_large:[],boat_small:[]};bt.forEach((b,i)=>{const nm=i%2?'boat_small':'boat_large';if(HP.defs[nm])rows[nm].push([b[0],SEA-HP.defs[nm].min.y*b[3]-.05,b[1],b[2],b[3]])});for(const nm in rows)if(rows[nm].length)HP.add(sc,nm,rows[nm])}}
+ U.forestStats=stats}
 
 /* ---------- the island city: gap-free rows facing every shore, street rows, block fill, alleys ---------- */
 function city(sc,T,r,U){const HP=P.HP,N=T.N;if(!HP||!HP.ready){console.warn('bridge: model pack not ready');return}
@@ -8343,7 +8442,7 @@ const PROF={
  'Redrock Stage':{wind:1,bed:['gust',.7],ev:['eagle','cricket']},
  'Highmoor Stage':{wind:1.1,bed:['gust',.8],ev:['curlew','bell']},
  'Coastal Run':{wind:.8,bed:['sea',.9],ev:['gull','gull','bell']},
- 'Broken Span':{wind:.6,bed:['sea',.5],ev:['gull','horn','bell']},
+ 'Grand Valley':{wind:.7,bed:['leaves',.5],ev:['gull','bird','bird']},
  'Frostline Stage':{wind:1.1,bed:['gust',.7],ev:['creak','bird']},
  'Mangrove Ford':{wind:.3,bed:['stream',.7],ev:['frog','frog','bird','gull']},
  'Terrace Run':{wind:.5,bed:['leaves',.35],ev:['cricket','bell','bird']},
@@ -8469,14 +8568,12 @@ window.__optAction=k=>{if(k==='@tutorial')P.startTutorial()};
 'use strict';
 const P=window.PT8;
 P.LOG=[
- {v:'0.04',d:'Oct 20, 2026',t:'New track: Broken Span',items:[
-  'Harbor Lights is gone, replaced by Broken Span, the first track of a brand-new roster: a long orange suspension bridge with two towers, hangers and cables, snapped in half.',
-  'Floor it up the ramp and jump the 18 m gap. Fall short and you are sent back to a long run-up, so you can try again at full speed.',
-  'You land on City Island, a walled island city built from the building pack and KayKit buildings: unbroken rows of buildings face every shore, corner towers, brick gate houses over both roads, shopfronts, trees, hydrants, bins and rooftop water towers.',
-  'Any gap between buildings is a tiny alley with dumpsters, bins, crates and bags; larger leftovers become pocket parks.',
-  'A low causeway on concrete piers brings you home across the bay, then a hairpin on the mainland and back up the bridge approach.',
-  'Wreckage lies in the water under the gap, with dangling cables, bent truss ends, rebar and hazard boards; the whole map works at dawn, day, sunset and night.',
-  'Jumps can now have their own gap length and ramp height, and respawns near a long gap start well back so you can build speed again.']},
+ {v:'0.04',d:'Oct 20, 2026',t:'New track: Grand Valley',items:[
+  'Harbor Lights is gone, replaced by Grand Valley, the first track of a brand-new roster: a short, low orange suspension bridge with two towers, hangers and cables, leading to a walled island city.',
+  'City Island is built from the building pack and KayKit buildings: unbroken rows of buildings face every shore, corner towers, brick gate houses over both roads, shopfronts, trees, hydrants, bins and rooftop water towers. Any gap between buildings is a tiny alley with dumpsters, bins and crates; larger leftovers become pocket parks.',
+  'Leave the city through the west gate and the race runs on into a forest valley: a winding, hilly road with real terrain, timber fences, pine and broadleaf trees, bushes, boulders, logs, stumps, wild flowers, chevron boards on the sharp bends, and farm and camp sites with houses, barns, wells, haystacks and fences.',
+  'The road swings round the valley and comes back to the start straight, with overhead signs, buoys and boats in the channel; the whole map works at dawn, day, sunset and night.',
+  'Jumps can now have their own gap length and ramp height.']},
  {v:'0.03',d:'Oct 20, 2026',t:'New streetlights',items:[
   'All streetlights on every map: new lamp model, a much wider and softer pool of light, a smoother glow, and lights that fade in and out instead of popping.',
   'Only the rally mode has a loading screen now; everything else launches straight in. The loader car\'s front wheels point straight.',
@@ -10106,7 +10203,7 @@ function lamps(sc,T){
  if(have.length){for(const p of have){const y=isFinite(p.y)?p.y:T.terr(p.x,p.z);L.push({hx:p.x+Math.sin(p.yaw)*AX,hy:y+HY,hz:p.z+Math.cos(p.yaw)*AX})}}
  else if(!T.d.gravel&&K&&P.lampParts){const st=Math.max(2,Math.round(40/(T.sp||6)));let side=1;const own=[];
   const HB=T.d.harbor&&T.hbr,hb=i=>HB&&((i>=HB.rest[0]&&i<=HB.rest[1])||HB.tuns.some(a=>i>=a[0]-1&&i<=a[1]+1)),inAl=i=>HB&&HB.alleys.some(a=>i>=a[0]&&i<=a[1]),onPier=i=>HB&&i>=HB.pier[0]&&i<=HB.pier[1];
-  for(let i=Math.floor(st/2);i<N;i+=st){if(HB){if(hb(i))continue}else if((T.gap&&T.gap[i])||(T.tn&&T.tn[i])||(!T.d.city&&!T.d.span&&T.wall&&T.wall[i]&&!(T.br&&T.br[i])))continue;side=-side;const c=Math.cos(T.psi[i]),s_=Math.sin(T.psi[i]),lo=side*(HB?(onPier(i)?T.hw[i]-.25:inAl(i)?T.hw[i]+1.1:T.hw[i]+3.4):T.lampOff?T.hw[i]+T.lampOff[i]:T.hw[i]+3.2),x=T.x[i]+c*lo,z=T.z[i]-s_*lo,y=HB?(inAl(i)?.2:onPier(i)?.09:.12)+T.y[i]:T.d.span?T.y[i]+(T.sg[i]===2?.12:0):T.br&&T.br[i]?T.y[i]-lo*T.bank[i]:T.terr(x,z),yaw=Math.atan2(-c*side,s_*side);
+  for(let i=Math.floor(st/2);i<N;i+=st){if(HB){if(hb(i))continue}else if((T.gap&&T.gap[i])||(T.tn&&T.tn[i])||(T.d.span&&T.sg&&T.sg[i]===3)||(!T.d.city&&!T.d.span&&T.wall&&T.wall[i]&&!(T.br&&T.br[i])))continue;side=-side;const c=Math.cos(T.psi[i]),s_=Math.sin(T.psi[i]),lo=side*(HB?(onPier(i)?T.hw[i]-.25:inAl(i)?T.hw[i]+1.1:T.hw[i]+3.4):T.lampOff?T.hw[i]+T.lampOff[i]:T.hw[i]+3.2),x=T.x[i]+c*lo,z=T.z[i]-s_*lo,y=HB?(inAl(i)?.2:onPier(i)?.09:.12)+T.y[i]:T.d.span?T.y[i]+(T.sg[i]===2?.12:0):T.br&&T.br[i]?T.y[i]-lo*T.bank[i]:T.terr(x,z),yaw=Math.atan2(-c*side,s_*side);
    own.push([x,y,z,yaw]);L.push({hx:x+Math.sin(yaw)*AX,hy:y+HY,hz:z+Math.cos(yaw)*AX})}
   if(own.length){const im=new THREE.InstancedMesh(K.mk(P.lampParts()),K.MAT,own.length),dm=new THREE.Object3D();const wc=new THREE.Color(1,1,1);own.forEach((q,i)=>{dm.position.set(q[0],q[1],q[2]);dm.rotation.set(0,q[3],0);dm.updateMatrix();im.setMatrixAt(i,dm.matrix);im.setColorAt(i,wc)});im.frustumCulled=false;im.userData.ptProp='lamp';sc.add(im)}}
  if(!L.length)return;
