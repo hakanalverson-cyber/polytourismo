@@ -700,3 +700,22 @@ body.barnscene #cd,body.barnscene #mm,body.barnscene #huds,body.barnscene #rlDas
 .gc.lock b{color:#ffffff7a}
 .gc.bn .th i{position:absolute;inset:0;display:grid;place-items:center;font:700 34px var(--mn);color:#f2c76b;font-style:normal}
 @media(max-width:860px){.lst.cards{width:92vw}}
+
+
+/* ===== garage: full-screen card grid -> black fade -> showroom view ===== */
+#s8show>.shfade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .4s;z-index:30}
+#s8show>.shfade.on{opacity:1;pointer-events:auto;transition:opacity .22s}
+#s8show .gnav{display:none;align-items:center;gap:8px}
+#s8show .gnav em{font:700 10px var(--mn);letter-spacing:.2em;color:var(--dim);font-style:normal;min-width:64px;text-align:center}
+#s8show .gnav .btn{padding:8px 14px}
+#s8show.gv-grid::before{background:radial-gradient(ellipse at 50% 0%,#1b222b 0%,#0d1014 55%,#07090c 100%)}
+#s8show.gv-grid .stat,#s8show.gv-grid .drag,#s8show.gv-grid #shTabs,#s8show.gv-grid #shSw,#s8show.gv-grid #shLv,#s8show.gv-grid #shAct{display:none!important}
+#s8show.gv-grid .lst.cards{left:0;right:0;width:auto;top:12vh;bottom:12vh;padding:6px 3.4vw 24px;background:none;-webkit-mask-image:linear-gradient(180deg,#000 0,#000 92%,transparent 100%);mask-image:linear-gradient(180deg,#000 0,#000 92%,transparent 100%)}
+#s8show.gv-grid .lst.cards .gg{grid-template-columns:repeat(auto-fill,minmax(clamp(150px,15.5vw,230px),1fr));gap:12px}
+#s8show.gv-grid .gc{padding:8px 8px 10px;background:#ffffff0e;border:1px solid #ffffff1a}
+#s8show.gv-grid .gc b{font-size:11px}
+#s8show.gv-grid .gc.sel{background:#f1f3f524;border-color:#f1f3f5;box-shadow:inset 0 0 0 1px #f1f3f5}
+#s8show.gv-car .lst{display:none}
+#s8show.gv-car .gnav{display:flex}
+#s8show.gv-car .stat{left:0;right:auto;width:min(360px,30vw);background:linear-gradient(90deg,#07090cee 62%,transparent);padding:16px 2.4vw 30px 3.4vw}
+
