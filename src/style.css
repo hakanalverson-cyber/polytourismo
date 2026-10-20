@@ -726,3 +726,26 @@ body.barnscene #cd,body.barnscene #mm,body.barnscene #huds,body.barnscene #rlDas
 .chip.bn{color:#f2c76b;border-color:#f2c76b66}
 .txrow{display:flex;align-items:center;gap:8px;margin-top:6px}.txrow small{font:700 9px var(--mn);letter-spacing:.2em;color:var(--dim);text-transform:uppercase}.txrow .seg .btn{padding:3px 8px;font-size:10px}
 .txrow .seg{display:flex;flex-wrap:nowrap}.txrow .seg .btn{white-space:nowrap}
+
+/* menu transitions: a slanted colour sweep between screens, then each screen's panels glide in one after another */
+#ptWipe{position:fixed;inset:0;z-index:9000;pointer-events:none;overflow:hidden}
+#ptWipe i{position:absolute;top:-10%;bottom:-10%;left:-70%;width:62%;opacity:0;transform:skewX(-16deg)}
+#ptWipe.go i:nth-child(1){background:linear-gradient(90deg,#07090c,#0d1319 70%,#07090c);animation:ptWipe .62s cubic-bezier(.65,0,.25,1) both}
+#ptWipe.go i:nth-child(2){width:5%;background:var(--ac,#7fe3f2);box-shadow:0 0 40px 6px var(--ac,#7fe3f2);animation:ptWipe .62s cubic-bezier(.65,0,.25,1) .045s both;margin-left:62%}
+#ptWipe.go i:nth-child(3){width:1.2%;background:#fff;animation:ptWipe .62s cubic-bezier(.65,0,.25,1) .07s both;margin-left:68%}
+@keyframes ptWipe{0%{opacity:1;transform:skewX(-16deg) translateX(0)}99%{opacity:1}100%{opacity:0;transform:skewX(-16deg) translateX(330%)}}
+.v8s.on::before{animation:ptFadeIn .5s ease both}
+.v8s.on>*{animation:ptRise .62s cubic-bezier(.16,.85,.25,1) backwards}
+.v8s.on>*:nth-child(1){animation-delay:.18s}.v8s.on>*:nth-child(2){animation-delay:.26s}.v8s.on>*:nth-child(3){animation-delay:.34s}.v8s.on>*:nth-child(4){animation-delay:.42s}.v8s.on>*:nth-child(n+5){animation-delay:.5s}
+.v8s.on .card,.v8s.on .trk,.v8s.on .gc,.v8s.on .drv,.v8s.on .evc{animation:ptPop .5s cubic-bezier(.16,.85,.25,1) backwards}
+.v8s.on .card:nth-child(1),.v8s.on .trk:nth-child(1),.v8s.on .gc:nth-child(1),.v8s.on .drv:nth-child(1){animation-delay:.3s}
+.v8s.on .card:nth-child(2),.v8s.on .trk:nth-child(2),.v8s.on .gc:nth-child(2),.v8s.on .drv:nth-child(2){animation-delay:.35s}
+.v8s.on .card:nth-child(3),.v8s.on .trk:nth-child(3),.v8s.on .gc:nth-child(3),.v8s.on .drv:nth-child(3){animation-delay:.4s}
+.v8s.on .card:nth-child(4),.v8s.on .trk:nth-child(4),.v8s.on .gc:nth-child(4),.v8s.on .drv:nth-child(4){animation-delay:.45s}
+.v8s.on .card:nth-child(5),.v8s.on .trk:nth-child(5),.v8s.on .gc:nth-child(5){animation-delay:.5s}
+.v8s.on .card:nth-child(6),.v8s.on .trk:nth-child(6),.v8s.on .gc:nth-child(6){animation-delay:.55s}
+.v8s.on .card:nth-child(n+7),.v8s.on .trk:nth-child(n+7),.v8s.on .gc:nth-child(n+7){animation-delay:.6s}
+@keyframes ptRise{from{opacity:0;transform:translateY(26px);filter:blur(4px)}}
+@keyframes ptPop{from{opacity:0;transform:translateY(18px) scale(.94)}}
+@keyframes ptFadeIn{from{opacity:0}}
+@media (prefers-reduced-motion:reduce){#ptWipe{display:none}.v8s.on>*,.v8s.on .card,.v8s.on .trk,.v8s.on .gc,.v8s.on .drv,.v8s.on::before{animation:none!important}}

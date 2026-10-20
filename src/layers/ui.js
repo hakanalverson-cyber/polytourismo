@@ -106,7 +106,10 @@ $$('.ico',root).forEach(e=>{e.appendChild(IC[e.dataset.i]())});
 
 /* ================= screen switching ================= */
 const rawShow=show;let prevScr='menu';
-show=n=>{const was=scr;rawShow(n);if(was!==n&&P.sfx&&['s8cards','s8setup','s8career','s8show','s8res','menu'].includes(n))P.sfx('whoosh');for(const id of SCREENS)$(id).classList.toggle('on',id===n);
+const WP=document.createElement('div');WP.id='ptWipe';WP.innerHTML='<i></i><i></i><i></i>';document.body.appendChild(WP);
+const MENUS=['menu','s8cards','s8setup','s8career','s8show','s8res'];let wipeT=0;
+function wipe(){try{WP.classList.remove('go');void WP.offsetWidth;WP.classList.add('go');clearTimeout(wipeT);wipeT=setTimeout(()=>WP.classList.remove('go'),900)}catch(e){}}
+show=n=>{const was=scr;if(was&&was!==n&&MENUS.includes(n)&&was!=='game'&&was!=='pause')wipe();rawShow(n);if(was!==n&&P.sfx&&['s8cards','s8setup','s8career','s8show','s8res','menu'].includes(n))P.sfx('whoosh');for(const id of SCREENS)$(id).classList.toggle('on',id===n);
  $$('.crv',root).forEach(e=>e.textContent=fmtCr(P.SV().cr));
  if(was==='s8show'&&n!=='s8show')studioOff();
  if(['menu','s8cards','s8setup','s8career','s8res'].includes(n))refreshMenuCars();
