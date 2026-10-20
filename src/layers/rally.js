@@ -451,7 +451,7 @@ function jumpUpdate(J,dt){
  J.t+=dt;const u=(((J.t*SPD)/J.CL)%1+1)%1,p=J.curve.getPointAt(u),tg=J.curve.getTangentAt(u),tg2=J.curve.getTangentAt((u+.004)%1),car=J.car;
  const k=(tg.x*tg2.z-tg.z*tg2.x)/.004/J.CL;
  car.g.position.set(p.x,.8,p.z);car.g.rotation.set(0,Math.atan2(tg.x,tg.z),0);car.g.updateMatrixWorld(true);
- try{if(typeof wheels==='function')wheels(car,SPD,Math.max(-1,Math.min(1,k*140)),dt||1/60)}catch(e){}
+ try{if(window.__wheels)window.__wheels(car,SPD,Math.max(-1,Math.min(1,k*140)),dt||1/60)}catch(e){}
  J.acc+=dt;const V=new THREE.Vector3();
  while(J.acc>1/45){J.acc-=1/45;for(const sx of[-.85,.85]){const d=J.dust[J.di=(J.di+1)%J.dust.length];V.set(sx,.25,-2).applyMatrix4(car.g.matrixWorld);d.m.position.copy(V);d.age=0;d.life=1.1+Math.random()*.7;d.vx=(Math.random()-.5)*2.4-tg.x*3;d.vz=(Math.random()-.5)*2.4-tg.z*3;d.vy=.8+Math.random()*1.1;d.s0=.35+Math.random()*.3;d.m.visible=true}}
  for(const d of J.dust){if(!d.m.visible)continue;d.age+=dt;if(d.age>d.life){d.m.visible=false;continue}const q=d.age/d.life;d.m.position.x+=d.vx*dt;d.m.position.y+=d.vy*dt*(1-q*.7);d.m.position.z+=d.vz*dt;d.m.scale.setScalar(d.s0+q*2.6);d.m.material.opacity=.5*(1-q)*(1-q*.3)}
@@ -465,17 +465,25 @@ function jumpFrame(now){
  const dt=Math.max(0,Math.min(.05,(now-J.last)/1000||0));J.last=now;
  if(!J.size())return;jumpUpdate(J,dt);jumpDraw(J)}
 P._jumpAt=t=>{const J=JS;if(!J)return 0;J.on=false;cancelAnimationFrame(J.raf);J.size();J.t=0;J.dust.forEach(d=>d.m.visible=false);for(let i=0;i<Math.round(t*30);i++)jumpUpdate(J,1/30);jumpDraw(J);return 1};
-P.rallyIntro=(open,track)=>{let e=$i('rlLoad');
+P.rallyIntro=(open,track,o)=>{o=o||{};let e=$i('rlLoad');
  if(!e){e=document.createElement('div');e.id='rlLoad';e.innerHTML=`<div class="rl-jump"></div><div class="rl-lt"><small>PREPARING</small><h2>RALLY</h2><p>LOADING STAGES</p><div class="rl-pb"><u></u></div></div>`;document.body.appendChild(e)}
+ {const t=e.querySelector('h2'),p_=e.querySelector('p');if(t)t.textContent=o.title||'RALLY';if(p_)p_.textContent=o.sub||'LOADING STAGES'}
  e.classList.remove('on','done','ready');void e.offsetWidth;e.classList.add('on');const t0=performance.now();
  let J=null;
  /* 1) get everything ready and paint one still frame; nothing animates while the heavy work runs */
- try{J=jumpInit(e.querySelector('.rl-jump'));try{const sel=P.rallySel(0);J.setCar(P.modelOf(sel.id,0))}catch(er){console.error('loadcar',er)}J.on=false;J.size();J.dust.forEach(d=>d.m.visible=false);J.t=0;J.acc=0;for(let i=0;i<40;i++)jumpUpdate(J,1/30);jumpDraw(J)}catch(err){console.error('jump',err);J=null}
+ try{J=jumpInit(e.querySelector('.rl-jump'));try{const sel=o.car||P.rallySel(0);J.setCar(P.modelOf(sel.id,sel.alt?1:0))}catch(er){console.error('loadcar',er)}J.on=false;J.size();J.dust.forEach(d=>d.m.visible=false);J.t=0;J.acc=0;for(let i=0;i<40;i++)jumpUpdate(J,1/30);jumpDraw(J)}catch(err){console.error('jump',err);J=null}
  const finish=()=>{
   /* 2) all loaded: now play the shot smoothly, then fade out */
   e.classList.add('ready');if(J){try{J.on=true;J.last=performance.now();cancelAnimationFrame(J.raf);J.raf=requestAnimationFrame(jumpFrame)}catch(er){}}
-  setTimeout(()=>{e.classList.add('done');setTimeout(()=>{e.classList.remove('on','done','ready');if(J){J.on=false;cancelAnimationFrame(J.raf)}},650)},1900)};
+  setTimeout(()=>{e.classList.add('done');setTimeout(()=>{e.classList.remove('on','done','ready');if(J){J.on=false;cancelAnimationFrame(J.raf)}},650)},1500)};
  requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(()=>{try{open()}catch(err){console.error(err)}
-  (P.stageRender?P.stageRender(track):Promise.resolve()).catch(()=>{}).then(()=>setTimeout(finish,60))},80)))};
+  (P.stageRender&&track!=null&&!o.noStage?P.stageRender(track):Promise.resolve()).catch(()=>{}).then(()=>setTimeout(finish,60))},80)))};
+/* every mode gets the car loading screen */
+P.launchWithIntro=cfg=>{if(P._introBusy)return;const rally=cfg.mode==='rally'&&!cfg.circuit,circ=!!cfg.circuit,mm=cfg.cutup?'cutup':cfg.mode;
+ const NAME={ta:'TIME ATTACK',mp:'MULTIPLAYER',elim:'ELIMINATION',cutup:'CUT-UP'};
+ const title=rally?'RALLY':circ?'TRACK':(NAME[mm]||'RACE'),sub=rally?'LOADING STAGES':circ?'LOADING CIRCUIT':'LOADING TRACK';
+ let car=null;try{const h=cfg.humans&&cfg.humans[0];if(h)car={id:h.id,alt:h.alt}}catch(e){}
+ P._introBusy=1;setTimeout(()=>{P._introBusy=0},1200);
+ P.rallyIntro(()=>P.launch(cfg),rally?cfg.track:null,{title,sub,car,noStage:!rally})};
 P.RALLYSESSION=()=>S;
 })();

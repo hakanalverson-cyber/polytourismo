@@ -106,10 +106,10 @@ $$('.ico',root).forEach(e=>{e.appendChild(IC[e.dataset.i]())});
 
 /* ================= screen switching ================= */
 const rawShow=show;let prevScr='menu';
-const WP=document.createElement('div');WP.id='ptWipe';WP.innerHTML='<i></i><i></i><i></i>';document.body.appendChild(WP);
+const WP=document.createElement('div');WP.id='ptWipe';document.body.appendChild(WP);
 const MENUS=['menu','s8cards','s8setup','s8career','s8show','s8res'];let wipeT=0;
-function wipe(){try{WP.classList.remove('go');void WP.offsetWidth;WP.classList.add('go');clearTimeout(wipeT);wipeT=setTimeout(()=>WP.classList.remove('go'),900)}catch(e){}}
-show=n=>{const was=scr;if(was&&was!==n&&MENUS.includes(n)&&was!=='game'&&was!=='pause')wipe();rawShow(n);if(was!==n&&P.sfx&&['s8cards','s8setup','s8career','s8show','s8res','menu'].includes(n))P.sfx('whoosh');for(const id of SCREENS)$(id).classList.toggle('on',id===n);
+function wipe(){try{WP.classList.remove('go');void WP.offsetWidth;WP.classList.add('go');clearTimeout(wipeT);wipeT=setTimeout(()=>WP.classList.remove('go'),600)}catch(e){}}
+show=n=>{const was=scr;if(was&&was!==n&&MENUS.includes(n)&&was!=='game'&&was!=='pause')wipe();rawShow(n);if(was!==n&&['s8cards','s8setup','s8career','s8show'].includes(n)){const e=$(n);e.classList.add('enter');clearTimeout(e._en);e._en=setTimeout(()=>e.classList.remove('enter'),900)}if(was!==n&&P.sfx&&['s8cards','s8setup','s8career','s8show','s8res','menu'].includes(n))P.sfx('whoosh');for(const id of SCREENS)$(id).classList.toggle('on',id===n);
  $$('.crv',root).forEach(e=>e.textContent=fmtCr(P.SV().cr));
  if(was==='s8show'&&n!=='s8show')studioOff();
  if(['menu','s8cards','s8setup','s8career','s8res'].includes(n))refreshMenuCars();
@@ -253,7 +253,7 @@ $('suGo').onclick=()=>{if(isRL(ST.mode)&&ST.rstep!==2){P.sfx('select');openShow(
  else if(m==='elim'){const df=[{cl:['C','B'],sk:.78},{cl:['B','A'],sk:.88},{cl:['A','S'],sk:.97}][ST.diff],n=Math.max(1,Math.min(ST.cpus||3,8-ST.players));cfg={mode:'elim',track:ST.track,laps:99,humans,ai:P.makeAI({n,classes:(ST.cc&&ST.cc!=='auto')?[ST.cc]:df.cl,skill:df.sk,rally:!!d.gravel}),tod,endur:false,rev:!!ST.rev,interval:ST.iv||30,weather:ST.wx||'clear'}}
  else cfg={mode:'cutup',track:ST.track,time:ST.time,humans,ai:[],traffic:ST.traffic,tod};
  cfg.dmg=dmgOf(m)==='1';
- P.launch(cfg)};
+ (P.launchWithIntro||P.launch)(cfg)};
 
 /* ================= CAREER ================= */
 const CTOD=['day','sunset','dawn','night','day'];
@@ -279,7 +279,7 @@ function renderCareer(){const cr=P.careerRank(),rk=ST.crank==null?cr:Math.min(ST
  <div style="flex:1"></div><button class="btn go" id="evGo" ${lk?'disabled':''}><span>${lk?lk:'Start event'}</span></button>`;
  drawTrack($('evPrev'),ev.track,true);
  $('evGar').onclick=()=>openShow('garage',{player:0,cap:ev.cap,ret:'s8career'});
- $('evGo').onclick=()=>{if(lk)return;P.launch(Object.assign(P.eventCfg(ev,pick),{tod}))}}
+ $('evGo').onclick=()=>{if(lk)return;(P.launchWithIntro||P.launch)(Object.assign(P.eventCfg(ev,pick),{tod}))}}
 
 /* ================= STUDIO (garage + Brand Central) : native res, MSAA, bloom ================= */
 let S=null,STU={on:false},lastPhotoKey='';

@@ -3,6 +3,11 @@
 'use strict';
 const P=window.PT8;
 P.LOG=[
+ {v:'0.03',d:'Oct 20, 2026',t:'Smoother menus and a loading screen',items:[
+  'Menu transitions are now a plain black fade.',
+  'Every mode gets the car loading screen, with your own car on it. Its wheels now spin and steer properly.',
+  'Lists (tracks, cars, modes) pop in when a screen opens, not on every click.',
+  'Harbor Lights town redone: tidy street grid, city buildings only (no barns or greenhouses), calmer colours.']},
  {v:'0.02',d:'Oct 20, 2026',t:'Update log',items:[
   'New update log button in the main menu (this screen).',
   'The tutorial moved to Settings > Driving, with a PLAY button.']},
@@ -21,7 +26,7 @@ P.LOG=[
   'Afterhours: street lights, tunnel and night-sky fixes, and a darker, calmer tunnel interior.']}
 ];
 const css=document.createElement('style');
-css.textContent=`#ptLog{position:fixed;inset:0;z-index:8000;display:none;align-items:center;justify-content:center;background:#05070acc;backdrop-filter:blur(3px)}
+css.textContent=`@keyframes ptFadeIn{from{opacity:0}}#ptLog{position:fixed;inset:0;z-index:8000;display:none;align-items:center;justify-content:center;background:#05070acc;backdrop-filter:blur(3px)}
 #ptLog.on{display:flex;animation:ptFadeIn .25s ease both}
 #ptLog .lgBox{width:min(720px,92vw);max-height:84vh;display:flex;flex-direction:column;background:linear-gradient(180deg,#121920,#0b0f13);border:1px solid #ffffff18;border-top:3px solid #f1f3f5}
 #ptLog .lgHd{display:flex;align-items:center;padding:16px 22px;border-bottom:1px solid #ffffff12}
