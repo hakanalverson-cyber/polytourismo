@@ -1,0 +1,3 @@
+from shot import run,W
+js="""(()=>{const g=PT8.BLD.Barn_02.g;g.computeBoundingBox();const b=g.boundingBox,p=g.attributes.position,c=g.attributes.color,n=p.count;const fr=[];for(let i=0;i<g.index.count;i+=3){const a=g.index.getX(i),bb=g.index.getX(i+1),cc=g.index.getX(i+2);const z=[p.getZ(a),p.getZ(bb),p.getZ(cc)];if(z.every(v=>v>b.max.z-.35)){const x=(p.getX(a)+p.getX(bb)+p.getX(cc))/3,y=(p.getY(a)+p.getY(bb)+p.getY(cc))/3;fr.push([+x.toFixed(1),+y.toFixed(1),(c.getX(a)*255|0)+','+(c.getY(a)*255|0)+','+(c.getZ(a)*255|0)].join(' '))}}return JSON.stringify({b:[b.min.toArray(),b.max.toArray()],tris:g.index.count/3,front:fr.length,f:fr.slice(0,80)})})()"""
+run(W+'/Poly-Tourismo.html',[('wait',2500),('js',js)],'bg')

@@ -26,6 +26,18 @@ function build(sc,T,cfg){
  if(!best)return null;
  const k=best.k,rx=at(k,best.side*(hw(k)+3)),dirx=rx[0]-best.x,dirz=rx[1]-best.z,dl=Math.hypot(dirx,dirz),fx=dirx/dl,fz=dirz/dl,yaw=Math.atan2(fx,fz);
  const pre=sc.children.slice();
+ /* graded yard: level the ground around the barn so grass never pokes through the floor, blend the edges back into the hills */
+ const lw=(x,z)=>[best.x+x*fz+z*fx,best.z-x*fx+z*fz];
+ const CX=10,ZB=-9,ZF=16,MG=5;let flatY=-1e9;
+ for(let x=-CX;x<=CX;x+=2.5)for(let z=ZB;z<=ZF;z+=2.5){const[wx,wz]=lw(x,z);flatY=Math.max(flatY,T.terr(wx,wz))}
+ flatY+=.1;best.y=flatY;
+ const padY0=(wx,wz)=>{const dx=wx-best.x,dz=wz-best.z,x=dx*fz-dz*fx,z=dx*fx+dz*fz;return padY(x,z)};
+ const padY=(x,z)=>{const d=Math.max(0,Math.abs(x)-CX,ZB-z,z-ZF),w=Math.min(1,d/MG),e=w*w*(3-2*w),[wx,wz]=lw(x,z);return flatY*(1-e)+(T.terr(wx,wz)+.05)*e};
+ {const xs=[],zs=[];for(let x=-CX-MG;x<=CX+MG+.01;x+=2.5)xs.push(x);for(let z=ZB-MG;z<=ZF+MG+.01;z+=2.5)zs.push(z);
+  const pos=[],idx=[];for(const z of zs)for(const x of xs){const[wx,wz]=lw(x,z);pos.push(wx,padY(x,z),wz)}
+  for(let j=0;j<zs.length-1;j++)for(let i=0;i<xs.length-1;i++){const a=j*xs.length+i,b=a+1,c=a+xs.length,d=c+1;idx.push(a,c,b,b,c,d)}
+  const pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));pg.setIndex(idx);pg.computeVertexNormals();
+  const pm=new THREE.Mesh(pg,new THREE.MeshStandardMaterial({color:0x8a7352,roughness:1,flatShading:true,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}));pm.receiveShadow=true;sc.add(pm)}
  const g=new THREE.Group();g.position.set(best.x,best.y,best.z);g.rotation.y=yaw;sc.add(g);
  const found=P.barnFound(cfg.car);
  /* barn shell, 9 wide x 13 deep, door end toward the road (+z in local space) */
@@ -45,7 +57,7 @@ function build(sc,T,cfg){
  box(dw+.4,.25,.4,trim,0,3.65,D/2+.1);box(.25,3.6,.4,trim,-dw/2-.1,1.8,D/2+.1);box(.25,3.6,.4,trim,dw/2+.1,1.8,D/2+.1);
  const shell=g.children.slice(sh0);
  /* doors: hinged at the outer posts, swing open outward */
- const doors=[];for(const sd of[-1,1]){const piv=new THREE.Group();piv.position.set(sd*dw/2,0,D/2+.2);const dr=new THREE.Mesh(new THREE.BoxGeometry(dw/2,3.55,.14),M_(0x9b4a37));dr.position.set(-sd*dw/4,1.8,0);piv.add(dr);
+ const doors=[];for(const sd of[-1,1]){const piv=new THREE.Group();piv.position.set(sd*dw/2,0,D/2+.2);const dr=new THREE.Mesh(new THREE.BoxGeometry(dw/2,3.55,.14),M_(0xb81212));dr.position.set(-sd*dw/4,1.8,0);piv.add(dr);
   const xb=new THREE.Mesh(new THREE.BoxGeometry(dw/2*1.05,.16,.18),trim);xb.position.set(-sd*dw/4,1.8,.02);xb.rotation.z=sd*.7;piv.add(xb);g.add(piv);doors.push({piv,sd})}
  /* fence posts and the trail */
  const L=pt=>[pt[0],pt[1]];
@@ -69,15 +81,24 @@ function build(sc,T,cfg){
    for(let t=0;t+2<n;t+=3){const cx=(pa.getX(t)+pa.getX(t+1)+pa.getX(t+2))/3,cz=(pa.getZ(t)+pa.getZ(t+1)+pa.getZ(t+2))/3;if(dseg(cx,cz)<8.6||Math.hypot(cx-best.x,cz-best.z)<16)continue;for(let q=0;q<3;q++){keepP.push(pa.getX(t+q),pa.getY(t+q),pa.getZ(t+q));if(ca)keepC.push(ca.getX(t+q),ca.getY(t+q),ca.getZ(t+q))}}
    const ng=new THREE.BufferGeometry();ng.setAttribute('position',new THREE.Float32BufferAttribute(keepP,3));if(ca)ng.setAttribute('color',new THREE.Float32BufferAttribute(keepC,3));ng.computeVertexNormals();o.geometry=ng}}
  if(T.solids)T.solids=T.solids.filter(q=>!(q&&isFinite(q.x)&&isFinite(q.z)&&bad(q.x,q.z)))}
- for(let i=3;i<nT-9;i+=4)for(const sd of[-1,1]){const a=tp[i-1],b=tp[i+1],tx=b[0]-a[0],tz=b[1]-a[1],tl=Math.hypot(tx,tz)||1,x=tp[i][0]+(-tz/tl)*3.2*sd,z=tp[i][1]+(tx/tl)*3.2*sd;
-  const post=new THREE.Mesh(new THREE.BoxGeometry(.18,1.3,.18),M_(0x5a4634));post.position.set(x,T.terr(x,z)+.55,z);post.rotation.set((i%3-1)*.07,0,(i%5-2)*.06);sc.add(post)}
- /* a faded sign where the trail leaves the road */
- {const[sx,sz]=at(k,best.side*(hw(k)+4.2)),sg=new THREE.Group();sg.position.set(sx,T.terr(sx,sz),sz);sc.add(sg);const pl=new THREE.Mesh(new THREE.BoxGeometry(.12,1.8,.12),M_(0x5a4634));pl.position.y=.9;sg.add(pl);const bd=new THREE.Mesh(new THREE.BoxGeometry(1.0,.5,.07),M_(0xb9a27a));bd.position.set(0,1.6,0);bd.rotation.z=.08;sg.add(bd)}
+ /* post-and-rail fence: lines the trail and closes the yard into a paddock, leaving the trail end open as a gate */
+ {const pm_=M_(0x4a3626),rm_=M_(0x8a6c4a),pg_=new THREE.BoxGeometry(.26,1.35,.26),rg_=new THREE.BoxGeometry(1,.14,.08),fg=new THREE.Group(),up=new THREE.Vector3(1,0,0);sc.add(fg);
+  const run_=pts=>{let prev=null;for(const[x,z]of pts){const y=Math.max(T.terr(x,z),padY0(x,z)),po=new THREE.Mesh(pg_,pm_);po.position.set(x,y+.55,z);po.castShadow=true;fg.add(po);
+   if(prev){const dx=x-prev[0],dz=z-prev[2],dy=y-prev[1],len=Math.hypot(dx,dy,dz);for(const h of[.35,.7,1.05]){const r=new THREE.Mesh(rg_,rm_);r.scale.x=len;r.castShadow=true;r.position.set((x+prev[0])/2,(y+prev[1])/2+h,(z+prev[2])/2);r.quaternion.setFromUnitVectors(up,new THREE.Vector3(dx,dy,dz).normalize());fg.add(r)}}prev=[x,y,z]}};
+  for(const sd of[-1,1]){const arr=[];for(let i=4;i<nT-8;i+=2){const a=tp[i-1],b=tp[i+1],tx=b[0]-a[0],tz=b[1]-a[1],tl=Math.hypot(tx,tz)||1;arr.push([tp[i][0]+(-tz/tl)*3.4*sd,tp[i][1]+(tx/tl)*3.4*sd])}run_(arr)}
+  /* paddock around the barn (local frame): back + both sides, front pieces either side of the gate */
+  const FX=12,FZ0=-10,FZ1=17,pts_=[],seg=(x0,z0,x1,z1)=>{const n=Math.max(1,Math.round(Math.hypot(x1-x0,z1-z0)/3.6)),o=[];for(let i=0;i<=n;i++){const[wx,wz]=lw(x0+(x1-x0)*i/n,z0+(z1-z0)*i/n);o.push([wx,wz])}return o};
+  run_(seg(-4,FZ1,-FX,FZ1).concat(seg(-FX,FZ1,-FX,FZ0).slice(1),seg(-FX,FZ0,FX,FZ0).slice(1),seg(FX,FZ0,FX,FZ1).slice(1),seg(FX,FZ1,4,FZ1).slice(1)))}
+ /* yard dressing from the pack: hay, crates, a well, trees and bushes around the barn, clear of the trail */
+ if(P.BLD&&P.PROPKIT){const dress=[['Haystack_04',8,-3,.4],['Haystack_01',9.5,-.6,-.3],['Haystack_02',-8.6,-4.5,1],['WoodenCrates_01',-7.2,6,.3],['WoodenCrates_01',-8.3,7.4,-.4],['Well_02',7.8,9,0],['AnimalFeeder_01',-9,-1,1.57],['Tree_07',-14,-2,0],['Tree_04',13.5,4,1],['Tree_05',-13,12,2],['Tree_02',14,-8,3],['Bush_01',-10,10,0],['Bush_02',10.5,-7,1],['Bush_01',-11,-8,2],['Bush_02',11,13,0]];
+  for(const[nm,lx,lz,ry]of dress){const q=P.BLD[nm];if(!q)continue;const m=new THREE.Mesh(q.g.clone(),P.PROPKIT.MAT);m.position.set(lx,padY(lx,lz)-flatY,lz);m.rotation.y=ry;m.castShadow=true;m.receiveShadow=true;g.add(m)}}
+ /* a faded sign beside the trail mouth, well off the line of travel */
+ {const a_=tp[1],b_=tp[3],tx=b_[0]-a_[0],tz=b_[1]-a_[1],tl=Math.hypot(tx,tz)||1,sx=tp[2][0]+(-tz/tl)*5.6,sz=tp[2][1]+(tx/tl)*5.6,sg=new THREE.Group();sg.position.set(sx,T.terr(sx,sz),sz);sg.rotation.y=Math.atan2(-tz,-tx)+PI/2;sc.add(sg);const pl=new THREE.Mesh(new THREE.BoxGeometry(.12,1.8,.12),M_(0x5a4634));pl.position.y=.9;sg.add(pl);const bd=new THREE.Mesh(new THREE.BoxGeometry(1.0,.5,.07),M_(0xb9a27a));bd.position.set(0,1.6,0);sg.add(bd)}
  /* the real thing is the pack's barn: shown closed until the reveal, then swapped for the open-door barn while the screen is black */
- let pk=null;{const q=P.BLD&&P.BLD.Barn_02;if(q&&!found){pk=new THREE.Mesh(q.g.clone(),P.PROPKIT.MAT);pk.castShadow=true;pk.receiveShadow=true;g.add(pk);shell.forEach(o=>o.visible=false);doors.forEach(d=>d.piv.visible=false)}}
+ let pk=null,pkMat=null;{const q=P.BLD&&P.BLD.Barn_02;if(q&&!found){pkMat=P.PROPKIT.MAT.clone();pkMat.side=THREE.DoubleSide;pk=new THREE.Mesh(q.g.clone(),pkMat);pk.castShadow=true;pk.receiveShadow=true;g.add(pk);shell.forEach(o=>o.visible=false);doors.forEach(d=>d.piv.visible=false);R.localClippingEnabled=true}}
  const door={x:best.x+fx*(D/2+2.5),z:best.z+fz*(D/2+2.5)};
  const light=new THREE.PointLight(0xffd9a0,0,18,1.6);light.position.set(0,3.2,1);g.add(light);
- B={pk,shell,cfg,g,doors,light,car:null,found,x:best.x,z:best.z,y:best.y,fx,fz,yaw,door,D,sc,T};
+ B={pk,pkMat,shell,cfg,g,doors,light,car:null,found,x:best.x,z:best.z,y:best.y,fx,fz,yaw,door,D,sc,T};
  /* a found barn stays open and empty */
  if(found){doors.forEach(d=>d.piv.rotation.y=d.sd*1.75)}
  return B}
@@ -97,7 +118,7 @@ function barnCar(){const id=B.cfg.car,idx=P.modelOf(id,0),src=CAR_MODELS[idx];if
  const bb=new THREE.Box3().setFromObject(model),sz=bb.getSize(new THREE.Vector3()),ct=bb.getCenter(new THREE.Vector3()),k=(src.userData.gl||4.4)/Math.max(sz.x,sz.z,.001);
  ctd.position.set(-ct.x,-bb.min.y,-ct.z);grp.scale.setScalar(k);grp.rotation.y=(sz.x>sz.z?PI/2:0)+PI+.3;
  grp.position.set(0,.27,-1.1);B.g.add(grp);return{g:grp}}
-function startScene(){if(BN||!B||B.found)return;const car=B.car||barnCar();if(!car)return;B.car=car;if(B.pk){B.pk.visible=false;B.shell.forEach(o=>o.visible=true);B.doors.forEach(d=>d.piv.visible=true)}car.g.visible=true;
+function startScene(){if(BN||!B||B.found)return;const car=B.car||barnCar();if(!car)return;B.car=car;if(B.pk){B.g.updateMatrixWorld(true);const m_=B.g.matrixWorld,bx=[[1,0,0,-2.7],[-1,0,0,-2.7],[0,1,0,-4.3],[0,-1,0,0],[0,0,1,-9],[0,0,-1,5.6]];/* clip a doorway box out of the pack barn's front wall */B.pkMat.clippingPlanes=bx.map(([nx,ny,nz,c])=>new THREE.Plane(new THREE.Vector3(nx,ny,nz),c).applyMatrix4(m_));B.pkMat.clipIntersection=true;B.pkMat.needsUpdate=true;B.doors.forEach(d=>{d.piv.visible=true;d.piv.position.z=7.35})}car.g.visible=true;
  BN={t:0,ph:0,cardUp:false};RACE.cars.forEach(c=>{if(c.m&&c.m.g)c.m.g.visible=false});document.body.classList.add('barnscene');const f=fadeEl();f.style.transition='opacity .6s';f.style.opacity=1;if(P.sfx)P.sfx('whoosh');prompt(false)}
 function endScene(){const id=B.cfg.car,s=sv();s.owned[id]=(s.owned[id]||0)|1;s.barn=s.barn||{};s.barn[id]=1;P.save();B.found=true;if(card)card.style.display='none';
  BN.ph=4;BN.t=0;const f=fadeEl();f.style.transition='opacity .6s';f.style.opacity=1}
