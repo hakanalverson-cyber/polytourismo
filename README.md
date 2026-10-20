@@ -1,4 +1,4 @@
-# Poly Tourismo
+# Poly GT
 
 A low-poly 3D racing game that ships as **one HTML file** (Three.js r128). Open `dist/Poly-Tourismo.html` in a browser and play.
 

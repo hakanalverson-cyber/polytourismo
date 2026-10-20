@@ -221,6 +221,8 @@ i=src.rindex('</body>') if '</body>' in src else len(src)
 src=src[:i]+add+BOOT_JS+src[i:]
 
 src=src.replace("'Poly Tourismo v7'","'Poly Tourismo'").replace("'Poly Tourismo v9'","'Poly Tourismo'")
+# rename: Poly Tourismo -> Poly GT (visible text only; save-data keys are untouched)
+src=src.replace('POLY<br><span>TOURISMO</span>','POLY<br><span>GT</span>').replace('POLY TOURISMO','POLY GT').replace('Poly Tourismo','Poly GT')
 out=sys.argv[1] if len(sys.argv)>1 else W+'/dist/Poly-Tourismo.html'
 open(out,'w').write(src);print('wrote',out,len(src))
 if not len(sys.argv)>1:
