@@ -641,3 +641,19 @@ body.rallyhud .h8spd,body.rallyhud .h8pos{display:none!important}
 .qplabel i:first-child{flex:0 0 3.4vw}
 }
 @media(max-width:860px){.qplabel{display:none}}
+
+/* player 2 keyboard picker */
+.p2kb{margin-top:14px}
+.p2kb h4{margin:0 0 8px;font-size:11px;letter-spacing:.2em;color:var(--dim)}
+.p2kb h4 small{letter-spacing:.12em;margin-left:8px;opacity:.7}
+.p2kb .kbs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.p2kb .kbo{all:unset;box-sizing:border-box;cursor:pointer;padding:12px;border:1px solid rgba(255,255,255,.14);background:rgba(8,12,16,.55);display:flex;flex-direction:column;gap:6px;align-items:center;text-align:center}
+.p2kb .kbo:hover{border-color:rgba(255,255,255,.4)}
+.p2kb .kbo.on{border-color:#f1f3f5;background:rgba(241,243,245,.1);box-shadow:inset 0 0 0 1px #f1f3f5}
+.p2kb .kg{display:grid;grid-template-columns:repeat(3,44px);gap:5px}
+.p2kb .kc{display:flex;align-items:center;justify-content:center;height:40px;border:1px solid rgba(255,255,255,.3);border-bottom-width:3px;border-radius:5px;font:bold 14px monospace;font-style:normal;color:#e9edf0;background:rgba(255,255,255,.07)}
+.p2kb .kc.sh{color:#7fe3f2;border-color:rgba(127,227,242,.6)}
+.p2kb .kc.gas{border-color:rgba(127,214,138,.7)}
+.p2kb .kc.br{border-color:rgba(239,106,90,.7)}
+.p2kb .kbo b{font-size:12px;letter-spacing:.14em}
+.p2kb .kbo small{font-size:10px;letter-spacing:.1em;color:var(--dim)}

@@ -106,10 +106,10 @@ const R=new THREE.WebGLRenderer({canvas:$('c'),antialias:false});R.setClearColor
 function rs(){const d=PX>1?1:Math.min(devicePixelRatio||1,2);R.setPixelRatio(1);R.setSize(Math.max(2,innerWidth*d/PX|0),Math.max(2,innerHeight*d/PX|0),false)}
 addEventListener('resize',rs);rs();
 /* ---------------- input ---------------- */
-const KM=[{u:'KeyW',d:'KeyS',l:'KeyA',r:'KeyD',h:'Space'},{u:'ArrowUp',d:'ArrowDown',l:'ArrowLeft',r:'ArrowRight',h:'ShiftRight'},{u:'KeyI',d:'KeyK',l:'KeyJ',r:'KeyL',h:'KeyU'},{u:'KeyT',d:'KeyG',l:'KeyF',r:'KeyH',h:'KeyY'}];
+const KM=[{u:'KeyW',d:'KeyS',l:'KeyA',r:'KeyD',h:'Space'},{u:'ArrowUp',d:'ArrowDown',l:'ArrowLeft',r:'ArrowRight',h:'ShiftRight'},{u:'KeyI',d:'KeyK',l:'KeyJ',r:'KeyL',h:'KeyM'},{u:'KeyT',d:'KeyG',l:'KeyF',r:'KeyH',h:'KeyB'}];
 const down=new Set(),GAME_KEYS=new Set(KM.flatMap(k=>Object.values(k)));
-function readIn(p){const k=KM[p];let th=down.has(k.u)?1:0,br=down.has(k.d)?1:0,st=(down.has(k.l)?1:0)-(down.has(k.r)?1:0),hb=down.has(k.h)?1:0;
-try{const g=(navigator.getGamepads?navigator.getGamepads():[])[p];if(g){const ax=g.axes[0]||0;if(Math.abs(ax)>.12)st=-ax;th=Math.max(th,g.buttons[7]?g.buttons[7].value:0,g.buttons[0]&&g.buttons[0].pressed?1:0);br=Math.max(br,g.buttons[6]?g.buttons[6].value:0,g.buttons[1]&&g.buttons[1].pressed?1:0);if(g.buttons[2]&&g.buttons[2].pressed)hb=1}}catch(e){}
+function readIn(p){const k=KM[p];let th=down.has(k.u)?1:0,br=down.has(k.d)?1:0,st=(down.has(k.l)?1:0)-(down.has(k.r)?1:0),hb=(!(window.PT8&&PT8.noHb&&PT8.noHb())&&down.has(k.h))?1:0;
+try{const g=(navigator.getGamepads?navigator.getGamepads():[])[p];if(g){const ax=g.axes[0]||0;if(Math.abs(ax)>.12)st=-ax;th=Math.max(th,g.buttons[7]?g.buttons[7].value:0,g.buttons[0]&&g.buttons[0].pressed?1:0);br=Math.max(br,g.buttons[6]?g.buttons[6].value:0,g.buttons[1]&&g.buttons[1].pressed?1:0);if(g.buttons[2]&&g.buttons[2].pressed&&!(window.PT8&&PT8.noHb&&PT8.noHb()))hb=1}}catch(e){}
 return{th,br,st,hb:0}}
 addEventListener('keydown',e=>{if(e.code=='Escape'){e.preventDefault();esc();return}if(scr=='game'&&GAME_KEYS.has(e.code))e.preventDefault();down.add(e.code)});
 addEventListener('keyup',e=>down.delete(e.code));addEventListener('blur',()=>{down.clear();if(scr=='game')esc()});
@@ -2079,6 +2079,22 @@ body.rallyhud .h8spd,body.rallyhud .h8pos{display:none!important}
 .qplabel i:first-child{flex:0 0 3.4vw}
 }
 @media(max-width:860px){.qplabel{display:none}}
+
+/* player 2 keyboard picker */
+.p2kb{margin-top:14px}
+.p2kb h4{margin:0 0 8px;font-size:11px;letter-spacing:.2em;color:var(--dim)}
+.p2kb h4 small{letter-spacing:.12em;margin-left:8px;opacity:.7}
+.p2kb .kbs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.p2kb .kbo{all:unset;box-sizing:border-box;cursor:pointer;padding:12px;border:1px solid rgba(255,255,255,.14);background:rgba(8,12,16,.55);display:flex;flex-direction:column;gap:6px;align-items:center;text-align:center}
+.p2kb .kbo:hover{border-color:rgba(255,255,255,.4)}
+.p2kb .kbo.on{border-color:#f1f3f5;background:rgba(241,243,245,.1);box-shadow:inset 0 0 0 1px #f1f3f5}
+.p2kb .kg{display:grid;grid-template-columns:repeat(3,44px);gap:5px}
+.p2kb .kc{display:flex;align-items:center;justify-content:center;height:40px;border:1px solid rgba(255,255,255,.3);border-bottom-width:3px;border-radius:5px;font:bold 14px monospace;font-style:normal;color:#e9edf0;background:rgba(255,255,255,.07)}
+.p2kb .kc.sh{color:#7fe3f2;border-color:rgba(127,227,242,.6)}
+.p2kb .kc.gas{border-color:rgba(127,214,138,.7)}
+.p2kb .kc.br{border-color:rgba(239,106,90,.7)}
+.p2kb .kbo b{font-size:12px;letter-spacing:.14em}
+.p2kb .kbo small{font-size:10px;letter-spacing:.1em;color:var(--dim)}
 </style><script>
 /* ===== Poly Tourismo v8 layer: core (economy, gears, AI, race flow, modes) ===== */
 (function v8core(){
@@ -2180,6 +2196,7 @@ function gearLogic(c,live,dt){const p=c.k,tp=taps[p],now=performance.now();
  if(c.seenU===undefined){c.seenU=tp.u;c.seenD=tp.d;c.lastU=0;c.lastD=0}
  if(window.PTO&&PTO.autoShift){c.seenU=tp.u;c.seenD=tp.d;if(live)autoGear(c,dt||.016,c.mt||MATS.road,.93,true);return}
  if(tp.u!==c.seenU){c.seenU=tp.u;if(live&&c.lastU&&now-c.lastU<340){shiftGear(c,1);c.lastU=0}else c.lastU=now}
+ if(tp.qu){tp.qu=0;if(live)shiftGear(c,1)}if(tp.qd){tp.qd=0;if(live)shiftGear(c,-1)}
  if(tp.d!==c.seenD){c.seenD=tp.d;if(live&&c.lastD&&now-c.lastD<340){shiftGear(c,-1);c.lastD=0}else c.lastD=now}
  try{const g=navigator.getGamepads?navigator.getGamepads()[p]:null;if(g){const B=i=>!!(g.buttons[i]&&g.buttons[i].pressed),bu=B(5)||B(12),bd=B(4)||B(13);if(live){if(bu&&!c.pu)shiftGear(c,1);if(bd&&!c.pd)shiftGear(c,-1)}c.pu=bu;c.pd=bd}}catch(e){}
 }
@@ -2187,7 +2204,7 @@ function gearLogic(c,live,dt){const p=c.k,tp=taps[p],now=performance.now();
 /* ---------------- AI ---------------- */
 function kappa(T){if(T.kap)return T.kap;const kz=new Float32Array(T.N);for(let i=0;i<T.N;i++){const N=T.N;kz[i]=Math.max(0,-(T.y[(i+5)%N]-2*T.y[i]+T.y[(i-5+N)%N])/(25*T.sp*T.sp))}T.kz=kz;const N=T.N,k=new Float32Array(N),sp=T.sp;for(let i=0;i<N;i++){const a=Math.abs(wr(T.psi[(i+3)%N]-T.psi[(i-3+N)%N]));k[i]=a/(6*sp)}
  const o=new Float32Array(N);for(let i=0;i<N;i++){let m=0;for(let j=-2;j<=2;j++)m=Math.max(m,k[(i+j+N)%N]);o[i]=m}return T.kap=o}
-function steerLimit(R){return 2.25*R/(1+((RACE&&RACE.cfg&&RACE.cfg.circuit)?.0105:.033)*R)}
+function steerLimit(R){return 2.25*R/(1+.0105*R)}
 function aiInput(c,dt){const Rc=RACE,T=Rc.T,N=T.N,a=c.ai||(c.ai={skill:.9,lat:0,mist:0,name:'CPU'}),K=kappa(T);
  const live=Rc.state==='race'&&c.respT<=0&&!(c.exp>0);
  const cs=c.cs,mt=c.mt||MATS.road;
@@ -2352,6 +2369,20 @@ soloCam=(c,dt,out)=>{
 };
 /* the old group-cam blend never applies to finished cars */
 PT8.TAPS=taps;
+/* universal shift keys: the keys either side of forward (Q/E, PageUp/PageDown, U/O, R/Y); rally/track handle their own */
+PT8.SHIFTK=[{dn:'KeyQ',up:'KeyE',n:['Q','E']},{dn:'PageUp',up:'PageDown',n:['PAGE UP','PAGE DOWN']},{dn:'KeyU',up:'KeyO',n:['U','O']},{dn:'KeyR',up:'KeyY',n:['R','Y']}];
+PT8.SHIFTK.forEach(k=>{GAME_KEYS.add(k.dn);GAME_KEYS.add(k.up)});
+/* handbrake is a single-driver tool: off whenever more than one human is racing */
+PT8.noHb=()=>!!(RACE&&RACE.cfg&&RACE.cfg.humans&&RACE.cfg.humans.length>1);
+/* player 2 can use the arrow keys or the numpad (8 4 5 6, 7 / 9 shift) */
+{const AR={u:'ArrowUp',d:'ArrowDown',l:'ArrowLeft',r:'ArrowRight',h:'ShiftRight'},NP={u:'Numpad8',d:'Numpad5',l:'Numpad4',r:'Numpad6',h:'Numpad0'};
+ PT8.p2Keys='arrows';try{if(localStorage.getItem('pt9-p2keys')==='numpad')PT8.p2Keys='numpad'}catch(e){}
+ PT8.setP2Keys=v=>{PT8.p2Keys=v==='numpad'?'numpad':'arrows';const np=PT8.p2Keys==='numpad';Object.assign(KM[1],np?NP:AR);Object.values(KM[1]).forEach(k=>GAME_KEYS.add(k));
+  Object.assign(PT8.SHIFTK[1],np?{dn:'Numpad7',up:'Numpad9',n:['7','9']}:{dn:'PageUp',up:'PageDown',n:['PAGE UP','PAGE DOWN']});GAME_KEYS.add('Numpad7');GAME_KEYS.add('Numpad9');
+  if(PT8.rallyP2)PT8.rallyP2(np);try{localStorage.setItem('pt9-p2keys',PT8.p2Keys)}catch(e){}};
+ PT8.p2Name=()=>PT8.p2Keys==='numpad'?'numpad 8 4 5 6':'arrows'}
+addEventListener('keydown',e=>{if(e.repeat||!RACE||RACE.cfg.rally||scr!=='game')return;PT8.SHIFTK.forEach((k,p)=>{if(e.code===k.dn)taps[p].qd=1;else if(e.code===k.up)taps[p].qu=1})});
+PT8.setP2Keys(PT8.p2Keys);
 })();
 
 /* ===== Poly Tourismo v10 layer: cars10 (136 low-poly cars from the mega pack, built lazily from a compact gzip pack) ===== */
@@ -4270,7 +4301,7 @@ const S=[
  {t:'Welcome',x:'This lesson is a free drive with prompts. <b>W</b> accelerate &middot; <b>S</b> brake / reverse &middot; <b>A</b> / <b>D</b> steer &middot; <b>Space</b> handbrake &middot; <b>Esc</b> pause. Wait for GO.',ok:(c,R)=>R.state==='race'},
  {t:'Throttle',x:'Hold <b>W</b> and build up some speed.',ok:c=>c.sp>12},
  {t:'Steering',x:'Steer both ways with <b>A</b> and <b>D</b>. Small, smooth inputs are faster than yanking the wheel.',ok:(c,R,s)=>s.a&&s.d&&c.sp>6},
- {t:'Gears',x:()=>auto()?'Auto-shift is on, so the gearbox changes for you. Reach 3rd gear. (Turn it off in Settings for manual shifting and perfect-shift boosts.)':'<b>Double-tap W</b> to shift up, <b>double-tap S</b> to shift down. Shift close to the redline for a free <b>perfect-shift</b> boost. Reach 3rd gear.',ok:c=>(c.gear|0)>=2},
+ {t:'Gears',x:()=>auto()?'Auto-shift is on, so the gearbox changes for you. Reach 3rd gear. (Turn it off in Settings for manual shifting and perfect-shift boosts.)':'Press <b>E</b> to shift up and <b>Q</b> to shift down (the keys either side of W), or double-tap W / S. Shift close to the redline for a free <b>perfect-shift</b> boost. Reach 3rd gear.',ok:c=>(c.gear|0)>=2},
  {t:'Braking',x:'Brake <b>before</b> corners, then get back on the power. Get above 45 mph, then hold <b>S</b> until you are almost stopped.',ok:(c,R,s)=>{if(c.sp>20)s.fast=1;return s.fast&&c.sp<8}},
  {t:'Elimination',info:1,x:'In <b>Elimination</b> the car in last place is knocked out on every timer. Last place also gets a small speed boost, so staying out of the back is the job. Setup lets you change the interval and CPU level.'},
  {t:'Weather',info:1,x:'Rain, storm and fog change the grip and visibility. Set it in the <b>Weather</b> row of Multiplayer or Elimination setup. In the wet, brake earlier and be gentle with the throttle.'},
@@ -4849,12 +4880,14 @@ function renderSetup(){const m=ST.mode;$('suTitle').innerHTML=MODE_NAME[m];
  if(m==='elim')cfg+=`<div class="row8"><b>CPU</b><span class="seg" id="cCpu">${seg([[1,'1'],[2,'2'],[3,'3'],[4,'4'],[5,'5'],[7,'7']].filter(a=>a[0]+ST.players<=8),Math.max(1,ST.cpus))}</span></div><div class="row8"><b>Level</b><span class="seg" id="cDif">${seg([[0,'Easy'],[1,'Normal'],[2,'Hard']],ST.diff)}</span></div><div class="row8"><b>CPU class</b><span class="seg" id="cCc">${seg([['auto','Auto'],['C','C'],['B','B'],['A','A'],['S','S']],ST.cc||'auto')}</span></div>`;
  if(m==='mp')cfg+=`<div class="row8"><b>CPU</b><span class="seg" id="cCpu">${seg([[0,'0'],[2,'2'],[3,'3'],[4,'4']].filter(a=>a[0]+ST.players<=8),ST.cpus)}</span></div><div class="row8"><b>Level</b><span class="seg" id="cDif">${seg([[0,'Easy'],[1,'Normal'],[2,'Hard']],ST.diff)}</span></div><div class="row8"><b>CPU class</b><span class="seg" id="cCc">${seg([['auto','Auto'],['C','C'],['B','B'],['A','A'],['S','S']],ST.cc||'auto')}</span></div>`;
  if(m==='cutup')cfg+=`<div class="row8"><b>Traffic</b><span class="seg" id="cTr">${seg([['light','Light'],['heavy','Heavy']],ST.traffic)}</span></div><div class="row8"><b>Clock</b><span class="seg" id="cTime">${seg([[90,'90s'],[120,'120s'],[180,'180s']],ST.time)}</span></div>`;
+
+ if(ST.players>=2&&m!=='rally'&&m!=='track'&&m!=='ta'){const kc=(l,c)=>`<i class="kc${c?' '+c:''}">${l}</i>`,np=P.p2Keys==='numpad';cfg+=`<div class="p2kb"><h4>Player 2 keys <small>click a layout</small></h4><div class="kbs"><button class="kbo${np?'':' on'}" data-k="arrows"><div class="kg">${kc('PgUp','sh')}${kc('&uarr;','gas')}${kc('PgDn','sh')}${kc('&larr;','st')}${kc('&darr;','br')}${kc('&rarr;','st')}</div><b>Arrow keys</b><small>PgUp / PgDn shift</small></button><button class="kbo${np?' on':''}" data-k="numpad"><div class="kg">${kc('7','sh')}${kc('8','gas')}${kc('9','sh')}${kc('4','st')}${kc('5','br')}${kc('6','st')}</div><b>Numpad 8 4 5 6</b><small>7 down &middot; 9 up</small></button></div></div>`}
  if(m==='mp'||m==='elim')cfg+=`<div class="row8"><b>Weather</b><span class="seg" id="cWx">${seg(P.WX_ORDER.map(k=>[k,P.WX[k].n[0]+P.WX[k].n.slice(1).toLowerCase()]),ST.wx||'clear')}</span></div>`;
  $('suCfg').innerHTML=cfg;
  const td=effTod();$('suTod').innerHTML=`<div class="tod"><h4 style="margin:0 0 7px;font:700 10px var(--mn);letter-spacing:.3em;color:var(--dim)">TIME OF DAY</h4><canvas id="todPrev" width="168" height="70"></canvas><span class="seg" id="cTod">${seg(P.TOD_ORDER.map(k=>[k,P.TOD[k].n]),td)}</span></div>`;
  drawTod($('todPrev'),ST.track,td);
  const bind=(id,k,num)=>{const e=$(id);if(e)$$('button',e).forEach(b=>b.onclick=()=>{ST[k]=num?+b.dataset.v:b.dataset.v;if(k==='players'&&(ST.mode==='mp'||ST.mode==='elim')&&ST.players+ST.cpus>8)ST.cpus=8-ST.players;renderSetup()})};
- bind('cLaps','laps',1);bind('cRL','rlaps',1);bind('cIv','iv',1);bind('cWx','wx',0);bind('cEnd','endurS',0);{const e=$('cRev');if(e)$$('button',e).forEach(b=>b.onclick=()=>{ST.rev=b.dataset.v==='1';renderSetup()})}bind('cPl','players',1);bind('cCpu','cpus',1);bind('cDif','diff',1);bind('cCc','cc',0);bind('cTime','time',1);bind('cTr','traffic',0);bind('cTod','todUser',0);
+ $$('.p2kb .kbo',root).forEach(b=>b.onclick=()=>{P.setP2Keys(b.dataset.k);P.sfx('select');renderSetup()});bind('cLaps','laps',1);bind('cRL','rlaps',1);bind('cIv','iv',1);bind('cWx','wx',0);bind('cEnd','endurS',0);{const e=$('cRev');if(e)$$('button',e).forEach(b=>b.onclick=()=>{ST.rev=b.dataset.v==='1';renderSetup()})}bind('cPl','players',1);bind('cCpu','cpus',1);bind('cDif','diff',1);bind('cCc','cc',0);bind('cTime','time',1);bind('cTr','traffic',0);bind('cTod','todUser',0);
  const np=m==='ta'?1:ST.players;let dv='<h4 style="margin:6px 0 8px;font:700 10px var(--mn);letter-spacing:.3em;color:var(--dim)">VEHICLES</h4>';
  for(let p=0;p<np;p++){const s=selCar(p),c=BYID[s.id];dv+=`<div class="drv" style="border-left-color:${['#f1f3f5','#f2c76b','#7fd68a','#ef6a5a'][p]}"><div><b>${np>1?'P'+(p+1)+' &middot; ':''}${c.name}${s.alt?' ALT':''}</b><input class="nm" data-p="${p}" maxlength="12" spellcheck="false" placeholder="Name (P${p+1})" value="${((ST.names||[])[p]||'').replace(/[<>&"]/g,'')}"><small>Class <span class="cls ${c.cls}">${c.cls}</span> &middot; ${c.type}${m==='rally'?' &middot; RALLY SPEC':''}</small><div class="fxrow">${fxChip(m==='rally'?{...c,off:Math.max(c.off,.9)}:c,!!D[ST.track].gravel)}</div></div><span class="lvth" data-id="${s.id}" data-alt="${s.alt?1:0}"></span><button class="btn sm" data-p="${p}"><span>Garage</span></button></div>`}
  $('suDrv').innerHTML=dv;$$('#suDrv .lvth',root).forEach(e=>{const t=P.livThumb&&P.livThumb(e.dataset.id,+e.dataset.alt,84);if(t)e.appendChild(t)});$$('#suDrv input.nm',root).forEach(i=>i.oninput=()=>{(ST.names=ST.names||[])[+i.dataset.p]=i.value});$$('#suDrv button',root).forEach(b=>b.onclick=()=>openShow('garage',{player:+b.dataset.p,cap:null,ret:'s8setup',rally:ST.mode==='rally',track:ST.mode==='track'}));
@@ -4864,7 +4897,7 @@ function renderSetup(){const m=ST.mode;$('suTitle').innerHTML=MODE_NAME[m];
   if(m==='rally')$('suTitle').innerHTML='<em>RALLY</em> '+(r2?'CAR SELECTION':'STAGE SETUP');if(m==='track')$('suTitle').innerHTML='<em>TRACK</em> '+(r2?'CAR SELECTION':'CIRCUIT SETUP');
   $('suGo').querySelector('span').textContent=isRL(m)&&!r2?'Next: Car >':'Start';
   if(r2){const wxn=(P.WX[ST.wx||'clear']||{n:'CLEAR'}).n;$('suDrv').insertAdjacentHTML('afterbegin',`<div class="rrecap"><b>${D[ST.track].name}</b><small>${(Math.round(T.L)*(ST.rlaps||1)/1000).toFixed(1)} km &middot; ${m==='track'?ST.laps:(ST.rlaps||1)} lap${(ST.rlaps||1)>1?'s':''} &middot; ${wxn} &middot; ${(P.TOD[effTod()]||{n:''}).n}</small></div>`)}}
- $('suHint').textContent=m==='track'?'One car on the circuit at a time &middot; pass the controller between runs &middot; fastest total wins':m==='rally'?'One car on the stage at a time &middot; pass the controller between runs &middot; fastest total wins':m==='ta'?'W / S + A / D &middot; double-tap W up, S down to shift':'P1 WASD &middot; P2 arrows &middot; P3 IJKL &middot; P4 TFGH';$('suHint').innerHTML=$('suHint').textContent}
+ $('suHint').textContent=m==='track'?'One car on the circuit at a time &middot; pass the controller between runs &middot; fastest total wins':m==='rally'?'One car on the stage at a time &middot; pass the controller between runs &middot; fastest total wins':m==='ta'?'W / S + A / D &middot; Q / E shift (or double-tap W / S)':'P1 WASD &middot; P2 '+P.p2Name()+' &middot; P3 IJKL &middot; P4 TFGH';$('suHint').innerHTML=$('suHint').textContent}
 /* custom driver names: trimmed, 12 chars, unique across players */
 function cleanName(p,np){const nm=(ST.names||[])[p];let v=(nm||'').replace(/[<>&"]/g,'').trim().slice(0,12);if(!v)return null;for(let q=0;q<p;q++){const o=((ST.names||[])[q]||'').trim().slice(0,12);if(o&&o.toLowerCase()===v.toLowerCase())v=v.slice(0,10)+(p+1)}return v}
 $('suGo').onclick=()=>{if(isRL(ST.mode)&&ST.rstep!==2){P.sfx('select');openShow('garage',{player:0,cap:null,ret:'s8setup',rally:ST.mode==='rally',track:ST.mode==='track',flow:true});return}
@@ -5152,7 +5185,7 @@ function fxStep(c,Rc,dt){roost(c,Rc,dt);if(c.human)smokeFx(c,Rc,dt);const T=Rc.T
  if(c.human&&Rc.cfg&&!Rc.cfg.noFx)stageFx(c,T,dt)}
 const sc0=stepCar;
 stepCar=function(c,dt){const Rc=RACE,rl=!!(Rc&&Rc.cfg&&Rc.cfg.rally&&c.human&&!c.forceAI),auto=!!(window.PTO&&PTO.autoShift);
- if(rl){if(c.rg===undefined)c.rg=c.gear|0;if(!auto)c.gear=c.rg;c._hb=Rc.state==='race'&&!c.fin&&c.respT<=0&&!(c.exp>0)&&!paused&&down.has(RK[curP].hb)}
+ if(rl){if(c.rg===undefined)c.rg=c.gear|0;if(!auto)c.gear=c.rg;c._hb=!(S&&S.drv&&S.drv.length>1)&&Rc.state==='race'&&!c.fin&&c.respT<=0&&!(c.exp>0)&&!paused&&down.has(RK[curP].hb)}
  sc0.apply(this,arguments);
  if(rl){if(auto)c.rg=c.gear|0;else c.gear=c.rg;handbrakeFx(c,dt)}
  if(!Rc||!Rc.T||!Rc.dust)return;
@@ -5198,11 +5231,12 @@ function rallyGears(on){for(const id in REAL){const car=BYID[id];if(!car)continu
  if(on){if(!gtOrig[id])gtOrig[id]=arr.map(g=>({top:g.top,acc:g.acc}));const t=gearTable(REAL[id]);arr.length=0;t.forEach(g=>arr.push(g))}
  else if(gtOrig[id]){arr.length=0;gtOrig[id].forEach(g=>arr.push(g));delete gtOrig[id]}}}
 P.rallyGears=rallyGears;P.REALGEARS=REAL;
-const RK=[{dn:'KeyQ',up:'KeyE',hb:'Space',cam:'KeyC',n:['Q','E','SPACE','C']},{dn:'Comma',up:'Period',hb:'ShiftRight',cam:'Slash',n:[',','.','R-SHIFT','/']},{dn:'KeyU',up:'KeyO',hb:'KeyM',cam:'KeyP',n:['U','O','M','P']},{dn:'KeyR',up:'KeyY',hb:'KeyB',cam:'KeyV',n:['R','Y','B','V']}];
-const MOVE=['W A S D','Arrow keys','I J K L','T F G H'];
+const RK=[{dn:'KeyQ',up:'KeyE',hb:'Space',cam:'KeyC',n:['Q','E','SPACE','C']},{dn:'PageUp',up:'PageDown',hb:'ShiftRight',cam:'Slash',n:['PG UP','PG DN','R-SHIFT','/']},{dn:'KeyU',up:'KeyO',hb:'KeyM',cam:'KeyP',n:['U','O','M','P']},{dn:'KeyR',up:'KeyY',hb:'KeyB',cam:'KeyV',n:['R','Y','B','V']}];
+const MOVE=['W A S D','Arrow keys','I J K L','T F G H'];P.rallyP2=np=>{MOVE[1]=np?'Numpad 8 4 5 6':'Arrow keys';Object.assign(RK[1],np?{dn:'Numpad7',up:'Numpad9',n:['7','9',RK[1].n[2],RK[1].n[3]]}:{dn:'PageUp',up:'PageDown',n:['PG UP','PG DN',RK[1].n[2],RK[1].n[3]]});[RK[1].dn,RK[1].up].forEach(x=>GAME_KEYS.add(x))};
 RK.forEach(k=>[k.dn,k.up,k.hb,k.cam].forEach(x=>GAME_KEYS.add(x)));
 let curP=0;const camPref={};const CAMS=['CHASE','HOOD','FAR CHASE'];
-const ctlHTML=p=>{const k=RK[Math.min(p,3)].n;return `<div class="rl-ctl"><span><b>${MOVE[Math.min(p,3)]}</b>drive</span><span><b>${k[0]} / ${k[1]}</b>shift down / up</span><span><b>${k[2]}</b>handbrake</span><span><b>${k[3]}</b>camera</span></div>`};
+P.rallyP2(P.p2Keys==='numpad');
+const ctlHTML=p=>{const k=RK[Math.min(p,3)].n,multi=S&&S.drv&&S.drv.length>1;return `<div class="rl-ctl"><span><b>${MOVE[Math.min(p,3)]}</b>drive</span><span><b>${k[0]} / ${k[1]}</b>shift down / up</span>${multi?'':`<span><b>${k[2]}</b>handbrake</span>`}<span><b>${k[3]}</b>camera</span></div>`};
 function shiftR(c,d){const car=c.cs||BYID.merc,G=P.GT(car),g=c.rg|0,n=Math.max(0,Math.min(G.length-1,g+d));if(n===g)return;
  const rr=c.sp/Math.max(1,(CIR()&&P.effTop?P.effTop(car,g)*1.03:car.top*G[g].top)*(c.mt?c.mt.top:1));if(d>0&&rr>=.8&&rr<=1.06){c.pb=1.1;c.perfect=1}else c.perfect=0;
  c.rg=n;c.gear=n;c.shiftT=.14;c.gearFlash=.9;if(P.sfx){P.sfx(d>0?'up':'dn');if(c.perfect)P.sfx('move')}}
@@ -5213,7 +5247,7 @@ addEventListener('keydown',e=>{const Rc=RACE;if(!Rc||!Rc.cfg||!Rc.cfg.rally||Rc.
  else if((e.code===k.up||e.code===k.dn)&&Rc.state==='race'&&!c.fin&&!(window.PTO&&PTO.autoShift))shiftR(c,e.code===k.up?1:-1)});
 let tEl=null,tH=0;function toast(t){if(!tEl){tEl=document.createElement('div');tEl.id='rlToast';document.body.appendChild(tEl)}tEl.textContent=t;tEl.style.opacity=1;clearTimeout(tH);tH=setTimeout(()=>{tEl.style.opacity=0},1100)}
 /* tarmac at 200 mph: steering authority falls with speed so a tap stays a tap (lateral pull stays roughly constant above ~90 mph) */
-{const ip0=P.inPost;P.inPost=(c,dt)=>{if(ip0)ip0(c,dt);const Rc=RACE;if(Rc&&Rc.cfg&&Rc.cfg.circuit&&c.human&&!c.forceAI&&c.in&&c.sp>40)c.in.st*=Math.pow(40/c.sp,.85)}}
+{const ip0=P.inPost;P.inPost=(c,dt)=>{if(ip0)ip0(c,dt);const Rc=RACE;if(Rc&&Rc.cfg&&c.human&&!c.forceAI&&c.in&&c.sp>40)c.in.st*=Math.pow(40/c.sp,.85)}}
 const so0=soloCam;
 soloCam=(c,dt,out)=>{so0(c,dt,out);const Rc=RACE;if(!(Rc&&Rc.cfg&&Rc.cfg.rally&&c.human)||!c.camMode||c.fin)return;
  const m=c.camMode,sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);
@@ -5300,7 +5334,7 @@ async function turn(i){S.i=i;const d=S.drv[i],cfg=S.cfg;keysFor(d.p);curP=0;rall
  await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
  await fadeTo(0,800)}
 const box=()=>$i('resBox');
-const keyHint=p=>['W A S D','arrow keys','I J K L','T F G H'][p]||'';
+const keyHint=p=>['W A S D',P.p2Keys==='numpad'?'numpad 8 4 5 6':'arrow keys','I J K L','T F G H'][p]||'';
 const quitRally=()=>{S=null;keysReset();leaveFx();P.cleanupRace();show('menu')};
 function briefing(i){const d=S.drv[i],car=BYID[d.id],st=D[S.cfg.track];paused=true;
  box().innerHTML=`<h1>UP NEXT</h1><div class="sub">${st.name.toUpperCase()} &middot; ${S.cfg.laps} LAP${S.cfg.laps>1?'S':''} &middot; RUN ${i+1} OF ${S.drv.length}</div>
@@ -5580,9 +5614,9 @@ P.TRACK_CARS=P.CARS.filter(c=>c.cat==='TRACK'&&!c.rallyOnly).map(c=>c.id);
 /* real-world numbers: [top speed mph, accel, grip, brake, forward gears, track-only]
    Track-only "monsters" (race prototypes and GT3 cars) never appear in any other mode. */
 const TK={
- p1:[215,38,1.16,1.22,7,1],   /* Bugatti Bolide, 7-speed sequential */
- c35:[211,36,1.15,1.2,6,1],   /* McLaren F1 GTR, 6-speed */
- c63:[205,34,1.13,1.18,5,1],  /* Mazda 787B, 5-speed */
+ p1:[311,38,1.16,1.22,7,1],   /* Bugatti Bolide, 7-speed sequential */
+ c35:[240,36,1.15,1.2,6,1],   /* McLaren F1 GTR, 6-speed */
+ c63:[220,34,1.13,1.18,5,1],  /* Mazda 787B, 5-speed */
  c24:[203,32,1.1,1.1,6,0],    /* Ferrari 575M, 6-speed */
  c92:[190,33,1.13,1.16,6,1],  /* Audi R8 LMS, 6-speed sequential */
  c45:[186,32,1.12,1.15,6,1],  /* BMW M4 GT3, 6-speed */
@@ -5602,16 +5636,11 @@ const eq=(mph,acc)=>{const v=mph/MPS;let lo=v,hi=v*4;for(let i=0;i<50;i++){const
 P.TRACK_ONLY=[];
 P.TRACK_CARS.forEach(id=>{const c=P.BYID[id],t=TK[id];if(!t)return;c._std={top:c.top,acc:c.acc,grip:c.grip,brk:c.brk};c._tk={top:+eq(t[0],t[1]).toFixed(1),acc:t[1],grip:t[2],brk:t[3],mph:t[0]};c.real=t[4];if(P.REALGEARS)P.REALGEARS[id]=t[4];if(t[5]){c.trackOnly=true;P.TRACK_ONLY.push(id)}});
 P.CARS.forEach(c=>{c.tdiv=P.TRACK_CARS.includes(c.id)?(c.trackOnly||c.cls==='S'?'PRO':'CLUB'):null});
-/* the garage reads top speed from the real target, not the stock gear table */
-const gt0=P.gearTops;P.gearTops=car=>{if(tkOn&&car&&car._tk){const n=P.GT(car).length,v=car._tk.mph/MPS;return Array.from({length:n},(_,i)=>v*Math.pow(.78,n-1-i))}return gt0(car)};
-/* circuit stats are only live while the Track garage / a circuit race is up, everything else keeps its normal numbers */
-let tkOn=false;
-function applyStats(on){if(on===tkOn)return;tkOn=on;P.TRACK_CARS.forEach(id=>{const c=P.BYID[id];if(!c||!c._tk)return;Object.assign(c,on?c._tk:c._std);if(on)delete c.mph})}
-Object.defineProperty(P,'_to',{get:()=>tkOn,set:v=>applyStats(!!v),configurable:true});
+/* real numbers are permanent now: every car runs at its real-world speed in every mode */
+P.TRACK_CARS.forEach(id=>{const c=P.BYID[id];if(c&&c._tk)Object.assign(c,c._tk)});
+P._to=false;
 const ow1=P.owns;P.owns=(id,alt)=>P._to&&P.TRACK_CARS.includes(id)?true:ow1(id,alt);
 P.trackSel=p=>{const sv=P.SV();sv.tsel=sv.tsel||[];let s=sv.tsel[p];if(!s||!P.TRACK_CARS.includes(s.id))s=sv.tsel[p]={id:P.TRACK_CARS[p%P.TRACK_CARS.length],alt:0};return s};
-const lh=P.launch;P.launch=cfg=>{P._to=!!cfg.circuit;return lh(cfg)};
-const sh0=show;show=function(id){if(id==='menu'||id==='s8cards')P._to=false;return sh0.apply(this,arguments)};
 /* medals follow the car: platinum is the clean-lap pace of a 165 mph car (R33), scaled by real top speed, so every car gets a fair target */
 P.MEDAL_REF[14]=85.9;
 const mf=P.medalFor,mtm=P.medalTime,MD=P.MEDALS;
@@ -5621,6 +5650,38 @@ P.medalTime=(track,car,i)=>{const r=trRef(track,car);return r==null?mtm(track,ca
 /* track-only cars are hidden from every regular fleet */
 const mk=P.makeAI;P.makeAI=function(o){const r=mk.apply(this,arguments);return r.map(a=>P.TRACK_ONLY.includes(a.id)?Object.assign(a,{id:'merc'}):a)};
 const ll=P.loanerFor;P.loanerFor=function(cap,rally){const c=ll.apply(this,arguments);return c&&c.trackOnly?(P.BYID.merc):c};
+})();
+
+/* ===== Poly Tourismo v9 layer: realspeed (every car runs at its real-world top speed; steering, AI and medals follow) ===== */
+(function v9realspeed(){
+'use strict';
+const P=window.PT8,MPS=2.23694;
+/* real top speeds, mph */
+const R={ford:158,merc:155,ster:165,art:155,ferr:201,zen:217,must:155,urus:140,m8:201,amg:196,gtr:196,por:175,
+c26:155,c50:130,c67:140,c91:112,c93:118,c5:140,c28:120,c32:155,c39:167,c57:155,
+c12:155,c18:140,c22:110,c25:130,c40:140,c41:120,c48:156,c55:155,c58:100,c62:115,c83:155,c96:120,c101:146,c111:146,c114:155,c117:125,c121:138,c122:155,
+c4:140,c10:140,c14:130,c19:125,c29:130,c31:135,c54:130,c60:140,c64:130,c70:150,c82:165,c87:175,c90:125,c97:165,c110:185,c134:155,
+c2:191,c3:155,c6:177,c7:194,c8:165,c11:155,c13:183,c16:160,c20:189,c21:155,c46:198,c47:190,c53:155,c56:155,c59:160,c61:157,c71:155,c79:155,c95:159,c126:155,c128:186,c129:170,c132:155,
+c17:177,c27:168,c30:205,c33:202,c34:211,c43:217,c44:183,c66:213,c78:202,c80:181,c85:190,c86:205,c88:205,c94:205,c116:236,c124:248,c125:191,c130:189,c131:125,c135:196,
+c1:224,c15:214,c36:245,c37:253,c42:218,c51:137,c52:140,c65:125,c73:236,c75:250,c77:311,c98:330,c104:190,c106:217,c108:125,c120:140,c123:216,c127:221};
+const eq=(mph,acc)=>{const v=mph/MPS;let lo=v,hi=v*5;for(let i=0;i<50;i++){const t=(lo+hi)/2,a=.66*acc;let l2=0,h2=t;for(let k=0;k<40;k++){const w=(l2+h2)/2,r=w/t;if(a*P.band(r)*(1-r)>.0007*w*w)l2=w;else h2=w}if(l2>=v)hi=t;else lo=t}return(lo+hi)/2};
+P.REALMPH=R;P.topFor=eq;
+P.CARS.forEach(c=>{if(c.mph)return;const m=R[c.id];if(!m)return;c.top0=c.top;c.mph=m;c.top=+eq(m,c.acc).toFixed(1)});
+P.CARS.forEach(c=>{if(!c.top0)c.top0=c.top});
+/* garage and HUD read true per-gear flat-out speeds */
+P.gearTops=car=>P.GT(car).map((_,i)=>P.effTop(car,i));
+/* gravel stages: cap at 120 mph so a 200 mph car can still read a narrow stage */
+const mul0=P.mul;
+P.mul=c=>{const m=mul0(c);const Rc=RACE;if(c.human&&Rc&&Rc.cfg&&Rc.cfg.rally&&!Rc.cfg.circuit&&c.cs&&c.cs.mph>120){if(!c.cs._cf)c.cs._cf=eq(120,c.cs.acc)/c.cs.top;m.top*=c.cs._cf}return m};
+/* medals: scale by real speed (square root) against a 155 mph reference, gravel capped at 120 */
+const mf=P.medalFor,mtm=P.medalTime,MD=P.MEDALS;
+const spd=(track,car)=>{const g=P.STAGES&&P.STAGES.indexOf(+String(track).replace('r',''))>=0,cap=g?120:1e9;return[Math.min(P.BYID.merc.mph,cap),Math.min(car.mph||P.BYID.merc.mph,cap)]};
+const ref=(track,car)=>{const k=String(track),b=P.MEDAL_REF[k];if(!b)return null;const[a,c]=spd(track,car);return b*Math.pow(a/c,.5)};
+const isTrk=track=>(P.TRK_TRACKS||[]).includes(+String(track).replace('r',''));
+P.medalFor=(track,car,lap)=>{if(isTrk(track))return mf(track,car,lap);const r=ref(track,car);if(r==null||lap==null)return -1;for(let i=0;i<MD.length;i++)if(lap<=r*MD[i].f)return i;return MD.length};
+P.medalTime=(track,car,i)=>{if(isTrk(track))return mtm(track,car,i);const r=ref(track,car);return r==null?null:r*MD[i].f};
+/* reference laps were set at the old speeds; these factors (new bot lap / old bot lap) bring them in line */
+const CAL=window.PT9_CAL||{};for(const k in CAL){if(P.MEDAL_REF[k]!=null)P.MEDAL_REF[k]*=CAL[k];if(P.MEDAL_REF['r'+k]!=null)P.MEDAL_REF['r'+k]*=CAL[k]}
 })();
 
 /* ===== Poly Tourismo v9 layer: perf (performance options: presets, pixel density cap, FPS counter, HUD DOM caching) ===== */

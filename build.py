@@ -88,9 +88,13 @@ src=rep(src,"const k=i%N,s=Math.sin(T.psi[k]),c=Math.cos(T.psi[k]),l=side*(T.hw[
  "const k=i%N,s=Math.sin(T.psi[k]),c=Math.cos(T.psi[k]),l=side*(T.hw[k]+.3),l2=side*(T.hw[k]+.3+TH),y=T.y[k]-l*T.bank[k],y2=T.y[k]-l2*T.bank[k],bot=T.br[k]?1.6:.3,h=T.wh[k],X1=T.x[k]+c*l,Z1=T.z[k]-s*l,X2=T.x[k]+c*l2,Z2=T.z[k]-s*l2,u=i*T.sp/4,g1=T.br[k]?y-bot:Math.min(y-bot,T.terr(X1,Z1)-.45),g2=T.br[k]?y2-bot:Math.min(y2-bot,T.terr(X2,Z2)-.45);\n  pos.push(X1,g1,Z1,X1,y+h,Z1, X1,y+h,Z1,X2,y2+h,Z2, X2,y2+h,Z2,X2,g2,Z2);")
 src=rep(src,"z=T.z[i]-Math.sin(T.psi[i])*l,y=T.y[i]-l*T.bank[i];posts.push(","z=T.z[i]-Math.sin(T.psi[i])*l,y=T.br[i]?T.y[i]-l*T.bank[i]:Math.min(T.y[i]-l*T.bank[i],T.terr(x,z)+.05);posts.push(")
 src=rep(src,"const over=close.road&&c.y-close.h<1.65;","const over=!T.d.gravel&&close.road&&c.y-close.h<1.65;")
-src=rep(src,"{u:'Numpad8',d:'Numpad5',l:'Numpad4',r:'Numpad6',h:'Numpad0'}","{u:'KeyT',d:'KeyG',l:'KeyF',r:'KeyH',h:'KeyY'}")
+src=rep(src,"br=down.has(k.d)?1:0,st=(down.has(k.l)?1:0)-(down.has(k.r)?1:0),hb=down.has(k.h)?1:0;","br=down.has(k.d)?1:0,st=(down.has(k.l)?1:0)-(down.has(k.r)?1:0),hb=(!(window.PT8&&PT8.noHb&&PT8.noHb())&&down.has(k.h))?1:0;")
+src=rep(src,"if(g.buttons[2]&&g.buttons[2].pressed)hb=1}}catch(e){}","if(g.buttons[2]&&g.buttons[2].pressed&&!(window.PT8&&PT8.noHb&&PT8.noHb()))hb=1}}catch(e){}")
+src=rep(src,"const rr=c.sp/Math.max(1,cs_.top*G_[c.gear|0].top*(c.mt?c.mt.top:1));","const rr=c.sp/Math.max(1,(PT8.effTop?PT8.effTop(cs_,c.gear|0)*1.03:cs_.top*G_[c.gear|0].top)*(c.mt?c.mt.top:1));")
+src=rep(src,"{u:'KeyI',d:'KeyK',l:'KeyJ',r:'KeyL',h:'KeyU'}","{u:'KeyI',d:'KeyK',l:'KeyJ',r:'KeyL',h:'KeyM'}")
+src=rep(src,"{u:'Numpad8',d:'Numpad5',l:'Numpad4',r:'Numpad6',h:'Numpad0'}","{u:'KeyT',d:'KeyG',l:'KeyF',r:'KeyH',h:'KeyB'}")
 
-parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','cars10','audio','modes','tracks','tracks2','extra','race2','elim','tod','harbor','props','stages','ra_data','tracks3','weather','ambience','tutorial','hud2','shade','liveries','ui','rally','trackmode','perf']  if os.path.exists(f'{SRC}/layers/{n}.js')]
+parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','cars10','audio','modes','tracks','tracks2','extra','race2','elim','tod','harbor','props','stages','ra_data','tracks3','weather','ambience','tutorial','hud2','shade','liveries','ui','rally','trackmode','realspeed','perf']  if os.path.exists(f'{SRC}/layers/{n}.js')]
 css=open(f'{SRC}/style.css').read()
 import base64
 b64=lambda f:base64.b64encode(open(W+'/assets/'+f,'rb').read()).decode()

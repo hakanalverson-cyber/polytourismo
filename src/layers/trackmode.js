@@ -7,9 +7,9 @@ P.TRACK_CARS=P.CARS.filter(c=>c.cat==='TRACK'&&!c.rallyOnly).map(c=>c.id);
 /* real-world numbers: [top speed mph, accel, grip, brake, forward gears, track-only]
    Track-only "monsters" (race prototypes and GT3 cars) never appear in any other mode. */
 const TK={
- p1:[215,38,1.16,1.22,7,1],   /* Bugatti Bolide, 7-speed sequential */
- c35:[211,36,1.15,1.2,6,1],   /* McLaren F1 GTR, 6-speed */
- c63:[205,34,1.13,1.18,5,1],  /* Mazda 787B, 5-speed */
+ p1:[311,38,1.16,1.22,7,1],   /* Bugatti Bolide, 7-speed sequential */
+ c35:[240,36,1.15,1.2,6,1],   /* McLaren F1 GTR, 6-speed */
+ c63:[220,34,1.13,1.18,5,1],  /* Mazda 787B, 5-speed */
  c24:[203,32,1.1,1.1,6,0],    /* Ferrari 575M, 6-speed */
  c92:[190,33,1.13,1.16,6,1],  /* Audi R8 LMS, 6-speed sequential */
  c45:[186,32,1.12,1.15,6,1],  /* BMW M4 GT3, 6-speed */
@@ -29,16 +29,11 @@ const eq=(mph,acc)=>{const v=mph/MPS;let lo=v,hi=v*4;for(let i=0;i<50;i++){const
 P.TRACK_ONLY=[];
 P.TRACK_CARS.forEach(id=>{const c=P.BYID[id],t=TK[id];if(!t)return;c._std={top:c.top,acc:c.acc,grip:c.grip,brk:c.brk};c._tk={top:+eq(t[0],t[1]).toFixed(1),acc:t[1],grip:t[2],brk:t[3],mph:t[0]};c.real=t[4];if(P.REALGEARS)P.REALGEARS[id]=t[4];if(t[5]){c.trackOnly=true;P.TRACK_ONLY.push(id)}});
 P.CARS.forEach(c=>{c.tdiv=P.TRACK_CARS.includes(c.id)?(c.trackOnly||c.cls==='S'?'PRO':'CLUB'):null});
-/* the garage reads top speed from the real target, not the stock gear table */
-const gt0=P.gearTops;P.gearTops=car=>{if(tkOn&&car&&car._tk){const n=P.GT(car).length,v=car._tk.mph/MPS;return Array.from({length:n},(_,i)=>v*Math.pow(.78,n-1-i))}return gt0(car)};
-/* circuit stats are only live while the Track garage / a circuit race is up, everything else keeps its normal numbers */
-let tkOn=false;
-function applyStats(on){if(on===tkOn)return;tkOn=on;P.TRACK_CARS.forEach(id=>{const c=P.BYID[id];if(!c||!c._tk)return;Object.assign(c,on?c._tk:c._std);if(on)delete c.mph})}
-Object.defineProperty(P,'_to',{get:()=>tkOn,set:v=>applyStats(!!v),configurable:true});
+/* real numbers are permanent now: every car runs at its real-world speed in every mode */
+P.TRACK_CARS.forEach(id=>{const c=P.BYID[id];if(c&&c._tk)Object.assign(c,c._tk)});
+P._to=false;
 const ow1=P.owns;P.owns=(id,alt)=>P._to&&P.TRACK_CARS.includes(id)?true:ow1(id,alt);
 P.trackSel=p=>{const sv=P.SV();sv.tsel=sv.tsel||[];let s=sv.tsel[p];if(!s||!P.TRACK_CARS.includes(s.id))s=sv.tsel[p]={id:P.TRACK_CARS[p%P.TRACK_CARS.length],alt:0};return s};
-const lh=P.launch;P.launch=cfg=>{P._to=!!cfg.circuit;return lh(cfg)};
-const sh0=show;show=function(id){if(id==='menu'||id==='s8cards')P._to=false;return sh0.apply(this,arguments)};
 /* medals follow the car: platinum is the clean-lap pace of a 165 mph car (R33), scaled by real top speed, so every car gets a fair target */
 P.MEDAL_REF[14]=85.9;
 const mf=P.medalFor,mtm=P.medalTime,MD=P.MEDALS;

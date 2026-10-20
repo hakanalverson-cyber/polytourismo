@@ -92,12 +92,13 @@ const taps=[0,1,2,3].map(()=>({u:0,d:0}));
 addEventListener('keydown',e=>{if(e.repeat)return;for(let p=0;p<4;p++){const k=KM[p];if(e.code===k.u)taps[p].u++;if(e.code===k.d)taps[p].d++}});
 function shiftGear(c,d,auto){const cs_=c.cs||BYID.merc,G_=GT(cs_),n=clamp((c.gear|0)+(d>0?1:-1),0,G_.length-1);if(n===(c.gear|0))return false;const rr=c.sp/Math.max(1,cs_.top*G_[c.gear|0].top*(c.mt?c.mt.top:1));if(!auto&&d>0&&rr>=.8&&rr<=1.06){c.pb=1.1;c.perfect=1}else c.perfect=0;
  c.gear=n;c.shiftT=.14;c.gearFlash=.9;if(c.human){PT8.sfx(d>0?'up':'dn');if(c.perfect)PT8.sfx('move')}return true}
-function autoGear(c,dt,mt,fac,auto){const cs=c.cs,G_=GT(cs),NG=G_.length,g=c.gear|0,ce=q=>cs.top*G_[q].top*(mt.top||1);let want=NG-1;for(let q=0;q<NG;q++)if(c.sp<=ce(q)*fac){want=q;break}
+function autoGear(c,dt,mt,fac,auto){const cs=c.cs,G_=GT(cs),NG=G_.length,g=c.gear|0,ce=q=>(PT8.effTop?PT8.effTop(cs,q)*1.03:cs.top*G_[q].top)*(mt.top||1);let want=NG-1;for(let q=0;q<NG;q++)if(c.sp<=ce(q)*fac){want=q;break}
  if(want<g&&!(c.sp<ce(g)*.55))want=g;if(want!==g){c.gearHold=(c.gearHold||0)-dt;if(c.gearHold<=0){shiftGear(c,want>g?1:-1,auto);c.gearHold=auto?.5:.35}}else c.gearHold=.2}
 function gearLogic(c,live,dt){const p=c.k,tp=taps[p],now=performance.now();
  if(c.seenU===undefined){c.seenU=tp.u;c.seenD=tp.d;c.lastU=0;c.lastD=0}
  if(window.PTO&&PTO.autoShift){c.seenU=tp.u;c.seenD=tp.d;if(live)autoGear(c,dt||.016,c.mt||MATS.road,.93,true);return}
  if(tp.u!==c.seenU){c.seenU=tp.u;if(live&&c.lastU&&now-c.lastU<340){shiftGear(c,1);c.lastU=0}else c.lastU=now}
+ if(tp.qu){tp.qu=0;if(live)shiftGear(c,1)}if(tp.qd){tp.qd=0;if(live)shiftGear(c,-1)}
  if(tp.d!==c.seenD){c.seenD=tp.d;if(live&&c.lastD&&now-c.lastD<340){shiftGear(c,-1);c.lastD=0}else c.lastD=now}
  try{const g=navigator.getGamepads?navigator.getGamepads()[p]:null;if(g){const B=i=>!!(g.buttons[i]&&g.buttons[i].pressed),bu=B(5)||B(12),bd=B(4)||B(13);if(live){if(bu&&!c.pu)shiftGear(c,1);if(bd&&!c.pd)shiftGear(c,-1)}c.pu=bu;c.pd=bd}}catch(e){}
 }
@@ -105,7 +106,7 @@ function gearLogic(c,live,dt){const p=c.k,tp=taps[p],now=performance.now();
 /* ---------------- AI ---------------- */
 function kappa(T){if(T.kap)return T.kap;const kz=new Float32Array(T.N);for(let i=0;i<T.N;i++){const N=T.N;kz[i]=Math.max(0,-(T.y[(i+5)%N]-2*T.y[i]+T.y[(i-5+N)%N])/(25*T.sp*T.sp))}T.kz=kz;const N=T.N,k=new Float32Array(N),sp=T.sp;for(let i=0;i<N;i++){const a=Math.abs(wr(T.psi[(i+3)%N]-T.psi[(i-3+N)%N]));k[i]=a/(6*sp)}
  const o=new Float32Array(N);for(let i=0;i<N;i++){let m=0;for(let j=-2;j<=2;j++)m=Math.max(m,k[(i+j+N)%N]);o[i]=m}return T.kap=o}
-function steerLimit(R){return 2.25*R/(1+((RACE&&RACE.cfg&&RACE.cfg.circuit)?.0105:.033)*R)}
+function steerLimit(R){return 2.25*R/(1+.0105*R)}
 function aiInput(c,dt){const Rc=RACE,T=Rc.T,N=T.N,a=c.ai||(c.ai={skill:.9,lat:0,mist:0,name:'CPU'}),K=kappa(T);
  const live=Rc.state==='race'&&c.respT<=0&&!(c.exp>0);
  const cs=c.cs,mt=c.mt||MATS.road;
@@ -270,4 +271,18 @@ soloCam=(c,dt,out)=>{
 };
 /* the old group-cam blend never applies to finished cars */
 PT8.TAPS=taps;
+/* universal shift keys: the keys either side of forward (Q/E, PageUp/PageDown, U/O, R/Y); rally/track handle their own */
+PT8.SHIFTK=[{dn:'KeyQ',up:'KeyE',n:['Q','E']},{dn:'PageUp',up:'PageDown',n:['PAGE UP','PAGE DOWN']},{dn:'KeyU',up:'KeyO',n:['U','O']},{dn:'KeyR',up:'KeyY',n:['R','Y']}];
+PT8.SHIFTK.forEach(k=>{GAME_KEYS.add(k.dn);GAME_KEYS.add(k.up)});
+/* handbrake is a single-driver tool: off whenever more than one human is racing */
+PT8.noHb=()=>!!(RACE&&RACE.cfg&&RACE.cfg.humans&&RACE.cfg.humans.length>1);
+/* player 2 can use the arrow keys or the numpad (8 4 5 6, 7 / 9 shift) */
+{const AR={u:'ArrowUp',d:'ArrowDown',l:'ArrowLeft',r:'ArrowRight',h:'ShiftRight'},NP={u:'Numpad8',d:'Numpad5',l:'Numpad4',r:'Numpad6',h:'Numpad0'};
+ PT8.p2Keys='arrows';try{if(localStorage.getItem('pt9-p2keys')==='numpad')PT8.p2Keys='numpad'}catch(e){}
+ PT8.setP2Keys=v=>{PT8.p2Keys=v==='numpad'?'numpad':'arrows';const np=PT8.p2Keys==='numpad';Object.assign(KM[1],np?NP:AR);Object.values(KM[1]).forEach(k=>GAME_KEYS.add(k));
+  Object.assign(PT8.SHIFTK[1],np?{dn:'Numpad7',up:'Numpad9',n:['7','9']}:{dn:'PageUp',up:'PageDown',n:['PAGE UP','PAGE DOWN']});GAME_KEYS.add('Numpad7');GAME_KEYS.add('Numpad9');
+  if(PT8.rallyP2)PT8.rallyP2(np);try{localStorage.setItem('pt9-p2keys',PT8.p2Keys)}catch(e){}};
+ PT8.p2Name=()=>PT8.p2Keys==='numpad'?'numpad 8 4 5 6':'arrows'}
+addEventListener('keydown',e=>{if(e.repeat||!RACE||RACE.cfg.rally||scr!=='game')return;PT8.SHIFTK.forEach((k,p)=>{if(e.code===k.dn)taps[p].qd=1;else if(e.code===k.up)taps[p].qu=1})});
+PT8.setP2Keys(PT8.p2Keys);
 })();
