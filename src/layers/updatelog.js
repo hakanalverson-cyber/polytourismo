@@ -11,6 +11,7 @@ P.LOG=[
   'Pavement and ground textures no longer sit on the road surface.',
   'Harbor Lights town rebuilt as continuous street walls: rows of buildings behind pavements and tree-lined verges, each row taller than the last, replacing the scattered houses and plant pots. Building colours are muted.',
   'Two concrete dock tunnels on Harbor Lights, with lit ceilings and signed portals. A much bigger cargo yard.',
+  'Harbor Lights: taller brick alley walls with roof ledges (no flat poster or fire-escape details), waterfront buildings facing the water on every quay, a denser city with parks and car parks, and the white sheds, silos and turbines removed.',
   'Harbor Lights fixes: no more brick strips along the track, no grey wall spikes at alley exits, boardwalk and road at the same height, crates sit on the ground, restaurant lamps hang from cords, calmer cobblestones, and more varied houses (size, colour, spacing, setback).',
   'Harbor Lights: houses sit closer to the road, with grass patches, bushes and drifting chimney smoke added.',
   'All streetlights on every map: new lamp model, a much wider and softer pool of light, a smoother glow, and lights that fade in and out instead of popping. Harbor Lights now has streetlights too.',

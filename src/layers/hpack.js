@@ -32,7 +32,7 @@ function prep(g){const root=g.scene;root.updateMatrixWorld(true);
 /* instanced placement: list rows are [x,y,z,yaw,scale,tintHex?]; sy optional non-uniform height factor in row[6] */
 HP.add=(sc,name,list,o)=>{o=o||{};const d=HP.defs[name];if(!d||!list.length)return[];const out=[],dm=new THREE.Object3D(),col=new THREE.Color(),ptr=new THREE.Matrix4();
  for(const part of d.parts){const mat=o.matFix?o.matFix(part.mat):part.mat;const im=new THREE.InstancedMesh(part.geo,mat,list.length);
-  list.forEach((q,i)=>{dm.position.set(q[0],q[1],q[2]);dm.rotation.set(0,q[3]||0,0);const s=q[4]||1,sy=q[6]||1;dm.scale.set(s,s*sy,s);dm.updateMatrix();im.setMatrixAt(i,dm.matrix);if(q[5]!=null){col.setHex(q[5]);im.setColorAt(i,col)}});
+  list.forEach((q,i)=>{dm.position.set(q[0],q[1],q[2]);dm.rotation.set(0,q[3]||0,0);const s=q[4]||1,sy=q[6]||1;dm.scale.set(s,s*sy,s);dm.updateMatrix();im.setMatrixAt(i,dm.matrix);col.setHex(q[5]!=null?q[5]:0xffffff);im.setColorAt(i,col)});
   im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true;im.frustumCulled=false;im.castShadow=false;im.receiveShadow=false;im.userData.ptProp='hp_'+name;sc.add(im);out.push(im)}
  return out};
 /* one standalone clone (for a few hero pieces) */

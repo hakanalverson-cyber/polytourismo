@@ -276,8 +276,6 @@ function harborTown(sc,T){
    const k=nearest(x,z),yaw=Math.round(Math.atan2(rx[k]-x,rz[k]-z)/(Math.PI/2))*Math.PI/2+(r()<.3?(r()-.5)*.35:0);occ.push([x,z,rad]);(out[nm]=out[nm]||[]).push([x,.02,z,yaw,s,0,sy]);log.push({n:nm,x,z,y:.02,fr:rad,sk:.5,s});n++}return n};
  /* low-rise streets near the quay, mid-rise behind, towers on the far ring; everything on a lattice and square to the street */
  /* the street walls near the road are assembled in harbor.js; only the far tower ring is placed here */
- place(TOW,2.0,2.4,150,340,9000,150,46);
- place(TOW,2.8,3.3,280,600,9000,120,60);
  /* trees and hedges between the blocks */
  const TR=['Tree_02','Tree_04','Tree_05','Tree_07'].filter(n=>P.BLD[n]);
  for(let t=0,n=0;t<1500&&n<0;t++){const x=-660+r()*1320,z=-660+r()*1320;if(!land(x,z,8)||near(x,z)<12)continue;if(!clear(x,z,2))continue;const nm=TR[Math.floor(r()*TR.length)];(out[nm]=out[nm]||[]).push([x,.02,z,r()*6.28,1.1+r()*.7,1]);occ.push([x,z,1.6])}

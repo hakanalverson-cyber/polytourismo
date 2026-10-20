@@ -13,7 +13,7 @@ const hp=[[-250,-200,0],[-100,-212,0],[60,-205,0],[200,-215,0],[290,-170,0],[320
  [-264,238,0,5.2],[-236,192,0,5.2],[-250,140,0,5.2],[-212,100,0,5.2],[-226,52,0,5.2],
  [-262,-28,0],[-300,-90,0],[-300,-150,0]];
 const docks={id:8,name:'Harbor Lights',desc:'daylight docks / boardwalk / brick alleys / restaurant',hw:8,bank:0,off:'city',idw:0,offs:0,amp:0,up:0,shoulder:8,flat:1,allWalls:1,harbor:1,biome:'harbor',tod0:'day',
- sky:[0x3a82d6,0xb6dcf4],fog:0xbcd6e8,sun:0xfff4de,hemi:[0xdcecff,0x6a6a60],road:'#3b3e44',walls:[[6,13,1.0],[14,26,9.5],[29,33,9.5]],ice:[],boost:[],jumps:[],pts:hp};
+ sky:[0x3a82d6,0xb6dcf4],fog:0xbcd6e8,sun:0xfff4de,hemi:[0xdcecff,0x6a6a60],road:'#3b3e44',walls:[[6,13,1.0],[14,26,14],[29,33,14]],ice:[],boost:[],jumps:[],pts:hp};
 const frost={id:9,look:4,name:'Frostline Stage',desc:'frozen forest / ice ruts / hairpins',hw:5.5,bank:8,shoulder:6,gravel:1,ice:[],walls:[],boost:[],off:'snow',idw:.86,offs:0,amp:6.5,up:36,biome:'forest',frost:1,tod0:'dawn',
  sky:[0x8fb0d0,0xe9f1f8],fog:0xd6e3ee,sun:0xfff4e0,hemi:[0xe6f0fa,0x7a8a9a],road:'#a3a9b0',dust:0xf2f6fa,dirt:0xdfe6ee,
  pts:[[-120,-240,10],[0,-255,14],[110,-225,22],[200,-250,30],[290,-190,36],[310,-100,30],[250,-40,24],[160,-70,28],[100,-10,34],[150,60,40],[250,90,36],[300,160,28],[250,230,20],[150,250,14],[60,200,10],[-30,240,6],[-120,215,8],[-190,150,14],[-140,80,20],[-210,20,26],[-290,-30,22],[-290,-120,16],[-220,-190,12]],tunnels:0};

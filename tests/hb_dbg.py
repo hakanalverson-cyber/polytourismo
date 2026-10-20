@@ -23,5 +23,6 @@ with sync_playwright() as p:
         RACE.cars.forEach(q=>{if(q.m)q.m.visible=false});R.setSize(1280,720,false);R.render(sc,cam);const d=R.domElement.toDataURL('image/png');hid.forEach(o=>o.visible=true);return d})(%r)"""%hide
         d=pg.evaluate(js);im=Image.open(io.BytesIO(base64.b64decode(d.split(',')[1]))).convert('RGB')
         return im.getpixel((763,230))
-    print(pg.evaluate("""(()=>{const d=PT8.HP.defs.bld_A.parts[0].mat;const t=d.map;const im=t.image;const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const g=c.getContext('2d');g.drawImage(im,0,0);const a=g.getImageData(0,0,im.width,im.height).data;const out=[];for(let i=0;i<30;i++){const p=((i*37)%(im.width*im.height))*4;out.push([a[p],a[p+1],a[p+2],a[p+3]].join(','))}return JSON.stringify([im.width,im.height,t.flipY,t.encoding,d.color.getHexString(),d.vertexColors,out])})()"""))
+    print(pg.evaluate("""(()=>{const sc=RACE.scene,cam=new THREE.PerspectiveCamera(60,16/9,.5,1600);cam.position.set(-110,3,-210);cam.lookAt(60,3,-206);cam.updateMatrixWorld();
+    let r='ok';try{R.render(sc,cam)}catch(e){r=e.stack.split('\\n').slice(0,8).join(' | ')}return r})()"""))
     b.close()
