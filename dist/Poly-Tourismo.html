@@ -121,7 +121,7 @@ function fx(x,y,z,col,n,sp,life,sz,gr){if(!FS)return;for(let i=0;i<n;i++){let p=
 p.on=1;p.l=p.ml=life*(.7+Math.random()*.6);p.sz=sz;p.gr=gr;p.m.material.color.set(col);p.m.position.set(x+(Math.random()-.5)*.4,y,z+(Math.random()-.5)*.4);p.v.set((Math.random()-.5)*sp,Math.random()*sp*.6+(gr<0?.5:0),(Math.random()-.5)*sp);p.m.visible=true}}
 function fxu(dt){for(const p of FX){if(!p.on)continue;p.l-=dt;if(p.l<=0){p.on=0;p.m.visible=false;continue}const k=p.l/p.ml;p.v.y-=p.gr*dt;p.m.position.addScaledVector(p.v,dt);p.v.multiplyScalar(1-dt*1.5);p.m.scale.setScalar(p.gr<0?p.sz*(1+(1-k)*2):p.sz*(.3+k*.7));p.m.material.opacity=Math.min(.7,k*1.2)}}
 /* ---------------- tracks ---------------- */
-const MATS={road:{grip:1,top:1,acc:1},grass:{grip:.6,top:.8,acc:.7},sand:{grip:.5,top:.72,acc:.6},snow:{grip:.42,top:.78,acc:.6},ice:{grip:.13,top:1,acc:.5},city:{grip:.7,top:.8,acc:.7}};
+const MATS={gravelR:{grip:.7,top:.86,acc:.76},road:{grip:1,top:1,acc:1},grass:{grip:.6,top:.8,acc:.7},sand:{grip:.5,top:.72,acc:.6},snow:{grip:.42,top:.78,acc:.6},ice:{grip:.13,top:1,acc:.5},city:{grip:.7,top:.8,acc:.7}};
 const crp=(a,b,c,d,t)=>{const t2=t*t,t3=t2*t;return .5*((2*b)+(-a+c)*t+(2*a-5*b+4*c-d)*t2+(-a+3*b-3*c+d)*t3)};
 const cityPts=[];for(let i=0;i<40;i++){const t=.9+i/40*2*PI,dt=Math.abs(wr(t-PI));cityPts.push([260*Math.sin(t),130*Math.sin(2*t),dt<.62?11*Math.pow(Math.max(0,Math.cos(dt*2.5)),2):0])}
 const D=[
@@ -309,7 +309,7 @@ const spd0=Math.hypot(c.vx,c.vz),fw=c.vx*Math.sin(c.yaw)+c.vz*Math.cos(c.yaw);
  c.driftTimer=Math.max(0,(c.driftTimer||0)-dt);
  hb=live&&c.driftTimer>0&&fw>15&&Math.abs(c.in.st)>.62&&nG>=2?1:0;
  if(!live||Math.abs(c.in.st)<.35||fw<15)c.driftTimer=0;c.drifting=!!hb;
- const sc=T.surf(c.x,c.z,c.y),mt=MATS[sc.road?'road':T.d.off];c.mt=mt;c.onRoad=sc.road;
+ const sc=T.surf(c.x,c.z,c.y),mt=MATS[sc.road?(T.gv&&T.gv[sc.i]?'gravelR':'road'):T.d.off];c.mt=mt;c.onRoad=sc.road;
 let sr=(2.5-Math.min(spd0,40)*.03)*(hb?1.3:1)*(nG>=2?1:.25);const sy0=Math.sin(c.yaw),cy0=Math.cos(c.yaw);let vf0=c.vx*sy0+c.vz*cy0;
 c.yr+=(c.st*sr*clamp(vf0/6,-1,1)-c.yr)*Math.min(1,dt*9);c.yaw+=c.yr*dt;
 const fx_=Math.sin(c.yaw),fz_=Math.cos(c.yaw),rx=fz_,rz=-fx_;let vf=c.vx*fx_+c.vz*fz_,vr=c.vx*rx+c.vz*rz;
@@ -578,7 +578,7 @@ end=code.indexOf('let sr=',start);
 
 code=code.slice(0,start)+`
 const sc=T.surf(c.x,c.z,c.y);
-const mt=MATS[sc.road?'road':T.d.off];
+const mt=MATS[sc.road?(T.gv&&T.gv[sc.i]?'gravelR':'road'):T.d.off];
 c.mt=mt;c.onRoad=sc.road;
 drift(c,dt,live,fw,nG>=2,!!sc.road);
 hb=c.drifting?1:0;
@@ -6903,8 +6903,8 @@ const coast={id:7,look:0,name:'Coastal Run',desc:'sea cliffs / sweepers / sunset
 /* Grand Valley: control points [x,z,y,halfwidth]. Mainland start, short low suspension bridge, island city streets, then a winding forest valley road home */
 const sp=[[-470,30,2],[-420,30,3.2],[-375,30,5],[-330,30,6.4],[-300,30,7.1],[-262,30,7.6],[-200,30,7.7],[-122,30,7.3],[-90,30,5.6],[-70,30,2.8,7.5],
  [-35,30,.8,6.5],[20,30,.8,6.5],[75,30,.8,6.5],[130,42,.8,6.5],[185,80,.8,6.5],[235,100,.8,6.5],[265,60,.8,6.5],[265,5,.8,6.5],[240,-35,.8,6.5],[195,-52,.8,6.5],[150,-28,.8,6.5],[105,-55,.8,6.5],[60,-92,.8,6.5],[10,-100,.8,6.5],[-35,-92,.8,6.5],
- [-75,-92,1.1,7],[-125,-100,1.9,7],[-170,-128,3.2,7],[-195,-175,4.8,7],[-175,-225,6.5,7],[-215,-270,8,7],[-285,-285,8.8,7],[-345,-262,8,7],[-365,-215,6.4,7],[-335,-170,5,7],[-370,-128,4,7],
- [-430,-130,3.4,7],[-490,-165,4.4,7],[-550,-200,6,7],[-615,-190,7,7],[-660,-145,6.2,7],[-665,-90,4.8,7],[-640,-55,3.8,7],[-615,0,3,7],[-570,40,2.4,7],[-520,45,2.1,7.5]];
+ [-75,-92,1.1,6],[-125,-100,1.9,6],[-170,-128,3.2,6],[-195,-175,4.8,6],[-175,-225,6.5,6],[-215,-270,8,6],[-285,-285,8.8,6],[-345,-262,8,6],[-365,-215,6.4,6],[-335,-170,5,6],[-370,-128,4,6],
+ [-430,-130,3.4,6],[-490,-165,4.4,6],[-550,-200,6,6],[-615,-190,7,6],[-660,-145,6.2,6],[-665,-90,4.8,6],[-640,-55,3.8,6],[-615,0,3,6],[-570,40,2.4,6],[-520,45,2.1,7.5]];
 const span={id:8,name:'Grand Valley',desc:'suspension bridge / island city / forest valley',hw:8,bank:0,off:'city',idw:0,offs:0,amp:0,up:0,shoulder:8,flat:1,allWalls:1,span:1,biome:'harbor',tod0:'day',
  sky:[0x3a82d6,0xb6dcf4],fog:0xbcd6e8,sun:0xfff4de,hemi:[0xdcecff,0x6a6a60],road:'#3b3e44',walls:[],ice:[],boost:[],jumps:[],pts:sp};
 const frost={id:9,look:4,name:'Frostline Stage',desc:'frozen forest / ice ruts / hairpins',hw:5.5,bank:8,shoulder:6,gravel:1,ice:[],walls:[],boost:[],off:'snow',idw:.86,offs:0,amp:6.5,up:36,biome:'forest',frost:1,tod0:'dawn',
@@ -6930,7 +6930,7 @@ buildWorld=T=>{const sc=bw0(T),d=T.d;
    else if(o.isMesh&&o.geometry&&o.geometry.attributes&&o.geometry.attributes.color&&o.geometry.attributes.position.count>2000){const a=o.geometry.attributes.color.array,c=new THREE.Color();for(let i=0;i<a.length;i+=3){c.setRGB(a[i],a[i+1],a[i+2]).lerp(W,.82);a[i]=c.r;a[i+1]=c.g;a[i+2]=c.b}o.geometry.attributes.color.needsUpdate=true}})}
  return sc};
 /* medal references: Mercedes AI first lap (tests/newtracks_laps.py) */
-Object.assign(P.MEDAL_REF,{7:67.3,8:70,9:81.1,r7:66.6,r8:69.1,r9:78.8});
+Object.assign(P.MEDAL_REF,{7:67.3,8:74.2,9:81.1,r7:66.6,r8:73.9,r9:78.8});
 })();
 
 /* ===== Poly GT v9 layer: suspension sway, ground-hugging shadows ===== */
@@ -7236,9 +7236,9 @@ sampleTrack=d=>{const T=ps(d);if(!d.span)return T;
  /* flare: within 30 m of the island the deck widens to the pavement width and the barrier slopes away to nothing */
  {const isl=[];for(let i=0;i<N;i++)if(T.sg[i]===2)isl.push(i);T.fl=new Float32Array(N);T.vh=new Float32Array(N);const base=new Float32Array(N);
   for(let i=0;i<N;i++){base[i]=T.sg[i]===1?1.15:1.0;if(T.sg[i]===2)continue;let dm=1e9;for(const j of isl){const dd=Math.min((i-j+N)%N,(j-i+N)%N);if(dd<dm)dm=dd;if(dm<=1)break}
-   const u=T.sg[i]===1?Math.max(0,Math.min(1,1-(dm-1)*T.sp/30)):(dm<=Math.round(40/T.sp)?Math.max(0,Math.min(1,1-(dm-1)*T.sp/30)):0);T.fl[i]=u*u*(3-2*u)}
+   const u=T.sg[i]===1?Math.max(0,Math.min(1,1-(dm-1)*T.sp/30)):0;T.fl[i]=u*u*(3-2*u)}
   for(let i=0;i<N;i++){let a=0,n=0;for(let k=-8;k<=8;k++){a+=base[(i+k+N)%N];n++}T.vh[i]=(a/n)*(1-T.fl[i])+.04}}
- makeTerrain(T);T.jgl=0;
+ T.gv=Uint8Array.from(T.sg,v=>v===3?1:0);makeTerrain(T);T.jgl=0;
  return T};
 /* ---------- terrain: valley floor, hills, road benches, farm pads, shore ---------- */
 function makeTerrain(T){const N=T.N,rx=[],rz=[],ry=[],rh=[];
@@ -7275,6 +7275,7 @@ const T_PAVE=()=>ctex(16,16,(x,w,h)=>{x.fillStyle='#8f9296';x.fillRect(0,0,w,h);
 const T_CONC=()=>ctex(8,8,(x,w,h)=>{x.fillStyle='#b4b7ba';x.fillRect(0,0,w,h);x.fillStyle='#d9c25a';x.fillRect(0,1,w,1);x.fillStyle='#0000001c';x.fillRect(0,h-2,w,2)});
 const T_SLAB=()=>ctex(16,16,(x,w,h)=>{x.fillStyle='#8b8e90';x.fillRect(0,0,w,h);x.fillStyle='#0000001c';x.fillRect(0,0,w,1);x.fillRect(0,0,1,h);const r=rngf(2);for(let i=0;i<20;i++){x.fillStyle=r()<.5?'#ffffff10':'#00000014';x.fillRect(r()*w|0,r()*h|0,2,1)}});
 const T_FENCE=()=>ctex(32,16,(x,w,h)=>{x.fillStyle='#4b3622';x.fillRect(0,0,w,h);x.fillStyle='#93714a';for(const y of[1,6,11])x.fillRect(0,y,w,4);x.fillStyle='#ffffff18';for(const y of[1,6,11])x.fillRect(0,y,w,1);x.fillStyle='#5a4128';x.fillRect(0,0,3,h);x.fillStyle='#00000030';x.fillRect(w-1,0,1,h)});
+const T_GRAVEL=()=>ctex(64,64,(x,w,h)=>{x.fillStyle='#9d8b68';x.fillRect(0,0,w,h);const r=rngf(12);for(let i=0;i<420;i++){x.fillStyle=r()<.5?'#00000026':r()<.5?'#ffffff22':'#6a5a3e55';x.fillRect(r()*w|0,r()*h|0,1+(r()*2|0),1)}x.fillStyle='#00000024';x.fillRect(w*.26|0,0,6,h);x.fillRect(w*.68|0,0,6,h);x.fillStyle='#ffffff18';x.fillRect(w*.47|0,0,6,h)});
 const T_GRASS=()=>ctex(16,16,(x,w,h)=>{x.fillStyle='#6f9a4e';x.fillRect(0,0,w,h);const r=rngf(8);for(let i=0;i<60;i++){x.fillStyle=r()<.5?'#5a8840':'#82ac5e';x.fillRect(r()*w|0,r()*h|0,1,1)}});
 const T_ALLEY=()=>ctex(16,16,(x,w,h)=>{x.fillStyle='#4d4b48';x.fillRect(0,0,w,h);const r=rngf(6);for(let i=0;i<40;i++){x.fillStyle=r()<.5?'#00000030':'#ffffff10';x.fillRect(r()*w|0,r()*h|0,2,2)}});
 /* orange X-braced truss, transparent between the members */
@@ -7331,7 +7332,9 @@ function buildSpan(T){const d=T.d,N=T.N,r=rngf(8*77+11),sc=new THREE.Scene();
   const top=mesh(new THREE.PlaneGeometry(w,h),pm,cx,GY-.015,cz,sc);top.rotation.x=-Math.PI/2}
  /* ----- road surface ----- */
  const PO={polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2};
- sc.add(ribbon(T,k=>-T.hw[k],k=>T.hw[k],10,.03,new THREE.MeshStandardMaterial(Object.assign({map:T_ASPH(),roughness:.9,side:THREE.DoubleSide},PO)),6));
+ {const am=new THREE.MeshStandardMaterial(Object.assign({map:T_ASPH(),roughness:.9,side:THREE.DoubleSide},PO)),gm2=new THREE.MeshStandardMaterial(Object.assign({map:T_GRAVEL(),roughness:1,side:THREE.DoubleSide},PO));
+  for(const [a,b] of runs(T,i=>T.sg[i]!==3))sc.add(strip(T,a,b,k=>-T.hw[k],k=>T.hw[k],.03,am,6,10));
+  for(const [a,b] of runs(T,i=>T.sg[i]===3))sc.add(strip(T,a,b+1,k=>-T.hw[k],k=>T.hw[k],.03,gm2,6,10))}
  const concM=new THREE.MeshStandardMaterial({map:T_SLAB(),roughness:1,side:THREE.DoubleSide}),steelM=flat(0x4a4d52,{side:THREE.DoubleSide}),orgM=new THREE.MeshStandardMaterial({map:T_ORANGE(),roughness:.8,side:THREE.DoubleSide,flatShading:true});
  const trussM=new THREE.MeshStandardMaterial({map:T_TRUSS(),roughness:.8,side:THREE.DoubleSide,alphaTest:.5});
  const jumps=T.jumps||[],broken=jumps.length>0;
@@ -7347,12 +7350,11 @@ function buildSpan(T){const d=T.d,N=T.N,r=rngf(8*77+11),sc=new THREE.Scene();
   /* cross beams under the deck */
   const cb=[];for(let k=a;k<=b;k+=Math.max(1,Math.round(8/T.sp))){if(T.gap[k])continue;const f=frame(T,k,0);cb.push([f[0],T.y[k]-1.2,f[1],DW(k)*2,.5,.6,f[2]])}
   instB(sc,new THREE.BoxGeometry(1,1,1),steelM,cb)}
- /* ----- walls: concrete barrier on the bridge and its approach, timber fence in the forest, invisible kerb walls on the island ----- */
+ /* ----- walls: concrete barrier on the bridge and its approach, no rail in the forest, invisible kerb walls on the island ----- */
  {const mt=new THREE.MeshStandardMaterial({map:T_CONC(),side:THREE.DoubleSide,roughness:.9});
   /* one continuous barrier from the island gate round the whole loop; its height eases between land and bridge and slopes away to nothing at the gates */
   const W=Object.create(T);W.wall=Uint8Array.from(T.sg,sg=>sg===2||sg===3?0:1);W.wh=T.vh;sc.add(wallMesh(W,1,mt));sc.add(wallMesh(W,-1,mt));
-  /* in the forest the barrier is a timber rail fence */
-  const fm=new THREE.MeshStandardMaterial({map:T_FENCE(),side:THREE.DoubleSide,roughness:1}),F=Object.create(T);F.wall=Uint8Array.from(T.sg,sg=>sg===3?1:0);F.wh=T.vh;sc.add(wallMesh(F,1,fm));sc.add(wallMesh(F,-1,fm))}
+}
  /* ----- bridge structure ----- */
  const deckY=(x)=>{let best=1e9,y=DECK0;for(let i=0;i<N;i++){if(T.sg[i]!==1||Math.abs(T.z[i]-BZ)>3)continue;const dd=Math.abs(T.x[i]-x);if(dd<best){best=dd;y=T.y[i]}}return y};
  const HW=T.hw[Math.max(0,T.sg.indexOf(1))]||8,LAT=HW+1.3;
@@ -7389,7 +7391,7 @@ function buildSpan(T){const d=T.d,N=T.N,r=rngf(8*77+11),sc=new THREE.Scene();
    for(const [ya,yb,w,dd] of segs)mesh(new THREE.BoxGeometry(w,yb-ya,dd),orgM,0,(ya+yb)/2,lz,g);
    mesh(new THREE.BoxGeometry(3.3,1.0,2.7),flat(0x8f3220),0,TOPY+.5,lz,g);mesh(new THREE.SphereGeometry(.45,8,6),new THREE.MeshBasicMaterial({color:0xff2a1a}),0,TOPY+1.4,lz,g)}
   /* portal beams between the legs (clear of the roadway) */
-  if(tx===TOWX[0]){const sg=mesh(new THREE.PlaneGeometry(13,2.1),new THREE.MeshBasicMaterial({map:T_SIGN('GRAND VALLEY BRIDGE','#1d4d34','#f6f1e6')}),-1.34,y+7.5,0,g);sg.rotation.y=-Math.PI/2}
+  if(tx===TOWX[0]){const sg=mesh(new THREE.PlaneGeometry(13,2.1),new THREE.MeshBasicMaterial({map:T_SIGN('GRAND VALLEY BRIDGE','#1d4d34','#f6f1e6')}),-1.34,y+TOWH-2.5,0,g);sg.rotation.y=-Math.PI/2}
   for(const [by,bh] of[[y+7.5,2.4],[y+13.5,2.0],[y+TOWH-2.5,2.8]]){mesh(new THREE.BoxGeometry(2.6,bh,(LAT+2.1)*2),orgM,0,by,0,g);
    const x=mesh(new THREE.PlaneGeometry((LAT+.2)*2,bh*.0+4.6),new THREE.MeshStandardMaterial({map:T_TRUSS(),side:THREE.DoubleSide,alphaTest:.5,roughness:.8}),0,by-bh/2-2.3,0,g);x.rotation.y=Math.PI/2}}
  /* ----- broken ends, fallen deck, warning boards ----- */
@@ -7413,7 +7415,7 @@ function buildSpan(T){const d=T.d,N=T.N,r=rngf(8*77+11),sc=new THREE.Scene();
   mesh(new THREE.BoxGeometry(T.hw[0]*2+3.6,2.2,.6),new THREE.MeshBasicMaterial({map:ctex(32,4,(x,w,h)=>{for(let i=0;i<32;i++)for(let j=0;j<4;j++){x.fillStyle=(i+j)&1?'#fff':'#111';x.fillRect(i,j,1,1)}})}),0,8.6,0,g)}
  /* the island pavement runs on over the flared deck so there is no gap at the gates */
  {const pv=new THREE.MeshStandardMaterial({map:T_PAVE(),roughness:1,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
-  for(const [a,b] of runs(T,i=>T.sg[i]!==2&&T.fl[i]>.02))for(const sd of[-1,1]){sc.add(strip(T,a,b,k=>sd*(T.hw[k]+.02),k=>sd*(T.hw[k]+.02+(DW(k)-T.hw[k]-.02)),.1,pv,3,2))}}
+  for(const [a,b] of runs(T,i=>T.sg[i]===1&&T.fl[i]>.02))for(const sd of[-1,1]){sc.add(strip(T,a,b,k=>sd*(T.hw[k]+.02),k=>sd*(T.hw[k]+.02+(DW(k)-T.hw[k]-.02)),.1,pv,3,2))}}
  /* ----- island: kerbs and pavements ----- */
  const paveM=new THREE.MeshStandardMaterial({map:T_PAVE(),roughness:1,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}),curbM=flat(0xb9b6ae,{side:THREE.DoubleSide});
  for(const [a,b] of runs(T,i=>T.sg[i]===2))for(const sd of[-1,1]){
@@ -8571,7 +8573,7 @@ P.LOG=[
  {v:'0.04',d:'Oct 20, 2026',t:'New track: Grand Valley',items:[
   'Harbor Lights is gone, replaced by Grand Valley, the first track of a brand-new roster: a short, low orange suspension bridge with two towers, hangers and cables, leading to a walled island city.',
   'City Island is built from the building pack and KayKit buildings: unbroken rows of buildings face every shore, corner towers, brick gate houses over both roads, shopfronts, trees, hydrants, bins and rooftop water towers. Any gap between buildings is a tiny alley with dumpsters, bins and crates; larger leftovers become pocket parks.',
-  'Leave the city through the west gate and the race runs on into a forest valley: a winding, hilly road with real terrain, timber fences, pine and broadleaf trees, bushes, boulders, logs, stumps, wild flowers, chevron boards on the sharp bends, and farm and camp sites with houses, barns, wells, haystacks and fences.',
+  'Leave the city through the west gate and the race runs on into a forest valley: a winding, hilly gravel path (loose-surface grip) with real terrain, no rails, pine and broadleaf trees, bushes, boulders, logs, stumps, wild flowers, chevron boards on the sharp bends, and farm and camp sites with houses, barns, wells, haystacks and fences.',
   'The road swings round the valley and comes back to the start straight, with overhead signs, buoys and boats in the channel; the whole map works at dawn, day, sunset and night.',
   'Jumps can now have their own gap length and ramp height.']},
  {v:'0.03',d:'Oct 20, 2026',t:'New streetlights',items:[
