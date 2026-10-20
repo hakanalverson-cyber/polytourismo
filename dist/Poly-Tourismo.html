@@ -5844,7 +5844,7 @@ function build(sc,T,cfg){
  const N=T.N,hw=k=>T.hw[k],at=(k,l)=>{const c=Math.cos(T.psi[k]),s=Math.sin(T.psi[k]);return[T.x[k]+c*l,T.z[k]-s*l]};
  /* find calm, empty ground to one side of the road, not close to any other stretch of track */
  let best=null;
- for(let f=0;f<30;f++){const k=Math.floor(N*((cfg.frac+f*.031)%1));if((T.gap&&T.gap[k])||(T.br&&T.br[k])||(T.wall&&T.wall[k])||(T.tn&&T.tn[k]))continue;
+ for(let f=0;f<30;f++){const k=Math.floor(N*((cfg.frac+f*.031)%1));{let bad=false;for(let q=-6;q<=6;q++){const i=(k+q+N)%N;if((T.gap&&T.gap[i])||(T.br&&T.br[i])||(T.wall&&T.wall[i])||(T.tn&&T.tn[i]))bad=true}if(bad)continue}
   for(const side of[cfg.side,-cfg.side])for(const off of[60,70,82]){const l=side*(hw(k)+off),[x,z]=at(k,l),ty=T.terr(x,z);
    let sl=0;for(const[dx,dz]of[[9,0],[-9,0],[0,9],[0,-9],[7,7],[-7,-7]])sl=Math.max(sl,Math.abs(T.terr(x+dx,z+dz)-ty));
    let pm=0;for(let u=.1;u<1;u+=.15){const[px,pz]=at(k,side*(hw(k)+3+(off-3)*u));pm=Math.max(pm,Math.abs(T.terr(px,pz)-(T.y[k]+(ty-T.y[k])*u)))}
@@ -5853,6 +5853,7 @@ function build(sc,T,cfg){
    const sc_=sl*3+pm*1.2+dy*.4+f*.15;if(!best||sc_<best.s)best={s:sc_,k,side,off,x,z,y:ty}}}
  if(!best)return null;
  const k=best.k,rx=at(k,best.side*(hw(k)+3)),dirx=rx[0]-best.x,dirz=rx[1]-best.z,dl=Math.hypot(dirx,dirz),fx=dirx/dl,fz=dirz/dl,yaw=Math.atan2(fx,fz);
+ const pre=sc.children.slice();
  const g=new THREE.Group();g.position.set(best.x,best.y,best.z);g.rotation.y=yaw;sc.add(g);
  const found=P.barnFound(cfg.car);
  /* barn shell, 9 wide x 13 deep, door end toward the road (+z in local space) */
@@ -5882,6 +5883,14 @@ function build(sc,T,cfg){
   for(let i=0;i<nT;i++){const q=i*2;idx.push(q,q+1,q+2,q+1,q+3,q+2)}
   const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setIndex(idx);gg.computeVertexNormals();
   const tm=new THREE.Mesh(gg,new THREE.MeshStandardMaterial({color:0x7d6444,roughness:1,flatShading:true,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}));sc.add(tm)}
+ /* keep the way to the barn clear: hide or remove props, trees and solids near the trail */
+ {const segs=[];for(let i=0;i<nT;i++)segs.push([tp[i],tp[i+1]]);const rd=at(k,best.side*(hw(k)+.2));segs.unshift([rd,tp[0]]);
+  const dseg=(x,z)=>{let m=1e9;for(const[a,b]of segs){const vx=b[0]-a[0],vz=b[1]-a[1],l2=vx*vx+vz*vz||1,t=Math.max(0,Math.min(1,((x-a[0])*vx+(z-a[1])*vz)/l2));m=Math.min(m,Math.hypot(x-a[0]-vx*t,z-a[1]-vz*t))}return m};
+  const bad=(x,z)=>dseg(x,z)<6.5||Math.hypot(x-best.x,z-best.z)<14;
+  const mt=new THREE.Matrix4(),zero=new THREE.Matrix4().makeScale(0,0,0);
+  for(const o of pre){if(o.isInstancedMesh){let ch=false;for(let j=0;j<o.count;j++){o.getMatrixAt(j,mt);const e=mt.elements;if(bad(e[12],e[14])){o.setMatrixAt(j,zero);ch=true}}if(ch)o.instanceMatrix.needsUpdate=true}
+   else if(o.isMesh||o.isGroup){if(o.position&&bad(o.position.x,o.position.z)&&o.position.y>-50&&!(o.geometry&&o.geometry.type==='PlaneGeometry'&&o.scale.x>100))o.visible=false}}
+  if(T.solids)T.solids=T.solids.filter(q=>!(q&&isFinite(q.x)&&isFinite(q.z)&&bad(q.x,q.z)))}
  for(let i=3;i<nT-9;i+=4)for(const sd of[-1,1]){const a=tp[i-1],b=tp[i+1],tx=b[0]-a[0],tz=b[1]-a[1],tl=Math.hypot(tx,tz)||1,x=tp[i][0]+(-tz/tl)*3.2*sd,z=tp[i][1]+(tx/tl)*3.2*sd;
   const post=new THREE.Mesh(new THREE.BoxGeometry(.18,1.3,.18),M_(0x5a4634));post.position.set(x,T.terr(x,z)+.55,z);post.rotation.set((i%3-1)*.07,0,(i%5-2)*.06);sc.add(post)}
  /* a faded sign where the trail leaves the road */
@@ -5903,7 +5912,12 @@ function prompt(on){if(!pr){pr=document.createElement('div');pr.id='barnPrompt';
 let BN=null;const bcam=new THREE.PerspectiveCamera(52,16/9,.2,8000);
 let fade=null,card=null;
 const fadeEl=()=>{if(!fade){fade=document.createElement('div');fade.id='bnFade';document.body.appendChild(fade)}return fade};
-function startScene(){if(BN||!B||B.found)return;const car=B.car||(()=>{const c=mkCar(0xdddddd,0);const id=B.cfg.car;c.modelIndex=P.modelOf(id,0);attachCarModel(c);c.g.position.set(0,.75,-1.2);c.g.rotation.y=.35;B.g.add(c.g);return c})();B.car=car;car.g.visible=true;
+function barnCar(){const id=B.cfg.car,idx=P.modelOf(id,0),src=CAR_MODELS[idx];if(!src)return null;
+ const model=src.clone(true),grp=new THREE.Group(),ctd=new THREE.Group();ctd.add(model);grp.add(ctd);ctd.updateMatrixWorld(true);
+ const bb=new THREE.Box3().setFromObject(model),sz=bb.getSize(new THREE.Vector3()),ct=bb.getCenter(new THREE.Vector3()),k=(src.userData.gl||4.4)/Math.max(sz.x,sz.z,.001);
+ ctd.position.set(-ct.x,-bb.min.y,-ct.z);grp.scale.setScalar(k);grp.rotation.y=(sz.x>sz.z?PI/2:0)+PI+.3;
+ grp.position.set(0,.27,-1.1);B.g.add(grp);return{g:grp}}
+function startScene(){if(BN||!B||B.found)return;const car=B.car||barnCar();if(!car)return;B.car=car;car.g.visible=true;
  BN={t:0,ph:0,cardUp:false};RACE.cars.forEach(c=>{if(c.m&&c.m.g)c.m.g.visible=false});document.body.classList.add('barnscene');const f=fadeEl();f.style.transition='opacity .6s';f.style.opacity=1;if(P.sfx)P.sfx('whoosh');prompt(false)}
 function endScene(){const id=B.cfg.car,s=sv();s.owned[id]=(s.owned[id]||0)|1;s.barn=s.barn||{};s.barn[id]=1;P.save();B.found=true;if(card)card.style.display='none';
  BN.ph=4;BN.t=0;const f=fadeEl();f.style.transition='opacity .6s';f.style.opacity=1}
