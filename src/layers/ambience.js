@@ -5,7 +5,7 @@ const P=window.PT8;let A=null;
 const O=()=>window.PTO||{master:.7,sfx:.65,engine:.55};
 /* what each map sounds like: wind amount, bed (looped noise colour), one-shot events */
 const PROF={
- 'Quarry Circuit':{wind:.5,bed:['machine',.5],ev:['clank','beeper']},
+ 'Quarry Circuit':{wind:.5,bed:['machine',.5],ev:['clank']},
  'Canyon Viaduct':{wind:.9,bed:['gust',.5],ev:['eagle']},
  'Alpine Pass':{wind:1,bed:['gust',.6],ev:['bell','eagle']},
  'Afterhours Loop':{wind:.35,bed:['city',.7],ev:['siren','horn']},
@@ -45,7 +45,7 @@ const EV={
  horn(t,p){osc(t,118,112,1.7,'sawtooth',.25,p,400);osc(t,236,224,1.7,'square',.06,p,500)},
  siren(t,p){for(let i=0;i<4;i++)osc(t+i*.55,i%2?640:880,i%2?640:880,.55,'sine',.12,p,1500)},
  clank(t,p){burst(t,900,6,.18,.5,p);osc(t,330,300,.4,'triangle',.25,p,1400)},
- beeper(t,p){for(let i=0;i<5;i++)osc(t+i*.5,1000,1000,.22,'square',.07,p,2200)},
+ beeper(){},
  creak(t,p){osc(t,150,95,1.2,'sawtooth',.1,p,380)},
  frog(t,p){const n=2+Math.random()*3|0;for(let i=0;i<n;i++)osc(t+i*.17,300,190,.12,'square',.1,p,800)},
  crow(t,p){const n=2+Math.random()*2|0;for(let i=0;i<n;i++)osc(t+i*.34,720,470,.22,'sawtooth',.16,p,1900)},

@@ -3,6 +3,15 @@
 'use strict';
 const P=window.PT8;
 P.LOG=[
+ {v:'0.04',d:'Oct 20, 2026',t:'Classes, tuning and economy',items:[
+  'Pagani Zonda Cinque is now the Zonda R.',
+  'Diablo, Huracan, 458 and 599 GTB moved to the low end of class A; the RS4 Avant is now upper-middle class B (and priced to match).',
+  'Track-only cars sit higher in their class and are a bit sharper.',
+  'All cars cost 5% more; race income is up about 8%.',
+  'Tuning is stronger and now costs credits for every step away from stock (reset is free).',
+  'Different poses for the small photos under car info.',
+  'Resuming from pause gives a 3-2-1 countdown.',
+  'Removed the beeping ambience sound.']},
  {v:'0.03',d:'Oct 20, 2026',t:'Smoother menus and a loading screen',items:[
   'Menu transitions are now a plain black fade.',
   'Every mode gets the car loading screen, with your own car on it. Its wheels now spin and steer properly.',

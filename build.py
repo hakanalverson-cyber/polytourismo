@@ -24,6 +24,9 @@ src=rep(src,"if(rv<-3){fx((a.x+b.x)/2,a.y+.5,(a.z+b.z)/2,0xffe080,6,5,.3,.15,8);
 src=rep(src,"const wx=c.x-fx_*1.3,wz=c.z-fz_*1.3;fx(wx,c.y-.4,wz,","const _w=WL[2+(Math.random()<.5?0:1)],wx=c.x+fz_*_w[0]+fx_*_w[1],wz=c.z-fx_*_w[0]+fz_*_w[1];fx(wx,c.y-.55,wz,")
 src=rep(src,"for(const side of [-1,1])fx(c.x-Math.sin(c.yaw)*1.6+Math.cos(c.yaw)*side*.8,c.y-.4,c.z-Math.cos(c.yaw)*1.6-Math.sin(c.yaw)*side*.8,","for(const side of [-1,1])fx(c.x+Math.cos(c.yaw)*WL[side<0?2:3][0]+Math.sin(c.yaw)*WL[2][1],c.y-.55,c.z-Math.sin(c.yaw)*WL[side<0?2:3][0]+Math.cos(c.yaw)*WL[2][1],")
 src=rep(src,"function wheels(car,speed,steer,dt){","window.__wheels=(a,b,c,d)=>wheels(a,b,c,d);function wheels(car,speed,steer,dt){")
+src=rep(src,"out.push(shot(shoots.A,56,[3.3,.6,5.4],[0,.8,0],1.15,-.02,0,.08));","out.push(shot(shoots.A,56,[-3.1,.55,5.6],[0,.8,0],-1.0,-.02,0,-.06));")
+src=rep(src,"out.push(shot(shoots.B,46,[6.2,1.9,6.8],[0,1,0],2.1,-.1,.1,0));","out.push(shot(shoots.B,46,[5.4,2.3,7.4],[0,1,0],2.55,-.08,-.08,0));")
+src=rep(src,"out.push(shot(shoots.C,34,[2.8,1.25,-9],[0,.95,0],0,0,0,-.03));","out.push(shot(shoots.C,34,[3.8,1.05,-8.4],[0,.95,0],.4,0,0,.03));")
 src=rep(src,"const prevStepFn=step;","window.__explode=explode;const prevStepFn=step;")
 src=rep(src,"const hide=c.exp>0&&c.exp<1.66;","const hide=c.exp>0&&c.exp<(c.expMax||1.7)-.04;")
 src=rep(src,"if(d>50){explode(c,'cut');return}if(Math.abs(d)<=50){c.safeIdx=sf.i;c.safeUnw+=d}","if(d>50){if(window.PTO&&PTO.shortcutPenalty===false){c.safeIdx=sf.i;c.safeUnw+=d}else{explode(c,'cut');return}}else if(Math.abs(d)<=50){c.safeIdx=sf.i;c.safeUnw+=d}")
@@ -184,7 +187,7 @@ src=rep(src,"      front:k<2,angle:0\n    };\n  });","""      front:k<2,angle:0
      for(const g of gs(w)){g.translate(-r.c[0],-r.c[1],-r.c[2]);g.applyMatrix4(M);g.translate(r.c[0],r.c[1],r.c[2])}}
    for(const[a,b2]of[[0,1],[2,3]]){const A=car.ptWheels[a],B=car.ptWheels[b2],wa=wid(A),wb=wid(B),bad=wa>wb*1.25?A:wb>wa*1.25?B:null;if(!bad)continue;const good=bad===A?B:A;
      bad.spin.children.slice().forEach(m=>bad.spin.remove(m));good.spin.children.forEach(m=>bad.spin.add(new THREE.Mesh(mir(m.geometry),m.material)));bad.pivot.position.set(-good.pivot.position.x,good.pivot.position.y,good.pivot.position.z);bad.radius=good.radius}}""")
-parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','cars10','audio','modes','tracks','tracks2','extra','race2','elim','tod','harbor','props','bld','stages','ra_data','tracks3','weather','ambience','tutorial','updatelog','hud2','shade','ui','rally','trackmode','realspeed','barn','animals','clean','solid','damage','perf']  if os.path.exists(f'{SRC}/layers/{n}.js')]
+parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','cars10','audio','modes','tracks','tracks2','extra','race2','elim','tod','harbor','props','bld','stages','ra_data','tracks3','weather','ambience','tutorial','updatelog','hud2','shade','ui','rally','trackmode','realspeed','barn','animals','clean','solid','damage','perf','econ']  if os.path.exists(f'{SRC}/layers/{n}.js')]
 css=open(f'{SRC}/style.css').read()
 import base64
 b64=lambda f:base64.b64encode(open(W+'/assets/'+f,'rb').read()).decode()
