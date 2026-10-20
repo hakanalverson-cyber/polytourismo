@@ -8,6 +8,12 @@ src=open(W+'/base/Poly-Tourismo-v7.html').read()
 def rep(s,a,b,cnt=1):
     assert s.count(a)>=1,('missing',a[:60])
     return s.replace(a,b,cnt)
+
+# Afterhours: warm-white window palette in the backdrop / slab textures (no neon)
+src=src.replace("['#ffd77a','#7af0ff','#ff7ad0','#fff6c0'][(r()*4)|0]","['#ffe2a8','#fff0c8','#ffd98a','#fff6dc'][(r()*4)|0]")
+src=src.replace("['#ffd77a','#7af0ff','#ff7ad0'][(i+j)%3]","['#ffe2a8','#fff0c8','#ffd98a'][(i+j)%3]")
+src=src.replace("['#ff5a7a66','#7af0ff55','#ffd77a55'][i%3]","['#ffd98a55','#fff0c844','#ffe2a844'][i%3]")
+src=src.replace("color:d.id==3?0x7af0ff:0xfff0c8","color:d.id==3?0xffe2a8:0xfff0c8")
 src=rep(src,"const G0=26,K=46,DM=3.6,L0=.62,RW=.38,WX=.98,WZ=1.65,IP=1.5,IR=.8,TOP=38,TOPB=52,ACC=24,BRK=40,REV=16,ROLL=3.5,DRAG=.0007,GRIP=9;","let G0=26,K=80,DM=7,L0=.62,RW=.38,WX=.98,WZ=1.65,IP=1.5,IR=.8,TOP=38,TOPB=52,ACC=24,BRK=40,REV=16,ROLL=3.5,DRAG=.0007,GRIP=9;")
 src=rep(src,"FX.length>=260","FX.length>=420")
 src=rep(src,"MS.tick(T0);R.setScissorTest","MS.tick(Math.max(0,T0));R.setScissorTest")

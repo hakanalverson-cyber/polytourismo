@@ -71,15 +71,15 @@ function city(sc,T){
  row(LOW.concat(TOW.slice(4)),1.0,1.4,12+14,1,4);
  row(LOW.concat(TOW),1.3,1.9,12+14+22,1,5);
  /* grass: verge strips beside the road and lawns, from the pack's GrassLand tile */
- if(P.BLD.GrassLand_Plain){const GL='GrassLand_Plain',gs=1.9,gt=gs*5;
-  for(const side of[-1,1])for(let i=0;i<T.N;i+=4){if((T.gap&&T.gap[i])||(T.br&&T.br[i])||(T.tn&&T.tn[i])||(T.wall&&T.wall[i]&&T.br&&T.br[i]))continue;const c=Math.cos(T.psi[i]),sn=Math.sin(T.psi[i]);
-   for(const off of[T.hw[i]+3.5,T.hw[i]+3.5+gt*.9]){const l=side*off,x=T.x[i]+c*l,z=T.z[i]-sn*l;if(near(x,z)<T.hw[i]+2.2)continue;(out[GL]=out[GL]||[]).push([x,T.terr(x,z)-.02,z,T.psi[i],gs,1,.12])}}
-  const lawn=(cx,cz,R)=>{for(let gx=-R;gx<=R;gx+=gt*.9)for(let gz=-R;gz<=R;gz+=gt*.9){const x=cx+gx,z=cz+gz;if(Math.hypot(gx,gz)>R||near(x,z)<T.hw[nearest(x,z)]+3)continue;(out[GL]=out[GL]||[]).push([x,T.terr(x,z)-.02,z,r()*6.28,gs,1,.12])}};
+ if(P.BLD.GrassLand_Plain){const GL='GrassLand_Plain',gs=2.3,gt=gs*5;
+  for(const side of[-1,1])for(let i=0;i<T.N;i+=2){if((T.gap&&T.gap[i])||(T.br&&T.br[i])||(T.tn&&T.tn[i])||(T.wall&&T.wall[i]&&T.br&&T.br[i]))continue;const c=Math.cos(T.psi[i]),sn=Math.sin(T.psi[i]);
+   for(const off of[T.hw[i]+3.5,T.hw[i]+3.5+gt*.9]){const l=side*off,x=T.x[i]+c*l,z=T.z[i]-sn*l;if(near(x,z)<T.hw[i]+2.2)continue;(out[GL]=out[GL]||[]).push([x,T.terr(x,z)+(i%5)*.012,z,T.psi[i],gs,1])}}
+  const lawn=(cx,cz,R)=>{for(let gx=-R;gx<=R;gx+=gt*.9)for(let gz=-R;gz<=R;gz+=gt*.9){const x=cx+gx,z=cz+gz;if(Math.hypot(gx,gz)>R||near(x,z)<T.hw[nearest(x,z)]+3)continue;(out[GL]=out[GL]||[]).push([x,T.terr(x,z),z,r()*6.28,gs,1])}};
   P._lawn=lawn}
  /* parks: small forests between the blocks */
  const TREES=['Tree_02','Tree_04','Tree_05','Tree_07','Bush_01','Bush_02'].filter(n=>P.BLD[n]);
  if(TREES.length){const nP=40;let pk=0;for(let t=0;t<900&&pk<nP;t++){const cx=x0-80+r()*(x1-x0+160),cz=z0-80+r()*(z1-z0+160),d=near(cx,cz);if(d<26||d>170||!clear(cx,cz,16))continue;
-   const R_=18+r()*22,n=26+Math.floor(r()*30);placed.push([cx,cz,R_*.55]);if(P._lawn)P._lawn(cx,cz,R_*.9);if(r()<.3&&P.BLD.WaterLand_05){(out.WaterLand_05=out.WaterLand_05||[]).push([cx,T.terr(cx,cz)-.03,cz,r()*6.28,1.5,0,.12])}let c=0;for(let q=0;q<n*3&&c<n;q++){const a=r()*6.283,rr=Math.sqrt(r())*R_,x=cx+Math.cos(a)*rr,z=cz+Math.sin(a)*rr;if(near(x,z)<T.hw[nearest(x,z)]+9)continue;let bad=false;for(const p of log)if(p.n.indexOf('Tree')<0&&p.n.indexOf('Bush')<0&&Math.hypot(p.x-x,p.z-z)<(p.fr||2)+1.5){bad=true;break}if(bad)continue;
+   const R_=18+r()*22,n=26+Math.floor(r()*30);placed.push([cx,cz,R_*.55]);if(P._lawn)P._lawn(cx,cz,R_*.9);if(r()<.3&&P.BLD.WaterLand_05){(out.WaterLand_05=out.WaterLand_05||[]).push([cx,T.terr(cx,cz)-.15,cz,r()*6.28,1.5,0])}let c=0;for(let q=0;q<n*3&&c<n;q++){const a=r()*6.283,rr=Math.sqrt(r())*R_,x=cx+Math.cos(a)*rr,z=cz+Math.sin(a)*rr;if(near(x,z)<T.hw[nearest(x,z)]+9)continue;let bad=false;for(const p of log)if(p.n.indexOf('Tree')<0&&p.n.indexOf('Bush')<0&&Math.hypot(p.x-x,p.z-z)<(p.fr||2)+1.5){bad=true;break}if(bad)continue;
      const nm=TREES[Math.floor(r()*TREES.length)],big=nm.indexOf('Tree')==0,sc_=big?1.5+r()*1.3:1.4+r()*.9;(out[nm]=out[nm]||[]).push([x,T.terr(x,z),z,r()*6.28,sc_,1]);log.push({n:nm,x,z,y:0,fr:1.4,sk:.3,s:sc_});c++}pk++}}
  tryPlace(TOW,1.6,2.4,60,110,700,70,140);
  tryPlace(TOW,2.4,3.6,100,210,900,80,260);
@@ -95,7 +95,7 @@ function city(sc,T){
 function tunnel(sc,T){
  if(!(T.d&&T.d.city)||!T.tunnels||!T.tunnels.length)return;
  const kill=[];sc.traverse(o=>{if(o.isMesh&&o.geometry&&o.geometry.type==='BoxGeometry'&&o.geometry.parameters.height===26&&o.material&&o.material.emissiveMap)kill.push(o)});kill.forEach(o=>o.parent.remove(o));const seen=new Set();sc.traverse(o=>{const m=o.material;if(o.isMesh&&m&&!seen.has(m)&&m.isMeshStandardMaterial&&m.side===THREE.DoubleSide&&m.color.getHex()===0x3a3a46){seen.add(m);m.color.setHex(0x7a8099);m.emissive=new THREE.Color(0x232a4c);m.needsUpdate=true}});
- const N=T.N,cy=new THREE.BoxGeometry(.22,.22,3.2),cols=[0x7af0ff,0xff7ad0],ms=cols.map(c=>new THREE.MeshBasicMaterial({color:c,fog:false})),L=[[],[]];
+ const N=T.N,cy=new THREE.BoxGeometry(.22,.22,3.2),cols=[0xffe2a8,0xffc878],ms=cols.map(c=>new THREE.MeshBasicMaterial({color:c,fog:false})),L=[[],[]];
  const slab=new THREE.MeshStandardMaterial({color:0x3a3d4c,roughness:.9,flatShading:true}),pil=new THREE.MeshStandardMaterial({color:0x5a5f70,roughness:.9});
  const dum=new THREE.Object3D(),slabs=[],pils=[];
  for(const[a,b]of T.tunnels){

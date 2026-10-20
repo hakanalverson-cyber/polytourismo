@@ -254,7 +254,7 @@ if(d.id==1){inst(sc,new THREE.DodecahedronGeometry(2.6,0),mat(0xa0522d),place(16
 inst(sc,new THREE.CylinderGeometry(.55,.7,5,6),mat(0x3f9a55),place(65,14,(x,h,z,o)=>{o.push([x,h+2.5,z,.7+r()*.8]);return 0}));
 }
 if(d.id==2)inst(sc,new THREE.DodecahedronGeometry(3,0),mat(0x8a96a8),place(150,8,(x,h,z,o)=>{o.push([x,h+.8,z,.6+r()*1.8,0,r()*6]);return 0}));
-if(d.id==3){const wt=ctex(16,32,(x,w,h)=>{x.fillStyle='#10102a';x.fillRect(0,0,w,h);const rr=rngf(3);for(let j=0;j<8;j++)for(let i=0;i<4;i++){x.fillStyle=rr()<.55?['#ffd77a','#7af0ff','#ff7ad0'][(i+j)%3]:'#1c1c3c';x.fillRect(1+i*4,1+j*4,2,2)}});
+if(d.id==3){const wt=ctex(16,32,(x,w,h)=>{x.fillStyle='#10102a';x.fillRect(0,0,w,h);const rr=rngf(3);for(let j=0;j<8;j++)for(let i=0;i<4;i++){x.fillStyle=rr()<.55?['#ffe2a8','#fff0c8','#ffd98a'][(i+j)%3]:'#1c1c3c';x.fillRect(1+i*4,1+j*4,2,2)}});
 for(let g=0;g<0;g++){const bl=place(70,24,(x,h,z,o)=>{if(Math.abs(x)<40&&Math.abs(z)<40)return 1;o.push([x,0,z,1,0,0]);return 0}).map(p=>{const hh=14+r()*(g+1)*22;return[p[0],hh/2,p[2],1,hh,0,10+r()*14]});
 const bm=new THREE.MeshStandardMaterial({color:[0x3a3a6a,0x4a2a6a,0x2a4a6a][g],emissive:0xffffff,emissiveMap:wt,emissiveIntensity:.8,roughness:.8}),im=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),bm,bl.length),o=new THREE.Object3D();bl.forEach((p,i)=>{const w=p[6];o.position.set(p[0],p[1],p[2]);o.scale.set(w,p[4],w);o.updateMatrix();im.setMatrixAt(i,o.matrix)});im.instanceMatrix.needsUpdate=true;sc.add(im)}
 const lp=[];for(let i=0;i<T.N;i+=9)for(const sd of[-1,1]){const l=sd*(T.hw[i]+1.8);lp.push([T.x[i]+Math.cos(T.psi[i])*l,T.y[i]-l*T.bank[i]+2.4,T.z[i]-Math.sin(T.psi[i])*l,1])}
@@ -1347,7 +1347,7 @@ function rib(T,a,b,seg,lf,yf,m){const pos=[],idx=[],n=b-a+1;for(let r=0;r<n;r++)
  for(let r=0;r<n-1;r++)for(let j=0;j<seg;j++){const p=r*(seg+1)+j,q=p+seg+1;idx.push(p,q,p+1,p+1,q,q+1)}
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();return new THREE.Mesh(g,m)}
 function tunnelMeshes(sc,T){const d=T.d,col=[0x6d7471,0x8a5a3c,0x8f9ba3,0x3a3a46][d.id],cm=new THREE.MeshStandardMaterial({color:col,roughness:.95,side:THREE.DoubleSide}),
- hill=new THREE.MeshStandardMaterial({color:[0x587a45,0xa0522d,0xdfe8f2][d.id]||col,roughness:1,flatShading:true,side:THREE.DoubleSide}),light=new THREE.MeshBasicMaterial({color:d.id==3?0x7af0ff:0xfff0c8});
+ hill=new THREE.MeshStandardMaterial({color:[0x587a45,0xa0522d,0xdfe8f2][d.id]||col,roughness:1,flatShading:true,side:THREE.DoubleSide}),light=new THREE.MeshBasicMaterial({color:d.id==3?0xffe2a8:0xfff0c8});
  for(const [a,b] of T.tunnels){const hw=T.hw[a];
   sc.add(rib(T,a,b,2,(k,u)=>lerp(-T.hw[k]-.6,T.hw[k]+.6,u),(k,l)=>7.7-l*T.bank[k],cm));
   if(d.id<3){const W=hw+16,top=(k,l,r,n)=>{const al=Math.abs(l),e=Math.min(r,n-1-r);return(al<=T.hw[k]+.6?7.95:lerp(7.95,-.7,Math.min(1,(al-T.hw[k]-.6)/(W-T.hw[k]-.6))))+Math.sin(l*.7+k)*.18-l*T.bank[k]};
@@ -1355,7 +1355,7 @@ function tunnelMeshes(sc,T){const d=T.d,col=[0x6d7471,0x8a5a3c,0x8f9ba3,0x3a3a46
    for(const k of[a,b])for(const sd of[-1,1]){const pos=[],s=Math.sin(T.psi[k]),c=Math.cos(T.psi[k]);for(let m=0;m<=6;m++){const l=sd*lerp(T.hw[k]+.6,W,m/6),y=T.y[k]-l*T.bank[k],al=Math.abs(l),h=lerp(7.95,-.7,Math.min(1,(al-T.hw[k]-.6)/(W-T.hw[k]-.6)));pos.push(T.x[k]+c*l,y-.9,T.z[k]-s*l,T.x[k]+c*l,y+h,T.z[k]-s*l)}
     const g=new THREE.BufferGeometry(),ix=[];for(let m=0;m<6;m++){const p=m*2;ix.push(p,p+2,p+1,p+1,p+2,p+3)}g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setIndex(ix);g.computeVertexNormals();sc.add(new THREE.Mesh(g,cm))}}
   else{const k=(a+b)>>1,mid=new THREE.Group();mid.position.set((T.x[a]+T.x[b])/2,T.y[k]+7.5,(T.z[a]+T.z[b])/2);mid.rotation.y=Math.atan2(T.x[b]-T.x[a],T.z[b]-T.z[a]);sc.add(mid);
-   const wt=ctex(16,32,(x,w,h)=>{x.fillStyle='#10102a';x.fillRect(0,0,w,h);const rr=rngf(7);for(let j=0;j<8;j++)for(let i=0;i<4;i++){x.fillStyle=rr()<.5?['#ffd77a','#7af0ff','#ff7ad0'][(i+j)%3]:'#1c1c3c';x.fillRect(1+i*4,1+j*4,2,2)}});
+   const wt=ctex(16,32,(x,w,h)=>{x.fillStyle='#10102a';x.fillRect(0,0,w,h);const rr=rngf(7);for(let j=0;j<8;j++)for(let i=0;i<4;i++){x.fillStyle=rr()<.5?['#ffe2a8','#fff0c8','#ffd98a'][(i+j)%3]:'#1c1c3c';x.fillRect(1+i*4,1+j*4,2,2)}});
    mesh(new THREE.BoxGeometry(hw*2+22,26,Math.hypot(T.x[b]-T.x[a],T.z[b]-T.z[a])),new THREE.MeshStandardMaterial({color:0x4a4a70,emissive:0xffffff,emissiveMap:wt,emissiveIntensity:.8,roughness:.8}),0,13,0,mid)}
   const L=[];for(let k=a+2;k<=b-2;k+=3)for(const sd of[-1,1]){const l=sd*(hw*.45);L.push([T.x[k%T.N]+Math.cos(T.psi[k%T.N])*l,T.y[k%T.N]+7.5-l*T.bank[k%T.N],T.z[k%T.N]-Math.sin(T.psi[k%T.N])*l,1,1,T.psi[k%T.N]])}
   inst(sc,new THREE.BoxGeometry(.5,.08,2.2),light,L);
@@ -1382,9 +1382,9 @@ function pano(T){const d=T.d,W=4096,H=512,hz=352,fog=new THREE.Color(d.fog),cv=d
   for(let i=0;i<7;i++)peak(i*W/7+r()*180,300+r()*140,90+r()*80,0x586774);
   g.fillStyle=mix(0x1f3d3a,.3);for(let x=0;x<W;x+=9){const h=18+r()*34;g.beginPath();g.moveTo(x,hz+6);g.lineTo(x+5,hz-h);g.lineTo(x+10,hz+6);g.fill()}g.fillStyle=gr(hz,H,mix(0xdfe9f2,.2),mix(0xeff5fa,.1));g.fillRect(0,hz,W,H-hz)}
  else{g.fillStyle=gr(hz-190,hz,'#00000000','#ff5aa055');g.fillRect(0,hz-190,W,190);
-  const wins=(x,y,w,h,den)=>{for(let yy=y+6;yy<y+h-4;yy+=9)for(let xx=x+4;xx<x+w-4;xx+=8)if(r()<den){g.fillStyle=['#ffd77a','#7af0ff','#ff7ad0','#fff6c0'][(r()*4)|0];g.fillRect(xx,yy,3,4)}};
+  const wins=(x,y,w,h,den)=>{for(let yy=y+6;yy<y+h-4;yy+=9)for(let xx=x+4;xx<x+w-4;xx+=8)if(r()<den){g.fillStyle=['#ffe2a8','#fff0c8','#ffd98a','#fff6dc'][(r()*4)|0];g.fillRect(xx,yy,3,4)}};
   for(let layer=0;layer<3;layer++){const col=['#2a1a4a','#1c1438','#100c26'][layer],den=[.12,.25,.38][layer],hh=[150,190,230][layer];let x=0;while(x<W){const w=24+r()*(34+layer*14),h=40+r()*hh;g.fillStyle=col;g.fillRect(x,hz-h,w,h);wins(x,hz-h,w,h,den);if(r()<.12){g.fillRect(x+w/2-1,hz-h-30,2,30);g.fillStyle='#ff3a3a';g.fillRect(x+w/2-2,hz-h-32,4,4)}x+=w+(layer?2:6)}}
-  g.fillStyle=gr(hz,H,'#150f2c','#0c0818');g.fillRect(0,hz,W,H-hz);for(let i=0;i<60;i++){g.fillStyle=['#ff5a7a66','#7af0ff55','#ffd77a55'][i%3];g.fillRect(r()*W,hz+8+r()*120,40+r()*160,2)}}
+  g.fillStyle=gr(hz,H,'#150f2c','#0c0818');g.fillRect(0,hz,W,H-hz);for(let i=0;i<60;i++){g.fillStyle=['#ffd98a55','#fff0c844','#ffe2a844'][i%3];g.fillRect(r()*W,hz+8+r()*120,40+r()*160,2)}}
  const t=new THREE.CanvasTexture(cv);t.encoding=THREE.sRGBEncoding;t.wrapS=THREE.RepeatWrapping;t.magFilter=t.minFilter=THREE.LinearFilter;t.generateMipmaps=false;
  const b=T.bounds,m=new THREE.Mesh(new THREE.CylinderGeometry(1300,1300,480,72,1,true),new THREE.MeshBasicMaterial({map:t,transparent:true,side:THREE.BackSide,fog:false,depthWrite:false}));m.position.set((b[0]+b[1])/2,90,(b[2]+b[3])/2);m.renderOrder=-2;return m}
 const prevBuild=buildWorld;buildWorld=T=>{const sc=prevBuild(T);tunnelMeshes(sc,T);sc.add(pano(T));return sc};
@@ -9687,15 +9687,15 @@ function city(sc,T){
  row(LOW.concat(TOW.slice(4)),1.0,1.4,12+14,1,4);
  row(LOW.concat(TOW),1.3,1.9,12+14+22,1,5);
  /* grass: verge strips beside the road and lawns, from the pack's GrassLand tile */
- if(P.BLD.GrassLand_Plain){const GL='GrassLand_Plain',gs=1.9,gt=gs*5;
-  for(const side of[-1,1])for(let i=0;i<T.N;i+=4){if((T.gap&&T.gap[i])||(T.br&&T.br[i])||(T.tn&&T.tn[i])||(T.wall&&T.wall[i]&&T.br&&T.br[i]))continue;const c=Math.cos(T.psi[i]),sn=Math.sin(T.psi[i]);
-   for(const off of[T.hw[i]+3.5,T.hw[i]+3.5+gt*.9]){const l=side*off,x=T.x[i]+c*l,z=T.z[i]-sn*l;if(near(x,z)<T.hw[i]+2.2)continue;(out[GL]=out[GL]||[]).push([x,T.terr(x,z)-.02,z,T.psi[i],gs,1,.12])}}
-  const lawn=(cx,cz,R)=>{for(let gx=-R;gx<=R;gx+=gt*.9)for(let gz=-R;gz<=R;gz+=gt*.9){const x=cx+gx,z=cz+gz;if(Math.hypot(gx,gz)>R||near(x,z)<T.hw[nearest(x,z)]+3)continue;(out[GL]=out[GL]||[]).push([x,T.terr(x,z)-.02,z,r()*6.28,gs,1,.12])}};
+ if(P.BLD.GrassLand_Plain){const GL='GrassLand_Plain',gs=2.3,gt=gs*5;
+  for(const side of[-1,1])for(let i=0;i<T.N;i+=2){if((T.gap&&T.gap[i])||(T.br&&T.br[i])||(T.tn&&T.tn[i])||(T.wall&&T.wall[i]&&T.br&&T.br[i]))continue;const c=Math.cos(T.psi[i]),sn=Math.sin(T.psi[i]);
+   for(const off of[T.hw[i]+3.5,T.hw[i]+3.5+gt*.9]){const l=side*off,x=T.x[i]+c*l,z=T.z[i]-sn*l;if(near(x,z)<T.hw[i]+2.2)continue;(out[GL]=out[GL]||[]).push([x,T.terr(x,z)+(i%5)*.012,z,T.psi[i],gs,1])}}
+  const lawn=(cx,cz,R)=>{for(let gx=-R;gx<=R;gx+=gt*.9)for(let gz=-R;gz<=R;gz+=gt*.9){const x=cx+gx,z=cz+gz;if(Math.hypot(gx,gz)>R||near(x,z)<T.hw[nearest(x,z)]+3)continue;(out[GL]=out[GL]||[]).push([x,T.terr(x,z),z,r()*6.28,gs,1])}};
   P._lawn=lawn}
  /* parks: small forests between the blocks */
  const TREES=['Tree_02','Tree_04','Tree_05','Tree_07','Bush_01','Bush_02'].filter(n=>P.BLD[n]);
  if(TREES.length){const nP=40;let pk=0;for(let t=0;t<900&&pk<nP;t++){const cx=x0-80+r()*(x1-x0+160),cz=z0-80+r()*(z1-z0+160),d=near(cx,cz);if(d<26||d>170||!clear(cx,cz,16))continue;
-   const R_=18+r()*22,n=26+Math.floor(r()*30);placed.push([cx,cz,R_*.55]);if(P._lawn)P._lawn(cx,cz,R_*.9);if(r()<.3&&P.BLD.WaterLand_05){(out.WaterLand_05=out.WaterLand_05||[]).push([cx,T.terr(cx,cz)-.03,cz,r()*6.28,1.5,0,.12])}let c=0;for(let q=0;q<n*3&&c<n;q++){const a=r()*6.283,rr=Math.sqrt(r())*R_,x=cx+Math.cos(a)*rr,z=cz+Math.sin(a)*rr;if(near(x,z)<T.hw[nearest(x,z)]+9)continue;let bad=false;for(const p of log)if(p.n.indexOf('Tree')<0&&p.n.indexOf('Bush')<0&&Math.hypot(p.x-x,p.z-z)<(p.fr||2)+1.5){bad=true;break}if(bad)continue;
+   const R_=18+r()*22,n=26+Math.floor(r()*30);placed.push([cx,cz,R_*.55]);if(P._lawn)P._lawn(cx,cz,R_*.9);if(r()<.3&&P.BLD.WaterLand_05){(out.WaterLand_05=out.WaterLand_05||[]).push([cx,T.terr(cx,cz)-.15,cz,r()*6.28,1.5,0])}let c=0;for(let q=0;q<n*3&&c<n;q++){const a=r()*6.283,rr=Math.sqrt(r())*R_,x=cx+Math.cos(a)*rr,z=cz+Math.sin(a)*rr;if(near(x,z)<T.hw[nearest(x,z)]+9)continue;let bad=false;for(const p of log)if(p.n.indexOf('Tree')<0&&p.n.indexOf('Bush')<0&&Math.hypot(p.x-x,p.z-z)<(p.fr||2)+1.5){bad=true;break}if(bad)continue;
      const nm=TREES[Math.floor(r()*TREES.length)],big=nm.indexOf('Tree')==0,sc_=big?1.5+r()*1.3:1.4+r()*.9;(out[nm]=out[nm]||[]).push([x,T.terr(x,z),z,r()*6.28,sc_,1]);log.push({n:nm,x,z,y:0,fr:1.4,sk:.3,s:sc_});c++}pk++}}
  tryPlace(TOW,1.6,2.4,60,110,700,70,140);
  tryPlace(TOW,2.4,3.6,100,210,900,80,260);
@@ -9711,7 +9711,7 @@ function city(sc,T){
 function tunnel(sc,T){
  if(!(T.d&&T.d.city)||!T.tunnels||!T.tunnels.length)return;
  const kill=[];sc.traverse(o=>{if(o.isMesh&&o.geometry&&o.geometry.type==='BoxGeometry'&&o.geometry.parameters.height===26&&o.material&&o.material.emissiveMap)kill.push(o)});kill.forEach(o=>o.parent.remove(o));const seen=new Set();sc.traverse(o=>{const m=o.material;if(o.isMesh&&m&&!seen.has(m)&&m.isMeshStandardMaterial&&m.side===THREE.DoubleSide&&m.color.getHex()===0x3a3a46){seen.add(m);m.color.setHex(0x7a8099);m.emissive=new THREE.Color(0x232a4c);m.needsUpdate=true}});
- const N=T.N,cy=new THREE.BoxGeometry(.22,.22,3.2),cols=[0x7af0ff,0xff7ad0],ms=cols.map(c=>new THREE.MeshBasicMaterial({color:c,fog:false})),L=[[],[]];
+ const N=T.N,cy=new THREE.BoxGeometry(.22,.22,3.2),cols=[0xffe2a8,0xffc878],ms=cols.map(c=>new THREE.MeshBasicMaterial({color:c,fog:false})),L=[[],[]];
  const slab=new THREE.MeshStandardMaterial({color:0x3a3d4c,roughness:.9,flatShading:true}),pil=new THREE.MeshStandardMaterial({color:0x5a5f70,roughness:.9});
  const dum=new THREE.Object3D(),slabs=[],pils=[];
  for(const[a,b]of T.tunnels){
