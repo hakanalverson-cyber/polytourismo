@@ -15,6 +15,24 @@ P.REALMPH=R;P.topFor=eq;
 const ACC={c77:40,c98:46};
 P.CARS.forEach(c=>{if(c.mph)return;if(ACC[c.id])c.acc=ACC[c.id];const m=R[c.id];if(!m)return;c.top0=c.top;c.mph=m;c.top=+eq(m,c.acc).toFixed(1)});
 P.CARS.forEach(c=>{if(!c.top0)c.top0=c.top});
+
+/* real gearbox sizes (forward gears) for rally and track */
+const GEARS={c26:6,c50:6,c67:5,c91:4,c93:5,c5:5,c28:5,c32:7,c39:8,c57:5,c12:6,c18:6,c22:5,c25:5,c40:6,c41:5,c48:5,c55:5,c58:4,c62:4,c83:5,c96:5,c101:6,c111:5,c114:7,c117:4,c121:5,c122:6,
+c4:4,c10:4,c14:4,c19:4,c29:4,c31:4,c54:4,c60:5,c64:4,c70:6,c82:6,c87:6,c90:4,c97:6,c110:6,c134:6,
+c2:6,c3:6,c6:6,c7:7,c8:6,c11:6,c13:7,c16:6,c20:7,c21:5,c46:7,c47:7,c53:5,c56:6,c59:4,c61:5,c71:6,c79:5,c95:5,c126:7,c128:8,c129:5,c132:6,
+c17:6,c27:5,c30:5,c33:7,c34:7,c43:7,c44:5,c66:6,c78:7,c80:6,c85:6,c86:6,c88:6,c94:6,c116:6,c124:6,c125:6,c130:5,c131:2,c135:6,
+c1:6,c15:7,c36:7,c37:7,c42:6,c51:5,c52:5,c65:5,c73:7,c75:2,c77:7,c98:9,c104:6,c106:6,c108:6,c120:5,c123:7,c127:7};
+for(const id in GEARS){if(P.REALGEARS)P.REALGEARS[id]=GEARS[id];const c=P.BYID[id];if(c)c.real=GEARS[id]}
+/* regular modes: our tracks are small, so the field is compressed to a 150 mph ceiling (best car); rally / track keep real speeds */
+const regMph=m=>Math.round(150*Math.pow(m/280,.6));
+P.CARS.forEach(c=>{if(!c.mph)return;c.topR=c.top;c.mphR=c.mph;c.mphG=regMph(c.mph);c.topG=+eq(c.mphG,c.acc).toFixed(1)});
+let realOn=null;const setReal=on=>{on=!!on;if(on===realOn)return;realOn=on;P.CARS.forEach(c=>{if(c.mphR){c.top=on?c.topR:c.topG;c.mph=on?c.mphR:c.mphG;if(c.cs)delete c._cf}});P.CARS.forEach(c=>{delete c._cf})};
+P.setReal=setReal;setReal(false);
+let live=false,_ro=!!P._ro,_to=!!P._to;const upd=()=>setReal(live||_ro||_to);
+Object.defineProperty(P,'_ro',{get:()=>_ro,set:v=>{_ro=!!v;upd()},configurable:true});
+Object.defineProperty(P,'_to',{get:()=>_to,set:v=>{_to=!!v;upd()},configurable:true});
+{const lh=P.launch;P.launch=cfg=>{live=!!(cfg&&(cfg.circuit||cfg.rally||cfg.mode==='rally'));setReal(live||_ro||_to);return lh(cfg)}}
+{const sh=show;show=function(id){if(id!=='game'&&id!=='pause'&&live){live=false;upd()}return sh.apply(this,arguments)}}
 /* garage and HUD read true per-gear flat-out speeds */
 P.gearTops=car=>P.GT(car).map((_,i)=>P.effTop(car,i));
 /* gravel stages: cap at 120 mph so a 200 mph car can still read a narrow stage */

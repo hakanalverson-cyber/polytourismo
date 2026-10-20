@@ -94,10 +94,11 @@ src=rep(src,"const dmp=Math.exp(-1.3*dt);","const dmp=Math.exp(-3.4*dt);")
 src=rep(src,"hillHold:true,autoShift:false,","hillHold:true,autoShift:false,p2numpad:false,")
 src=rep(src,"['autoShift','AUTO SHIFT']","['autoShift','AUTO SHIFT'],\n  ['p2numpad','PLAYER 2 NUMPAD KEYS']")
 src=rep(src,"  if(window.PT8&&PT8.perfPre)PT8.perfPre();\n","  if(window.PT8&&PT8.perfPre)PT8.perfPre();\n  if(window.PT8&&PT8.syncP2)PT8.syncP2();\n")
+src=rep(src,"c.farT=near?0:c.farT+dt;","c.farT=(near||(window.PT8&&PT8.nearBarn&&PT8.nearBarn(c)))?0:c.farT+dt;")
 src=rep(src,"{u:'KeyI',d:'KeyK',l:'KeyJ',r:'KeyL',h:'KeyU'}","{u:'KeyI',d:'KeyK',l:'KeyJ',r:'KeyL',h:'KeyM'}")
 src=rep(src,"{u:'Numpad8',d:'Numpad5',l:'Numpad4',r:'Numpad6',h:'Numpad0'}","{u:'KeyT',d:'KeyG',l:'KeyF',r:'KeyH',h:'KeyB'}")
 
-parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','cars10','audio','modes','tracks','tracks2','extra','race2','elim','tod','harbor','props','stages','ra_data','tracks3','weather','ambience','tutorial','hud2','shade','liveries','ui','rally','trackmode','realspeed','perf']  if os.path.exists(f'{SRC}/layers/{n}.js')]
+parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','cars10','audio','modes','tracks','tracks2','extra','race2','elim','tod','harbor','props','stages','ra_data','tracks3','weather','ambience','tutorial','hud2','shade','liveries','ui','rally','trackmode','realspeed','barn','perf']  if os.path.exists(f'{SRC}/layers/{n}.js')]
 css=open(f'{SRC}/style.css').read()
 import base64
 b64=lambda f:base64.b64encode(open(W+'/assets/'+f,'rb').read()).decode()
