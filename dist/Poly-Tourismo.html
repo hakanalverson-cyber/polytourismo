@@ -5856,6 +5856,19 @@ body.barnscene #cd,body.barnscene #mm,body.barnscene #huds,body.barnscene #rlDas
 @keyframes ptPop{from{opacity:0;transform:translateY(18px) scale(.94)}}
 @keyframes ptFadeIn{from{opacity:0}}
 @media (prefers-reduced-motion:reduce){#ptWipe{display:none}.v8s.on>*,.v8s.on .card,.v8s.on .trk,.v8s.on .gc,.v8s.on .drv,.v8s.on::before{animation:none!important}}
+
+/* leaderboard */
+.lb{margin:14px 0 6px}.lbpod{display:flex;gap:12px;justify-content:center;align-items:flex-end;margin-bottom:14px}
+.lbp{flex:1;max-width:250px;background:linear-gradient(180deg,#141b22,#0c1116);border:1px solid #ffffff14;border-top:3px solid #8a949c;padding:12px 14px 12px;text-align:center;position:relative}
+.lbp.p1{border-top-color:#f2c76b;padding-top:20px;padding-bottom:16px;box-shadow:0 0 30px #f2c76b22}.lbp.p2{border-top-color:#c8d0d8}.lbp.p3{border-top-color:#c98a5a}
+.lbp.me{outline:1px solid #7fe3f244}.lbn{position:absolute;top:-1px;left:10px;font:800 26px var(--mn);color:#ffffff22}.lbp.p1 .lbn{color:#f2c76b55;font-size:34px}
+.lbname{display:block;font:800 15px var(--mn);letter-spacing:.08em;text-transform:uppercase}.lbp small{display:block;font:600 10px var(--mn);letter-spacing:.16em;color:var(--dim);margin:3px 0 8px;text-transform:uppercase}
+.lbp strong{display:block;font:800 22px var(--mn);color:#fff}.lbbest{display:block;font:700 9px var(--mn);letter-spacing:.18em;color:var(--dim);margin-top:5px}.lbbest b{color:#c9a0ff;font-size:12px;letter-spacing:.06em}
+.lbts{display:flex;gap:5px;justify-content:center;flex-wrap:wrap;margin-top:9px;min-height:18px}
+.lbt{font:800 9px var(--mn);font-style:normal;letter-spacing:.14em;padding:3px 7px;border:1px solid #ffffff2a;color:#cfd6dc;background:#ffffff0a;white-space:nowrap}
+.lbt.win{color:#1a1405;background:#f2c76b;border-color:#f2c76b}.lbt.fl{color:#fff;background:#7a3fd0;border-color:#9b66ec}
+.lbtab td.lbfl{color:#c9a0ff;font-weight:800}.lbgap{color:var(--dim);font-size:10px}.lbtab td:last-child{white-space:nowrap}
+.lbsolo{max-width:320px;margin:10px auto 14px}
 </style><script>
 /* ===== Poly Tourismo v8 layer: core (economy, gears, AI, race flow, modes) ===== */
 (function v8core(){
@@ -6515,7 +6528,7 @@ P.showResults=function(){const Rc=RACE,cfg=Rc.cfg,N=Rc.T.N,humans=Rc.cars.filter
  const rank=cars=>[...cars].sort((a,b)=>(b.fin?1e6-b.finT:0)-(a.fin?1e6-a.finT:0)||b.unw-a.unw);
  if(Rc.mode==='cutup'){
   const hs=humans.slice().sort((a,b)=>b.score-a.score);
-  hs.forEach((c,i)=>{const cr=Math.round(c.score/10)+(c.bestCombo>=8?250:0);res.rows.push({name:c.ptName,car:BYID[c.carId].name,score:c.score,extra:'NEAR MISSES '+c.nm+' / BEST COMBO x'+c.bestCombo+' / CRASHES '+c.crashes,cr,human:true,place:i+1,col:CS[c.k]});res.total+=cr});
+  hs.forEach((c,i)=>{const cr=Math.round(c.score/10)+(c.bestCombo>=8?250:0);res.rows.push({name:c.ptName,car:BYID[c.carId].name,score:c.score,extra:'NEAR MISSES '+c.nm+' / BEST COMBO x'+c.bestCombo+' / CRASHES '+c.crashes,combo:c.bestCombo,crashes:c.crashes,cr,human:true,place:i+1,col:CS[c.k]});res.total+=cr});
   res.title='CUT-UP COMPLETE';res.sub=cfg.ev?cfg.ev.name:'TRAFFIC RUN';
   if(cfg.ev){const t=cfg.ev.target,best=hs[0].score,ok=best>=t;res.goal={txt:'TARGET '+t.toLocaleString('en-US')+' PTS',ok};if(ok){const first=!sv.career.done[cfg.ev.id];const bonus=first?cfg.ev.prize:Math.round(cfg.ev.prize*.35);res.pay.push({l:first?'EVENT PRIZE':'REPLAY PRIZE',v:bonus});res.total+=bonus;if(first){sv.career.done[cfg.ev.id]={score:best};res.first=true}else if((sv.career.done[cfg.ev.id].score||0)<best)sv.career.done[cfg.ev.id].score=best}}
  }else{
@@ -8770,6 +8783,19 @@ $('shAct').onclick=()=>{const car=BYID[SR.id];
 (function(){const el=$('s8show');let lx=0;el.addEventListener('pointerdown',e=>{if(e.target.closest('.lst,.stat,.bot,.hdr'))return;SR.drag=true;lx=e.clientX;el.setPointerCapture(e.pointerId)});el.addEventListener('pointermove',e=>{if(!SR.drag)return;const d=e.clientX-lx;lx=e.clientX;SR.ang+=d*.01;SR.vel=d*.5});el.addEventListener('pointerup',()=>{SR.drag=false});el.addEventListener('pointercancel',()=>{SR.drag=false})})();
 
 /* ================= RESULTS ================= */
+/* ---------- leaderboard: podium + full table with best lap, driver, car and a title for each driver ---------- */
+const lbEsc=t=>String(t==null?'':t).replace(/[<>&"]/g,'');
+P.lbTitles=(rows,mode)=>{const T=rows.map(()=>[]);let fi=-1,fb=1e9;rows.forEach((r,i)=>{if(r.best!=null&&r.best<fb){fb=r.best;fi=i}});
+ if(mode==='cutup'){rows.forEach((r,i)=>{if(i===0)T[i].push('TOP SCORER');else if(i<3)T[i].push('PODIUM')});let bc=-1,bi=-1;rows.forEach((r,i)=>{if((r.combo||0)>bc){bc=r.combo||0;bi=i}});if(bi>=0&&bc>=3)T[bi].push('COMBO MASTER');rows.forEach((r,i)=>{if(r.crashes===0)T[i].push('CLEAN DRIVER')});return T}
+ rows.forEach((r,i)=>{if(r.place===1)T[i].push(mode==='elim'?'LAST ONE STANDING':'WINNER');else if(r.place<=3&&r.time!=null)T[i].push('PODIUM');else if(r.time!=null)T[i].push('FINISHER')});
+ if(fi>=0&&rows.length>1)T[fi].push('FASTEST LAP');else if(fi>=0&&rows.length===1)T[fi].push('BEST LAP');
+ rows.forEach((r,i)=>{if(r.medal!=null&&r.medal>=0&&P.MEDALS[r.medal])T[i].push(P.MEDALS[r.medal].n+' MEDAL')});return T};
+P.lbHTML=(rows,o)=>{o=o||{};const mode=o.mode||'race',T=P.lbTitles(rows,mode),cut=mode==='cutup';let fi=-1,fb=1e9;rows.forEach((r,i)=>{if(r.best!=null&&r.best<fb){fb=r.best;fi=i}});
+ const big=r=>cut?(r.score||0).toLocaleString('en-US'):(r.time!=null?fmtT(r.time):(r.txt||'--'));
+ const chips=i=>T[i].map(t=>`<em class="lbt${/FASTEST|BEST LAP/.test(t)?' fl':/WINNER|LAST ONE|TOP SCORER/.test(t)?' win':''}">${t}</em>`).join('');
+ const pod=rows.slice(0,3),order=pod.length===3?[1,0,2]:pod.map((_,i)=>i);
+ let h='<div class="lb"><div class="lbpod n'+pod.length+'">'+order.map(i=>{const r=pod[i];return `<div class="lbp p${i+1}${r.human?' me':''}"><b class="lbn">${i+1}</b><span class="lbname" style="${r.human&&r.col?'color:'+r.col:''}">${lbEsc(r.name)}${r.loan?' (loaner)':''}</span><small>${lbEsc(r.car)}</small><strong>${big(r)}</strong>${!cut&&r.best!=null?`<span class="lbbest">BEST LAP <b>${fmtT(r.best)}</b></span>`:''}<div class="lbts">${chips(i)}</div></div>`}).join('')+'</div>';
+ h+=`<table class="rt lbtab"><tr><th>Pos</th><th>Driver</th><th>Car</th>${cut?'<th>Score</th><th>Detail</th>':'<th>Best lap</th><th>Time</th>'}<th>Title</th></tr>`+rows.map((r,i)=>`<tr class="${r.human?'hum':''}"><td class="pl">${r.place}</td><td><b style="${r.human&&r.col?'color:'+r.col:''}">${lbEsc(r.name)}${r.loan?' (loaner)':''}</b></td><td>${lbEsc(r.car)}</td>`+(cut?`<td><b>${(r.score||0).toLocaleString('en-US')}</b></td><td style="font-size:10px;color:var(--dim)">${lbEsc(r.extra)}</td>`:`<td class="${i===fi&&rows.length>1?'lbfl':''}" style="${i===fi&&rows.length>1?'':'color:var(--ac)'}">${r.best!=null?fmtT(r.best):'--'}</td><td>${r.time!=null?fmtT(r.time):(r.txt?lbEsc(r.txt):(r.lapsDown?'+'+r.lapsDown+' lap':'...'))}${r.gap?` <small class="lbgap">${r.gap}</small>`:''}</td>`)+`<td>${chips(i)}</td></tr>`).join('')+'</table></div>';return h};
 let RES=null;
 P.renderResults=res=>{RES=res;const mode=res.mode;
  let h=`<h1>${res.title}</h1><div class="sub">${res.sub}</div>`;
@@ -8777,9 +8803,9 @@ P.renderResults=res=>{RES=res;const mode=res.mode;
  if(res.goal)h+=`<span class="goal ${res.goal.ok?'ok':'no'}">${res.goal.txt}</span>`;
  if(res.medal!=null&&res.medal>=0){const md=P.MEDALS[res.medal];h+=`<span class="medalbig" style="background:${md.col}">${md.n} medal</span>`}
  res.notes.forEach(n=>h+=`<span class="goal ok">${n}</span>`);
- if(mode==='cutup'){h+='<table class="rt"><tr><th>#</th><th>Driver</th><th>Car</th><th>Score</th><th>Detail</th><th>Cr.</th></tr>'+res.rows.map(r=>`<tr class="hum"><td class="pl">${r.place}</td><td><b style="color:${r.col}">${r.name}</b></td><td>${r.car}</td><td><b>${r.score.toLocaleString('en-US')}</b></td><td style="font-size:10px;color:var(--dim)">${r.extra}</td><td style="color:var(--ac2)">${fmtCr(r.cr)}</td></tr>`).join('')+'</table>'}
- else if(mode==='ta'){const r=res.rows[0];h+=`<table class="rt"><tr><th>Lap</th><th>Time</th></tr>`+(r.laps||[]).map((t,i)=>`<tr class="${t===r.best?'hum':''}"><td class="pl">${i+1}</td><td>${fmtT(t)}${t===r.best?'  best':''}</td></tr>`).join('')+`</table><div style="font-size:11px;letter-spacing:.16em;color:var(--dim)">TOTAL <b style="color:#fff">${fmtT(r.time)}</b></div>`}
- else h+='<table class="rt"><tr><th>Pos</th><th>Driver</th><th>Car</th><th>Time</th><th>Best lap</th></tr>'+res.rows.map(r=>`<tr class="${r.human?'hum':''}"><td class="pl">${r.place}</td><td><b style="${r.human?'color:'+r.col:''}">${r.name}${r.loan?' (loaner)':''}</b></td><td>${r.car}</td><td>${r.time!=null?fmtT(r.time):(r.txt?r.txt:(r.lapsDown?'+'+r.lapsDown+' lap':'...'))}</td><td style="color:var(--ac)">${r.best!=null?fmtT(r.best):'--'}</td></tr>`).join('')+'</table>';
+ if(mode==='cutup')h+=P.lbHTML(res.rows,{mode:'cutup'});
+ else if(mode==='ta'){const r=res.rows[0];h+=`<div class="lbp me lbsolo"><span class="lbname">${lbEsc(r.name||'DRIVER')}</span><small>${lbEsc(r.car||'')}</small><strong>${r.best!=null?fmtT(r.best):'--'}</strong><span class="lbbest">BEST LAP</span><div class="lbts">${P.lbTitles([Object.assign({place:1,time:r.time},r)],'ta')[0].map(t=>`<em class="lbt win">${t}</em>`).join('')}</div></div><table class="rt"><tr><th>Lap</th><th>Time</th></tr>`+(r.laps||[]).map((t,i)=>`<tr class="${t===r.best?'hum':''}"><td class="pl">${i+1}</td><td>${fmtT(t)}${t===r.best?'  best':''}</td></tr>`).join('')+`</table><div style="font-size:11px;letter-spacing:.16em;color:var(--dim)">TOTAL <b style="color:#fff">${fmtT(r.time)}</b></div>`}
+ else h+=P.lbHTML(res.rows,{mode:mode});
  h+='<div>'+res.pay.map(p=>`<div class="pay"><span>${p.l}</span><span>+${fmtCr(p.v)}</span></div>`).join('')+`<div class="pay tot"><span>Total earned</span><span>+${fmtCr(res.total)}</span></div><div class="pay"><span>Balance</span><span>${fmtCr(res.balance)}</span></div></div>`;
  const career=res.cfg&&res.cfg.ev;
  h+=`<div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap"><button class="btn go" id="rcCont"><span>${career?'Career hub':'Continue'}</span></button><button class="btn" id="rcRetry"><span>Retry</span></button><button class="btn" id="rcBrand"><span>Brand Central</span></button><button class="btn" id="rcMenu"><span>Main menu</span></button></div>`;
@@ -9036,7 +9062,7 @@ function briefing(i){const d=S.drv[i],car=BYID[d.id],st=D[S.cfg.track];paused=tr
  show('s8res');$i('rlGo').onclick=()=>{turn(i)};$i('rlQuit').onclick=quitRally}
 function sorted(){return S.drv.filter(d=>d.time!=null).sort((a,b)=>a.time-b.time)}
 function standingsHTML(fin){const done=sorted(),lead=done.length?done[0].time:0;
- return `<table class="rt"><tr><th>Pos</th><th>Driver</th><th>Car</th><th>Time</th><th>${fin?'Gap':'Best lap'}</th></tr>`+done.map((d,i)=>`<tr class="${i===0?'hum':''}"><td class="pl">${i+1}</td><td><b style="color:${PCOL[d.p%4]}">${d.name.replace(/</g,'')}</b></td><td>${BYID[d.id].name}${d.medal>=0?` <span class="rl-med" style="background:${P.MEDALS[d.medal].col}" title="${P.MEDALS[d.medal].n}"></span>`:''}</td><td>${fmt(d.time)}</td><td style="color:var(--ac)">${fin?(i?'+'+(d.time-lead).toFixed(2):'--'):(d.best!=null?fmt(d.best):'--')}</td></tr>`).join('')+'</table>'}
+ return P.lbHTML(done.map((d,i)=>({place:i+1,name:d.name.replace(/</g,''),car:BYID[d.id].name,time:d.time,best:d.best,col:PCOL[d.p%4],human:true,medal:d.medal,gap:fin&&i?'+'+(d.time-lead).toFixed(2):''})),{mode:'rally'})}
 const splitsHTML=d=>(d.pen?`<div class="rl-note">CUT PENALTIES / +${d.pen.toFixed(1)} s (${Math.round(d.pen/5)} cut${d.pen>5?'s':''}) included in the time</div>`:'')+(d.splits&&d.splits.length?`<div class="rl-spl">${d.splits.map((t,k)=>`<span>CP${k+1}<b>${fmt(t)}</b></span>`).join('')}</div>`:'');
 const sr0=P.showResults;
 P.showResults=function(){const Rc=RACE;if(!(Rc&&Rc.cfg&&Rc.cfg.rally&&S))return sr0.apply(this,arguments);
@@ -9082,8 +9108,8 @@ function crashStep(Rc,dt){const c=human(Rc);if(!c)return;const T=Rc.T;if(!T.soli
  for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const l=T._sg.get((cx+a)+','+(cz+b));if(!l)continue;
   for(const s of l){const dx=c.x-s[0],dz=c.z-s[1],d=Math.hypot(dx,dz),R=s[2]+1.05;if(d>=R||d<.001)continue;const nx=dx/d,nz=dz/d,vn=c.vx*nx+c.vz*nz;
    if(Math.abs(c.y-(T.terr?T.terr(s[0],s[1]):c.y))>3.5)continue;c.x+=nx*(R-d);c.z+=nz*(R-d);
-   if(vn<0){c.vx-=1.28*vn*nx;c.vz-=1.28*vn*nz;c.vx*=.82;c.vz*=.82;if(-vn>2.2&&c.cdT<=0){c.cdT=.35;hurt(Rc,c,-vn,nx,nz)}}}}}
-function hurt(Rc,c,v,nx,nz){if(!P.dmgOn(Rc)){Rc.shake=Math.max(Rc.shake||0,Math.min(1,v/16));if(P.sfx)P.sfx('crash');return}const was=c.dmg||0,add=Math.min(.55,Math.pow(v/26,1.55)*.85);c.dmg=Math.min(1,was+add);c.hits=(c.hits||0)+1;Rc.shake=Math.max(Rc.shake||0,Math.min(1.2,v/14));
+   if(vn<0){c.vx-=1.28*vn*nx;c.vz-=1.28*vn*nz;c.vx*=.82;c.vz*=.82;if(-vn>2.2&&c.cdT<=0){c.cdT=.7;hurt(Rc,c,-vn,nx,nz)}}}}}
+function hurt(Rc,c,v,nx,nz){if(!P.dmgOn(Rc)){Rc.shake=Math.max(Rc.shake||0,Math.min(1,v/16));if(P.sfx)P.sfx('crash');return}if(v<4){if(P.sfx&&v>2.6)P.sfx('crash');return}const was=c.dmg||0,add=Math.min(.5,Math.pow((v-3.5)/24,1.5)*.9);c.dmg=Math.min(1,was+add);c.hits=(c.hits||0)+1;Rc.shake=Math.max(Rc.shake||0,Math.min(1.2,v/14));
  c.yaw+=(Math.random()<.5?-1:1)*Math.min(.5,v*.02);if(!c._pull)c._pull=(Math.random()<.5?-1:1);
  if(P.sfx)P.sfx('crash');const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);
  for(let k=0;k<10;k++)P.puff(c.x-nx*1.1,c.y+.2,c.z-nz*1.1,-nx*rnd(1,6)+rnd(-2,2),rnd(1,5),-nz*rnd(1,6)+rnd(-2,2),k%2?[1,.7,.2]:[.55,.5,.45],rnd(.12,.3),rnd(.4,.9),.95,14);
@@ -9978,12 +10004,12 @@ function grid(T){const x=X(T),g=new Map(),put=(k,o)=>{let l=g.get(k);if(!l){l=[]
  for(const p of x.pts)put(Math.floor(p[0]/8)+','+Math.floor(p[1]/8),p);
  T._bg=g;return g}
 let cd=0;
-function hit(Rc,c,v,nx,nz){if(cd>0)return;cd=.3;Rc.shake=Math.max(Rc.shake||0,Math.min(1,v/16));if(P.sfx)P.sfx('crash');if(P.dmgOn&&P.dmgOn(Rc)&&P.hurt&&!((c.cdT||0)>0)){c.cdT=.35;P.hurt(Rc,c,v,nx,nz)}}
+function hit(Rc,c,v,nx,nz){if(cd>0)return;cd=.3;Rc.shake=Math.max(Rc.shake||0,Math.min(1,v/16));if(P.sfx)P.sfx('crash');if(P.dmgOn&&P.dmgOn(Rc)&&P.hurt&&!((c.cdT||0)>0)){c.cdT=.7;P.hurt(Rc,c,v,nx,nz)}}
 function bStep(Rc,dt){const T=Rc.T;if(!T||Rc.state!=='race')return;cd-=dt;const g=T._bg||grid(T);if(!g.size)return;
  for(const c of Rc.cars){if(!c.human||c.fin||c.respT>0||c.exp>0)continue;const cx=Math.floor(c.x/8),cz=Math.floor(c.z/8),gy=T.terr?T.terr(c.x,c.z):c.y;if(c.y-gy>3.2)continue;
   for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const l=g.get((cx+a)+','+(cz+b));if(!l)continue;
    for(const s of l){let qx,qz,r;if(s.length===5){const dx=s[2]-s[0],dz=s[3]-s[1],ll=dx*dx+dz*dz||1,t=Math.max(0,Math.min(1,((c.x-s[0])*dx+(c.z-s[1])*dz)/ll));qx=s[0]+dx*t;qz=s[1]+dz*t;r=s[4]}else{qx=s[0];qz=s[1];r=s[2]}
-    const ex=c.x-qx,ez=c.z-qz,d=Math.hypot(ex,ez),R=r+1.0;if(d>=R||d<.001)continue;const nx=ex/d,nz=ez/d,vn=c.vx*nx+c.vz*nz;c.x+=nx*(R-d);c.z+=nz*(R-d);
+    const ex=c.x-qx,ez=c.z-qz,d=Math.hypot(ex,ez),R=r+.88;if(d>=R||d<.001)continue;const nx=ex/d,nz=ez/d,vn=c.vx*nx+c.vz*nz;c.x+=nx*(R-d);c.z+=nz*(R-d);
     if(vn<0){c.vx-=1.25*vn*nx;c.vz-=1.25*vn*nz;c.vx*=.88;c.vz*=.88;if(-vn>2.2)hit(Rc,c,-vn,nx,nz)}}}}}
 const bw=buildWorld;buildWorld=function(T){const sc=bw.apply(this,arguments);try{collect(sc,T)}catch(e){console.warn('solid',e)}return sc};
 

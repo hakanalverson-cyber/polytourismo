@@ -159,7 +159,7 @@ P.showResults=function(){const Rc=RACE,cfg=Rc.cfg,N=Rc.T.N,humans=Rc.cars.filter
  const rank=cars=>[...cars].sort((a,b)=>(b.fin?1e6-b.finT:0)-(a.fin?1e6-a.finT:0)||b.unw-a.unw);
  if(Rc.mode==='cutup'){
   const hs=humans.slice().sort((a,b)=>b.score-a.score);
-  hs.forEach((c,i)=>{const cr=Math.round(c.score/10)+(c.bestCombo>=8?250:0);res.rows.push({name:c.ptName,car:BYID[c.carId].name,score:c.score,extra:'NEAR MISSES '+c.nm+' / BEST COMBO x'+c.bestCombo+' / CRASHES '+c.crashes,cr,human:true,place:i+1,col:CS[c.k]});res.total+=cr});
+  hs.forEach((c,i)=>{const cr=Math.round(c.score/10)+(c.bestCombo>=8?250:0);res.rows.push({name:c.ptName,car:BYID[c.carId].name,score:c.score,extra:'NEAR MISSES '+c.nm+' / BEST COMBO x'+c.bestCombo+' / CRASHES '+c.crashes,combo:c.bestCombo,crashes:c.crashes,cr,human:true,place:i+1,col:CS[c.k]});res.total+=cr});
   res.title='CUT-UP COMPLETE';res.sub=cfg.ev?cfg.ev.name:'TRAFFIC RUN';
   if(cfg.ev){const t=cfg.ev.target,best=hs[0].score,ok=best>=t;res.goal={txt:'TARGET '+t.toLocaleString('en-US')+' PTS',ok};if(ok){const first=!sv.career.done[cfg.ev.id];const bonus=first?cfg.ev.prize:Math.round(cfg.ev.prize*.35);res.pay.push({l:first?'EVENT PRIZE':'REPLAY PRIZE',v:bonus});res.total+=bonus;if(first){sv.career.done[cfg.ev.id]={score:best};res.first=true}else if((sv.career.done[cfg.ev.id].score||0)<best)sv.career.done[cfg.ev.id].score=best}}
  }else{

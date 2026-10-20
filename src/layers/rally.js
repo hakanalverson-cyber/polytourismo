@@ -220,7 +220,7 @@ function briefing(i){const d=S.drv[i],car=BYID[d.id],st=D[S.cfg.track];paused=tr
  show('s8res');$i('rlGo').onclick=()=>{turn(i)};$i('rlQuit').onclick=quitRally}
 function sorted(){return S.drv.filter(d=>d.time!=null).sort((a,b)=>a.time-b.time)}
 function standingsHTML(fin){const done=sorted(),lead=done.length?done[0].time:0;
- return `<table class="rt"><tr><th>Pos</th><th>Driver</th><th>Car</th><th>Time</th><th>${fin?'Gap':'Best lap'}</th></tr>`+done.map((d,i)=>`<tr class="${i===0?'hum':''}"><td class="pl">${i+1}</td><td><b style="color:${PCOL[d.p%4]}">${d.name.replace(/</g,'')}</b></td><td>${BYID[d.id].name}${d.medal>=0?` <span class="rl-med" style="background:${P.MEDALS[d.medal].col}" title="${P.MEDALS[d.medal].n}"></span>`:''}</td><td>${fmt(d.time)}</td><td style="color:var(--ac)">${fin?(i?'+'+(d.time-lead).toFixed(2):'--'):(d.best!=null?fmt(d.best):'--')}</td></tr>`).join('')+'</table>'}
+ return P.lbHTML(done.map((d,i)=>({place:i+1,name:d.name.replace(/</g,''),car:BYID[d.id].name,time:d.time,best:d.best,col:PCOL[d.p%4],human:true,medal:d.medal,gap:fin&&i?'+'+(d.time-lead).toFixed(2):''})),{mode:'rally'})}
 const splitsHTML=d=>(d.pen?`<div class="rl-note">CUT PENALTIES / +${d.pen.toFixed(1)} s (${Math.round(d.pen/5)} cut${d.pen>5?'s':''}) included in the time</div>`:'')+(d.splits&&d.splits.length?`<div class="rl-spl">${d.splits.map((t,k)=>`<span>CP${k+1}<b>${fmt(t)}</b></span>`).join('')}</div>`:'');
 const sr0=P.showResults;
 P.showResults=function(){const Rc=RACE;if(!(Rc&&Rc.cfg&&Rc.cfg.rally&&S))return sr0.apply(this,arguments);
@@ -266,8 +266,8 @@ function crashStep(Rc,dt){const c=human(Rc);if(!c)return;const T=Rc.T;if(!T.soli
  for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const l=T._sg.get((cx+a)+','+(cz+b));if(!l)continue;
   for(const s of l){const dx=c.x-s[0],dz=c.z-s[1],d=Math.hypot(dx,dz),R=s[2]+1.05;if(d>=R||d<.001)continue;const nx=dx/d,nz=dz/d,vn=c.vx*nx+c.vz*nz;
    if(Math.abs(c.y-(T.terr?T.terr(s[0],s[1]):c.y))>3.5)continue;c.x+=nx*(R-d);c.z+=nz*(R-d);
-   if(vn<0){c.vx-=1.28*vn*nx;c.vz-=1.28*vn*nz;c.vx*=.82;c.vz*=.82;if(-vn>2.2&&c.cdT<=0){c.cdT=.35;hurt(Rc,c,-vn,nx,nz)}}}}}
-function hurt(Rc,c,v,nx,nz){if(!P.dmgOn(Rc)){Rc.shake=Math.max(Rc.shake||0,Math.min(1,v/16));if(P.sfx)P.sfx('crash');return}const was=c.dmg||0,add=Math.min(.55,Math.pow(v/26,1.55)*.85);c.dmg=Math.min(1,was+add);c.hits=(c.hits||0)+1;Rc.shake=Math.max(Rc.shake||0,Math.min(1.2,v/14));
+   if(vn<0){c.vx-=1.28*vn*nx;c.vz-=1.28*vn*nz;c.vx*=.82;c.vz*=.82;if(-vn>2.2&&c.cdT<=0){c.cdT=.7;hurt(Rc,c,-vn,nx,nz)}}}}}
+function hurt(Rc,c,v,nx,nz){if(!P.dmgOn(Rc)){Rc.shake=Math.max(Rc.shake||0,Math.min(1,v/16));if(P.sfx)P.sfx('crash');return}if(v<4){if(P.sfx&&v>2.6)P.sfx('crash');return}const was=c.dmg||0,add=Math.min(.5,Math.pow((v-3.5)/24,1.5)*.9);c.dmg=Math.min(1,was+add);c.hits=(c.hits||0)+1;Rc.shake=Math.max(Rc.shake||0,Math.min(1.2,v/14));
  c.yaw+=(Math.random()<.5?-1:1)*Math.min(.5,v*.02);if(!c._pull)c._pull=(Math.random()<.5?-1:1);
  if(P.sfx)P.sfx('crash');const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);
  for(let k=0;k<10;k++)P.puff(c.x-nx*1.1,c.y+.2,c.z-nz*1.1,-nx*rnd(1,6)+rnd(-2,2),rnd(1,5),-nz*rnd(1,6)+rnd(-2,2),k%2?[1,.7,.2]:[.55,.5,.45],rnd(.12,.3),rnd(.4,.9),.95,14);
