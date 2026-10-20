@@ -109,7 +109,7 @@ src=src[:j0]+newcc+src[j1:]
 
 # ---- v9e: auto-shift option, reverse tracks ----
 src=rep(src,"hillHold:true,cameraDistance:1,","hillHold:true,autoShift:false,perfPreset:'HIGH',maxDensity:1.5,shadowRate:2,shadowRes:1536,showFps:false,cameraDistance:1,")
-src=rep(src,"['hillHold','HILL HOLD']","['hillHold','HILL HOLD'],\n  ['autoShift','AUTO SHIFT'],\n  ['shortcutPenalty','SHORTCUT PENALTY']")
+src=rep(src,"['hillHold','HILL HOLD']","['hillHold','HILL HOLD'],\n  ['autoShift','AUTO SHIFT'],\n  ['shortcutPenalty','SHORTCUT PENALTY'],\n  ['@tutorial','TUTORIAL','@btn','PLAY']")
 src=rep(src,"\n AUDIO:[","\n PERFORMANCE:[\n  ['perfPreset','PRESET',['MINIMUM','LOW','MEDIUM','HIGH','ULTRA','CUSTOM']],\n  ['maxDensity','MAX PIXEL DENSITY',1,2,.25],\n  ['resolution','RENDER SCALE',.5,1,.05],\n  ['shadows','SHADOWS'],\n  ['shadowRate','SHADOW UPDATE EVERY N FRAMES',1,4,1],\n  ['shadowRes','SHADOW QUALITY',[512,1024,1536,2048]],\n  ['effects','PARTICLES',[0,1,2]],\n  ['fogReach','FOG DISTANCE',350,1100,50],\n  ['showFps','SHOW FPS']\n ],\n AUDIO:[")
 src=rep(src,"function apply(){\n  rs();","function apply(){\n  if(window.PT8&&PT8.perfPre)PT8.perfPre();\n  rs();")
 src=rep(src,"          apply();\n        };\n      }else{","          apply();if(tab==='PERFORMANCE')render();\n        };\n      }else{")
@@ -184,7 +184,7 @@ src=rep(src,"      front:k<2,angle:0\n    };\n  });","""      front:k<2,angle:0
      for(const g of gs(w)){g.translate(-r.c[0],-r.c[1],-r.c[2]);g.applyMatrix4(M);g.translate(r.c[0],r.c[1],r.c[2])}}
    for(const[a,b2]of[[0,1],[2,3]]){const A=car.ptWheels[a],B=car.ptWheels[b2],wa=wid(A),wb=wid(B),bad=wa>wb*1.25?A:wb>wa*1.25?B:null;if(!bad)continue;const good=bad===A?B:A;
      bad.spin.children.slice().forEach(m=>bad.spin.remove(m));good.spin.children.forEach(m=>bad.spin.add(new THREE.Mesh(mir(m.geometry),m.material)));bad.pivot.position.set(-good.pivot.position.x,good.pivot.position.y,good.pivot.position.z);bad.radius=good.radius}}""")
-parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','cars10','audio','modes','tracks','tracks2','extra','race2','elim','tod','harbor','props','bld','stages','ra_data','tracks3','weather','ambience','tutorial','hud2','shade','ui','rally','trackmode','realspeed','barn','animals','clean','solid','damage','perf']  if os.path.exists(f'{SRC}/layers/{n}.js')]
+parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','cars10','audio','modes','tracks','tracks2','extra','race2','elim','tod','harbor','props','bld','stages','ra_data','tracks3','weather','ambience','tutorial','updatelog','hud2','shade','ui','rally','trackmode','realspeed','barn','animals','clean','solid','damage','perf']  if os.path.exists(f'{SRC}/layers/{n}.js')]
 css=open(f'{SRC}/style.css').read()
 import base64
 b64=lambda f:base64.b64encode(open(W+'/assets/'+f,'rb').read()).decode()
@@ -223,6 +223,7 @@ src=src[:i]+add+BOOT_JS+src[i:]
 src=src.replace("'Poly Tourismo v7'","'Poly Tourismo'").replace("'Poly Tourismo v9'","'Poly Tourismo'")
 VERSION=open(W+'/VERSION').read().strip()
 src=src.replace('GRAND TOUR / V9','GRAND TOUR / V'+VERSION).replace("sm.textContent='V9'","sm.textContent='V"+VERSION+"'")
+src=rep(src,"      let input;\n      if(typeof o[key]==='boolean'){","      let input;\n      if(kind==='@btn'){input=document.createElement('button');input.textContent=max;input.className='sel';input.onclick=()=>{if(window.__optAction)window.__optAction(key)};row.append(input);return row}\n      if(typeof o[key]==='boolean'){")
 # rename: Poly Tourismo -> Poly GT (visible text only; save-data keys are untouched)
 src=src.replace('POLY<br><span>TOURISMO</span>','POLY<br><span>GT</span>').replace('POLY TOURISMO','POLY GT').replace('Poly Tourismo','Poly GT')
 out=sys.argv[1] if len(sys.argv)>1 else W+'/dist/Poly-Tourismo.html'

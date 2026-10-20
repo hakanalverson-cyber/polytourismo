@@ -41,9 +41,10 @@ hudUpdate=()=>{hu0();const e=el();if(!st){if(e)e.style.display='none';return}
  if(st.hold)return;if(st.okT){st.okT-=dt;if(st.okT<=0)next();return}
  if(s.info||s.done)return;const c=RACE.cars.find(q=>q.human);if(!c)return;
  if(s.ok(c,RACE,st.s,dt)){st.okT=1.1;P.sfx('ok');paint()}};
-/* ---- menu entry + first-run offer ---- */
+/* the lesson now lives in Settings > Driving; the menu slot is the update log */
+window.__optAction=k=>{if(k==='@tutorial')P.startTutorial()};
+/* ---- first-run offer ---- */
 (function(){const ma=document.querySelector('.menuActions');if(!ma)return;
- const b=document.createElement('button');b.innerHTML='<small>05</small> Tutorial';b.style.order=5;b.onclick=()=>P.startTutorial();ma.append(b);
  const m=document.getElementById('menu');if(!m)return;const o=document.createElement('div');o.id='tutOffer';o.style.display='none';
  o.innerHTML='<b>New here?</b><span>Take the short driving lesson: controls, gears, braking and the rest.</span><button class="pri" id="tutYes">Start lesson</button><button id="tutNo">Not now</button>';m.appendChild(o);
  const hide=()=>{o.style.display='none';try{const sv=P.SV();sv.tutDone=sv.tutDone||2;P.save()}catch(e){}};

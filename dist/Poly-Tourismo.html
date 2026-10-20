@@ -1069,7 +1069,8 @@ const pages={
   ['hillHold','HILL HOLD'],
   ['autoShift','AUTO SHIFT'],
   ['p2numpad','PLAYER 2 NUMPAD KEYS'],
-  ['shortcutPenalty','SHORTCUT PENALTY']
+  ['shortcutPenalty','SHORTCUT PENALTY'],
+  ['@tutorial','TUTORIAL','@btn','PLAY']
  ],
  CAMERA:[
   ['cameraDistance','CHASE DISTANCE',.8,1.4,.05],
@@ -1165,6 +1166,7 @@ function render(){
       name.textContent=label;
       row.append(name);
       let input;
+      if(kind==='@btn'){input=document.createElement('button');input.textContent=max;input.className='sel';input.onclick=()=>{if(window.__optAction)window.__optAction(key)};row.append(input);return row}
       if(typeof o[key]==='boolean'){
         input=document.createElement('button');
         input.textContent=o[key]?'ON':'OFF';
@@ -8206,14 +8208,64 @@ hudUpdate=()=>{hu0();const e=el();if(!st){if(e)e.style.display='none';return}
  if(st.hold)return;if(st.okT){st.okT-=dt;if(st.okT<=0)next();return}
  if(s.info||s.done)return;const c=RACE.cars.find(q=>q.human);if(!c)return;
  if(s.ok(c,RACE,st.s,dt)){st.okT=1.1;P.sfx('ok');paint()}};
-/* ---- menu entry + first-run offer ---- */
+/* the lesson now lives in Settings > Driving; the menu slot is the update log */
+window.__optAction=k=>{if(k==='@tutorial')P.startTutorial()};
+/* ---- first-run offer ---- */
 (function(){const ma=document.querySelector('.menuActions');if(!ma)return;
- const b=document.createElement('button');b.innerHTML='<small>05</small> Tutorial';b.style.order=5;b.onclick=()=>P.startTutorial();ma.append(b);
  const m=document.getElementById('menu');if(!m)return;const o=document.createElement('div');o.id='tutOffer';o.style.display='none';
  o.innerHTML='<b>New here?</b><span>Take the short driving lesson: controls, gears, braking and the rest.</span><button class="pri" id="tutYes">Start lesson</button><button id="tutNo">Not now</button>';m.appendChild(o);
  const hide=()=>{o.style.display='none';try{const sv=P.SV();sv.tutDone=sv.tutDone||2;P.save()}catch(e){}};
  o.querySelector('#tutYes').onclick=()=>{hide();P.startTutorial()};o.querySelector('#tutNo').onclick=()=>{P.sfx('back');hide()};
  setTimeout(()=>{try{if(scr==='menu'&&!P.SV().tutDone)o.style.display=''}catch(e){}},1800)})();
+})();
+
+/* ===== Poly GT layer: update log (menu button + overlay) ===== */
+(function ptUpdateLog(){
+'use strict';
+const P=window.PT8;
+P.LOG=[
+ {v:'0.02',d:'Oct 20, 2026',t:'Update log',items:[
+  'New update log button in the main menu (this screen).',
+  'The tutorial moved to Settings > Driving, with a PLAY button.']},
+ {v:'0.01',d:'Oct 20, 2026',t:'Poly GT',items:[
+  'The game is now called Poly GT.',
+  'Leaderboard: podium cards plus a full table with best lap, driver, car and a title for each driver.',
+  'Damage setting in every mode. Hit something hard enough and the car is hurt; at 100% it explodes and respawns where it was 3 seconds later.',
+  'Gentler wall damage: light scrapes do nothing, hits are spaced out and the collision margin is tighter.',
+  'Sparks, smoke and debris on every impact; sparks while you grind along a wall; skid smoke now comes from the tires.',
+  'Per-player Manual / Auto gearbox in car setup, and every car now has its real number of gears in every mode.',
+  'Perf points come from real-world stats, are capped at 1,500, and every garage list runs lowest to highest within each class.',
+  'Pit stops, fuel and tyre wear are gone.',
+  'Harbor Lights: hundreds more buildings and trees around the docks.',
+  'Cut-up: traffic wheels now spin and steer.',
+  'Menu transitions: a sweep between screens and panels that glide in.',
+  'Afterhours: street lights, tunnel and night-sky fixes, and a darker, calmer tunnel interior.']}
+];
+const css=document.createElement('style');
+css.textContent=`#ptLog{position:fixed;inset:0;z-index:8000;display:none;align-items:center;justify-content:center;background:#05070acc;backdrop-filter:blur(3px)}
+#ptLog.on{display:flex;animation:ptFadeIn .25s ease both}
+#ptLog .lgBox{width:min(720px,92vw);max-height:84vh;display:flex;flex-direction:column;background:linear-gradient(180deg,#121920,#0b0f13);border:1px solid #ffffff18;border-top:3px solid #f1f3f5}
+#ptLog .lgHd{display:flex;align-items:center;padding:16px 22px;border-bottom:1px solid #ffffff12}
+#ptLog .lgHd h2{margin:0;font:800 18px var(--mn);letter-spacing:.28em;font-style:italic}#ptLog .lgHd h2 em{color:#7fe3f2;font-style:italic}
+#ptLog .lgHd span{margin-left:auto;font:700 10px var(--mn);letter-spacing:.2em;color:var(--dim)}
+#ptLog .lgBody{overflow:auto;padding:6px 22px 18px}
+#ptLog .lgV{padding:16px 0 4px;border-bottom:1px solid #ffffff0d}#ptLog .lgV:last-child{border:0}
+#ptLog .lgV h3{margin:0 0 4px;font:800 15px var(--mn);letter-spacing:.14em;display:flex;gap:12px;align-items:baseline}
+#ptLog .lgV h3 b{color:#f2c76b}#ptLog .lgV h3 small{font:600 10px var(--mn);letter-spacing:.18em;color:var(--dim)}
+#ptLog .lgV h4{margin:0 0 8px;font:600 11px var(--mn);letter-spacing:.2em;color:#9fb0ba;text-transform:uppercase}
+#ptLog ul{margin:0 0 12px;padding-left:18px}#ptLog li{margin:5px 0;font:500 13px/1.45 system-ui,sans-serif;color:#d7dde2}
+#ptLog .lgFt{padding:12px 22px;border-top:1px solid #ffffff12;display:flex;justify-content:flex-end}`;
+document.head.appendChild(css);
+const ov=document.createElement('div');ov.id='ptLog';document.body.appendChild(ov);
+const open=()=>{const cur=(document.querySelector('.menuTop small')||{}).textContent||'';
+ ov.innerHTML=`<div class="lgBox"><div class="lgHd"><h2>UPDATE <em>LOG</em></h2><span>${cur}</span></div><div class="lgBody">`+P.LOG.map(e=>`<div class="lgV"><h3><b>v${e.v}</b><small>${e.d}</small></h3><h4>${e.t}</h4><ul>${e.items.map(i=>`<li>${i}</li>`).join('')}</ul></div>`).join('')+`</div><div class="lgFt"><button class="btn" id="lgClose"><span>Close</span></button></div></div>`;
+ ov.classList.add('on');if(P.sfx)P.sfx('select');ov.querySelector('#lgClose').onclick=close};
+const close=()=>{if(ov.classList.contains('on')){ov.classList.remove('on');if(P.sfx)P.sfx('back')}};
+ov.addEventListener('click',e=>{if(e.target===ov)close()});
+addEventListener('keydown',e=>{if(ov.classList.contains('on')&&(e.code==='Escape'||e.code==='Enter')){e.stopImmediatePropagation();e.preventDefault();close()}},true);
+const ma=document.querySelector('.menuActions');
+if(ma){const b=document.createElement('button');b.innerHTML='<small>05</small> Update log';b.style.order=5;b.onclick=open;ma.append(b)}
+P.openUpdateLog=open;
 })();
 
 /* ===== Poly GT v9 layer: hud2 (round-info list, whose-speedometer labels, floating P1..P4 tags, draft wind) ===== */
@@ -8458,8 +8510,8 @@ function pickMode(m){if(m==='career'){ST.crank=null;ST.cev=null;openCareer()}els
  const g=document.createElement('button');g.innerHTML='<small>02</small> Garage';g.style.order=2;g.onclick=()=>openShow('garage',{player:0,cap:null,ret:'menu'});
  const b=document.createElement('button');b.innerHTML='<small>03</small> Brand Central';b.style.order=3;b.onclick=()=>openShow('brand',{player:0,cap:null,ret:'menu'});
  ma.append(g,b);bt[1].style.order=4;bt[1].innerHTML='<small>04</small> Settings';
- const lg=$('logo');if(lg)lg.innerHTML='POLY<br><span>GT</span><small>GRAND TOUR / V0.01</small>';
- const mt=document.querySelector('.menuTop');if(mt){mt.querySelector('.brandMark').textContent='PT / 98';const sm=mt.querySelector('small');if(sm)sm.textContent='V0.01'}
+ const lg=$('logo');if(lg)lg.innerHTML='POLY<br><span>GT</span><small>GRAND TOUR / V0.02</small>';
+ const mt=document.querySelector('.menuTop');if(mt){mt.querySelector('.brandMark').textContent='PT / 98';const sm=mt.querySelector('small');if(sm)sm.textContent='V0.02'}
  const f=document.createElement('div');f.className='mfoot';$('menu').appendChild(f);
  P.menuStats=()=>{const sv=P.SV();f.innerHTML='<span>Balance <b>'+fmtCr(sv.cr)+'</b></span><span>Career <b>'+P.RANKS[P.careerRank()].n+'</b></span><span>Races <b>'+sv.stats.races+'</b></span><span>Wins <b>'+sv.stats.wins+'</b></span><span style="margin-left:auto">Enter: play</span>'};
  P.menuStats()})();
