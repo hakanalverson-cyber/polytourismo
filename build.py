@@ -12,6 +12,7 @@ def main():
     outputs = [Path(sys.argv[1])] if len(sys.argv) > 1 else [
         ROOT / "dist" / "Poly-Tourismo.html",
         ROOT / "dist" / "index.html",
+        ROOT / "index.html",
     ]
     for output in outputs:
         output.parent.mkdir(parents=True, exist_ok=True)
