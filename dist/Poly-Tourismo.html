@@ -7238,6 +7238,7 @@ sampleTrack=d=>{const T=ps(d);if(!d.span)return T;
   for(let i=0;i<N;i++){base[i]=T.sg[i]===1?1.15:1.0;if(T.sg[i]===2)continue;let dm=1e9;for(const j of isl){const dd=Math.min((i-j+N)%N,(j-i+N)%N);if(dd<dm)dm=dd;if(dm<=1)break}
    const u=T.sg[i]===1?Math.max(0,Math.min(1,1-(dm-1)*T.sp/30)):0;T.fl[i]=u*u*(3-2*u)}
   for(let i=0;i<N;i++){let a=0,n=0;for(let k=-8;k<=8;k++){a+=base[(i+k+N)%N];n++}T.vh[i]=(a/n)*(1-T.fl[i])+.04}}
+ for(let i=0;i<N;i++)if(T.sg[i]===2)T.y[i]=GY;
  T.gv=Uint8Array.from(T.sg,v=>v===3?1:0);makeTerrain(T);T.jgl=0;
  return T};
 /* ---------- terrain: valley floor, hills, road benches, farm pads, shore ---------- */
@@ -7332,15 +7333,15 @@ function buildSpan(T){const d=T.d,N=T.N,r=rngf(8*77+11),sc=new THREE.Scene();
   const top=mesh(new THREE.PlaneGeometry(w,h),pm,cx,GY-.015,cz,sc);top.rotation.x=-Math.PI/2}
  /* ----- road surface ----- */
  const PO={polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2};
- {const am=new THREE.MeshStandardMaterial(Object.assign({map:T_ASPH(),roughness:.9,side:THREE.DoubleSide},PO)),gm2=new THREE.MeshStandardMaterial(Object.assign({map:T_GRAVEL(),roughness:1,side:THREE.DoubleSide},PO));
+ {const am=new THREE.MeshStandardMaterial(Object.assign({map:T_ASPH(),roughness:.9,side:THREE.DoubleSide},PO)),gm2=new THREE.MeshStandardMaterial(Object.assign({map:T_GRAVEL(),roughness:1,side:THREE.DoubleSide},PO));am.name='ROAD';gm2.name='ROAD';
   for(const [a,b] of runs(T,i=>T.sg[i]!==3))sc.add(strip(T,a,b+1,k=>-T.hw[k],k=>T.hw[k],.03,am,6,10));
   for(const [a,b] of runs(T,i=>T.sg[i]===3))sc.add(strip(T,a,b+1,k=>-T.hw[k],k=>T.hw[k],.03,gm2,6,10));
-  /* soft dirt shoulders that fade the path into the ground */
-  const vt=(flip)=>{const t=ctex(32,8,(x,w,h)=>{const rr=rngf(21);for(let i=0;i<w;i++){const u=flip?1-i/(w-1):i/(w-1),al=Math.pow(Math.max(0,1-u),1.2);for(let j=0;j<h;j++){const n=.75+.25*rr();x.fillStyle='rgba('+(150*n|0)+','+(128*n|0)+','+(92*n|0)+','+(al*(.7+.3*rr())).toFixed(3)+')';x.fillRect(i,j,1,1)}}});t.magFilter=THREE.LinearFilter;return t};
-  const vm=[vt(0),vt(1)].map(t=>new THREE.MeshStandardMaterial({map:t,transparent:true,depthWrite:false,roughness:1,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}));
-  for(const [a,b] of runs(T,i=>T.sg[i]===3)){
-   sc.add(strip(T,a,b+1,k=>T.hw[k]-.3,k=>T.hw[k]+3.2,.02,vm[0],6,4));
-   sc.add(strip(T,a,b+1,k=>-T.hw[k]-3.2,k=>-T.hw[k]+.3,.02,vm[1],6,4))}}
+  /* dirt creeps onto the tarmac: speckled gravel fades in over 42 m before the path starts, and fades out over 42 m after it ends */
+  const dt_=(flip)=>{const t=ctex(64,64,(x,w,h)=>{const rr=rngf(flip?33:34);for(let j=0;j<h;j++){const p=flip?1-j/(h-1):j/(h-1);for(let i=0;i<w;i++){const e=Math.abs(i/(w-1)-.5)*2,pp=Math.pow(p,1.5)*(.55+.9*e*e)+(p>.9?.3:0),n=rr();if(n<pp){const q=.7+.3*rr(),k=rr();x.fillStyle=k<.25?'rgba('+(120*q|0)+','+(104*q|0)+','+(76*q|0)+',.95)':'rgba('+(176*q|0)+','+(152*q|0)+','+(112*q|0)+',.95)';x.fillRect(i,j,1,1)}}}});t.magFilter=THREE.NearestFilter;return t};
+  const dm=[dt_(0),dt_(1)].map(t=>new THREE.MeshStandardMaterial({map:t,transparent:true,depthWrite:false,roughness:1,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3})),L14=Math.round(42/T.sp);
+  for(let i=0;i<N;i++){const n=(i+1)%N;
+   if(T.sg[i]!==3&&T.sg[n]===3)sc.add(strip(T,(i-L14+N)%N,(i-L14+N)%N+L14,k=>-T.hw[k],k=>T.hw[k],.045,dm[0],L14*T.sp,10));
+   if(T.sg[i]===3&&T.sg[n]!==3)sc.add(strip(T,n,n+L14,k=>-T.hw[k],k=>T.hw[k],.045,dm[1],L14*T.sp,10))}}
  const concM=new THREE.MeshStandardMaterial({map:T_SLAB(),roughness:1,side:THREE.DoubleSide}),steelM=flat(0x4a4d52,{side:THREE.DoubleSide}),orgM=new THREE.MeshStandardMaterial({map:T_ORANGE(),roughness:.8,side:THREE.DoubleSide,flatShading:true});
  const trussM=new THREE.MeshStandardMaterial({map:T_TRUSS(),roughness:.8,side:THREE.DoubleSide,alphaTest:.5});
  const jumps=T.jumps||[],broken=jumps.length>0;
@@ -7359,7 +7360,7 @@ function buildSpan(T){const d=T.d,N=T.N,r=rngf(8*77+11),sc=new THREE.Scene();
  /* ----- walls: concrete barrier on the bridge and its approach, no rail in the forest, invisible kerb walls on the island ----- */
  {const mt=new THREE.MeshStandardMaterial({map:T_CONC(),side:THREE.DoubleSide,roughness:.9});
   /* one continuous barrier from the island gate round the whole loop; its height eases between land and bridge and slopes away to nothing at the gates */
-  const W=Object.create(T);W.wall=Uint8Array.from(T.sg,sg=>sg===2||sg===3?0:1);W.wh=T.vh;sc.add(wallMesh(W,1,mt));sc.add(wallMesh(W,-1,mt));
+  const W=Object.create(T);W.wall=Uint8Array.from(T.sg,sg=>sg===2||sg===3?0:1);W.wh=T.vh;const tilt=(m,sd)=>{const pa=m.geometry.attributes.position;for(let v=1;v<pa.count;v+=2){const k=((v>>1)%T.N),c=Math.cos(T.psi[k]),sn=Math.sin(T.psi[k]);pa.setX(v,pa.getX(v)+sd*c*.32);pa.setZ(v,pa.getZ(v)-sd*sn*.32)}pa.needsUpdate=true;return m};sc.add(tilt(wallMesh(W,1,mt),1));sc.add(tilt(wallMesh(W,-1,mt),-1));
 }
  /* ----- bridge structure ----- */
  const deckY=(x)=>{let best=1e9,y=DECK0;for(let i=0;i<N;i++){if(T.sg[i]!==1||Math.abs(T.z[i]-BZ)>3)continue;const dd=Math.abs(T.x[i]-x);if(dd<best){best=dd;y=T.y[i]}}return y};
