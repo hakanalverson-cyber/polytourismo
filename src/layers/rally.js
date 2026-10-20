@@ -167,7 +167,7 @@ let stEl=null;
 function statUpdate(Rc,c){if(!stEl){stEl=document.createElement('div');stEl.id='rlStat';document.body.appendChild(stEl)}
  const dv=Math.round((c.dmg||0)*100),pen=Rc.pen||0;if(!dv&&!pen){stEl.style.display='none';stEl._k='';return}
  const key=dv+'|'+pen;if(stEl._k!==key){stEl._k=key;const plate=(l,v,sub,col)=>`<div class="h8top"><div class="h8plate"><div class="lap">${l}</div><div class="raceTime" style="${col?'color:'+col:''}">${v}</div><div class="bl" style="${col?'color:'+col:''}">${sub}</div></div></div>`;
-  stEl.innerHTML=(dv?plate('DAMAGE',dv+'%',dv>=80?'ENGINE FAILING':dv>=50?'HEAVY':dv>=20?'ENGINE HURT':'MINOR',dv>=50?'#ef6a5a':dv>=20?'#f2c76b':''):'')+(pen?plate('PENALTY','+'+pen.toFixed(1)+' s',(Math.round(pen/5))+' CUT'+(pen>5?'S':''),'#ef6a5a'):'')}
+  stEl.innerHTML=(dv?plate('DAMAGE',dv+'%','',dv>=50?'#ef6a5a':dv>=20?'#f2c76b':''):'')+(pen?plate('PENALTY','+'+pen.toFixed(1)+' s',(Math.round(pen/5))+' CUT'+(pen>5?'S':''),'#ef6a5a'):'')}
  const ht=document.querySelector('#h0 .h8top');if(ht){const rc=ht.getBoundingClientRect();stEl.style.left=(rc.right+8)+'px';stEl.style.top=rc.top+'px';stEl.style.setProperty('--pw',ht.offsetWidth+'px');stEl.style.setProperty('--ph',ht.offsetHeight+'px');const pv=ht.parentNode.style.getPropertyValue('--s');if(pv)stEl.style.setProperty('--s',pv)}else{stEl.style.left='210px';stEl.style.top='12px'}
  stEl.style.display='flex'}
 function dashUpdate(Rc,c){const d=mkDash(),on=scr==='game'&&!Rc.prep&&!Rc.replay&&!c.fin;d.style.display=on?'flex':'none';bodyCls('rallyhud',on);if(!on){if(stEl)stEl.style.display='none';return}
@@ -271,7 +271,7 @@ function hurt(Rc,c,v,nx,nz){if(!P.dmgOn(Rc)){Rc.shake=Math.max(Rc.shake||0,Math.
  c.yaw+=(Math.random()<.5?-1:1)*Math.min(.5,v*.02);if(!c._pull)c._pull=(Math.random()<.5?-1:1);
  if(P.sfx)P.sfx('crash');const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);
  for(let k=0;k<10;k++)P.puff(c.x-nx*1.1,c.y+.2,c.z-nz*1.1,-nx*rnd(1,6)+rnd(-2,2),rnd(1,5),-nz*rnd(1,6)+rnd(-2,2),k%2?[1,.7,.2]:[.55,.5,.45],rnd(.12,.3),rnd(.4,.9),.95,14);
- const lv=c.dmg>=.8?'ENGINE FAILING':c.dmg>=.5?'HEAVY DAMAGE':c.dmg>=.2?(was<.2?'ENGINE DAMAGED':''):'';if(lv&&(was<.2&&c.dmg>=.2||was<.5&&c.dmg>=.5||was<.8&&c.dmg>=.8))toast(lv)}
+ if(c.dmg>=1&&!(c.exp>0)&&window.__explode)window.__explode(c,'dmg')}
 P.hurt=(Rc,c,v,nx,nz)=>hurt(Rc,c,v,nx,nz);P.smokeFx=(c,Rc,dt)=>smokeFx(c,Rc,dt);P.statUpdate=(Rc,c)=>statUpdate(Rc,c);
 function smokeFx(c,Rc,dt){const dm=c.dmg||0;if(dm<.18||c.exp>0||c.respT>0)return;const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);
  const rate=(4+dm*26)*(c.sp>3?1:.6);c._smA=(c._smA||0)+dt*rate;

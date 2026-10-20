@@ -1397,8 +1397,8 @@ soloCam=(c,dt,out)=>{prevSolo(c,dt,out);const want=c.inTn&&!(c.exp>0)?1:0;c.tnB=
 function ensure(c){if(c.safeIdx===undefined){c.safeIdx=c.idx;c.safeUnw=c.unw;c.farT=0}}
 function place(c,unw){const T=RACE.T,N=T.N;let i=((Math.round(unw)%N)+N)%N;for(let k=0;k<60&&(T.gap[i]||T.gap[(i+1)%N]||T.gap[(i+2)%N]||T.gap[(i-1+N)%N]);k++){i=(i-1+N)%N;unw-=1}
  c.x=T.x[i];c.z=T.z[i];c.y=T.y[i]+1.3;c.vx=c.vy=c.vz=0;c.yaw=T.psi[i];c.pitch=c.roll=c.wpt=c.wrl=c.yr=0;c.st=0;c.idx=i;c.unw=unw;c.safeIdx=i;c.safeUnw=unw;c.respT=1.3;c.stuck=0;c.boost=0;c.driftTimer=0;c.dts=0;c.ptDrift=false;c.ptBlend=0;c.farT=0;c.exp=0;c.vBl=0}
-function explode(c,kind){if(c.exp>0)return;ensure(c);const Rc=RACE,v=Rc.v7||(Rc.v7={deb:[],ball:[]});c.exp=1.7;c.vx=c.vy=c.vz=0;c.sp=0;c.exTarget=c.safeUnw-(kind==='cut'?Math.max(2,Math.round(10/(RACE.T.sp||3))):FALL_BACK);
- c.warn=kind==='cut'?'CAR DESTROYED / SHORTCUT / SET BACK 10 M':'CAR DESTROYED / OFF TRACK / SET BACK 180 M';c.warnT=3.4;
+function explode(c,kind){if(c.exp>0)return;ensure(c);const Rc=RACE,v=Rc.v7||(Rc.v7={deb:[],ball:[]});c.expMax=kind==='dmg'?3:1.7;c.exp=c.expMax;c.vx=c.vy=c.vz=0;c.sp=0;c.dmg=0;c.exTarget=kind==='dmg'?c.unw:c.safeUnw-(kind==='cut'?Math.max(2,Math.round(10/(RACE.T.sp||3))):FALL_BACK);
+ c.warn='';c.warnT=0;
  fx(c.x,c.y+.6,c.z,0xffb030,34,16,1,.55,4);fx(c.x,c.y+.6,c.z,0xff6a20,22,10,.8,.7,2);fx(c.x,c.y+.8,c.z,0x1a1a1a,16,5,2,.9,-1.2);
  for(const [col,sz,op] of [[0xfff0a0,1,.95],[0xff8a2a,1.7,.7]]){const m=new THREE.Mesh(new THREE.SphereGeometry(sz,12,8),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:op,blending:THREE.AdditiveBlending,depthWrite:false}));m.position.set(c.x,c.y+.7,c.z);Rc.scene.add(m);v.ball.push({m,t:0,s:sz})}
  for(let i=0;i<14;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(.2+Math.random()*.4,.1,.3+Math.random()*.5),new THREE.MeshStandardMaterial({color:[0x222222,0x888888,c.col,0x444444][i%4],roughness:.7}));m.position.set(c.x,c.y+.6,c.z);Rc.scene.add(m);const a=Math.random()*6.28,s=6+Math.random()*9;v.deb.push({m,t:0,vx:Math.cos(a)*s,vy:8+Math.random()*9,vz:Math.sin(a)*s,rx:Math.random()*9,rz:Math.random()*9})}
@@ -1407,7 +1407,7 @@ function v7Update(dt){const Rc=RACE;if(!Rc||!Rc.v7)return;const v=Rc.v7;for(cons
  v.ball=v.ball.filter(b=>{if(b.t>.6){Rc.scene.remove(b.m);return false}return true});
  for(const d of v.deb){d.t+=dt;d.vy-=26*dt;d.m.position.x+=d.vx*dt;d.m.position.y+=d.vy*dt;d.m.position.z+=d.vz*dt;d.m.rotation.x+=d.rx*dt;d.m.rotation.z+=d.rz*dt}
  v.deb=v.deb.filter(d=>{if(d.t>2.2){Rc.scene.remove(d.m);return false}return true})}
-const prevStepFn=step;step=dt=>{prevStepFn(dt);v7Update(dt);if(RACE)for(const c of RACE.cars)if(c.warnT>0)c.warnT-=dt};
+window.__explode=explode;const prevStepFn=step;step=dt=>{prevStepFn(dt);v7Update(dt);if(RACE)for(const c of RACE.cars)if(c.warnT>0)c.warnT-=dt};
 function landsOnFarRoad(c){const T=RACE.T,N=T.N,cx=Math.floor(c.x/16),cz=Math.floor(c.z/16);ensure(c);
  for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const l=T.grid.get((cx+a)*8192+cz+b);if(!l)continue;for(const i of l){if(T.gap[i])continue;const dx=c.x-T.x[i],dz=c.z-T.z[i];if(dx*dx+dz*dz<(T.hw[i]+3)*(T.hw[i]+3)&&T.y[i]<=c.y+3&&T.y[i]>=c.y-45&&wrapD(i-c.safeIdx,N)>50)return true}}return false}
 const prevRespawn=respawn;respawn=c=>{const T=RACE.T;if(c.y<T.y[c.idx]-12&&!(c.exp>0)){explode(c,landsOnFarRoad(c)&&!(window.PTO&&PTO.shortcutPenalty===false)?'cut':'fall');return}prevRespawn(c);c.safeIdx=c.idx;c.safeUnw=c.unw};
@@ -1421,7 +1421,7 @@ const prevStepCar=stepCar;stepCar=(c,dt)=>{const T=RACE.T,N=T.N;ensure(c);
  let near=false;const cx=Math.floor(c.x/16),cz=Math.floor(c.z/16);
  out:for(let a=-3;a<=3;a++)for(let b=-3;b<=3;b++){const l=T.grid.get((cx+a)*8192+cz+b);if(!l)continue;for(const i of l){const dx=c.x-T.x[i],dz=c.z-T.z[i];if(dx*dx+dz*dz<(T.hw[i]+40)*(T.hw[i]+40)){near=true;break out}}}
  c.farT=(near||(window.PT8&&PT8.nearBarn&&PT8.nearBarn(c)))?0:c.farT+dt;if(c.farT>3.5)explode(c,'fall')};
-const prevVis=updateVisual;updateVisual=(c,T,t)=>{prevVis(c,T,t);const hide=c.exp>0&&c.exp<1.66;c.m.g.visible=c.m.g.visible&&!hide;if(hide)c.m.sh.visible=false};
+const prevVis=updateVisual;updateVisual=(c,T,t)=>{prevVis(c,T,t);const hide=c.exp>0&&c.exp<(c.expMax||1.7)-.04;c.m.g.visible=c.m.g.visible&&!hide;if(hide)c.m.sh.visible=false};
 /* ---------- HUD: warnings, turbo tint ---------- */
 const prevHud=hudUpdate;hudUpdate=()=>{prevHud();for(const c of RACE.cars){const e=document.getElementById('h'+c.k);if(!e)continue;const w=e.querySelector('.raceWarning'),a=e.querySelector('.speedArc');if(w&&c.warnT>0)w.textContent=c.warn;if(a)a.setAttribute('stroke',c.boost>0?'#ffd27a':'#dbe5dc')}};
 /* ---------- car showroom info panel ---------- */
@@ -6888,8 +6888,8 @@ P.pxDraw=(cv,str,col)=>{const g=cv.getContext('2d');g.clearRect(0,0,cv.width,cv.
 'use strict';
 const P=window.PT8;
 const L0=P.launch;
-P.launch=cfg=>{if(cfg.endur===undefined&&cfg.mode!=='cutup')cfg.endur=(cfg.laps||0)>=4;L0(cfg)};
-const endur=Rc=>!!(Rc&&Rc.cfg&&Rc.cfg.endur&&Rc.mode!=='cutup');
+P.launch=cfg=>{cfg.endur=false;L0(cfg)};
+const endur=Rc=>false;
 
 /* ---------- physics multipliers (read every physics step by the stepCar wrapper) ---------- */
 P.mul=c=>{const Rc=RACE,m={acc:1,top:1,grip:1,brk:1};if(!Rc)return m;
@@ -8493,7 +8493,7 @@ function renderSetup(){const m=ST.mode;$('suTitle').innerHTML=MODE_NAME[m];
  $('trkExtra').innerHTML=ex;if(m==='rally'&&P.poiStrip){const eh=document.createElement('h4');eh.style.margin='10px 0 4px';eh.textContent='Points of interest';const ph=document.createElement('div');ph.className='rl-poi';$('trkExtra').append(eh,ph);P.poiStrip(ST.track,ph)}
  let cfg='';
  if(m==='elim')cfg+=`<div class="row8"><b>Knockout every</b><span class="seg" id="cIv">${seg([[20,'20s'],[30,'30s'],[45,'45s']],ST.iv||30)}</span></div><div class="row8"><b>Direction</b><span class="seg" id="cRev">${seg([['0','Forward'],['1','Reverse']],ST.rev?'1':'0')}</span></div>`;
- if(m==='ta'||m==='mp')cfg+=`<div class="row8"><b>Laps</b><span class="seg" id="cLaps">${seg([[2,'2'],[3,'3'],[4,'4'],[5,'5'],[8,'8'],[10,'10']],ST.laps)}</span></div><div class="row8"><b>Direction</b><span class="seg" id="cRev">${seg([['0','Forward'],['1','Reverse']],ST.rev?'1':'0')}</span></div><div class="row8"><b>Fuel &amp; pits</b><span class="seg" id="cEnd">${seg([['auto','Auto'],['1','On'],['0','Off']],ST.endurS||'auto')}</span></div>`;
+ if(m==='ta'||m==='mp')cfg+=`<div class="row8"><b>Laps</b><span class="seg" id="cLaps">${seg([[2,'2'],[3,'3'],[4,'4'],[5,'5'],[8,'8'],[10,'10']],ST.laps)}</span></div><div class="row8"><b>Direction</b><span class="seg" id="cRev">${seg([['0','Forward'],['1','Reverse']],ST.rev?'1':'0')}</span></div>`;
  if(m==='rally'){const Tn=tr(ST.track),dist=Tn.L*(ST.rlaps||1),wxn=(P.WX[ST.wx||'clear']||{n:'CLEAR'}).n;cfg+=`<div class="rcfg"><h4>Stage configuration</h4><div class="row8"><b>Stage laps</b><span class="seg" id="cRL">${seg([[1,'1'],[2,'2'],[3,'3']],ST.rlaps)}</span></div><div class="row8"><b>Drivers</b><span class="seg" id="cPl">${seg([[1,'1'],[2,'2'],[3,'3'],[4,'4']],ST.players)}</span></div><div class="row8"><b>Weather</b><span class="seg" id="cWx">${seg(P.WX_ORDER.map(k=>[k,P.WX[k].n[0]+P.WX[k].n.slice(1).toLowerCase()]),ST.wx||'clear')}</span></div><div class="rsum"><div><small>Distance</small><b>${(dist/1000).toFixed(1)} km</b></div><div><small>Drivers</small><b>${ST.players}</b></div><div><small>Conditions</small><b>${wxn} &middot; ${(P.TOD[effTod()]||{n:''}).n}</b></div></div><small class="rnote">Drivers take turns, one car on the stage at a time. Fastest total wins.</small></div>`}
  if(m==='track'){const Tn=tr(ST.track),dist=Tn.L*(ST.rlaps||1),wxn=(P.WX[ST.wx||'clear']||{n:'CLEAR'}).n;cfg+=`<div class="rcfg"><h4>Circuit configuration</h4><div class="row8"><b>Race laps</b><span class="seg" id="cRL">${seg([[1,'1'],[2,'2'],[3,'3'],[5,'5']],ST.rlaps)}</span></div><div class="row8"><b>Drivers</b><span class="seg" id="cPl">${seg([[1,'1'],[2,'2'],[3,'3'],[4,'4']],ST.players)}</span></div><div class="row8"><b>Weather</b><span class="seg" id="cWx">${seg(P.WX_ORDER.map(k=>[k,P.WX[k].n[0]+P.WX[k].n.slice(1).toLowerCase()]),ST.wx||'clear')}</span></div><div class="rsum"><div><small>Distance</small><b>${(dist/1000).toFixed(1)} km</b></div><div><small>Drivers</small><b>${ST.players}</b></div><div><small>Conditions</small><b>${wxn} &middot; ${(P.TOD[effTod()]||{n:''}).n}</b></div></div><small class="rnote">Drivers take turns, one car on the circuit at a time. Fastest total wins. Medal times follow your car.</small></div>`}
  if(m==='mp'||m==='cutup'||m==='elim')cfg+=`<div class="row8"><b>Drivers</b><span class="seg" id="cPl">${seg([[1,'1'],[2,'2'],[3,'3'],[4,'4']],ST.players)}</span></div>`;
@@ -8957,7 +8957,7 @@ let stEl=null;
 function statUpdate(Rc,c){if(!stEl){stEl=document.createElement('div');stEl.id='rlStat';document.body.appendChild(stEl)}
  const dv=Math.round((c.dmg||0)*100),pen=Rc.pen||0;if(!dv&&!pen){stEl.style.display='none';stEl._k='';return}
  const key=dv+'|'+pen;if(stEl._k!==key){stEl._k=key;const plate=(l,v,sub,col)=>`<div class="h8top"><div class="h8plate"><div class="lap">${l}</div><div class="raceTime" style="${col?'color:'+col:''}">${v}</div><div class="bl" style="${col?'color:'+col:''}">${sub}</div></div></div>`;
-  stEl.innerHTML=(dv?plate('DAMAGE',dv+'%',dv>=80?'ENGINE FAILING':dv>=50?'HEAVY':dv>=20?'ENGINE HURT':'MINOR',dv>=50?'#ef6a5a':dv>=20?'#f2c76b':''):'')+(pen?plate('PENALTY','+'+pen.toFixed(1)+' s',(Math.round(pen/5))+' CUT'+(pen>5?'S':''),'#ef6a5a'):'')}
+  stEl.innerHTML=(dv?plate('DAMAGE',dv+'%','',dv>=50?'#ef6a5a':dv>=20?'#f2c76b':''):'')+(pen?plate('PENALTY','+'+pen.toFixed(1)+' s',(Math.round(pen/5))+' CUT'+(pen>5?'S':''),'#ef6a5a'):'')}
  const ht=document.querySelector('#h0 .h8top');if(ht){const rc=ht.getBoundingClientRect();stEl.style.left=(rc.right+8)+'px';stEl.style.top=rc.top+'px';stEl.style.setProperty('--pw',ht.offsetWidth+'px');stEl.style.setProperty('--ph',ht.offsetHeight+'px');const pv=ht.parentNode.style.getPropertyValue('--s');if(pv)stEl.style.setProperty('--s',pv)}else{stEl.style.left='210px';stEl.style.top='12px'}
  stEl.style.display='flex'}
 function dashUpdate(Rc,c){const d=mkDash(),on=scr==='game'&&!Rc.prep&&!Rc.replay&&!c.fin;d.style.display=on?'flex':'none';bodyCls('rallyhud',on);if(!on){if(stEl)stEl.style.display='none';return}
@@ -9061,7 +9061,7 @@ function hurt(Rc,c,v,nx,nz){if(!P.dmgOn(Rc)){Rc.shake=Math.max(Rc.shake||0,Math.
  c.yaw+=(Math.random()<.5?-1:1)*Math.min(.5,v*.02);if(!c._pull)c._pull=(Math.random()<.5?-1:1);
  if(P.sfx)P.sfx('crash');const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);
  for(let k=0;k<10;k++)P.puff(c.x-nx*1.1,c.y+.2,c.z-nz*1.1,-nx*rnd(1,6)+rnd(-2,2),rnd(1,5),-nz*rnd(1,6)+rnd(-2,2),k%2?[1,.7,.2]:[.55,.5,.45],rnd(.12,.3),rnd(.4,.9),.95,14);
- const lv=c.dmg>=.8?'ENGINE FAILING':c.dmg>=.5?'HEAVY DAMAGE':c.dmg>=.2?(was<.2?'ENGINE DAMAGED':''):'';if(lv&&(was<.2&&c.dmg>=.2||was<.5&&c.dmg>=.5||was<.8&&c.dmg>=.8))toast(lv)}
+ if(c.dmg>=1&&!(c.exp>0)&&window.__explode)window.__explode(c,'dmg')}
 P.hurt=(Rc,c,v,nx,nz)=>hurt(Rc,c,v,nx,nz);P.smokeFx=(c,Rc,dt)=>smokeFx(c,Rc,dt);P.statUpdate=(Rc,c)=>statUpdate(Rc,c);
 function smokeFx(c,Rc,dt){const dm=c.dmg||0;if(dm<.18||c.exp>0||c.respT>0)return;const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);
  const rate=(4+dm*26)*(c.sp>3?1:.6);c._smA=(c._smA||0)+dt*rate;

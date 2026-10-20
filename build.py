@@ -17,7 +17,11 @@ src=src.replace("color:d.id==3?0x7af0ff:0xfff0c8","color:d.id==3?0xffe2a8:0xfff0
 
 # shortcut penalty: optional, and only a 10 m set-back
 src=rep(src,"c.exTarget=c.safeUnw-(kind==='cut'?CUT_BACK:FALL_BACK);","c.exTarget=c.safeUnw-(kind==='cut'?Math.max(2,Math.round(10/(RACE.T.sp||3))):FALL_BACK);")
-src=rep(src,"SHORTCUT / SET BACK 450 M","SHORTCUT / SET BACK 10 M")
+src=rep(src,"c.exp=1.7;c.vx=c.vy=c.vz=0;c.sp=0;","c.expMax=kind==='dmg'?3:1.7;c.exp=c.expMax;c.vx=c.vy=c.vz=0;c.sp=0;c.dmg=0;")
+src=rep(src,"c.exTarget=c.safeUnw-(kind==='cut'?Math.max","c.exTarget=kind==='dmg'?c.unw:c.safeUnw-(kind==='cut'?Math.max")
+src=rep(src,"c.warn=kind==='cut'?'CAR DESTROYED / SHORTCUT / SET BACK 450 M':'CAR DESTROYED / OFF TRACK / SET BACK 180 M';c.warnT=3.4;","c.warn='';c.warnT=0;")
+src=rep(src,"const prevStepFn=step;","window.__explode=explode;const prevStepFn=step;")
+src=rep(src,"const hide=c.exp>0&&c.exp<1.66;","const hide=c.exp>0&&c.exp<(c.expMax||1.7)-.04;")
 src=rep(src,"if(d>50){explode(c,'cut');return}if(Math.abs(d)<=50){c.safeIdx=sf.i;c.safeUnw+=d}","if(d>50){if(window.PTO&&PTO.shortcutPenalty===false){c.safeIdx=sf.i;c.safeUnw+=d}else{explode(c,'cut');return}}else if(Math.abs(d)<=50){c.safeIdx=sf.i;c.safeUnw+=d}")
 src=rep(src,"explode(c,landsOnFarRoad(c)?'cut':'fall')","explode(c,landsOnFarRoad(c)&&!(window.PTO&&PTO.shortcutPenalty===false)?'cut':'fall')")
 

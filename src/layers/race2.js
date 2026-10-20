@@ -3,8 +3,8 @@
 'use strict';
 const P=window.PT8;
 const L0=P.launch;
-P.launch=cfg=>{if(cfg.endur===undefined&&cfg.mode!=='cutup')cfg.endur=(cfg.laps||0)>=4;L0(cfg)};
-const endur=Rc=>!!(Rc&&Rc.cfg&&Rc.cfg.endur&&Rc.mode!=='cutup');
+P.launch=cfg=>{cfg.endur=false;L0(cfg)};
+const endur=Rc=>false;
 
 /* ---------- physics multipliers (read every physics step by the stepCar wrapper) ---------- */
 P.mul=c=>{const Rc=RACE,m={acc:1,top:1,grip:1,brk:1};if(!Rc)return m;
