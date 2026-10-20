@@ -23,5 +23,5 @@ with sync_playwright() as p:
         RACE.cars.forEach(q=>{if(q.m)q.m.visible=false});R.setSize(1280,720,false);R.render(sc,cam);const d=R.domElement.toDataURL('image/png');hid.forEach(o=>o.visible=true);return d})(%r)"""%hide
         d=pg.evaluate(js);im=Image.open(io.BytesIO(base64.b64decode(d.split(',')[1]))).convert('RGB')
         return im.getpixel((763,230))
-    print(pg.evaluate("""(()=>{const o=RACE.scene.children[729],m=o.material;return JSON.stringify([m.type,m.size,m.color&&m.color.getHexString(),m.map?1:0,o.geometry.attributes.position.count,o.geometry.attributes.position.array.slice(0,9),o.visible,o.parent&&o.parent.type,m.blending,m.transparent,o.userData])})()"""))
+    print(pg.evaluate("""(()=>{const d=PT8.HP.defs.cargo_A.parts[0].mat.map;return JSON.stringify([PT8.HP.ready,!!d,d&&d.image&&d.image.width,d&&d.image&&d.image.src&&d.image.src.slice(0,22)])})()"""))
     b.close()
