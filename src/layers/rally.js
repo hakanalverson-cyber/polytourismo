@@ -99,7 +99,7 @@ hudUpdate=()=>{hu0();const Rc=RACE;if(!Rc||!Rc.cfg||!Rc.cfg.rally)return;
 /* ---------------- rally controls: real gearboxes (shift keys), handbrake, camera ---------------- */
 const REAL0={lr:6,ford:6,merc:7,ster:7,art:8,ferr:7,zen:7,must:6,urus:8,m8:8,amg:9,gtr:6,por:7,p1:7};const REAL=new Proxy(REAL0,{get:(t,k)=>t[k]||(P.BYID[k]&&P.BYID[k].real)||6});
 const gtOrig={};
-function gearTable(n){const R0=n>=8?3.4:n>=6?3.1:2.7,t=[];for(let i=0;i<n;i++){const u=i/(n-1);t.push({top:Math.pow(R0,-(1-u)),acc:.66+.44*Math.pow(1-u,1.5)})}return t}
+function gearTable(n){const R0=n<=2?2.2:n<=4?3.4:n===5?4.2:n===6?5.2:n===7?5.8:n===8?6.4:7.2,t=[];for(let i=0;i<n;i++){const u=n>1?i/(n-1):1;t.push({top:Math.pow(R0,-Math.pow(1-u,1.5)),acc:.66+.44*Math.pow(1-u,1.5)})}return t}
 function rallyGears(on){for(const id in REAL){const car=BYID[id];if(!car)continue;const arr=P.GT(car);
  if(on){if(!gtOrig[id])gtOrig[id]=arr.map(g=>({top:g.top,acc:g.acc}));const t=gearTable(REAL[id]);arr.length=0;t.forEach(g=>arr.push(g))}
  else if(gtOrig[id]){arr.length=0;gtOrig[id].forEach(g=>arr.push(g));delete gtOrig[id]}}}

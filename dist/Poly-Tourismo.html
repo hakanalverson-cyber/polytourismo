@@ -8642,7 +8642,7 @@ function thumbFor(id){if(THC.has(id))return THC.get(id);
 function pumpThumbs(){if(thRun)return;thRun=1;const go=()=>{const j=THQ.shift();if(!j){thRun=0;return}try{if(j.cv.isConnected){const t=thumbFor(j.id);if(t){j.cv.getContext('2d').drawImage(t,0,0,j.cv.width,j.cv.height);j.cv.classList.add('rdy')}}}catch(e){}setTimeout(go,8)};setTimeout(go,10)}
 function cardHTML(c,sv){const o=!c.lk;return `<div class="gc ${o?'':'lock'} ${c.barn&&!o?'bn':''} ${c.id===SR.id&&o?'sel':''} ${c.off?'off':''}" data-id="${c.id}"><div class="th"><canvas width="336" height="200" data-id="${c.id}"></canvas>${!o&&c.barn?'<i>?</i>':''}</div><b>${o||!c.barn?c.name:'???'}</b><small><span class="cls ${c.cls}">${c.cls}</span>${c.off?'Class cap':o?c.type:(c.barn?'Hidden on a map':'Not owned')}</small></div>`}
 function cardsHTML(list,sv){
- const byPP=(a,b)=>P.pp(BYID[b.id])-P.pp(BYID[a.id])||a.price-b.price;list=list.slice().sort(byPP);const reg=list.filter(c=>!c.barn),barn=list.filter(c=>c.barn),cats=(P.CATS||[]).filter(k=>reg.some(c=>c.cat===k));
+ const byPP=(a,b)=>P.pp(BYID[a.id])-P.pp(BYID[b.id])||a.price-b.price;list=list.slice().sort(byPP);const reg=list.filter(c=>!c.barn),barn=list.filter(c=>c.barn),cats=(P.CATS||[]).filter(k=>reg.some(c=>c.cat===k));
  const own=c=>!c.lk&&!c.off;let h='',order=[];
  const nOwn=list.filter(c=>!c.lk).length;
  h+=`<div class="gtools"><button class="of ${SR.of?'on':''}" data-of="1"><span></span>Owned first</button><em>${nOwn} / ${list.length} cars</em></div><div class="cats">`+cats.map(k=>`<button data-jump="${k}">${k}<i>${reg.filter(c=>c.cat===k).length}</i></button>`).join('')+(barn.length?`<button data-jump="__barn">Barn finds<i>${barn.length}</i></button>`:'')+'</div>';
@@ -8665,7 +8665,7 @@ function openShow(kind,o){SR.sec=0;P._ro=!!o.rally&&kind==='garage';P._to=!!o.tr
  else{if(!BYID[SR.id])SR.id='merc';if(SR.alt&&!P.owns(SR.id,1))SR.alt=0}
  if(SR.flow){SR.cat=SR.trk?(BYID[SR.id].tdiv||'PRO'):(BYID[SR.id].rdiv||'WRC');SR.sec=1}
  renderShow();show('s8show');}
-function showList(){const l=showList0();return l.sort((a,b)=>CLS.indexOf(a.cls)-CLS.indexOf(b.cls)||P.pp(BYID[b.id])-P.pp(BYID[a.id])||a.price-b.price)}
+function showList(){const l=showList0();return l.sort((a,b)=>CLS.indexOf(a.cls)-CLS.indexOf(b.cls)||P.pp(BYID[a.id])-P.pp(BYID[b.id])||a.price-b.price)}
 function showList0(){const sv=P.SV();let l=SORTED.map(c=>({...c,off:false}));if(SR.rally&&SR.kind==='garage')return l.filter(c=>P.RALLY_CARS.includes(c.id));if(SR.trk&&SR.kind==='garage')return l.filter(c=>P.TRACK_CARS.includes(c.id));l=l.filter(c=>!c.rallyOnly&&!c.trackOnly);if(SR.kind==='brand')l=l.filter(c=>!c.barn);if(SR.kind==='garage'){l.forEach(c=>{c.lk=!((sv.owned[c.id]||0)>0);c.off=SR.cap!=null&&CLS.indexOf(c.cls)>CLS.indexOf(SR.cap)})}return l}
 const CARDS=()=>SR.kind==='garage'&&!SR.rally&&!SR.trk;
 function statBars(c,tn){const f=tn?P.tuneFx(tn,false):{top:1,acc:1,grip:1,brk:1},fg=tn?P.tuneFx(tn,true):{grip:1};
@@ -8879,7 +8879,7 @@ hudUpdate=()=>{hu0();const Rc=RACE;if(!Rc||!Rc.cfg||!Rc.cfg.rally)return;
 /* ---------------- rally controls: real gearboxes (shift keys), handbrake, camera ---------------- */
 const REAL0={lr:6,ford:6,merc:7,ster:7,art:8,ferr:7,zen:7,must:6,urus:8,m8:8,amg:9,gtr:6,por:7,p1:7};const REAL=new Proxy(REAL0,{get:(t,k)=>t[k]||(P.BYID[k]&&P.BYID[k].real)||6});
 const gtOrig={};
-function gearTable(n){const R0=n>=8?3.4:n>=6?3.1:2.7,t=[];for(let i=0;i<n;i++){const u=i/(n-1);t.push({top:Math.pow(R0,-(1-u)),acc:.66+.44*Math.pow(1-u,1.5)})}return t}
+function gearTable(n){const R0=n<=2?2.2:n<=4?3.4:n===5?4.2:n===6?5.2:n===7?5.8:n===8?6.4:7.2,t=[];for(let i=0;i<n;i++){const u=n>1?i/(n-1):1;t.push({top:Math.pow(R0,-Math.pow(1-u,1.5)),acc:.66+.44*Math.pow(1-u,1.5)})}return t}
 function rallyGears(on){for(const id in REAL){const car=BYID[id];if(!car)continue;const arr=P.GT(car);
  if(on){if(!gtOrig[id])gtOrig[id]=arr.map(g=>({top:g.top,acc:g.acc}));const t=gearTable(REAL[id]);arr.length=0;t.forEach(g=>arr.push(g))}
  else if(gtOrig[id]){arr.length=0;gtOrig[id].forEach(g=>arr.push(g));delete gtOrig[id]}}}
@@ -9341,6 +9341,8 @@ Object.defineProperty(P,'_to',{get:()=>_to,set:v=>{_to=!!v;upd()},configurable:t
 {const lh=P.launch;P.launch=cfg=>{live=!!(cfg&&(cfg.circuit||cfg.rally||cfg.mode==='rally'));setReal(live||_ro||_to);return lh(cfg)}}
 {const sh=show;show=function(id){if(id!=='game'&&id!=='pause'&&live){live=false;upd()}return sh.apply(this,arguments)}}
 /* classes follow perf points so a higher-points car can never sit in a lower class than a lower-points one */
+/* performance points come from real-world figures only (true top speed, launch, grip, braking), so a car's rating never shifts with the mode it is shown in */
+{const pp0=P.pp;P.pp=c=>{const s=c._std||c;const t=c.topG||s.top;return Math.round(300+(t-30)*14+(s.acc-18)*9+(s.grip-.9)*320+(s.brk-.9)*160+(c.off||0)*20)}}
 P.CLASS_AT=[600,720,840,960];
 P.reclass=()=>{P.CARS.forEach(c=>{const v=P.pp(c);c.cls=v<P.CLASS_AT[0]?'D':v<P.CLASS_AT[1]?'C':v<P.CLASS_AT[2]?'B':v<P.CLASS_AT[3]?'A':'S'});
  const ci=c=>P.CLS.indexOf(c.cls);P.SORTED.sort((a,b)=>ci(a)-ci(b)||P.pp(a)-P.pp(b))};
