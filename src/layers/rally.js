@@ -520,7 +520,7 @@ function jumpUpdate(J,dt){
  J.t+=dt;const u=(((J.t*SPD)/J.CL)%1+1)%1,p=J.curve.getPointAt(u),tg=J.curve.getTangentAt(u),tg2=J.curve.getTangentAt((u+.004)%1),car=J.car;
  const k=(tg.x*tg2.z-tg.z*tg2.x)/.004/J.CL;
  car.g.position.set(p.x,.8,p.z);car.g.rotation.set(0,Math.atan2(tg.x,tg.z),0);car.g.updateMatrixWorld(true);
- try{if(window.__wheels)window.__wheels(car,SPD,Math.max(-1,Math.min(1,k*140)),dt||1/60)}catch(e){}
+ try{if(window.__wheels)window.__wheels(car,SPD,0,dt||1/60)}catch(e){}
  J.acc+=dt;const V=new THREE.Vector3();
  while(J.acc>1/45){J.acc-=1/45;for(const sx of[-.85,.85]){const d=J.dust[J.di=(J.di+1)%J.dust.length];V.set(sx,.25,-2).applyMatrix4(car.g.matrixWorld);d.m.position.copy(V);d.age=0;d.life=1.1+Math.random()*.7;d.vx=(Math.random()-.5)*2.4-tg.x*3;d.vz=(Math.random()-.5)*2.4-tg.z*3;d.vy=.8+Math.random()*1.1;d.s0=.35+Math.random()*.3;d.m.visible=true}}
  for(const d of J.dust){if(!d.m.visible)continue;d.age+=dt;if(d.age>d.life){d.m.visible=false;continue}const q=d.age/d.life;d.m.position.x+=d.vx*dt;d.m.position.y+=d.vy*dt*(1-q*.7);d.m.position.z+=d.vz*dt;d.m.scale.setScalar(d.s0+q*2.6);d.m.material.opacity=.5*(1-q)*(1-q*.3)}
@@ -550,6 +550,7 @@ P.rallyIntro=(open,track,o)=>{o=o||{};let e=$i('rlLoad');
   (P.stageRender&&track!=null&&!o.noStage?P.stageRender(track):Promise.resolve()).catch(()=>{}).then(()=>setTimeout(finish,60))},80)))};
 /* every mode gets the car loading screen */
 P.launchWithIntro=cfg=>{if(P._introBusy)return;const rally=cfg.mode==='rally'&&!cfg.circuit,circ=!!cfg.circuit,mm=cfg.cutup?'cutup':cfg.mode;
+ if(!rally){P.launch(cfg);return}
  const NAME={ta:'TIME ATTACK',mp:'MULTIPLAYER',elim:'ELIMINATION',cutup:'CUT-UP'};
  const title=cfg.ev?'CAREER':rally?'RALLY':circ?'TRACK':(NAME[mm]||'RACE'),sub=cfg.ev?'LOADING EVENT':rally?'LOADING STAGES':circ?'LOADING CIRCUIT':'LOADING TRACK',scene=cfg.ev?'night':circ?'fly':null;
  let car=null;try{const h=cfg.humans&&cfg.humans[0];if(h)car={id:h.id,alt:h.alt}}catch(e){}

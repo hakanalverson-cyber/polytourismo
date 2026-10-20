@@ -29,13 +29,14 @@ const WIN={value:0};
 const glowTex=(rgb,hard)=>{const cv=document.createElement('canvas');cv.width=cv.height=64;const c=cv.getContext('2d'),g=c.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,`rgba(${rgb},1)`);g.addColorStop(hard||.25,`rgba(${rgb},.55)`);g.addColorStop(1,`rgba(${rgb},0)`);c.fillStyle=g;c.fillRect(0,0,64,64);const t=new THREE.CanvasTexture(cv);return t};
 let TXH=null,TXP=null;
 function lamps(sc,T){
- TXH=TXH||(()=>{const cv=document.createElement('canvas');cv.width=cv.height=64;const c=cv.getContext('2d'),g=c.createRadialGradient(32,32,0,32,32,32);[[0,.95],[.08,.7],[.2,.34],[.4,.12],[.7,.03],[1,0]].forEach(([o,a])=>g.addColorStop(o,`rgba(255,226,170,${a})`));c.fillStyle=g;c.fillRect(0,0,64,64);return new THREE.CanvasTexture(cv)})();
+ TXH=TXH||(()=>{const cv=document.createElement('canvas');cv.width=cv.height=64;const c=cv.getContext('2d'),g=c.createRadialGradient(32,32,0,32,32,32);[0,.04,.08,.14,.2,.3,.4,.5,.62,.75,.88,1].forEach(o=>g.addColorStop(o,`rgba(255,226,170,${(Math.exp(-o*o*9)*(1-o*o)*.9).toFixed(3)})`));c.fillStyle=g;c.fillRect(0,0,64,64);return new THREE.CanvasTexture(cv)})();
  const N=T.N,K=P.PROPKIT,log=sc.userData.props||[],have=log.filter(p=>p.n==='lamp'&&isFinite(p.yaw)),L=[];
  const grp=new THREE.Group();grp.visible=false;grp.userData.noChunk=1;sc.add(grp);sc.userData.lamps=grp;
  const AX=3.7,HY=6.8;
  if(have.length){for(const p of have){const y=isFinite(p.y)?p.y:T.terr(p.x,p.z);L.push({hx:p.x+Math.sin(p.yaw)*AX,hy:y+HY,hz:p.z+Math.cos(p.yaw)*AX})}}
  else if(!T.d.gravel&&K&&P.lampParts){const st=Math.max(2,Math.round(40/(T.sp||6)));let side=1;const own=[];
-  for(let i=Math.floor(st/2);i<N;i+=st){if((T.gap&&T.gap[i])||(T.tn&&T.tn[i])||(!T.d.city&&T.wall&&T.wall[i]&&!(T.br&&T.br[i])))continue;side=-side;const c=Math.cos(T.psi[i]),s_=Math.sin(T.psi[i]),lo=side*(T.hw[i]+3.2),x=T.x[i]+c*lo,z=T.z[i]-s_*lo,y=T.br&&T.br[i]?T.y[i]-lo*T.bank[i]:T.terr(x,z),yaw=Math.atan2(-c*side,s_*side);
+  const HB=T.d.harbor&&T.hbr,hb=i=>HB&&((i>=HB.rest[0]&&i<=HB.rest[1])),inAl=i=>HB&&HB.alleys.some(a=>i>=a[0]&&i<=a[1]),onPier=i=>HB&&i>=HB.pier[0]&&i<=HB.pier[1];
+  for(let i=Math.floor(st/2);i<N;i+=st){if(HB){if(hb(i))continue}else if((T.gap&&T.gap[i])||(T.tn&&T.tn[i])||(!T.d.city&&T.wall&&T.wall[i]&&!(T.br&&T.br[i])))continue;side=-side;const c=Math.cos(T.psi[i]),s_=Math.sin(T.psi[i]),lo=side*(HB?(onPier(i)?T.hw[i]-.25:inAl(i)?T.hw[i]+1.1:T.hw[i]+3.2):T.hw[i]+3.2),x=T.x[i]+c*lo,z=T.z[i]-s_*lo,y=HB?(inAl(i)?.2:onPier(i)?.09:0)+T.y[i]:T.br&&T.br[i]?T.y[i]-lo*T.bank[i]:T.terr(x,z),yaw=Math.atan2(-c*side,s_*side);
    own.push([x,y,z,yaw]);L.push({hx:x+Math.sin(yaw)*AX,hy:y+HY,hz:z+Math.cos(yaw)*AX})}
   if(own.length){const im=new THREE.InstancedMesh(K.mk(P.lampParts()),K.MAT,own.length),dm=new THREE.Object3D();const wc=new THREE.Color(1,1,1);own.forEach((q,i)=>{dm.position.set(q[0],q[1],q[2]);dm.rotation.set(0,q[3],0);dm.updateMatrix();im.setMatrixAt(i,dm.matrix);im.setColorAt(i,wc)});im.frustumCulled=false;im.userData.ptProp='lamp';sc.add(im)}}
  if(!L.length)return;
@@ -45,13 +46,13 @@ function lamps(sc,T){
  sc.userData.lampPos=L.map(l=>[l.hx,l.hy,l.hz]);sc.userData.lampDbg=L.map(l=>[+l.lat.toFixed(1),+T.hw[l.k].toFixed(1),l.k]);
  /* halo sprite on each lamp head (small, so it never balloons up close) */
  const pp=[];L.forEach(l=>pp.push(l.hx,l.hy-.1,l.hz));const hg=new THREE.BufferGeometry();hg.setAttribute('position',new THREE.Float32BufferAttribute(pp,3));
- const hp=new THREE.Points(hg,new THREE.PointsMaterial({map:TXH,size:26,sizeAttenuation:false,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,fog:false,color:0xffe0a8}));hp.frustumCulled=false;grp.add(hp);
+ const hp=new THREE.Points(hg,new THREE.PointsMaterial({map:TXH,size:30,sizeAttenuation:false,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,fog:false,color:0xffe0a8}));hp.frustumCulled=false;grp.add(hp);
  /* light pools: one merged sheet per lamp, built from the actual road samples so it follows grade, bank and curvature exactly; soft gaussian falloff via vertex colour */
- const pos=[],col=[],idx=[];let vi=0;const LX=11,LW=5,SX=(T.sp||3);
- for(const l of L){if(!(l.lat===l.lat)||Math.abs(l.lat)>T.hw[l.k]+1.5)continue;const jr=Math.max(2,Math.round(LX/SX)),rows=2*jr+1,cols=13,w=Math.min(T.hw[l.k]*1.05,7);
+ const pos=[],col=[],idx=[];let vi=0;const LX=20,LW=5,SX=(T.sp||3);
+ for(const l of L){if(!(l.lat===l.lat)||Math.abs(l.lat)>T.hw[l.k]+1.5)continue;const jr=Math.max(2,Math.round(LX/SX)),rows=2*jr+1,cols=17,w=Math.min(T.hw[l.k]*1.15,8);
   for(let r=0;r<rows;r++){const j=((l.k-jr+r)%N+N)%N,c=Math.cos(T.psi[j]),s_=Math.sin(T.psi[j]),dx=(r-jr)*SX;
-   for(let q=0;q<cols;q++){const lt=-w+2*w*q/(cols-1),dl=lt-l.lat,u=Math.min(1,Math.abs(dx)/LX),I=Math.exp(-(dx*dx/(2*4.4*4.4)+dl*dl/(2*3.3*3.3)))*Math.pow(1-u*u,2);
-    pos.push(T.x[j]+c*lt,T.y[j]-lt*T.bank[j]+.045,T.z[j]-s_*lt);const v=I*.4;col.push(v,v*.78,v*.5)}}
+   for(let q=0;q<cols;q++){const lt=-w+2*w*q/(cols-1),dl=lt-l.lat,u=Math.min(1,Math.abs(dx)/LX),I=(.6*Math.exp(-(dx*dx/(2*3.4*3.4)+dl*dl/(2*2.8*2.8)))+.4*Math.exp(-(dx*dx/(2*8.5*8.5)+dl*dl/(2*5.5*5.5))))*Math.pow(1-u*u,2.4);
+    pos.push(T.x[j]+c*lt,T.y[j]-lt*T.bank[j]+.045,T.z[j]-s_*lt);const v=I*.34;col.push(v,v*.78,v*.5)}}
   for(let r=0;r<rows-1;r++)for(let q=0;q<cols-1;q++){const a=vi+r*cols+q;idx.push(a,a+cols,a+1,a+1,a+cols,a+cols+1)}vi+=rows*cols}
  if(idx.length){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.setIndex(idx);
   const pm=new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,fog:false}));pm.frustumCulled=false;grp.add(pm);sc.userData.lampPool=pm}
@@ -73,12 +74,17 @@ function setPano(sc,key){let m=null;sc.children.forEach(o=>{if(o.isMesh&&o.geome
  if(key==='night'){m.material.map=ud.nightMap;m.material.color.setRGB(1,1,1)}else{m.material.map=dayPano();m.material.color.setRGB(...(key==='sunset'?[1,.78,.66]:key==='dawn'?[.95,.84,.82]:[1,1,1]))}
  m.material.needsUpdate=true}
 
-const LTS=[];let lampSc=null;
-function ensureLights(sc){if(LTS.length&&lampSc===sc)return;LTS.length=0;lampSc=sc;for(let i=0;i<4;i++){const l=new THREE.PointLight(0xffd29a,0,36,1.6);l.userData.lampLight=1;sc.add(l);LTS.push(l)}}
+const LTS=[];let lampSc=null;const NL=6;
+function ensureLights(sc){if(LTS.length&&lampSc===sc)return;LTS.length=0;lampSc=sc;for(let i=0;i<NL;i++){const l=new THREE.PointLight(0xffd29a,0,48,1.5);l.userData.lampLight=1;l.userData.li=-1;sc.add(l);LTS.push(l)}}
+/* lights keep their lamp until it falls out of range and has faded out, so nothing ever pops; intensity eases with distance */
 function lampFrame(){const Rc=RACE;if(!Rc||!Rc.scene)return;const sc=Rc.scene,g=sc.userData&&sc.userData.lamps,pos=sc.userData&&sc.userData.lampPos;
  if(!g||!pos||!LTS.length||lampSc!==sc)return;const on=g.visible,c0=Rc.cars.find(c=>c.human)||Rc.cars[0];if(!c0)return;
- const best=[];for(let i=0;i<pos.length;i++){const d=Math.hypot(pos[i][0]-c0.x,pos[i][2]-c0.z);if(d<60)best.push([d,i])}best.sort((a,b)=>a[0]-b[0]);
- for(let q=0;q<LTS.length;q++){const b=best[q],l=LTS[q];if(!on||!b){l.intensity+=(0-l.intensity)*.2;continue}const p=pos[b[1]];l.position.set(p[0],p[1]-.4,p[2]);l.intensity+=((3.4*Math.max(0,1-b[0]/55))-l.intensity)*.25}
+ const R=62,near=[];for(let i=0;i<pos.length;i++){const d=Math.hypot(pos[i][0]-c0.x,pos[i][2]-c0.z);if(d<R)near.push([d,i])}near.sort((a,b)=>a[0]-b[0]);const want=near.slice(0,NL),wset=new Map(want.map(w=>[w[1],w[0]]));
+ const used=new Set();for(const l of LTS)if(l.userData.li>=0&&wset.has(l.userData.li))used.add(l.userData.li);
+ for(const l of LTS){const li=l.userData.li;
+  if(li>=0&&wset.has(li)){continue}
+  if(l.intensity<.03){const nx=want.find(w=>!used.has(w[1]));if(nx){l.userData.li=nx[1];used.add(nx[1]);const p=pos[nx[1]];l.position.set(p[0],p[1]-.4,p[2])}else l.userData.li=-1}}
+ for(const l of LTS){const li=l.userData.li;let tgt=0;if(on&&li>=0&&wset.has(li)){const u=Math.max(0,1-wset.get(li)/R);tgt=3.2*u*u*(3-2*u)}l.intensity+=(tgt-l.intensity)*.1}
  }
 function leanShadow(c){const Rc=RACE;if(!Rc||!Rc.scene)return;const sc=Rc.scene,g=sc.userData&&sc.userData.lamps,pos=sc.userData&&sc.userData.lampPos;if(!g||!g.visible||!pos||!c.m||!c.m.sh||!c.m.sh.visible)return;
  let bd=1e9,bi=-1;for(let i=0;i<pos.length;i++){const d=Math.hypot(pos[i][0]-c.x,pos[i][2]-c.z);if(d<bd){bd=d;bi=i}}if(bi<0||bd>30)return;

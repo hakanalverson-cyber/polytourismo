@@ -188,12 +188,13 @@ src=rep(src,"      front:k<2,angle:0\n    };\n  });","""      front:k<2,angle:0
      for(const g of gs(w)){g.translate(-r.c[0],-r.c[1],-r.c[2]);g.applyMatrix4(M);g.translate(r.c[0],r.c[1],r.c[2])}}
    for(const[a,b2]of[[0,1],[2,3]]){const A=car.ptWheels[a],B=car.ptWheels[b2],wa=wid(A),wb=wid(B),bad=wa>wb*1.25?A:wb>wa*1.25?B:null;if(!bad)continue;const good=bad===A?B:A;
      bad.spin.children.slice().forEach(m=>bad.spin.remove(m));good.spin.children.forEach(m=>bad.spin.add(new THREE.Mesh(mir(m.geometry),m.material)));bad.pivot.position.set(-good.pivot.position.x,good.pivot.position.y,good.pivot.position.z);bad.radius=good.radius}}""")
-parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','cars10','audio','modes','tracks','tracks2','extra','race2','elim','tod','harbor','props','bld','stages','ra_data','tracks3','weather','ambience','tutorial','updatelog','hud2','shade','ui','rally','trackmode','realspeed','barn','animals','clean','solid','damage','perf','econ']  if os.path.exists(f'{SRC}/layers/{n}.js')]
+parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','cars10','audio','modes','tracks','hpack','tracks2','extra','race2','elim','tod','harbor','props','bld','stages','ra_data','tracks3','weather','ambience','tutorial','updatelog','hud2','shade','ui','rally','trackmode','realspeed','barn','animals','clean','solid','damage','perf','econ']  if os.path.exists(f'{SRC}/layers/{n}.js')]
 css=open(f'{SRC}/style.css').read()
 import base64
 b64=lambda f:base64.b64encode(open(W+'/assets/'+f,'rb').read()).decode()
 ANIM='<script>const ANIM_B64="'+b64('animals.bin')+'",ANIM_META='+open(W+'/assets/animals.json').read()+';</script>'
 BLD='<script>const BLD_B64="'+b64('bld.bin')+'",BLD_META='+open(W+'/assets/bld.json').read()+';</script>'
+HPACK='<script>const HPACK_B64="'+b64('harbor_pack.glb.gz')+'";</script>'
 CARS10='<script>const CAR10_BIN_B64="'+b64('cars_v10.bin.gz')+'",CAR10_TEX_B64="'+b64('cars_v10_tex.png')+'",CAR10_META='+open(W+'/assets/cars_v10.json').read()+';</script>'
 src=rep(src,"bins[k].tire=true;","bins[k].tire=true;(bins[k].tp||(bins[k].tp=[])).push(part);")
 src=rep(src,"    for(const [g,m] of b.parts){\n      g.translate(-center.x,-center.y,-center.z);\n      spin.add(new THREE.Mesh(g,m));\n    }","""    for(const [g] of b.parts)g.translate(-center.x,-center.y,-center.z);
@@ -220,7 +221,7 @@ src=src.replace('<title>Poly Tourismo v7</title>','<title>Poly Tourismo</title>'
 src=src.replace('<body>','<body><div id="ptBoot">POLY TOURISMO<i></i><small>LOADING</small></div>',1)
 BOOT_JS='<script>(function(){function done(){var b=document.getElementById("ptBoot"),c=document.getElementById("ptBootCss");if(!b)return;b.style.opacity=0;setTimeout(function(){if(c)c.remove();b.remove()},260)}function go(){requestAnimationFrame(function(){requestAnimationFrame(function(){setTimeout(done,350)})})}if(document.readyState==="complete")go();else addEventListener("load",go);setTimeout(done,8000)})();</script>'
 GLTF='<script>'+open(W+'/assets/GLTFLoader.r128.js').read()+'</script>'
-add=GLTF+ANIM+BLD+CARS10+'<style id="v8css">'+css+'</style><script>\n'+'\n'.join(parts)+'\n</script>'
+add=GLTF+ANIM+BLD+CARS10+HPACK+'<style id="v8css">'+css+'</style><script>\n'+'\n'.join(parts)+'\n</script>'
 i=src.rindex('</body>') if '</body>' in src else len(src)
 src=src[:i]+add+BOOT_JS+src[i:]
 

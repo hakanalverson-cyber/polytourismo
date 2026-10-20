@@ -3,47 +3,27 @@
 'use strict';
 const P=window.PT8;
 P.LOG=[
- {v:'0.06',d:'Oct 20, 2026',t:'Even road grip',items:[
-  'Every track now has the same grip along the whole road: no ice patches, and fords no longer cut grip.',
-  'Grass and other off-road ground are slippier than the road again.',
-  'Tarmac stays grippy and gravel stays slightly slippery, each at a steady level: grip no longer drops with speed on gravel.']},
- {v:'0.05',d:'Oct 20, 2026',t:'Loading scenes, rally split, podium',items:[
-  'Animated podium: blocks rise, winner gets a shine, times and titles pop in.',
-  'Career loads with a car cruising a city at night; Track loads with a trackside fly-by.',
-  'WRC is now only the Stratos, Delta, 037, Polo and Impreza WRX Rally; the rest are Casual. R35, Civic Type R and AE86 left rally.',
-  'WRC cars are phenomenal on gravel, Casual cars are good.',
-  'Rally and Track garage sections start closed.',
-  'Career Cut-Up targets are much lower (max 2,000).']},
- {v:'0.04',d:'Oct 20, 2026',t:'Classes, tuning and economy',items:[
-  'Pagani Zonda Cinque is now the Zonda R.',
-  'Diablo, Huracan, 458 and 599 GTB moved to the low end of class A; the RS4 Avant is now upper-middle class B (and priced to match).',
-  'Track-only cars sit higher in their class and are a bit sharper.',
-  'All cars cost 5% more; race income is up about 8%.',
-  'Tuning is stronger and now costs credits for every step away from stock (reset is free).',
-  'Different poses for the small photos under car info.',
-  'Resuming from pause gives a 3-2-1 countdown.',
-  'Removed the beeping ambience sound.']},
- {v:'0.03',d:'Oct 20, 2026',t:'Smoother menus and a loading screen',items:[
-  'Menu transitions are now a plain black fade.',
-  'Every mode gets the car loading screen, with your own car on it. Its wheels now spin and steer properly.',
-  'Lists (tracks, cars, modes) pop in when a screen opens, not on every click.',
-  'Harbor Lights town redone: tidy street grid, city buildings only (no barns or greenhouses), calmer colours.']},
- {v:'0.02',d:'Oct 20, 2026',t:'Update log',items:[
-  'New update log button in the main menu (this screen).',
-  'The tutorial moved to Settings > Driving, with a PLAY button.']},
- {v:'0.01',d:'Oct 20, 2026',t:'Poly GT',items:[
-  'The game is now called Poly GT.',
-  'Leaderboard: podium cards plus a full table with best lap, driver, car and a title for each driver.',
-  'Damage setting in every mode. Hit something hard enough and the car is hurt; at 100% it explodes and respawns where it was 3 seconds later.',
-  'Gentler wall damage: light scrapes do nothing, hits are spaced out and the collision margin is tighter.',
-  'Sparks, smoke and debris on every impact; sparks while you grind along a wall; skid smoke now comes from the tires.',
-  'Per-player Manual / Auto gearbox in car setup, and every car now has its real number of gears in every mode.',
-  'Perf points come from real-world stats, are capped at 1,500, and every garage list runs lowest to highest within each class.',
-  'Pit stops, fuel and tyre wear are gone.',
-  'Harbor Lights: hundreds more buildings and trees around the docks.',
-  'Cut-up: traffic wheels now spin and steer.',
-  'Menu transitions: a sweep between screens and panels that glide in.',
-  'Afterhours: street lights, tunnel and night-sky fixes, and a darker, calmer tunnel interior.']}
+ {v:'0.03',d:'Oct 20, 2026',t:'Harbor rework, new streetlights',items:[
+  'Harbor Lights rebuilt: a new, more varied road with a long run of brick alleyways, the boardwalk pier and the restaurant kept.',
+  'Alleys are brick walls with doors, windows, awnings, pipes and fire escapes, kerbed pavements outside the road, bins, hydrants and crates, and real buildings rising behind them.',
+  'Real low-poly ships (sailing ships, steamers, rowboats and a wreck) in the harbor and out at sea.',
+  'A container yard with stacked cargo pods, depots, trucks, cranes and wind turbines, assembled from open-source (CC0) models by Kenney and KayKit plus the building pack.',
+  'Pavement and ground textures no longer sit on the road surface.',
+  'All streetlights on every map: new lamp model, a much wider and softer pool of light, a smoother glow, and lights that fade in and out instead of popping. Harbor Lights now has streetlights too.',
+  'Only the rally mode has a loading screen now; everything else launches straight in. The loader car\'s front wheels point straight.',
+  'Update log reset: everything before this is folded into 0.02.']},
+ {v:'0.02',d:'Oct 20, 2026',t:'Everything so far',items:[
+  'The game is now Poly GT, with an update log in the main menu and the tutorial under Settings > Driving.',
+  'Leaderboard podium cards with animated blocks, a full table, and a title for each driver.',
+  'Damage setting in every mode: sparks, smoke and debris on impacts, explosions at 100% and a respawn after 3 seconds.',
+  'Per-player Manual / Auto gearbox; every car has its real gear count. Pit stops, fuel and tyre wear are gone.',
+  'Perf points come from real stats and are capped at 1,500; every garage list runs low to high within each class.',
+  'Reclassed cars (Diablo, Huracan, 458 and 599 GTB low class A, RS4 Avant upper class B, Zonda R renamed), higher-sitting track-only cars, 5% higher prices, about 8% more income.',
+  'Stronger tuning that now costs credits (reset is free); new poses for the car photos; a 3-2-1 countdown when you resume.',
+  'WRC is the Stratos, Delta, 037, Polo and Impreza WRX Rally (phenomenal on gravel); other rally cars are Casual (good on gravel). Rally and Track garage sections start closed.',
+  'Career Cut-Up targets are lower (max 2,000). Every road surface now has the same steady grip.',
+  'Smoother menus: black fades, lists pop in once, beeping ambience removed.',
+  'Harbor Lights town and Afterhours skyline rebuilt with the building pack.']}
 ];
 const css=document.createElement('style');
 css.textContent=`@keyframes ptFadeIn{from{opacity:0}}#ptLog{position:fixed;inset:0;z-index:8000;display:none;align-items:center;justify-content:center;background:#05070acc;backdrop-filter:blur(3px)}
