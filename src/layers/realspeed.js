@@ -33,6 +33,11 @@ Object.defineProperty(P,'_ro',{get:()=>_ro,set:v=>{_ro=!!v;upd()},configurable:t
 Object.defineProperty(P,'_to',{get:()=>_to,set:v=>{_to=!!v;upd()},configurable:true});
 {const lh=P.launch;P.launch=cfg=>{live=!!(cfg&&(cfg.circuit||cfg.rally||cfg.mode==='rally'));setReal(live||_ro||_to);return lh(cfg)}}
 {const sh=show;show=function(id){if(id!=='game'&&id!=='pause'&&live){live=false;upd()}return sh.apply(this,arguments)}}
+/* classes follow perf points so a higher-points car can never sit in a lower class than a lower-points one */
+P.CLASS_AT=[600,720,840,960];
+P.reclass=()=>{P.CARS.forEach(c=>{if(c.rallyOnly||c.trackOnly)return;const v=P.pp(c);c.cls=v<P.CLASS_AT[0]?'D':v<P.CLASS_AT[1]?'C':v<P.CLASS_AT[2]?'B':v<P.CLASS_AT[3]?'A':'S'});
+ const ci=c=>P.CLS.indexOf(c.cls);P.SORTED.sort((a,b)=>ci(a)-ci(b)||P.pp(b)-P.pp(a))};
+P.reclass();
 /* garage and HUD read true per-gear flat-out speeds */
 P.gearTops=car=>P.GT(car).map((_,i)=>P.effTop(car,i));
 /* gravel stages: cap at 120 mph so a 200 mph car can still read a narrow stage */
