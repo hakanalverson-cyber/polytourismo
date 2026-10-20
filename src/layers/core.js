@@ -90,7 +90,7 @@ const lerpf=(a,b,t)=>a+(b-a)*t;
 /* ---------------- gears: double-tap detection ---------------- */
 const taps=[0,1,2,3].map(()=>({u:0,d:0}));
 addEventListener('keydown',e=>{if(e.repeat)return;for(let p=0;p<4;p++){const k=KM[p];if(e.code===k.u)taps[p].u++;if(e.code===k.d)taps[p].d++}});
-function shiftGear(c,d,auto){const cs_=c.cs||BYID.merc,G_=GT(cs_),n=clamp((c.gear|0)+(d>0?1:-1),0,G_.length-1);if(n===(c.gear|0))return false;const rr=c.sp/Math.max(1,cs_.top*G_[c.gear|0].top*(c.mt?c.mt.top:1));if(!auto&&d>0&&rr>=.8&&rr<=1.06){c.pb=1.1;c.perfect=1}else c.perfect=0;
+function shiftGear(c,d,auto){const cs_=c.cs||BYID.merc,G_=GT(cs_),n=clamp((c.gear|0)+(d>0?1:-1),0,G_.length-1);if(n===(c.gear|0))return false;const rr=c.sp/Math.max(1,(PT8.effTop?PT8.effTop(cs_,c.gear|0)*1.03:cs_.top*G_[c.gear|0].top)*(c.mt?c.mt.top:1));if(!auto&&d>0&&rr>=.8&&rr<=1.06){c.pb=1.1;c.perfect=1}else c.perfect=0;
  c.gear=n;c.shiftT=.14;c.gearFlash=.9;if(c.human){PT8.sfx(d>0?'up':'dn');if(c.perfect)PT8.sfx('move')}return true}
 function autoGear(c,dt,mt,fac,auto){const cs=c.cs,G_=GT(cs),NG=G_.length,g=c.gear|0,ce=q=>(PT8.effTop?PT8.effTop(cs,q)*1.03:cs.top*G_[q].top)*(mt.top||1);let want=NG-1;for(let q=0;q<NG;q++)if(c.sp<=ce(q)*fac){want=q;break}
  if(want<g&&!(c.sp<ce(g)*.55))want=g;if(want!==g){c.gearHold=(c.gearHold||0)-dt;if(c.gearHold<=0){shiftGear(c,want>g?1:-1,auto);c.gearHold=auto?.5:.35}}else c.gearHold=.2}

@@ -7,7 +7,7 @@ P.TRACK_CARS=P.CARS.filter(c=>c.cat==='TRACK'&&!c.rallyOnly).map(c=>c.id);
 /* real-world numbers: [top speed mph, accel, grip, brake, forward gears, track-only]
    Track-only "monsters" (race prototypes and GT3 cars) never appear in any other mode. */
 const TK={
- p1:[311,38,1.16,1.22,7,1],   /* Bugatti Bolide, 7-speed sequential */
+ p1:[270,44,1.16,1.22,7,1],   /* Bugatti Bolide, 7-speed sequential */
  c35:[240,36,1.15,1.2,6,1],   /* McLaren F1 GTR, 6-speed */
  c63:[220,34,1.13,1.18,5,1],  /* Mazda 787B, 5-speed */
  c24:[203,32,1.1,1.1,6,0],    /* Ferrari 575M, 6-speed */
