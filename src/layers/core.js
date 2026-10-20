@@ -278,10 +278,11 @@ PT8.SHIFTK.forEach(k=>{GAME_KEYS.add(k.dn);GAME_KEYS.add(k.up)});
 PT8.noHb=()=>!!(RACE&&RACE.cfg&&RACE.cfg.humans&&RACE.cfg.humans.length>1);
 /* player 2 can use the arrow keys or the numpad (8 4 5 6, 7 / 9 shift) */
 {const AR={u:'ArrowUp',d:'ArrowDown',l:'ArrowLeft',r:'ArrowRight',h:'ShiftRight'},NP={u:'Numpad8',d:'Numpad5',l:'Numpad4',r:'Numpad6',h:'Numpad0'};
- PT8.p2Keys='arrows';try{if(localStorage.getItem('pt9-p2keys')==='numpad')PT8.p2Keys='numpad'}catch(e){}
+ PT8.p2Keys=(window.PTO&&PTO.p2numpad)?'numpad':'arrows';
  PT8.setP2Keys=v=>{PT8.p2Keys=v==='numpad'?'numpad':'arrows';const np=PT8.p2Keys==='numpad';Object.assign(KM[1],np?NP:AR);Object.values(KM[1]).forEach(k=>GAME_KEYS.add(k));
   Object.assign(PT8.SHIFTK[1],np?{dn:'Numpad7',up:'Numpad9',n:['7','9']}:{dn:'PageUp',up:'PageDown',n:['PAGE UP','PAGE DOWN']});GAME_KEYS.add('Numpad7');GAME_KEYS.add('Numpad9');
-  if(PT8.rallyP2)PT8.rallyP2(np);try{localStorage.setItem('pt9-p2keys',PT8.p2Keys)}catch(e){}};
+  if(PT8.rallyP2)PT8.rallyP2(np);if(window.PTO&&PTO.p2numpad!==np){PTO.p2numpad=np;try{localStorage.setItem('pt7-options',JSON.stringify(PTO))}catch(e){}}};
+ PT8.syncP2=()=>{const v=(window.PTO&&PTO.p2numpad)?'numpad':'arrows';if(v!==PT8.p2Keys)PT8.setP2Keys(v)};
  PT8.p2Name=()=>PT8.p2Keys==='numpad'?'numpad 8 4 5 6':'arrows'}
 addEventListener('keydown',e=>{if(e.repeat||!RACE||RACE.cfg.rally||scr!=='game')return;PT8.SHIFTK.forEach((k,p)=>{if(e.code===k.dn)taps[p].qd=1;else if(e.code===k.up)taps[p].qu=1})});
 PT8.setP2Keys(PT8.p2Keys);

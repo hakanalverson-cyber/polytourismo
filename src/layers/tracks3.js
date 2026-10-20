@@ -19,7 +19,8 @@ function dressRA(T,sc){
  const N=T.N,wrp=a=>{while(a>PI)a-=2*PI;while(a<-PI)a+=2*PI;return a};
  const rr=(()=>{let s=1234567;return()=>((s=(s*1664525+1013904223)>>>0)/4294967296)})();
  const lerp=(a,b,t)=>a+(b-a)*t;
- const at=(k,l,dy)=>{k=((k%N)+N)%N;const c=Math.cos(T.psi[k]),s=Math.sin(T.psi[k]);return[T.x[k]+c*l,T.y[k]-l*T.bank[k]+(dy||0),T.z[k]-s*l]};
+ /* off the paving, everything sits on the real ground (never floats, never sinks under the grass) */
+ const at=(k,l,dy)=>{k=((k%N)+N)%N;const c=Math.cos(T.psi[k]),s=Math.sin(T.psi[k]),x=T.x[k]+c*l,z=T.z[k]-s*l,ry=T.y[k]-l*T.bank[k],ex=Math.abs(l)-T.hw[k];if(ex>1.2){const ty=T.terr(x,z);return[x,(ex<5?Math.max(ty,ry):ty)+(dy||0)+(ex<5?.05:0),z]}return[x,ry+(dy||0),z]};
  const g=new THREE.Group();g.name='raDress';
  /* backdrop mountains were laid out for a ~600 m world: push them out so nothing stands in or over this much bigger circuit */
  sc.traverse(o=>{const q=o.geometry&&o.geometry.parameters;if(q&&o.geometry.type==='ConeGeometry'&&q.radius>=80&&q.height>=60){o.position.x*=2.0;o.position.z*=2.0}});
