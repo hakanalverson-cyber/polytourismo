@@ -13,6 +13,7 @@ P.LOG=[
   'Two concrete dock tunnels on Harbor Lights, with lit ceilings and signed portals. A much bigger cargo yard.',
   'Harbor Lights: taller brick alley walls with roof ledges (no flat poster or fire-escape details), waterfront buildings facing the water on every quay, a denser city with parks and car parks, and the white sheds, silos and turbines removed.',
   'Harbor Lights: no more guardrails along open roads (invisible collision walls instead), buildings right at the pavement, and walls that rise gradually into each dock tunnel.',
+  'Harbor Lights: boardwalk now runs unbroken to the quay, brick alley walls vary in height like apartment blocks with solid ends, the restaurant has a door-height entrance, and parked cars and trucks are gone from the map.',
   'Harbor Lights fixes: no more brick strips along the track, no grey wall spikes at alley exits, boardwalk and road at the same height, crates sit on the ground, restaurant lamps hang from cords, calmer cobblestones, and more varied houses (size, colour, spacing, setback).',
   'Harbor Lights: houses sit closer to the road, with grass patches, bushes and drifting chimney smoke added.',
   'All streetlights on every map: new lamp model, a much wider and softer pool of light, a smoother glow, and lights that fade in and out instead of popping. Harbor Lights now has streetlights too.',
