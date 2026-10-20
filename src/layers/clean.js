@@ -275,8 +275,8 @@ function harborTown(sc,T){
    const nm=list[Math.floor(r()*list.length)],g=P.BLD[nm];if(!g)continue;const s=sMin+r()*(sMax-sMin),rad=Math.max(g.w,g.d)*s*.5+1.2;if(!clear(x,z,rad))continue;
    const k=nearest(x,z),yaw=Math.round(Math.atan2(rx[k]-x,rz[k]-z)/(Math.PI/2))*Math.PI/2;occ.push([x,z,rad]);(out[nm]=out[nm]||[]).push([x,.02,z,yaw,s]);log.push({n:nm,x,z,y:.02,fr:rad,sk:.5,s});n++}return n};
  /* low-rise streets near the quay, mid-rise behind, towers on the far ring; everything on a lattice and square to the street */
- place(LOW,1.25,1.4,30,95,9000,230,26);
- place(MID,1.5,1.7,70,190,9000,200,34);
+ place(LOW,1.25,1.4,12,70,9000,260,22);
+ place(MID,1.5,1.7,40,160,9000,220,30);
  place(TOW,2.0,2.4,150,340,9000,150,46);
  place(TOW,2.8,3.3,280,600,9000,120,60);
  /* trees and hedges between the blocks */

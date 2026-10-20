@@ -9,6 +9,7 @@ P.LOG=[
   'Real low-poly ships (sailing ships, steamers, rowboats and a wreck) in the harbor and out at sea.',
   'A container yard with stacked cargo pods, depots, trucks, cranes and wind turbines, assembled from open-source (CC0) models by Kenney and KayKit plus the building pack.',
   'Pavement and ground textures no longer sit on the road surface.',
+  'Harbor Lights: houses sit closer to the road, with grass patches, bushes and drifting chimney smoke added.',
   'All streetlights on every map: new lamp model, a much wider and softer pool of light, a smoother glow, and lights that fade in and out instead of popping. Harbor Lights now has streetlights too.',
   'Only the rally mode has a loading screen now; everything else launches straight in. The loader car\'s front wheels point straight.',
   'Update log reset: everything before this is folded into 0.02.']},
