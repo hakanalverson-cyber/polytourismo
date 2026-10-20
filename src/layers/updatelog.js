@@ -3,20 +3,16 @@
 'use strict';
 const P=window.PT8;
 P.LOG=[
- {v:'0.03',d:'Oct 20, 2026',t:'Harbor rework, new streetlights',items:[
-  'Harbor Lights rebuilt: a new, more varied road with a long run of brick alleyways, the boardwalk pier and the restaurant kept.',
-  'Alleys are brick walls with doors, windows, awnings, pipes and fire escapes, kerbed pavements outside the road, bins, hydrants and crates, and real buildings rising behind them.',
-  'Small boats tied up around the piers.',
-  'A container yard with stacked cargo pods, depots, trucks, cranes and wind turbines, assembled from open-source (CC0) models by Kenney and KayKit plus the building pack.',
-  'Pavement and ground textures no longer sit on the road surface.',
-  'Harbor Lights town rebuilt as continuous street walls: rows of buildings behind pavements and tree-lined verges, each row taller than the last, replacing the scattered houses and plant pots. Building colours are muted.',
-  'Two concrete dock tunnels on Harbor Lights, with lit ceilings and signed portals. A much bigger cargo yard.',
-  'Harbor Lights: taller brick alley walls with roof ledges (no flat poster or fire-escape details), waterfront buildings facing the water on every quay, a denser city with parks and car parks, and the white sheds, silos and turbines removed.',
-  'Harbor Lights: no more guardrails along open roads (invisible collision walls instead), buildings right at the pavement, and walls that rise gradually into each dock tunnel.',
-  'Harbor Lights: boardwalk now runs unbroken to the quay, brick alley walls vary in height like apartment blocks with solid ends, the restaurant has a door-height entrance, and parked cars and trucks are gone from the map.',
-  'Harbor Lights fixes: no more brick strips along the track, no grey wall spikes at alley exits, boardwalk and road at the same height, crates sit on the ground, restaurant lamps hang from cords, calmer cobblestones, and more varied houses (size, colour, spacing, setback).',
-  'Harbor Lights: houses sit closer to the road, with grass patches, bushes and drifting chimney smoke added.',
-  'All streetlights on every map: new lamp model, a much wider and softer pool of light, a smoother glow, and lights that fade in and out instead of popping. Harbor Lights now has streetlights too.',
+ {v:'0.04',d:'Oct 20, 2026',t:'New track: Broken Span',items:[
+  'Harbor Lights is gone, replaced by Broken Span, the first track of a brand-new roster: a long orange suspension bridge with two towers, hangers and cables, snapped in half.',
+  'Floor it up the ramp and jump the 18 m gap. Fall short and you are sent back to a long run-up, so you can try again at full speed.',
+  'You land on City Island, a walled island city built from the building pack and KayKit buildings: unbroken rows of buildings face every shore, corner towers, brick gate houses over both roads, shopfronts, trees, hydrants, bins and rooftop water towers.',
+  'Any gap between buildings is a tiny alley with dumpsters, bins, crates and bags; larger leftovers become pocket parks.',
+  'A low causeway on concrete piers brings you home across the bay, then a hairpin on the mainland and back up the bridge approach.',
+  'Wreckage lies in the water under the gap, with dangling cables, bent truss ends, rebar and hazard boards; the whole map works at dawn, day, sunset and night.',
+  'Jumps can now have their own gap length and ramp height, and respawns near a long gap start well back so you can build speed again.']},
+ {v:'0.03',d:'Oct 20, 2026',t:'New streetlights',items:[
+  'All streetlights on every map: new lamp model, a much wider and softer pool of light, a smoother glow, and lights that fade in and out instead of popping.',
   'Only the rally mode has a loading screen now; everything else launches straight in. The loader car\'s front wheels point straight.',
   'Update log reset: everything before this is folded into 0.02.']},
  {v:'0.02',d:'Oct 20, 2026',t:'Everything so far',items:[
@@ -30,7 +26,7 @@ P.LOG=[
   'WRC is the Stratos, Delta, 037, Polo and Impreza WRX Rally (phenomenal on gravel); other rally cars are Casual (good on gravel). Rally and Track garage sections start closed.',
   'Career Cut-Up targets are lower (max 2,000). Every road surface now has the same steady grip.',
   'Smoother menus: black fades, lists pop in once, beeping ambience removed.',
-  'Harbor Lights town and Afterhours skyline rebuilt with the building pack.']}
+  'Afterhours skyline rebuilt with the building pack.']}
 ];
 const css=document.createElement('style');
 css.textContent=`@keyframes ptFadeIn{from{opacity:0}}#ptLog{position:fixed;inset:0;z-index:8000;display:none;align-items:center;justify-content:center;background:#05070acc;backdrop-filter:blur(3px)}

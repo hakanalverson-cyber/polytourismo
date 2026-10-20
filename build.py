@@ -15,6 +15,15 @@ src=src.replace("['#ffd77a','#7af0ff','#ff7ad0'][(i+j)%3]","['#ffe2a8','#fff0c8'
 src=src.replace("['#ff5a7a66','#7af0ff55','#ffd77a55'][i%3]","['#ffd98a55','#fff0c844','#ffe2a844'][i%3]")
 src=src.replace("color:d.id==3?0x7af0ff:0xfff0c8","color:d.id==3?0xffe2a8:0xfff0c8")
 
+# per-jump overrides: d.jumps=[[ctrl,frac,gapMetres,rampHeight]] (a long snapped-bridge gap needs a taller ramp)
+src=rep(src,"gl=Math.max(2,Math.round(8/sp));","gl=Math.max(2,Math.round((jp[2]||8)/sp)),JH=jp[3]||4.4,JL=jp[3]?jp[3]*.78:3.45;")
+src=rep(src,"T.y[(c-rl+k+N)%N]+=4.4*u*u*(2-u);","T.y[(c-rl+k+N)%N]+=JH*u*u*(2-u);")
+src=rep(src,"T.y[(c+k)%N]+=lerp(4.4,3.45,k/gl);","T.y[(c+k)%N]+=lerp(JH,JL,k/gl);")
+src=rep(src,"T.y[(c+gl+k)%N]+=3.45*(1-sm(0,1,k/rl));","T.y[(c+gl+k)%N]+=JL*(1-sm(0,1,k/rl));")
+# respawns near a long gap start well back so the car can build speed again
+src=rep(src,"function respawn(c){const T=RACE.T,i=(c.idx-4+T.N)%T.N;","function respawn(c){const T=RACE.T;let i=(c.idx-4+T.N)%T.N;i=(i-(PT8.jumpBack?PT8.jumpBack(T,i):0)+T.N)%T.N;")
+src=rep(src,"k++){i=(i-1+N)%N;unw-=1}","k++){i=(i-1+N)%N;unw-=1}{const bk=PT8.jumpBack?PT8.jumpBack(T,i):0;i=(i-bk+N)%N;unw-=bk}")
+
 # shortcut penalty: optional, and only a 10 m set-back
 src=rep(src,"c.exTarget=c.safeUnw-(kind==='cut'?CUT_BACK:FALL_BACK);","c.exTarget=c.safeUnw-(kind==='cut'?Math.max(2,Math.round(10/(RACE.T.sp||3))):FALL_BACK);")
 src=rep(src,"c.exp=1.7;c.vx=c.vy=c.vz=0;c.sp=0;","c.expMax=kind==='dmg'?3:1.7;c.exp=c.expMax;c.vx=c.vy=c.vz=0;c.sp=0;c.dmg=0;")
@@ -188,7 +197,7 @@ src=rep(src,"      front:k<2,angle:0\n    };\n  });","""      front:k<2,angle:0
      for(const g of gs(w)){g.translate(-r.c[0],-r.c[1],-r.c[2]);g.applyMatrix4(M);g.translate(r.c[0],r.c[1],r.c[2])}}
    for(const[a,b2]of[[0,1],[2,3]]){const A=car.ptWheels[a],B=car.ptWheels[b2],wa=wid(A),wb=wid(B),bad=wa>wb*1.25?A:wb>wa*1.25?B:null;if(!bad)continue;const good=bad===A?B:A;
      bad.spin.children.slice().forEach(m=>bad.spin.remove(m));good.spin.children.forEach(m=>bad.spin.add(new THREE.Mesh(mir(m.geometry),m.material)));bad.pivot.position.set(-good.pivot.position.x,good.pivot.position.y,good.pivot.position.z);bad.radius=good.radius}}""")
-parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','cars10','audio','modes','tracks','hpack','tracks2','extra','race2','elim','tod','harbor','props','bld','stages','ra_data','tracks3','weather','ambience','tutorial','updatelog','hud2','shade','ui','rally','trackmode','realspeed','barn','animals','clean','solid','damage','perf','econ']  if os.path.exists(f'{SRC}/layers/{n}.js')]
+parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','cars10','audio','modes','tracks','hpack','tracks2','extra','race2','elim','tod','bridge','props','bld','stages','ra_data','tracks3','weather','ambience','tutorial','updatelog','hud2','shade','ui','rally','trackmode','realspeed','barn','animals','clean','solid','damage','perf','econ']  if os.path.exists(f'{SRC}/layers/{n}.js')]
 css=open(f'{SRC}/style.css').read()
 import base64
 b64=lambda f:base64.b64encode(open(W+'/assets/'+f,'rb').read()).decode()

@@ -101,7 +101,6 @@ const PLAN={
  'Redrock Stage':{edge:[['pole',-1,70,10]],field:[['cactus',36,7,170],['hoodoo',9,30,260],['arch',2,30,260],['pump',4,20,150],['cabinA',3,14,120],['boulderR',14,12,200],['tentG',2,12,40],['tentR',1,12,40]]},
  'Highmoor Stage':{edge:[['post',0,42,2.4]],field:[['cabinS',5,14,130],['turbine',4,40,260],['cairn',8,8,100],['bale',4,6,40],['boulderG',12,12,180],['tentB',2,12,40],['tentG',2,12,40]],flock:[['sheepA',9,4,22,170]]},
  'Coastal Run':{edge:[['post',0,42,2.4]],field:[['lighthouse',1,25,260,'high'],['turbine',3,40,240],['cabinH',4,14,120],['boulderG',6,12,140],['tentR',2,12,40],['tentG',2,12,40],['bale',3,6,40],['fish',5,0,260,'water'],['sail',6,0,260,'water'],['buoy',8,0,260,'water']],fence:[0xe9e2d0,2,'cliff']},
- 'Harbor Lights':{edge:[],field:[['cont2_0',3,6,140],['cont2_1',3,6,140],['cont2_2',3,6,140],['cont1',2,6,140],['cont4',2,6,140],['crane',3,0,0,'quay'],['crates',8,4,100],['barrels',8,4,100],['lamp',12,3,100],['bollard',46,0,0,'edge'],['fish',4,0,260,'water'],['sail',6,0,260,'water'],['buoy',8,0,260,'water']]},
  'Frostline Stage':{edge:[['pole',1,70,9],['snowpole',0,24,3.4]],field:[['snowman',6,5,60],['cabinF',5,14,120],['logs',6,8,70],['stump',8,5,60],['bale',4,6,40],['tentR',2,12,40],['tentB',2,12,40],['boulderS',8,12,160]],fence:[0x9a7a52,2]}
 };
 

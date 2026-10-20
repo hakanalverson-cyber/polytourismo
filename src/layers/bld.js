@@ -33,7 +33,6 @@ const add=(map,list)=>{const p=PLAN[map];if(!p)return;p.field=(p.field||[]).conc
 add('Pinewood Stage',[['farmhouse',1,16,120],['silo',1,16,110],['coop',1,12,80],['barn2',1,16,120],['outhouse',2,10,70]]);
 add('Highmoor Stage',[['farmhouse',1,16,130],['silo2',1,14,110],['barn2',1,16,120]]);
 add('Coastal Run',[['greenhouse',1,18,120]]);
-add('Harbor Lights',[['warehouse',3,16,140],['shopC',2,14,120],['shopD',1,14,120]]);
 
 /* richer scenery: pack trees and bushes through every map */
 add('Quarry Circuit',[['treeA',96,9,150],['treeB',80,9,150],['treeD',80,9,150],['treeC',48,9,150],['bushA',144,5,150],['bushB',144,5,150],['hay',6,14,120],['boulderG',20,12,260]]);
@@ -45,7 +44,6 @@ add('Redrock Stage',[['bushB',70,5,150],['cactus',24,6,200]]);
 add('Highmoor Stage',[['treeC',48,10,150],['bushA',144,4,150],['bushB',112,4,150],['hay2',6,10,80],['boulderG',16,12,220]]);
 add('Coastal Run',[['treeA',64,8,150],['treeD',64,8,150],['bushA',112,5,150],['bushB',80,5,150]]);
 add('Frostline Stage',[['treeC',80,8,150]]);
-add('Harbor Lights',[['bushB',22,6,100]]);
 PLAN['Road Atlanta']=PLAN['Road Atlanta']||{edge:[],field:[['treeA',64,14,150],['treeB',48,14,150],['treeD',64,14,150],['bushA',96,8,150],['bushB',96,8,150],['hay',4,16,120]]};
 /* "random grey boxes": the container offices go */
 for(const k in PLAN){const p=PLAN[k];if(p.field)p.field=p.field.filter(f=>f[0]!=='officeC')}

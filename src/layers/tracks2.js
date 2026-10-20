@@ -1,4 +1,4 @@
-/* ===== Poly Tourismo v9 layer: tracks2 (Coastal Run, Harbor Lights, Frostline Stage) ===== */
+/* ===== Poly Tourismo v9 layer: tracks2 (Coastal Run, Broken Span, Frostline Stage) ===== */
 (function v9tracks2(){
 'use strict';
 const P=window.PT8;
@@ -6,23 +6,22 @@ const P=window.PT8;
 const coast={id:7,look:0,name:'Coastal Run',desc:'sea cliffs / sweepers / sunset',hw:8,bank:10,off:'grass',idw:.95,offs:0,amp:2.5,up:-46,shoulder:8,
  sky:[0x4f86c8,0xf2c9a0],fog:0xe8c7a8,sun:0xffd9a8,hemi:[0xd8e4f0,0x5e6a5a],road:'#34363b',sea:1,tod0:'sunset',
  pts:[[-300,-120,18],[-230,-190,22],[-120,-215,26],[-10,-185,30],[80,-210,34],[185,-240,30],[290,-200,22],[345,-110,14],[310,-20,10],[220,30,12],[130,10,16],[60,60,20],[90,140,16],[190,185,10],[260,250,8],[180,300,8],[60,285,12],[-60,240,18],[-150,170,22],[-170,80,24],[-250,60,22],[-320,0,20]]};
-const hp=[[-250,-200,0],[-100,-212,0],[60,-205,0],[200,-215,0],[290,-170,0],[320,-90,0],
- [320,0,0,7],[330,100,0,7],[335,200,0,7],[345,265,0,7],[305,305,0,7],[260,270,0,7],[252,180,0,7],[250,90,0,7],
- [200,50,0,5.2],[150,46,0,5.2],[106,72,0,5.2],[104,118,0,5.2],[140,148,0,5.2],[132,196,0,5.2],[80,214,0,5.2],[36,186,0,5.2],[34,140,0,5.2],[-6,118,0,5.2],[-40,150,0,5.2],[-30,205,0,5.2],[-60,255,0,5.2],
- [-130,275,0,7],[-220,275,0,7],
- [-264,238,0,5.2],[-236,192,0,5.2],[-250,140,0,5.2],[-212,100,0,5.2],[-226,52,0,5.2],
- [-262,-28,0],[-300,-90,0],[-300,-150,0]];
-const docks={id:8,name:'Harbor Lights',desc:'daylight docks / boardwalk / brick alleys / restaurant',hw:8,bank:0,off:'city',idw:0,offs:0,amp:0,up:0,shoulder:8,flat:1,allWalls:1,harbor:1,biome:'harbor',tod0:'day',
- sky:[0x3a82d6,0xb6dcf4],fog:0xbcd6e8,sun:0xfff4de,hemi:[0xdcecff,0x6a6a60],road:'#3b3e44',walls:[[6,13,1.0],[14,26,14],[29,33,14]],ice:[],boost:[],jumps:[],pts:hp};
+/* Broken Span: control points [x,z,y,halfwidth]. Mainland start, suspension bridge (snapped at index 7), island city streets, low causeway home */
+const sp=[[-760,30,2],[-700,30,2.6],[-640,30,5],[-585,30,8.8],[-535,30,13],[-490,30,17.5],[-455,30,20],[-425,30,20],
+ [-380,30,16.5],[-330,30,15.5],[-280,30,14],[-235,30,12.4],[-190,30,10.2],[-145,30,7.6],[-105,30,4.6],[-70,30,2.2,7.5],
+ [-35,30,.8,6.5],[20,30,.8,6.5],[75,30,.8,6.5],[130,42,.8,6.5],[185,80,.8,6.5],[235,100,.8,6.5],[265,60,.8,6.5],[265,5,.8,6.5],[240,-35,.8,6.5],[195,-52,.8,6.5],[150,-28,.8,6.5],[105,-55,.8,6.5],[60,-92,.8,6.5],[10,-100,.8,6.5],[-35,-92,.8,6.5],
+ [-90,-90,.9,7],[-170,-90,1.1,7],[-260,-90,1.3,7],[-350,-92,1.5,7],[-440,-92,1.7,7],[-530,-92,1.9,7],[-610,-92,2,7],[-680,-92,2],
+ [-740,-92,2],[-800,-90,2],[-842,-72,2],[-860,-30,2],[-842,12,2],[-800,30,2]];
+const span={id:8,name:'Broken Span',desc:'suspension bridge / snapped span jump / island city',hw:8,bank:0,off:'city',idw:0,offs:0,amp:0,up:0,shoulder:8,flat:1,allWalls:1,span:1,biome:'harbor',tod0:'day',
+ sky:[0x3a82d6,0xb6dcf4],fog:0xbcd6e8,sun:0xfff4de,hemi:[0xdcecff,0x6a6a60],road:'#3b3e44',walls:[],ice:[],boost:[],jumps:[[7,0,18,7.5]],pts:sp};
 const frost={id:9,look:4,name:'Frostline Stage',desc:'frozen forest / ice ruts / hairpins',hw:5.5,bank:8,shoulder:6,gravel:1,ice:[],walls:[],boost:[],off:'snow',idw:.86,offs:0,amp:6.5,up:36,biome:'forest',frost:1,tod0:'dawn',
  sky:[0x8fb0d0,0xe9f1f8],fog:0xd6e3ee,sun:0xfff4e0,hemi:[0xe6f0fa,0x7a8a9a],road:'#a3a9b0',dust:0xf2f6fa,dirt:0xdfe6ee,
  pts:[[-120,-240,10],[0,-255,14],[110,-225,22],[200,-250,30],[290,-190,36],[310,-100,30],[250,-40,24],[160,-70,28],[100,-10,34],[150,60,40],[250,90,36],[300,160,28],[250,230,20],[150,250,14],[60,200,10],[-30,240,6],[-120,215,8],[-190,150,14],[-140,80,20],[-210,20,26],[-290,-30,22],[-290,-120,16],[-220,-190,12]],tunnels:0};
-D.push(coast,docks,frost);
+D.push(coast,span,frost);
 [7,9].forEach(i=>{const j=P.pickJumps(D[i],1,i===9?{l:50,a:.75,t:1.6,r:100,f:.12}:undefined);D[i].jumps=j.length?j:[]});
-D[8].jumps=[];
 /* snowier gravel stage: bigger hills like the other rally stages */
 {const p=D[9].pts,mean=p.reduce((a,q)=>a+q[2],0)/p.length;p.forEach(q=>{q[2]=+(mean+(q[2]-mean)*1.25).toFixed(1)});D[9].up=Math.round(D[9].up*1.15)}
-P.TRACK_INFO.push({s:'TARMAC',tags:['SEA CLIFFS','SWEEPERS','SUNSET']},{s:'TARMAC',tags:['PIER','ALLEYS','RESTAURANT']},{s:'GRAVEL',tags:['SNOW','HAIRPINS','CRESTS']});
+P.TRACK_INFO.push({s:'TARMAC',tags:['SEA CLIFFS','SWEEPERS','SUNSET']},{s:'TARMAC',tags:['SUSPENSION BRIDGE','BIG JUMP','ISLAND CITY']},{s:'GRAVEL',tags:['SNOW','HAIRPINS','CRESTS']});
 
 /* world decoration: sea for the coast, frost for the stage */
 const bw0=buildWorld;

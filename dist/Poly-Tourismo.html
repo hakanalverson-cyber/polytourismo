@@ -333,7 +333,7 @@ let dl=bi-c.idx;if(dl>T.N/2)dl-=T.N;if(dl<-T.N/2)dl+=T.N;if(Math.abs(dl)<40){c.i
 const hd=Math.sin(T.psi[c.idx])*c.vx+Math.cos(T.psi[c.idx])*c.vz;c.wrong=hd<-3&&live?c.wrong+dt:0;
 if(live&&(c.y<T.y[c.idx]-12||Math.abs(c.roll)>.68&&Math.abs(c.pitch)>.5||(spd<1.2&&th>0&&(c.stuck+=dt)>4)))respawn(c);if(spd>=1.2||th==0)c.stuck=0;
 if(c.respT>0)c.respT-=dt}
-function respawn(c){const T=RACE.T,i=(c.idx-4+T.N)%T.N;c.x=T.x[i];c.z=T.z[i];c.y=T.y[i]+1.3;c.vx=c.vy=c.vz=0;c.yaw=T.psi[i];c.pitch=c.roll=c.wpt=c.wrl=c.yr=0;c.idx=i;c.unw=Math.floor(c.unw/T.N)*T.N+i;c.respT=.9;c.stuck=0;c.boost=0;c.driftTimer=0;c.dts=0;beep(300,.2,'triangle')}
+function respawn(c){const T=RACE.T;let i=(c.idx-4+T.N)%T.N;i=(i-(PT8.jumpBack?PT8.jumpBack(T,i):0)+T.N)%T.N;c.x=T.x[i];c.z=T.z[i];c.y=T.y[i]+1.3;c.vx=c.vy=c.vz=0;c.yaw=T.psi[i];c.pitch=c.roll=c.wpt=c.wrl=c.yr=0;c.idx=i;c.unw=Math.floor(c.unw/T.N)*T.N+i;c.respT=.9;c.stuck=0;c.boost=0;c.driftTimer=0;c.dts=0;beep(300,.2,'triangle')}
 function carCollide(a,b){const dx=b.x-a.x,dz=b.z-a.z;if(dx*dx+dz*dz>25||Math.abs(a.y-b.y)>1.6)return;const sa=Math.sin(a.yaw),ca=Math.cos(a.yaw),sb=Math.sin(b.yaw),cb=Math.cos(b.yaw),HX=.95,HZ=2.1;let best=1e9,bx=0,bz=0;
  for(const [nx,nz] of [[ca,-sa],[sa,ca],[cb,-sb],[sb,cb]]){const ra=HX*Math.abs(nx*ca-nz*sa)+HZ*Math.abs(nx*sa+nz*ca),rb=HX*Math.abs(nx*cb-nz*sb)+HZ*Math.abs(nx*sb+nz*cb),pr=dx*nx+dz*nz,ov=ra+rb-Math.abs(pr);if(ov<=0)return;if(ov<best){best=ov;const sg=pr<0?-1:1;bx=nx*sg;bz=nz*sg}}
  const ov=best/2+.01;a.x-=bx*ov;a.z-=bz*ov;b.x+=bx*ov;b.z+=bz*ov;const rv=(b.vx-a.vx)*bx+(b.vz-a.vz)*bz;
@@ -551,14 +551,14 @@ code=code.slice(0,start)+`
 T.jumps=[];T.jumpCaps=[];
 (d.jumps||[]).forEach(jp=>{
  const c=Math.round(cps[jp[0]]+jp[1]*(cps[jp[0]+1]-cps[jp[0]]))%N;
- const rl=Math.round(60/sp),gl=Math.max(2,Math.round(8/sp));
+ const rl=Math.round(60/sp),gl=Math.max(2,Math.round((jp[2]||8)/sp)),JH=jp[3]||4.4,JL=jp[3]?jp[3]*.78:3.45;
  for(let k=0;k<=rl;k++){
    const u=k/rl;
-   T.y[(c-rl+k+N)%N]+=4.4*u*u*(2-u);
+   T.y[(c-rl+k+N)%N]+=JH*u*u*(2-u);
  }
- for(let k=1;k<gl;k++)T.y[(c+k)%N]+=lerp(4.4,3.45,k/gl);
+ for(let k=1;k<gl;k++)T.y[(c+k)%N]+=lerp(JH,JL,k/gl);
  for(let k=0;k<=rl;k++)
-   T.y[(c+gl+k)%N]+=3.45*(1-sm(0,1,k/rl));
+   T.y[(c+gl+k)%N]+=JL*(1-sm(0,1,k/rl));
  for(let k=0;k<gl;k++)T.gap[(c+k)%N]=1;
  T.jumps.push(c);
  T.jumpCaps.push((c-1+N)%N,(c+gl)%N);
@@ -1397,7 +1397,7 @@ soloCam=(c,dt,out)=>{prevSolo(c,dt,out);const want=c.inTn&&!(c.exp>0)?1:0;c.tnB=
  const fx_=Math.sin(c.yaw),fz_=Math.cos(c.yaw);_hp.set(c.x+fx_*1.25,c.y+1.02,c.z+fz_*1.25);_hl.set(c.x+fx_*40,c.y+1.02-Math.sin(c.pitch)*24-.4,c.z+fz_*40);out.p.lerp(_hp,k);out.l.lerp(_hl,k);out.f=lerp(out.f,80,k);c.cb=Math.min(c.cb,1-k)}};
 /* ---------- penalties: explosions ---------- */
 function ensure(c){if(c.safeIdx===undefined){c.safeIdx=c.idx;c.safeUnw=c.unw;c.farT=0}}
-function place(c,unw){const T=RACE.T,N=T.N;let i=((Math.round(unw)%N)+N)%N;for(let k=0;k<60&&(T.gap[i]||T.gap[(i+1)%N]||T.gap[(i+2)%N]||T.gap[(i-1+N)%N]);k++){i=(i-1+N)%N;unw-=1}
+function place(c,unw){const T=RACE.T,N=T.N;let i=((Math.round(unw)%N)+N)%N;for(let k=0;k<60&&(T.gap[i]||T.gap[(i+1)%N]||T.gap[(i+2)%N]||T.gap[(i-1+N)%N]);k++){i=(i-1+N)%N;unw-=1}{const bk=PT8.jumpBack?PT8.jumpBack(T,i):0;i=(i-bk+N)%N;unw-=bk}
  c.x=T.x[i];c.z=T.z[i];c.y=T.y[i]+1.3;c.vx=c.vy=c.vz=0;c.yaw=T.psi[i];c.pitch=c.roll=c.wpt=c.wrl=c.yr=0;c.st=0;c.idx=i;c.unw=unw;c.safeIdx=i;c.safeUnw=unw;c.respT=1.3;c.stuck=0;c.boost=0;c.driftTimer=0;c.dts=0;c.ptDrift=false;c.ptBlend=0;c.farT=0;c.exp=0;c.vBl=0}
 function explode(c,kind){if(c.exp>0)return;ensure(c);const Rc=RACE,v=Rc.v7||(Rc.v7={deb:[],ball:[]});c.expMax=kind==='dmg'?3:1.7;c.exp=c.expMax;c.vx=c.vy=c.vz=0;c.sp=0;c.dmg=0;c.exTarget=kind==='dmg'?c.unw:c.safeUnw-(kind==='cut'?Math.max(2,Math.round(10/(RACE.T.sp||3))):FALL_BACK);
  c.warn='';c.warnT=0;
@@ -6892,7 +6892,7 @@ HP.add=(sc,name,list,o)=>{o=o||{};const d=HP.defs[name];if(!d||!list.length)retu
 HP.make=name=>{const d=HP.defs[name];if(!d)return null;const g=new THREE.Group();d.parts.forEach(p=>g.add(new THREE.Mesh(p.geo,p.mat)));return g};
 })();
 
-/* ===== Poly GT v9 layer: tracks2 (Coastal Run, Harbor Lights, Frostline Stage) ===== */
+/* ===== Poly GT v9 layer: tracks2 (Coastal Run, Broken Span, Frostline Stage) ===== */
 (function v9tracks2(){
 'use strict';
 const P=window.PT8;
@@ -6900,23 +6900,22 @@ const P=window.PT8;
 const coast={id:7,look:0,name:'Coastal Run',desc:'sea cliffs / sweepers / sunset',hw:8,bank:10,off:'grass',idw:.95,offs:0,amp:2.5,up:-46,shoulder:8,
  sky:[0x4f86c8,0xf2c9a0],fog:0xe8c7a8,sun:0xffd9a8,hemi:[0xd8e4f0,0x5e6a5a],road:'#34363b',sea:1,tod0:'sunset',
  pts:[[-300,-120,18],[-230,-190,22],[-120,-215,26],[-10,-185,30],[80,-210,34],[185,-240,30],[290,-200,22],[345,-110,14],[310,-20,10],[220,30,12],[130,10,16],[60,60,20],[90,140,16],[190,185,10],[260,250,8],[180,300,8],[60,285,12],[-60,240,18],[-150,170,22],[-170,80,24],[-250,60,22],[-320,0,20]]};
-const hp=[[-250,-200,0],[-100,-212,0],[60,-205,0],[200,-215,0],[290,-170,0],[320,-90,0],
- [320,0,0,7],[330,100,0,7],[335,200,0,7],[345,265,0,7],[305,305,0,7],[260,270,0,7],[252,180,0,7],[250,90,0,7],
- [200,50,0,5.2],[150,46,0,5.2],[106,72,0,5.2],[104,118,0,5.2],[140,148,0,5.2],[132,196,0,5.2],[80,214,0,5.2],[36,186,0,5.2],[34,140,0,5.2],[-6,118,0,5.2],[-40,150,0,5.2],[-30,205,0,5.2],[-60,255,0,5.2],
- [-130,275,0,7],[-220,275,0,7],
- [-264,238,0,5.2],[-236,192,0,5.2],[-250,140,0,5.2],[-212,100,0,5.2],[-226,52,0,5.2],
- [-262,-28,0],[-300,-90,0],[-300,-150,0]];
-const docks={id:8,name:'Harbor Lights',desc:'daylight docks / boardwalk / brick alleys / restaurant',hw:8,bank:0,off:'city',idw:0,offs:0,amp:0,up:0,shoulder:8,flat:1,allWalls:1,harbor:1,biome:'harbor',tod0:'day',
- sky:[0x3a82d6,0xb6dcf4],fog:0xbcd6e8,sun:0xfff4de,hemi:[0xdcecff,0x6a6a60],road:'#3b3e44',walls:[[6,13,1.0],[14,26,14],[29,33,14]],ice:[],boost:[],jumps:[],pts:hp};
+/* Broken Span: control points [x,z,y,halfwidth]. Mainland start, suspension bridge (snapped at index 7), island city streets, low causeway home */
+const sp=[[-760,30,2],[-700,30,2.6],[-640,30,5],[-585,30,8.8],[-535,30,13],[-490,30,17.5],[-455,30,20],[-425,30,20],
+ [-380,30,16.5],[-330,30,15.5],[-280,30,14],[-235,30,12.4],[-190,30,10.2],[-145,30,7.6],[-105,30,4.6],[-70,30,2.2,7.5],
+ [-35,30,.8,6.5],[20,30,.8,6.5],[75,30,.8,6.5],[130,42,.8,6.5],[185,80,.8,6.5],[235,100,.8,6.5],[265,60,.8,6.5],[265,5,.8,6.5],[240,-35,.8,6.5],[195,-52,.8,6.5],[150,-28,.8,6.5],[105,-55,.8,6.5],[60,-92,.8,6.5],[10,-100,.8,6.5],[-35,-92,.8,6.5],
+ [-90,-90,.9,7],[-170,-90,1.1,7],[-260,-90,1.3,7],[-350,-92,1.5,7],[-440,-92,1.7,7],[-530,-92,1.9,7],[-610,-92,2,7],[-680,-92,2],
+ [-740,-92,2],[-800,-90,2],[-842,-72,2],[-860,-30,2],[-842,12,2],[-800,30,2]];
+const span={id:8,name:'Broken Span',desc:'suspension bridge / snapped span jump / island city',hw:8,bank:0,off:'city',idw:0,offs:0,amp:0,up:0,shoulder:8,flat:1,allWalls:1,span:1,biome:'harbor',tod0:'day',
+ sky:[0x3a82d6,0xb6dcf4],fog:0xbcd6e8,sun:0xfff4de,hemi:[0xdcecff,0x6a6a60],road:'#3b3e44',walls:[],ice:[],boost:[],jumps:[[7,0,18,7.5]],pts:sp};
 const frost={id:9,look:4,name:'Frostline Stage',desc:'frozen forest / ice ruts / hairpins',hw:5.5,bank:8,shoulder:6,gravel:1,ice:[],walls:[],boost:[],off:'snow',idw:.86,offs:0,amp:6.5,up:36,biome:'forest',frost:1,tod0:'dawn',
  sky:[0x8fb0d0,0xe9f1f8],fog:0xd6e3ee,sun:0xfff4e0,hemi:[0xe6f0fa,0x7a8a9a],road:'#a3a9b0',dust:0xf2f6fa,dirt:0xdfe6ee,
  pts:[[-120,-240,10],[0,-255,14],[110,-225,22],[200,-250,30],[290,-190,36],[310,-100,30],[250,-40,24],[160,-70,28],[100,-10,34],[150,60,40],[250,90,36],[300,160,28],[250,230,20],[150,250,14],[60,200,10],[-30,240,6],[-120,215,8],[-190,150,14],[-140,80,20],[-210,20,26],[-290,-30,22],[-290,-120,16],[-220,-190,12]],tunnels:0};
-D.push(coast,docks,frost);
+D.push(coast,span,frost);
 [7,9].forEach(i=>{const j=P.pickJumps(D[i],1,i===9?{l:50,a:.75,t:1.6,r:100,f:.12}:undefined);D[i].jumps=j.length?j:[]});
-D[8].jumps=[];
 /* snowier gravel stage: bigger hills like the other rally stages */
 {const p=D[9].pts,mean=p.reduce((a,q)=>a+q[2],0)/p.length;p.forEach(q=>{q[2]=+(mean+(q[2]-mean)*1.25).toFixed(1)});D[9].up=Math.round(D[9].up*1.15)}
-P.TRACK_INFO.push({s:'TARMAC',tags:['SEA CLIFFS','SWEEPERS','SUNSET']},{s:'TARMAC',tags:['PIER','ALLEYS','RESTAURANT']},{s:'GRAVEL',tags:['SNOW','HAIRPINS','CRESTS']});
+P.TRACK_INFO.push({s:'TARMAC',tags:['SEA CLIFFS','SWEEPERS','SUNSET']},{s:'TARMAC',tags:['SUSPENSION BRIDGE','BIG JUMP','ISLAND CITY']},{s:'GRAVEL',tags:['SNOW','HAIRPINS','CRESTS']});
 
 /* world decoration: sea for the coast, frost for the stage */
 const bw0=buildWorld;
@@ -7206,303 +7205,340 @@ P.todPost=Rc=>{const key=P.curTod;if(key!=='night')return;
  for(const c of Rc.cars){if(!c.human)continue;const sp=new THREE.SpotLight(0xfff0cf,2.4,130,.5,.55,1.2);sp.position.set(0,.55,1.9);const tg=new THREE.Object3D();tg.position.set(0,-.2,34);c.m.g.add(sp);c.m.g.add(tg);sp.target=tg}}
 })();
 
-/* ===== Poly GT v9 layer: harbor (daylight docks: pier, alleys, restaurant) ===== */
-(function v9harbor(){
+/* ===== Poly GT layer: Broken Span (suspension bridge snapped in half, a jump, then a walled island city) ===== */
+(function ptBridge(){
 'use strict';
 const P=window.PT8;
 const hex=h=>'#'+h.toString(16).padStart(6,'0');
-/* control points we need to find again on the sampled track */
-const near=(T,x,z)=>{let b=1e9,bi=0;for(let i=0;i<T.N;i++){const d=Math.hypot(T.x[i]-x,T.z[i]-z);if(d<b){b=d;bi=i}}return bi};
-const PIER=[[320,0],[216,62]],ALLEYS=[[[200,50],[-60,255]],[[-264,238],[-226,52]]],REST=[[-125,274],[-222,275]];
-const TUNS=[[[-70,-209],[50,-207]],[[-300,-90],[-300,-148]]];
-const seg=(T,a,b)=>[near(T,a[0],a[1]),near(T,b[0],b[1])];
+const flat=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.9,metalness:0,flatShading:true},o));
+const frame=(T,k,l)=>{k=((k%T.N)+T.N)%T.N;const s=Math.sin(T.psi[k]),c=Math.cos(T.psi[k]);return[T.x[k]+c*l,T.z[k]-s*l,T.psi[k]]};
 
-/* restaurant = flagged "tunnel" (hood cam), low rail walls so the dining room can sit behind them */
+/* ---------- layout (world metres) ---------- */
+const SEA=-1.2,GY=.8,LAND=1.9;
+const ISL={x0:-50,x1:310,z0:-150,z1:170};      /* the island city */
+const COAST=-620,MAINX=-1180;                    /* mainland shore */
+const TOWX=[-520,-306],TOWH=34,DECK0=20,BZ=30;  /* two towers, nominal deck height, bridge centre line */
+const GATE=[30,-92],GATEW=10.5;                  /* z of the two gates in the island's west wall */
+const onIsland=(x,z)=>x>=ISL.x0&&x<=ISL.x1&&z>=ISL.z0&&z<=ISL.z1;
+const GROUND=(x,z)=>onIsland(x,z)?GY:(x<COAST&&x>MAINX&&Math.abs(z)<460)?LAND:-3.2;
+
+/* ---------- track hook: classify samples, walls, lamps, ground ---------- */
 const ps=sampleTrack;
-sampleTrack=d=>{const T=ps(d);if(!d.harbor)return T;
- const [a,b]=seg(T,REST[0],REST[1]);T.tn=new Uint8Array(T.N);T.tunnels=[];
- for(let i=a;i<=b;i++){T.tn[i]=1;T.wall[i]=1;T.wh[i]=1.2}
- T.tunnels.push([a,b]);
- const [p0,p1]=seg(T,PIER[0],PIER[1]),al=ALLEYS.map(q=>seg(T,q[0],q[1]));
- for(const [l0,l1] of al)for(let i=l0;i<=l1;i++)T.tn[i]=1; /* narrow alleys use the hood camera too */
- const tuns=TUNS.map(q=>seg(T,q[0],q[1]));for(const [t0,t1] of tuns){for(let i=t0;i<=t1;i++){T.tn[i]=1;T.wall[i]=1;T.wh[i]=11.5}T.tunnels.push([t0,t1])}
- T.hbr={pier:[p0,p1],alley:al[0],alleys:al,rest:[a,b],tuns};return T};
+sampleTrack=d=>{const T=ps(d);if(!d.span)return T;
+ const N=T.N;T.sg=new Uint8Array(N);T.lampOff=new Float32Array(N);
+ for(let i=0;i<N;i++){const x=T.x[i],z=T.z[i];let sg;
+  if(x>=ISL.x0+.5)sg=2;else if(x<COAST)sg=0;else sg=z>-30?1:3;
+  T.sg[i]=sg;T.wall[i]=1;T.wh[i]=sg===1||sg===3?1.15:1.0;if(sg===1||sg===3)T.br[i]=1;
+  T.lampOff[i]=sg===1||sg===3?.95:sg===2?1.9:3.2}
+ T.terr=GROUND;T.jgl=0;if(T.jumps&&T.jumps.length){const c=T.jumps[0];for(let k=0;k<60&&T.gap[(c+k)%N];k++)T.jgl++}
+ return T};
+/* a respawn or crash recovery near the snapped span goes back to a long run-up, so the jump can be made again */
+P.jumpBack=(T,i)=>{const J=T.jumps||[],N=T.N;if(!T.jgl||T.jgl*T.sp<15)return 0;const rl=Math.round(60/T.sp);
+ for(const j of J){const dd=(i-j+N)%N;if(dd<T.jgl+rl+14||(N-dd)<rl+12){const target=(j-Math.round(240/T.sp)+N)%N;return(i-target+N)%N}}return 0};
 
 /* ---------- textures ---------- */
 const T_ASPH=()=>ctex(32,32,(x,w,h)=>{x.fillStyle='#3b3e44';x.fillRect(0,0,w,h);const r=rngf(4);for(let i=0;i<70;i++){x.fillStyle=r()<.5?'#00000022':'#ffffff10';x.fillRect(r()*w|0,r()*h|0,1,1)}x.fillStyle='#ffffffb0';x.fillRect(1,0,1,h);x.fillRect(w-2,0,1,h);x.fillStyle='#e8e0b0';x.fillRect(w/2-1,0,2,h/2)});
-const T_PLANK=()=>ctex(32,32,(x,w,h)=>{const r=rngf(9);for(let i=0;i<4;i++){const t=r()*.5;x.fillStyle=`rgb(${176+t*26|0},${132+t*22|0},${86+t*16|0})`;x.fillRect(0,i*8,w,8);x.fillStyle='#7a5a3a';x.fillRect(0,i*8+7,w,1);x.fillStyle='#00000010';x.fillRect((r()*w)|0,i*8,1,7)}x.fillStyle='#ffffffa0';x.fillRect(0,0,1,h);x.fillRect(w-1,0,1,h)});
-const T_COBBLE=()=>ctex(32,32,(x,w,h)=>{const r=rngf(3);x.fillStyle='#6a665f';x.fillRect(0,0,w,h);for(let j=0;j<8;j++)for(let i=0;i<8;i++){const o=(j&1)*2,t=r();x.fillStyle=`rgb(${112+t*26|0},${106+t*24|0},${98+t*22|0})`;x.fillRect(i*4+o,j*4,3,3)}});
-const T_TILE=()=>ctex(16,16,(x,w,h)=>{for(let j=0;j<4;j++)for(let i=0;i<4;i++){x.fillStyle=(i+j)&1?'#e2d6bf':'#b08a6e';x.fillRect(i*4,j*4,4,4)}});
-const T_FACADE=seed=>ctex(64,128,(x,w,h)=>{const r=rngf(seed),cols=['#d8b99a','#c9877a','#e3d6a5','#9db8a8','#b9a0b8','#d4a373'];x.fillStyle=cols[seed%cols.length];x.fillRect(0,0,w,h);
- x.fillStyle='#00000012';for(let y=0;y<h;y+=6)x.fillRect(0,y,w,1);
- x.fillStyle='#5a4636';x.fillRect(0,h-26,w,26);x.fillStyle='#2a2018';x.fillRect(8,h-24,14,24);x.fillStyle='#d9382a';x.fillRect(28,h-34,30,6);x.fillStyle='#fff';for(let i=0;i<30;i+=6)x.fillRect(28+i,h-34,3,6);
- for(let row=0;row<3;row++)for(let c=0;c<2;c++){const wx=8+c*30,wy=12+row*30;x.fillStyle='#2b3a4a';x.fillRect(wx,wy,18,20);x.fillStyle='#9fd0f0aa';x.fillRect(wx+1,wy+1,16,8);x.fillStyle='#e9e4d4';x.fillRect(wx-1,wy+20,20,2);x.fillStyle=r()<.5?'#6a8f4a':'#cf6a6a';x.fillRect(wx+2,wy+18,14,3);x.fillStyle='#4a5a3a';x.fillRect(wx-3,wy,3,20);x.fillRect(wx+18,wy,3,20)}});
-const T_FACADEW=()=>{const cols=['#d8b99a','#e3d6a5','#9db8a8','#a9bfd4','#e8e0d0','#c9877a'],TN=18;const t=ctex(64*TN,128,(x,w,h)=>{const r=rngf(5);for(let n=0;n<TN;n++){const ox=n*64;x.fillStyle=cols[Math.floor(n/3)%cols.length];x.fillRect(ox,0,64,h);
-  x.fillStyle='#00000010';for(let y=0;y<h;y+=6)x.fillRect(ox,y,64,1);
-  x.fillStyle='#5a4636';x.fillRect(ox,h-26,64,26);x.fillStyle='#2a2018';x.fillRect(ox+8,h-24,14,24);x.fillStyle='#b4574a';x.fillRect(ox+28,h-34,30,6);x.fillStyle='#e8dcc8';for(let i=0;i<30;i+=10)x.fillRect(ox+28+i,h-34,5,6);
-  for(let row=0;row<3;row++)for(let c=0;c<2;c++){const wx=ox+8+c*30,wy=12+row*30;x.fillStyle='#34475a';x.fillRect(wx,wy,18,20);x.fillStyle='#a9cde6';x.fillRect(wx+1,wy+1,16,8);x.fillStyle='#f0ebdc';x.fillRect(wx-1,wy+20,20,2);x.fillStyle=r()<.5?'#7a9a62':'#c98a7a';x.fillRect(wx+2,wy+18,14,3);x.fillStyle='#5a6a4a';x.fillRect(wx-3,wy,3,20);x.fillRect(wx+18,wy,3,20)}}});t.repeat.set(1/TN,1);return t};
-
-/* brick alley wall: 8 different 4 m x 14 m tiles side by side: shopfronts and doors at street level, floors of windows above, stone cornice on top (no flat posters or fire escapes) */
-const T_BRICKW=()=>{const TN=8,TW=128,TH=448,BR=['#a4553f','#9b4a38','#b0644a','#8c4636','#b87556','#a05a46'],FY=[30,116,202,288];
- const t=ctex(TW*TN,TH,(x,w,h)=>{const r=rngf(31);
-  for(let n=0;n<TN;n++){const ox=n*TW;x.fillStyle='#7d6a5c';x.fillRect(ox,0,TW,TH);
-   for(let row=0;row<TH/6;row++){const off=(row&1)*6;for(let c=-1;c<TW/12+1;c++){x.fillStyle=BR[(r()*BR.length)|0];x.fillRect(ox+c*12+off+1,row*6+1,10,4)}}
-   const win=(wx,wy,ww,wh,sh)=>{x.fillStyle='#d9cdb4';x.fillRect(ox+wx-3,wy-3,ww+6,wh+6);x.fillStyle='#26323f';x.fillRect(ox+wx,wy,ww,wh);x.fillStyle='#9ac3df';x.fillRect(ox+wx+2,wy+2,ww-4,Math.floor(wh*.38));x.fillStyle='#d9cdb4';x.fillRect(ox+wx+ww/2-1,wy,2,wh);x.fillRect(ox+wx,wy+wh/2,ww,2);x.fillStyle='#bfb49c';x.fillRect(ox+wx-5,wy+wh+3,ww+10,4);
-    if(sh){x.fillStyle='#3f6a58';x.fillRect(ox+wx-10,wy,8,wh);x.fillRect(ox+wx+ww+2,wy,8,wh)}};
-   const door=(dx,w_,col)=>{x.fillStyle='#d9cdb4';x.fillRect(ox+dx-4,TH-92,w_+8,92);x.fillStyle=col;x.fillRect(ox+dx,TH-88,w_,88);x.fillStyle='#00000030';x.fillRect(ox+dx+w_/2-1,TH-88,2,88);x.fillStyle='#e8c860';x.fillRect(ox+dx+w_-9,TH-44,4,6)};
-   const rows=(xs,ww,wh,sh)=>FY.forEach((y,j)=>xs.forEach(wx=>win(wx,y,ww,wh,sh&&(j&1))));
-   if(n===0){rows([14,78],26,38,1);door(48,32,'#4b3a2c')}
-   else if(n===1){rows([14,86],22,34,0);door(40,46,'#2f4a3e');x.fillStyle='#d9cdb4';x.beginPath();x.arc(ox+63,TH-90,27,Math.PI,0);x.fill()}
-   else if(n===2){rows([49],30,40,1);x.fillStyle='#e8dcc0';x.fillRect(ox+8,TH-150,112,34);x.fillStyle='#8a3a2c';x.font='bold 22px monospace';x.textAlign='center';x.fillText(['BAR','CAFE','TAPAS'][(r()*3)|0],ox+64,TH-125);door(84,30,'#6a4a2c')}
-   else if(n===3){x.fillStyle='#e3d3b0';x.fillRect(ox,TH-130,TW,130);rows([18,84],26,36,1);x.fillStyle='#e3d3b0';win(18,TH-124,26,34,0);door(76,34,'#7a3a30')}
-   else if(n===4){rows([20,80],26,38,0);x.fillStyle='#2a3440';x.fillRect(ox+14,TH-84,100,70);x.fillStyle='#9ac3df88';x.fillRect(ox+16,TH-82,96,30);for(let i=0;i<10;i++){x.fillStyle=i&1?'#e8e2d4':'#c0392b';x.fillRect(ox+10+i*11,TH-100,11,22)}}
-   else if(n===5){rows([40],24,32,0);door(84,30,'#394a58');win(14,TH-124,22,30,0)}
-   else if(n===6){FY.forEach((y,j)=>{win(j&1?20:70,y,26,36,1);if(j<3)win(j&1?76:26,y,22,36,0)});door(10,30,'#4b3a2c')}
-   else {x.fillStyle='#5c6670';x.fillRect(ox+14,TH-120,100,116);for(let y=TH-120;y<TH-4;y+=9){x.fillStyle='#00000030';x.fillRect(ox+14,y,100,2)}x.fillStyle='#d8a028';x.fillRect(ox+14,TH-124,100,6);rows([14,88],26,36,0)}
-   x.fillStyle='#d9cdb4';x.fillRect(ox,0,TW,12);x.fillStyle='#00000030';x.fillRect(ox,12,TW,3);x.fillStyle='#d9cdb4';x.fillRect(ox,TH-100-14>0?FY[3]+60:0,0,0);x.fillStyle='#ffffff10';x.fillRect(ox,TH-12,TW,12)}});
- t.repeat.set(1/TN,1);return t};
-const T_TUNW=()=>{const t=ctex(32,32,(x,w,h)=>{x.fillStyle='#8d9195';x.fillRect(0,0,w,h);const r=rngf(12);for(let i=0;i<40;i++){x.fillStyle=r()<.5?'#00000010':'#ffffff10';x.fillRect(r()*w|0,r()*h|0,3,2)}x.fillStyle='#00000034';x.fillRect(0,0,w,1);x.fillRect(0,0,1,h);x.fillStyle='#ffffff14';x.fillRect(0,1,w,1)});t.wrapS=t.wrapT=THREE.RepeatWrapping;return t};
-/* tall concrete wall on one side of the road: absolute 4 m panels, a stone coping on top and a yellow kerb band at the foot */
-function vwall(T,sc,sd,flag,hOf,off,mt,o){o=o||{};const N=T.N,vs=o.vs||4,band=new THREE.MeshStandardMaterial({color:0xd2ad2c,roughness:1,side:THREE.DoubleSide}),cap=o.cap||new THREE.MeshStandardMaterial({color:0xa5a9ad,roughness:1,side:THREE.DoubleSide});
- let i=0;while(i<N){if(!flag[i]){i++;continue}let e=i;while(e+1<N&&flag[e+1])e++;
-  const P1=[],U1=[],I1=[],P2=[],I2=[],P3=[],I3=[];let cum=0;
-  for(let k=i;k<=e;k++){const f=frame(T,k,sd*(T.hw[k]+off)),f2=frame(T,k,sd*(T.hw[k]+off+.9)),f3=frame(T,k,sd*(T.hw[k]+off-.04)),h=hOf(k),y=T.y[k];if(k>i)cum+=T.sp;
-   P1.push(f[0],y-.2,f[1],f[0],y+h,f[1]);U1.push(cum/4,0,cum/4,(h+.2)/vs);
-   P2.push(f[0],y+h,f[1],f2[0],y+h,f2[1]);
-   P3.push(f3[0],y-.2,f3[1],f3[0],y+Math.min(h,.55),f3[1])}
-  const n=e-i+1,mk=(P,I,U)=>{for(let q=0;q<n-1;q++){const p=q*2;I.push(p,p+2,p+1,p+1,p+2,p+3)}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));if(U)g.setAttribute('uv',new THREE.Float32BufferAttribute(U,2));g.setIndex(I);g.computeVertexNormals();return g};
-  sc.add(new THREE.Mesh(mk(P1,I1,U1),mt));sc.add(new THREE.Mesh(mk(P2,I2),cap));if(o.band!==false)sc.add(new THREE.Mesh(mk(P3,I3),band));
-  if(o.end){/* closing faces at both ends so the wall reads as a solid block, not a thin shell */
-   for(const k of[i,e]){const f=frame(T,k,sd*(T.hw[k]+off)),g2=frame(T,k,sd*(T.hw[k]+off+o.end)),h=hOf(k),y=T.y[k];
-    const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute([f[0],y-.2,f[1],g2[0],y-.2,g2[1],g2[0],y+h,g2[1],f[0],y+h,f[1]],3));gg.setAttribute('uv',new THREE.Float32BufferAttribute([0,0,.9,0,.9,(h+.2)/vs,0,(h+.2)/vs],2));gg.setIndex([0,1,2,0,2,3]);gg.computeVertexNormals();sc.add(new THREE.Mesh(gg,mt))}}
-  i=e+1}}
 const T_PAVE=()=>ctex(16,16,(x,w,h)=>{x.fillStyle='#8f9296';x.fillRect(0,0,w,h);x.fillStyle='#00000026';x.fillRect(0,0,w,1);x.fillRect(0,0,1,h);x.fillRect(8,0,1,h);x.fillRect(0,8,w,1)});
 const T_CONC=()=>ctex(8,8,(x,w,h)=>{x.fillStyle='#b4b7ba';x.fillRect(0,0,w,h);x.fillStyle='#d9c25a';x.fillRect(0,1,w,1);x.fillStyle='#0000001c';x.fillRect(0,h-2,w,2)});
-const T_RAIL=()=>ctex(8,8,(x,w,h)=>{x.fillStyle='#8a5a34';x.fillRect(0,0,w,h);x.fillStyle='#d8c29a';x.fillRect(0,0,w,2);x.fillStyle='#0004';x.fillRect(0,h-2,w,2);x.fillRect(3,2,1,h-4)});
-const T_WALLB=()=>ctex(16,16,(x,w,h)=>{x.fillStyle='#c9b79c';x.fillRect(0,0,w,h);x.fillStyle='#00000018';for(let y=0;y<h;y+=4)x.fillRect(0,y,w,1)});
-const T_SIGN=txt=>ctex(256,48,(x,w,h)=>{x.fillStyle='#1a3a2c';x.fillRect(0,0,w,h);x.fillStyle='#f0d9a0';x.fillRect(3,3,w-6,h-6);x.fillStyle='#1a3a2c';x.fillRect(6,6,w-12,h-12);x.fillStyle='#f6e9c0';x.font='bold 28px monospace';x.textAlign='center';x.textBaseline='middle';x.fillText(txt,w/2,h/2+1)});
-const flat=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.9,metalness:0,flatShading:true},o));
+const T_SLAB=()=>ctex(16,16,(x,w,h)=>{x.fillStyle='#8b8e90';x.fillRect(0,0,w,h);x.fillStyle='#0000001c';x.fillRect(0,0,w,1);x.fillRect(0,0,1,h);const r=rngf(2);for(let i=0;i<20;i++){x.fillStyle=r()<.5?'#ffffff10':'#00000014';x.fillRect(r()*w|0,r()*h|0,2,1)}});
+const T_GRASS=()=>ctex(16,16,(x,w,h)=>{x.fillStyle='#6f9a4e';x.fillRect(0,0,w,h);const r=rngf(8);for(let i=0;i<60;i++){x.fillStyle=r()<.5?'#5a8840':'#82ac5e';x.fillRect(r()*w|0,r()*h|0,1,1)}});
+const T_ALLEY=()=>ctex(16,16,(x,w,h)=>{x.fillStyle='#4d4b48';x.fillRect(0,0,w,h);const r=rngf(6);for(let i=0;i<40;i++){x.fillStyle=r()<.5?'#00000030':'#ffffff10';x.fillRect(r()*w|0,r()*h|0,2,2)}});
+/* orange X-braced truss, transparent between the members */
+const T_TRUSS=()=>{const t=ctex(64,64,(x,w,h)=>{x.clearRect(0,0,w,h);x.strokeStyle='#bf4426';x.lineWidth=5;x.beginPath();x.moveTo(2,2);x.lineTo(w-2,h-2);x.moveTo(w-2,2);x.lineTo(2,h-2);x.stroke();x.fillStyle='#c94b2a';x.fillRect(0,0,w,7);x.fillRect(0,h-7,w,7);x.fillRect(0,0,5,h);x.fillRect(w-5,0,5,h)});return t};
+const T_ORANGE=()=>ctex(8,8,(x,w,h)=>{x.fillStyle='#c0482a';x.fillRect(0,0,w,h);x.fillStyle='#00000020';x.fillRect(0,h-2,w,2);x.fillStyle='#ffffff18';x.fillRect(0,0,w,1)});
+const T_SIGN=(txt,bg,fg)=>ctex(256,64,(x,w,h)=>{x.fillStyle=fg||'#f4f0e4';x.fillRect(0,0,w,h);x.fillStyle=bg||'#1d4d34';x.fillRect(4,4,w-8,h-8);x.fillStyle=fg||'#f4f0e4';x.font='bold 30px monospace';x.textAlign='center';x.textBaseline='middle';x.fillText(txt,w/2,h/2+2)});
+const T_CHEV=()=>ctex(32,32,(x,w,h)=>{x.fillStyle='#f2c61c';x.fillRect(0,0,w,h);x.fillStyle='#16181c';for(let i=-2;i<4;i++){x.beginPath();x.moveTo(i*10,h);x.lineTo(i*10+6,h);x.lineTo(i*10+6+h,0);x.lineTo(i*10+h,0);x.fill()}});
+const T_GATE=()=>ctex(64,64,(x,w,h)=>{x.fillStyle='#a7694f';x.fillRect(0,0,w,h);const r=rngf(3);for(let j=0;j<h/4;j++)for(let i=0;i<w/8;i++){x.fillStyle=r()<.5?'#9a5d45':'#b27659';x.fillRect(i*8+(j&1)*4,j*4,7,3)}x.fillStyle='#d9cdb4';x.fillRect(0,0,w,5);x.fillRect(0,h-6,w,6);for(let i=0;i<3;i++){x.fillStyle='#26323f';x.fillRect(6+i*20,14,12,26);x.fillStyle='#9ac3df';x.fillRect(7+i*20,15,10,9)}});
 
-/* one section of road surface with its own material (uv along the track) */
-function strip(T,a,b,l0,l1,dy,mt,vs,segs){const pos=[],uv=[],idx=[],n=b-a+1,sg=segs||4;
+/* ---------- geometry helpers (all skip the broken span) ---------- */
+function mkMesh(pos,idx,mt,uv){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));if(uv)g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();return new THREE.Mesh(g,mt)}
+/* horizontal strip between two lateral offsets */
+function strip(T,a,b,l0,l1,dy,mt,vs,segs){const pos=[],uv=[],idx=[],n=b-a+1,sg=segs||2;
  for(let r=0;r<n;r++){const k=(a+r)%T.N,s=Math.sin(T.psi[k]),c=Math.cos(T.psi[k]);for(let j=0;j<=sg;j++){const l=l0(k)+(l1(k)-l0(k))*j/sg;pos.push(T.x[k]+c*l,T.y[k]+dy,T.z[k]-s*l);uv.push(j/sg,r*T.sp/vs)}}
- for(let r=0;r<n-1;r++)for(let j=0;j<sg;j++){const p=r*(sg+1)+j,q=p+sg+1;idx.push(p,q,p+1,p+1,q,q+1)}
- const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();return new THREE.Mesh(g,mt)}
-function instB(sc,geo,m,list,tint){const im=new THREE.InstancedMesh(geo,m,Math.max(1,list.length)),o=new THREE.Object3D(),col=new THREE.Color();
- list.forEach((p,i)=>{o.position.set(p[0],p[1],p[2]);o.scale.set(p[3],p[4],p[5]);o.rotation.set(0,p[6]||0,0);o.updateMatrix();im.setMatrixAt(i,o.matrix);if(tint){col.setHex(tint[i%tint.length]);im.setColorAt(i,col)}});
- im.count=list.length;im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true;im.frustumCulled=false;sc.add(im);return im}
+ for(let r=0;r<n-1;r++){const k=(a+r)%T.N,k2=(a+r+1)%T.N;if(T.gap[k]||T.gap[k2])continue;for(let j=0;j<sg;j++){const p=r*(sg+1)+j,q=p+sg+1;idx.push(p,q,p+1,p+1,q,q+1)}}
+ return mkMesh(pos,idx,mt,uv)}
+/* vertical strip at a lateral offset, from y0 to y1 (both relative to the road) */
+function vstrip(T,a,b,lat,y0,y1,mt,vs,vrep){const pos=[],uv=[],idx=[],n=b-a+1;let cum=0;
+ for(let r=0;r<n;r++){const k=(a+r)%T.N,f=frame(T,k,typeof lat==='function'?lat(k):lat);if(r)cum+=T.sp;const o0=typeof y0==='function'?y0(k):y0,o1=typeof y1==='function'?y1(k):y1;pos.push(f[0],T.y[k]+o0,f[1],f[0],T.y[k]+o1,f[1]);uv.push(cum/vs,0,cum/vs,vrep||1)}
+ for(let r=0;r<n-1;r++){const k=(a+r)%T.N,k2=(a+r+1)%T.N;if(T.gap[k]||T.gap[k2])continue;const p=r*2;idx.push(p,p+2,p+1,p+1,p+2,p+3)}
+ return mkMesh(pos,idx,mt,uv)}
+/* consecutive samples satisfying pred */
+function runs(T,pred){const out=[],N=T.N;let i=0;while(i<N){if(!pred(i)){i++;continue}let e=i;while(e+1<N&&pred(e+1))e++;out.push([i,e]);i=e+1}return out}
+/* merged cylinders between pairs of points */
+function beams(list,mt,sides){const pos=[],nor=[],idx=[];let base=0;const up=new THREE.Vector3(0,1,0),q=new THREE.Quaternion(),dir=new THREE.Vector3();
+ for(const [a,b,r] of list){dir.set(b[0]-a[0],b[1]-a[1],b[2]-a[2]);const len=dir.length();if(len<1e-3)continue;dir.divideScalar(len);q.setFromUnitVectors(up,dir);
+  const g=new THREE.CylinderGeometry(r,r,len,sides||5,1,false);g.applyMatrix4(new THREE.Matrix4().makeRotationFromQuaternion(q));g.translate((a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2);
+  const p=g.attributes.position.array,n=g.attributes.normal.array,ix=g.index.array;for(let i=0;i<p.length;i++){pos.push(p[i]);nor.push(n[i])}for(let i=0;i<ix.length;i++)idx.push(ix[i]+base);base+=p.length/3;g.dispose()}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(nor,3));g.setIndex(idx);const m=new THREE.Mesh(g,mt);m.frustumCulled=false;return m}
+function boxAt(sc,w,h,d,mt,x,y,z,ry,rx,rz){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mt);m.position.set(x,y,z);if(ry)m.rotation.y=ry;if(rx)m.rotation.x=rx;if(rz)m.rotation.z=rz;sc.add(m);return m}
+function instB(sc,geo,m,list){const im=new THREE.InstancedMesh(geo,m,Math.max(1,list.length)),o=new THREE.Object3D();
+ list.forEach((p,i)=>{o.position.set(p[0],p[1],p[2]);o.scale.set(p[3],p[4],p[5]);o.rotation.set(0,p[6]||0,0);o.updateMatrix();im.setMatrixAt(i,o.matrix)});
+ im.count=list.length;im.instanceMatrix.needsUpdate=true;im.frustumCulled=false;sc.add(im);return im}
 
-const WATER=(x,z)=>(x>215&&z>5)||z>315;
-const frame=(T,k,l)=>{const s=Math.sin(T.psi[k]),c=Math.cos(T.psi[k]);return[T.x[k]+c*l,T.z[k]-s*l,T.psi[k]]};
-
-function buildHarbor(T){const d=T.d,N=T.N,r=rngf(8*77+5),sc=new THREE.Scene(),H=T.hbr;
+/* ---------- the world ---------- */
+function buildSpan(T){const d=T.d,N=T.N,r=rngf(8*77+11),sc=new THREE.Scene();
  let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;for(let i=0;i<N;i++){x0=Math.min(x0,T.x[i]);x1=Math.max(x1,T.x[i]);z0=Math.min(z0,T.z[i]);z1=Math.max(z1,T.z[i])}T.bounds=[x0-190,x1+190,z0-190,z1+190];
- sc.fog=new THREE.Fog(d.fog,170,900);sc.add(new THREE.HemisphereLight(d.hemi[0],d.hemi[1],.78));const sun=new THREE.DirectionalLight(d.sun,.8);sun.position.set(-150,250,100);sc.add(sun);
+ sc.fog=new THREE.Fog(d.fog,260,1500);sc.add(new THREE.HemisphereLight(d.hemi[0],d.hemi[1],.8));const sun=new THREE.DirectionalLight(d.sun,.85);sun.position.set(-150,250,100);sc.add(sun);
  const sk=ctex(2,64,(x,w,h)=>{const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,hex(d.sky[0]));g.addColorStop(.5,hex(d.sky[1]));g.addColorStop(1,hex(d.sky[1]));x.fillStyle=g;x.fillRect(0,0,w,h)});
- sc.add(new THREE.Mesh(new THREE.SphereGeometry(1500,16,12),new THREE.MeshBasicMaterial({map:sk,side:THREE.BackSide,fog:false})));
- mesh(new THREE.SphereGeometry(40,12,8),new THREE.MeshBasicMaterial({color:d.sun,fog:false}),-500,420,-1000,sc);
- /* water everywhere, land with a harbour-basin hole */
- const wm=new THREE.MeshStandardMaterial({color:0x0d6a99,roughness:1,metalness:0,flatShading:true});
- const sea=mesh(new THREE.PlaneGeometry(6000,6000),wm,0,-1.8,0,sc);sea.rotation.x=-Math.PI/2;sc.userData.harbor={water:wm};
- const bed=mesh(new THREE.PlaneGeometry(6000,6000),flat(0x1a4a5e),0,-9,0,sc);bed.rotation.x=-Math.PI/2;
- const shp=new THREE.Shape();shp.moveTo(-760,-760);shp.lineTo(760,-760);shp.lineTo(760,760);shp.lineTo(-760,760);shp.lineTo(-760,-760);
- const hole=new THREE.Path();[[215,5],[760,5],[760,760],[-760,760],[-760,315],[215,315]].forEach((p,i)=>i?hole.lineTo(p[0],-p[1]):hole.moveTo(p[0],-p[1]));shp.holes.push(hole);
- /* shape is XY; map y=-z so rotating -90deg about X lands it on the ground */
- {const g=new THREE.ShapeGeometry(shp);const gm=new THREE.MeshStandardMaterial({map:T_CONC_G(),roughness:1,polygonOffset:true,polygonOffsetFactor:2,polygonOffsetUnits:2});const land=new THREE.Mesh(g,gm);land.rotation.x=-Math.PI/2;land.position.y=-.06;sc.add(land)}
- function T_CONC_G(){const t=ctex(16,16,(x,w,h)=>{x.fillStyle='#7b7e80';x.fillRect(0,0,w,h);x.fillStyle='#0000001a';x.fillRect(0,0,w,1);x.fillRect(0,0,1,h);const rr=rngf(2);for(let i=0;i<20;i++){x.fillStyle=rr()<.5?'#ffffff10':'#00000014';x.fillRect(rr()*w|0,rr()*h|0,2,1)}});t.repeat.set(160,160);return t}
- /* quay edge: stone face + curb along the basin outline */
- const seg2=[[[215,5],[215,315]],[[215,5],[760,5]],[[-760,315],[215,315]]];
- for(const [a,b] of seg2){const len=Math.hypot(b[0]-a[0],b[1]-a[1]),m=mesh(new THREE.BoxGeometry(len,1.6,1.2),flat(0x6a6d70),(a[0]+b[0])/2,-.95,(a[1]+b[1])/2,sc);m.rotation.y=-Math.atan2(b[1]-a[1],b[0]-a[0])}
- /* ----- road surfaces ----- */
- const PO={polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2};const asph=new THREE.MeshStandardMaterial(Object.assign({map:T_ASPH(),roughness:.9,side:THREE.DoubleSide},PO));sc.add(ribbon(T,k=>-T.hw[k],k=>T.hw[k],10,.03,asph,6));
- const hw=k=>T.hw[k];
- const plank=new THREE.MeshStandardMaterial({map:T_PLANK(),roughness:1,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4}),cob=new THREE.MeshStandardMaterial({map:T_COBBLE(),roughness:1,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4}),tile=new THREE.MeshStandardMaterial({map:T_TILE(),roughness:.7,side:THREE.DoubleSide});
- sc.add(strip(T,H.pier[0],H.pier[1],k=>-hw(k),k=>hw(k),.03,plank,6));
- const paveM=new THREE.MeshStandardMaterial({map:T_PAVE(),roughness:1,side:THREE.DoubleSide}),curbM=new THREE.MeshStandardMaterial({color:0xb9b6ae,roughness:1,side:THREE.DoubleSide});
- for(const [a0,a1] of H.alleys){sc.add(strip(T,a0,a1,k=>-hw(k),k=>hw(k),.03,cob,5));
-  /* kerb face + raised pavement on both sides: the paving sits strictly outside the drivable width */
-  for(const sd of[-1,1]){sc.add(strip(T,a0,a1,k=>sd*(hw(k)+.02),k=>sd*(hw(k)+1.95),.2,paveM,3,2));
-   const pos=[],idx=[],n=a1-a0+1;for(let q=0;q<n;q++){const k=(a0+q)%T.N,f=frame(T,k,sd*(hw(k)+.02));pos.push(f[0],T.y[k]+.07,f[1],f[0],T.y[k]+.2,f[1])}
-   for(let q=0;q<n-1;q++){const p=q*2;idx.push(p,p+2,p+1,p+1,p+2,p+3)}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();sc.add(new THREE.Mesh(g,curbM))}}
- /* pier supports */
- {const pil=[];for(let i=H.pier[0];i<=H.pier[1];i+=4)for(const sd of [-1,1]){const f=frame(T,i,sd*(hw(i)-.6));pil.push([f[0],-4.6,f[1],.55,8.8,.55])}instB(sc,new THREE.CylinderGeometry(1,1,1,6),flat(0x4a3a2a),pil)}
- /* ----- walls: concrete barrier on the quay, wooden rail on pier/restaurant, tall painted facades in the alleys ----- */
- const ramp=new Uint8Array(N),rampH=new Float32Array(N);for(const [t0,t1] of H.tuns){const RL=15;for(let d=1;d<=RL;d++){const hh=11.5*Math.pow(1-(d-1)/RL,1.8);for(const i of[t0-d,t1+d]){const k=(i+N)%N;if(!H.alleys.some(a=>k>=a[0]&&k<=a[1])){ramp[k]=1;rampH[k]=Math.max(rampH[k],hh)}}}}
- const AH={'-1':new Float32Array(N),'1':new Float32Array(N)};for(const [a0,a1] of H.alleys)for(const sd of[-1,1]){let k=a0;while(k<=a1){const L=6+((r()*5)|0),h=9+r()*11;for(let q=0;q<L&&k<=a1;q++,k++)AH[sd][k]=h}}
- const cat=new Uint8Array(N);const inAl=i=>H.alleys.some(a=>i>=a[0]&&i<=a[1]);for(let i=0;i<N;i++){cat[i]=H.tuns.some(a=>i>=a[0]&&i<=a[1])?3:ramp[i]?4:inAl(i)?2:((i>=H.pier[0]&&i<=H.pier[1])||(i>=H.rest[0]&&i<=H.rest[1]))?1:0}
- const mats=[new THREE.MeshStandardMaterial({map:T_CONC(),side:THREE.DoubleSide,roughness:.9}),new THREE.MeshStandardMaterial({map:T_RAIL(),side:THREE.DoubleSide,roughness:.9}),new THREE.MeshStandardMaterial({map:T_BRICKW(),side:THREE.DoubleSide,roughness:.95}),new THREE.MeshStandardMaterial({map:T_TUNW(),side:THREE.DoubleSide,roughness:.95})];mats[4]=mats[3];
- for(let c=1;c<5;c++){const W=Object.create(T);W.wall=Uint8Array.from(T.wall,(w,i)=>cat[i]===c?w:0);W.wh=Float32Array.from(T.wh,(h,i)=>cat[i]===c?(c===4?rampH[i]:c===3?11.5:c<2?Math.min(h,1.2):h):0);if(c===2)W.hw=Float32Array.from(T.hw,h=>h+1.7);if(c===2){for(const sd of[-1,1])vwall(T,sc,sd,W.wall,k=>AH[sd][k],2.0,mats[2],{vs:14,band:false,end:6.6,cap:new THREE.MeshStandardMaterial({color:0xb7ab94,roughness:1,side:THREE.DoubleSide})});continue}
-  if(c>=3){for(const sd of[-1,1])vwall(T,sc,sd,W.wall,k=>W.wh[k],4.3,mats[3]);continue}sc.add(wallMesh(W,1,mats[c]));sc.add(wallMesh(W,-1,mats[c]))}
- /* roofs: a flat roof ledge on top of each alley wall at that wall's own height; it overhangs the road by under a metre and never covers it */
- {const roofM=new THREE.MeshStandardMaterial({color:0x7d4a3c,roughness:1,side:THREE.DoubleSide}),stoneM=new THREE.MeshStandardMaterial({color:0xd2c7b0,roughness:1,side:THREE.DoubleSide});
-  for(const [a0,a1] of H.alleys)for(const sd of[-1,1]){const wf=k=>T.hw[k]+2.0,P1=[],P2=[],I1=[],I2=[],n=a1-a0+1;
-   for(let q=0;q<n;q++){const k=(a0+q)%T.N,h=AH[sd][k],fa=frame(T,k,sd*(wf(k)-.8)),fb=frame(T,k,sd*(wf(k)+6.6));P1.push(fa[0],T.y[k]+h+.05,fa[1],fb[0],T.y[k]+h+.05,fb[1]);P2.push(fa[0],T.y[k]+h-.9,fa[1],fa[0],T.y[k]+h+.15,fa[1])}
-   for(let q=0;q<n-1;q++){const p=q*2;I1.push(p,p+2,p+1,p+1,p+2,p+3);I2.push(p,p+2,p+1,p+1,p+2,p+3)}
-   const mkg=(P,I)=>{const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setIndex(I);g.computeVertexNormals();return g};
-   sc.add(new THREE.Mesh(mkg(P1,I1),roofM));sc.add(new THREE.Mesh(mkg(P2,I2),stoneM))}}
- /* ----- start arch ----- */
- {const ar=new THREE.Group();ar.position.set(T.x[0],T.y[0],T.z[0]);ar.rotation.y=T.psi[0];sc.add(ar);
-  for(const sd of[-1,1])mesh(new THREE.BoxGeometry(.8,8,.8),mat(0xdddddd),sd*(T.hw[0]+1.2),4,0,ar);
-  mesh(new THREE.BoxGeometry(T.hw[0]*2+3.6,2.2,.6),new THREE.MeshBasicMaterial({map:ctex(32,4,(x,w,h)=>{for(let i=0;i<32;i++)for(let j=0;j<4;j++){x.fillStyle=(i+j)&1?'#fff':'#111';x.fillRect(i,j,1,1)}})}),0,8.4,0,ar);
-  const sl=mesh(new THREE.PlaneGeometry(T.hw[0]*2,2.4),new THREE.MeshBasicMaterial({map:ctex(16,2,(x,w,h)=>{for(let i=0;i<16;i++){x.fillStyle=i&1?'#fff':'#111';x.fillRect(i,0,1,1);x.fillStyle=i&1?'#111':'#fff';x.fillRect(i,1,1,1)}})}),T.x[0],T.y[0]+.1,T.z[0],sc);sl.rotation.order='YXZ';sl.rotation.set(-Math.PI/2,T.psi[0],0)}
- const occ=sc.userData.occ=[];
- /* ----- scatter helper (land only, away from the road) ----- */
- const rd=(x,z)=>{let b=1e9;for(let i=0;i<N;i+=2){const dd=Math.hypot(x-T.x[i],z-T.z[i]);if(dd<b)b=dd}return b};
- const scatter=(cnt,lo,hi,fn)=>{const out=[];for(let t=0;t<cnt*30&&out.length<cnt;t++){const x=-640+r()*1280,z=-640+r()*1280;if(WATER(x,z)||Math.abs(x)>700)continue;const q=rd(x,z);if(q<lo||q>=hi)continue;fn(x,z,out,q)}return out};
- harborTunnels(sc,T,H);
- harborDress(sc,T,H,{r,rd,WATER,occ,frame,cat});
- /* bollards on the quay edge */
- {const bl=[];for(let z=20;z<310;z+=22)if(rd(216.5,z)>14)bl.push([216.5,.5,z,.5,1,.5]);for(let x=216;x<500;x+=22)if(rd(x,6.5)>14)bl.push([x,.5,6.5,.5,1,.5]);instB(sc,new THREE.CylinderGeometry(1,1,1,6),flat(0x2a2f36),bl)}
- /* ----- restaurant dining hall around the flagged section ----- */
- {const [a,b]=H.rest,W=hw(a)+7.5,hall=new THREE.MeshStandardMaterial({color:0xe6d3b0,roughness:.95,side:THREE.DoubleSide,flatShading:true});
-  sc.add(strip(T,a,b,k=>-W,k=>W,.02,tile,5,2));
-  /* ceiling + outer walls (with window bands) */
-  const ceil=strip(T,a,b,k=>-W-.3,k=>W+.3,8.2,new THREE.MeshStandardMaterial({color:0xb99b72,roughness:1,side:THREE.DoubleSide}),20,2);sc.add(ceil);
-  const roof=strip(T,a,b,k=>-W-1,k=>W+1,9.6,flat(0x8a4a38,{side:THREE.DoubleSide}),20,2);sc.add(roof);
-  const wallStrip=(sd)=>{const pos=[],uv=[],idx=[],n=b-a+1;for(let q=0;q<n;q++){const k=a+q,f=frame(T,k,sd*W);pos.push(f[0],0,f[1],f[0],9.6,f[1]);uv.push(q*T.sp/6,0,q*T.sp/6,1)}for(let q=0;q<n-1;q++){const p=q*2;idx.push(p,p+2,p+1,p+1,p+2,p+3)}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();
-   const wtex=ctex(32,32,(x,w,h)=>{x.fillStyle='#e6d3b0';x.fillRect(0,0,w,h);x.fillStyle='#7a4a2a';x.fillRect(0,0,w,3);x.fillRect(0,h-5,w,5);x.fillStyle='#9ad0f0';x.fillRect(4,8,24,15);x.fillStyle='#ffffff90';x.fillRect(5,9,22,3);x.fillStyle='#7a4a2a';x.fillRect(15,8,2,15);x.fillRect(4,15,24,1)});
-   return new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:wtex,side:THREE.DoubleSide,roughness:.9}))};
-  sc.add(wallStrip(1));sc.add(wallStrip(-1));
-  /* tables + chairs + plants in the two dining strips, pendant lights overhead */
-  const tab=[],tops=[],chr=[],plant=[],bulbs=[],cand=[];
-  for(let i=a+3;i<b-2;i+=4)for(const sd of [-1,1]){const lat=sd*(hw(i)+3.6+r()*1.8),f=frame(T,i,lat);tab.push([f[0],.55,f[1],.18,1.1,.18]);tops.push([f[0],1.1,f[1],1.7,.08,1.7]);
-   for(const dd of [-1,1]){const g=frame(T,i,lat+dd*1.4);chr.push([g[0],.45,g[1],.7,.9,.7,f[2]]);cand.push([f[0],1.2,f[1],.12,.22,.12])}}
-  for(let i=a+5;i<b-2;i+=9)for(const sd of [-1,1]){const f=frame(T,i,sd*(W-1)),f2=frame(T,i,sd*(hw(i)+1.3));plant.push([f[0],1.1,f[1],.9,2.2,.9]);bulbs.push([f2[0],6.6,f2[1],.55,.55,.55])}
-  for(let i=a+4;i<b-2;i+=8){const f=frame(T,i,0);bulbs.push([f[0],7.1,f[1],.7,.7,.7])}
-  instB(sc,new THREE.CylinderGeometry(1,1,1,6),flat(0x3a2a1c),tab);instB(sc,new THREE.CylinderGeometry(1,1,1,10),flat(0xf6f0e0),tops);
-  instB(sc,new THREE.BoxGeometry(1,1,1),flat(0xa04a2c),chr);instB(sc,new THREE.IcosahedronGeometry(1,0),flat(0x3f8a4a),plant);
-  instB(sc,new THREE.CylinderGeometry(1,1,1,5),new THREE.MeshBasicMaterial({color:0xffd27a}),cand);
-  {const cords=bulbs.map(b=>[b[0],(8.2+b[1])/2,b[2],.035,8.2-b[1]+.1,.035]),shades=bulbs.map(b=>[b[0],b[1]+.05,b[2],1,.55,1]),glow=bulbs.map(b=>[b[0],b[1]-.12,b[2],.26,.26,.26]);
-   instB(sc,new THREE.CylinderGeometry(1,1,1,4),flat(0x20252b),cords);instB(sc,new THREE.CylinderGeometry(.28,.62,1,12,1,true),flat(0x2f6a4c,{side:THREE.DoubleSide}),shades);instB(sc,new THREE.SphereGeometry(1,8,6),new THREE.MeshBasicMaterial({color:0xffe2a0}),glow)}
-  /* entrance portals + signs */
-  for(const [k,flip] of [[a,0],[b,1]]){const f=frame(T,k,0),g=new THREE.Group();g.position.set(f[0],0,f[1]);g.rotation.y=f[2]+(flip?Math.PI:0);sc.add(g);
-   /* a proper front wall with a door-height opening (5.4 m) for the road, a lintel above it and the sign on the lintel */
-   const hwO=T.hw[k]+1.5,fm=flat(0x8a4a38),pw=W+1.2-hwO;
-   for(const sd of[-1,1])mesh(new THREE.BoxGeometry(pw,9.8,1.2),fm,sd*(hwO+pw/2),4.9,0,g);
-   mesh(new THREE.BoxGeometry(hwO*2+.2,4.4,1.2),fm,0,7.6,0,g);
-   const tr=mesh(new THREE.BoxGeometry(hwO*2+1.2,.35,1.6),flat(0xd8c29a),0,5.55,0,g);
-   const sg=mesh(new THREE.PlaneGeometry(Math.min(hwO*2-1,13),2.2),new THREE.MeshBasicMaterial({map:T_SIGN('HARBOR GRILL')}),0,7.7,-.65,g);sg.rotation.y=Math.PI}}
- /* ----- pano: distant skyline + sea haze ----- */
+ const dome=new THREE.Mesh(new THREE.SphereGeometry(1500,16,12),new THREE.MeshBasicMaterial({map:sk,side:THREE.BackSide,fog:false}));sc.add(dome);const follow=[dome];
+ const sunM=mesh(new THREE.SphereGeometry(40,12,8),new THREE.MeshBasicMaterial({color:d.sun,fog:false}),-500,420,-1000,sc);
+ const U={};sc.userData.span=U;
+ /* sea */
+ const wm=new THREE.MeshStandardMaterial({color:0x14709f,roughness:1,metalness:0,flatShading:true});U.water=wm;
+ const sea=mesh(new THREE.PlaneGeometry(7000,7000),wm,0,SEA,0,sc);sea.rotation.x=-Math.PI/2;
+ const bed=mesh(new THREE.PlaneGeometry(7000,7000),flat(0x1a4a5e),0,-12,0,sc);bed.rotation.x=-Math.PI/2;
+ /* mainland */
+ {const gm=new THREE.MeshStandardMaterial({map:T_GRASS(),roughness:1});gm.map.repeat.set(90,90);
+  const top=mesh(new THREE.PlaneGeometry(COAST-MAINX,920),gm,(COAST+MAINX)/2,LAND-.02,0,sc);top.rotation.x=-Math.PI/2;
+  mesh(new THREE.BoxGeometry(COAST-MAINX,14,920),flat(0x6a6358),(COAST+MAINX)/2,LAND-7.05,0,sc);
+  /* rocky headland hills behind the start */
+  const hm=flat(0x5c7d46);for(let t=0,n=0;t<200&&n<14;t++){const hx=MAINX+40+r()*380,hz=(r()-.5)*860,hr=60+r()*80;let ok=true;for(let i=0;i<N&&ok;i+=2)if(Math.hypot(T.x[i]-hx,T.z[i]-hz)<hr+55)ok=false;if(!ok)continue;n++;const c=mesh(new THREE.ConeGeometry(hr,24+r()*40,7),hm,hx,LAND+4,hz,sc);c.rotation.y=r()*6}}
+ /* island slab: concrete sea wall, paved top */
+ {const w=ISL.x1-ISL.x0,h=ISL.z1-ISL.z0,cx=(ISL.x0+ISL.x1)/2,cz=(ISL.z0+ISL.z1)/2;
+  const sm=new THREE.MeshStandardMaterial({map:T_SLAB(),roughness:1});sm.map.repeat.set(w/4,1);
+  mesh(new THREE.BoxGeometry(w,GY+8,h),flat(0x777b7e),cx,(GY-8)/2,cz,sc);
+  const pm=new THREE.MeshStandardMaterial({map:T_SLAB(),roughness:1,polygonOffset:true,polygonOffsetFactor:2,polygonOffsetUnits:2});pm.map.repeat.set(w/6,h/6);
+  const top=mesh(new THREE.PlaneGeometry(w,h),pm,cx,GY-.015,cz,sc);top.rotation.x=-Math.PI/2}
+ /* ----- road surface ----- */
+ const PO={polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2};
+ sc.add(ribbon(T,k=>-T.hw[k],k=>T.hw[k],10,.03,new THREE.MeshStandardMaterial(Object.assign({map:T_ASPH(),roughness:.9,side:THREE.DoubleSide},PO)),6));
+ const concM=new THREE.MeshStandardMaterial({map:T_SLAB(),roughness:1,side:THREE.DoubleSide}),steelM=flat(0x4a4d52,{side:THREE.DoubleSide}),orgM=new THREE.MeshStandardMaterial({map:T_ORANGE(),roughness:.8,side:THREE.DoubleSide,flatShading:true});
+ const trussM=new THREE.MeshStandardMaterial({map:T_TRUSS(),roughness:.8,side:THREE.DoubleSide,alphaTest:.5});
+ const jumps=T.jumps||[],broken=jumps.length>0;
+ /* ----- bridge deck: slab, braced truss, underside ----- */
+ for(const [a,b] of runs(T,i=>T.sg[i]===1)){
+  sc.add(strip(T,a,b,k=>-(T.hw[k]+1.3),k=>T.hw[k]+1.3,-.02,concM,6,2));
+  sc.add(strip(T,a,b,k=>-(T.hw[k]+1.3),k=>T.hw[k]+1.3,-.55,steelM,6,2));
+  sc.add(strip(T,a,b,k=>-(T.hw[k]+1.3),k=>T.hw[k]+1.3,-4.2,steelM,6,2));
+  for(const sd of[-1,1]){const t=vstrip(T,a,b,k=>sd*(T.hw[k]+1.3),-4.2,0,trussM,4.2,1);sc.add(t);sc.add(vstrip(T,a,b,k=>sd*(T.hw[k]+1.3),-.55,.0,orgM,4,1))}
+  /* cross beams under the deck */
+  const cb=[];for(let k=a;k<=b;k+=Math.max(1,Math.round(8/T.sp))){if(T.gap[k])continue;const f=frame(T,k,0);cb.push([f[0],T.y[k]-1.2,f[1],(T.hw[k]+1.3)*2,.5,.6,f[2]])}
+  instB(sc,new THREE.BoxGeometry(1,1,1),steelM,cb)}
+ /* shore abutment skirts: embankment sides where the road climbs over land */
+ for(const [a,b] of runs(T,i=>T.sg[i]===0&&T.y[i]>LAND+.35&&T.z[i]>0)){for(const sd of[-1,1])sc.add(vstrip(T,a,b,k=>sd*(T.hw[k]+.1),k=>LAND-T.y[k],0,flat(0x77705f,{side:THREE.DoubleSide}),8,1))}
+ /* ----- low causeway: concrete deck on piers ----- */
+ {const pil=[];for(const [a,b] of runs(T,i=>T.sg[i]===3)){
+   sc.add(strip(T,a,b,k=>-(T.hw[k]+1.2),k=>T.hw[k]+1.2,-.02,concM,6,2));sc.add(strip(T,a,b,k=>-(T.hw[k]+1.2),k=>T.hw[k]+1.2,-1.5,steelM,6,2));
+   for(const sd of[-1,1])sc.add(vstrip(T,a,b,k=>sd*(T.hw[k]+1.2),-1.5,0,concM,4,1));
+   for(let k=a;k<=b;k+=Math.max(1,Math.round(18/T.sp))){const f=frame(T,k,0);pil.push([f[0],(T.y[k]-1.5-10)/2,f[1],2.6,T.y[k]+8.5,(T.hw[k]+1.2)*2-1,f[2]])}}
+  instB(sc,new THREE.BoxGeometry(1,1,1),flat(0x8a8d8f),pil)}
+ /* ----- walls: visible concrete barrier on bridge and causeway, plain guardrail on land, invisible kerb walls on the island ----- */
+ {const mats={1:new THREE.MeshStandardMaterial({map:T_CONC(),side:THREE.DoubleSide,roughness:.9}),0:flat(0xaab0b4,{side:THREE.DoubleSide})};
+  for(const c of[0,1]){const W=Object.create(T);W.wall=Uint8Array.from(T.wall,(w,i)=>(c===0?T.sg[i]===0:T.sg[i]===1||T.sg[i]===3)&&w?1:0);
+   W.wh=Float32Array.from(T.wh,(h,i)=>c===0?.8:h);sc.add(wallMesh(W,1,mats[c]));sc.add(wallMesh(W,-1,mats[c]))}}
+ /* ----- bridge structure ----- */
+ const deckY=(x)=>{let best=1e9,y=DECK0;for(let i=0;i<N;i++){if(T.sg[i]!==1||Math.abs(T.z[i]-BZ)>3)continue;const dd=Math.abs(T.x[i]-x);if(dd<best){best=dd;y=T.y[i]}}return y};
+ const HW=T.hw[Math.max(0,T.sg.indexOf(1))]||8,LAT=HW+1.3;
+ const cabM=flat(0x7a2a16),ropeM=flat(0x6a2a1a);
+ {const cab=[],rop=[],LATC=LAT;
+  const TOPY=DECK0+TOWH,mid=(TOWX[0]+TOWX[1])/2,half=(TOWX[1]-TOWX[0])/2,hmin=3.6;
+  const cy=x=>{const u=(x-mid)/half;return DECK0+hmin+(TOPY-DECK0-hmin)*u*u};
+  /* gap edges from the actual track */
+  let gA=-425,gB=-401;if(broken){const c=jumps[0];let gl=0;for(let k=0;k<40;k++)if(T.gap[(c+k)%N])gl++;gA=T.x[c];gB=T.x[(c+gl)%N]}
+  const cutA=broken?gA-1.2:mid,cutB=broken?gB+1.2:mid;
+  for(const sd of[-1,1]){const lat=sd*LATC;
+   const pt=(x,y)=>[x,y,BZ-lat];
+   /* main spans, tower to break (or tower to tower when the bridge is whole) */
+   const span=(xa,xb)=>{const n=Math.max(2,Math.round(Math.abs(xb-xa)/6));let prev=pt(xa,cy(xa));for(let i=1;i<=n;i++){const x=xa+(xb-xa)*i/n,q=pt(x,cy(x));cab.push([prev,q,.5]);prev=q}};
+   span(TOWX[0],cutA);span(TOWX[1],cutB);
+   /* hangers */
+   const hang=(xa,xb)=>{const st=xa<xb?1:-1;for(let x=xa+st*10;st*(xb-x)>5;x+=st*10){const dy=deckY(x);rop.push([pt(x,cy(x)),pt(x,dy+.9),.1])}};
+   hang(TOWX[0],cutA);hang(TOWX[1],cutB);
+   /* back stays down to the anchorages */
+   const anch=(xt,xa)=>{const ya=deckY(xa)+3.2,n=Math.round(Math.abs(xt-xa)/6);let prev=pt(xt,TOPY);for(let i=1;i<=n;i++){const u=i/n,x=xt+(xa-xt)*u,y=TOPY+(ya-TOPY)*u-5.5*4*u*(1-u),q=pt(x,y);cab.push([prev,q,.5]);prev=q;if(i%2===0&&i<n-1)rop.push([q,pt(x,deckY(x)+.9),.1])}};
+   anch(TOWX[0],COAST-25);anch(TOWX[1],ISL.x0-18);
+   if(broken){/* snapped cable ends dangle below the break */
+    for(const [cx,dir] of[[cutA,-1],[cutB,1]]){let prev=pt(cx,cy(cx));for(let i=1;i<=4;i++){const q=[cx+dir*(.35*i+.03*i*i),cy(cx)-i*2.1,BZ-lat+sd*.15*i];cab.push([prev,q,.5-.03*i]);prev=q}}
+    /* a couple of loose hangers swing below the cut cable */
+    for(const [cx,dir] of[[cutA,-1],[cutB,1]]){const x=cx+dir*8,top=pt(x,cy(x));rop.push([top,pt(x+dir*.8,cy(x)-8.5),.1])}}}
+  sc.add(beams(cab,cabM,6));sc.add(beams(rop,ropeM,4))}
+ /* towers */
+ for(const tx of TOWX){const y=deckY(tx),g=new THREE.Group();g.position.set(tx,0,BZ);sc.add(g);
+  const TOPY=DECK0+TOWH;
+  for(const sd of[-1,1]){const lz=sd*(LAT+2.1);
+   /* stepped legs: wide plinth in the water, shaft, tapered top */
+   mesh(new THREE.BoxGeometry(7.6,SEA+3.2+9,6.6),flat(0x6d7073),0,(-9+SEA+3.2)/2,lz,g);
+   const segs=[[-4,y+4,4.4,3.6],[y+4,y+16,3.9,3.2],[y+16,y+26,3.4,2.8],[y+26,TOPY,3.0,2.4]];
+   for(const [ya,yb,w,dd] of segs)mesh(new THREE.BoxGeometry(w,yb-ya,dd),orgM,0,(ya+yb)/2,lz,g);
+   mesh(new THREE.BoxGeometry(3.3,1.0,2.7),flat(0x8f3220),0,TOPY+.5,lz,g)}
+  /* portal beams between the legs (clear of the roadway) */
+  for(const [by,bh] of[[y+11.5,2.4],[y+21,2.2],[y+TOWH-3,3.2]]){mesh(new THREE.BoxGeometry(2.6,bh,(LAT+2.1)*2),orgM,0,by,0,g);
+   const x=mesh(new THREE.PlaneGeometry((LAT+.2)*2,bh*.0+4.6),new THREE.MeshStandardMaterial({map:T_TRUSS(),side:THREE.DoubleSide,alphaTest:.5,roughness:.8}),0,by-bh/2-2.3,0,g);x.rotation.y=Math.PI/2}}
+ /* ----- broken ends, fallen deck, warning boards ----- */
+ if(broken){const c=jumps[0];let gl=0;for(let k=0;k<40;k++)if(T.gap[(c+k)%N])gl++;
+  const eA=(c-1+N)%N,eB=(c+gl)%N;
+  for(const [k,dir] of[[eA,1],[eB,-1]]){const f=frame(T,k,0),ps2=T.psi[k],ax=Math.sin(ps2),az=Math.cos(ps2),lx=Math.cos(ps2),lz=-Math.sin(ps2);
+   /* torn end: end plate, rebar and a bent truss lip */
+   const reb=[];for(let i=0;i<22;i++){const l=(r()-.5)*2*(T.hw[k]+1),len=.8+r()*2.2,a0=[f[0]+lx*l,T.y[k]-.3-r()*.3,f[1]+lz*l],a1=[a0[0]+ax*dir*len,a0[1]-len*.35*r(),a0[2]+az*dir*len];reb.push([a0,a1,.045])}
+   sc.add(beams(reb,flat(0x2a2220),4));
+   for(const sd of[-1,1]){const lip=[];const base=frame(T,k,sd*(T.hw[k]+1.3));for(let i=0;i<4;i++){const h0=-4.2+i*1.15,len=.8+r()*2.4,a0=[base[0],T.y[k]+h0,base[1]],a1=[a0[0]+ax*dir*len,a0[1]-len*.6,a0[2]+az*dir*len];lip.push([a0,a1,.11])}sc.add(beams(lip,orgM,4))}
+   /* hazard boards beside the road at the edge */
+   for(const sd of[-1,1]){const g=new THREE.Group(),p=frame(T,(k-dir*3+N)%N,sd*(T.hw[k]+.2));g.position.set(p[0],T.y[k]+.55,p[1]);g.rotation.y=T.psi[k]+(dir>0?0:Math.PI);sc.add(g);
+    const b=mesh(new THREE.BoxGeometry(2.6,1.1,.12),new THREE.MeshStandardMaterial({map:T_CHEV(),roughness:.8}),0,0,0,g);b.material.map.repeat.set(3,1)}}
+  /* hanging "ROAD ENDS" sign on the approach gantry is built below; wreckage lies in the water under the gap */
+  const cx=(T.x[eA]+T.x[eB])/2,cz=(T.z[eA]+T.z[eB])/2;
+  for(let i=0;i<4;i++){const w=2.4+r()*3,l=5+r()*7;const b=boxAt(sc,w,.6,l,flat(0x55585a),cx+(r()-.5)*26,SEA-.9+r()*.9,cz+(r()-.5)*16,r()*3,(r()-.5)*.9,(r()-.5)*.9);
+   const tr=mesh(new THREE.PlaneGeometry(l,2.4),trussM,0,1.1,0,b);tr.rotation.y=Math.PI/2}
+  /* approach warning gantry before the ramp */
+  const ga=(T.x[eA]-86);{const gk=(()=>{let b=1e9,bi=0;for(let i=0;i<N;i++){if(T.sg[i]!==1)continue;const dd=Math.abs(T.x[i]-ga)+Math.abs(T.z[i]-BZ);if(dd<b){b=dd;bi=i}}return bi})();
+   const g=new THREE.Group(),f=frame(T,gk,0);g.position.set(f[0],T.y[gk],f[1]);g.rotation.y=f[2];sc.add(g);
+   for(const sd of[-1,1])mesh(new THREE.BoxGeometry(.7,7.4,.7),steelM,sd*(T.hw[gk]+.9),3.7,0,g);
+   mesh(new THREE.BoxGeometry((T.hw[gk]+.9)*2+1,.8,.7),steelM,0,7.4,0,g);
+   const s1=mesh(new THREE.PlaneGeometry(13,3.1),new THREE.MeshBasicMaterial({map:T_SIGN('BRIDGE OUT','#9b1c1c','#f6f1e6')}),0,6.0,-.4,g);s1.rotation.y=Math.PI}}
+ /* ----- start gantry on the mainland ----- */
+ {const g=new THREE.Group(),f=frame(T,0,0);g.position.set(f[0],T.y[0],f[1]);g.rotation.y=f[2];sc.add(g);
+  for(const sd of[-1,1])mesh(new THREE.BoxGeometry(.9,8.6,.9),steelM,sd*(T.hw[0]+1.2),4.3,0,g);
+  mesh(new THREE.BoxGeometry(T.hw[0]*2+3.6,2.2,.6),new THREE.MeshBasicMaterial({map:ctex(32,4,(x,w,h)=>{for(let i=0;i<32;i++)for(let j=0;j<4;j++){x.fillStyle=(i+j)&1?'#fff':'#111';x.fillRect(i,j,1,1)}})}),0,8.6,0,g)}
+ /* ----- island: kerbs and pavements ----- */
+ const paveM=new THREE.MeshStandardMaterial({map:T_PAVE(),roughness:1,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}),curbM=flat(0xb9b6ae,{side:THREE.DoubleSide});
+ for(const [a,b] of runs(T,i=>T.sg[i]===2))for(const sd of[-1,1]){
+  sc.add(strip(T,a,b,k=>sd*(T.hw[k]+.02),k=>sd*(T.hw[k]+3.3),.12,paveM,3,2));
+  sc.add(vstrip(T,a,b,k=>sd*(T.hw[k]+.02),.04,.12,curbM,4,1))}
+ /* ----- the city ----- */
+ city(sc,T,r,U);
+ /* ----- sea-level stuff: bollards along the island edge ----- */
+ {const bl=[];for(let x=ISL.x0+8;x<ISL.x1;x+=22){bl.push([x,GY+.4,ISL.z0+.5,.4,.8,.4]);bl.push([x,GY+.4,ISL.z1-.5,.4,.8,.4])}for(let z=ISL.z0+8;z<ISL.z1;z+=22){bl.push([ISL.x1-.5,GY+.4,z,.4,.8,.4]);if(Math.abs(z-GATE[0])>14&&Math.abs(z-GATE[1])>14)bl.push([ISL.x0+.5,GY+.4,z,.4,.8,.4])}
+  instB(sc,new THREE.CylinderGeometry(1,1,1,6),flat(0x2a2f36),bl)}
+ /* ----- far scenery: hazy hills, a skyline across the bay and sea haze ----- */
  {const Wd=4096,Hh=512,hz=352,cv=document.createElement('canvas');cv.width=Wd;cv.height=Hh;const g=cv.getContext('2d'),fog=new THREE.Color(d.fog),rr=rngf(77),mix=(h,t)=>'#'+new THREE.Color(h).lerp(fog,t).getHexString();
-  for(let i=0;i<90;i++){const x=rr()*Wd,w=24+rr()*60,h=40+rr()*130;g.fillStyle=mix([0x8a9aa8,0x9aa8b0,0xa8a8b4][i%3],.55);g.fillRect(x,hz-h,w,h)}
-  g.fillStyle=mix(0x7da0b8,.5);g.beginPath();g.moveTo(0,hz);for(let x=0;x<=Wd;x+=16)g.lineTo(x,hz-18-14*Math.sin(x*.004)-8*Math.sin(x*.013));g.lineTo(Wd,hz);g.fill();
+  g.fillStyle=mix(0x7b95a4,.55);g.beginPath();g.moveTo(0,hz);for(let x=0;x<=Wd;x+=16)g.lineTo(x,hz-40-34*Math.sin(x*.0031+1)-22*Math.sin(x*.0097)-10*Math.sin(x*.021));g.lineTo(Wd,hz);g.fill();
+  for(let i=0;i<70;i++){const x=rr()*Wd,w=22+rr()*50,h=40+rr()*120;g.fillStyle=mix([0x8a9aa8,0x9aa8b0,0xa8a8b4][i%3],.6);g.fillRect(x,hz-h,w,h)}
+  g.fillStyle=mix(0x6f9096,.45);g.beginPath();g.moveTo(0,hz);for(let x=0;x<=Wd;x+=16)g.lineTo(x,hz-16-14*Math.sin(x*.004+2)-8*Math.sin(x*.013));g.lineTo(Wd,hz);g.fill();
   const q=g.createLinearGradient(0,hz-10,0,Hh);q.addColorStop(0,mix(0x7fb4d0,.35));q.addColorStop(1,mix(0x4a86a6,.2));g.fillStyle=q;g.fillRect(0,hz,Wd,Hh-hz);
   const t=new THREE.CanvasTexture(cv);t.encoding=THREE.sRGBEncoding;t.wrapS=THREE.RepeatWrapping;t.minFilter=t.magFilter=THREE.LinearFilter;t.generateMipmaps=false;
-  const bb=T.bounds,m=new THREE.Mesh(new THREE.CylinderGeometry(1300,1300,480,72,1,true),new THREE.MeshBasicMaterial({map:t,transparent:true,side:THREE.BackSide,fog:false,depthWrite:false}));m.position.set((bb[0]+bb[1])/2,90,(bb[2]+bb[3])/2);m.renderOrder=-2;sc.add(m);sc.userData.harbor.pano=m.material}
+  const m=new THREE.Mesh(new THREE.CylinderGeometry(1300,1300,480,72,1,true),new THREE.MeshBasicMaterial({map:t,transparent:true,side:THREE.BackSide,fog:false,depthWrite:false}));m.position.y=90;m.renderOrder=-2;sc.add(m);U.pano=m.material;U.follow=[follow[0],m,sunM]}
+ {const [dome,pano,sunM]=U.follow;U.follow=null;const sx=-500,sy=420,sz=-1000;
+  dome.onBeforeRender=(rd,sce,cam)=>{const p=cam.position;dome.position.set(p.x,0,p.z);dome.updateMatrixWorld();pano.position.set(p.x,90,p.z);pano.updateMatrixWorld();sunM.position.set(p.x+sx,sy,p.z+sz);sunM.updateMatrixWorld()}}
  return sc}
 
-
-
-/* concrete dock tunnels: the road passes through a solid block, with ceiling, lights and signed portals */
-function harborTunnels(sc,T,H){
- const ceilM=new THREE.MeshStandardMaterial({color:0x7e8186,roughness:1,side:THREE.DoubleSide}),roofM=new THREE.MeshStandardMaterial({color:0x6c7075,roughness:1,side:THREE.DoubleSide}),lampM=new THREE.MeshBasicMaterial({color:0xfff0cc}),blk=flat(0x5d6268);
- const lamps=[];
- for(const [a,b] of H.tuns){const hw=k=>T.hw[k]+4.3;
-  sc.add(strip(T,a,b,k=>-hw(k),k=>hw(k),7.4,ceilM,6,2));
-  sc.add(strip(T,a,b,k=>-hw(k)-1.3,k=>hw(k)+1.3,11.6,roofM,10,2));
-  for(let k=a+2;k<b-1;k+=Math.max(1,Math.round(7/T.sp)))for(const sd of[-.5,.5]){const f=frame(T,k,sd*T.hw[k]);lamps.push([f[0],T.y[k]+7.32,f[1],.5,.06,2.2,f[2]])}
-  for(const [k,out] of[[a,-1],[b,1]]){const f=frame(T,k,0),g=new THREE.Group();g.position.set(f[0],T.y[k],f[1]);g.rotation.y=f[2];sc.add(g);
-   const w=(T.hw[k]+5.7)*2;mesh(new THREE.BoxGeometry(w,4.4,1.0),blk,0,9.4,out*.5,g);
-   const sg=mesh(new THREE.PlaneGeometry(Math.min(w-2,13),2.2),new THREE.MeshBasicMaterial({map:T_SIGN('DOCK TUNNEL')}),0,9.4,out*1.02,g);if(out<0)sg.rotation.y=Math.PI}}
- if(lamps.length)instB(sc,new THREE.BoxGeometry(1,1,1),lampM,lamps)}
-/* ---------- level dressing assembled from the CC0 model pack (Kenney ships/vehicles, KayKit city + cargo bits) ---------- */
-function harborDress(sc,T,H,X){const HP=P.HP;if(!HP||!HP.ready){console.warn('harbor: model pack not ready');return}
- const {r,rd,WATER,occ,frame,cat}=X,N=T.N,L={},D=n=>HP.defs[n];
- const put=(n,x,z,yaw,s,o)=>{const d=D(n);if(!d)return;o=o||{};(L[n]=L[n]||[]).push([x,o.y!=null?o.y:(/^bld_/.test(n)?-d.min.y*s*(o.sy||1)-.2:0),z,yaw,s,o.tint,o.sy])};
- const fit=(n,h)=>D(n)?h/D(n).h:1, fitW=(n,w)=>D(n)?w/Math.max(D(n).w,D(n).d):1;
- const free=(x,z,rad)=>{for(const q of occ)if(Math.hypot(q[0]-x,q[1]-z)<q[2]+rad)return false;return true};
- const land=(x,z,m)=>!WATER(x,z)&&!WATER(x+m,z)&&!WATER(x-m,z)&&!WATER(x,z+m)&&!WATER(x,z-m)&&Math.abs(x)<690&&Math.abs(z)<690;
- const pick=a=>a[(r()*a.length)|0],smk=[];
- /* 1) brick alleys: KayKit buildings stand shoulder to shoulder right behind the brick walls, taller than the wall so you see roofs against the sky */
- const BLDS=['bld_A','bld_B','bld_C','bld_D','bld_E','bld_F','bld_G','bld_H'].filter(D),ROOF=[0xffffff,0xf2e4d0,0xe8d8c4,0xdcc8b4,0xf4ecdc];
- for(const [a0,a1] of H.alleys)for(const sd of[-1,1]){let k=a0+1;
-  while(k<a1-1){const nm=pick(BLDS);if(!nm)break;const w0=D(nm).w,d0=D(nm).d,s=(7+r()*2.5)/w0,wp=w0*s,dp=d0*s,sy=1.9+r()*.9;
-   const hwk=T.hw[k],lat=sd*(hwk+2.4+dp/2),f=frame(T,k,lat),yaw=Math.atan2(-Math.cos(T.psi[k])*sd,Math.sin(T.psi[k])*sd);
-   const half=Math.hypot(wp,dp)/2*.92;
-   if(rd(f[0],f[1])-half>=hwk+2.2&&free(f[0],f[1],half*.8)&&land(f[0],f[1],4)){put(nm,f[0],f[1],yaw,s,{sy,tint:pick(ROOF)});occ.push([f[0],f[1],half*.8]);if(r()<.14)smk.push([f[0]+Math.sin(yaw)*1,D(nm).h*s*sy+.2,f[1]+Math.cos(yaw)*1])}
-   k+=Math.max(2,Math.round((wp*.97)/T.sp))}}
- /* 2) pavement furniture in the alleys: bins, hydrants, boxes, benches stay on the kerb strip, never on the asphalt */
- const FUR=[['dumpster',1.3],['firehydrant',.9],['trash_A',.8],['trash_A',.8],['box_A',.9],['box_B',.8],['barrel',.9],['bench',.85],['bush',1.4]];
- for(const [a0,a1] of H.alleys)for(let k=a0+3;k<a1-2;k+=Math.round(11/T.sp)+((r()*4)|0)){const sd=r()<.5?-1:1,[nm,h]=pick(FUR);if(!D(nm))continue;
-  const f=frame(T,k,sd*(T.hw[k]+1.15));const s=fit(nm,h),yaw=Math.atan2(-Math.cos(T.psi[k])*sd,Math.sin(T.psi[k])*sd);
-  put(nm,f[0],f[1],yaw,s,{y:.2})}
- /* 2b) waterfront: rows of buildings and sheds along every quay, fronts toward the water, with crates and bollards between them and the edge */
- {const SH0=[],ST0=['cargo_A_stacked','cargo_B_stacked','cargo_A_packed','cargo_B_packed'].filter(D);
-  const shores=[{ax:0,fix:215,lo:12,hi:308,face:Math.PI/2,sx:-1},{ax:1,fix:5,lo:222,hi:690,face:0,sx:-1},{ax:1,fix:315,lo:-690,hi:205,face:0,sx:-1}];
-  for(const sh of shores)for(let u=sh.lo;u<sh.hi;){
-   const big=r()<.4&&SH0.length,nm=big?pick(SH0):pick(BLDS);if(!nm){u+=8;continue}
-   const wt=big?18+r()*7:9+r()*6,sc2=big?fitW(nm,wt):wt/D(nm).w,wp=D(nm).w*sc2,dp=D(nm).d*sc2,sy=big?1:1.1+r()*1.1,inl=8+dp/2;
-   const x=sh.ax===0?sh.fix+sh.sx*inl:u+wp/2,z=sh.ax===0?u+wp/2:sh.fix+sh.sx*inl,half=Math.hypot(wp,dp)/2*.9;
-   if(land(x,z,half*.6)&&rd(x,z)-half>=11&&free(x,z,half*.85)){put(nm,x,z,sh.face,sc2,{sy,tint:big?undefined:pick(ROOF)});occ.push([x,z,half*.85]);if(big&&r()<.5)smk.push([x,D(nm).h*sc2,z]);
-    const cx=sh.ax===0?sh.fix-3:u+wp/2,cz=sh.ax===0?u+wp/2:sh.fix-3;if(ST0.length&&r()<.6&&free(cx,cz,2.5)){put(pick(ST0),cx,cz,sh.face,fitW(ST0[0],3.4));occ.push([cx,cz,2.5])}}
-   u+=wp*.97+(r()<.1?2+r()*4:0)}}
- /* 3) container yard on the north-east apron: stacked cargo pods, depots, trucks, cranes, wind turbines */
- const YARD={x0:226,x1:640,z0:-175,z1:-4};
- const STACK=['cargo_A_stacked','cargo_B_stacked','cargo_A_packed','cargo_B_packed','cargo_A','cargo_B'].filter(D),SHED=[],TRK=['truck','truck_flat','delivery_truck','van','tractor'].filter(D);
- const yardSpot=(x,z,rad)=>land(x,z,rad)&&x>YARD.x0&&x<YARD.x1&&z>YARD.z0&&z<YARD.z1&&rd(x,z)>16+rad&&free(x,z,rad);
- /* big sheds first */
- for(let t=0,n=0;t<800&&n<24&&SHED.length;t++){const x=YARD.x0+r()*(YARD.x1-YARD.x0),z=YARD.z0+r()*(YARD.z1-YARD.z0),nm=pick(SHED),s=fitW(nm,24+r()*8),rad=D(nm).w*s*.62;
-  if(!yardSpot(x,z,rad+3))continue;put(nm,x,z,Math.round(r()*2)*Math.PI/2,s);occ.push([x,z,rad+3]);smk.push([x+D(nm).w*s*.2,D(nm).h*s,z],[x-D(nm).w*s*.2,D(nm).h*s,z+D(nm).d*s*.15]);n++}
- /* stacks in tidy rows */
- for(let t=0,n=0;t<2200&&n<190;t++){const x=YARD.x0+r()*(YARD.x1-YARD.x0),z=YARD.z0+r()*(YARD.z1-YARD.z0),nm=pick(STACK),yaw=Math.round(r()*2)*Math.PI/2,s=fitW(nm,/stacked/.test(nm)?6.5:4);
-  const cols=2+((r()*3)|0),rows=1+((r()*3)|0),sp=D(nm).w*s+.25,rad=Math.max(cols,rows)*sp*.6+2;if(!yardSpot(x,z,rad))continue;
-  const tintv=pick([0xffffff,0xffe0b8,0xc0d8ff,0xffb8a8,0xc8ffd0]);
-  for(let a=0;a<cols;a++)for(let b=0;b<rows;b++)put(nm,x+Math.cos(yaw)*(a-cols/2)*sp+Math.sin(yaw)*(b-rows/2)*sp,z-Math.sin(yaw)*(a-cols/2)*sp+Math.cos(yaw)*(b-rows/2)*sp,yaw,s,{tint:tintv});
-  occ.push([x,z,rad]);n++}
- /* 4) crate rows on the west quay edge (x<215, z 60..310): stay >14 m from the asphalt */
- for(let z=70;z<312;z+=7+r()*8){const nm=pick(STACK),x=207-r()*4;if(!nm)continue;const s=fitW(nm,/stacked/.test(nm)?4:3);if(rd(x,z)<12||!free(x,z,3))continue;put(nm,x,z,Math.round(r()*2)*Math.PI/2,s);occ.push([x,z,3])}
- /* 5) ships: moored in the east basin and out at sea, plus rowboats and a wreck */
- /* small boats tied up around the piers (the only boat models available that aren't medieval) */
- const wl=-1.8;
- for(const [x,z,yaw] of[[290,150,.3],[300,205,-.5],[276,115,1.2],[236,230,0],[238,60,1.4],[236,290,.1]]){const nm=r()<.5?'boat_large':'boat_small';if(D(nm))put(nm,x,z,yaw,fitW(nm,5.2),{y:wl-.05})}
- /* 7) street walls: continuous rows of buildings behind a pavement on every open road, each row taller than the one before, so the skyline stays hidden */
- const openK=k=>!(H.alleys.some(q=>k>=q[0]-3&&k<=q[1]+3)||(k>=H.rest[0]-3&&k<=H.rest[1]+3)||(k>=H.pier[0]-3&&k<=H.pier[1]+3)||H.tuns.some(q=>k>=q[0]-4&&k<=q[1]+4));
- {const paveM=new THREE.MeshStandardMaterial({map:T_PAVE(),roughness:1,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
-  let k=0;while(k<N){if(!openK(k)){k++;continue}let e=k;while(e+1<N&&openK(e+1))e++;if(e-k>6)for(const sd of[-1,1]){sc.add(strip(T,k,e,q=>sd*(T.hw[q]+.1),q=>sd*(T.hw[q]+9),.12,paveM,3,2));
-    const pos=[],idx=[],n=e-k+1;for(let q=0;q<n;q++){const kk=(k+q)%N,f=frame(T,kk,sd*(T.hw[kk]+.1));pos.push(f[0],T.y[kk]+.03,f[1],f[0],T.y[kk]+.12,f[1])}
-    for(let q=0;q<n-1;q++){const pp=q*2;idx.push(pp,pp+2,pp+1,pp+1,pp+2,pp+3)}const kg=new THREE.BufferGeometry();kg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));kg.setIndex(idx);kg.computeVertexNormals();sc.add(new THREE.Mesh(kg,new THREE.MeshStandardMaterial({color:0xb4b2aa,roughness:1,side:THREE.DoubleSide})))}k=e+1}}
- const openRow=k=>!(H.alleys.some(q=>k>=q[0]-3&&k<=q[1]+3)||(k>=H.rest[0]-3&&k<=H.rest[1]+3)||(k>=H.pier[0]-3&&k<=H.pier[1]+3));
- const ROWS=[0,1,2];
- for(const row of ROWS)for(const sd of[-1,1]){let k=2;
-  while(k<N-2){if(!openRow(k)){k+=2;continue}
-   const nm=pick(BLDS);if(!nm)break;const w0=D(nm).w,d0=D(nm).d,wt=(row?12:8.5)+r()*(row?9:6),s=wt/w0,wp=w0*s,dp=d0*s,sy=(row?1.5:1.0)+r()*(row?1.4:.8);
-   const hwk=T.hw[k],lat=sd*(hwk+5.6+row*17+dp/2+r()*.5),f=frame(T,k,lat),yaw=Math.atan2(-Math.cos(T.psi[k])*sd,Math.sin(T.psi[k])*sd),half=Math.hypot(wp,dp)/2*.9;
-   if(rd(f[0],f[1])-half>=hwk+4.2&&free(f[0],f[1],half*.85)&&land(f[0],f[1],half*.7)){put(nm,f[0],f[1],yaw,s,{sy,tint:pick(ROOF)});occ.push([f[0],f[1],half*.85]);if(r()<.1)smk.push([f[0],D(nm).h*s*sy+.2,f[1]]);k+=Math.max(1,Math.round((wp*.97+(r()<.06?1.5+r()*2:0))/T.sp))}
-   else k+=2}}
- /* trees and hedges along the pavement edge (pack models, not pots) */
- {const pkInst=(nm,rows)=>{const q=P.BLD&&P.BLD[nm];if(!q||!P.PROPKIT||!rows.length)return;const im=new THREE.InstancedMesh(q.g.clone(),P.PROPKIT.MAT,rows.length),o=new THREE.Object3D();rows.forEach((w,i)=>{o.position.set(w[0],w[1],w[2]);o.rotation.set(0,w[3],0);o.scale.setScalar(w[4]);o.updateMatrix();im.setMatrixAt(i,o.matrix)});im.frustumCulled=false;im.userData.ptProp=nm;sc.add(im)};
-  const TRN=['Tree_02','Tree_04','Tree_05','Tree_07'].filter(n=>P.BLD&&P.BLD[n]),HGN=['Bush_01','Bush_02'].filter(n=>P.BLD&&P.BLD[n]),tr={},hg={};
-  for(let k=6;k<N;k+=Math.round(15/T.sp)){if(!openK(k))continue;const sd=(k/Math.round(15/T.sp))%2?1:-1,f=frame(T,k,sd*(T.hw[k]+3.7));if(!land(f[0],f[1],2)||!free(f[0],f[1],1.2))continue;const nm=pick(TRN);if(!nm)break;(tr[nm]=tr[nm]||[]).push([f[0],.12,f[1],r()*6.28,1.1+r()*.6]);occ.push([f[0],f[1],1.4])}
-  for(let k=3;k<N;k+=Math.round(6/T.sp)){if(!openK(k)||r()<.97)continue;const sd=r()<.5?-1:1,f=frame(T,k,sd*(T.hw[k]+3.5));if(!land(f[0],f[1],1.5)||!free(f[0],f[1],1))continue;const nm=pick(HGN);if(!nm)break;(hg[nm]=hg[nm]||[]).push([f[0],.12,f[1],r()*6.28,.55+r()*.3]);occ.push([f[0],f[1],.9])}
-  for(const n in tr)pkInst(n,tr[n]);for(const n in hg)pkInst(n,hg[n])}
- /* 7b) block fill: every remaining stretch of land within reach of a road becomes a building, a park, a car park or a depot, so nothing is left as bare ground */
- {const CARS=['car_taxi','car_police','car_hatchback','car_sedan','car_stationwagon','van','delivery_truck'].filter(D),CT=[0xffffff,0xc9d4e0,0xe0c9c9,0xcfe0cf,0xe6e0c4,0x9fb0c4,0xb8b8b8];
-  const parks=[],lots=[],lines=[],TR2=['Tree_02','Tree_04','Tree_05','Tree_07'].filter(n=>P.BLD&&P.BLD[n]),trs={};
-  const nearestK=(x,z)=>{let b=1e9,kk=0;for(let i=0;i<N;i+=2){const d=Math.hypot(x-T.x[i],z-T.z[i]);if(d<b){b=d;kk=i}}return kk};
-  let cnt=0;const cells=[];for(let x=-660;x<=690;x+=20)for(let z=-660;z<=690;z+=20)cells.push([x+(r()-.5)*8,z+(r()-.5)*8]);
-  for(let i=cells.length-1;i>0;i--){const j=(r()*(i+1))|0;[cells[i],cells[j]]=[cells[j],cells[i]]}
-  for(const [x,z] of cells){if(cnt>1000)break;if(!land(x,z,8))continue;const q=rd(x,z);if(q<14||q>300||!free(x,z,8))continue;
-   const kk=nearestK(x,z),yaw=Math.round(Math.atan2(T.x[kk]-x,T.z[kk]-z)/(Math.PI/2))*Math.PI/2,ind=x>140&&z<20,u=r();
-   if(ind&&SHED.length&&u<.55){const nm=pick(SHED),s2=fitW(nm,17+r()*7);if(nm){put(nm,x,z,yaw,s2);occ.push([x,z,13]);if(r()<.4)smk.push([x,D(nm).h*s2,z]);cnt++}}
-   else if(ind&&u<.85){const nm=pick(STACK),yw=Math.round(r()*2)*Math.PI/2,s2=fitW(nm,/stacked/.test(nm)?6.5:4.2),sp=D(nm).w*s2+.25;for(let a2=-1;a2<=1;a2++)for(let b2=-1;b2<=1;b2++)if(r()<.85)put(nm,x+a2*sp,z+b2*sp,yw,s2);occ.push([x,z,11]);cnt++}
-   else if(u<.74||ind){const nm=pick(BLDS);if(!nm)continue;const wt=9+r()*7,s2=wt/D(nm).w,sy=1.3+r()*(q>90?2:1.3);put(nm,x,z,yaw,s2,{sy,tint:pick(ROOF)});occ.push([x,z,Math.hypot(wt,D(nm).d*s2)*.5*.9]);if(r()<.08)smk.push([x,D(nm).h*s2*sy+.2,z]);cnt++}
-   else if(u<.8){parks.push([x,-.01,z,20,.1,20]);const n2=4+((r()*4)|0);for(let t=0;t<n2;t++){const nm=pick(TR2);if(nm)(trs[nm]=trs[nm]||[]).push([x+(r()-.5)*15,0,z+(r()-.5)*15,r()*6.28,1.0+r()*.7])}if(D('bench'))put('bench',x+(r()-.5)*8,z+(r()-.5)*8,yaw,fitW('bench',2.4),{y:0});occ.push([x,z,13]);cnt++}
-   else if(false){lots.push([x,-.01,z,22,.1,15,yaw]);for(let a2=0;a2<4;a2++)for(const rw of[-1,1]){if(r()<.2||!CARS.length)continue;const nm=pick(CARS),cx=(a2-1.5)*5,cz=rw*3.6;put(nm,x+Math.cos(yaw)*cx+Math.sin(yaw)*cz,z-Math.sin(yaw)*cx+Math.cos(yaw)*cz,yaw+Math.PI/2+(rw>0?0:Math.PI),fitW(nm,4.3),{tint:pick(CT),y:D(nm).min.y?-D(nm).min.y*fitW(nm,4.3):0})}occ.push([x,z,13]);cnt++}}
-  const po={polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1};
-  if(parks.length)instB(sc,new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial(Object.assign({color:0x5f8f48,roughness:1},po)),parks);
-  if(lots.length)instB(sc,new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial(Object.assign({color:0x4a4d53,roughness:1},po)),lots.map(q=>[q[0],q[1],q[2],q[3],q[4],q[5],q[6]]));
-  for(const n in trs){const q=P.BLD[n];if(!q||!P.PROPKIT)continue;const im=new THREE.InstancedMesh(q.g.clone(),P.PROPKIT.MAT,trs[n].length),o=new THREE.Object3D();trs[n].forEach((w,i)=>{o.position.set(w[0],w[1],w[2]);o.rotation.set(0,w[3],0);o.scale.setScalar(w[4]);o.updateMatrix();im.setMatrixAt(i,o.matrix)});im.frustumCulled=false;sc.add(im)}}
- /* 8) drifting smoke from chimneys, sheds and cranes */
- if(smk.length){const cv=document.createElement('canvas');cv.width=cv.height=64;const g=cv.getContext('2d'),gr=g.createRadialGradient(32,32,0,32,32,32);[[0,.7],[.4,.4],[.7,.14],[1,0]].forEach(([o,a])=>gr.addColorStop(o,`rgba(235,235,235,${a})`));g.fillStyle=gr;g.fillRect(0,0,64,64);
-  const tx=new THREE.CanvasTexture(cv),puffs=[],grp=new THREE.Group();sc.add(grp);const C=7;
-  smk.slice(0,40).forEach(([x,y,z])=>{for(let i=0;i<C;i++){const m=new THREE.Sprite(new THREE.SpriteMaterial({map:tx,transparent:true,depthWrite:false,fog:true,opacity:0}));grp.add(m);puffs.push({m,x,y,z,ph:i/C,sp:.8+r()*.3,dx:(r()-.5)*.5,dz:(r()-.5)*.5})}});
-  sc.onBeforeRender=()=>{const t=performance.now()/1000;for(const p of puffs){const u=((t*.07*p.sp+p.ph)%1),h=u*34;p.m.position.set(p.x+u*u*22+p.dx*u*8,p.y+h,p.z+u*9+p.dz*u*8);p.m.scale.setScalar(3+u*17);p.m.material.opacity=Math.sin(Math.min(1,u*1.2)*Math.PI)*.5*(1-u*.4)}}}
- for(const n in L)HP.add(sc,n,L[n])}
+/* ---------- the island city: gap-free rows facing every shore, street rows, block fill, alleys ---------- */
+function city(sc,T,r,U){const HP=P.HP,N=T.N;if(!HP||!HP.ready){console.warn('bridge: model pack not ready');return}
+ const D=n=>HP.defs[n],L={},PK={},B=P.BLD,MAT=P.PROPKIT&&P.PROPKIT.MAT;
+ const KK=['bld_A','bld_B','bld_C','bld_D','bld_E','bld_F','bld_G','bld_H'].filter(D);
+ const PKN=['CompanyBuilding_01','CompanyBuilding_02','CompanyBuilding_03','CompanyBuilding_04','CommercialBuilding_01','CommercialBuilding_02','CommercialBuilding_03','ResidentBuilding_01','ResidentBuilding_02','ResidentBuilding_03','ResidentBuilding_04','ResidentBuilding_05','ResidentBuilding_06','StoreBuilding_01'].filter(n=>B&&B[n]&&MAT);
+ const PD={};for(const n of PKN){const g=B[n].g;if(!g.boundingBox)g.computeBoundingBox();const b=g.boundingBox;PD[n]={w:b.max.x-b.min.x,h:b.max.y-b.min.y,d:b.max.z-b.min.z,my:b.min.y}}
+ const pick=a=>a[(r()*a.length)|0];
+ const TINT=[0xffffff,0xf3e6d3,0xe9d2c0,0xd8dde6,0xe6e0c8,0xdac0b0,0xf6efe2];
+ /* occupancy raster, 2 m cells */
+ const CS=2,GW=Math.ceil((ISL.x1-ISL.x0)/CS),GH=Math.ceil((ISL.z1-ISL.z0)/CS),occ=new Uint8Array(GW*GH);
+ const ci=x=>Math.floor((x-ISL.x0)/CS),cj=z=>Math.floor((z-ISL.z0)/CS);
+ const cell=(i,j)=>i>=0&&j>=0&&i<GW&&j<GH?occ[j*GW+i]:1;
+ const each=(cx,cz,w,dp,yaw,pad,fn)=>{const cs=Math.cos(yaw),sn=Math.sin(yaw),R=Math.hypot(w,dp)/2+1;
+  for(let j=Math.max(0,cj(cz-R));j<=Math.min(GH-1,cj(cz+R));j++)for(let i=Math.max(0,ci(cx-R));i<=Math.min(GW-1,ci(cx+R));i++){
+   const x=ISL.x0+(i+.5)*CS,z=ISL.z0+(j+.5)*CS,dx=x-cx,dz=z-cz,u=dx*cs-dz*sn,v=dx*sn+dz*cs;
+   if(Math.abs(u)<=w/2+pad&&Math.abs(v)<=dp/2+pad)fn(i,j)}};
+ const rectFree=(cx,cz,w,dp,yaw)=>{if(cx-w/2<ISL.x0-.01||cx+w/2>ISL.x1+.01||cz-dp/2<ISL.z0-.01||cz+dp/2>ISL.z1+.01){const R=Math.hypot(w,dp)/2;if(cx-R<ISL.x0||cx+R>ISL.x1||cz-R<ISL.z0||cz+R>ISL.z1)return false}
+  let ok=true;each(cx,cz,w,dp,yaw,-.35,(i,j)=>{if(occ[j*GW+i])ok=false});return ok};
+ const mark=(cx,cz,w,dp,yaw,pad)=>each(cx,cz,w,dp,yaw,pad||0,(i,j)=>{occ[j*GW+i]=1});
+ /* roads and pavements are off limits */
+ for(let i=0;i<N;i++){if(T.sg[i]!==2)continue;const R=T.hw[i]+3.3;each(T.x[i],T.z[i],R*2,R*2,0,0,(a,b)=>{const x=ISL.x0+(a+.5)*CS,z=ISL.z0+(b+.5)*CS;if((x-T.x[i])**2+(z-T.z[i])**2<=R*R)occ[b*GW+a]=1})}
+ const gateBox=[];
+ /* ---- model placement ---- */
+ const placeHP=(nm,x,z,yaw,s,sy,tint)=>{const d=D(nm);(L[nm]=L[nm]||[]).push([x,GY-d.min.y*s*sy-.15,z,yaw,s,tint,sy])};
+ const placePK=(nm,x,z,yaw,sx,sy,sz,tint)=>{(PK[nm]=PK[nm]||[]).push([x,GY+.02,z,yaw,sx,sy,sz,tint])};
+ const roofs=[];
+ /* a building spec for a slot of width W (along the frontage) */
+ const spec=(W,hLo,hHi,dMin)=>{const H=hLo+r()*(hHi-hLo);
+  if(PKN.length&&(r()<.38||!KK.length)){/* pack building, stretched to the slot */
+   let best=null,bs=1e9;for(const n of PKN){const sc2=Math.abs(Math.log(W/PD[n].w))+r()*.55;if(sc2<bs){bs=sc2;best=n}}
+   const p=PD[best],sx=W/p.w,Dp=Math.max(dMin||0,Math.min(13,p.d*sx*.95)),sz=Dp/p.d,sy=Math.max(.8,Math.min(3.4,H/p.h));return{pk:best,W,D:Dp,sx,sy,sz,H:p.h*sy}}
+  const nm=pick(KK),d=D(nm),s=W/d.w,Dp=d.d*s,sy=Math.max(.8,Math.min(3.2,H/(d.h*s)));return{hp:nm,W,D:Dp,s,sy,H:d.h*s*sy}};
+ const put=(sp,cx,cz,yaw)=>{const t=pick(TINT);if(sp.pk)placePK(sp.pk,cx,cz,yaw,sp.sx,sp.sy,sp.sz,t);else placeHP(sp.hp,cx,cz,yaw,sp.s,sp.sy,t);mark(cx,cz,sp.W,sp.D,yaw,0);if(r()<.11&&D('watertower'))roofs.push([cx,GY+sp.H,cz,yaw])};
+ /* widths that tile a run exactly */
+ const tile=(len,lo,hi)=>{const out=[];let rem=len;while(rem>.01){let w=lo+r()*(hi-lo);if(rem-w<lo*.85)w=rem;out.push(w);rem-=w}return out};
+ /* ---- 1) the sea wall: four unbroken rows facing outward, corner towers, gate houses ---- */
+ const CORNER=14;
+ const ringRow=(a,b,fix,axis,out,hLo,hHi)=>{/* from a to b along `axis`; building front sits 0.4 m inside the edge */
+  const len=b-a;if(len<4)return;let u=a;for(const W of tile(len,10,17)){const sp=spec(W,hLo,hHi,11),c=u+W/2;
+   const dep=sp.D;let cx,cz,yaw;
+   if(axis==='z'){cx=fix-out*(dep/2+.4);cz=c;yaw=Math.atan2(out,0)}else{cx=c;cz=fix-out*(dep/2+.4);yaw=Math.atan2(0,out)}
+   put(sp,cx,cz,yaw);u+=W}};
+ /* corner towers first (square, tall) */
+ for(const [cx,cz] of[[ISL.x0+CORNER/2,ISL.z0+CORNER/2],[ISL.x1-CORNER/2,ISL.z0+CORNER/2],[ISL.x0+CORNER/2,ISL.z1-CORNER/2],[ISL.x1-CORNER/2,ISL.z1-CORNER/2]]){
+  const nm=PKN.length?pick(PKN.filter(n=>/Company/.test(n))):null;
+  if(nm){const p=PD[nm];placePK(nm,cx,cz,0,CORNER/p.w,Math.min(3.6,(34+r()*14)/p.h),CORNER/p.d,pick(TINT))}
+  else{const n2=pick(KK),d=D(n2),s=CORNER/Math.max(d.w,d.d);placeHP(n2,cx,cz,0,s,2.6,pick(TINT))}
+  mark(cx,cz,CORNER,CORNER,0,0)}
+ ringRow(ISL.x0+CORNER,ISL.x1-CORNER,ISL.z0,'x',-1,16,36);   /* north, faces -z */
+ ringRow(ISL.x0+CORNER,ISL.x1-CORNER,ISL.z1,'x',1,16,36);    /* south, faces +z */
+ ringRow(ISL.z0+CORNER,ISL.z1-CORNER,ISL.x1,'z',1,16,36);    /* east, faces +x */
+ /* west wall, split by the two gates */
+ {const gs=GATE.slice().sort((p,q)=>p-q);let a=ISL.z0+CORNER;for(const g of gs){ringRow(a,g-GATEW,ISL.x0,'z',-1,16,36);a=g+GATEW}ringRow(a,ISL.z1-CORNER,ISL.x0,'z',-1,16,36)}
+ /* gate houses: a block spanning each gate, road passes under it */
+ {const gm=new THREE.MeshStandardMaterial({map:T_GATE(),roughness:.95});gm.map.repeat.set(6,2);
+  for(const gz of GATE){const w=11;const m=mesh(new THREE.BoxGeometry(w,8.2,GATEW*2),gm,ISL.x0+w/2,GY+7.2+4.1,gz,sc);m.userData.gate=1;
+   mesh(new THREE.BoxGeometry(w+.6,.8,GATEW*2+.6),flat(0xd9cdb4),ISL.x0+w/2,GY+15.7,gz,sc);
+   const sg=mesh(new THREE.PlaneGeometry(9,2.2),new THREE.MeshBasicMaterial({map:T_SIGN(gz===GATE[0]?'CITY ISLAND':'CAUSEWAY','#1d3a5c')}),ISL.x0-.06,GY+11.4,gz,sc);sg.rotation.y=-Math.PI/2;
+   mark(ISL.x0+w/2,gz,w,GATEW*2,0,0)}}
+ /* ---- 2) street rows: continuous frontage along both sides of every island road ---- */
+ const isl=[];for(let i=0;i<N;i++)if(T.sg[i]===2)isl.push(i);
+ /* contiguous runs in track order */
+ const rr=[];{let cur=null,prev=-5;for(const i of isl){if(cur&&i===prev+1)cur.push(i);else{cur=[i];rr.push(cur)}prev=i}}
+ for(const run of rr)for(const sd of[-1,1]){
+  /* offset polyline */
+  const pts=run.map(k=>{const f=frame(T,k,sd*(T.hw[k]+3.4));return[f[0],f[1]]}),cum=[0];for(let i=1;i<pts.length;i++)cum.push(cum[i-1]+Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]));
+  const total=cum[cum.length-1];const at=s=>{s=Math.max(0,Math.min(total,s));let i=1;while(i<cum.length-1&&cum[i]<s)i++;const u=(s-cum[i-1])/Math.max(1e-6,cum[i]-cum[i-1]);return[pts[i-1][0]+(pts[i][0]-pts[i-1][0])*u,pts[i-1][1]+(pts[i][1]-pts[i-1][1])*u]};
+  let s=0;while(s<total-6){const W=9+r()*8,e=Math.min(total,s+W);if(e-s<7){break}
+   const A=at(s),Bp=at(e),tx=Bp[0]-A[0],tz=Bp[1]-A[1],tl=Math.hypot(tx,tz)||1;
+   const rx=tz/tl,rz=-tx/tl;                  /* right of travel */
+   const fcx=-sd*rx,fcz=-sd*rz;               /* facing = toward the road */
+   const sp=spec(e-s,12,30,7),cx=(A[0]+Bp[0])/2-fcx*sp.D/2,cz=(A[1]+Bp[1])/2-fcz*sp.D/2,yaw=Math.atan2(fcx,fcz);
+   if(rectFree(cx,cz,sp.W,sp.D,yaw)){put(sp,cx,cz,yaw);s=e}else s+=3}}
+ /* ---- 3) block fill: tall buildings in everything that is left, biggest first ---- */
+ const nearestRoad=(x,z)=>{let b=1e9,bx=0,bz=0;for(const i of isl){const dd=(T.x[i]-x)**2+(T.z[i]-z)**2;if(dd<b){b=dd;bx=T.x[i];bz=T.z[i]}}return[bx,bz]};
+ for(const [maxW,minW] of[[18,10],[14,8],[10,6]]){
+  const order=[];for(let j=0;j<GH;j++)for(let i=0;i<GW;i++)order.push([i,j]);for(let k=order.length-1;k>0;k--){const q=(r()*(k+1))|0;[order[k],order[q]]=[order[q],order[k]]}
+  for(const [i,j] of order){if(occ[j*GW+i])continue;
+   let wc=0;while(wc<maxW/CS&&!cell(i+wc,j))wc++;let dc=0;
+   outer:while(dc<maxW/CS){for(let a=0;a<wc;a++)if(cell(i+a,j+dc))break outer;dc++}
+   if(wc*CS<minW||dc*CS<minW)continue;
+   const W=Math.min(wc*CS,minW+r()*(maxW-minW)),Dp=Math.min(dc*CS,minW+r()*(maxW-minW));
+   const cx=ISL.x0+i*CS+W/2,cz=ISL.z0+j*CS+Dp/2,[rx,rz]=nearestRoad(cx,cz),ax=rx-cx,az=rz-cz;
+   const yaw=Math.abs(ax)>Math.abs(az)?(ax>0?Math.PI/2:-Math.PI/2):(az>0?0:Math.PI);
+   const upright=Math.abs(Math.sin(yaw))>.5;const WW=upright?Dp:W,DD=upright?W:Dp;   /* width along the facade */
+   const H=20+r()*34,tint=pick(TINT);
+   if(PKN.length&&(r()<.45||!KK.length)){const nm=pick(PKN),p=PD[nm];placePK(nm,cx,cz,yaw,WW/p.w,Math.min(4,H/p.h),DD/p.d,tint);if(r()<.1&&D('watertower'))roofs.push([cx,GY+Math.min(4,H/p.h)*p.h,cz,yaw])}
+   else{const nm=pick(KK),d=D(nm),s=Math.min(WW/d.w,DD/d.d),sy=Math.max(.8,Math.min(3.4,H/(d.h*s)));placeHP(nm,cx,cz,yaw,s,sy,tint)}
+   mark(cx,cz,W,Dp,0,0)}}
+ /* ---- 4) whatever is still free: tiny alleys (dumpsters, bins, bags, crates) or, if large, a pocket park ---- */
+ const seen=new Uint8Array(GW*GH),alleys=[],parks=[],lotsFloor=[];
+ for(let j=0;j<GH;j++)for(let i=0;i<GW;i++){if(occ[j*GW+i]||seen[j*GW+i])continue;
+  const q=[[i,j]];seen[j*GW+i]=1;const cells=[];let mnx=1e9,mxx=-1e9,mnz=1e9,mxz=-1e9;
+  while(q.length){const [a,b]=q.pop();cells.push([a,b]);mnx=Math.min(mnx,a);mxx=Math.max(mxx,a);mnz=Math.min(mnz,b);mxz=Math.max(mxz,b);for(const [da,db] of[[1,0],[-1,0],[0,1],[0,-1]]){const na=a+da,nb=b+db;if(na<0||nb<0||na>=GW||nb>=GH||occ[nb*GW+na]||seen[nb*GW+na])continue;seen[nb*GW+na]=1;q.push([na,nb])}}
+  (cells.length>26?parks:alleys).push({cells,x0:ISL.x0+mnx*CS,x1:ISL.x0+(mxx+1)*CS,z0:ISL.z0+mnz*CS,z1:ISL.z0+(mxz+1)*CS})}
+ const trees={};const TR=['Tree_02','Tree_04','Tree_05','Tree_07'].filter(n=>B&&B[n]);
+ const alleyProps=['dumpster','dumpster','trash_A','trash_A','trash_B','box_A','box_B','barrel'].filter(D);
+ const fl=[];
+ for(const a of alleys){/* dark paved floor and clutter, a dumpster at each end */
+  for(const [ci2,cj2] of a.cells)fl.push([ISL.x0+(ci2+.5)*CS,GY+.012,ISL.z0+(cj2+.5)*CS,CS,.02,CS]);
+  const n=a.cells.length<3?(r()<.5?1:0):Math.max(2,Math.round(a.cells.length/2.2));
+  for(let k=0;k<n;k++){const [ci2,cj2]=a.cells[(r()*a.cells.length)|0],x=ISL.x0+(ci2+.5)*CS+(r()-.5)*1.4,z=ISL.z0+(cj2+.5)*CS+(r()-.5)*1.4;
+   const nm=(k<2&&a.cells.length>=3)?'dumpster':pick(alleyProps);if(!D(nm))continue;const h=nm==='dumpster'?1.15:nm==='barrel'?1.0:nm.startsWith('box')?.9:.55,s=h/D(nm).h;
+   (L[nm]=L[nm]||[]).push([x,GY+.02,z,r()*6.28,s,undefined,1])}}
+ for(const pk of parks){for(const [ci2,cj2] of pk.cells)fl.push([ISL.x0+(ci2+.5)*CS,GY+.018,ISL.z0+(cj2+.5)*CS,CS,.02,CS,0,1]);
+  for(let k=0;k<Math.min(9,pk.cells.length/6);k++){const [ci2,cj2]=pk.cells[(r()*pk.cells.length)|0],nm=pick(TR);if(nm)(trees[nm]=trees[nm]||[]).push([ISL.x0+(ci2+.5)*CS,GY,ISL.z0+(cj2+.5)*CS,r()*6.28,1.3+r()*.7])}}
+ {const g=fl.filter(f=>f.length<8),pg=fl.filter(f=>f.length>=8);
+  if(g.length)instB(sc,new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({map:T_ALLEY(),roughness:1,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}),g);
+  if(pg.length)instB(sc,new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:0x5f8f48,roughness:1,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}),pg)}
+ /* ---- 5) street furniture and trees on the pavements ---- */
+ for(const run of rr){for(let q=4;q<run.length-3;q+=Math.max(2,Math.round(26/T.sp))){const k=run[q],sd=((q/Math.max(2,Math.round(26/T.sp)))|0)%2?1:-1,f=frame(T,k,sd*(T.hw[k]+2.4));
+   if(!TR.length)break;const nm=pick(TR);(trees[nm]=trees[nm]||[]).push([f[0],GY+.1,f[1],r()*6.28,1.0+r()*.5])}
+  for(let q=7;q<run.length-3;q+=Math.max(3,Math.round(17/T.sp))){const k=run[q],sd=r()<.5?-1:1,f=frame(T,k,sd*(T.hw[k]+2.9));const nm=pick(['firehydrant','box_A','trash_A','bench'].filter(D));if(!nm)continue;
+   const h=nm==='firehydrant'?.9:nm==='bench'?.55:nm==='box_A'?.8:.6,s=h/D(nm).h,yaw=Math.atan2(-Math.cos(T.psi[k])*sd,Math.sin(T.psi[k])*sd);(L[nm]=L[nm]||[]).push([f[0],GY+.12,f[1],yaw,s,undefined,1])}}
+ /* ---- build meshes ---- */
+ for(const n in L)HP.add(sc,n,L[n]);
+ {const o=new THREE.Object3D(),c=new THREE.Color();
+  for(const n in PK){const rows=PK[n],im=new THREE.InstancedMesh(B[n].g.clone(),MAT,rows.length);rows.forEach((w,i)=>{o.position.set(w[0],w[1],w[2]);o.rotation.set(0,w[3],0);o.scale.set(w[4],w[5],w[6]);o.updateMatrix();im.setMatrixAt(i,o.matrix);c.setHex(w[7]);im.setColorAt(i,c)});im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true;im.frustumCulled=false;im.userData.ptProp=n;sc.add(im)}
+  for(const n in trees){const rows=trees[n],im=new THREE.InstancedMesh(B[n].g.clone(),MAT,rows.length);rows.forEach((w,i)=>{o.position.set(w[0],w[1],w[2]);o.rotation.set(0,w[3],0);o.scale.setScalar(w[4]);o.updateMatrix();im.setMatrixAt(i,o.matrix);c.setHex(0xffffff);im.setColorAt(i,c)});im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true;im.frustumCulled=false;sc.add(im)}}
+ if(roofs.length&&D('watertower'))HP.add(sc,'watertower',roofs.map(q=>[q[0],q[1]-.1,q[2],q[3],7,undefined,1]));
+ U.stats={ring:0,alleys:alleys.length,parks:parks.length,buildings:Object.values(L).reduce((a,b)=>a+b.length,0)+Object.values(PK).reduce((a,b)=>a+b.length,0)};
+ sc.userData.occ=occ;U.occ={occ,GW,GH,CS,x0:ISL.x0,z0:ISL.z0};
+}
 
 /* time of day tints the unlit backdrop and the water */
 const TINT={dawn:[1.0,.82,.78],day:[1,1,1],sunset:[1,.66,.52],night:[.1,.14,.3]},WT={dawn:[1,.85,.85],day:[1,1,1],sunset:[1,.7,.6],night:[.18,.24,.5]};
-if(P.applyTod){const at=P.applyTod;P.applyTod=(sc,T,key)=>{at(sc,T,key);const h=sc.userData&&sc.userData.harbor;if(!h)return;const t=TINT[key]||TINT.day,w=WT[key]||WT.day;h.pano.color.setRGB(t[0],t[1],t[2]);h.water.color.setRGB(.035,.3,.46).multiply(new THREE.Color(w[0],w[1],w[2]))}}
-const bw=buildWorld;buildWorld=T=>T.d.harbor?buildHarbor(T):bw(T);
+if(P.applyTod){const at=P.applyTod;P.applyTod=(sc,T,key)=>{at(sc,T,key);const h=sc.userData&&sc.userData.span;if(!h||!h.pano)return;const t=TINT[key]||TINT.day,w=WT[key]||WT.day;h.pano.color.setRGB(t[0],t[1],t[2]);h.water.color.setRGB(.06,.38,.55).multiply(new THREE.Color(w[0],w[1],w[2]))}}
+const bw=buildWorld;buildWorld=T=>T.d.span?buildSpan(T):bw(T);
 })();
 
 /* ===== Poly GT v9 layer: props (rooted scenery for every map) =====
@@ -7608,7 +7644,6 @@ const PLAN={
  'Redrock Stage':{edge:[['pole',-1,70,10]],field:[['cactus',36,7,170],['hoodoo',9,30,260],['arch',2,30,260],['pump',4,20,150],['cabinA',3,14,120],['boulderR',14,12,200],['tentG',2,12,40],['tentR',1,12,40]]},
  'Highmoor Stage':{edge:[['post',0,42,2.4]],field:[['cabinS',5,14,130],['turbine',4,40,260],['cairn',8,8,100],['bale',4,6,40],['boulderG',12,12,180],['tentB',2,12,40],['tentG',2,12,40]],flock:[['sheepA',9,4,22,170]]},
  'Coastal Run':{edge:[['post',0,42,2.4]],field:[['lighthouse',1,25,260,'high'],['turbine',3,40,240],['cabinH',4,14,120],['boulderG',6,12,140],['tentR',2,12,40],['tentG',2,12,40],['bale',3,6,40],['fish',5,0,260,'water'],['sail',6,0,260,'water'],['buoy',8,0,260,'water']],fence:[0xe9e2d0,2,'cliff']},
- 'Harbor Lights':{edge:[],field:[['cont2_0',3,6,140],['cont2_1',3,6,140],['cont2_2',3,6,140],['cont1',2,6,140],['cont4',2,6,140],['crane',3,0,0,'quay'],['crates',8,4,100],['barrels',8,4,100],['lamp',12,3,100],['bollard',46,0,0,'edge'],['fish',4,0,260,'water'],['sail',6,0,260,'water'],['buoy',8,0,260,'water']]},
  'Frostline Stage':{edge:[['pole',1,70,9],['snowpole',0,24,3.4]],field:[['snowman',6,5,60],['cabinF',5,14,120],['logs',6,8,70],['stump',8,5,60],['bale',4,6,40],['tentR',2,12,40],['tentB',2,12,40],['boulderS',8,12,160]],fence:[0x9a7a52,2]}
 };
 
@@ -7742,7 +7777,6 @@ const add=(map,list)=>{const p=PLAN[map];if(!p)return;p.field=(p.field||[]).conc
 add('Pinewood Stage',[['farmhouse',1,16,120],['silo',1,16,110],['coop',1,12,80],['barn2',1,16,120],['outhouse',2,10,70]]);
 add('Highmoor Stage',[['farmhouse',1,16,130],['silo2',1,14,110],['barn2',1,16,120]]);
 add('Coastal Run',[['greenhouse',1,18,120]]);
-add('Harbor Lights',[['warehouse',3,16,140],['shopC',2,14,120],['shopD',1,14,120]]);
 
 /* richer scenery: pack trees and bushes through every map */
 add('Quarry Circuit',[['treeA',96,9,150],['treeB',80,9,150],['treeD',80,9,150],['treeC',48,9,150],['bushA',144,5,150],['bushB',144,5,150],['hay',6,14,120],['boulderG',20,12,260]]);
@@ -7754,7 +7788,6 @@ add('Redrock Stage',[['bushB',70,5,150],['cactus',24,6,200]]);
 add('Highmoor Stage',[['treeC',48,10,150],['bushA',144,4,150],['bushB',112,4,150],['hay2',6,10,80],['boulderG',16,12,220]]);
 add('Coastal Run',[['treeA',64,8,150],['treeD',64,8,150],['bushA',112,5,150],['bushB',80,5,150]]);
 add('Frostline Stage',[['treeC',80,8,150]]);
-add('Harbor Lights',[['bushB',22,6,100]]);
 PLAN['Road Atlanta']=PLAN['Road Atlanta']||{edge:[],field:[['treeA',64,14,150],['treeB',48,14,150],['treeD',64,14,150],['bushA',96,8,150],['bushB',96,8,150],['hay',4,16,120]]};
 /* "random grey boxes": the container offices go */
 for(const k in PLAN){const p=PLAN[k];if(p.field)p.field=p.field.filter(f=>f[0]!=='officeC')}
@@ -8304,7 +8337,7 @@ const PROF={
  'Redrock Stage':{wind:1,bed:['gust',.7],ev:['eagle','cricket']},
  'Highmoor Stage':{wind:1.1,bed:['gust',.8],ev:['curlew','bell']},
  'Coastal Run':{wind:.8,bed:['sea',.9],ev:['gull','gull','bell']},
- 'Harbor Lights':{wind:.4,bed:['sea',.55],ev:['gull','horn','clank','bell']},
+ 'Broken Span':{wind:.6,bed:['sea',.5],ev:['gull','horn','bell']},
  'Frostline Stage':{wind:1.1,bed:['gust',.7],ev:['creak','bird']},
  'Mangrove Ford':{wind:.3,bed:['stream',.7],ev:['frog','frog','bird','gull']},
  'Terrace Run':{wind:.5,bed:['leaves',.35],ev:['cricket','bell','bird']},
@@ -8430,20 +8463,16 @@ window.__optAction=k=>{if(k==='@tutorial')P.startTutorial()};
 'use strict';
 const P=window.PT8;
 P.LOG=[
- {v:'0.03',d:'Oct 20, 2026',t:'Harbor rework, new streetlights',items:[
-  'Harbor Lights rebuilt: a new, more varied road with a long run of brick alleyways, the boardwalk pier and the restaurant kept.',
-  'Alleys are brick walls with doors, windows, awnings, pipes and fire escapes, kerbed pavements outside the road, bins, hydrants and crates, and real buildings rising behind them.',
-  'Small boats tied up around the piers.',
-  'A container yard with stacked cargo pods, depots, trucks, cranes and wind turbines, assembled from open-source (CC0) models by Kenney and KayKit plus the building pack.',
-  'Pavement and ground textures no longer sit on the road surface.',
-  'Harbor Lights town rebuilt as continuous street walls: rows of buildings behind pavements and tree-lined verges, each row taller than the last, replacing the scattered houses and plant pots. Building colours are muted.',
-  'Two concrete dock tunnels on Harbor Lights, with lit ceilings and signed portals. A much bigger cargo yard.',
-  'Harbor Lights: taller brick alley walls with roof ledges (no flat poster or fire-escape details), waterfront buildings facing the water on every quay, a denser city with parks and car parks, and the white sheds, silos and turbines removed.',
-  'Harbor Lights: no more guardrails along open roads (invisible collision walls instead), buildings right at the pavement, and walls that rise gradually into each dock tunnel.',
-  'Harbor Lights: boardwalk now runs unbroken to the quay, brick alley walls vary in height like apartment blocks with solid ends, the restaurant has a door-height entrance, and parked cars and trucks are gone from the map.',
-  'Harbor Lights fixes: no more brick strips along the track, no grey wall spikes at alley exits, boardwalk and road at the same height, crates sit on the ground, restaurant lamps hang from cords, calmer cobblestones, and more varied houses (size, colour, spacing, setback).',
-  'Harbor Lights: houses sit closer to the road, with grass patches, bushes and drifting chimney smoke added.',
-  'All streetlights on every map: new lamp model, a much wider and softer pool of light, a smoother glow, and lights that fade in and out instead of popping. Harbor Lights now has streetlights too.',
+ {v:'0.04',d:'Oct 20, 2026',t:'New track: Broken Span',items:[
+  'Harbor Lights is gone, replaced by Broken Span, the first track of a brand-new roster: a long orange suspension bridge with two towers, hangers and cables, snapped in half.',
+  'Floor it up the ramp and jump the 18 m gap. Fall short and you are sent back to a long run-up, so you can try again at full speed.',
+  'You land on City Island, a walled island city built from the building pack and KayKit buildings: unbroken rows of buildings face every shore, corner towers, brick gate houses over both roads, shopfronts, trees, hydrants, bins and rooftop water towers.',
+  'Any gap between buildings is a tiny alley with dumpsters, bins, crates and bags; larger leftovers become pocket parks.',
+  'A low causeway on concrete piers brings you home across the bay, then a hairpin on the mainland and back up the bridge approach.',
+  'Wreckage lies in the water under the gap, with dangling cables, bent truss ends, rebar and hazard boards; the whole map works at dawn, day, sunset and night.',
+  'Jumps can now have their own gap length and ramp height, and respawns near a long gap start well back so you can build speed again.']},
+ {v:'0.03',d:'Oct 20, 2026',t:'New streetlights',items:[
+  'All streetlights on every map: new lamp model, a much wider and softer pool of light, a smoother glow, and lights that fade in and out instead of popping.',
   'Only the rally mode has a loading screen now; everything else launches straight in. The loader car\'s front wheels point straight.',
   'Update log reset: everything before this is folded into 0.02.']},
  {v:'0.02',d:'Oct 20, 2026',t:'Everything so far',items:[
@@ -8457,7 +8486,7 @@ P.LOG=[
   'WRC is the Stratos, Delta, 037, Polo and Impreza WRX Rally (phenomenal on gravel); other rally cars are Casual (good on gravel). Rally and Track garage sections start closed.',
   'Career Cut-Up targets are lower (max 2,000). Every road surface now has the same steady grip.',
   'Smoother menus: black fades, lists pop in once, beeping ambience removed.',
-  'Harbor Lights town and Afterhours skyline rebuilt with the building pack.']}
+  'Afterhours skyline rebuilt with the building pack.']}
 ];
 const css=document.createElement('style');
 css.textContent=`@keyframes ptFadeIn{from{opacity:0}}#ptLog{position:fixed;inset:0;z-index:8000;display:none;align-items:center;justify-content:center;background:#05070acc;backdrop-filter:blur(3px)}
@@ -8728,8 +8757,8 @@ function pickMode(m){if(m==='career'){ST.crank=null;ST.cev=null;openCareer()}els
  const g=document.createElement('button');g.innerHTML='<small>02</small> Garage';g.style.order=2;g.onclick=()=>openShow('garage',{player:0,cap:null,ret:'menu'});
  const b=document.createElement('button');b.innerHTML='<small>03</small> Brand Central';b.style.order=3;b.onclick=()=>openShow('brand',{player:0,cap:null,ret:'menu'});
  ma.append(g,b);bt[1].style.order=4;bt[1].innerHTML='<small>04</small> Settings';
- const lg=$('logo');if(lg)lg.innerHTML='POLY<br><span>GT</span><small>GRAND TOUR / V0.03</small>';
- const mt=document.querySelector('.menuTop');if(mt){mt.querySelector('.brandMark').textContent='PT / 98';const sm=mt.querySelector('small');if(sm)sm.textContent='V0.03'}
+ const lg=$('logo');if(lg)lg.innerHTML='POLY<br><span>GT</span><small>GRAND TOUR / V0.04</small>';
+ const mt=document.querySelector('.menuTop');if(mt){mt.querySelector('.brandMark').textContent='PT / 98';const sm=mt.querySelector('small');if(sm)sm.textContent='V0.04'}
  const f=document.createElement('div');f.className='mfoot';$('menu').appendChild(f);
  P.menuStats=()=>{const sv=P.SV();f.innerHTML='<span>Balance <b>'+fmtCr(sv.cr)+'</b></span><span>Career <b>'+P.RANKS[P.careerRank()].n+'</b></span><span>Races <b>'+sv.stats.races+'</b></span><span>Wins <b>'+sv.stats.wins+'</b></span><span style="margin-left:auto">Enter: play</span>'};
  P.menuStats()})();
@@ -10071,7 +10100,7 @@ function lamps(sc,T){
  if(have.length){for(const p of have){const y=isFinite(p.y)?p.y:T.terr(p.x,p.z);L.push({hx:p.x+Math.sin(p.yaw)*AX,hy:y+HY,hz:p.z+Math.cos(p.yaw)*AX})}}
  else if(!T.d.gravel&&K&&P.lampParts){const st=Math.max(2,Math.round(40/(T.sp||6)));let side=1;const own=[];
   const HB=T.d.harbor&&T.hbr,hb=i=>HB&&((i>=HB.rest[0]&&i<=HB.rest[1])||HB.tuns.some(a=>i>=a[0]-1&&i<=a[1]+1)),inAl=i=>HB&&HB.alleys.some(a=>i>=a[0]&&i<=a[1]),onPier=i=>HB&&i>=HB.pier[0]&&i<=HB.pier[1];
-  for(let i=Math.floor(st/2);i<N;i+=st){if(HB){if(hb(i))continue}else if((T.gap&&T.gap[i])||(T.tn&&T.tn[i])||(!T.d.city&&T.wall&&T.wall[i]&&!(T.br&&T.br[i])))continue;side=-side;const c=Math.cos(T.psi[i]),s_=Math.sin(T.psi[i]),lo=side*(HB?(onPier(i)?T.hw[i]-.25:inAl(i)?T.hw[i]+1.1:T.hw[i]+3.4):T.hw[i]+3.2),x=T.x[i]+c*lo,z=T.z[i]-s_*lo,y=HB?(inAl(i)?.2:onPier(i)?.09:.12)+T.y[i]:T.br&&T.br[i]?T.y[i]-lo*T.bank[i]:T.terr(x,z),yaw=Math.atan2(-c*side,s_*side);
+  for(let i=Math.floor(st/2);i<N;i+=st){if(HB){if(hb(i))continue}else if((T.gap&&T.gap[i])||(T.tn&&T.tn[i])||(!T.d.city&&!T.d.span&&T.wall&&T.wall[i]&&!(T.br&&T.br[i])))continue;side=-side;const c=Math.cos(T.psi[i]),s_=Math.sin(T.psi[i]),lo=side*(HB?(onPier(i)?T.hw[i]-.25:inAl(i)?T.hw[i]+1.1:T.hw[i]+3.4):T.lampOff?T.hw[i]+T.lampOff[i]:T.hw[i]+3.2),x=T.x[i]+c*lo,z=T.z[i]-s_*lo,y=HB?(inAl(i)?.2:onPier(i)?.09:.12)+T.y[i]:T.d.span?T.y[i]+(T.sg[i]===2?.12:0):T.br&&T.br[i]?T.y[i]-lo*T.bank[i]:T.terr(x,z),yaw=Math.atan2(-c*side,s_*side);
    own.push([x,y,z,yaw]);L.push({hx:x+Math.sin(yaw)*AX,hy:y+HY,hz:z+Math.cos(yaw)*AX})}
   if(own.length){const im=new THREE.InstancedMesh(K.mk(P.lampParts()),K.MAT,own.length),dm=new THREE.Object3D();const wc=new THREE.Color(1,1,1);own.forEach((q,i)=>{dm.position.set(q[0],q[1],q[2]);dm.rotation.set(0,q[3],0);dm.updateMatrix();im.setMatrixAt(i,dm.matrix);im.setColorAt(i,wc)});im.frustumCulled=false;im.userData.ptProp='lamp';sc.add(im)}}
  if(!L.length)return;

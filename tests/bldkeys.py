@@ -1,0 +1,2 @@
+from shot import run,W
+run(W+'/Poly-Tourismo.html',[('wait',3000),('js','''(()=>{const B=PT8.BLD;if(!B)return 'none';const o={};for(const n in B){const g=B[n].g;if(!g.boundingBox)g.computeBoundingBox();const b=g.boundingBox;o[n]=[+(b.max.x-b.min.x).toFixed(1),+(b.max.y-b.min.y).toFixed(1),+(b.max.z-b.min.z).toFixed(1),+b.min.y.toFixed(1),+((b.max.x+b.min.x)/2).toFixed(1),+((b.max.z+b.min.z)/2).toFixed(1)]}return JSON.stringify(o)})()''')],'bk')

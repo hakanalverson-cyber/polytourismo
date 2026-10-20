@@ -13,7 +13,7 @@ const PROF={
  'Redrock Stage':{wind:1,bed:['gust',.7],ev:['eagle','cricket']},
  'Highmoor Stage':{wind:1.1,bed:['gust',.8],ev:['curlew','bell']},
  'Coastal Run':{wind:.8,bed:['sea',.9],ev:['gull','gull','bell']},
- 'Harbor Lights':{wind:.4,bed:['sea',.55],ev:['gull','horn','clank','bell']},
+ 'Broken Span':{wind:.6,bed:['sea',.5],ev:['gull','horn','bell']},
  'Frostline Stage':{wind:1.1,bed:['gust',.7],ev:['creak','bird']},
  'Mangrove Ford':{wind:.3,bed:['stream',.7],ev:['frog','frog','bird','gull']},
  'Terrace Run':{wind:.5,bed:['leaves',.35],ev:['cricket','bell','bird']},
