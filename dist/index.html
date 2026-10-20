@@ -7228,8 +7228,13 @@ sampleTrack=d=>{const T=ps(d);if(!d.span)return T;
  const N=T.N;T.sg=new Uint8Array(N);T.lampOff=new Float32Array(N);
  for(let i=0;i<N;i++){const x=T.x[i],z=T.z[i];let sg;
   if(x>=ISL.x0+.5)sg=2;else if(x<COAST)sg=0;else sg=z>-30?1:3;
-  T.sg[i]=sg;T.wall[i]=1;T.wh[i]=sg===1||sg===3?1.15:1.0;if(sg===1||sg===3)T.br[i]=1;
+  T.sg[i]=sg;T.wall[i]=1;T.wh[i]=sg===1||sg===3?1.15:1.0;if(sg!==2)T.br[i]=1;
   T.lampOff[i]=sg===1||sg===3?.95:sg===2?1.9:3.2}
+ /* flare: within 30 m of the island the deck widens to the pavement width and the barrier slopes away to nothing */
+ {const isl=[];for(let i=0;i<N;i++)if(T.sg[i]===2)isl.push(i);T.fl=new Float32Array(N);T.vh=new Float32Array(N);const base=new Float32Array(N);
+  for(let i=0;i<N;i++){base[i]=T.sg[i]===0?1.0:1.15;if(T.sg[i]===2)continue;let dm=1e9;for(const j of isl){const dd=Math.min((i-j+N)%N,(j-i+N)%N);if(dd<dm)dm=dd;if(dm<=1)break}
+   const u=Math.max(0,Math.min(1,1-(dm-1)*T.sp/30));T.fl[i]=u*u*(3-2*u)}
+  for(let i=0;i<N;i++){let a=0,n=0;for(let k=-8;k<=8;k++){a+=base[(i+k+N)%N];n++}T.vh[i]=(a/n)*(1-T.fl[i])+.04}}
  T.terr=GROUND;T.jgl=0;if(T.jumps&&T.jumps.length){const c=T.jumps[0];for(let k=0;k<60&&T.gap[(c+k)%N];k++)T.jgl++}
  return T};
 /* a respawn or crash recovery near the snapped span goes back to a long run-up, so the jump can be made again */
@@ -7306,26 +7311,29 @@ function buildSpan(T){const d=T.d,N=T.N,r=rngf(8*77+11),sc=new THREE.Scene();
  const trussM=new THREE.MeshStandardMaterial({map:T_TRUSS(),roughness:.8,side:THREE.DoubleSide,alphaTest:.5});
  const jumps=T.jumps||[],broken=jumps.length>0;
  /* ----- bridge deck: slab, braced truss, underside ----- */
+ const DW=k=>T.hw[k]+1.3+2.0*T.fl[k];
  for(const [a,b] of runs(T,i=>T.sg[i]===1)){
-  sc.add(strip(T,a,b,k=>-(T.hw[k]+1.3),k=>T.hw[k]+1.3,-.02,concM,6,2));
-  sc.add(strip(T,a,b,k=>-(T.hw[k]+1.3),k=>T.hw[k]+1.3,-.55,steelM,6,2));
-  sc.add(strip(T,a,b,k=>-(T.hw[k]+1.3),k=>T.hw[k]+1.3,-4.2,steelM,6,2));
-  for(const sd of[-1,1]){const t=vstrip(T,a,b,k=>sd*(T.hw[k]+1.3),-4.2,0,trussM,4.2,1);sc.add(t);sc.add(vstrip(T,a,b,k=>sd*(T.hw[k]+1.3),-.55,.0,orgM,4,1))}
+  sc.add(strip(T,a,b,k=>-DW(k),k=>DW(k),-.02,concM,6,2));
+  sc.add(strip(T,a,b,k=>-DW(k),k=>DW(k),-.55,steelM,6,2));
+  sc.add(strip(T,a,b,k=>-DW(k),k=>DW(k),-4.2,steelM,6,2));
+  for(const sd of[-1,1]){const t=vstrip(T,a,b,k=>sd*DW(k),-4.2,0,trussM,4.2,1);sc.add(t);sc.add(vstrip(T,a,b,k=>sd*DW(k),-.55,.0,orgM,4,1))}
+  /* solid concrete abutments where the truss meets the shore and the island */
+  for(const [q0,q1] of[[a,Math.min(b,a+9)],[Math.max(a,b-9),b]])for(const sd of[-1,1])sc.add(vstrip(T,q0,q1,k=>sd*DW(k),-4.2,0,concM,4,1));
   /* cross beams under the deck */
-  const cb=[];for(let k=a;k<=b;k+=Math.max(1,Math.round(8/T.sp))){if(T.gap[k])continue;const f=frame(T,k,0);cb.push([f[0],T.y[k]-1.2,f[1],(T.hw[k]+1.3)*2,.5,.6,f[2]])}
+  const cb=[];for(let k=a;k<=b;k+=Math.max(1,Math.round(8/T.sp))){if(T.gap[k])continue;const f=frame(T,k,0);cb.push([f[0],T.y[k]-1.2,f[1],DW(k)*2,.5,.6,f[2]])}
   instB(sc,new THREE.BoxGeometry(1,1,1),steelM,cb)}
  /* shore abutment skirts: embankment sides where the road climbs over land */
  for(const [a,b] of runs(T,i=>T.sg[i]===0&&T.y[i]>LAND+.35&&T.z[i]>0)){for(const sd of[-1,1])sc.add(vstrip(T,a,b,k=>sd*(T.hw[k]+.1),k=>LAND-T.y[k],0,flat(0x77705f,{side:THREE.DoubleSide}),8,1))}
  /* ----- low causeway: concrete deck on piers ----- */
  {const pil=[];for(const [a,b] of runs(T,i=>T.sg[i]===3)){
-   sc.add(strip(T,a,b,k=>-(T.hw[k]+1.2),k=>T.hw[k]+1.2,-.02,concM,6,2));sc.add(strip(T,a,b,k=>-(T.hw[k]+1.2),k=>T.hw[k]+1.2,-1.5,steelM,6,2));
-   for(const sd of[-1,1])sc.add(vstrip(T,a,b,k=>sd*(T.hw[k]+1.2),-1.5,0,concM,4,1));
+   sc.add(strip(T,a,b,k=>-DW(k),k=>DW(k),-.02,concM,6,2));sc.add(strip(T,a,b,k=>-DW(k),k=>DW(k),-1.5,steelM,6,2));
+   for(const sd of[-1,1])sc.add(vstrip(T,a,b,k=>sd*DW(k),-1.5,0,concM,4,1));
    for(let k=a;k<=b;k+=Math.max(1,Math.round(18/T.sp))){const f=frame(T,k,0);pil.push([f[0],(T.y[k]-1.5-10)/2,f[1],2.6,T.y[k]+8.5,(T.hw[k]+1.2)*2-1,f[2]])}}
   instB(sc,new THREE.BoxGeometry(1,1,1),flat(0x8a8d8f),pil)}
  /* ----- walls: visible concrete barrier on bridge and causeway, plain guardrail on land, invisible kerb walls on the island ----- */
- {const mats={1:new THREE.MeshStandardMaterial({map:T_CONC(),side:THREE.DoubleSide,roughness:.9}),0:flat(0xaab0b4,{side:THREE.DoubleSide})};
-  for(const c of[0,1]){const W=Object.create(T);W.wall=Uint8Array.from(T.wall,(w,i)=>(c===0?T.sg[i]===0:T.sg[i]===1||T.sg[i]===3)&&w?1:0);
-   W.wh=Float32Array.from(T.wh,(h,i)=>c===0?.8:h);sc.add(wallMesh(W,1,mats[c]));sc.add(wallMesh(W,-1,mats[c]))}}
+ {const mt=new THREE.MeshStandardMaterial({map:T_CONC(),side:THREE.DoubleSide,roughness:.9});
+  /* one continuous barrier from the island gate round the whole loop; its height eases between land and bridge and slopes away to nothing at the gates */
+  const W=Object.create(T);W.wall=Uint8Array.from(T.sg,sg=>sg===2?0:1);W.wh=T.vh;sc.add(wallMesh(W,1,mt));sc.add(wallMesh(W,-1,mt))}
  /* ----- bridge structure ----- */
  const deckY=(x)=>{let best=1e9,y=DECK0;for(let i=0;i<N;i++){if(T.sg[i]!==1||Math.abs(T.z[i]-BZ)>3)continue;const dd=Math.abs(T.x[i]-x);if(dd<best){best=dd;y=T.y[i]}}return y};
  const HW=T.hw[Math.max(0,T.sg.indexOf(1))]||8,LAT=HW+1.3;
@@ -7362,6 +7370,7 @@ function buildSpan(T){const d=T.d,N=T.N,r=rngf(8*77+11),sc=new THREE.Scene();
    for(const [ya,yb,w,dd] of segs)mesh(new THREE.BoxGeometry(w,yb-ya,dd),orgM,0,(ya+yb)/2,lz,g);
    mesh(new THREE.BoxGeometry(3.3,1.0,2.7),flat(0x8f3220),0,TOPY+.5,lz,g)}
   /* portal beams between the legs (clear of the roadway) */
+  if(tx===TOWX[0]){const sg=mesh(new THREE.PlaneGeometry(13,2.1),new THREE.MeshBasicMaterial({map:T_SIGN('BRIDGE OUT','#9b1c1c','#f6f1e6')}),-1.34,y+11.5,0,g);sg.rotation.y=-Math.PI/2}
   for(const [by,bh] of[[y+11.5,2.4],[y+21,2.2],[y+TOWH-3,3.2]]){mesh(new THREE.BoxGeometry(2.6,bh,(LAT+2.1)*2),orgM,0,by,0,g);
    const x=mesh(new THREE.PlaneGeometry((LAT+.2)*2,bh*.0+4.6),new THREE.MeshStandardMaterial({map:T_TRUSS(),side:THREE.DoubleSide,alphaTest:.5,roughness:.8}),0,by-bh/2-2.3,0,g);x.rotation.y=Math.PI/2}}
  /* ----- broken ends, fallen deck, warning boards ----- */
@@ -7378,17 +7387,14 @@ function buildSpan(T){const d=T.d,N=T.N,r=rngf(8*77+11),sc=new THREE.Scene();
   /* hanging "ROAD ENDS" sign on the approach gantry is built below; wreckage lies in the water under the gap */
   const cx=(T.x[eA]+T.x[eB])/2,cz=(T.z[eA]+T.z[eB])/2;
   for(let i=0;i<4;i++){const w=2.4+r()*3,l=5+r()*7;const b=boxAt(sc,w,.6,l,flat(0x55585a),cx+(r()-.5)*26,SEA-.9+r()*.9,cz+(r()-.5)*16,r()*3,(r()-.5)*.9,(r()-.5)*.9);
-   const tr=mesh(new THREE.PlaneGeometry(l,2.4),trussM,0,1.1,0,b);tr.rotation.y=Math.PI/2}
-  /* approach warning gantry before the ramp */
-  const ga=(T.x[eA]-86);{const gk=(()=>{let b=1e9,bi=0;for(let i=0;i<N;i++){if(T.sg[i]!==1)continue;const dd=Math.abs(T.x[i]-ga)+Math.abs(T.z[i]-BZ);if(dd<b){b=dd;bi=i}}return bi})();
-   const g=new THREE.Group(),f=frame(T,gk,0);g.position.set(f[0],T.y[gk],f[1]);g.rotation.y=f[2];sc.add(g);
-   for(const sd of[-1,1])mesh(new THREE.BoxGeometry(.7,7.4,.7),steelM,sd*(T.hw[gk]+.9),3.7,0,g);
-   mesh(new THREE.BoxGeometry((T.hw[gk]+.9)*2+1,.8,.7),steelM,0,7.4,0,g);
-   const s1=mesh(new THREE.PlaneGeometry(13,3.1),new THREE.MeshBasicMaterial({map:T_SIGN('BRIDGE OUT','#9b1c1c','#f6f1e6')}),0,6.0,-.4,g);s1.rotation.y=Math.PI}}
+   const tr=mesh(new THREE.PlaneGeometry(l,2.4),trussM,0,1.1,0,b);tr.rotation.y=Math.PI/2}}
  /* ----- start gantry on the mainland ----- */
  {const g=new THREE.Group(),f=frame(T,0,0);g.position.set(f[0],T.y[0],f[1]);g.rotation.y=f[2];sc.add(g);
   for(const sd of[-1,1])mesh(new THREE.BoxGeometry(.9,8.6,.9),steelM,sd*(T.hw[0]+1.2),4.3,0,g);
   mesh(new THREE.BoxGeometry(T.hw[0]*2+3.6,2.2,.6),new THREE.MeshBasicMaterial({map:ctex(32,4,(x,w,h)=>{for(let i=0;i<32;i++)for(let j=0;j<4;j++){x.fillStyle=(i+j)&1?'#fff':'#111';x.fillRect(i,j,1,1)}})}),0,8.6,0,g)}
+ /* the island pavement runs on over the flared deck so there is no gap at the gates */
+ {const pv=new THREE.MeshStandardMaterial({map:T_PAVE(),roughness:1,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
+  for(const [a,b] of runs(T,i=>T.sg[i]!==2&&T.fl[i]>.02))for(const sd of[-1,1]){sc.add(strip(T,a,b,k=>sd*(T.hw[k]+.02),k=>sd*(T.hw[k]+.02+(DW(k)-T.hw[k]-.02)),.1,pv,3,2))}}
  /* ----- island: kerbs and pavements ----- */
  const paveM=new THREE.MeshStandardMaterial({map:T_PAVE(),roughness:1,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}),curbM=flat(0xb9b6ae,{side:THREE.DoubleSide});
  for(const [a,b] of runs(T,i=>T.sg[i]===2))for(const sd of[-1,1]){
