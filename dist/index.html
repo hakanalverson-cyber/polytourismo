@@ -9656,7 +9656,7 @@ function lamps(sc,T){
   pole.frustumCulled=head.frustumCulled=false;grp.add(pole,head)}
  /* halos: one Points draw call */
  const pp=[];L.forEach(l=>pp.push(l.x,l.y,l.z));const hg=new THREE.BufferGeometry();hg.setAttribute('position',new THREE.Float32BufferAttribute(pp,3));
- const hp=new THREE.Points(hg,new THREE.PointsMaterial({map:TXH,size:3.6,sizeAttenuation:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,fog:false,color:0xffe0a8}));hp.frustumCulled=false;grp.add(hp);
+ const hp=new THREE.Points(hg,new THREE.PointsMaterial({map:TXH,size:2.2,sizeAttenuation:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,fog:false,color:0xffe0a8}));hp.frustumCulled=false;grp.add(hp);
  /* light pools on the road */
  const pools=L.filter(l=>l.own);if(pools.length){const pm=new THREE.InstancedMesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:TXP,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2,color:0xffc98a,opacity:.8,fog:false}),pools.length);
   pools.forEach((l,i)=>{dm.position.set(l.rx,l.ry,l.rz);dm.rotation.set(0,0,0);dm.scale.set(15,1,15);dm.updateMatrix();pm.setMatrixAt(i,dm.matrix)});dm.scale.set(1,1,1);pm.frustumCulled=false;grp.add(pm)}
