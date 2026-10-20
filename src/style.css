@@ -719,3 +719,8 @@ body.barnscene #cd,body.barnscene #mm,body.barnscene #huds,body.barnscene #rlDas
 #s8show.gv-car .gnav{display:flex}
 #s8show.gv-car .stat{left:0;right:auto;width:min(360px,30vw);background:linear-gradient(90deg,#07090cee 62%,transparent);padding:16px 2.4vw 30px 3.4vw}
 
+
+/* barn-find house marker on track lists */
+.trk .bnh{margin-left:auto;flex:none;color:#f2c76b;display:inline-flex;align-items:center;opacity:.95}
+.trk .bnh.got{color:#ffffff55}
+.chip.bn{color:#f2c76b;border-color:#f2c76b66}
