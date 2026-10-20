@@ -2473,7 +2473,7 @@ const MV=META.reduce((t,m)=>t+m.len*m.wid*m.hgt,0)/META.length;
 /* population-normalised size: pull every car's volume 75% of the way to the mean, keep the rest of its natural size order */
 const gameLen=m=>{const k=Math.pow(MV/(m.len*m.wid*m.hgt),.25);return Math.min(4.65,Math.max(m.len,m.wid)*k)};
 let buf=null;const geo={},cache={};
-const bodyMat=new THREE.MeshStandardMaterial({map:tex,roughness:.62,metalness:.12,flatShading:true});
+const bodyMat=new THREE.MeshStandardMaterial({map:tex,roughness:.62,metalness:.12,flatShading:true,shadowSide:THREE.DoubleSide});
 function geoms(k){if(geo[k])return geo[k];const out={};
  for(const pt of META[k].parts){if(!pt.nt)continue;const g=new THREE.BufferGeometry(),pq=new Int16Array(buf,pt.p,pt.nv*3),pos=new Float32Array(pt.nv*3);
   for(let i=0;i<pos.length;i++)pos[i]=pq[i]*.001;g.setAttribute('position',new THREE.BufferAttribute(pos,3));
@@ -2484,7 +2484,7 @@ function build(k,alt){const m=META[k],G=geoms(k),g=new THREE.Group();g.name='car
  const lift=(META[k].lift||0);
  if(G.body){const b=new THREE.Mesh(G.body,bodyMat);b.name='body';b.position.y=lift;g.add(b)}
  if(G.tires){const t=new THREE.Mesh(G.tires,bodyMat);t.name='tires';g.add(t)}
- if(G.paint){const c=alt?altRGB(k):m.paint,pm=new THREE.MeshStandardMaterial({color:srgb(c[0],c[1],c[2]),roughness:.58,metalness:.18,flatShading:true});const p=new THREE.Mesh(G.paint,pm);p.name='paint';p.position.y=lift;g.add(p)}
+ if(G.paint){const c=alt?altRGB(k):m.paint,pm=new THREE.MeshStandardMaterial({color:srgb(c[0],c[1],c[2]),roughness:.58,metalness:.18,flatShading:true,shadowSide:THREE.DoubleSide});const p=new THREE.Mesh(G.paint,pm);p.name='paint';p.position.y=lift;g.add(p)}
  /* invisible nose / tail markers so the livery baker knows which way the car faces (front is -Z in model space) */
  const mk=(n,z)=>{const t=new THREE.BufferGeometry();t.setAttribute('position',new THREE.BufferAttribute(new Float32Array([0,.5,z,0,.5,z,0,.5,z]),3));const q=new THREE.Mesh(t,new THREE.MeshBasicMaterial());q.name=n;q.visible=false;g.add(q)};
  mk('front',-m.len/2*.98);mk('rear',m.len/2*.98);
