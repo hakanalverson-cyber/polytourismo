@@ -9670,8 +9670,8 @@ function lamps(sc,T){
  const pos=[],col=[],idx=[];let vi=0;const LX=11,LW=5,SX=(T.sp||3);
  for(const l of L){if(!(l.lat===l.lat)||Math.abs(l.lat)>T.hw[l.k]+1.5)continue;const jr=Math.max(2,Math.round(LX/SX)),rows=2*jr+1,cols=13,w=Math.min(T.hw[l.k]*1.05,7);
   for(let r=0;r<rows;r++){const j=((l.k-jr+r)%N+N)%N,c=Math.cos(T.psi[j]),s_=Math.sin(T.psi[j]),dx=(r-jr)*SX;
-   for(let q=0;q<cols;q++){const lt=-w+2*w*q/(cols-1),dl=lt-l.lat,I=Math.exp(-(dx*dx/(2*5.2*5.2)+dl*dl/(2*3.3*3.3)))*(Math.abs(dx)>LX-1?0:1);
-    pos.push(T.x[j]+c*lt,T.y[j]-lt*T.bank[j]+.045,T.z[j]-s_*lt);const v=I*.62;col.push(v,v*.8,v*.5)}}
+   for(let q=0;q<cols;q++){const lt=-w+2*w*q/(cols-1),dl=lt-l.lat,u=Math.min(1,Math.abs(dx)/LX),I=Math.exp(-(dx*dx/(2*4.4*4.4)+dl*dl/(2*3.3*3.3)))*Math.pow(1-u*u,2);
+    pos.push(T.x[j]+c*lt,T.y[j]-lt*T.bank[j]+.045,T.z[j]-s_*lt);const v=I*.4;col.push(v,v*.78,v*.5)}}
   for(let r=0;r<rows-1;r++)for(let q=0;q<cols-1;q++){const a=vi+r*cols+q;idx.push(a,a+cols,a+1,a+1,a+cols,a+cols+1)}vi+=rows*cols}
  if(idx.length){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.setIndex(idx);
   const pm=new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,fog:false}));pm.frustumCulled=false;grp.add(pm);sc.userData.lampPool=pm}
@@ -9783,7 +9783,7 @@ function tunnel(sc,T){
  /* lit side walls: panelled concrete from the kerb up to the roof, so the underpass is never a black void */
  for(const[a,b]of T.tunnels){for(const sd of[-1,1]){const pos=[],col=[],idx=[],c=new THREE.Color();let vi=0;
    for(let k=a;k<=b;k++){const i=k%N,cs=Math.cos(T.psi[i]),sn=Math.sin(T.psi[i]),l=sd*(T.hw[i]+.15),x=T.x[i]+cs*l,z=T.z[i]-sn*l,y0=T.y[i]-l*T.bank[i]-.2,seam=(k%8===0)?.55:1;
-    pos.push(x,y0,z,x,y0+8,z);c.setRGB(.07*seam,.075*seam,.12*seam);col.push(c.r,c.g,c.b);c.setRGB(.15*seam,.16*seam,.24*seam);col.push(c.r,c.g,c.b);
+    pos.push(x,y0,z,x,y0+8,z);c.setRGB(.022*seam,.024*seam,.04*seam);col.push(c.r,c.g,c.b);c.setRGB(.06*seam,.062*seam,.09*seam);col.push(c.r,c.g,c.b);
     if(k>a){const q=vi-2;idx.push(q,q+1,vi,q+1,vi+1,vi)}vi+=2}
    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.setIndex(idx);
    const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.DoubleSide,fog:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4}));m.frustumCulled=false;sc.add(m)}}
