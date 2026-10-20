@@ -3,7 +3,7 @@
 'use strict';
 const P=window.PT8,PI=Math.PI;
 /* map name -> which car sleeps there and roughly where to look along the lap */
-const BARNS={'Quarry Circuit':{car:'c29',frac:.30,side:1},'Canyon Viaduct':{car:'c52',frac:.55,side:-1},'Coastal Run':{car:'c130',frac:.40,side:1},'Alpine Pass':{car:'c44',frac:.62,side:-1}};
+const BARNS={'Quarry Circuit':{car:'c29',frac:.30,side:1},'Canyon Viaduct':{car:'c66',frac:.55,side:-1},'Coastal Run':{car:'c130',frac:.40,side:1},'Alpine Pass':{car:'c44',frac:.62,side:-1}};
 P.BARNS=BARNS;P.BARN_IDS=Object.values(BARNS).map(b=>b.car);
 P.CARS.forEach(c=>{if(P.BARN_IDS.includes(c.id))c.barn=true});
 const sv=()=>P.SV();
@@ -16,13 +16,13 @@ function build(sc,T,cfg){
  const N=T.N,hw=k=>T.hw[k],at=(k,l)=>{const c=Math.cos(T.psi[k]),s=Math.sin(T.psi[k]);return[T.x[k]+c*l,T.z[k]-s*l]};
  /* find calm, empty ground to one side of the road, not close to any other stretch of track */
  let best=null;
- for(let f=0;f<30;f++){const k=Math.floor(N*((cfg.frac+f*.031)%1));if(T.gap[k]||(T.br&&T.br[k])||(T.wall&&T.wall[k])||(T.tn&&T.tn[k]))continue;
+ for(let f=0;f<30;f++){const k=Math.floor(N*((cfg.frac+f*.031)%1));if((T.gap&&T.gap[k])||(T.br&&T.br[k])||(T.wall&&T.wall[k])||(T.tn&&T.tn[k]))continue;
   for(const side of[cfg.side,-cfg.side])for(const off of[60,70,82]){const l=side*(hw(k)+off),[x,z]=at(k,l),ty=T.terr(x,z);
    let sl=0;for(const[dx,dz]of[[9,0],[-9,0],[0,9],[0,-9],[7,7],[-7,-7]])sl=Math.max(sl,Math.abs(T.terr(x+dx,z+dz)-ty));
    let pm=0;for(let u=.1;u<1;u+=.15){const[px,pz]=at(k,side*(hw(k)+3+(off-3)*u));pm=Math.max(pm,Math.abs(T.terr(px,pz)-(T.y[k]+(ty-T.y[k])*u)))}
    let dmin=1e9;for(let i=0;i<N;i+=3){const d=Math.hypot(T.x[i]-x,T.z[i]-z)-hw(i);if(d<dmin)dmin=d}
    const dy=Math.abs(ty-T.y[k]);if(dy>7||dmin<40)continue;
-   const sc_=sl*3+pm*1.2+dy*.4+f*.15;if(!best||sc_<best.s)best={s:sc_,k,side,off,x,z,y:ty}}}}
+   const sc_=sl*3+pm*1.2+dy*.4+f*.15;if(!best||sc_<best.s)best={s:sc_,k,side,off,x,z,y:ty}}}
  if(!best)return null;
  const k=best.k,rx=at(k,best.side*(hw(k)+3)),dirx=rx[0]-best.x,dirz=rx[1]-best.z,dl=Math.hypot(dirx,dirz),fx=dirx/dl,fz=dirz/dl,yaw=Math.atan2(fx,fz);
  const g=new THREE.Group();g.position.set(best.x,best.y,best.z);g.rotation.y=yaw;sc.add(g);
@@ -65,29 +65,31 @@ function build(sc,T,cfg){
  if(found){doors.forEach(d=>d.piv.rotation.y=d.sd*-1.75)}
  return B}
 const bw=buildWorld;buildWorld=function(T){const sc=bw.apply(this,arguments);B=null;try{const cfg=BARNS[T.d&&T.d.name];if(cfg&&!(T.d&&T.d.gravel))build(sc,T,cfg)}catch(e){console.error('barn',e)}return sc};
+P.barnInfo=()=>B&&{x:B.x,y:B.y,z:B.z,door:B.door,yaw:B.yaw,found:B.found};
+P.barnT=t=>{if(BN)BN.t=t};
 P.nearBarn=c=>!!(B&&Math.hypot(c.x-B.x,c.z-B.z)<150);
 /* ---------- prompt ---------- */
 let pr=null;
 function prompt(on){if(!pr){pr=document.createElement('div');pr.id='barnPrompt';pr.innerHTML='<kbd>SPACEBAR</kbd><span>Open the barn</span>';document.body.appendChild(pr)}pr.style.opacity=on?1:0}
 /* ---------- reveal scene ---------- */
-let BN=null;const bcam=new THREE.PerspectiveCamera(52,16/9,.2,1500);
+let BN=null;const bcam=new THREE.PerspectiveCamera(52,16/9,.2,8000);
 let fade=null,card=null;
 const fadeEl=()=>{if(!fade){fade=document.createElement('div');fade.id='bnFade';document.body.appendChild(fade)}return fade};
-function startScene(){if(BN||!B||B.found)return;const car=B.car||(()=>{const c=mkCar(0xdddddd,0);c.modelIndex=-1;const id=B.cfg.car;c.modelIndex=P.modelOf(id,0);attachCarModel(c);c.g.position.set(0,.3,-1.2);c.g.rotation.y=PI;B.g.add(c.g);return c})();B.car=car;car.g.visible=true;
- BN={t:0,ph:0,cardUp:false};document.body.classList.add('barnscene');const f=fadeEl();f.style.transition='opacity .6s';f.style.opacity=1;if(P.sfx)P.sfx('whoosh');prompt(false)}
+function startScene(){if(BN||!B||B.found)return;const car=B.car||(()=>{const c=mkCar(0xdddddd,0);const id=B.cfg.car;c.modelIndex=P.modelOf(id,0);attachCarModel(c);c.g.position.set(0,.75,-1.0);c.g.rotation.y=PI;B.g.add(c.g);return c})();B.car=car;car.g.visible=true;
+ BN={t:0,ph:0,cardUp:false};RACE.cars.forEach(c=>{if(c.m&&c.m.g)c.m.g.visible=false});document.body.classList.add('barnscene');const f=fadeEl();f.style.transition='opacity .6s';f.style.opacity=1;if(P.sfx)P.sfx('whoosh');prompt(false)}
 function endScene(){const id=B.cfg.car,s=sv();s.owned[id]=(s.owned[id]||0)|1;s.barn=s.barn||{};s.barn[id]=1;P.save();B.found=true;if(card)card.style.display='none';
  BN.ph=4;BN.t=0;const f=fadeEl();f.style.transition='opacity .6s';f.style.opacity=1}
 function tickScene(dt){const N_=BN;N_.t+=dt;const f=fadeEl();
  if(N_.ph===0&&N_.t>.7){N_.ph=1;N_.t=0;f.style.transition='opacity 1.6s';f.style.opacity=0}
  if(N_.ph===1){const o=Math.max(0,Math.min(1,(N_.t-1.4)/1.8)),e=o*o*(3-2*o);B.doors.forEach(d=>d.piv.rotation.y=d.sd*-1.75*e);B.light.intensity=1.6*e;if(o>0&&!N_.snd){N_.snd=1;if(P.sfx)P.sfx('back')}
   if(N_.t>5&&!N_.cardUp){N_.cardUp=true;showCard()}if(N_.t>5.2)N_.ph=2}
- if(N_.ph===4&&N_.t>.8){document.body.classList.remove('barnscene');const f2=fadeEl();f2.style.transition='opacity 1s';f2.style.opacity=0;BN=null}}
+ if(N_.ph===4&&N_.t>.8){document.body.classList.remove('barnscene');const f2=fadeEl();f2.style.transition='opacity 1s';f2.style.opacity=0;BN=null;RACE.cars.forEach(c=>{if(c.m&&c.m.g)c.m.g.visible=true})}}
 function showCard(){if(!card){card=document.createElement('div');card.id='bnCard';document.body.appendChild(card)}const c=P.BYID[B.cfg.car];
  card.innerHTML=`<small>BARN FIND</small><h2>${c.name}</h2><p>${c.type} &middot; ${Math.round(c.mphG||0)} mph</p><div class="bn-add">Added to your garage</div><span><kbd>SPACEBAR</kbd> Continue</span>`;card.style.display='flex'}
 const stp=step;step=dt=>{if(BN){tickScene(dt);return}stp(dt);const Rc=RACE;if(!B||B.found||!Rc||Rc.state!=='race'||Rc.cfg.rally){prompt(false);return}
  let near=false;for(const c of Rc.cars)if(c.human&&!c.fin&&Math.hypot(c.x-B.door.x,c.z-B.door.z)<9)near=true;prompt(near)};
 const drw=drawRace;drawRace=function(dt){if(BN&&B){const sy=Math.sin(B.yaw),cy=Math.cos(B.yaw),t=BN.t+(BN.ph>=1?.7:0),dist=15-Math.min(7,t*1.1);
-  const gx=B.x,gz=B.z;bcam.position.set(gx+sy*(B.D/2+dist)+cy*3.2,B.y+1.55,gz+cy*(B.D/2+dist)-sy*3.2);bcam.lookAt(gx+sy*(B.D/2-2),B.y+1.5,gz+cy*(B.D/2-2));bcam.aspect=Math.max(.1,R.domElement.width/R.domElement.height);bcam.updateProjectionMatrix();
+  const gx=B.x,gz=B.z;bcam.position.set(gx+sy*(B.D/2+dist)+cy*3.2,B.y+2.6,gz+cy*(B.D/2+dist)-sy*3.2);bcam.lookAt(gx+sy*(B.D/2-3),B.y+1.2,gz+cy*(B.D/2-2));bcam.aspect=Math.max(.1,R.domElement.width/R.domElement.height);bcam.updateProjectionMatrix();
   R.setScissorTest(false);R.setViewport(0,0,R.domElement.width,R.domElement.height);R.clear();R.render(RACE.scene,bcam);return}
  return drw.apply(this,arguments)};
 addEventListener('keydown',e=>{if(e.code!=='Space')return;if(BN){if(BN.cardUp&&BN.ph===2){e.preventDefault();e.stopImmediatePropagation();endScene()}else{e.preventDefault();e.stopImmediatePropagation()}return}

@@ -2109,7 +2109,37 @@ body.rallyhud .h8spd,body.rallyhud .h8pos{display:none!important}
 #bnCard .bn-add{font-size:11px;letter-spacing:.24em;color:#7fd68a;margin-top:6px}
 #bnCard span{margin-top:10px;font-size:11px;letter-spacing:.18em;color:#c9d0d6}
 @keyframes bnup{from{opacity:0;transform:translate(-50%,16px)}to{opacity:1;transform:translate(-50%,0)}}
-body.barnscene #huds,body.barnscene #rlDash,body.barnscene .hud,body.barnscene #barnPrompt{display:none!important}
+body.barnscene #cd,body.barnscene #mm,body.barnscene #huds,body.barnscene #rlDash,body.barnscene .hud,body.barnscene #barnPrompt{display:none!important}
+#bnCard{padding:46px 90px 22px;background:radial-gradient(ellipse at 50% 70%,#000c 0,#0000 70%)}
+
+/* garage cards */
+.lst.cards{width:min(720px,52vw);padding:8px 14px 20px 3.4vw;background:linear-gradient(90deg,#07090cf5 82%,transparent)}
+.lst.cards .gtools{display:flex;justify-content:space-between;align-items:center;padding:4px 0 6px}
+.lst.cards .gtools em{font:600 9px var(--mn);letter-spacing:.16em;color:var(--dim);font-style:normal;text-transform:uppercase}
+.lst.cards .of{display:inline-flex;gap:8px;align-items:center;font:700 10px var(--mn);letter-spacing:.14em;text-transform:uppercase;color:var(--dim);background:#ffffff0d;border:1px solid #ffffff14;padding:6px 10px;cursor:pointer}
+.lst.cards .of span{width:24px;height:12px;border-radius:7px;background:#ffffff26;position:relative;transition:.15s}
+.lst.cards .of span:after{content:"";position:absolute;left:2px;top:2px;width:8px;height:8px;border-radius:50%;background:#fff;transition:.15s}
+.lst.cards .of.on{color:#0b0e12;background:#f1f3f5}.lst.cards .of.on span{background:#0b0e12}.lst.cards .of.on span:after{left:14px;background:#f1f3f5}
+.lst.cards .cats{position:sticky;top:-8px}
+.lst.cards .gh{display:flex;gap:8px;align-items:baseline;font:700 11px var(--mn);letter-spacing:.3em;text-transform:uppercase;color:#f1f3f5;padding:16px 2px 8px;border-bottom:1px solid #ffffff1c;margin-bottom:8px}
+.lst.cards .gh i{font:600 9px var(--mn);letter-spacing:.12em;color:var(--dim);font-style:normal}
+.lst.cards .gh.barn{margin-top:20px;color:#f2c76b;font-size:9px;letter-spacing:.34em}
+.lst.cards .gg{display:grid;grid-template-columns:repeat(auto-fill,minmax(124px,1fr));gap:8px}
+.gc{position:relative;display:flex;flex-direction:column;gap:3px;padding:6px 6px 8px;background:#ffffff0b;border:1px solid #ffffff14;border-left:3px solid transparent;cursor:pointer;min-width:0}
+.gc:hover{background:#ffffff18}
+.gc .th{position:relative;aspect-ratio:168/100;background:#12171d;overflow:hidden}
+.gc canvas{width:100%;height:100%;display:block;opacity:0;transition:opacity .25s}.gc canvas.rdy{opacity:1}
+.gc b{font:700 10px var(--mn);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gc small{display:flex;gap:6px;align-items:center;font-size:9px;letter-spacing:.08em;color:var(--dim);white-space:nowrap;overflow:hidden}
+.gc.sel{background:#f1f3f52e;border-left-color:var(--ac)}.gc.sel b{color:var(--ac)}
+.gc.off{opacity:.4}
+.gc.lock{cursor:not-allowed;background:#ffffff06}
+.gc.lock{background:#000;border-color:#ffffff0d}
+.gc.lock .th{background:#000}
+.gc.lock canvas{filter:brightness(.16) grayscale(1) contrast(1.4)}
+.gc.lock b{color:#ffffff7a}
+.gc.bn .th i{position:absolute;inset:0;display:grid;place-items:center;font:700 34px var(--mn);color:#f2c76b;font-style:normal}
+@media(max-width:860px){.lst.cards{width:92vw}}
 </style><script>
 /* ===== Poly Tourismo v8 layer: core (economy, gears, AI, race flow, modes) ===== */
 (function v8core(){
@@ -5028,14 +5058,38 @@ function drawShow(dt){studioOn();ensureStudio();const car=BYID[SR.id],idx=P.mode
  S.cam.setViewOffset(W,H,-W*.0,H*.02,W,H);S.cam.updateProjectionMatrix();
  R.setScissorTest(false);R.setViewport(0,0,W,H);S.post.render(S.sc,S.cam);R.setRenderTarget(null);
  const key=idx+'|'+(window.PT7&&window.PT7.photos[idx]?1:0);if(key!==lastPhotoKey&&CAR_MODELS[idx]){lastPhotoKey=key;fillPhotos(idx)}}
+
+/* ---- garage cards: every car as a card, owned in colour, the rest blacked out ---- */
+try{SR.of=localStorage.getItem('pt9-ownfirst')==='1'}catch(e){SR.of=false}
+const THQ=[];let thRun=0,thIO=null;
+function pumpThumbs(){if(thRun)return;thRun=1;const go=()=>{const j=THQ.shift();if(!j){thRun=0;return}try{if(j.cv.isConnected){const idx=P.modelOf(j.id,0),ph=window.PT7&&(window.PT7.photos[idx]||(CAR_MODELS[idx]?window.PT7.makePhotos(idx):null));if(ph&&ph[0]){const g=j.cv.getContext('2d');g.drawImage(ph[0],0,0,j.cv.width,j.cv.height);j.cv.classList.add('rdy')}}}catch(e){}setTimeout(go,10)};setTimeout(go,20)}
+function cardHTML(c,sv){const o=!c.lk;return `<div class="gc ${o?'':'lock'} ${c.barn&&!o?'bn':''} ${c.id===SR.id&&o?'sel':''} ${c.off?'off':''}" data-id="${c.id}"><div class="th"><canvas width="168" height="100" data-id="${c.id}"></canvas>${!o&&c.barn?'<i>?</i>':''}</div><b>${o||!c.barn?c.name:'???'}</b><small><span class="cls ${c.cls}">${c.cls}</span>${c.off?'Class cap':o?c.type:(c.barn?'Hidden on a map':'Not owned')}</small></div>`}
+function cardsHTML(list,sv){
+ const reg=list.filter(c=>!c.barn),barn=list.filter(c=>c.barn),cats=(P.CATS||[]).filter(k=>reg.some(c=>c.cat===k));
+ const own=c=>!c.lk&&!c.off;let h='',order=[];
+ const nOwn=list.filter(c=>!c.lk).length;
+ h+=`<div class="gtools"><button class="of ${SR.of?'on':''}" data-of="1"><span></span>Owned first</button><em>${nOwn} / ${list.length} cars</em></div><div class="cats">`+cats.map(k=>`<button data-jump="${k}">${k}<i>${reg.filter(c=>c.cat===k).length}</i></button>`).join('')+(barn.length?`<button data-jump="__barn">Barn finds<i>${barn.length}</i></button>`:'')+'</div>';
+ let used=new Set();
+ if(SR.of){const mine=reg.filter(c=>!c.lk);if(mine.length){h+=`<div class="gh" data-sec="__own">Your cars<i>${mine.length}</i></div><div class="gg">`+mine.map(c=>cardHTML(c,sv)).join('')+'</div>';mine.forEach(c=>{used.add(c.id);if(own(c))order.push(c.id)})}}
+ for(const k of cats){const v=reg.filter(c=>c.cat===k&&!used.has(c.id));if(!v.length)continue;h+=`<div class="gh" data-sec="${k}">${k}<i>${v.length}</i></div><div class="gg">`+v.map(c=>cardHTML(c,sv)).join('')+'</div>';v.forEach(c=>{if(own(c))order.push(c.id)})}
+ if(barn.length){h+=`<div class="gh barn" data-sec="__barn">Barn finds<i>${barn.filter(c=>!c.lk).length} / ${barn.length}</i></div><div class="gg">`+barn.map(c=>cardHTML(c,sv)).join('')+'</div>';barn.forEach(c=>{if(own(c))order.push(c.id)})}
+ SR.order=order;return h}
+function bindCards(list){const box=$('shList');
+ $$('.gc',box).forEach(e=>e.onclick=()=>{const c=BYID[e.dataset.id];if(c.lk||c.off){P.sfx&&P.sfx('back');return}SR.id=c.id;SR.alt=0;const t=box.scrollTop;renderShow();$('shList').scrollTop=t});
+ $$('[data-of]',box).forEach(b=>b.onclick=()=>{SR.of=!SR.of;try{localStorage.setItem('pt9-ownfirst',SR.of?'1':'0')}catch(e){}P.sfx&&P.sfx('select');renderShow();$('shList').scrollTop=0});
+ $$('[data-jump]',box).forEach(b=>b.onclick=()=>{const t=box.querySelector(`.gh[data-sec="${b.dataset.jump}"]`);if(t)box.scrollTo({top:t.offsetTop-44,behavior:'smooth'})});
+ if(thIO)thIO.disconnect();thIO=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){thIO.unobserve(en.target);THQ.push({cv:en.target,id:en.target.dataset.id});pumpThumbs()}}),{root:box,rootMargin:'160px'});
+ THQ.length=0;$$('.gc canvas',box).forEach(cv=>thIO.observe(cv));
+ const sel=box.querySelector('.gc.sel');if(sel&&!SR.noScroll){const r=sel.getBoundingClientRect(),b=box.getBoundingClientRect();if(r.top<b.top+40||r.bottom>b.bottom)sel.scrollIntoView({block:'center'})}}
 function fillPhotos(idx){const box=$('shPhotos');if(!box)return;let ph=window.PT7&&(window.PT7.photos[idx]||(()=>{try{return window.PT7.makePhotos(idx)}catch(e){return null}})());box.innerHTML='';
  for(let i=0;i<3;i++){const cv=document.createElement('canvas');cv.width=96;cv.height=60;const g=cv.getContext('2d');g.fillStyle='#14181d';g.fillRect(0,0,96,60);if(ph&&ph[i]){try{g.drawImage(ph[i],0,0,96,60)}catch(e){}}box.appendChild(cv)}}
 function openShow(kind,o){SR.sec=0;P._ro=!!o.rally&&kind==='garage';P._to=!!o.track&&kind==='garage';SR.trk=!!o.track;SR.lv=false;SR.kind=kind;SR.player=o.player||0;SR.cap=o.cap==null?null:o.cap;SR.ret=o.ret||'menu';SR.rally=!!o.rally;SR.flow=!!o.flow;
- const list=showList();if(kind==='garage'){const s=SR.rally?P.rallySel(SR.player):SR.trk?P.trackSel(SR.player):P.SV().sel[SR.player];const ok=list.find(c=>c.id===s.id&&!c.off);const f=ok||list.find(c=>!c.off)||list[0];SR.id=f.id;SR.alt=(ok&&P.owns(f.id,s.alt))?s.alt:(P.owns(f.id,0)?0:1)}
+ const list=showList();if(kind==='garage'){const s=SR.rally?P.rallySel(SR.player):SR.trk?P.trackSel(SR.player):P.SV().sel[SR.player];const ok=list.find(c=>c.id===s.id&&!c.off&&!c.lk);const f=ok||list.find(c=>!c.off&&!c.lk)||list.find(c=>!c.lk)||BYID.merc;SR.id=f.id;SR.alt=(ok&&P.owns(f.id,s.alt))?s.alt:(P.owns(f.id,0)?0:1)}
  else{if(!BYID[SR.id])SR.id='merc';if(SR.alt&&!P.owns(SR.id,1))SR.alt=0}
  if(SR.flow){SR.cat=SR.trk?(BYID[SR.id].tdiv||'PRO'):(BYID[SR.id].rdiv||'WRC');SR.sec=1}
  renderShow();show('s8show');}
-function showList(){const sv=P.SV();let l=SORTED.map(c=>({...c,off:false}));if(SR.rally&&SR.kind==='garage')return l.filter(c=>P.RALLY_CARS.includes(c.id));if(SR.trk&&SR.kind==='garage')return l.filter(c=>P.TRACK_CARS.includes(c.id));l=l.filter(c=>!c.rallyOnly&&!c.trackOnly);if(SR.kind==='garage'){l=l.filter(c=>(sv.owned[c.id]||0)>0);l.forEach(c=>{c.off=SR.cap!=null&&CLS.indexOf(c.cls)>CLS.indexOf(SR.cap)});if(!l.length)l=[{...BYID.merc,off:false}]}return l}
+function showList(){const sv=P.SV();let l=SORTED.map(c=>({...c,off:false}));if(SR.rally&&SR.kind==='garage')return l.filter(c=>P.RALLY_CARS.includes(c.id));if(SR.trk&&SR.kind==='garage')return l.filter(c=>P.TRACK_CARS.includes(c.id));l=l.filter(c=>!c.rallyOnly&&!c.trackOnly);if(SR.kind==='brand')l=l.filter(c=>!c.barn);if(SR.kind==='garage'){l.forEach(c=>{c.lk=!((sv.owned[c.id]||0)>0);c.off=SR.cap!=null&&CLS.indexOf(c.cls)>CLS.indexOf(SR.cap)})}return l}
+const CARDS=()=>SR.kind==='garage'&&!SR.rally&&!SR.trk;
 function statBars(c,tn){const f=tn?P.tuneFx(tn,false):{top:1,acc:1,grip:1,brk:1},fg=tn?P.tuneFx(tn,true):{grip:1};
  const gt=P.gearTops(c).map(v=>v*2.23694*f.top),hi=gt[gt.length-1];const n=(v,a,b)=>clamp((v-a)/(b-a),0,1);
  /* [label, tuned bar, text, ratio vs stock, stock bar] */
@@ -5058,13 +5112,14 @@ function renderShow(){SR.alt=0;const kind=SR.kind,sv=P.SV(),list=showList(),car=
  if(!cats.includes(SR.cat))SR.cat=cats[0];
  const vis=list.filter(c=>SR.cat==='ALL'||(SR.cat==='OWNED'?(sv.owned[c.id]||0)>0:dc(c)===SR.cat));
 const secMode=true;let h='',last=null;
- if(secMode&&!SR.sec){h='<div class="secs">'+cats.filter(k=>k!=='ALL'&&cnt(k)).concat(RG?[]:['ALL']).map(k=>{const v=list.filter(c=>k==='ALL'||(k==='OWNED'?(sv.owned[c.id]||0)>0:dc(c)===k));const lo=Math.min(...v.map(c=>c.price));return `<button class="sect" data-cat="${k}"><b>${k==='ALL'?'ALL CARS':k}</b><small>${v.length} cars${kind==='brand'&&k!=='OWNED'?' &middot; from '+fmtCr(lo):''}</small></button>`}).join('')+'</div>'}
+ if(CARDS()){h=cardsHTML(list,sv)}
+ else if(secMode&&!SR.sec){h='<div class="secs">'+cats.filter(k=>k!=='ALL'&&cnt(k)).concat(RG?[]:['ALL']).map(k=>{const v=list.filter(c=>k==='ALL'||(k==='OWNED'?(sv.owned[c.id]||0)>0:dc(c)===k));const lo=Math.min(...v.map(c=>c.price));return `<button class="sect" data-cat="${k}"><b>${k==='ALL'?'ALL CARS':k}</b><small>${v.length} cars${kind==='brand'&&k!=='OWNED'?' &middot; from '+fmtCr(lo):''}</small></button>`}).join('')+'</div>'}
  else{
   if(secMode)h+=`<button class="secback" data-back="1"><span>&lsaquo; SECTIONS</span><i>${SR.cat==='ALL'?'ALL CARS':SR.cat} &middot; ${vis.length}</i></button>`;
   else h+='<div class="cats">'+cats.filter(k=>cnt(k)||k==='ALL').map(k=>`<button class="${k===SR.cat?'sel':''}" data-cat="${k}">${k==='ALL'?'ALL':k==='OWNED'?'OWNED':k}<i>${cnt(k)}</i></button>`).join('')+'</div>';
   for(const c of vis){if(c.cls!==last){last=c.cls;h+=`<div class="ch"><span class="cls ${c.cls}">${c.cls}</span> &nbsp;Class ${c.cls}</div>`}const o=(sv.owned[c.id]||0)>0;
    h+=`<div class="ci ${c.id===SR.id?'sel':''} ${c.off?'off':''}" data-id="${c.id}"><b>${c.name}</b><small>${kind==='brand'?(o?'Owned':fmtCr(c.price)):(c.off?'Class cap':c.type)}</small></div>`}}
- $('shList').innerHTML=h;$$('#shList .cats button',root).forEach(b=>b.onclick=()=>{SR.cat=b.dataset.cat;const v=list.filter(c=>SR.cat==='ALL'||(SR.cat==='OWNED'?(sv.owned[c.id]||0)>0:dc(c)===SR.cat));if(v.length&&!v.some(c=>c.id===SR.id)){SR.id=v[0].id;SR.alt=0}P.sfx('select');renderShow();$('shList').scrollTop=0});$$('#shList .ci',root).forEach(e=>e.onclick=()=>{SR.id=e.dataset.id;if(!P.owns(SR.id,SR.alt))SR.alt=0;renderShow()});
+ $('shList').innerHTML=h;$('shList').classList.toggle('cards',CARDS());if(CARDS())bindCards(list);$$('#shList .cats button',root).forEach(b=>b.onclick=()=>{SR.cat=b.dataset.cat;const v=list.filter(c=>SR.cat==='ALL'||(SR.cat==='OWNED'?(sv.owned[c.id]||0)>0:dc(c)===SR.cat));if(v.length&&!v.some(c=>c.id===SR.id)){SR.id=v[0].id;SR.alt=0}P.sfx('select');renderShow();$('shList').scrollTop=0});$$('#shList .ci',root).forEach(e=>e.onclick=()=>{SR.id=e.dataset.id;if(!P.owns(SR.id,SR.alt))SR.alt=0;renderShow()});
  $$('#shList .sect',root).forEach(b=>b.onclick=()=>{SR.cat=b.dataset.cat;SR.sec=1;const v=list.filter(c=>SR.cat==='ALL'||(SR.cat==='OWNED'?(sv.owned[c.id]||0)>0:dc(c)===SR.cat));if(v.length&&!v.some(c=>c.id===SR.id)){SR.id=v[0].id;SR.alt=0}P.sfx('select');renderShow();$('shList').scrollTop=0});
  $$('#shList .secback',root).forEach(b=>b.onclick=()=>{SR.sec=0;P.sfx('select');renderShow();$('shList').scrollTop=0});
  const sel=$$('#shList .ci.sel',root)[0];if(sel)sel.scrollIntoView({block:'nearest'});
@@ -5123,7 +5178,7 @@ addEventListener('keydown',e=>{
  if(scr==='s8cards'){if(e.code==='ArrowRight'||e.code==='KeyD')setFoc(foc+1);else if(e.code==='ArrowLeft'||e.code==='KeyA')setFoc(foc-1);else if(e.code==='ArrowDown'||e.code==='KeyS')setFoc(foc<3?3+Math.min(3,foc+(foc>0?1:0)):foc);else if(e.code==='ArrowUp'||e.code==='KeyW')setFoc(foc>=3?Math.min(2,Math.max(0,foc-3)):foc);else if(/^Digit[1-7]$/.test(e.code))pickMode($$('.card',root)[+e.code[5]-1].dataset.m);else if(e.code==='Enter'||e.code==='Space')pickMode($$('.card',root)[foc].dataset.m);return}
  if(scr==='s8show'){if(e.target&&e.target.tagName==='INPUT')return;if(SR.kind==='brand'){cheatBuf=(cheatBuf+(e.key.length===1?e.key.toLowerCase():'')).slice(-13);if(cheatBuf.endsWith('hakannowant')){cheatBuf='';const sv=P.SV();sv.owned={merc:1};sv.sel=sv.sel.map(()=>({id:'merc',alt:0}));P.save();SR.id='merc';SR.alt=0;renderShow();return}
   if(cheatBuf.endsWith('hakanwantsall')){cheatBuf='';const sv=P.SV();CARS.forEach(c=>{sv.owned[c.id]=3});P.save();renderShow();return}}
-  const list=showList().filter(c=>!SR.sec||SR.cat==='ALL'||(SR.cat==='OWNED'?(P.SV().owned[c.id]||0)>0:((SR.rally||SR.trk)&&SR.kind==='garage'?(SR.trk?c.tdiv:c.rdiv):c.cat)===SR.cat)),i=Math.max(0,list.findIndex(c=>c.id===SR.id));if(!list.length)return;if(e.code==='ArrowDown'){SR.id=list[Math.min(list.length-1,i+1)].id;SR.alt=P.owns(SR.id,SR.alt)?SR.alt:0;renderShow()}else if(e.code==='ArrowUp'){SR.id=list[Math.max(0,i-1)].id;SR.alt=P.owns(SR.id,SR.alt)?SR.alt:0;renderShow()}else if(e.code==='ArrowLeft')SR.vel-=3;else if(e.code==='ArrowRight')SR.vel+=3;else if(e.code==='Enter')$('shAct').click();return}
+  const list=(CARDS()&&SR.order)?SR.order.map(id=>BYID[id]):showList().filter(c=>!SR.sec||SR.cat==='ALL'||(SR.cat==='OWNED'?(P.SV().owned[c.id]||0)>0:((SR.rally||SR.trk)&&SR.kind==='garage'?(SR.trk?c.tdiv:c.rdiv):c.cat)===SR.cat)),i=Math.max(0,list.findIndex(c=>c.id===SR.id));if(!list.length)return;if(e.code==='ArrowDown'){SR.id=list[Math.min(list.length-1,i+1)].id;SR.alt=P.owns(SR.id,SR.alt)?SR.alt:0;renderShow()}else if(e.code==='ArrowUp'){SR.id=list[Math.max(0,i-1)].id;SR.alt=P.owns(SR.id,SR.alt)?SR.alt:0;renderShow()}else if(e.code==='ArrowLeft')SR.vel-=3;else if(e.code==='ArrowRight')SR.vel+=3;else if(e.code==='Enter')$('shAct').click();return}
  if(scr==='s8setup'&&e.code==='Enter'){$('suGo').click();return}
  if(scr==='menu'&&e.code==='Enter'){openCards();return}
  if(scr==='s8res'&&e.code==='Enter'){resContinue()}});
@@ -5725,7 +5780,7 @@ const CAL={0:.846,1:.844,2:.883,3:.812,4:.917,5:.869,6:.919,7:.853,8:.86,9:.899,
 'use strict';
 const P=window.PT8,PI=Math.PI;
 /* map name -> which car sleeps there and roughly where to look along the lap */
-const BARNS={'Quarry Circuit':{car:'c29',frac:.30,side:1},'Canyon Viaduct':{car:'c52',frac:.55,side:-1},'Coastal Run':{car:'c130',frac:.40,side:1},'Alpine Pass':{car:'c44',frac:.62,side:-1}};
+const BARNS={'Quarry Circuit':{car:'c29',frac:.30,side:1},'Canyon Viaduct':{car:'c66',frac:.55,side:-1},'Coastal Run':{car:'c130',frac:.40,side:1},'Alpine Pass':{car:'c44',frac:.62,side:-1}};
 P.BARNS=BARNS;P.BARN_IDS=Object.values(BARNS).map(b=>b.car);
 P.CARS.forEach(c=>{if(P.BARN_IDS.includes(c.id))c.barn=true});
 const sv=()=>P.SV();
@@ -5738,13 +5793,13 @@ function build(sc,T,cfg){
  const N=T.N,hw=k=>T.hw[k],at=(k,l)=>{const c=Math.cos(T.psi[k]),s=Math.sin(T.psi[k]);return[T.x[k]+c*l,T.z[k]-s*l]};
  /* find calm, empty ground to one side of the road, not close to any other stretch of track */
  let best=null;
- for(let f=0;f<30;f++){const k=Math.floor(N*((cfg.frac+f*.031)%1));if(T.gap[k]||(T.br&&T.br[k])||(T.wall&&T.wall[k])||(T.tn&&T.tn[k]))continue;
+ for(let f=0;f<30;f++){const k=Math.floor(N*((cfg.frac+f*.031)%1));if((T.gap&&T.gap[k])||(T.br&&T.br[k])||(T.wall&&T.wall[k])||(T.tn&&T.tn[k]))continue;
   for(const side of[cfg.side,-cfg.side])for(const off of[60,70,82]){const l=side*(hw(k)+off),[x,z]=at(k,l),ty=T.terr(x,z);
    let sl=0;for(const[dx,dz]of[[9,0],[-9,0],[0,9],[0,-9],[7,7],[-7,-7]])sl=Math.max(sl,Math.abs(T.terr(x+dx,z+dz)-ty));
    let pm=0;for(let u=.1;u<1;u+=.15){const[px,pz]=at(k,side*(hw(k)+3+(off-3)*u));pm=Math.max(pm,Math.abs(T.terr(px,pz)-(T.y[k]+(ty-T.y[k])*u)))}
    let dmin=1e9;for(let i=0;i<N;i+=3){const d=Math.hypot(T.x[i]-x,T.z[i]-z)-hw(i);if(d<dmin)dmin=d}
    const dy=Math.abs(ty-T.y[k]);if(dy>7||dmin<40)continue;
-   const sc_=sl*3+pm*1.2+dy*.4+f*.15;if(!best||sc_<best.s)best={s:sc_,k,side,off,x,z,y:ty}}}}
+   const sc_=sl*3+pm*1.2+dy*.4+f*.15;if(!best||sc_<best.s)best={s:sc_,k,side,off,x,z,y:ty}}}
  if(!best)return null;
  const k=best.k,rx=at(k,best.side*(hw(k)+3)),dirx=rx[0]-best.x,dirz=rx[1]-best.z,dl=Math.hypot(dirx,dirz),fx=dirx/dl,fz=dirz/dl,yaw=Math.atan2(fx,fz);
  const g=new THREE.Group();g.position.set(best.x,best.y,best.z);g.rotation.y=yaw;sc.add(g);
@@ -5787,29 +5842,31 @@ function build(sc,T,cfg){
  if(found){doors.forEach(d=>d.piv.rotation.y=d.sd*-1.75)}
  return B}
 const bw=buildWorld;buildWorld=function(T){const sc=bw.apply(this,arguments);B=null;try{const cfg=BARNS[T.d&&T.d.name];if(cfg&&!(T.d&&T.d.gravel))build(sc,T,cfg)}catch(e){console.error('barn',e)}return sc};
+P.barnInfo=()=>B&&{x:B.x,y:B.y,z:B.z,door:B.door,yaw:B.yaw,found:B.found};
+P.barnT=t=>{if(BN)BN.t=t};
 P.nearBarn=c=>!!(B&&Math.hypot(c.x-B.x,c.z-B.z)<150);
 /* ---------- prompt ---------- */
 let pr=null;
 function prompt(on){if(!pr){pr=document.createElement('div');pr.id='barnPrompt';pr.innerHTML='<kbd>SPACEBAR</kbd><span>Open the barn</span>';document.body.appendChild(pr)}pr.style.opacity=on?1:0}
 /* ---------- reveal scene ---------- */
-let BN=null;const bcam=new THREE.PerspectiveCamera(52,16/9,.2,1500);
+let BN=null;const bcam=new THREE.PerspectiveCamera(52,16/9,.2,8000);
 let fade=null,card=null;
 const fadeEl=()=>{if(!fade){fade=document.createElement('div');fade.id='bnFade';document.body.appendChild(fade)}return fade};
-function startScene(){if(BN||!B||B.found)return;const car=B.car||(()=>{const c=mkCar(0xdddddd,0);c.modelIndex=-1;const id=B.cfg.car;c.modelIndex=P.modelOf(id,0);attachCarModel(c);c.g.position.set(0,.3,-1.2);c.g.rotation.y=PI;B.g.add(c.g);return c})();B.car=car;car.g.visible=true;
- BN={t:0,ph:0,cardUp:false};document.body.classList.add('barnscene');const f=fadeEl();f.style.transition='opacity .6s';f.style.opacity=1;if(P.sfx)P.sfx('whoosh');prompt(false)}
+function startScene(){if(BN||!B||B.found)return;const car=B.car||(()=>{const c=mkCar(0xdddddd,0);const id=B.cfg.car;c.modelIndex=P.modelOf(id,0);attachCarModel(c);c.g.position.set(0,.75,-1.0);c.g.rotation.y=PI;B.g.add(c.g);return c})();B.car=car;car.g.visible=true;
+ BN={t:0,ph:0,cardUp:false};RACE.cars.forEach(c=>{if(c.m&&c.m.g)c.m.g.visible=false});document.body.classList.add('barnscene');const f=fadeEl();f.style.transition='opacity .6s';f.style.opacity=1;if(P.sfx)P.sfx('whoosh');prompt(false)}
 function endScene(){const id=B.cfg.car,s=sv();s.owned[id]=(s.owned[id]||0)|1;s.barn=s.barn||{};s.barn[id]=1;P.save();B.found=true;if(card)card.style.display='none';
  BN.ph=4;BN.t=0;const f=fadeEl();f.style.transition='opacity .6s';f.style.opacity=1}
 function tickScene(dt){const N_=BN;N_.t+=dt;const f=fadeEl();
  if(N_.ph===0&&N_.t>.7){N_.ph=1;N_.t=0;f.style.transition='opacity 1.6s';f.style.opacity=0}
  if(N_.ph===1){const o=Math.max(0,Math.min(1,(N_.t-1.4)/1.8)),e=o*o*(3-2*o);B.doors.forEach(d=>d.piv.rotation.y=d.sd*-1.75*e);B.light.intensity=1.6*e;if(o>0&&!N_.snd){N_.snd=1;if(P.sfx)P.sfx('back')}
   if(N_.t>5&&!N_.cardUp){N_.cardUp=true;showCard()}if(N_.t>5.2)N_.ph=2}
- if(N_.ph===4&&N_.t>.8){document.body.classList.remove('barnscene');const f2=fadeEl();f2.style.transition='opacity 1s';f2.style.opacity=0;BN=null}}
+ if(N_.ph===4&&N_.t>.8){document.body.classList.remove('barnscene');const f2=fadeEl();f2.style.transition='opacity 1s';f2.style.opacity=0;BN=null;RACE.cars.forEach(c=>{if(c.m&&c.m.g)c.m.g.visible=true})}}
 function showCard(){if(!card){card=document.createElement('div');card.id='bnCard';document.body.appendChild(card)}const c=P.BYID[B.cfg.car];
  card.innerHTML=`<small>BARN FIND</small><h2>${c.name}</h2><p>${c.type} &middot; ${Math.round(c.mphG||0)} mph</p><div class="bn-add">Added to your garage</div><span><kbd>SPACEBAR</kbd> Continue</span>`;card.style.display='flex'}
 const stp=step;step=dt=>{if(BN){tickScene(dt);return}stp(dt);const Rc=RACE;if(!B||B.found||!Rc||Rc.state!=='race'||Rc.cfg.rally){prompt(false);return}
  let near=false;for(const c of Rc.cars)if(c.human&&!c.fin&&Math.hypot(c.x-B.door.x,c.z-B.door.z)<9)near=true;prompt(near)};
 const drw=drawRace;drawRace=function(dt){if(BN&&B){const sy=Math.sin(B.yaw),cy=Math.cos(B.yaw),t=BN.t+(BN.ph>=1?.7:0),dist=15-Math.min(7,t*1.1);
-  const gx=B.x,gz=B.z;bcam.position.set(gx+sy*(B.D/2+dist)+cy*3.2,B.y+1.55,gz+cy*(B.D/2+dist)-sy*3.2);bcam.lookAt(gx+sy*(B.D/2-2),B.y+1.5,gz+cy*(B.D/2-2));bcam.aspect=Math.max(.1,R.domElement.width/R.domElement.height);bcam.updateProjectionMatrix();
+  const gx=B.x,gz=B.z;bcam.position.set(gx+sy*(B.D/2+dist)+cy*3.2,B.y+2.6,gz+cy*(B.D/2+dist)-sy*3.2);bcam.lookAt(gx+sy*(B.D/2-3),B.y+1.2,gz+cy*(B.D/2-2));bcam.aspect=Math.max(.1,R.domElement.width/R.domElement.height);bcam.updateProjectionMatrix();
   R.setScissorTest(false);R.setViewport(0,0,R.domElement.width,R.domElement.height);R.clear();R.render(RACE.scene,bcam);return}
  return drw.apply(this,arguments)};
 addEventListener('keydown',e=>{if(e.code!=='Space')return;if(BN){if(BN.cardUp&&BN.ph===2){e.preventDefault();e.stopImmediatePropagation();endScene()}else{e.preventDefault();e.stopImmediatePropagation()}return}
