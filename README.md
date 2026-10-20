@@ -100,3 +100,7 @@ All 136 cars come from the *Low Poly Cars - Mega Pack* sheet. `tools/build_pack.
 `src/layers/cars10.js` builds each model lazily: a `paint` mesh (plain colour, so liveries and the alt colour work) plus a palette-textured `body` mesh,
 and generates the catalogue (category, class, stats, price). The 14 original ids keep their saves and stats but wear pack models.
 Brand Central and the garage filter by category: hatchback, wagon, sedan, coupe, muscle, sports, supercar, hypercar and track.
+
+## Versioning
+
+The version lives in `VERSION` (currently shown in the main menu). It starts at 0.01 and every update raises it by 0.01. Deliver builds as `Poly-GT-v<version>.html`.

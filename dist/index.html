@@ -8458,8 +8458,8 @@ function pickMode(m){if(m==='career'){ST.crank=null;ST.cev=null;openCareer()}els
  const g=document.createElement('button');g.innerHTML='<small>02</small> Garage';g.style.order=2;g.onclick=()=>openShow('garage',{player:0,cap:null,ret:'menu'});
  const b=document.createElement('button');b.innerHTML='<small>03</small> Brand Central';b.style.order=3;b.onclick=()=>openShow('brand',{player:0,cap:null,ret:'menu'});
  ma.append(g,b);bt[1].style.order=4;bt[1].innerHTML='<small>04</small> Settings';
- const lg=$('logo');if(lg)lg.innerHTML='POLY<br><span>GT</span><small>GRAND TOUR / V9</small>';
- const mt=document.querySelector('.menuTop');if(mt){mt.querySelector('.brandMark').textContent='PT / 98';const sm=mt.querySelector('small');if(sm)sm.textContent='V9'}
+ const lg=$('logo');if(lg)lg.innerHTML='POLY<br><span>GT</span><small>GRAND TOUR / V0.01</small>';
+ const mt=document.querySelector('.menuTop');if(mt){mt.querySelector('.brandMark').textContent='PT / 98';const sm=mt.querySelector('small');if(sm)sm.textContent='V0.01'}
  const f=document.createElement('div');f.className='mfoot';$('menu').appendChild(f);
  P.menuStats=()=>{const sv=P.SV();f.innerHTML='<span>Balance <b>'+fmtCr(sv.cr)+'</b></span><span>Career <b>'+P.RANKS[P.careerRank()].n+'</b></span><span>Races <b>'+sv.stats.races+'</b></span><span>Wins <b>'+sv.stats.wins+'</b></span><span style="margin-left:auto">Enter: play</span>'};
  P.menuStats()})();
