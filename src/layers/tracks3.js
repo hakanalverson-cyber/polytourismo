@@ -5,7 +5,7 @@ const P=window.PT8,RA=window.PT8_RA;
 if(!RA)return;
 const PI=Math.PI;
 const roadAtl={id:14,look:0,name:'Road Atlanta',desc:'braselton georgia / uphill T1 / esses / T10 / T12 dive',hw:7.5,bank:14,off:'grass',idw:.85,offs:0,amp:3,up:5,shoulder:17,
- sky:[0x3f86d2,0xcfe4f4],fog:0xcfe0ea,sun:0xfff0d0,hemi:[0xd4e8f8,0x4f7a3c],road:'#3b3d43',tod0:'day',ra:1,
+ sky:[0x3f86d2,0xcfe4f4],fog:0xcfe0ea,sun:0xfff0d0,hemi:[0xd4e8f8,0x4f7a3c],road:'#3b3d43',tod0:'day',ra:1,uniform:1,
  pts:RA.pts,walls:[],ice:[],boost:[],jumps:[]};
 D.push(roadAtl);
 P.TRACK_INFO.push({s:'TARMAC',tags:['ESSES','UPHILL T1','T10 COMPLEX','T12 DIVE']});

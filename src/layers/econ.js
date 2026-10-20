@@ -5,6 +5,9 @@ const P=window.PT8;if(!P||!P.CARS)return;
 const AT=P.CLASS_AT||[480,576,672,768],ceil=v=>{for(const a of AT)if(v<a)return a-4;return 1500};
 /* 1) renames */
 {const z=P.BYID.zen;if(z)z.name='PAGANI ZONDA R'}
+/* rally gravel: WRC cars are phenomenal on gravel, casual rally cars are good */
+P.CARS.forEach(c=>{if(c.rdiv==='WRC')c.off=Math.max(c.off||0,1);else if(c.rdiv==='CASUAL')c.off=Math.max(c.off||0,.9)});
+{const m0=P.mul;P.mul=c=>{const m=m0(c);try{if(c.human&&RACE&&RACE.cfg&&RACE.cfg.rally&&!RACE.cfg.circuit&&c.cs){const d=c.cs.rdiv;if(d==='WRC'){m.grip*=1.14;m.acc*=1.1;m.brk*=1.25;m.top*=1.03}else if(d==='CASUAL'){m.grip*=1.04;m.acc*=1.03;m.brk*=1.08}}}catch(e){}return m}}
 /* 2) class placement: fixed performance points + a small matching nudge to the real stats */
 const FIX={};const nudge=(c,m)=>{const t=o=>{if(!o)return;o.acc=+(o.acc*m).toFixed(2);o.grip=+(o.grip*m).toFixed(3);o.brk=+(o.brk*m).toFixed(3)};t(c);t(c._std);t(c._tk)};
 const set=(id,target)=>{const c=P.BYID[id];if(!c)return;const p0=P.pp(c);FIX[id]=target;nudge(c,Math.max(.94,Math.min(1.12,1+(target/p0-1)*.25)))};

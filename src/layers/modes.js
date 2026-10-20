@@ -131,12 +131,12 @@ const RANKS=[
 ];
 /* [type,name,track,laps,cap,field,extra] type: race | rally | cutup */
 const EV=[
- [['race','Quarry Open',0,2,'B',4],['rally','Pinewood Shakedown',4,2,'C',3],['cutup','Cut-Up: Back Streets',3,0,null,0,3500],['race','Canyon Rookie Cup',1,2,'B',5],['race','ROOKIE FINAL: Alpine Pass',2,2,'B',5]],
- [['rally','Redrock Dash',5,2,null,4],['race','Afterhours Sprint',3,3,null,5],['cutup','Cut-Up: Canyon Run',1,0,null,0,6500],['race','Hatch Heroes',0,3,'C',5],['rally','AMATEUR FINAL: Highmoor Stage',6,3,null,5]],
- [['race','Alpine Sprint',2,3,null,5],['rally','Pinewood Open',4,3,'B',5],['cutup','Cut-Up: Overpass',3,0,null,0,10000],['rally','Utility Rally',6,2,'D',4],['race','SEMI-PRO FINAL: Canyon GP',1,4,null,6]],
- [['race','Quarry Grand Prix',0,4,null,6],['rally','Redrock Open',5,3,null,5],['cutup','Cut-Up: Alpine',2,0,null,0,14000],['race','Afterhours GP',3,4,null,6],['rally','PRO FINAL: Highmoor Rally',6,4,null,6]],
- [['race','Canyon Masters',1,4,null,6],['rally','Pinewood Masters',4,4,null,6],['cutup','Cut-Up: Quarry',0,0,null,0,19000],['race','Alpine Masters',2,4,null,7],['race','ELITE FINAL: Afterhours Grand Prix',3,5,null,7]],
- [['race','Legends Quarry',0,5,null,7],['rally','Legends Redrock',5,4,null,7],['cutup','Cut-Up: Legends',1,0,null,0,26000],['race','Legends Alpine',2,5,null,7],['rally','LEGEND FINAL: Grand Pinewood',4,5,null,7]]
+ [['race','Quarry Open',0,2,'B',4],['rally','Pinewood Shakedown',4,2,'C',3],['cutup','Cut-Up: Back Streets',3,0,null,0,500],['race','Canyon Rookie Cup',1,2,'B',5],['race','ROOKIE FINAL: Alpine Pass',2,2,'B',5]],
+ [['rally','Redrock Dash',5,2,null,4],['race','Afterhours Sprint',3,3,null,5],['cutup','Cut-Up: Canyon Run',1,0,null,0,800],['race','Hatch Heroes',0,3,'C',5],['rally','AMATEUR FINAL: Highmoor Stage',6,3,null,5]],
+ [['race','Alpine Sprint',2,3,null,5],['rally','Pinewood Open',4,3,'B',5],['cutup','Cut-Up: Overpass',3,0,null,0,1100],['rally','Utility Rally',6,2,'D',4],['race','SEMI-PRO FINAL: Canyon GP',1,4,null,6]],
+ [['race','Quarry Grand Prix',0,4,null,6],['rally','Redrock Open',5,3,null,5],['cutup','Cut-Up: Alpine',2,0,null,0,1400],['race','Afterhours GP',3,4,null,6],['rally','PRO FINAL: Highmoor Rally',6,4,null,6]],
+ [['race','Canyon Masters',1,4,null,6],['rally','Pinewood Masters',4,4,null,6],['cutup','Cut-Up: Quarry',0,0,null,0,1700],['race','Alpine Masters',2,4,null,7],['race','ELITE FINAL: Afterhours Grand Prix',3,5,null,7]],
+ [['race','Legends Quarry',0,5,null,7],['rally','Legends Redrock',5,4,null,7],['cutup','Cut-Up: Legends',1,0,null,0,2000],['race','Legends Alpine',2,5,null,7],['rally','LEGEND FINAL: Grand Pinewood',4,5,null,7]]
 ];
 const EVENTS=[];EV.forEach((r,ri)=>r.forEach((e,ei)=>EVENTS.push({id:'r'+ri+'e'+ei,rank:ri,idx:ei,type:e[0],name:e[1],track:e[2],laps:e[3],cap:e[4],n:e[5],target:e[6],final:ei===4,
  prize:Math.round(RANKS[ri].prize*(e[0]==='cutup'?.9:e[0]==='rally'?1.1:1)*(ei===4?2:1))})));
