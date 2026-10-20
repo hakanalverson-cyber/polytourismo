@@ -66,7 +66,7 @@ function build(sc,T,cfg){
  const L=pt=>[pt[0],pt[1]];
  const nT=40,pts=[];for(let i=0;i<=nT;i++){const u=i/nT,l=best.side*(hw(k)+2.4+(best.off-2.4+6)*u),wig=Math.sin(u*PI*2.2)*5*Math.sin(u*PI),[px,pz]=at(k,l),a=T.psi[k];pts.push([px+Math.sin(a)*wig*(u>.04?1:0),pz+Math.cos(a)*wig*(u>.04?1:0)])}
  /* the last stretch bends in to meet the barn doors */
- const tp=[];for(let i=0;i<=nT;i++){const u=i/nT,p=pts[i],bx=best.x+fx*(D/2+3),bz=best.z+fz*(D/2+3),w=Math.pow(u,3);tp.push([p[0]*(1-w)+bx*w,p[1]*(1-w)+bz*w])}
+ const tp=[];{const iS=Math.round(nT*.8),G=lw(0,38),Dr=lw(0,D/2+.6);for(let i=0;i<=nT;i++){if(i<=iS){const u_=i/iS,w=u_*u_*(3-2*u_),p=pts[i];tp.push([p[0]*(1-w)+G[0]*w,p[1]*(1-w)+G[1]*w])}else{const t=(i-iS)/(nT-iS);tp.push([G[0]+(Dr[0]-G[0])*t,G[1]+(Dr[1]-G[1])*t])}}}
  {const pos=[],uv=[],idx=[];for(let i=0;i<=nT;i++){const a=tp[Math.max(0,i-1)],b=tp[Math.min(nT,i+1)],tx=b[0]-a[0],tz=b[1]-a[1],tl=Math.hypot(tx,tz)||1,nx=-tz/tl,nz=tx/tl,wd=1.9-.5*(i/nT),p=tp[i];
    for(const sd of[-1,1]){const x=p[0]+nx*wd*sd,z=p[1]+nz*wd*sd;pos.push(x,T.terr(x,z)+.09+.04*(i/nT),z);uv.push(sd>0?1:0,i*.25)}}
   for(let i=0;i<nT;i++){const q=i*2;idx.push(q,q+1,q+2,q+1,q+3,q+2)}
@@ -88,10 +88,10 @@ function build(sc,T,cfg){
  {const pm_=M_(0x4a3626),rm_=M_(0x8a6c4a),pg_=new THREE.BoxGeometry(.26,1.35,.26),rg_=new THREE.BoxGeometry(1,.14,.08),fg=new THREE.Group(),up=new THREE.Vector3(1,0,0);sc.add(fg);
   const run_=pts=>{let prev=null;for(const[x,z]of pts){const y=Math.max(T.terr(x,z),padY0(x,z)),po=new THREE.Mesh(pg_,pm_);po.position.set(x,y+.55,z);po.castShadow=true;fg.add(po);
    if(prev){const dx=x-prev[0],dz=z-prev[2],dy=y-prev[1],len=Math.hypot(dx,dy,dz);for(const h of[.35,.7,1.05]){const r=new THREE.Mesh(rg_,rm_);r.scale.x=len;r.castShadow=true;r.position.set((x+prev[0])/2,(y+prev[1])/2+h,(z+prev[2])/2);r.quaternion.setFromUnitVectors(up,new THREE.Vector3(dx,dy,dz).normalize());fg.add(r)}}prev=[x,y,z]}};
-  for(const sd of[-1,1]){const arr=[];for(let i=4;i<nT-8;i+=2){const a=tp[i-1],b=tp[i+1],tx=b[0]-a[0],tz=b[1]-a[1],tl=Math.hypot(tx,tz)||1;arr.push([tp[i][0]+(-tz/tl)*3.4*sd,tp[i][1]+(tx/tl)*3.4*sd])}run_(arr)}
+  for(const sd of[-1,1]){const arr=[];for(let i=Math.round(nT*.8);i<nT;i+=1){const a=tp[Math.max(0,i-2)],b=tp[Math.min(nT,i+2)],tx=b[0]-a[0],tz=b[1]-a[1],tl=Math.hypot(tx,tz)||1;{const px=tp[i][0]+(-tz/tl)*3.4*sd,pz=tp[i][1]+(tx/tl)*3.4*sd,ddx=px-best.x,ddz=pz-best.z;if(ddx*fx+ddz*fz<18.5)break;arr.push([px,pz])}}arr.push(lw(sd*3.4,17));run_(arr)}
   /* paddock around the barn (local frame): back + both sides, front pieces either side of the gate */
   const FX=12,FZ0=-10,FZ1=17,pts_=[],seg=(x0,z0,x1,z1)=>{const n=Math.max(1,Math.round(Math.hypot(x1-x0,z1-z0)/3.6)),o=[];for(let i=0;i<=n;i++){const[wx,wz]=lw(x0+(x1-x0)*i/n,z0+(z1-z0)*i/n);o.push([wx,wz])}return o};
-  run_(seg(-4,FZ1,-FX,FZ1).concat(seg(-FX,FZ1,-FX,FZ0).slice(1),seg(-FX,FZ0,FX,FZ0).slice(1),seg(FX,FZ0,FX,FZ1).slice(1),seg(FX,FZ1,4,FZ1).slice(1)))}
+  run_(seg(-3.4,FZ1,-FX,FZ1).concat(seg(-FX,FZ1,-FX,FZ0).slice(1),seg(-FX,FZ0,FX,FZ0).slice(1),seg(FX,FZ0,FX,FZ1).slice(1),seg(FX,FZ1,3.4,FZ1).slice(1)))}
  /* yard dressing from the pack: hay, crates, a well, trees and bushes around the barn, clear of the trail */
  if(P.BLD&&P.PROPKIT){const dress=[['Haystack_04',8,-3,.4],['Haystack_01',9.5,-.6,-.3],['Haystack_02',-8.6,-4.5,1],['WoodenCrates_01',-7.2,6,.3],['WoodenCrates_01',-8.3,7.4,-.4],['Well_02',7.8,9,0],['AnimalFeeder_01',-9,-1,1.57],['Tree_07',-14,-2,0],['Tree_04',13.5,4,1],['Tree_05',-13,12,2],['Tree_02',14,-8,3],['Bush_01',-10,10,0],['Bush_02',10.5,-7,1],['Bush_01',-11,-8,2],['Bush_02',11,13,0]];
   for(const[nm,lx,lz,ry]of dress){const q=P.BLD[nm];if(!q)continue;const m=new THREE.Mesh(q.g.clone(),P.PROPKIT.MAT);m.position.set(lx,padY(lx,lz)-.06-flatY,lz);m.rotation.y=ry;m.castShadow=true;m.receiveShadow=true;g.add(m)}}

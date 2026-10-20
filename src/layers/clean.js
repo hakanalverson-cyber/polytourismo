@@ -40,7 +40,7 @@ function lamps(sc,T){
   pole.frustumCulled=head.frustumCulled=false;grp.add(pole,head)}
  /* halos: one Points draw call */
  const pp=[];L.forEach(l=>pp.push(l.x,l.y,l.z));const hg=new THREE.BufferGeometry();hg.setAttribute('position',new THREE.Float32BufferAttribute(pp,3));
- const hp=new THREE.Points(hg,new THREE.PointsMaterial({map:TXH,size:9,sizeAttenuation:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,fog:false,color:0xffe0a8}));hp.frustumCulled=false;grp.add(hp);
+ const hp=new THREE.Points(hg,new THREE.PointsMaterial({map:TXH,size:3.6,sizeAttenuation:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,fog:false,color:0xffe0a8}));hp.frustumCulled=false;grp.add(hp);
  /* light pools on the road */
  const pools=L.filter(l=>l.own);if(pools.length){const pm=new THREE.InstancedMesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:TXP,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2,color:0xffc98a,opacity:.8,fog:false}),pools.length);
   pools.forEach((l,i)=>{dm.position.set(l.rx,l.ry,l.rz);dm.rotation.set(0,0,0);dm.scale.set(15,1,15);dm.updateMatrix();pm.setMatrixAt(i,dm.matrix)});dm.scale.set(1,1,1);pm.frustumCulled=false;grp.add(pm)}
@@ -72,21 +72,47 @@ function city(sc,T){
  row(LOW.concat(TOW),1.3,1.9,12+14+22,1,5);
  /* grass: verge strips beside the road and lawns, from the pack's GrassLand tile */
  if(P.BLD.GrassLand_Plain){const GL='GrassLand_Plain',gs=2.3,gt=gs*5;
-  for(const side of[-1,1])for(let i=0;i<T.N;i+=2){if((T.gap&&T.gap[i])||(T.br&&T.br[i])||(T.tn&&T.tn[i])||(T.wall&&T.wall[i]&&T.br&&T.br[i]))continue;const c=Math.cos(T.psi[i]),sn=Math.sin(T.psi[i]);
-   for(const off of[T.hw[i]+3.5,T.hw[i]+3.5+gt*.9]){const l=side*off,x=T.x[i]+c*l,z=T.z[i]-sn*l;if(near(x,z)<T.hw[i]+2.2)continue;(out[GL]=out[GL]||[]).push([x,T.terr(x,z)+(i%5)*.012,z,T.psi[i],gs,1])}}
+  /* verge: one continuous grass ribbon per side (no overlapping tiles), broken wherever the road is a bridge, tunnel or crossing */
+  {const pos=[],col=[],idx=[],c0=new THREE.Color(),W0=3.4,W1=11.5;let vi=0,open=false;
+   for(const side of[-1,1]){open=false;for(let i=0;i<T.N;i++){const bad=(T.gap&&T.gap[i])||(T.br&&T.br[i])||(T.tn&&T.tn[i]);const c=Math.cos(T.psi[i]),sn=Math.sin(T.psi[i]);let xa,za,xb,zb;
+     if(!bad){const la=side*(T.hw[i]+W0),lb=side*(T.hw[i]+W1);xa=T.x[i]+c*la;za=T.z[i]-sn*la;xb=T.x[i]+c*lb;zb=T.z[i]-sn*lb;if(near(xb,zb)<T.hw[i]+W1*.55)open=open&&false,xa=null}
+     if(bad||xa===null){open=false;continue}
+     const ya=T.terr(xa,za)+.06,yb=T.terr(xb,zb)+.06,j=(Math.sin(i*.9)+Math.sin(i*.37+side))*.05;c0.setHSL(.29+j*.2,.42,.34+j);pos.push(xa,ya,za,xb,yb,zb);col.push(c0.r,c0.g,c0.b,c0.r*.92,c0.g*.92,c0.b*.92);
+     if(open){const q=vi-2;idx.push(q,q+1,vi,q+1,vi+1,vi);if(side>0)idx.push(),0}
+     open=true;vi+=2}}
+   if(idx.length){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.setIndex(idx);g.computeVertexNormals();
+    const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}));m.frustumCulled=false;m.receiveShadow=false;sc.add(m)}
+   /* street trees and hedges along the verge */
+   const ST=['Tree_02','Tree_04','Tree_05','Tree_07'].filter(n=>P.BLD[n]),HB=['Bush_01','Bush_02'].filter(n=>P.BLD[n]);let acc=0;
+   for(const side of[-1,1])for(let i=0;i<T.N;i+=3){if((T.gap&&T.gap[i])||(T.br&&T.br[i])||(T.tn&&T.tn[i]))continue;const c=Math.cos(T.psi[i]),sn=Math.sin(T.psi[i]);
+    if(ST.length&&i%9===(side>0?0:4)){const l=side*(T.hw[i]+W0+3+r()*3),x=T.x[i]+c*l,z=T.z[i]-sn*l;if(near(x,z)>T.hw[i]+W0+1.5&&clear(x,z,1.2)){const nm=ST[Math.floor(r()*ST.length)],sc_=1.0+r()*.6;(out[nm]=out[nm]||[]).push([x,T.terr(x,z),z,r()*6.28,sc_,1]);placed.push([x,z,1.2])}}
+    if(HB.length&&i%3===0&&r()<.8){const l=side*(T.hw[i]+W0+.9),x=T.x[i]+c*l,z=T.z[i]-sn*l;if(near(x,z)>T.hw[i]+W0*.5){const nm=HB[Math.floor(r()*HB.length)];(out[nm]=out[nm]||[]).push([x,T.terr(x,z),z,r()*6.28,1.0+r()*.5,1])}}}}
   const lawn=(cx,cz,R)=>{for(let gx=-R;gx<=R;gx+=gt*.9)for(let gz=-R;gz<=R;gz+=gt*.9){const x=cx+gx,z=cz+gz;if(Math.hypot(gx,gz)>R||near(x,z)<T.hw[nearest(x,z)]+3)continue;(out[GL]=out[GL]||[]).push([x,T.terr(x,z),z,r()*6.28,gs,1])}};
   P._lawn=lawn}
  /* parks: small forests between the blocks */
  const TREES=['Tree_02','Tree_04','Tree_05','Tree_07','Bush_01','Bush_02'].filter(n=>P.BLD[n]);
  if(TREES.length){const nP=40;let pk=0;for(let t=0;t<900&&pk<nP;t++){const cx=x0-80+r()*(x1-x0+160),cz=z0-80+r()*(z1-z0+160),d=near(cx,cz);if(d<26||d>170||!clear(cx,cz,16))continue;
    const R_=18+r()*22,n=26+Math.floor(r()*30);placed.push([cx,cz,R_*.55]);if(P._lawn)P._lawn(cx,cz,R_*.9);if(r()<.3&&P.BLD.WaterLand_05){(out.WaterLand_05=out.WaterLand_05||[]).push([cx,T.terr(cx,cz)-.15,cz,r()*6.28,1.5,0])}let c=0;for(let q=0;q<n*3&&c<n;q++){const a=r()*6.283,rr=Math.sqrt(r())*R_,x=cx+Math.cos(a)*rr,z=cz+Math.sin(a)*rr;if(near(x,z)<T.hw[nearest(x,z)]+9)continue;let bad=false;for(const p of log)if(p.n.indexOf('Tree')<0&&p.n.indexOf('Bush')<0&&Math.hypot(p.x-x,p.z-z)<(p.fr||2)+1.5){bad=true;break}if(bad)continue;
-     const nm=TREES[Math.floor(r()*TREES.length)],big=nm.indexOf('Tree')==0,sc_=big?1.5+r()*1.3:1.4+r()*.9;(out[nm]=out[nm]||[]).push([x,T.terr(x,z),z,r()*6.28,sc_,1]);log.push({n:nm,x,z,y:0,fr:1.4,sk:.3,s:sc_});c++}pk++}}
+     const nm=TREES[Math.floor(r()*TREES.length)],big=nm.indexOf('Tree')==0,sc_=big?1.0+r()*.8:1.1+r()*.6;(out[nm]=out[nm]||[]).push([x,T.terr(x,z),z,r()*6.28,sc_,1]);log.push({n:nm,x,z,y:0,fr:1.4,sk:.3,s:sc_});c++}pk++}}
+ /* pack-themed lots: community gardens (FarmLand grid + greenhouse + fences + crates), well plazas and fenced ponds */
+ {const B=P.BLD,add_=(nm,x,z,yaw,sc_,y)=>{if(!B[nm])return;(out[nm]=out[nm]||[]).push([x,y===undefined?T.terr(x,z):y,z,yaw,sc_,2]);},
+  fence=(cx,cz,R,gap,sf)=>{const len=3*sf,n=Math.max(8,Math.floor(6.283*R/len));for(let k=0;k<n;k++){const a=k/n*6.283;if(Math.abs(((a-gap+9.42)%6.283)-3.14)>3.14-.22)continue;const x=cx+Math.cos(a)*R,z=cz+Math.sin(a)*R;if(near(x,z)<T.hw[nearest(x,z)]+5)continue;add_('WoodFence_02',x,z,-(a+1.5708),sf)}},
+  FL=Object.keys(B).filter(n=>/^FarmLand_/.test(n));
+  let lots=0;for(let t=0;t<1500&&lots<34;t++){const cx=x0-90+r()*(x1-x0+180),cz=z0-90+r()*(z1-z0+180),d=near(cx,cz);if(d<24||d>150||!clear(cx,cz,17))continue;const kind=lots%3,R=kind===0?15:kind===1?11:12;
+   placed.push([cx,cz,R+2]);lots++;const gap=Math.atan2(rz[nearest(cx,cz)]-cz,rx[nearest(cx,cz)]-cx);
+   if(P._lawn)P._lawn(cx,cz,R+3);
+   if(kind===0&&FL.length){for(let gx=-1;gx<=0;gx++)for(let gz=-1;gz<=0;gz++){const x=cx+gx*8.4+4.2-3,z=cz+gz*8.4+4.2-3;add_(FL[Math.floor(r()*FL.length)],x,z,Math.floor(r()*4)*1.5708,1.6)}
+    add_('GreenMouse',cx+R*.55*Math.cos(gap+3.14),cz+R*.55*Math.sin(gap+3.14),gap+1.57,1.1);add_('WoodenCrates_01',cx+R*.5,cz-R*.3,r()*6,1.3);add_('WoodenCrates_01',cx+R*.55,cz-R*.18,r()*6,1.1);add_('Haystack_04',cx-R*.5,cz+R*.4,r()*6,1.3);add_('Well_02',cx+3,cz+R*.45,0,1.3);fence(cx,cz,R,gap,1.35)}
+   else if(kind===1){add_('Well_02',cx,cz,0,2.2);for(let q=0;q<5;q++){const a=q/5*6.283+r();add_(['Bush_01','Bush_02'][q&1],cx+Math.cos(a)*5,cz+Math.sin(a)*5,r()*6,1.6)}add_('WoodenCrates_01',cx+3.4,cz+2,r()*6,1.3);add_('AnimalFeeder_01',cx-4.5,cz+1,r()*6,1.4);for(let q=0;q<4;q++){const a=q/4*6.283+.7;add_(['Tree_02','Tree_04','Tree_05','Tree_07'][q],cx+Math.cos(a)*9,cz+Math.sin(a)*9,r()*6,1.3)}fence(cx,cz,R,gap,1.1)}
+   else{add_('WaterLand_05',cx,cz,r()*6,1.8,T.terr(cx,cz)-.12);for(let q=0;q<9;q++){const a=q/9*6.283+r()*.4;add_(['Bush_01','Bush_02','Tree_04','Tree_02'][q&3],cx+Math.cos(a)*(6.5+r()*2),cz+Math.sin(a)*(6.5+r()*2),r()*6,q&2?1.3:1.5)}add_('AnimalFeeder_01',cx+7,cz-4,.6,1.3);fence(cx,cz,R,gap,1.2)}
+   for(const nm of['Tree_02'])void 0;
+  }}
  tryPlace(TOW,1.6,2.4,60,110,700,70,140);
  tryPlace(TOW,2.4,3.6,100,210,900,80,260);
  tryPlace(TOW,3.6,5.5,200,520,1200,70,460);
  const dum=new THREE.Object3D(),col=new THREE.Color();
  for(const nm in out){const L=out[nm],im=new THREE.InstancedMesh(P.BLD[nm].g.clone(),P.PROPKIT.MAT,L.length);
-  L.forEach((q,i)=>{dum.position.set(q[0],q[1],q[2]);dum.rotation.set(0,q[3],0);dum.scale.set(q[4],q[6]||q[4],q[4]);dum.updateMatrix();im.setMatrixAt(i,dum.matrix);if(q[5]){col.setHSL(.27+r()*.08,.35,.78+r()*.2)}else{const h=.55+r()*.35;col.setHSL(h,.18+r()*.25,.62+r()*.3)}im.setColorAt(i,col)});
+  L.forEach((q,i)=>{dum.position.set(q[0],q[1],q[2]);dum.rotation.set(0,q[3],0);dum.scale.set(q[4],q[6]||q[4],q[4]);dum.updateMatrix();im.setMatrixAt(i,dum.matrix);if(q[5]===2){col.setRGB(1,1,1)}else if(q[5]){col.setHSL(.27+r()*.08,.35,.78+r()*.2)}else{const h=.55+r()*.35;col.setHSL(h,.18+r()*.25,.62+r()*.3)}im.setColorAt(i,col)});
   im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true;im.frustumCulled=false;im.castShadow=false;im.receiveShadow=false;im.userData.ptProp=nm;sc.add(im)}
  sc.userData.props=log}
 
@@ -116,6 +142,38 @@ function tunnel(sc,T){
  if(slabs.length){const im=new THREE.InstancedMesh(new THREE.BoxGeometry(1,.7,1.2),slab,slabs.length);slabs.forEach((q,i)=>{dum.position.set(q[0],q[1],q[2]);dum.rotation.set(0,q[3],0);dum.scale.set(q[4],1,1);dum.updateMatrix();im.setMatrixAt(i,dum.matrix)});im.frustumCulled=false;sc.add(im)}
 }
 
+/* ---------- rural lots for every non-city map: farm plots, ranch yards, orchards and ponds built from the pack, rooted on level ground, clear of the road and barn ---------- */
+const LOTS={'Quarry Circuit':[12,'fpwo'],'Canyon Viaduct':[5,'wh'],'Alpine Pass':[6,'wh'],'Coastal Run':[9,'fpwo'],'Pinewood Stage':[9,'fwoh'],'Redrock Stage':[5,'wh'],'Highmoor Stage':[9,'fwoh'],'Terrace Run':[12,'fpo'],'Autumn Ridge':[9,'fwoh'],'Mangrove Ford':[6,'pwo'],'Frostline Stage':[5,'wh'],'Road Atlanta':[9,'fwo']};
+function lotsAll(sc,T){
+ const cfg=LOTS[T.d&&T.d.name];if(!cfg||T.d.city||!P.BLD)return;const B=P.BLD,N=T.N;
+ const rx=[],rz=[],rh=[],rf=[];for(let i=0;i<N;i+=2){rx.push(T.x[i]);rz.push(T.z[i]);rh.push(T.hw[i]);rf.push((T.gap&&T.gap[i])||(T.br&&T.br[i])||(T.tn&&T.tn[i])||(T.wall&&T.wall[i])?1:0)}
+ const near=(x,z)=>{let b=1e9;for(let i=0;i<rx.length;i++){const d=Math.hypot(x-rx[i],z-rz[i])-rh[i];if(d<b)b=d}return b};
+ const nearest=(x,z)=>{let b=1e9,k=0;for(let i=0;i<rx.length;i++){const d=Math.hypot(x-rx[i],z-rz[i]);if(d<b){b=d;k=i}}return k};
+ let seed=T.d.id*40503+17;const r=()=>((seed=(seed*1664525+1013904223)>>>0)/4294967296);
+ let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;rx.forEach((x,i)=>{x0=Math.min(x0,x);x1=Math.max(x1,x);z0=Math.min(z0,rz[i]);z1=Math.max(z1,rz[i])});
+ let lo=1e9;for(let i=0;i<N;i++)lo=Math.min(lo,T.y[i]);
+ const log=sc.userData.props||[],placed=[],out={},bs=T.barnSite;
+ const clear=(x,z,rad)=>{for(const q of placed)if(Math.hypot(q[0]-x,q[1]-z)<q[2]+rad)return false;for(const p of log)if(Math.hypot(p.x-x,p.z-z)<(p.fr||2)+rad)return false;return true};
+ const add_=(nm,x,z,yaw,sc_,sink)=>{if(!B[nm])return;(out[nm]=out[nm]||[]).push([x,T.terr(x,z)-(sink||0),z,yaw,sc_,2])};
+ const fence=(cx,cz,R,gap,sf)=>{const len=3*sf,n=Math.max(8,Math.floor(6.283*R/len));for(let k=0;k<n;k++){const a=k/n*6.283;if(Math.abs(((a-gap+9.42)%6.283)-3.14)>3.14-.2)continue;const x=cx+Math.cos(a)*R,z=cz+Math.sin(a)*R;if(near(x,z)<6)continue;add_('WoodFence_02',x,z,-(a+1.5708),sf,.1)}};
+ const FL=Object.keys(B).filter(n=>/^FarmLand_/.test(n)),TR=['Tree_02','Tree_04','Tree_05','Tree_07'].filter(n=>B[n]);
+ let n=0;const want=cfg[0],kinds=cfg[1];
+ for(let t=0;t<2500&&n<want;t++){const k=kinds[n%kinds.length],R=k==='f'?14:k==='h'?13:k==='o'?15:11,i=Math.floor(r()*rx.length),side=r()<.5?-1:1,off=rh[i]+R+7+r()*60,c=Math.cos(T.psi[i*2]),sn=Math.sin(T.psi[i*2]),cx=rx[i]+c*side*off,cz=rz[i]-sn*side*off;
+  if(near(cx,cz)<R+6||!clear(cx,cz,R+2))continue;if(bs&&Math.hypot(bs.x-cx,bs.z-cz)<R+38)continue;
+  let bad=false;for(let q=-8;q<=8&&!bad;q++){const j=(nearest(cx,cz)+q+rx.length)%rx.length;if(rf[j]&&Math.hypot(rx[j]-cx,rz[j]-cz)<R+40)bad=true}if(bad)continue;
+  const h0=T.terr(cx,cz);if(T.d.sea&&h0<lo-1.5)continue;let mn=1e9,mx=-1e9;for(let a=0;a<6;a++){const h=T.terr(cx+Math.cos(a)*R*.8,cz+Math.sin(a)*R*.8);mn=Math.min(mn,h);mx=Math.max(mx,h)}if(mx-mn>2.4)continue;
+  if(T.fords&&T.fords.some(f=>Math.hypot(T.x[f.i%N]-cx,T.z[f.i%N]-cz)<R+70))continue;
+  const kk=nearest(cx,cz),gap=Math.atan2(rz[kk]-cz,rx[kk]-cx),face=Math.atan2(rx[kk]-cx,rz[kk]-cz);placed.push([cx,cz,R+1]);log.push({n:'lot',x:cx,z:cz,y:h0,fr:R+1,sk:0,s:1});n++;
+  if(k==='f'&&FL.length){for(let gx=0;gx<2;gx++)for(let gz=0;gz<3;gz++)add_(FL[Math.floor(r()*FL.length)],cx+(gx-.5)*8.4,cz+(gz-1)*8.4,Math.floor(r()*4)*1.5708,1.6);fence(cx,cz,R,gap,1.35);add_('GreenMouse',cx-R*.8*Math.cos(gap),cz-R*.8*Math.sin(gap),face,1.0);add_('WoodenCrates_01',cx+R*.55,cz-R*.4,r()*6,1.3);add_('Haystack_04',cx-R*.5,cz+R*.55,r()*6,1.4);add_('Well_02',cx+R*.6,cz+R*.5,0,1.3)}
+  else if(k==='p'&&B.WaterLand_05){add_('WaterLand_05',cx,cz,r()*6,2.2,.14);for(let q=0;q<10;q++){const a=q/10*6.283+r()*.3;add_(['Bush_01','Bush_02','Tree_04','Tree_02'][q&3],cx+Math.cos(a)*(7.5+r()*2),cz+Math.sin(a)*(7.5+r()*2),r()*6,q&2?1.4:1.6)}add_('AnimalFeeder_01',cx+8.5,cz-3,.6,1.3);fence(cx,cz,R,gap,1.2)}
+  else if(k==='w'){add_('Well_02',cx,cz,0,2.2);add_('WoodenCrates_01',cx+3.5,cz+2,r()*6,1.3);add_('WoodenCrates_01',cx+4.6,cz+3,r()*6,1.1);add_('AnimalFeeder_01',cx-4.5,cz+1,r()*6,1.4);add_('Haystack_01',cx-3,cz-4,r()*6,1.5);add_('Haystack_04',cx+4,cz-4.5,r()*6,1.4);for(let q=0;q<4;q++){const a=q/4*6.283+.7;add_(TR[q%TR.length],cx+Math.cos(a)*8.5,cz+Math.sin(a)*8.5,r()*6,1.2)}fence(cx,cz,R,gap,1.1)}
+  else if(k==='h'){const bx=cx-Math.cos(gap)*R*.2,bz=cz-Math.sin(gap)*R*.2;add_('FarmerHouse',bx,bz,face,1.1,.5);add_('ChickenCoop',cx+Math.sin(face)*-6+Math.cos(face)*6,cz+Math.cos(face)*-6-Math.sin(face)*6,face+.5,1.2,.2);add_('Silo_01',cx-6,cz+5,0,1.2,.3);add_('Silo_02',cx-8.5,cz+4,0,1.2,.3);add_('Outhouses',cx+7,cz+6,face,1.3,.2);add_('Haystack_04',cx+6,cz-6,r()*6,1.4);add_('WoodenCrates_01',cx+3,cz+7,r()*6,1.2);add_('Well_02',cx-4,cz-7,0,1.3);for(let q=0;q<5;q++){const a=q/5*6.283+.4;add_(TR[q%TR.length],cx+Math.cos(a)*(R+2),cz+Math.sin(a)*(R+2),r()*6,1.3)}fence(cx,cz,R,gap,1.3)}
+  else if(k==='o'){for(let gx=-1;gx<=1;gx++)for(let gz=-1;gz<=1;gz++){if(!gx&&!gz){add_('Well_02',cx,cz,0,1.6);continue}add_(TR[(gx+gz+2)%TR.length],cx+gx*6+(r()-.5)*1.5,cz+gz*6+(r()-.5)*1.5,r()*6,1.1+r()*.4)}add_('Haystack_02',cx+8.5,cz+5,r()*6,1.4);fence(cx,cz,R,gap,1.3)}
+ }
+ const dum=new THREE.Object3D(),col=new THREE.Color();
+ for(const nm in out){const L=out[nm],im=new THREE.InstancedMesh(B[nm].g.clone(),P.PROPKIT.MAT,L.length);L.forEach((q,i)=>{dum.position.set(q[0],q[1],q[2]);dum.rotation.set(0,q[3],0);dum.scale.setScalar(q[4]);dum.updateMatrix();im.setMatrixAt(i,dum.matrix);col.setRGB(1,1,1);im.setColorAt(i,col)});im.frustumCulled=false;im.castShadow=false;im.receiveShadow=false;im.userData.ptProp=nm;sc.add(im)}
+ sc.userData.props=log}
+
 /* ---------- ground cover: grass tufts, flowers and scrub so no meadow is bare ---------- */
 const COVER={
  'Quarry Circuit':{t:[0x6fae5c,0x5e9c52,0x86c070,0x4f8f4a],f:[0xffe27a,0xffffff,0xf59ac0,0xb7a3f0],nt:2200,nf:700},
@@ -142,6 +200,6 @@ function cover(sc,T){
  /* (grass tufts read as grey cones under the hazy grade, so only the flowers and the dry-scrub variants are kept) */
  if(!cfg.nf)mk(new THREE.IcosahedronGeometry(.5,0),Math.round(cfg.nt*.35),cfg.t,1.0,1.9,.35);
  if(cfg.nf)mk(new THREE.OctahedronGeometry(.13,0),cfg.nf*2,cfg.f,1.1,1.9,.5)}
-const bw0=buildWorld;buildWorld=function(T){const sc=bw0.apply(this,arguments);try{city(sc,T)}catch(e){console.warn('city',e)}try{tunnel(sc,T)}catch(e){console.warn('tunnel',e)}try{cover(sc,T)}catch(e){console.warn('cover',e)}try{lamps(sc,T)}catch(e){console.warn('lamps',e)}return sc};
+const bw0=buildWorld;buildWorld=function(T){const sc=bw0.apply(this,arguments);try{city(sc,T)}catch(e){console.warn('city',e)}try{tunnel(sc,T)}catch(e){console.warn('tunnel',e)}try{lotsAll(sc,T)}catch(e){console.warn('lots',e)}try{cover(sc,T)}catch(e){console.warn('cover',e)}try{lamps(sc,T)}catch(e){console.warn('lamps',e)}return sc};
 const at0=P.applyTod;P.applyTod=function(sc,T,key){const r=at0.apply(this,arguments);try{WIN.value=key==='night'?1.5:(key==='sunset'||key==='dawn')?.3:0;const g=sc&&sc.userData&&sc.userData.lamps;if(g)g.visible=key==='night'||key==='dawn'||key==='sunset'}catch(e){}return r};
 })();
