@@ -5772,7 +5772,7 @@ const isTrk=track=>(P.TRK_TRACKS||[]).includes(+String(track).replace('r',''));
 P.medalFor=(track,car,lap)=>{if(isTrk(track))return mf(track,car,lap);const r=ref(track,car);if(r==null||lap==null)return -1;for(let i=0;i<MD.length;i++)if(lap<=r*MD[i].f)return i;return MD.length};
 P.medalTime=(track,car,i)=>{if(isTrk(track))return mtm(track,car,i);const r=ref(track,car);return r==null?null:r*MD[i].f};
 /* reference laps were set at the old speeds; these factors (new bot lap / old bot lap) bring them in line */
-const CAL={0:.846,1:.844,2:.883,3:.812,4:.917,5:.869,6:.919,7:.853,8:.86,9:.899,10:.919,11:.937,12:.929,13:.875};for(const k in CAL){if(P.MEDAL_REF[k]!=null)P.MEDAL_REF[k]*=CAL[k];if(P.MEDAL_REF['r'+k]!=null)P.MEDAL_REF['r'+k]*=CAL[k]}
+const CAL={0:0.905,1:0.936,2:0.929,3:0.91,4:0.959,5:0.925,6:0.973,7:0.913,8:0.928,9:0.939,10:0.919,11:0.937,12:0.929,13:0.875};for(const k in CAL){if(P.MEDAL_REF[k]!=null)P.MEDAL_REF[k]*=CAL[k];if(P.MEDAL_REF['r'+k]!=null)P.MEDAL_REF['r'+k]*=CAL[k]}
 })();
 
 /* ===== Poly Tourismo v9 layer: barn finds (hidden trails, locked barns, a car reveal, cars you cannot buy) ===== */
