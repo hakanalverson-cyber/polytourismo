@@ -70,7 +70,7 @@ function attachCarModel(car){
  const source=CAR_MODELS[car.modelIndex??carChoices[car.pi]??car.pi%14];if(!source)return;
  const model=source.clone(true),visual=new THREE.Group(),centered=new THREE.Group();visual.add(centered);centered.add(model);centered.updateMatrixWorld(true);
  const box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3()),scale=(source.userData.gl||4.5)/Math.max(size.x,size.z,.001),height=size.y*scale;
- centered.position.copy(center).multiplyScalar(-1);visual.scale.setScalar(scale);visual.rotation.y=(size.x>size.z?PI/2:0)+PI;visual.position.y=-.72+height/2;
+ centered.position.copy(center).multiplyScalar(-1);visual.scale.setScalar(scale);visual.rotation.y=(size.x>size.z?PI/2:0)+PI;visual.position.y=-.95+height/2;
  visual.traverse(o=>{if(o.isMesh){const alter=m=>{const q=m.clone();if(q.color){const c=q.color,l=c.r*.2126+c.g*.7152+c.b*.0722;c.lerp(new THREE.Color(l,l,l),.68)}q.roughness=Math.max(.32,q.roughness||.4);q.metalness=Math.min(.45,q.metalness||.1);return q};o.material=Array.isArray(o.material)?o.material.map(alter):alter(o.material);}});
  car.g.children.forEach(ch=>{if(ch!==car.sh)ch.visible=false});styleScene(visual);car.g.add(visual);car.visualModel=visual;car.visualHeight=height;car.wheels.forEach(w=>w.sp.visible=false);
  car.exhaustRig=new THREE.Group();car.exhaustRig.position.y=visual.position.y;car.g.add(car.exhaustRig);car.fl=[];
@@ -168,16 +168,17 @@ const cx=Math.floor(x/CS),cz=Math.floor(z/CS);let bd=1e9,bi=-1,dg=1e9;
 for(let a=-2;a<=2;a++)for(let c=-2;c<=2;c++){const l=T.grid.get(gk(cx+a,cz+c));if(!l)continue;for(const i of l){const dx=x-T.x[i],dz=z-T.z[i],d2=dx*dx+dz*dz;if(T.gap[i]){if(d2<dg)dg=d2}else if(!T.br[i]&&d2<bd){bd=d2;bi=i}}}
 if(bi>=0){const dd=Math.sqrt(bd),hw=T.hw[bi],lat=clamp((x-T.x[bi])*Math.cos(T.psi[bi])-(z-T.z[bi])*Math.sin(T.psi[bi]),-hw,hw),yr=T.y[bi]-lat*T.bank[bi];b=lerp(yr,b,sm(hw+1.1,hw+1.1+d.shoulder+clamp(Math.abs(yr-b)*1.6,0,30),dd))}
 if(dg<1e9)b-=30*(1-sm(5,12,Math.sqrt(dg)));return b};
-{const t0=T.terr;T.terr=(x,z)=>{let h=t0(x,z);const cx=Math.floor(x/16),cz=Math.floor(z/16);for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const ids=T.grid.get((cx+a)*8192+cz+b);if(!ids)continue;for(const i of ids){const j=(i+1)%T.N,dx=T.x[j]-T.x[i],dz=T.z[j]-T.z[i],f=clamp(((x-T.x[i])*dx+(z-T.z[i])*dz)/(dx*dx+dz*dz),0,1),px=lerp(T.x[i],T.x[j],f),pz=lerp(T.z[i],T.z[j],f),dist=Math.hypot(x-px,z-pz);if(dist<T.hw[i]+8){const psi=T.psi[i]+wr(T.psi[j]-T.psi[i])*f,lat=(x-px)*Math.cos(psi)-(z-pz)*Math.sin(psi),y=lerp(T.y[i],T.y[j],f)-lat*lerp(T.bank[i],T.bank[j],f);h=Math.min(h,y-(T.d.gravel?.04:.14)+Math.max(0,dist-T.hw[i]-1.25)*.85)}}}return h}}
+{const t0=T.terr;T.terr=(x,z)=>{let h=t0(x,z);const cx=Math.floor(x/16),cz=Math.floor(z/16);for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const ids=T.grid.get((cx+a)*8192+cz+b);if(!ids)continue;for(const i of ids){const j=(i+1)%T.N,dx=T.x[j]-T.x[i],dz=T.z[j]-T.z[i],fr=((x-T.x[i])*dx+(z-T.z[i])*dz)/(dx*dx+dz*dz),f=clamp(fr,0,1),px=lerp(T.x[i],T.x[j],f),pz=lerp(T.z[i],T.z[j],f),dist=Math.hypot(x-px,z-pz);if((fr<0||fr>1)&&dist<T.hw[i]+2.5)continue;if(dist<T.hw[i]+8){const psi=T.psi[i]+wr(T.psi[j]-T.psi[i])*f,lat=(x-px)*Math.cos(psi)-(z-pz)*Math.sin(psi),y=lerp(T.y[i],T.y[j],f)-lat*lerp(T.bank[i],T.bank[j],f);h=Math.min(h,y-(T.d.gravel?.04:.14)+Math.max(0,dist-T.hw[i]-1.25)*.85)}}}return h}}
 T.surf=(x,z,y)=>{
- const cx=Math.floor(x/CS),cz=Math.floor(z/CS);let best=-1e9,bi=-1,bl=0;
+ const cx=Math.floor(x/CS),cz=Math.floor(z/CS);let best=-1e9,bi=-1,bl=0,cn=0,h2=0;const cH=SF_H,cI=SF_I,cL=SF_L;
  for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const ids=T.grid.get(gk(cx+a,cz+b));if(!ids)continue;
  for(const i of ids){const j=(i+1)%N;if(T.gap[i]||T.gap[j])continue;
  const dx=T.x[j]-T.x[i],dz=T.z[j]-T.z[i],len2=dx*dx+dz*dz,f=((x-T.x[i])*dx+(z-T.z[i])*dz)/len2;if(f<0||f>1)continue;
  const px=lerp(T.x[i],T.x[j],f),pz=lerp(T.z[i],T.z[j],f),psi=T.psi[i]+wr(T.psi[j]-T.psi[i])*f,lat=(x-px)*Math.cos(psi)-(z-pz)*Math.sin(psi),hw=lerp(T.hw[i],T.hw[j],f);if(Math.abs(lat)>hw)continue;
  const h=lerp(T.y[i],T.y[j],f)-lat*lerp(T.bank[i],T.bank[j],f)+.05;
- if(h<=y+1.2&&h>best){best=h;bi=i;bl=lat;}
+ if(h<=y+1.2){if(h>best)best=h;if(cn<64){cH[cn]=h;cI[cn]=i;cL[cn]=lat;cn++}}
  }}
+ if(cn){let ba=1e9;for(let q=0;q<cn;q++)if(cH[q]>best-1.5&&Math.abs(cL[q])<ba){ba=Math.abs(cL[q]);bi=cI[q];bl=cL[q];h2=cH[q]}best=h2}
  return bi>=0?{h:best,road:1,i:bi,lat:bl}:{h:T.terr(x,z),road:0,i:-1,lat:0};
 };
 return T}
@@ -210,6 +211,7 @@ function wallMesh(T,side,mt){const N=T.N,pos=[],idx=[],uv=[],TH=.85;mt.side=THRE
 function inst(sc,geo,m,list){const im=new THREE.InstancedMesh(geo,m,list.length),o=new THREE.Object3D();list.forEach((p,i)=>{o.position.set(p[0],p[1],p[2]);o.scale.set(p[3],p[4]||p[3],p[3]);o.rotation.y=p[5]||0;o.updateMatrix();im.setMatrixAt(i,o.matrix)});im.instanceMatrix.needsUpdate=true;sc.add(im);return im}
 function nearRoad(T,x,z,m){const cx=Math.floor(x/16),cz=Math.floor(z/16);for(let a=-1;a<=1;a++)for(let c=-1;c<=1;c++){const l=T.grid.get((cx+a)*8192+cz+c);if(!l)continue;for(const i of l){const dx=x-T.x[i],dz=z-T.z[i];if(dx*dx+dz*dz<(T.hw[i]+m)**2)return true}}return false}
 function terrainBed(T,x,z){return T.terr(x,z)}
+const SF_H=new Float64Array(64),SF_I=new Int32Array(64),SF_L=new Float64Array(64);
 function buildWorld(T){const d=T.d,sc=new THREE.Scene(),r=rngf(d.id*77+5);
 sc.fog=new THREE.Fog(d.fog,120,520);sc.add(new THREE.HemisphereLight(d.hemi[0],d.hemi[1],d.id==3?.7:1));const sun=new THREE.DirectionalLight(d.sun,d.id==3?.5:.85);sun.position.set(-150,250,100);sc.add(sun);
 const sk=ctex(2,64,(x,w,h)=>{const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,'#'+d.sky[0].toString(16).padStart(6,'0'));g.addColorStop(.5,'#'+d.sky[1].toString(16).padStart(6,'0'));g.addColorStop(1,'#'+d.sky[1].toString(16).padStart(6,'0'));x.fillStyle=g;x.fillRect(0,0,w,h)});
@@ -362,10 +364,10 @@ function updateVisual(c,T,t){const m=c.m;_e.set(c.pitch,c.yaw,c.roll);m.g.rotati
 m.wheels.forEach((w,i)=>{w.pv.position.set(WL[i][0],-.1-w.len,WL[i][1]);if(i<2)w.pv.rotation.y=-c.st*.45;w.sp.rotation.x+=(c.vx*Math.sin(c.yaw)+c.vz*Math.cos(c.yaw))*dtf/RW});
 m.sw.rotation.z=-c.st*1.2;m.drv.position.y=.5+Math.sin(t*9)*.01*c.sp/20;m.drv.rotation.z=-c.st*.12;m.drv.rotation.x=-clamp((c.vy)*.02,-.2,.2);if(m.prop)m.prop.rotation.y=t*(8+c.sp*.5);
 m.tl.emissiveIntensity=c.in.br>0?1.6:.3;
- if(m.visualModel){const v=m.visualModel;v.position.y=-.72+m.visualHeight/2;const close=T.surf(c.x,c.z,c.y);
+ if(m.visualModel){const v=m.visualModel;v.position.y=-.95+m.visualHeight/2;const close=T.surf(c.x,c.z,c.y);
  const over=!T.d.gravel&&close.road&&c.y-close.h<1.65;if(over){const i=close.i,j=(i+2)%T.N,k=(i-2+T.N)%T.N,grade=(T.y[j]-T.y[k])/(4*T.sp),delta=wr(c.yaw-T.psi[i]);c.vTp=-Math.atan(grade*Math.cos(delta)-T.bank[i]*Math.sin(delta));c.vTr=-Math.atan(T.bank[i]*Math.cos(delta)+grade*Math.sin(delta));}
  let nr=0;for(const w of m.wheels)if(w.s&&w.s.road)nr++;c.vBl=(c.vBl||0)+((over?nr/4:0)-(c.vBl||0))*(1-Math.exp(-dtf*7));if(c.vBl>.002)m.g.rotation.set(lerp(c.pitch,c.vTp,c.vBl),c.yaw,lerp(c.roll,c.vTr,c.vBl),'YXZ');
- m.g.updateMatrixWorld(true);let lift=0;for(const x of [-.78,.78])for(const z of [-1.65,1.65]){const p=m.g.localToWorld(new V(x,-.72,z)),road=T.surf(p.x,p.z,c.y+.5);if(c.y-road.h<1.65)lift=Math.max(lift,road.h+.07-p.y)}v.position.y+=lift;m.exhaustRig.position.y=v.position.y;}
+ m.g.updateMatrixWorld(true);let lift=0;for(const x of [-.78,.78])for(const z of [-1.65,1.65]){const p=m.g.localToWorld(new V(x,-.95,z)),road=T.surf(p.x,p.z,c.y+.5);if(c.y-road.h<1.65)lift=Math.max(lift,road.h+.07-p.y)}v.position.y+=lift;m.exhaustRig.position.y=v.position.y;}
  m.fl.forEach(f=>{f.visible=c.boost>0;f.scale.z=.8+Math.random()*.25});
  c.fxTime=(c.fxTime||0)+dtf;if(c.fxTime>.17){c.fxTime=0;if(c.drifting&&(c.ptBlend||0)>.72&&c.sp>22&&Math.abs(wr(Math.atan2(c.vx,c.vz)-c.yaw))>.34)for(const side of [-1,1])fx(c.x-Math.sin(c.yaw)*1.6+Math.cos(c.yaw)*side*.8,c.y-.4,c.z-Math.cos(c.yaw)*1.6-Math.sin(c.yaw)*side*.8,c.dts>.7?0xc4e1e4:0xd9ccb0,1,1.4,.3,.12,1.5);}
 
@@ -2731,7 +2733,7 @@ function spaceTraffic(Rc,dt){const T=Rc.T,N=T.N,sp=T.sp,L=Rc.traffic;
 const laneClear=(Rc,t,lat)=>{const T=Rc.T,hw=T.hw[Math.floor(t.idx)%T.N]||6;for(const u of Rc.traffic){if(u===t||u.dir!==t.dir)continue;if(Math.abs(u.tl-lat)*hw>2.7&&Math.abs(u.lat-lat)*hw>2.7)continue;const d=Math.abs(((u.idx-t.idx)*t.dir+T.N*1.5)%T.N-T.N*.5)*T.sp;if(d<20)return false}return true};
 function trafficTick(Rc,dt){const T=Rc.T,N=T.N;spaceTraffic(Rc,dt);
  for(const t of Rc.traffic){const m=t.m;
-  if(m.visualModel&&!t.vm){m.visualModel.position.y=-.72+m.visualHeight/2;t.vm=1}
+  if(m.visualModel&&!t.vm){m.visualModel.position.y=-.95+m.visualHeight/2;t.vm=1}
   if(t.hit>0){t.hit-=dt;t.vy-=22*dt;t.x+=t.vx*dt;t.y+=t.vy*dt;t.z+=t.vz*dt;t.spin+=dt*9;
    m.g.position.set(t.x,Math.max(t.y,T.surf(t.x,t.z,t.y+3).h+.9),t.z);m.g.rotation.set(t.spin*.6,t.yaw+t.spin*.3,t.spin);
    if(t.hit<=0){t.idx=(Rc.cars.find(c=>c.human).idx+90+Math.random()*60)%N;for(let q=0;q<10&&!laneClear(Rc,t,t.tl);q++)t.idx=(t.idx+9)%N;t.seen={};t.vb=t.v=rnd(t.lane.v[0],t.lane.v[1])}

@@ -71,7 +71,7 @@ function spaceTraffic(Rc,dt){const T=Rc.T,N=T.N,sp=T.sp,L=Rc.traffic;
 const laneClear=(Rc,t,lat)=>{const T=Rc.T,hw=T.hw[Math.floor(t.idx)%T.N]||6;for(const u of Rc.traffic){if(u===t||u.dir!==t.dir)continue;if(Math.abs(u.tl-lat)*hw>2.7&&Math.abs(u.lat-lat)*hw>2.7)continue;const d=Math.abs(((u.idx-t.idx)*t.dir+T.N*1.5)%T.N-T.N*.5)*T.sp;if(d<20)return false}return true};
 function trafficTick(Rc,dt){const T=Rc.T,N=T.N;spaceTraffic(Rc,dt);
  for(const t of Rc.traffic){const m=t.m;
-  if(m.visualModel&&!t.vm){m.visualModel.position.y=-.72+m.visualHeight/2;t.vm=1}
+  if(m.visualModel&&!t.vm){m.visualModel.position.y=-.95+m.visualHeight/2;t.vm=1}
   if(t.hit>0){t.hit-=dt;t.vy-=22*dt;t.x+=t.vx*dt;t.y+=t.vy*dt;t.z+=t.vz*dt;t.spin+=dt*9;
    m.g.position.set(t.x,Math.max(t.y,T.surf(t.x,t.z,t.y+3).h+.9),t.z);m.g.rotation.set(t.spin*.6,t.yaw+t.spin*.3,t.spin);
    if(t.hit<=0){t.idx=(Rc.cars.find(c=>c.human).idx+90+Math.random()*60)%N;for(let q=0;q<10&&!laneClear(Rc,t,t.tl);q++)t.idx=(t.idx+9)%N;t.seen={};t.vb=t.v=rnd(t.lane.v[0],t.lane.v[1])}
