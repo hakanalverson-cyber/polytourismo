@@ -6874,7 +6874,9 @@ function prep(g){const root=g.scene;root.updateMatrixWorld(true);
   const s=b.getSize(new THREE.Vector3());HP.defs[node.name]={parts,w:s.x,h:s.y,d:s.z,min:b.min.clone(),max:b.max.clone()}})}
 (async()=>{try{const raw=atob(HPACK_B64),u=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)u[i]=raw.charCodeAt(i);
  const ab=await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
- new THREE.GLTFLoader().parse(ab,'',g=>{try{prep(g);HP.ready=true}catch(e){console.warn('hpack',e)}},e=>console.warn('hpack',e))}catch(e){console.warn('hpack',e)}})();
+ /* decode textures through <img>, not fetch(blob:), which some hosts block */
+ const cib=window.createImageBitmap;window.createImageBitmap=undefined;
+ try{new THREE.GLTFLoader().parse(ab,'',g=>{try{prep(g);HP.ready=true}catch(e){console.warn('hpack',e)}},e=>console.warn('hpack',e))}finally{window.createImageBitmap=cib}}catch(e){console.warn('hpack',e)}})();
 /* instanced placement: list rows are [x,y,z,yaw,scale,tintHex?]; sy optional non-uniform height factor in row[6] */
 HP.add=(sc,name,list,o)=>{o=o||{};const d=HP.defs[name];if(!d||!list.length)return[];const out=[],dm=new THREE.Object3D(),col=new THREE.Color(),ptr=new THREE.Matrix4();
  for(const part of d.parts){const mat=o.matFix?o.matFix(part.mat):part.mat;const im=new THREE.InstancedMesh(part.geo,mat,list.length);
