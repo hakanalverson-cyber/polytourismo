@@ -106,10 +106,12 @@ src=rep(src,"c.farT=near?0:c.farT+dt;","c.farT=(near||(window.PT8&&PT8.nearBarn&
 src=rep(src,"{u:'KeyI',d:'KeyK',l:'KeyJ',r:'KeyL',h:'KeyU'}","{u:'KeyI',d:'KeyK',l:'KeyJ',r:'KeyL',h:'KeyM'}")
 src=rep(src,"{u:'Numpad8',d:'Numpad5',l:'Numpad4',r:'Numpad6',h:'Numpad0'}","{u:'KeyT',d:'KeyG',l:'KeyF',r:'KeyH',h:'KeyB'}")
 
-parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','cars10','audio','modes','tracks','tracks2','extra','race2','elim','tod','harbor','props','stages','ra_data','tracks3','weather','ambience','tutorial','hud2','shade','liveries','ui','rally','trackmode','realspeed','barn','perf']  if os.path.exists(f'{SRC}/layers/{n}.js')]
+parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','cars10','audio','modes','tracks','tracks2','extra','race2','elim','tod','harbor','props','bld','stages','ra_data','tracks3','weather','ambience','tutorial','hud2','shade','liveries','ui','rally','trackmode','realspeed','barn','animals','perf']  if os.path.exists(f'{SRC}/layers/{n}.js')]
 css=open(f'{SRC}/style.css').read()
 import base64
 b64=lambda f:base64.b64encode(open(W+'/assets/'+f,'rb').read()).decode()
+ANIM='<script>const ANIM_B64="'+b64('animals.bin')+'",ANIM_META='+open(W+'/assets/animals.json').read()+';</script>'
+BLD='<script>const BLD_B64="'+b64('bld.bin')+'",BLD_META='+open(W+'/assets/bld.json').read()+';</script>'
 CARS10='<script>const CAR10_BIN_B64="'+b64('cars_v10.bin.gz')+'",CAR10_TEX_B64="'+b64('cars_v10_tex.png')+'",CAR10_META='+open(W+'/assets/cars_v10.json').read()+';</script>'
 src=rep(src,"bins[k].tire=true;","bins[k].tire=true;(bins[k].tp||(bins[k].tp=[])).push(part);")
 src=rep(src,"    for(const [g,m] of b.parts){\n      g.translate(-center.x,-center.y,-center.z);\n      spin.add(new THREE.Mesh(g,m));\n    }","""    for(const [g] of b.parts)g.translate(-center.x,-center.y,-center.z);
@@ -134,7 +136,7 @@ BOOT_CSS='<style id="ptBootCss">html,body{background:#0b0e12!important}body>*:no
 src=src.replace('<title>Poly Tourismo v7</title>','<title>Poly Tourismo</title>'+BOOT_CSS)
 src=src.replace('<body>','<body><div id="ptBoot">POLY TOURISMO<i></i><small>LOADING</small></div>',1)
 BOOT_JS='<script>(function(){function done(){var b=document.getElementById("ptBoot"),c=document.getElementById("ptBootCss");if(!b)return;b.style.opacity=0;setTimeout(function(){if(c)c.remove();b.remove()},260)}function go(){requestAnimationFrame(function(){requestAnimationFrame(function(){setTimeout(done,350)})})}if(document.readyState==="complete")go();else addEventListener("load",go);setTimeout(done,8000)})();</script>'
-add=CARS10+'<style id="v8css">'+css+'</style><script>\n'+'\n'.join(parts)+'\n</script>'
+add=ANIM+BLD+CARS10+'<style id="v8css">'+css+'</style><script>\n'+'\n'.join(parts)+'\n</script>'
 i=src.rindex('</body>') if '</body>' in src else len(src)
 src=src[:i]+add+BOOT_JS+src[i:]
 
