@@ -14,6 +14,12 @@ src=src.replace("['#ffd77a','#7af0ff','#ff7ad0','#fff6c0'][(r()*4)|0]","['#ffe2a
 src=src.replace("['#ffd77a','#7af0ff','#ff7ad0'][(i+j)%3]","['#ffe2a8','#fff0c8','#ffd98a'][(i+j)%3]")
 src=src.replace("['#ff5a7a66','#7af0ff55','#ffd77a55'][i%3]","['#ffd98a55','#fff0c844','#ffe2a844'][i%3]")
 src=src.replace("color:d.id==3?0x7af0ff:0xfff0c8","color:d.id==3?0xffe2a8:0xfff0c8")
+
+# shortcut penalty: optional, and only a 10 m set-back
+src=rep(src,"c.exTarget=c.safeUnw-(kind==='cut'?CUT_BACK:FALL_BACK);","c.exTarget=c.safeUnw-(kind==='cut'?Math.max(2,Math.round(10/(RACE.T.sp||3))):FALL_BACK);")
+src=rep(src,"SHORTCUT / SET BACK 450 M","SHORTCUT / SET BACK 10 M")
+src=rep(src,"if(d>50){explode(c,'cut');return}if(Math.abs(d)<=50){c.safeIdx=sf.i;c.safeUnw+=d}","if(d>50){if(window.PTO&&PTO.shortcutPenalty===false){c.safeIdx=sf.i;c.safeUnw+=d}else{explode(c,'cut');return}}else if(Math.abs(d)<=50){c.safeIdx=sf.i;c.safeUnw+=d}")
+src=rep(src,"explode(c,landsOnFarRoad(c)?'cut':'fall')","explode(c,landsOnFarRoad(c)&&!(window.PTO&&PTO.shortcutPenalty===false)?'cut':'fall')")
 src=rep(src,"const G0=26,K=46,DM=3.6,L0=.62,RW=.38,WX=.98,WZ=1.65,IP=1.5,IR=.8,TOP=38,TOPB=52,ACC=24,BRK=40,REV=16,ROLL=3.5,DRAG=.0007,GRIP=9;","let G0=26,K=80,DM=7,L0=.62,RW=.38,WX=.98,WZ=1.65,IP=1.5,IR=.8,TOP=38,TOPB=52,ACC=24,BRK=40,REV=16,ROLL=3.5,DRAG=.0007,GRIP=9;")
 src=rep(src,"FX.length>=260","FX.length>=420")
 src=rep(src,"MS.tick(T0);R.setScissorTest","MS.tick(Math.max(0,T0));R.setScissorTest")
@@ -91,7 +97,7 @@ src=src[:j0]+newcc+src[j1:]
 
 # ---- v9e: auto-shift option, reverse tracks ----
 src=rep(src,"hillHold:true,cameraDistance:1,","hillHold:true,autoShift:false,perfPreset:'HIGH',maxDensity:1.5,shadowRate:2,shadowRes:1536,showFps:false,cameraDistance:1,")
-src=rep(src,"['hillHold','HILL HOLD']","['hillHold','HILL HOLD'],\n  ['autoShift','AUTO SHIFT']")
+src=rep(src,"['hillHold','HILL HOLD']","['hillHold','HILL HOLD'],\n  ['autoShift','AUTO SHIFT'],\n  ['shortcutPenalty','SHORTCUT PENALTY']")
 src=rep(src,"\n AUDIO:[","\n PERFORMANCE:[\n  ['perfPreset','PRESET',['MINIMUM','LOW','MEDIUM','HIGH','ULTRA','CUSTOM']],\n  ['maxDensity','MAX PIXEL DENSITY',1,2,.25],\n  ['resolution','RENDER SCALE',.5,1,.05],\n  ['shadows','SHADOWS'],\n  ['shadowRate','SHADOW UPDATE EVERY N FRAMES',1,4,1],\n  ['shadowRes','SHADOW QUALITY',[512,1024,1536,2048]],\n  ['effects','PARTICLES',[0,1,2]],\n  ['fogReach','FOG DISTANCE',350,1100,50],\n  ['showFps','SHOW FPS']\n ],\n AUDIO:[")
 src=rep(src,"function apply(){\n  rs();","function apply(){\n  if(window.PT8&&PT8.perfPre)PT8.perfPre();\n  rs();")
 src=rep(src,"          apply();\n        };\n      }else{","          apply();if(tab==='PERFORMANCE')render();\n        };\n      }else{")
@@ -105,7 +111,7 @@ src=rep(src,"const over=close.road&&c.y-close.h<1.65;","const over=!T.d.gravel&&
 src=rep(src,"br=down.has(k.d)?1:0,st=(down.has(k.l)?1:0)-(down.has(k.r)?1:0),hb=down.has(k.h)?1:0;","br=down.has(k.d)?1:0,st=(down.has(k.l)?1:0)-(down.has(k.r)?1:0),hb=(!(window.PT8&&PT8.noHb&&PT8.noHb())&&down.has(k.h))?1:0;")
 src=rep(src,"if(g.buttons[2]&&g.buttons[2].pressed)hb=1}}catch(e){}","if(g.buttons[2]&&g.buttons[2].pressed&&!(window.PT8&&PT8.noHb&&PT8.noHb()))hb=1}}catch(e){}")
 src=rep(src,"const dmp=Math.exp(-1.3*dt);","const dmp=Math.exp(-3.4*dt);")
-src=rep(src,"hillHold:true,autoShift:false,","hillHold:true,autoShift:false,p2numpad:false,")
+src=rep(src,"hillHold:true,autoShift:false,","hillHold:true,autoShift:false,shortcutPenalty:true,p2numpad:false,")
 src=rep(src,"['autoShift','AUTO SHIFT']","['autoShift','AUTO SHIFT'],\n  ['p2numpad','PLAYER 2 NUMPAD KEYS']")
 src=rep(src,"  if(window.PT8&&PT8.perfPre)PT8.perfPre();\n","  if(window.PT8&&PT8.perfPre)PT8.perfPre();\n  if(window.PT8&&PT8.syncP2)PT8.syncP2();\n")
 src=rep(src,"c.farT=near?0:c.farT+dt;","c.farT=(near||(window.PT8&&PT8.nearBarn&&PT8.nearBarn(c)))?0:c.farT+dt;")

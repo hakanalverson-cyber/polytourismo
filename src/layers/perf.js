@@ -85,6 +85,6 @@ const _c=new THREE.Vector3(),_cp=new THREE.Vector3();
   let nd=P.dynRes;
   if(fps<50||bad>.25)nd=Math.max(.62,nd-(fps<38?.14:.07));
   else if(fps>58&&nd<1&&now-lastUp>5000){nd=Math.min(1,nd+.05);lastUp=now}
-  if(Math.abs(nd-P.dynRes)>.01){P.dynRes=nd;rs()}})(performance.now())}
+  if(Math.abs(nd-P.dynRes)>.01){P.dynRes=nd;rs();/* resizing clears the canvas: redraw immediately, in the same task, so no black frame is ever presented */try{if(typeof drawRace==='function'&&RACE)drawRace(.0001)}catch(e){}}})(performance.now())}
 rs();
 })();

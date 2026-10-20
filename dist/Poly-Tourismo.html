@@ -464,7 +464,7 @@ const defaults = {
   garageRotate:true,mapOrbit:true,
   master:.7,engine:.55,sfx:.65,sound:true,
   steering:1,driftAssist:.7,drifts:true,driftMph:47,
-  hillHold:true,autoShift:false,p2numpad:false,perfPreset:'HIGH',maxDensity:1.5,shadowRate:2,shadowRes:1536,showFps:false,cameraDistance:1,fov:58,shake:true,
+  hillHold:true,autoShift:false,shortcutPenalty:true,p2numpad:false,perfPreset:'HIGH',maxDensity:1.5,shadowRate:2,shadowRes:1536,showFps:false,cameraDistance:1,fov:58,shake:true,
   boostFov:true,minimap:true,timer:true,hudScale:1,
   units:'mph',showroom:true,splitAlways:true
 };
@@ -1068,7 +1068,8 @@ const pages={
   ['driftAssist','DRIFT ASSIST',0,1,.05],
   ['hillHold','HILL HOLD'],
   ['autoShift','AUTO SHIFT'],
-  ['p2numpad','PLAYER 2 NUMPAD KEYS']
+  ['p2numpad','PLAYER 2 NUMPAD KEYS'],
+  ['shortcutPenalty','SHORTCUT PENALTY']
  ],
  CAMERA:[
   ['cameraDistance','CHASE DISTANCE',.8,1.4,.05],
@@ -1396,8 +1397,8 @@ soloCam=(c,dt,out)=>{prevSolo(c,dt,out);const want=c.inTn&&!(c.exp>0)?1:0;c.tnB=
 function ensure(c){if(c.safeIdx===undefined){c.safeIdx=c.idx;c.safeUnw=c.unw;c.farT=0}}
 function place(c,unw){const T=RACE.T,N=T.N;let i=((Math.round(unw)%N)+N)%N;for(let k=0;k<60&&(T.gap[i]||T.gap[(i+1)%N]||T.gap[(i+2)%N]||T.gap[(i-1+N)%N]);k++){i=(i-1+N)%N;unw-=1}
  c.x=T.x[i];c.z=T.z[i];c.y=T.y[i]+1.3;c.vx=c.vy=c.vz=0;c.yaw=T.psi[i];c.pitch=c.roll=c.wpt=c.wrl=c.yr=0;c.st=0;c.idx=i;c.unw=unw;c.safeIdx=i;c.safeUnw=unw;c.respT=1.3;c.stuck=0;c.boost=0;c.driftTimer=0;c.dts=0;c.ptDrift=false;c.ptBlend=0;c.farT=0;c.exp=0;c.vBl=0}
-function explode(c,kind){if(c.exp>0)return;ensure(c);const Rc=RACE,v=Rc.v7||(Rc.v7={deb:[],ball:[]});c.exp=1.7;c.vx=c.vy=c.vz=0;c.sp=0;c.exTarget=c.safeUnw-(kind==='cut'?CUT_BACK:FALL_BACK);
- c.warn=kind==='cut'?'CAR DESTROYED / SHORTCUT / SET BACK 450 M':'CAR DESTROYED / OFF TRACK / SET BACK 180 M';c.warnT=3.4;
+function explode(c,kind){if(c.exp>0)return;ensure(c);const Rc=RACE,v=Rc.v7||(Rc.v7={deb:[],ball:[]});c.exp=1.7;c.vx=c.vy=c.vz=0;c.sp=0;c.exTarget=c.safeUnw-(kind==='cut'?Math.max(2,Math.round(10/(RACE.T.sp||3))):FALL_BACK);
+ c.warn=kind==='cut'?'CAR DESTROYED / SHORTCUT / SET BACK 10 M':'CAR DESTROYED / OFF TRACK / SET BACK 180 M';c.warnT=3.4;
  fx(c.x,c.y+.6,c.z,0xffb030,34,16,1,.55,4);fx(c.x,c.y+.6,c.z,0xff6a20,22,10,.8,.7,2);fx(c.x,c.y+.8,c.z,0x1a1a1a,16,5,2,.9,-1.2);
  for(const [col,sz,op] of [[0xfff0a0,1,.95],[0xff8a2a,1.7,.7]]){const m=new THREE.Mesh(new THREE.SphereGeometry(sz,12,8),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:op,blending:THREE.AdditiveBlending,depthWrite:false}));m.position.set(c.x,c.y+.7,c.z);Rc.scene.add(m);v.ball.push({m,t:0,s:sz})}
  for(let i=0;i<14;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(.2+Math.random()*.4,.1,.3+Math.random()*.5),new THREE.MeshStandardMaterial({color:[0x222222,0x888888,c.col,0x444444][i%4],roughness:.7}));m.position.set(c.x,c.y+.6,c.z);Rc.scene.add(m);const a=Math.random()*6.28,s=6+Math.random()*9;v.deb.push({m,t:0,vx:Math.cos(a)*s,vy:8+Math.random()*9,vz:Math.sin(a)*s,rx:Math.random()*9,rz:Math.random()*9})}
@@ -1409,14 +1410,14 @@ function v7Update(dt){const Rc=RACE;if(!Rc||!Rc.v7)return;const v=Rc.v7;for(cons
 const prevStepFn=step;step=dt=>{prevStepFn(dt);v7Update(dt);if(RACE)for(const c of RACE.cars)if(c.warnT>0)c.warnT-=dt};
 function landsOnFarRoad(c){const T=RACE.T,N=T.N,cx=Math.floor(c.x/16),cz=Math.floor(c.z/16);ensure(c);
  for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const l=T.grid.get((cx+a)*8192+cz+b);if(!l)continue;for(const i of l){if(T.gap[i])continue;const dx=c.x-T.x[i],dz=c.z-T.z[i];if(dx*dx+dz*dz<(T.hw[i]+3)*(T.hw[i]+3)&&T.y[i]<=c.y+3&&T.y[i]>=c.y-45&&wrapD(i-c.safeIdx,N)>50)return true}}return false}
-const prevRespawn=respawn;respawn=c=>{const T=RACE.T;if(c.y<T.y[c.idx]-12&&!(c.exp>0)){explode(c,landsOnFarRoad(c)?'cut':'fall');return}prevRespawn(c);c.safeIdx=c.idx;c.safeUnw=c.unw};
+const prevRespawn=respawn;respawn=c=>{const T=RACE.T;if(c.y<T.y[c.idx]-12&&!(c.exp>0)){explode(c,landsOnFarRoad(c)&&!(window.PTO&&PTO.shortcutPenalty===false)?'cut':'fall');return}prevRespawn(c);c.safeIdx=c.idx;c.safeUnw=c.unw};
 const prevStepCar=stepCar;stepCar=(c,dt)=>{const T=RACE.T,N=T.N;ensure(c);
  if(c.exp>0){c.exp-=dt;c.vx=c.vy=c.vz=0;c.sp=0;c.in={th:0,br:0,st:0,hb:0};if(c.exp<=0){c.exp=0;place(c,c.exTarget)}return}
  prevStepCar(c,dt);if(c.exp>0)return;
  const live=RACE.state==='race'&&!c.fin&&c.respT<=0;c.inTn=!!(T.tn&&T.tn[c.idx]&&c.onRoad);
  if(!live)return;
  const sf=T.surf(c.x,c.z,c.y);
- if(sf.road){const d=wrapD(sf.i-c.safeIdx,N);if(d>50){explode(c,'cut');return}if(Math.abs(d)<=50){c.safeIdx=sf.i;c.safeUnw+=d}}
+ if(sf.road){const d=wrapD(sf.i-c.safeIdx,N);if(d>50){if(window.PTO&&PTO.shortcutPenalty===false){c.safeIdx=sf.i;c.safeUnw+=d}else{explode(c,'cut');return}}else if(Math.abs(d)<=50){c.safeIdx=sf.i;c.safeUnw+=d}}
  let near=false;const cx=Math.floor(c.x/16),cz=Math.floor(c.z/16);
  out:for(let a=-3;a<=3;a++)for(let b=-3;b<=3;b++){const l=T.grid.get((cx+a)*8192+cz+b);if(!l)continue;for(const i of l){const dx=c.x-T.x[i],dz=c.z-T.z[i];if(dx*dx+dz*dz<(T.hw[i]+40)*(T.hw[i]+40)){near=true;break out}}}
  c.farT=(near||(window.PT8&&PT8.nearBarn&&PT8.nearBarn(c)))?0:c.farT+dt;if(c.farT>3.5)explode(c,'fall')};
@@ -9920,7 +9921,7 @@ const _c=new THREE.Vector3(),_cp=new THREE.Vector3();
   let nd=P.dynRes;
   if(fps<50||bad>.25)nd=Math.max(.62,nd-(fps<38?.14:.07));
   else if(fps>58&&nd<1&&now-lastUp>5000){nd=Math.min(1,nd+.05);lastUp=now}
-  if(Math.abs(nd-P.dynRes)>.01){P.dynRes=nd;rs()}})(performance.now())}
+  if(Math.abs(nd-P.dynRes)>.01){P.dynRes=nd;rs();/* resizing clears the canvas: redraw immediately, in the same task, so no black frame is ever presented */try{if(typeof drawRace==='function'&&RACE)drawRace(.0001)}catch(e){}}})(performance.now())}
 rs();
 })();
 
