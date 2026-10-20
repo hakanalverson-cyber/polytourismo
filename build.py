@@ -14,6 +14,12 @@ src=rep(src,"MS.tick(T0);R.setScissorTest","MS.tick(Math.max(0,T0));R.setScissor
 src=rep(src,"document.title='Poly Tourismo v7';rs();\n})();","document.title='Poly Tourismo v9';rs();window.PT7={makePhotos,photos};\n})();")
 src=rep(src,"['boostFov','BOOST FOV'],","")
 src=rep(src,"['units','SPEED UNITS',['kmh','mph']],","")
+src=rep(src,"units:'kmh',showroom","units:'mph',showroom")
+src=rep(src,"driftSpeed:76,","driftMph:47,")
+src=rep(src,"fw>o.driftSpeed/3.6&&","fw>o.driftMph/2.23694&&")
+src=rep(src,"['driftSpeed','DRIFT SPEED KMH',60,100,2],","['driftMph','DRIFT SPEED MPH',37,62,1],")
+src=rep(src,"} catch(e) {}\n\nconst compile","} catch(e) {}\no.units='mph';\n\nconst compile")
+src=rep(src,"ABOVE 76 KM/H","ABOVE 47 MPH")
 
 # ---------- v9 world patches ----------
 src=rep(src,"function styleMaterial(m){","const TODU={mul:{value:new THREE.Vector3(1,1,1)},add:{value:new THREE.Vector3(0,0,0)},sat:{value:1}};window.TODU=TODU;\nfunction styleMaterial(m){")

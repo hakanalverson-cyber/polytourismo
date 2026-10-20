@@ -9,7 +9,7 @@ const S=[
  {t:'Throttle',x:'Hold <b>W</b> and build up some speed.',ok:c=>c.sp>12},
  {t:'Steering',x:'Steer both ways with <b>A</b> and <b>D</b>. Small, smooth inputs are faster than yanking the wheel.',ok:(c,R,s)=>s.a&&s.d&&c.sp>6},
  {t:'Gears',x:()=>auto()?'Auto-shift is on, so the gearbox changes for you. Reach 3rd gear. (Turn it off in Settings for manual shifting and perfect-shift boosts.)':'<b>Double-tap W</b> to shift up, <b>double-tap S</b> to shift down. Shift close to the redline for a free <b>perfect-shift</b> boost. Reach 3rd gear.',ok:c=>(c.gear|0)>=2},
- {t:'Braking',x:'Brake <b>before</b> corners, then get back on the power. Get above 70 km/h, then hold <b>S</b> until you are almost stopped.',ok:(c,R,s)=>{if(c.sp>20)s.fast=1;return s.fast&&c.sp<8}},
+ {t:'Braking',x:'Brake <b>before</b> corners, then get back on the power. Get above 45 mph, then hold <b>S</b> until you are almost stopped.',ok:(c,R,s)=>{if(c.sp>20)s.fast=1;return s.fast&&c.sp<8}},
  {t:'Elimination',info:1,x:'In <b>Elimination</b> the car in last place is knocked out on every timer. Last place also gets a small speed boost, so staying out of the back is the job. Setup lets you change the interval and CPU level.'},
  {t:'Weather',info:1,x:'Rain, storm and fog change the grip and visibility. Set it in the <b>Weather</b> row of Multiplayer or Elimination setup. In the wet, brake earlier and be gentle with the throttle.'},
  {t:'Tuning',info:1,x:'In the <b>Garage</b> you can tune <b>gearing, aero, tyres and more</b>. Changes show on the performance chart with a green <b>+</b> bar. Tuning applies in Multiplayer, Elimination and Career (not Time Attack).'},

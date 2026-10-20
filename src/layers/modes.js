@@ -202,7 +202,7 @@ P.showResults=function(){const Rc=RACE,cfg=Rc.cfg,N=Rc.T.N,humans=Rc.cars.filter
 const SEGS=36;
 const HUDHTML=`<div class="h8top"><div class="h8pos"><b>1</b><i>ST</i><span>/6</span></div><div class="h8plate"><div class="lap"></div><div class="raceTime"></div><div class="bl"></div></div></div>
 <div class="h8mode"></div>
-<div class="h8spd"><div class="gnum"><small>GEAR</small><b>1</b><div class="pips"><i></i><i></i><i></i><i></i></div></div><div class="spdmain"><div class="dg"><b class="rdot"></b><canvas width="17" height="7"></canvas><i>KM/H</i></div><div class="segs"></div><div class="sub"><div class="ghint"></div><div class="cond"></div></div></div></div>
+<div class="h8spd"><div class="gnum"><small>GEAR</small><b>1</b><div class="pips"><i></i><i></i><i></i><i></i></div></div><div class="spdmain"><div class="dg"><b class="rdot"></b><canvas width="17" height="7"></canvas><i>MPH</i></div><div class="segs"></div><div class="sub"><div class="ghint"></div><div class="cond"></div></div></div></div>
 <div class="h8warn raceWarning"></div><div class="h8pop"></div><div class="h8fin"></div>`;
 hudUpdate=()=>{const Rc=RACE,T=Rc.T;
  const order=[...Rc.cars].sort((a,b)=>(b.fin?1e6-b.finT:0)-(a.fin?1e6-a.finT:0)||b.unw-a.unw);
@@ -211,7 +211,7 @@ hudUpdate=()=>{const Rc=RACE,T=Rc.T;
   if(!e.dataset.b){e.innerHTML=HUDHTML;e.dataset.b=1;const sg=e.querySelector('.segs');for(let k=0;k<SEGS;k++)sg.appendChild(document.createElement('i'))}
   const s=clamp(Math.min(r[2]*innerWidth/860,r[3]*innerHeight/580),.46,1.15);e.style.setProperty('--s',s);
   const q=k=>e.querySelector(k),st=c.cs,mt=c.mt||MATS.road;
-  const gt=P.gearTops(st).map(v=>v*3.6),NG=gt.length,topH=gt[NG-1],kmh=Math.round(c.sp*3.6),maxK=Math.ceil(topH/10)*10+10,gx=c.gear|0;
+  const gt=P.gearTops(st).map(v=>v*2.23694),NG=gt.length,topH=gt[NG-1],kmh=Math.round(c.sp*2.23694),maxK=Math.ceil(topH/10)*10+10,gx=c.gear|0;
   q('.h8top').style.top=(10+gi*94*s)+'px';{const sp=e.querySelector('.h8spd');sp.style.right=(12+(gi%2)*(236*s))+'px';sp.style.bottom=(12+Math.floor(gi/2)*84*s)+'px'}
   const cut=Rc.mode==='cutup',lap=clamp(Math.floor(c.unw/T.N)+1,1,Rc.laps);
   q('.h8pos').style.display=cut?'none':'';
@@ -230,7 +230,7 @@ hudUpdate=()=>{const Rc=RACE,T=Rc.T;
   sgs.forEach((x,k)=>{const v=(k+.5)/SEGS*maxK;let zi=0;while(zi<NG-1&&v>=gt[zi])zi++;const zb=Math.min(3,Math.floor(k*4/SEGS));x.className=(k<lit?'on ':'')+'z'+zb+(gx===zi?' cur':'')});
   q('.gnum b').textContent=gx+1;{const pp=q('.pips');if(pp.children.length!==NG){pp.innerHTML='<i></i>'.repeat(NG)}pp.querySelectorAll('i').forEach((x,k)=>x.className=k<=gx?'on':'')}
   q('.gnum').className='gnum'+(c.gearFlash>0?' fl':'');
-  const ceilK=st.top*P.GT(st)[gx].top*((c.mt&&c.mt.top)||1)*3.6,upN=Rc.state==='race'&&!c.fin&&gx<NG-1&&kmh>=ceilK*.84,dnN=kmh<ceilK*.34;let hint='';if(Rc.state==='race'&&!c.fin){if(upN)hint='SHIFT UP';else if(gx>0&&dnN)hint='SHIFT DOWN'}
+  const ceilK=st.top*P.GT(st)[gx].top*((c.mt&&c.mt.top)||1)*2.23694,upN=Rc.state==='race'&&!c.fin&&gx<NG-1&&kmh>=ceilK*.84,dnN=kmh<ceilK*.34;let hint='';if(Rc.state==='race'&&!c.fin){if(upN)hint='SHIFT UP';else if(gx>0&&dnN)hint='SHIFT DOWN'}
   q('.ghint').textContent=hint;
   {const up=upN,rd=q('.rdot');rd.className='rdot'+(up?' on':'');
    const fx=P.surfFx(st,!!Rc.T.d.gravel),cd=q('.cond');cd.innerHTML=(Rc.T.d.gravel?'GRAVEL':'TARMAC')+' <b class="'+(fx.g>=0?'up':'dn')+'">GRIP '+(fx.g>=0?'+':'')+fx.g+'%</b>'+(fx.t<-1||fx.t>1?' <b class="'+(fx.t>=0?'up':'dn')+'">SPD '+(fx.t>=0?'+':'')+fx.t+'%</b>':'')}

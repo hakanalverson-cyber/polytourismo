@@ -105,7 +105,7 @@ function gearLogic(c,live,dt){const p=c.k,tp=taps[p],now=performance.now();
 /* ---------------- AI ---------------- */
 function kappa(T){if(T.kap)return T.kap;const kz=new Float32Array(T.N);for(let i=0;i<T.N;i++){const N=T.N;kz[i]=Math.max(0,-(T.y[(i+5)%N]-2*T.y[i]+T.y[(i-5+N)%N])/(25*T.sp*T.sp))}T.kz=kz;const N=T.N,k=new Float32Array(N),sp=T.sp;for(let i=0;i<N;i++){const a=Math.abs(wr(T.psi[(i+3)%N]-T.psi[(i-3+N)%N]));k[i]=a/(6*sp)}
  const o=new Float32Array(N);for(let i=0;i<N;i++){let m=0;for(let j=-2;j<=2;j++)m=Math.max(m,k[(i+j+N)%N]);o[i]=m}return T.kap=o}
-function steerLimit(R){return 2.25*R/(1+.033*R)}
+function steerLimit(R){return 2.25*R/(1+((RACE&&RACE.cfg&&RACE.cfg.circuit)?.0105:.033)*R)}
 function aiInput(c,dt){const Rc=RACE,T=Rc.T,N=T.N,a=c.ai||(c.ai={skill:.9,lat:0,mist:0,name:'CPU'}),K=kappa(T);
  const live=Rc.state==='race'&&c.respT<=0&&!(c.exp>0);
  const cs=c.cs,mt=c.mt||MATS.road;
@@ -119,10 +119,10 @@ function aiInput(c,dt){const Rc=RACE,T=Rc.T,N=T.N,a=c.ai||(c.ai={skill:.9,lat:0,
  let st=clamp(wr(des-c.yaw)*2.2,-1,1);
  /* speed plan */
  const gfac=(mt.grip||1)*cs.grip;let tgt=1e9;
- for(let j=2;j<=44;j+=2){const i=(c.idx+j)%N;if(T.gap[i])continue;const k=Math.max(K[i],8e-4),R_=1/k,vz=Math.sqrt(6.5/Math.max(T.kz[i],1e-4)),ice=T.ice[i]?.3:1,vlim=Math.min(vz,steerLimit(R_)*.9*Math.min(1,.6+gfac*.4)*ice,Math.sqrt(26*gfac*ice*R_));
+ const jm=Math.max(44,Math.min(160,Math.ceil(c.sp*c.sp/(25*cs.brk)/T.sp)+8));for(let j=2;j<=jm;j+=2){const i=(c.idx+j)%N;if(T.gap[i])continue;const k=Math.max(K[i],8e-4),R_=1/k,vz=Math.sqrt(6.5/Math.max(T.kz[i],1e-4)),ice=T.ice[i]?.3:1,vlim=Math.min(vz,steerLimit(R_)*.9*Math.min(1,.6+gfac*.4)*ice,Math.sqrt(26*gfac*ice*R_));
   tgt=Math.min(tgt,Math.sqrt(vlim*vlim+2*(12.5*cs.brk)*j*T.sp))}
  const topNow=topSpeed(cs,GT(cs).length-1)*(mt.top||1);
- tgt=Math.min(tgt,topNow*(.9+.1*skill))*Math.min(1,.55+skill*.5);
+ tgt=Math.min(tgt,topNow*(.9+.1*skill))*Math.min(1,.55+skill*.5);c._tg=tgt;c._tn=topNow;
  let th=0,br=0;if(!live){th=0}else{if(c.sp<tgt-.8)th=1;else if(c.sp>tgt+1.8)br=1}
  /* gears */
  if(live)autoGear(c,dt,mt,.86,false);
