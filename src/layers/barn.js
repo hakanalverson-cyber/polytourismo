@@ -29,10 +29,11 @@ function build(sc,T,cfg){
  const g=new THREE.Group();g.position.set(best.x,best.y,best.z);g.rotation.y=yaw;sc.add(g);
  const found=P.barnFound(cfg.car);
  /* barn shell, 9 wide x 13 deep, door end toward the road (+z in local space) */
- const wood=M_(0x8c3a2b),dark=M_(0x2a2420),trim=M_(0xe6dfd0),roof=M_(0x55575c,{roughness:.8}),floor=M_(0x3a3430);
+ const wood=M_(0xb81212),dark=M_(0x2a2420),trim=M_(0xededed),roof=M_(0x35373c,{roughness:.8}),floor=M_(0x3a3430);
  const box=(w,h,d,m,x,y,z)=>{const q=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);q.position.set(x,y,z);g.add(q);return q};
- const W=9,D=13,H=4.6;
+ const W=9.2,D=12.8,H=4.4;
  box(W+1.2,.3,D+1.2,floor,0,.1,0);
+ const sh0=g.children.length;
  box(.3,H,D,wood,-W/2,H/2,0);box(.3,H,D,wood,W/2,H/2,0);box(W,H,.3,wood,0,H/2,-D/2);
  /* front wall with a wide door opening */
  const dw=4.8;box((W-dw)/2,H,.3,wood,-(W+dw)/4,H/2,D/2);box((W-dw)/2,H,.3,wood,(W+dw)/4,H/2,D/2);box(dw,H-3.6,.3,wood,0,3.6+(H-3.6)/2,D/2);
@@ -42,6 +43,7 @@ function build(sc,T,cfg){
  const gab=new THREE.Shape();gab.moveTo(-W/2,0);gab.lineTo(W/2,0);gab.lineTo(0,2.8);gab.closePath();
  for(const z of[-D/2,D/2]){const gm=new THREE.Mesh(new THREE.ShapeGeometry(gab),wood);gm.position.set(0,H,z+(z>0?.16:-.16));if(z<0)gm.rotation.y=PI;g.add(gm)}
  box(dw+.4,.25,.4,trim,0,3.65,D/2+.1);box(.25,3.6,.4,trim,-dw/2-.1,1.8,D/2+.1);box(.25,3.6,.4,trim,dw/2+.1,1.8,D/2+.1);
+ const shell=g.children.slice(sh0);
  /* doors: hinged at the outer posts, swing open outward */
  const doors=[];for(const sd of[-1,1]){const piv=new THREE.Group();piv.position.set(sd*dw/2,0,D/2+.2);const dr=new THREE.Mesh(new THREE.BoxGeometry(dw/2,3.55,.14),M_(0x9b4a37));dr.position.set(-sd*dw/4,1.8,0);piv.add(dr);
   const xb=new THREE.Mesh(new THREE.BoxGeometry(dw/2*1.05,.16,.18),trim);xb.position.set(-sd*dw/4,1.8,.02);xb.rotation.z=sd*.7;piv.add(xb);g.add(piv);doors.push({piv,sd})}
@@ -62,14 +64,20 @@ function build(sc,T,cfg){
   const mt=new THREE.Matrix4(),zero=new THREE.Matrix4().makeScale(0,0,0);
   for(const o of pre){if(o.isInstancedMesh){let ch=false;for(let j=0;j<o.count;j++){o.getMatrixAt(j,mt);const e=mt.elements;if(bad(e[12],e[14])){o.setMatrixAt(j,zero);ch=true}}if(ch)o.instanceMatrix.needsUpdate=true}
    else if(o.isMesh||o.isGroup){if(o.position&&bad(o.position.x,o.position.z)&&o.position.y>-50&&!(o.geometry&&o.geometry.type==='PlaneGeometry'&&o.scale.x>100))o.visible=false}}
-  if(T.solids)T.solids=T.solids.filter(q=>!(q&&isFinite(q.x)&&isFinite(q.z)&&bad(q.x,q.z)))}
+  /* fence rails/posts are merged into one 'lines' mesh: cut a gap where the trail crosses */
+ for(const o of pre){if(o.isMesh&&o.userData&&o.userData.ptProp==='lines'&&o.geometry&&o.geometry.attributes.position&&!o.geometry.index){const g=o.geometry,pa=g.attributes.position,ca=g.attributes.color,n=pa.count,keepP=[],keepC=[];
+   for(let t=0;t+2<n;t+=3){const cx=(pa.getX(t)+pa.getX(t+1)+pa.getX(t+2))/3,cz=(pa.getZ(t)+pa.getZ(t+1)+pa.getZ(t+2))/3;if(dseg(cx,cz)<8.6||Math.hypot(cx-best.x,cz-best.z)<16)continue;for(let q=0;q<3;q++){keepP.push(pa.getX(t+q),pa.getY(t+q),pa.getZ(t+q));if(ca)keepC.push(ca.getX(t+q),ca.getY(t+q),ca.getZ(t+q))}}
+   const ng=new THREE.BufferGeometry();ng.setAttribute('position',new THREE.Float32BufferAttribute(keepP,3));if(ca)ng.setAttribute('color',new THREE.Float32BufferAttribute(keepC,3));ng.computeVertexNormals();o.geometry=ng}}
+ if(T.solids)T.solids=T.solids.filter(q=>!(q&&isFinite(q.x)&&isFinite(q.z)&&bad(q.x,q.z)))}
  for(let i=3;i<nT-9;i+=4)for(const sd of[-1,1]){const a=tp[i-1],b=tp[i+1],tx=b[0]-a[0],tz=b[1]-a[1],tl=Math.hypot(tx,tz)||1,x=tp[i][0]+(-tz/tl)*3.2*sd,z=tp[i][1]+(tx/tl)*3.2*sd;
   const post=new THREE.Mesh(new THREE.BoxGeometry(.18,1.3,.18),M_(0x5a4634));post.position.set(x,T.terr(x,z)+.55,z);post.rotation.set((i%3-1)*.07,0,(i%5-2)*.06);sc.add(post)}
  /* a faded sign where the trail leaves the road */
  {const[sx,sz]=at(k,best.side*(hw(k)+4.2)),sg=new THREE.Group();sg.position.set(sx,T.terr(sx,sz),sz);sc.add(sg);const pl=new THREE.Mesh(new THREE.BoxGeometry(.12,1.8,.12),M_(0x5a4634));pl.position.y=.9;sg.add(pl);const bd=new THREE.Mesh(new THREE.BoxGeometry(1.0,.5,.07),M_(0xb9a27a));bd.position.set(0,1.6,0);bd.rotation.z=.08;sg.add(bd)}
+ /* the real thing is the pack's barn: shown closed until the reveal, then swapped for the open-door barn while the screen is black */
+ let pk=null;{const q=P.BLD&&P.BLD.Barn_02;if(q&&!found){pk=new THREE.Mesh(q.g.clone(),P.PROPKIT.MAT);pk.castShadow=true;pk.receiveShadow=true;g.add(pk);shell.forEach(o=>o.visible=false);doors.forEach(d=>d.piv.visible=false)}}
  const door={x:best.x+fx*(D/2+2.5),z:best.z+fz*(D/2+2.5)};
  const light=new THREE.PointLight(0xffd9a0,0,18,1.6);light.position.set(0,3.2,1);g.add(light);
- B={cfg,g,doors,light,car:null,found,x:best.x,z:best.z,y:best.y,fx,fz,yaw,door,D,sc,T};
+ B={pk,shell,cfg,g,doors,light,car:null,found,x:best.x,z:best.z,y:best.y,fx,fz,yaw,door,D,sc,T};
  /* a found barn stays open and empty */
  if(found){doors.forEach(d=>d.piv.rotation.y=d.sd*1.75)}
  return B}
@@ -89,7 +97,7 @@ function barnCar(){const id=B.cfg.car,idx=P.modelOf(id,0),src=CAR_MODELS[idx];if
  const bb=new THREE.Box3().setFromObject(model),sz=bb.getSize(new THREE.Vector3()),ct=bb.getCenter(new THREE.Vector3()),k=(src.userData.gl||4.4)/Math.max(sz.x,sz.z,.001);
  ctd.position.set(-ct.x,-bb.min.y,-ct.z);grp.scale.setScalar(k);grp.rotation.y=(sz.x>sz.z?PI/2:0)+PI+.3;
  grp.position.set(0,.27,-1.1);B.g.add(grp);return{g:grp}}
-function startScene(){if(BN||!B||B.found)return;const car=B.car||barnCar();if(!car)return;B.car=car;car.g.visible=true;
+function startScene(){if(BN||!B||B.found)return;const car=B.car||barnCar();if(!car)return;B.car=car;if(B.pk){B.pk.visible=false;B.shell.forEach(o=>o.visible=true);B.doors.forEach(d=>d.piv.visible=true)}car.g.visible=true;
  BN={t:0,ph:0,cardUp:false};RACE.cars.forEach(c=>{if(c.m&&c.m.g)c.m.g.visible=false});document.body.classList.add('barnscene');const f=fadeEl();f.style.transition='opacity .6s';f.style.opacity=1;if(P.sfx)P.sfx('whoosh');prompt(false)}
 function endScene(){const id=B.cfg.car,s=sv();s.owned[id]=(s.owned[id]||0)|1;s.barn=s.barn||{};s.barn[id]=1;P.save();B.found=true;if(card)card.style.display='none';
  BN.ph=4;BN.t=0;const f=fadeEl();f.style.transition='opacity .6s';f.style.opacity=1}

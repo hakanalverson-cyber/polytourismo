@@ -1,6 +1,6 @@
+import sys
 from shot import run,W
-js="""(()=>{const o=PT8.CARS.filter(c=>c.mph).map(c=>[c.id,c.mph,Math.round(PT8.effTop(c,PT8.GT(c).length-1)*2.23694)]).filter(a=>Math.abs(a[1]-a[2])>3);return 'mismatch '+JSON.stringify(o)+' km '+JSON.stringify(KM[1])+' '+JSON.stringify(PT8.SHIFTK.map(k=>k.n))})()"""
-st=[('wait',800),('js',js),('js',"(()=>{PT8.setP2Keys('numpad');return JSON.stringify(KM[1])+PT8.SHIFTK[1].dn+PT8.SHIFTK[1].up})()"),
-('js',"(()=>{PT8.launch({mode:'mp',track:0,laps:1,humans:[{id:'merc'},{id:'c2'}],ai:[],tod:'day'});return String(PT8.noHb())})()"),
-('js',"(()=>{down.add('Numpad9');window.dispatchEvent(new KeyboardEvent('keydown',{code:'Numpad9'}));for(let i=0;i<60*6;i++)step(1/60);const c=RACE.cars[1];window.dispatchEvent(new KeyboardEvent('keydown',{code:'Numpad9'}));for(let i=0;i<10;i++)step(1/60);return 'p2 gear '+c.gear+' state '+RACE.state})()")]
-run(W+'/Poly-Tourismo.html',st,'rs1')
+js="""(()=>{const bad=[];RACE.scene.traverse(o=>{if(o.isMesh||o.isLine||o.isPoints){const g=o.geometry;if(!g){bad.push('nogeo '+o.name);return}const a=g.attributes;if(!a.position||(o.material&&o.material.vertexColors&&!a.color)||(o.isInstancedMesh&&!o.instanceMatrix))bad.push((o.userData.ptProp||o.name||o.type)+' '+Object.keys(a)+' vc='+(o.material&&o.material.vertexColors)+' inst='+!!o.isInstancedMesh);for(const k in a)if(!a[k]||!a[k].array)bad.push('nullattr '+k)}});return JSON.stringify(bad.slice(0,15))})()"""
+st=[('wait',2500),('js',"(()=>{document.getElementById('play').click();return 1})()"),('wait',1000),
+('js',"(()=>{PT8.launch({mode:'rally',track:%s,laps:1,humans:[{id:'merc',alt:0,name:'T'}],ai:[],tod:'day',endur:false});return 1})()"%sys.argv[1]),('wait',6000),('js',js)]
+run(W+'/Poly-Tourismo.html',st,'rs')

@@ -131,12 +131,14 @@ src=rep(src,"    for(const [g,m] of b.parts){\n      g.translate(-center.x,-cent
 src=rep(src,"w.angle=(w.angle+speed/w.radius*dt)%(PI*2);\n    w.spin.rotation.x=w.angle;\n    w.pivot.rotation.y=w.front?steer*.35:0;","{const stp=speed/w.radius*dt;w.angle=(w.angle+Math.max(-.5,Math.min(.5,stp)))%(PI*2)}\n    w.spin.rotation.x=w.angle;\n    {const tg=w.front?steer*.35:0;w.sa=Math.abs(tg-(w.sa||0))<.012?tg:(w.sa||0)+(tg-(w.sa||0))*.7;w.pivot.rotation.y=w.sa}")
 src=rep(src,"function loadEmbeddedCarPack(){\n try{","function loadEmbeddedCarPack(){return;\n try{")
 src=rep(src,"scale=4.5/Math.max(size.x,size.z,.001)","scale=(source.userData.gl||4.5)/Math.max(size.x,size.z,.001)")
+src=re.sub(r'<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"[^>]*></script>','',src)
 src=src.replace("const compile = s => eval('('+s+')');","const compile = s => eval('('+s+')');window.PTO=o;",1)
 BOOT_CSS='<style id="ptBootCss">html,body{background:#0b0e12!important}body>*:not(#ptBoot){visibility:hidden!important}#ptBoot{position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#0b0e12;color:#e8eef2;font:italic 800 34px/1 Arial Black,Impact,sans-serif;letter-spacing:.06em;visibility:visible!important;transition:opacity .25s}#ptBoot small{font:700 10px/1 monospace;letter-spacing:.4em;color:#f1f3f5;font-style:normal}#ptBoot i{display:block;width:140px;height:3px;background:#1d252d;position:relative;overflow:hidden}#ptBoot i:after{content:"";position:absolute;inset:0;width:40%;background:#f1f3f5;animation:ptb 1s linear infinite}@keyframes ptb{from{left:-40%}to{left:100%}}</style>'
 src=src.replace('<title>Poly Tourismo v7</title>','<title>Poly Tourismo</title>'+BOOT_CSS)
 src=src.replace('<body>','<body><div id="ptBoot">POLY TOURISMO<i></i><small>LOADING</small></div>',1)
 BOOT_JS='<script>(function(){function done(){var b=document.getElementById("ptBoot"),c=document.getElementById("ptBootCss");if(!b)return;b.style.opacity=0;setTimeout(function(){if(c)c.remove();b.remove()},260)}function go(){requestAnimationFrame(function(){requestAnimationFrame(function(){setTimeout(done,350)})})}if(document.readyState==="complete")go();else addEventListener("load",go);setTimeout(done,8000)})();</script>'
-add=ANIM+BLD+CARS10+'<style id="v8css">'+css+'</style><script>\n'+'\n'.join(parts)+'\n</script>'
+GLTF='<script>'+open(W+'/assets/GLTFLoader.r128.js').read()+'</script>'
+add=GLTF+ANIM+BLD+CARS10+'<style id="v8css">'+css+'</style><script>\n'+'\n'.join(parts)+'\n</script>'
 i=src.rindex('</body>') if '</body>' in src else len(src)
 src=src[:i]+add+BOOT_JS+src[i:]
 
