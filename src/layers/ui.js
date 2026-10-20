@@ -346,8 +346,20 @@ function drawShow(dt){studioOn();ensureStudio();const car=BYID[SR.id],idx=P.mode
 /* ---- garage cards: every car as a card, owned in colour, the rest blacked out ---- */
 try{SR.of=localStorage.getItem('pt9-ownfirst')==='1'}catch(e){SR.of=false}
 const THQ=[];let thRun=0,thIO=null;
-function pumpThumbs(){if(thRun)return;thRun=1;const go=()=>{const j=THQ.shift();if(!j){thRun=0;return}try{if(j.cv.isConnected){const idx=P.modelOf(j.id,0),ph=window.PT7&&(window.PT7.photos[idx]||(CAR_MODELS[idx]?window.PT7.makePhotos(idx):null));if(ph&&ph[0]){const g=j.cv.getContext('2d');g.drawImage(ph[0],0,0,j.cv.width,j.cv.height);j.cv.classList.add('rdy')}}}catch(e){}setTimeout(go,10)};setTimeout(go,20)}
-function cardHTML(c,sv){const o=!c.lk;return `<div class="gc ${o?'':'lock'} ${c.barn&&!o?'bn':''} ${c.id===SR.id&&o?'sel':''} ${c.off?'off':''}" data-id="${c.id}"><div class="th"><canvas width="168" height="100" data-id="${c.id}"></canvas>${!o&&c.barn?'<i>?</i>':''}</div><b>${o||!c.barn?c.name:'???'}</b><small><span class="cls ${c.cls}">${c.cls}</span>${c.off?'Class cap':o?c.type:(c.barn?'Hidden on a map':'Not owned')}</small></div>`}
+/* thumbnails: one small private renderer draws every car (real model, real paint) into a cached canvas */
+let TH=null;const THC=new Map();
+function thumbFor(id){if(THC.has(id))return THC.get(id);
+ if(!TH){const r=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});r.setPixelRatio(1);r.setSize(336,200,false);r.setClearColor(0,0);
+  const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight(0xffffff,0x56606c,1.05));const d=new THREE.DirectionalLight(0xfff4e6,1.0);d.position.set(5,8,7);sc.add(d);const d2=new THREE.DirectionalLight(0xbcd4ff,.45);d2.position.set(-6,3,-5);sc.add(d2);
+  const cam=new THREE.PerspectiveCamera(28,336/200,.1,100);cam.position.set(5.6,2.5,8.4);cam.lookAt(0,.8,0);TH={r,sc,cam}}
+ const car=BYID[id],idx=P.modelOf(id,0),src=CAR_MODELS[idx];if(!src)return null;
+ const model=src.clone(true),car_=new THREE.Group(),ctd=new THREE.Group();ctd.add(model);car_.add(ctd);ctd.updateMatrixWorld(true);
+ const bb=new THREE.Box3().setFromObject(model),sz=bb.getSize(new THREE.Vector3()),ct=bb.getCenter(new THREE.Vector3()),k=(src.userData.gl?src.userData.gl*1.093:4.7)/Math.max(sz.x,sz.z,.001);
+ ctd.position.set(-ct.x,-bb.min.y,-ct.z);car_.scale.setScalar(k);car_.rotation.y=(sz.x>sz.z?Math.PI/2:0)+Math.PI;TH.sc.add(car_);
+ TH.r.render(TH.sc,TH.cam);const cv=document.createElement('canvas');cv.width=336;cv.height=200;cv.getContext('2d').drawImage(TH.r.domElement,0,0);TH.sc.remove(car_);
+ THC.set(id,cv);return cv}
+function pumpThumbs(){if(thRun)return;thRun=1;const go=()=>{const j=THQ.shift();if(!j){thRun=0;return}try{if(j.cv.isConnected){const t=thumbFor(j.id);if(t){j.cv.getContext('2d').drawImage(t,0,0,j.cv.width,j.cv.height);j.cv.classList.add('rdy')}}}catch(e){}setTimeout(go,8)};setTimeout(go,10)}
+function cardHTML(c,sv){const o=!c.lk;return `<div class="gc ${o?'':'lock'} ${c.barn&&!o?'bn':''} ${c.id===SR.id&&o?'sel':''} ${c.off?'off':''}" data-id="${c.id}"><div class="th"><canvas width="336" height="200" data-id="${c.id}"></canvas>${!o&&c.barn?'<i>?</i>':''}</div><b>${o||!c.barn?c.name:'???'}</b><small><span class="cls ${c.cls}">${c.cls}</span>${c.off?'Class cap':o?c.type:(c.barn?'Hidden on a map':'Not owned')}</small></div>`}
 function cardsHTML(list,sv){
  const reg=list.filter(c=>!c.barn),barn=list.filter(c=>c.barn),cats=(P.CATS||[]).filter(k=>reg.some(c=>c.cat===k));
  const own=c=>!c.lk&&!c.off;let h='',order=[];
@@ -363,7 +375,7 @@ function bindCards(list){const box=$('shList');
  $$('[data-of]',box).forEach(b=>b.onclick=()=>{SR.of=!SR.of;try{localStorage.setItem('pt9-ownfirst',SR.of?'1':'0')}catch(e){}P.sfx&&P.sfx('select');renderShow();$('shList').scrollTop=0});
  $$('[data-jump]',box).forEach(b=>b.onclick=()=>{const t=box.querySelector(`.gh[data-sec="${b.dataset.jump}"]`);if(t)box.scrollTo({top:t.offsetTop-44,behavior:'smooth'})});
  if(thIO)thIO.disconnect();thIO=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){thIO.unobserve(en.target);THQ.push({cv:en.target,id:en.target.dataset.id});pumpThumbs()}}),{root:box,rootMargin:'160px'});
- THQ.length=0;$$('.gc canvas',box).forEach(cv=>thIO.observe(cv));
+ THQ.length=0;$$('.gc canvas',box).forEach(cv=>{const t=THC.get(cv.dataset.id);if(t){cv.getContext('2d').drawImage(t,0,0,cv.width,cv.height);cv.classList.add('rdy')}else thIO.observe(cv)});
  const sel=box.querySelector('.gc.sel');if(sel&&!SR.noScroll){const r=sel.getBoundingClientRect(),b=box.getBoundingClientRect();if(r.top<b.top+40||r.bottom>b.bottom)sel.scrollIntoView({block:'center'})}}
 function fillPhotos(idx){const box=$('shPhotos');if(!box)return;let ph=window.PT7&&(window.PT7.photos[idx]||(()=>{try{return window.PT7.makePhotos(idx)}catch(e){return null}})());box.innerHTML='';
  for(let i=0;i<3;i++){const cv=document.createElement('canvas');cv.width=96;cv.height=60;const g=cv.getContext('2d');g.fillStyle='#14181d';g.fillRect(0,0,96,60);if(ph&&ph[i]){try{g.drawImage(ph[i],0,0,96,60)}catch(e){}}box.appendChild(cv)}}

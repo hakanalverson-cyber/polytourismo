@@ -687,16 +687,16 @@ body.barnscene #cd,body.barnscene #mm,body.barnscene #huds,body.barnscene #rlDas
 .lst.cards .gg{display:grid;grid-template-columns:repeat(auto-fill,minmax(124px,1fr));gap:8px}
 .gc{position:relative;display:flex;flex-direction:column;gap:3px;padding:6px 6px 8px;background:#ffffff0b;border:1px solid #ffffff14;border-left:3px solid transparent;cursor:pointer;min-width:0}
 .gc:hover{background:#ffffff18}
-.gc .th{position:relative;aspect-ratio:168/100;background:#12171d;overflow:hidden}
+.gc .th{position:relative;aspect-ratio:168/100;background:radial-gradient(ellipse at 50% 85%,#566271 0%,#2c343e 55%,#1a2027 100%);overflow:hidden}
 .gc canvas{width:100%;height:100%;display:block;opacity:0;transition:opacity .25s}.gc canvas.rdy{opacity:1}
 .gc b{font:700 10px var(--mn);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .gc small{display:flex;gap:6px;align-items:center;font-size:9px;letter-spacing:.08em;color:var(--dim);white-space:nowrap;overflow:hidden}
 .gc.sel{background:#f1f3f52e;border-left-color:var(--ac)}.gc.sel b{color:var(--ac)}
 .gc.off{opacity:.4}
 .gc.lock{cursor:not-allowed;background:#ffffff06}
-.gc.lock{background:#000;border-color:#ffffff0d}
-.gc.lock .th{background:#000}
-.gc.lock canvas{filter:brightness(.16) grayscale(1) contrast(1.4)}
+.gc.lock{background:#0b0d10;border-color:#ffffff0d}
+.gc.lock .th{background:radial-gradient(ellipse at 50% 85%,#4a5460 0%,#262d36 60%,#161b21 100%)}
+.gc.lock canvas{filter:brightness(0)}
 .gc.lock b{color:#ffffff7a}
 .gc.bn .th i{position:absolute;inset:0;display:grid;place-items:center;font:700 34px var(--mn);color:#f2c76b;font-style:normal}
 @media(max-width:860px){.lst.cards{width:92vw}}
