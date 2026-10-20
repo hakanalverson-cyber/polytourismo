@@ -5,10 +5,15 @@ const P=window.PT8;if(typeof HPACK_B64==='undefined'||!THREE.GLTFLoader)return;
 const HP=P.HP={ready:false,defs:{},cache:{}};
 /* the pack is one glb: every top-level node is a model, named like the source file */
 HP.mats={};
+/* the packs' palettes are very saturated; mute them so the town sits calmly together */
+const MUTE=new Map();
+function mute(t){if(MUTE.has(t))return MUTE.get(t);let out=t;try{const im=t.image;if(im&&im.width){const cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;const g=cv.getContext('2d');g.drawImage(im,0,0);const d=g.getImageData(0,0,cv.width,cv.height),a=d.data;
+ for(let i=0;i<a.length;i+=4){const l=.3*a[i]+.59*a[i+1]+.11*a[i+2];a[i]=l+(a[i]-l)*.5;a[i+1]=l+(a[i+1]-l)*.5;a[i+2]=l+(a[i+2]-l)*.5+ -2}
+ g.putImageData(d,0,0);out=new THREE.CanvasTexture(cv);out.flipY=t.flipY;out.encoding=t.encoding;out.wrapS=t.wrapS;out.wrapT=t.wrapT}}catch(e){console.warn('mute',e)}MUTE.set(t,out);MUTE.set(out,out);return out}
 function prep(g){const root=g.scene;root.updateMatrixWorld(true);
  root.children.forEach(node=>{const parts=[],inv=new THREE.Matrix4();node.updateMatrixWorld(true);inv.copy(node.matrixWorld).invert();
   node.traverse(o=>{if(!o.isMesh)return;const m=new THREE.Matrix4().multiplyMatrices(inv,o.matrixWorld),mat=o.material;
-   if(mat.map){mat.map.magFilter=mat.map.minFilter=THREE.NearestFilter;mat.map.generateMipmaps=false;mat.map.needsUpdate=true}
+   if(mat.map){mat.map=mute(mat.map);mat.map.magFilter=mat.map.minFilter=THREE.NearestFilter;mat.map.generateMipmaps=false;mat.map.needsUpdate=true}
    mat.roughness=.92;mat.metalness=0;mat.flatShading=false;mat.needsUpdate=true;
    const gm=o.geometry.clone();gm.applyMatrix4(m);parts.push({geo:gm,mat})});
   /* merge parts that share a material so every model costs one draw call per material */

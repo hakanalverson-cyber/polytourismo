@@ -35,7 +35,7 @@ function lamps(sc,T){
  const AX=3.7,HY=6.8;
  if(have.length){for(const p of have){const y=isFinite(p.y)?p.y:T.terr(p.x,p.z);L.push({hx:p.x+Math.sin(p.yaw)*AX,hy:y+HY,hz:p.z+Math.cos(p.yaw)*AX})}}
  else if(!T.d.gravel&&K&&P.lampParts){const st=Math.max(2,Math.round(40/(T.sp||6)));let side=1;const own=[];
-  const HB=T.d.harbor&&T.hbr,hb=i=>HB&&((i>=HB.rest[0]&&i<=HB.rest[1])),inAl=i=>HB&&HB.alleys.some(a=>i>=a[0]&&i<=a[1]),onPier=i=>HB&&i>=HB.pier[0]&&i<=HB.pier[1];
+  const HB=T.d.harbor&&T.hbr,hb=i=>HB&&((i>=HB.rest[0]&&i<=HB.rest[1])||HB.tuns.some(a=>i>=a[0]-1&&i<=a[1]+1)),inAl=i=>HB&&HB.alleys.some(a=>i>=a[0]&&i<=a[1]),onPier=i=>HB&&i>=HB.pier[0]&&i<=HB.pier[1];
   for(let i=Math.floor(st/2);i<N;i+=st){if(HB){if(hb(i))continue}else if((T.gap&&T.gap[i])||(T.tn&&T.tn[i])||(!T.d.city&&T.wall&&T.wall[i]&&!(T.br&&T.br[i])))continue;side=-side;const c=Math.cos(T.psi[i]),s_=Math.sin(T.psi[i]),lo=side*(HB?(onPier(i)?T.hw[i]-.25:inAl(i)?T.hw[i]+1.1:T.hw[i]+3.2):T.hw[i]+3.2),x=T.x[i]+c*lo,z=T.z[i]-s_*lo,y=HB?(inAl(i)?.2:onPier(i)?.09:0)+T.y[i]:T.br&&T.br[i]?T.y[i]-lo*T.bank[i]:T.terr(x,z),yaw=Math.atan2(-c*side,s_*side);
    own.push([x,y,z,yaw]);L.push({hx:x+Math.sin(yaw)*AX,hy:y+HY,hz:z+Math.cos(yaw)*AX})}
   if(own.length){const im=new THREE.InstancedMesh(K.mk(P.lampParts()),K.MAT,own.length),dm=new THREE.Object3D();const wc=new THREE.Color(1,1,1);own.forEach((q,i)=>{dm.position.set(q[0],q[1],q[2]);dm.rotation.set(0,q[3],0);dm.updateMatrix();im.setMatrixAt(i,dm.matrix);im.setColorAt(i,wc)});im.frustumCulled=false;im.userData.ptProp='lamp';sc.add(im)}}
@@ -275,13 +275,12 @@ function harborTown(sc,T){
    const nm=list[Math.floor(r()*list.length)],g=P.BLD[nm];if(!g)continue;const s=sMin+Math.pow(r(),1.4)*(sMax-sMin),rad=Math.max(g.w,g.d)*s*.5+1.2+r()*r()*8;if(!clear(x,z,rad))continue;const sy=.85+r()*.5;
    const k=nearest(x,z),yaw=Math.round(Math.atan2(rx[k]-x,rz[k]-z)/(Math.PI/2))*Math.PI/2+(r()<.3?(r()-.5)*.35:0);occ.push([x,z,rad]);(out[nm]=out[nm]||[]).push([x,.02,z,yaw,s,0,sy]);log.push({n:nm,x,z,y:.02,fr:rad,sk:.5,s});n++}return n};
  /* low-rise streets near the quay, mid-rise behind, towers on the far ring; everything on a lattice and square to the street */
- place(LOW,1.0,1.75,12,70,9000,260,22);
- place(MID,1.3,2.0,40,160,9000,220,30);
+ /* the street walls near the road are assembled in harbor.js; only the far tower ring is placed here */
  place(TOW,2.0,2.4,150,340,9000,150,46);
  place(TOW,2.8,3.3,280,600,9000,120,60);
  /* trees and hedges between the blocks */
  const TR=['Tree_02','Tree_04','Tree_05','Tree_07'].filter(n=>P.BLD[n]);
- for(let t=0,n=0;t<1500&&n<110;t++){const x=-660+r()*1320,z=-660+r()*1320;if(!land(x,z,8)||near(x,z)<12)continue;if(!clear(x,z,2))continue;const nm=TR[Math.floor(r()*TR.length)];(out[nm]=out[nm]||[]).push([x,.02,z,r()*6.28,1.1+r()*.7,1]);occ.push([x,z,1.6])}
+ for(let t=0,n=0;t<1500&&n<0;t++){const x=-660+r()*1320,z=-660+r()*1320;if(!land(x,z,8)||near(x,z)<12)continue;if(!clear(x,z,2))continue;const nm=TR[Math.floor(r()*TR.length)];(out[nm]=out[nm]||[]).push([x,.02,z,r()*6.28,1.1+r()*.7,1]);occ.push([x,z,1.6])}
  const dum=new THREE.Object3D(),col=new THREE.Color();
  for(const nm in out){const L=out[nm],im=new THREE.InstancedMesh(P.BLD[nm].g.clone(),P.PROPKIT.MAT,L.length);
   L.forEach((q,i)=>{dum.position.set(q[0],q[1],q[2]);dum.rotation.set(0,q[3],0);dum.scale.set(q[4],q[4]*(q[6]||1),q[4]);dum.updateMatrix();im.setMatrixAt(i,dum.matrix);if(q[5]===1){col.setHSL(.27+r()*.08,.35,.78+r()*.2)}else{const PAL=[[.07,.28,.62],[.09,.22,.74],[.06,.3,.5],[.58,.1,.72],[.12,.18,.78],[.0,.04,.66],[.1,.14,.58]],ck=(Math.floor(q[0]/110)*73856093^Math.floor(q[2]/110)*19349663)>>>0,pk=PAL[r()<.55?ck%PAL.length:Math.floor(r()*PAL.length)];col.setHSL(pk[0]+(r()-.5)*.03,pk[1],pk[2]+(r()-.5)*.1)}im.setColorAt(i,col)});

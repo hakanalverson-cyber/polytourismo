@@ -9,6 +9,8 @@ P.LOG=[
   'Small boats tied up around the piers.',
   'A container yard with stacked cargo pods, depots, trucks, cranes and wind turbines, assembled from open-source (CC0) models by Kenney and KayKit plus the building pack.',
   'Pavement and ground textures no longer sit on the road surface.',
+  'Harbor Lights town rebuilt as continuous street walls: rows of buildings behind pavements and tree-lined verges, each row taller than the last, replacing the scattered houses and plant pots. Building colours are muted.',
+  'Two concrete dock tunnels on Harbor Lights, with lit ceilings and signed portals. A much bigger cargo yard.',
   'Harbor Lights fixes: no more brick strips along the track, no grey wall spikes at alley exits, boardwalk and road at the same height, crates sit on the ground, restaurant lamps hang from cords, calmer cobblestones, and more varied houses (size, colour, spacing, setback).',
   'Harbor Lights: houses sit closer to the road, with grass patches, bushes and drifting chimney smoke added.',
   'All streetlights on every map: new lamp model, a much wider and softer pool of light, a smoother glow, and lights that fade in and out instead of popping. Harbor Lights now has streetlights too.',

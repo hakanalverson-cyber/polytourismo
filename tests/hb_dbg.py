@@ -23,5 +23,5 @@ with sync_playwright() as p:
         RACE.cars.forEach(q=>{if(q.m)q.m.visible=false});R.setSize(1280,720,false);R.render(sc,cam);const d=R.domElement.toDataURL('image/png');hid.forEach(o=>o.visible=true);return d})(%r)"""%hide
         d=pg.evaluate(js);im=Image.open(io.BytesIO(base64.b64decode(d.split(',')[1]))).convert('RGB')
         return im.getpixel((763,230))
-    print(pg.evaluate("""(()=>{const d=PT8.HP.defs.cargo_A.parts[0].mat.map;return JSON.stringify([PT8.HP.ready,!!d,d&&d.image&&d.image.width,d&&d.image&&d.image.src&&d.image.src.slice(0,22)])})()"""))
+    print(pg.evaluate("""(()=>{const d=PT8.HP.defs.bld_A.parts[0].mat;const t=d.map;const im=t.image;const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const g=c.getContext('2d');g.drawImage(im,0,0);const a=g.getImageData(0,0,im.width,im.height).data;const out=[];for(let i=0;i<30;i++){const p=((i*37)%(im.width*im.height))*4;out.push([a[p],a[p+1],a[p+2],a[p+3]].join(','))}return JSON.stringify([im.width,im.height,t.flipY,t.encoding,d.color.getHexString(),d.vertexColors,out])})()"""))
     b.close()

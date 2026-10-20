@@ -6,6 +6,7 @@ const hex=h=>'#'+h.toString(16).padStart(6,'0');
 /* control points we need to find again on the sampled track */
 const near=(T,x,z)=>{let b=1e9,bi=0;for(let i=0;i<T.N;i++){const d=Math.hypot(T.x[i]-x,T.z[i]-z);if(d<b){b=d;bi=i}}return bi};
 const PIER=[[320,0],[250,90]],ALLEYS=[[[200,50],[-60,255]],[[-264,238],[-226,52]]],REST=[[-125,274],[-222,275]];
+const TUNS=[[[-70,-209],[50,-207]],[[-300,-90],[-300,-148]]];
 const seg=(T,a,b)=>[near(T,a[0],a[1]),near(T,b[0],b[1])];
 
 /* restaurant = flagged "tunnel" (hood cam), low rail walls so the dining room can sit behind them */
@@ -16,7 +17,8 @@ sampleTrack=d=>{const T=ps(d);if(!d.harbor)return T;
  T.tunnels.push([a,b]);
  const [p0,p1]=seg(T,PIER[0],PIER[1]),al=ALLEYS.map(q=>seg(T,q[0],q[1]));
  for(const [l0,l1] of al)for(let i=l0;i<=l1;i++)T.tn[i]=1; /* narrow alleys use the hood camera too */
- T.hbr={pier:[p0,p1],alley:al[0],alleys:al,rest:[a,b]};return T};
+ const tuns=TUNS.map(q=>seg(T,q[0],q[1]));for(const [t0,t1] of tuns){for(let i=t0;i<=t1;i++){T.tn[i]=1;T.wall[i]=1;T.wh[i]=11.5}T.tunnels.push([t0,t1])}
+ T.hbr={pier:[p0,p1],alley:al[0],alleys:al,rest:[a,b],tuns};return T};
 
 /* ---------- textures ---------- */
 const T_ASPH=()=>ctex(32,32,(x,w,h)=>{x.fillStyle='#3b3e44';x.fillRect(0,0,w,h);const r=rngf(4);for(let i=0;i<70;i++){x.fillStyle=r()<.5?'#00000022':'#ffffff10';x.fillRect(r()*w|0,r()*h|0,1,1)}x.fillStyle='#ffffffb0';x.fillRect(1,0,1,h);x.fillRect(w-2,0,1,h);x.fillStyle='#e8e0b0';x.fillRect(w/2-1,0,2,h/2)});
@@ -52,6 +54,7 @@ const T_BRICKW=()=>{const TN=8,TW=128,TH=256,BR=['#a4553f','#9b4a38','#b0644a','
    else {x.fillStyle='#5c6670';x.fillRect(ox+14,TH-120,100,116);for(let y=TH-120;y<TH-4;y+=9){x.fillStyle='#00000030';x.fillRect(ox+14,y,100,2)}x.fillStyle='#d8a028';x.fillRect(ox+14,TH-124,100,6);win(14,30,26,36,0);win(88,30,26,36,0);win(14,100,26,36,0);win(88,100,26,36,0)}
    x.fillStyle='#0000001e';x.fillRect(ox,0,TW,18);x.fillStyle='#ffffff10';x.fillRect(ox,TH-12,TW,12)}});
  t.repeat.set(1/TN,1);return t};
+const T_TUNW=()=>{const t=ctex(32,64,(x,w,h)=>{x.fillStyle='#8a8e92';x.fillRect(0,0,w,h);for(let i=0;i<14;i++){x.fillStyle=i&1?'#00000010':'#ffffff0c';x.fillRect(0,i*4+8,w,4)}x.fillStyle='#00000030';x.fillRect(0,0,1,h);x.fillRect(16,0,1,h);x.fillStyle='#d9b84a';x.fillRect(0,50,w,4);x.fillStyle='#3a3e44';x.fillRect(0,54,w,10);x.fillStyle='#00000022';x.fillRect(0,0,w,3)});return t};
 const T_PAVE=()=>ctex(16,16,(x,w,h)=>{x.fillStyle='#8f9296';x.fillRect(0,0,w,h);x.fillStyle='#00000026';x.fillRect(0,0,w,1);x.fillRect(0,0,1,h);x.fillRect(8,0,1,h);x.fillRect(0,8,w,1)});
 const T_CONC=()=>ctex(8,8,(x,w,h)=>{x.fillStyle='#b4b7ba';x.fillRect(0,0,w,h);x.fillStyle='#d9c25a';x.fillRect(0,1,w,1);x.fillStyle='#0000001c';x.fillRect(0,h-2,w,2)});
 const T_RAIL=()=>ctex(8,8,(x,w,h)=>{x.fillStyle='#8a5a34';x.fillRect(0,0,w,h);x.fillStyle='#d8c29a';x.fillRect(0,0,w,2);x.fillStyle='#0004';x.fillRect(0,h-2,w,2);x.fillRect(3,2,1,h-4)});
@@ -103,9 +106,9 @@ function buildHarbor(T){const d=T.d,N=T.N,r=rngf(8*77+5),sc=new THREE.Scene(),H=
  /* pier supports */
  {const pil=[];for(let i=H.pier[0];i<=H.pier[1];i+=4)for(const sd of [-1,1]){const f=frame(T,i,sd*(hw(i)-.6));pil.push([f[0],-4.6,f[1],.55,8.8,.55])}instB(sc,new THREE.CylinderGeometry(1,1,1,6),flat(0x4a3a2a),pil)}
  /* ----- walls: concrete barrier on the quay, wooden rail on pier/restaurant, tall painted facades in the alleys ----- */
- const cat=new Uint8Array(N);const inAl=i=>H.alleys.some(a=>i>=a[0]&&i<=a[1]);for(let i=0;i<N;i++){cat[i]=inAl(i)?2:((i>=H.pier[0]&&i<=H.pier[1])||(i>=H.rest[0]&&i<=H.rest[1]))?1:0}
- const mats=[new THREE.MeshStandardMaterial({map:T_CONC(),side:THREE.DoubleSide,roughness:.9}),new THREE.MeshStandardMaterial({map:T_RAIL(),side:THREE.DoubleSide,roughness:.9}),new THREE.MeshStandardMaterial({map:T_BRICKW(),side:THREE.DoubleSide,roughness:.95})];
- for(let c=0;c<3;c++){const W=Object.create(T);W.wall=Uint8Array.from(T.wall,(w,i)=>cat[i]===c?w:0);W.wh=Float32Array.from(T.wh,(h,i)=>cat[i]===c?(c<2?Math.min(h,c?1.2:1.0):h):0);if(c===2)W.hw=Float32Array.from(T.hw,h=>h+1.7);sc.add(wallMesh(W,1,mats[c]));sc.add(wallMesh(W,-1,mats[c]))}
+ const cat=new Uint8Array(N);const inAl=i=>H.alleys.some(a=>i>=a[0]&&i<=a[1]);for(let i=0;i<N;i++){cat[i]=H.tuns.some(a=>i>=a[0]&&i<=a[1])?3:inAl(i)?2:((i>=H.pier[0]&&i<=H.pier[1])||(i>=H.rest[0]&&i<=H.rest[1]))?1:0}
+ const mats=[new THREE.MeshStandardMaterial({map:T_CONC(),side:THREE.DoubleSide,roughness:.9}),new THREE.MeshStandardMaterial({map:T_RAIL(),side:THREE.DoubleSide,roughness:.9}),new THREE.MeshStandardMaterial({map:T_BRICKW(),side:THREE.DoubleSide,roughness:.95}),new THREE.MeshStandardMaterial({map:T_TUNW(),side:THREE.DoubleSide,roughness:.95})];
+ for(let c=0;c<4;c++){const W=Object.create(T);W.wall=Uint8Array.from(T.wall,(w,i)=>cat[i]===c?w:0);W.wh=Float32Array.from(T.wh,(h,i)=>cat[i]===c?(c===3?11.5:c<2?Math.min(h,c?1.2:1.0):h):0);if(c===2)W.hw=Float32Array.from(T.hw,h=>h+1.7);sc.add(wallMesh(W,1,mats[c]));sc.add(wallMesh(W,-1,mats[c]))}
  /* top trim along the alley walls */
  {const W=Object.create(T);W.wh=Float32Array.from(T.wh,(h,i)=>cat[i]===2?.0:-.3)}
  /* ----- start arch ----- */
@@ -117,6 +120,7 @@ function buildHarbor(T){const d=T.d,N=T.N,r=rngf(8*77+5),sc=new THREE.Scene(),H=
  /* ----- scatter helper (land only, away from the road) ----- */
  const rd=(x,z)=>{let b=1e9;for(let i=0;i<N;i+=2){const dd=Math.hypot(x-T.x[i],z-T.z[i]);if(dd<b)b=dd}return b};
  const scatter=(cnt,lo,hi,fn)=>{const out=[];for(let t=0;t<cnt*30&&out.length<cnt;t++){const x=-640+r()*1280,z=-640+r()*1280;if(WATER(x,z)||Math.abs(x)>700)continue;const q=rd(x,z);if(q<lo||q>=hi)continue;fn(x,z,out,q)}return out};
+ harborTunnels(sc,T,H);
  harborDress(sc,T,H,{r,rd,WATER,occ,frame,cat});
  /* bollards on the quay edge */
  {const bl=[];for(let z=20;z<310;z+=22)bl.push([216.5,.5,z,.5,1,.5]);for(let x=216;x<500;x+=22)bl.push([x,.5,6.5,.5,1,.5]);instB(sc,new THREE.CylinderGeometry(1,1,1,6),flat(0x2a2f36),bl)}
@@ -155,6 +159,19 @@ function buildHarbor(T){const d=T.d,N=T.N,r=rngf(8*77+5),sc=new THREE.Scene(),H=
  return sc}
 
 
+
+/* concrete dock tunnels: the road passes through a solid block, with ceiling, lights and signed portals */
+function harborTunnels(sc,T,H){
+ const ceilM=new THREE.MeshStandardMaterial({color:0x7e8186,roughness:1,side:THREE.DoubleSide}),roofM=new THREE.MeshStandardMaterial({color:0x6c7075,roughness:1,side:THREE.DoubleSide}),lampM=new THREE.MeshBasicMaterial({color:0xfff0cc}),blk=flat(0x5d6268);
+ const lamps=[];
+ for(const [a,b] of H.tuns){const hw=k=>T.hw[k]+.3;
+  sc.add(strip(T,a,b,k=>-hw(k),k=>hw(k),7.4,ceilM,6,2));
+  sc.add(strip(T,a,b,k=>-hw(k)-1.2,k=>hw(k)+1.2,11.6,roofM,10,2));
+  for(let k=a+2;k<b-1;k+=Math.max(1,Math.round(7/T.sp)))for(const sd of[-.5,.5]){const f=frame(T,k,sd*T.hw[k]);lamps.push([f[0],T.y[k]+7.32,f[1],.5,.06,2.2,f[2]])}
+  for(const [k,out] of[[a,-1],[b,1]]){const f=frame(T,k,0),g=new THREE.Group();g.position.set(f[0],T.y[k],f[1]);g.rotation.y=f[2];sc.add(g);
+   const w=(T.hw[k]+1.5)*2;mesh(new THREE.BoxGeometry(w,4.4,1.0),blk,0,9.4,out*.5,g);
+   const sg=mesh(new THREE.PlaneGeometry(Math.min(w-2,13),2.2),new THREE.MeshBasicMaterial({map:T_SIGN('DOCK TUNNEL')}),0,9.4,out*1.02,g);if(out<0)sg.rotation.y=Math.PI}}
+ if(lamps.length)instB(sc,new THREE.BoxGeometry(1,1,1),lampM,lamps)}
 /* ---------- level dressing assembled from the CC0 model pack (Kenney ships/vehicles, KayKit city + cargo bits) ---------- */
 function harborDress(sc,T,H,X){const HP=P.HP;if(!HP||!HP.ready){console.warn('harbor: model pack not ready');return}
  const {r,rd,WATER,occ,frame,cat}=X,N=T.N,L={},D=n=>HP.defs[n];
@@ -181,15 +198,15 @@ function harborDress(sc,T,H,X){const HP=P.HP;if(!HP||!HP.ready){console.warn('ha
  const STACK=['cargo_A_stacked','cargo_B_stacked','cargo_A_packed','cargo_B_packed','cargo_A','cargo_B'].filter(D),SHED=['cargodepot_A','cargodepot_B','cargodepot_C','basemodule_garage','basemodule_A','basemodule_D'].filter(D),TRK=['truck','truck_flat','delivery_truck','van','tractor'].filter(D);
  const yardSpot=(x,z,rad)=>land(x,z,rad)&&x>YARD.x0&&x<YARD.x1&&z>YARD.z0&&z<YARD.z1&&rd(x,z)>16+rad&&free(x,z,rad);
  /* big sheds first */
- for(let t=0,n=0;t<400&&n<13;t++){const x=YARD.x0+r()*(YARD.x1-YARD.x0),z=YARD.z0+r()*(YARD.z1-YARD.z0),nm=pick(SHED),s=fitW(nm,24+r()*8),rad=D(nm).w*s*.62;
+ for(let t=0,n=0;t<800&&n<24;t++){const x=YARD.x0+r()*(YARD.x1-YARD.x0),z=YARD.z0+r()*(YARD.z1-YARD.z0),nm=pick(SHED),s=fitW(nm,24+r()*8),rad=D(nm).w*s*.62;
   if(!yardSpot(x,z,rad+3))continue;put(nm,x,z,Math.round(r()*2)*Math.PI/2,s);occ.push([x,z,rad+3]);smk.push([x+D(nm).w*s*.2,D(nm).h*s,z],[x-D(nm).w*s*.2,D(nm).h*s,z+D(nm).d*s*.15]);n++}
  /* stacks in tidy rows */
- for(let t=0,n=0;t<900&&n<70;t++){const x=YARD.x0+r()*(YARD.x1-YARD.x0),z=YARD.z0+r()*(YARD.z1-YARD.z0),nm=pick(STACK),yaw=Math.round(r()*2)*Math.PI/2,s=fitW(nm,/stacked/.test(nm)?5:3.4);
+ for(let t=0,n=0;t<2200&&n<190;t++){const x=YARD.x0+r()*(YARD.x1-YARD.x0),z=YARD.z0+r()*(YARD.z1-YARD.z0),nm=pick(STACK),yaw=Math.round(r()*2)*Math.PI/2,s=fitW(nm,/stacked/.test(nm)?6.5:4);
   const cols=2+((r()*3)|0),rows=1+((r()*3)|0),sp=D(nm).w*s+.25,rad=Math.max(cols,rows)*sp*.6+2;if(!yardSpot(x,z,rad))continue;
   const tintv=pick([0xffffff,0xffe0b8,0xc0d8ff,0xffb8a8,0xc8ffd0]);
   for(let a=0;a<cols;a++)for(let b=0;b<rows;b++)put(nm,x+Math.cos(yaw)*(a-cols/2)*sp+Math.sin(yaw)*(b-rows/2)*sp,z-Math.sin(yaw)*(a-cols/2)*sp+Math.cos(yaw)*(b-rows/2)*sp,yaw,s,{tint:tintv});
   occ.push([x,z,rad]);n++}
- for(let t=0,n=0;t<300&&n<16;t++){const x=YARD.x0+r()*(YARD.x1-YARD.x0),z=YARD.z0+r()*(YARD.z1-YARD.z0),nm=pick(TRK),s=fit(nm,3.4);if(!yardSpot(x,z,5))continue;put(nm,x,z,r()*6.28,s);occ.push([x,z,5]);n++}
+ for(let t=0,n=0;t<600&&n<24;t++){const x=YARD.x0+r()*(YARD.x1-YARD.x0),z=YARD.z0+r()*(YARD.z1-YARD.z0),nm=pick(TRK),s=fit(nm,3.4);if(!yardSpot(x,z,5))continue;put(nm,x,z,r()*6.28,s);occ.push([x,z,5]);n++}
  for(let t=0,n=0;t<300&&n<8;t++){const x=YARD.x0+r()*(YARD.x1-YARD.x0),z=YARD.z0+r()*(YARD.z1-YARD.z0),nm=pick(['drill_structure','structure_tall','structure_low','watertower'].filter(D)),s=fit(nm,nm==='watertower'?22:16);if(!nm||!yardSpot(x,z,10))continue;put(nm,x,z,Math.round(r()*3)*Math.PI/2,s);occ.push([x,z,10]);if(nm!=='watertower')smk.push([x,D(nm).h*s,z]);n++}
  for(let t=0,n=0;t<400&&n<6;t++){const x=-640+r()*1280,z=-640+r()*500,nm=pick(['windturbine_tall','windturbine_low'].filter(D));if(!nm||!land(x,z,6)||rd(x,z)<60||!free(x,z,12))continue;put(nm,x,z,r()*6.28,fit(nm,40));occ.push([x,z,12]);n++}
  /* 4) crate rows on the west quay edge (x<215, z 60..310): stay >14 m from the asphalt */
@@ -198,15 +215,23 @@ function harborDress(sc,T,H,X){const HP=P.HP;if(!HP||!HP.ready){console.warn('ha
  /* small boats tied up around the piers (the only boat models available that aren't medieval) */
  const wl=-1.8;
  for(const [x,z,yaw] of[[290,150,.3],[300,205,-.5],[276,115,1.2],[236,230,0],[238,60,1.4],[236,290,.1]]){const nm=r()<.5?'boat_large':'boat_small';if(D(nm))put(nm,x,z,yaw,fitW(nm,5.2),{y:wl-.05})}
- /* 7) grass: soft green patches on the open ground, bushes and tufts along the verges, more trees */
- {const gp=[],gm=new THREE.MeshStandardMaterial({color:0x6fae52,roughness:1,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
-  for(let t=0;t<2600&&gp.length<190;t++){const x=-640+r()*1280,z=-640+r()*1280,rad=7+r()*13;if(!land(x,z,rad)||rd(x,z)<10+rad*.5||!free(x,z,rad*.5))continue;gp.push([x,-.045,z,rad,1,rad*(.7+r()*.5)])}
-  if(gp.length){const im=instB(sc,new THREE.CircleGeometry(1,12),gm,gp.map(q=>[q[0],q[1],q[2],q[3],q[5],1]));im.rotation.x=0;
-   /* circles lie in XY: rotate each instance flat */const o=new THREE.Object3D();gp.forEach((q,i)=>{o.position.set(q[0],q[1],q[2]);o.rotation.set(-Math.PI/2,0,r()*6.28);o.scale.set(q[3],q[5],1);o.updateMatrix();im.setMatrixAt(i,o.matrix)});im.instanceMatrix.needsUpdate=true}
-  const GR=['bush'].filter(D),TR=['Tree_02','Tree_04','Tree_05','Tree_07'].filter(n=>P.BLD&&P.BLD[n]),HB2=['Bush_01','Bush_02'].filter(n=>P.BLD&&P.BLD[n]);
-  for(let t=0,n=0;t<3000&&n<260;t++){const x=-640+r()*1280,z=-640+r()*1280,q=rd(x,z);if(!land(x,z,3)||q<9||q>70||!free(x,z,2))continue;put('bush',x,z,r()*6.28,fit('bush',1.2+r()*1.6),{y:-.04,tint:pick([0xffffff,0xd8f0c0,0xbfe0a0])});occ.push([x,z,1.5]);n++}
-  /* kerbside bushes along the open road shoulders */
-  for(let k=8;k<N;k+=Math.round(16/T.sp)){if(H.alleys.some(a=>k>=a[0]-2&&k<=a[1]+2)||(k>=H.rest[0]-2&&k<=H.rest[1]+2)||(k>=H.pier[0]-2&&k<=H.pier[1]+2))continue;const sd=r()<.5?-1:1,f=frame(T,k,sd*(T.hw[k]+10+r()*5));if(!land(f[0],f[1],2)||!free(f[0],f[1],1.5))continue;put('bush',f[0],f[1],r()*6.28,fit('bush',1.4+r()),{y:-.04});occ.push([f[0],f[1],1.5])}}
+ /* 7) street walls: continuous rows of buildings behind a pavement on every open road, each row taller than the one before, so the skyline stays hidden */
+ const openK=k=>!(H.alleys.some(q=>k>=q[0]-3&&k<=q[1]+3)||(k>=H.rest[0]-3&&k<=H.rest[1]+3)||(k>=H.pier[0]-3&&k<=H.pier[1]+3)||H.tuns.some(q=>k>=q[0]-4&&k<=q[1]+4));
+ {const paveM=new THREE.MeshStandardMaterial({map:T_PAVE(),roughness:1,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
+  let k=0;while(k<N){if(!openK(k)){k++;continue}let e=k;while(e+1<N&&openK(e+1))e++;if(e-k>6)for(const sd of[-1,1])sc.add(strip(T,k,e,q=>sd*(T.hw[q]+1.5),q=>sd*(T.hw[q]+4.9),.12,paveM,3,2));k=e+1}}
+ const ROWS=[0,1,2];
+ for(const row of ROWS)for(const sd of[-1,1]){let k=2;
+  while(k<N-2){if(!openK(k)){k+=2;continue}
+   const nm=pick(BLDS);if(!nm)break;const w0=D(nm).w,d0=D(nm).d,wt=(row?12:8.5)+r()*(row?9:6),s=wt/w0,wp=w0*s,dp=d0*s,sy=(row?1.5:1.0)+r()*(row?1.4:.8);
+   const hwk=T.hw[k],lat=sd*(hwk+8+row*17+dp/2+r()*2),f=frame(T,k,lat),yaw=Math.atan2(-Math.cos(T.psi[k])*sd,Math.sin(T.psi[k])*sd),half=Math.hypot(wp,dp)/2*.9;
+   if(rd(f[0],f[1])-half>=hwk+6&&free(f[0],f[1],half*.85)&&land(f[0],f[1],half*.7)){put(nm,f[0],f[1],yaw,s,{sy,tint:pick(ROOF)});occ.push([f[0],f[1],half*.85]);if(r()<.1)smk.push([f[0],D(nm).h*s*sy+.2,f[1]]);k+=Math.max(1,Math.round((wp+(r()<.22?3+r()*7:.5))/T.sp))}
+   else k+=2}}
+ /* trees and hedges along the pavement edge (pack models, not pots) */
+ {const pkInst=(nm,rows)=>{const q=P.BLD&&P.BLD[nm];if(!q||!P.PROPKIT||!rows.length)return;const im=new THREE.InstancedMesh(q.g.clone(),P.PROPKIT.MAT,rows.length),o=new THREE.Object3D();rows.forEach((w,i)=>{o.position.set(w[0],w[1],w[2]);o.rotation.set(0,w[3],0);o.scale.setScalar(w[4]);o.updateMatrix();im.setMatrixAt(i,o.matrix)});im.frustumCulled=false;im.userData.ptProp=nm;sc.add(im)};
+  const TRN=['Tree_02','Tree_04','Tree_05','Tree_07'].filter(n=>P.BLD&&P.BLD[n]),HGN=['Bush_01','Bush_02'].filter(n=>P.BLD&&P.BLD[n]),tr={},hg={};
+  for(let k=6;k<N;k+=Math.round(15/T.sp)){if(!openK(k))continue;const sd=(k/Math.round(15/T.sp))%2?1:-1,f=frame(T,k,sd*(T.hw[k]+5.7));if(!land(f[0],f[1],2)||!free(f[0],f[1],1.2))continue;const nm=pick(TRN);if(!nm)break;(tr[nm]=tr[nm]||[]).push([f[0],.12,f[1],r()*6.28,1.1+r()*.6]);occ.push([f[0],f[1],1.4])}
+  for(let k=3;k<N;k+=Math.round(6/T.sp)){if(!openK(k)||r()<.35)continue;const sd=r()<.5?-1:1,f=frame(T,k,sd*(T.hw[k]+5.2));if(!land(f[0],f[1],1.5)||!free(f[0],f[1],1))continue;const nm=pick(HGN);if(!nm)break;(hg[nm]=hg[nm]||[]).push([f[0],.12,f[1],r()*6.28,1+r()*.5]);occ.push([f[0],f[1],.9])}
+  for(const n in tr)pkInst(n,tr[n]);for(const n in hg)pkInst(n,hg[n])}
  /* 8) drifting smoke from chimneys, sheds and cranes */
  if(smk.length){const cv=document.createElement('canvas');cv.width=cv.height=64;const g=cv.getContext('2d'),gr=g.createRadialGradient(32,32,0,32,32,32);[[0,.7],[.4,.4],[.7,.14],[1,0]].forEach(([o,a])=>gr.addColorStop(o,`rgba(235,235,235,${a})`));g.fillStyle=gr;g.fillRect(0,0,64,64);
   const tx=new THREE.CanvasTexture(cv),puffs=[],grp=new THREE.Group();sc.add(grp);const C=7;
