@@ -131,7 +131,7 @@ function city(sc,T){
      const nm=TREES[Math.floor(r()*TREES.length)],big=nm.indexOf('Tree')==0,sc_=big?1.0+r()*.8:1.1+r()*.6;(out[nm]=out[nm]||[]).push([x,T.terr(x,z),z,r()*6.28,sc_,1]);log.push({n:nm,x,z,y:0,fr:1.4,sk:.3,s:sc_});c++}pk++}}
  /* pack-themed lots: community gardens (FarmLand grid + greenhouse + fences + crates), well plazas and fenced ponds */
  {const B=P.BLD,add_=(nm,x,z,yaw,sc_,y)=>{if(!B[nm])return;(out[nm]=out[nm]||[]).push([x,y===undefined?T.terr(x,z):y,z,yaw,sc_,2]);},
-  fence=(cx,cz,R,gap,sf)=>{const len=3*sf,n=Math.max(8,Math.floor(6.283*R/len));for(let k=0;k<n;k++){const a=k/n*6.283;if(Math.abs(((a-gap+9.42)%6.283)-3.14)>3.14-.22)continue;const x=cx+Math.cos(a)*R,z=cz+Math.sin(a)*R;if(near(x,z)<T.hw[nearest(x,z)]+5)continue;add_('WoodFence_02',x,z,-(a+1.5708),sf)}},
+  fence=(cx,cz,R,gap,sf)=>{const len=3*sf,n=Math.max(8,Math.floor(6.283*R/len));for(let k=0;k<n;k++){const a=k/n*6.283;if(Math.abs(((a-gap+9.42)%6.283)-3.14)>3.14-.22)continue;const x=cx+Math.cos(a)*R,z=cz+Math.sin(a)*R;if(near(x,z)<T.hw[nearest(x,z)]+5)continue;(add_('WoodFence_02',x,z,-(a+1.5708),sf),P.addSeg&&P.addSeg(T,x+Math.sin(a)*1.5*sf,z-Math.cos(a)*1.5*sf,x-Math.sin(a)*1.5*sf,z+Math.cos(a)*1.5*sf,.2))}},
   FL=Object.keys(B).filter(n=>/^FarmLand_/.test(n));
   let lots=0;for(let t=0;t<1500&&lots<34;t++){const cx=x0-90+r()*(x1-x0+180),cz=z0-90+r()*(z1-z0+180),d=near(cx,cz);if(d<24||d>150||!clear(cx,cz,17))continue;const kind=lots%3,R=kind===0?15:kind===1?11:12;
    placed.push([cx,cz,R+2]);lots++;const gap=Math.atan2(rz[nearest(cx,cz)]-cz,rx[nearest(cx,cz)]-cx);
@@ -203,7 +203,7 @@ function lotsAll(sc,T){
  const log=sc.userData.props||[],placed=[],out={},bs=T.barnSite;
  const clear=(x,z,rad)=>{for(const q of placed)if(Math.hypot(q[0]-x,q[1]-z)<q[2]+rad)return false;for(const p of log)if(Math.hypot(p.x-x,p.z-z)<(p.fr||2)+rad)return false;return true};
  const add_=(nm,x,z,yaw,sc_,sink)=>{if(!B[nm])return;(out[nm]=out[nm]||[]).push([x,T.terr(x,z)-(sink||0),z,yaw,sc_,2])};
- const fence=(cx,cz,R,gap,sf)=>{const len=3*sf,n=Math.max(8,Math.floor(6.283*R/len));for(let k=0;k<n;k++){const a=k/n*6.283;if(Math.abs(((a-gap+9.42)%6.283)-3.14)>3.14-.2)continue;const x=cx+Math.cos(a)*R,z=cz+Math.sin(a)*R;if(near(x,z)<6)continue;add_('WoodFence_02',x,z,-(a+1.5708),sf,.1)}};
+ const fence=(cx,cz,R,gap,sf)=>{const len=3*sf,n=Math.max(8,Math.floor(6.283*R/len));for(let k=0;k<n;k++){const a=k/n*6.283;if(Math.abs(((a-gap+9.42)%6.283)-3.14)>3.14-.2)continue;const x=cx+Math.cos(a)*R,z=cz+Math.sin(a)*R;if(near(x,z)<6)continue;(add_('WoodFence_02',x,z,-(a+1.5708),sf,.1),P.addSeg&&P.addSeg(T,x+Math.sin(a)*1.5*sf,z-Math.cos(a)*1.5*sf,x-Math.sin(a)*1.5*sf,z+Math.cos(a)*1.5*sf,.2))}};
  const FL=Object.keys(B).filter(n=>/^FarmLand_/.test(n)),TR=['Tree_02','Tree_04','Tree_05','Tree_07'].filter(n=>B[n]);
  let n=0;const want=cfg[0],kinds=cfg[1];
  for(let t=0;t<2500&&n<want;t++){const k=kinds[n%kinds.length],R=k==='f'?14:k==='h'?13:k==='o'?15:11,i=Math.floor(r()*rx.length),side=r()<.5?-1:1,off=rh[i]+R+7+r()*60,c=Math.cos(T.psi[i*2]),sn=Math.sin(T.psi[i*2]),cx=rx[i]+c*side*off,cz=rz[i]-sn*side*off;

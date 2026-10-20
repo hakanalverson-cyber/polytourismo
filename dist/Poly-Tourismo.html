@@ -7891,12 +7891,12 @@ function dressRA(T,sc){
  const gm=M_(0x9a8460,{roughness:1});for(const c of corners){const a=Math.max(0,c.a-2),b=c.b+2;strip([[a,b]],c.dir>0?-1:1,2.4,11,.03,gm,6)}
  /* ---- guardrail: outside of corners, far from the racing line ---- */
  {const rail=M_(0xa9b2b6,{metalness:.5,roughness:.5,side:THREE.DoubleSide}),posts=[],pm=[];
-  for(const c of corners){const side=c.dir>0?-1:1;const pos=[],idx=[];const a=c.a,b=c.b,n=b-a;for(let q=0;q<=n;q++){const k=(a+q)%N,l=side*(T.hw[k]+13);pos.push(...at(k,l,.55),...at(k,l,1.0));if(q%3===0)pm.push([...at(k,l,.5),1])}
+  for(const c of corners){const side=c.dir>0?-1:1;const pos=[],idx=[];const a=c.a,b=c.b,n=b-a;for(let q=0;q<=n;q++){const k=(a+q)%N,l=side*(T.hw[k]+13);pos.push(...at(k,l,.55),...at(k,l,1.0));if(q%3===0)pm.push([...at(k,l,.5),1]);if(q<n&&P.addSeg){const p1=at(k,l,0),p2=at((a+q+1)%N,l,0);P.addSeg(T,p1[0],p1[2],p2[0],p2[2],.3)}}
    for(let q=0;q<n;q++){const i=q*2;idx.push(i,i+1,i+2,i+1,i+3,i+2)}
    const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setIndex(idx);gg.computeVertexNormals();g.add(new THREE.Mesh(gg,rail))}
   if(pm.length)inst(g,new THREE.BoxGeometry(.14,1.1,.14),M_(0x77818a),pm)}
  /* ---- tyre walls at the slow corners ---- */
- {const L=[];for(const nm of['T7','T10a','T12','T4']){const k0=M[nm];if(k0==null)continue;const side=curv[k0]>0?-1:1;for(let q=-14;q<=14;q++){const k=(k0+q+N)%N,l=side*(T.hw[k]+16);for(let h=0;h<3;h++){const p=at(k,l,.3+h*.52);L.push([p[0],p[1],p[2],1,1,0])}}}
+ {const L=[];for(const nm of['T7','T10a','T12','T4']){const k0=M[nm];if(k0==null)continue;const side=curv[k0]>0?-1:1;for(let q=-14;q<=14;q++){const k=(k0+q+N)%N,l=side*(T.hw[k]+16);for(let h=0;h<3;h++){const p=at(k,l,.3+h*.52);L.push([p[0],p[1],p[2],1,1,0]);if(h===0&&P.addPt)P.addPt(T,p[0],p[2],.6)}}}
   const im=inst(g,new THREE.CylinderGeometry(.55,.55,.5,8),M_(0x1c1e22),L)}
  /* ---- pine forest ---- */
  {const pines=[],pines2=[],round=[];const x0=T.bounds[0]+8,x1=T.bounds[1]-8,z0=T.bounds[2]+8,z1=T.bounds[3]-8;
@@ -8547,7 +8547,7 @@ function renderCareer(){const cr=P.careerRank(),rk=ST.crank==null?cr:Math.min(ST
  <div class="drv"><div><b>${car.name}${pick.alt?' ALT':''}${pick.loan?' &middot; loaner':''}</b><small>Class <span class="cls ${car.cls}">${car.cls}</span> &middot; ${car.type}${pick.loan?' &middot; no owned car fits':''}</small><div class="fxrow">${fxChip(car,!!t.gravel)}</div></div><button class="btn sm" id="evGar"><span>Garage</span></button></div>
  <div style="flex:1"></div><button class="btn go" id="evGo" ${lk?'disabled':''}><span>${lk?lk:'Start event'}</span></button>`;
  drawTrack($('evPrev'),ev.track,true);
- $('evGar').onclick=()=>openShow('garage',{player:0,cap:ev.cap,ret:'s8career',rally:ev.type==='rally'});
+ $('evGar').onclick=()=>openShow('garage',{player:0,cap:ev.cap,ret:'s8career'});
  $('evGo').onclick=()=>{if(lk)return;P.launch(Object.assign(P.eventCfg(ev,pick),{tod}))}}
 
 /* ================= STUDIO (garage + Brand Central) : native res, MSAA, bloom ================= */
@@ -8727,7 +8727,7 @@ const secMode=true;let h='',last=null;
 $('shPrev').onclick=()=>flipCar(-1);$('shNext').onclick=()=>flipCar(1);
 $('shStat').addEventListener('input',e=>{if(e.target.id==='shNm')(ST.names=ST.names||[])[SR.player]=e.target.value});
 $('shAct').onclick=()=>{const car=BYID[SR.id];
- if(SR.kind==='brand'){if(P.buy(car.id,SR.alt)){P.sfx('buy');const f=$('shFlash');f.textContent='Purchased / '+car.name+(SR.alt?' alt':'');f.classList.remove('on');void f.offsetWidth;f.classList.add('on');renderShow()}}
+ if(SR.kind==='brand'){if(P.buy(car.id,SR.alt)){P.sfx('buy');const f=$('shFlash');f.textContent='Purchased / '+car.name+(SR.alt?' alt':'');f.classList.remove('on');void f.offsetWidth;f.classList.add('on');clearTimeout(f._t);f._t=setTimeout(()=>{f.classList.remove('on');f.textContent=''},2800);renderShow()}}
  else{const it=showList().find(c=>c.id===car.id);if(it.off||!P.owns(car.id,SR.alt))return;if(SR.rally){const sv=P.SV();(sv.rsel=sv.rsel||[])[SR.player]={id:car.id,alt:SR.alt?1:0};P.save()}else if(SR.trk){const sv=P.SV();(sv.tsel=sv.tsel||[])[SR.player]={id:car.id,alt:SR.alt?1:0};P.save()}else P.setSel(SR.player,car.id,SR.alt);P.sfx('select');
   if(SR.flow){if(SR.player<ST.players-1){openShow('garage',{player:SR.player+1,cap:null,ret:'s8setup',rally:SR.rally,track:SR.trk,flow:true});return}ST.rstep=2;$('suGo').click();ST.rstep=1;return}
   leaveShow();}};
@@ -8870,7 +8870,7 @@ const hu0=hudUpdate;
 hudUpdate=()=>{hu0();const Rc=RACE;if(!Rc||!Rc.cfg||!Rc.cfg.rally)return;
  Rc.cars.forEach((c,i)=>{if(!c.human)return;const e=document.getElementById('h'+i);if(!e||!e.dataset.b)return;let el=e.querySelector('.h8pace');if(!el){el=document.createElement('div');el.className='h8pace';e.appendChild(el)}
   try{dashUpdate(Rc,c)}catch(e){if(!P._rdErr){P._rdErr=1;console.error('dash',e)}}
-  if(Rc.state==='count'){el.style.opacity=0;return}
+  if(Rc.state==='count'||Rc.cfg.circuit){el.style.opacity=0;if(el._t){el._t='';el.innerHTML=''}return}
   const n=note(c,Rc.T);let txt='',cls='';
   if(n.ev&&(!n.cor||n.ev.d<n.cor.d+15)){txt=`<b>${n.ev.t}</b><span>${Math.round(n.ev.d/10)*10} m</span>`;cls=n.ev.t==='NARROW'?'ev nr':'ev'}
   else if(n.cor){txt=`<i>${arrow(n.cor.t==='HAIRPIN'?'HAIRPIN':n.cor.g,n.cor.dir)}</i><b style="color:${(GR[n.cor.t==='HAIRPIN'?'HAIRPIN':n.cor.g]||GR[3])[1]}">${n.cor.t}</b><span>${Math.round(n.cor.d/10)*10} m</span>`;cls=n.cor.t==='HAIRPIN'?'hp':''}
@@ -9450,7 +9450,7 @@ function build(sc,T,cfg){
  /* post-and-rail fence: lines the trail and closes the yard into a paddock, leaving the trail end open as a gate */
  {const pm_=M_(0x4a3626),rm_=M_(0x8a6c4a),pg_=new THREE.BoxGeometry(.26,1.35,.26),rg_=new THREE.BoxGeometry(1,.14,.08),fg=new THREE.Group(),up=new THREE.Vector3(1,0,0);sc.add(fg);
   const run_=pts=>{let prev=null;for(const[x,z]of pts){const y=Math.max(T.terr(x,z),padY0(x,z)),po=new THREE.Mesh(pg_,pm_);po.position.set(x,y+.55,z);po.castShadow=true;fg.add(po);
-   if(prev){const dx=x-prev[0],dz=z-prev[2],dy=y-prev[1],len=Math.hypot(dx,dy,dz);for(const h of[.35,.7,1.05]){const r=new THREE.Mesh(rg_,rm_);r.scale.x=len;r.castShadow=true;r.position.set((x+prev[0])/2,(y+prev[1])/2+h,(z+prev[2])/2);r.quaternion.setFromUnitVectors(up,new THREE.Vector3(dx,dy,dz).normalize());fg.add(r)}}prev=[x,y,z]}};
+   if(prev){if(P.addSeg)P.addSeg(T,prev[0],prev[2],x,z,.22);const dx=x-prev[0],dz=z-prev[2],dy=y-prev[1],len=Math.hypot(dx,dy,dz);for(const h of[.35,.7,1.05]){const r=new THREE.Mesh(rg_,rm_);r.scale.x=len;r.castShadow=true;r.position.set((x+prev[0])/2,(y+prev[1])/2+h,(z+prev[2])/2);r.quaternion.setFromUnitVectors(up,new THREE.Vector3(dx,dy,dz).normalize());fg.add(r)}}prev=[x,y,z]}};
   for(const sd of[-1,1]){const arr=[];for(let i=Math.round(nT*.8);i<nT;i+=1){const a=tp[Math.max(0,i-2)],b=tp[Math.min(nT,i+2)],tx=b[0]-a[0],tz=b[1]-a[1],tl=Math.hypot(tx,tz)||1;{const px=tp[i][0]+(-tz/tl)*3.4*sd,pz=tp[i][1]+(tx/tl)*3.4*sd,ddx=px-best.x,ddz=pz-best.z;if(ddx*fx+ddz*fz<18.5)break;arr.push([px,pz])}}arr.push(lw(sd*3.4,17));run_(arr)}
   /* paddock around the barn (local frame): back + both sides, front pieces either side of the gate */
   const FX=12,FZ0=-10,FZ1=17,pts_=[],seg=(x0,z0,x1,z1)=>{const n=Math.max(1,Math.round(Math.hypot(x1-x0,z1-z0)/3.6)),o=[];for(let i=0;i<=n;i++){const[wx,wz]=lw(x0+(x1-x0)*i/n,z0+(z1-z0)*i/n);o.push([wx,wz])}return o};
@@ -9749,7 +9749,7 @@ function city(sc,T){
      const nm=TREES[Math.floor(r()*TREES.length)],big=nm.indexOf('Tree')==0,sc_=big?1.0+r()*.8:1.1+r()*.6;(out[nm]=out[nm]||[]).push([x,T.terr(x,z),z,r()*6.28,sc_,1]);log.push({n:nm,x,z,y:0,fr:1.4,sk:.3,s:sc_});c++}pk++}}
  /* pack-themed lots: community gardens (FarmLand grid + greenhouse + fences + crates), well plazas and fenced ponds */
  {const B=P.BLD,add_=(nm,x,z,yaw,sc_,y)=>{if(!B[nm])return;(out[nm]=out[nm]||[]).push([x,y===undefined?T.terr(x,z):y,z,yaw,sc_,2]);},
-  fence=(cx,cz,R,gap,sf)=>{const len=3*sf,n=Math.max(8,Math.floor(6.283*R/len));for(let k=0;k<n;k++){const a=k/n*6.283;if(Math.abs(((a-gap+9.42)%6.283)-3.14)>3.14-.22)continue;const x=cx+Math.cos(a)*R,z=cz+Math.sin(a)*R;if(near(x,z)<T.hw[nearest(x,z)]+5)continue;add_('WoodFence_02',x,z,-(a+1.5708),sf)}},
+  fence=(cx,cz,R,gap,sf)=>{const len=3*sf,n=Math.max(8,Math.floor(6.283*R/len));for(let k=0;k<n;k++){const a=k/n*6.283;if(Math.abs(((a-gap+9.42)%6.283)-3.14)>3.14-.22)continue;const x=cx+Math.cos(a)*R,z=cz+Math.sin(a)*R;if(near(x,z)<T.hw[nearest(x,z)]+5)continue;(add_('WoodFence_02',x,z,-(a+1.5708),sf),P.addSeg&&P.addSeg(T,x+Math.sin(a)*1.5*sf,z-Math.cos(a)*1.5*sf,x-Math.sin(a)*1.5*sf,z+Math.cos(a)*1.5*sf,.2))}},
   FL=Object.keys(B).filter(n=>/^FarmLand_/.test(n));
   let lots=0;for(let t=0;t<1500&&lots<34;t++){const cx=x0-90+r()*(x1-x0+180),cz=z0-90+r()*(z1-z0+180),d=near(cx,cz);if(d<24||d>150||!clear(cx,cz,17))continue;const kind=lots%3,R=kind===0?15:kind===1?11:12;
    placed.push([cx,cz,R+2]);lots++;const gap=Math.atan2(rz[nearest(cx,cz)]-cz,rx[nearest(cx,cz)]-cx);
@@ -9821,7 +9821,7 @@ function lotsAll(sc,T){
  const log=sc.userData.props||[],placed=[],out={},bs=T.barnSite;
  const clear=(x,z,rad)=>{for(const q of placed)if(Math.hypot(q[0]-x,q[1]-z)<q[2]+rad)return false;for(const p of log)if(Math.hypot(p.x-x,p.z-z)<(p.fr||2)+rad)return false;return true};
  const add_=(nm,x,z,yaw,sc_,sink)=>{if(!B[nm])return;(out[nm]=out[nm]||[]).push([x,T.terr(x,z)-(sink||0),z,yaw,sc_,2])};
- const fence=(cx,cz,R,gap,sf)=>{const len=3*sf,n=Math.max(8,Math.floor(6.283*R/len));for(let k=0;k<n;k++){const a=k/n*6.283;if(Math.abs(((a-gap+9.42)%6.283)-3.14)>3.14-.2)continue;const x=cx+Math.cos(a)*R,z=cz+Math.sin(a)*R;if(near(x,z)<6)continue;add_('WoodFence_02',x,z,-(a+1.5708),sf,.1)}};
+ const fence=(cx,cz,R,gap,sf)=>{const len=3*sf,n=Math.max(8,Math.floor(6.283*R/len));for(let k=0;k<n;k++){const a=k/n*6.283;if(Math.abs(((a-gap+9.42)%6.283)-3.14)>3.14-.2)continue;const x=cx+Math.cos(a)*R,z=cz+Math.sin(a)*R;if(near(x,z)<6)continue;(add_('WoodFence_02',x,z,-(a+1.5708),sf,.1),P.addSeg&&P.addSeg(T,x+Math.sin(a)*1.5*sf,z-Math.cos(a)*1.5*sf,x-Math.sin(a)*1.5*sf,z+Math.cos(a)*1.5*sf,.2))}};
  const FL=Object.keys(B).filter(n=>/^FarmLand_/.test(n)),TR=['Tree_02','Tree_04','Tree_05','Tree_07'].filter(n=>B[n]);
  let n=0;const want=cfg[0],kinds=cfg[1];
  for(let t=0;t<2500&&n<want;t++){const k=kinds[n%kinds.length],R=k==='f'?14:k==='h'?13:k==='o'?15:11,i=Math.floor(r()*rx.length),side=r()<.5?-1:1,off=rh[i]+R+7+r()*60,c=Math.cos(T.psi[i*2]),sn=Math.sin(T.psi[i*2]),cx=rx[i]+c*side*off,cz=rz[i]-sn*side*off;
@@ -9869,6 +9869,40 @@ function cover(sc,T){
 const bw0=buildWorld;buildWorld=function(T){const sc=bw0.apply(this,arguments);try{city(sc,T)}catch(e){console.warn('city',e)}try{tunnel(sc,T)}catch(e){console.warn('tunnel',e)}try{lotsAll(sc,T)}catch(e){console.warn('lots',e)}try{cover(sc,T)}catch(e){console.warn('cover',e)}try{lamps(sc,T)}catch(e){console.warn('lamps',e)}return sc};
 const at0=P.applyTod;P.applyTod=function(sc,T,key){const r=at0.apply(this,arguments);try{if(T&&T.d&&T.d.city)setPano(sc,key)}catch(e){console.warn('pano',e)}try{WIN.value=key==='night'?1.5:(key==='sunset'||key==='dawn')?.3:0;const g=sc&&sc.userData&&sc.userData.lamps;if(g){g.visible=key==='night'||key==='dawn'||key==='sunset';const pm=sc.userData.lampPool;if(pm)pm.material.color.setScalar(key==='night'?1:key==='dawn'||key==='sunset'?.45:0);if(g.visible&&sc.userData.lampPos&&sc.userData.lampPos.length)ensureLights(sc)}}catch(e){console.warn('lampTod',e)}return r};
 const uv0=updateVisual;updateVisual=function(c,T,t){const r=uv0.apply(this,arguments);try{if(c===(RACE&&(RACE.cars.find(q=>q.human)||RACE.cars[0])))lampFrame();leanShadow(c)}catch(e){if(!window._lfw){window._lfw=1;console.warn('lampFrame',e&&e.stack||e)}}return r};
+})();
+
+/* ===== Poly Tourismo v9 layer: solid (every barrier, fence, tyre wall, bale, pole and tunnel mound is a real collider, in every mode) ===== */
+(function v9solid(){
+'use strict';
+const P=window.PT8;
+const NAMES={bale:.9,barrels:.7,bollard:.35,crates:.85,dumpster:1.25,boulderG:1.25,boulderR:1.25,boulderS:1.1,cairn:.8,hoodoo:1.0,pole:.3,snowpole:.25,lamp:.35,logs:1.0,stump:.5,post:.3,cactus:.5,busstop:.9};
+const X=T=>T._bx||(T._bx={segs:[],pts:[]});
+P.addSeg=(T,x1,z1,x2,z2,r)=>{if(!T)return;X(T).segs.push([x1,z1,x2,z2,r||.3]);T._bg=null};
+P.addPt=(T,x,z,r)=>{if(!T)return;X(T).pts.push([x,z,r||.5]);T._bg=null};
+/* collect colliders from the finished world */
+function collect(sc,T){const x=X(T),log=sc.userData.props||[],L=P.PROPLIB||{};let prev=null;
+ for(const p of log){if(p.n==='fencepost'){if(prev&&Math.hypot(prev.x-p.x,prev.z-p.z)<4.8)x.segs.push([prev.x,prev.z,p.x,p.z,.22]);prev=p;continue}
+  prev=null;const r=NAMES[p.n];if(r){const f=L[p.n]&&L[p.n].fr?Math.min(1.6,L[p.n].fr*.8):r;x.pts.push([p.x,p.z,Math.max(.3,f*(p.s||1)*.9)])}}
+ /* tunnels: the mound / roof sides and end caps are solid, the carriageway stays open (its own kerb walls already collide) */
+ for(const[a,b]of T.tunnels||[]){const N=T.N,city=!!(T.d&&T.d.city);
+  for(const sd of[-1,1]){let pv=null;for(let k=a;k<=b;k+=2){const i=k%N,c=Math.cos(T.psi[i]),s=Math.sin(T.psi[i]),l=sd*(T.hw[i]+(city?1.2:15)),q=[T.x[i]+c*l,T.z[i]-s*l];if(pv)x.segs.push([pv[0],pv[1],q[0],q[1],.4]);pv=q}
+   if(!city)for(const k of[a,b]){const i=k%N,c=Math.cos(T.psi[i]),s=Math.sin(T.psi[i]);const l0=sd*(T.hw[i]+15),l1=sd*(T.hw[i]+1.6);x.segs.push([T.x[i]+c*l0,T.z[i]-s*l0,T.x[i]+c*l1,T.z[i]-s*l1,.4])}}}
+ T._bg=null}
+function grid(T){const x=X(T),g=new Map(),put=(k,o)=>{let l=g.get(k);if(!l){l=[];g.set(k,l)}l.push(o)};
+ for(const s of x.segs){const x0=Math.floor(Math.min(s[0],s[2])/8),x1=Math.floor(Math.max(s[0],s[2])/8),z0=Math.floor(Math.min(s[1],s[3])/8),z1=Math.floor(Math.max(s[1],s[3])/8);for(let a=x0;a<=x1;a++)for(let b=z0;b<=z1;b++)put(a+','+b,s)}
+ for(const p of x.pts)put(Math.floor(p[0]/8)+','+Math.floor(p[1]/8),p);
+ T._bg=g;return g}
+let cd=0;
+function hit(Rc,c,v,nx,nz){if(cd>0)return;cd=.3;Rc.shake=Math.max(Rc.shake||0,Math.min(1,v/16));if(P.sfx)P.sfx('crash')}
+function bStep(Rc,dt){const T=Rc.T;if(!T||Rc.state!=='race')return;cd-=dt;const g=T._bg||grid(T);if(!g.size)return;
+ for(const c of Rc.cars){if(!c.human||c.fin||c.respT>0||c.exp>0)continue;const cx=Math.floor(c.x/8),cz=Math.floor(c.z/8),gy=T.terr?T.terr(c.x,c.z):c.y;if(c.y-gy>3.2)continue;
+  for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const l=g.get((cx+a)+','+(cz+b));if(!l)continue;
+   for(const s of l){let qx,qz,r;if(s.length===5){const dx=s[2]-s[0],dz=s[3]-s[1],ll=dx*dx+dz*dz||1,t=Math.max(0,Math.min(1,((c.x-s[0])*dx+(c.z-s[1])*dz)/ll));qx=s[0]+dx*t;qz=s[1]+dz*t;r=s[4]}else{qx=s[0];qz=s[1];r=s[2]}
+    const ex=c.x-qx,ez=c.z-qz,d=Math.hypot(ex,ez),R=r+1.0;if(d>=R||d<.001)continue;const nx=ex/d,nz=ez/d,vn=c.vx*nx+c.vz*nz;c.x+=nx*(R-d);c.z+=nz*(R-d);
+    if(vn<0){c.vx-=1.25*vn*nx;c.vz-=1.25*vn*nz;c.vx*=.88;c.vz*=.88;if(-vn>2.2)hit(Rc,c,-vn,nx,nz)}}}}}
+const bw=buildWorld;buildWorld=function(T){const sc=bw.apply(this,arguments);try{collect(sc,T)}catch(e){console.warn('solid',e)}return sc};
+
+const st0=step;step=function(dt){st0.apply(this,arguments);try{if(RACE)bStep(RACE,dt)}catch(e){if(!P._sErr){P._sErr=1;console.warn('solid',e)}}};
 })();
 
 /* ===== Poly Tourismo v9 layer: perf (performance options: presets, pixel density cap, FPS counter, HUD DOM caching) ===== */

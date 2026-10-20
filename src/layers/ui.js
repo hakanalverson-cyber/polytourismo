@@ -272,7 +272,7 @@ function renderCareer(){const cr=P.careerRank(),rk=ST.crank==null?cr:Math.min(ST
  <div class="drv"><div><b>${car.name}${pick.alt?' ALT':''}${pick.loan?' &middot; loaner':''}</b><small>Class <span class="cls ${car.cls}">${car.cls}</span> &middot; ${car.type}${pick.loan?' &middot; no owned car fits':''}</small><div class="fxrow">${fxChip(car,!!t.gravel)}</div></div><button class="btn sm" id="evGar"><span>Garage</span></button></div>
  <div style="flex:1"></div><button class="btn go" id="evGo" ${lk?'disabled':''}><span>${lk?lk:'Start event'}</span></button>`;
  drawTrack($('evPrev'),ev.track,true);
- $('evGar').onclick=()=>openShow('garage',{player:0,cap:ev.cap,ret:'s8career',rally:ev.type==='rally'});
+ $('evGar').onclick=()=>openShow('garage',{player:0,cap:ev.cap,ret:'s8career'});
  $('evGo').onclick=()=>{if(lk)return;P.launch(Object.assign(P.eventCfg(ev,pick),{tod}))}}
 
 /* ================= STUDIO (garage + Brand Central) : native res, MSAA, bloom ================= */
@@ -452,7 +452,7 @@ const secMode=true;let h='',last=null;
 $('shPrev').onclick=()=>flipCar(-1);$('shNext').onclick=()=>flipCar(1);
 $('shStat').addEventListener('input',e=>{if(e.target.id==='shNm')(ST.names=ST.names||[])[SR.player]=e.target.value});
 $('shAct').onclick=()=>{const car=BYID[SR.id];
- if(SR.kind==='brand'){if(P.buy(car.id,SR.alt)){P.sfx('buy');const f=$('shFlash');f.textContent='Purchased / '+car.name+(SR.alt?' alt':'');f.classList.remove('on');void f.offsetWidth;f.classList.add('on');renderShow()}}
+ if(SR.kind==='brand'){if(P.buy(car.id,SR.alt)){P.sfx('buy');const f=$('shFlash');f.textContent='Purchased / '+car.name+(SR.alt?' alt':'');f.classList.remove('on');void f.offsetWidth;f.classList.add('on');clearTimeout(f._t);f._t=setTimeout(()=>{f.classList.remove('on');f.textContent=''},2800);renderShow()}}
  else{const it=showList().find(c=>c.id===car.id);if(it.off||!P.owns(car.id,SR.alt))return;if(SR.rally){const sv=P.SV();(sv.rsel=sv.rsel||[])[SR.player]={id:car.id,alt:SR.alt?1:0};P.save()}else if(SR.trk){const sv=P.SV();(sv.tsel=sv.tsel||[])[SR.player]={id:car.id,alt:SR.alt?1:0};P.save()}else P.setSel(SR.player,car.id,SR.alt);P.sfx('select');
   if(SR.flow){if(SR.player<ST.players-1){openShow('garage',{player:SR.player+1,cap:null,ret:'s8setup',rally:SR.rally,track:SR.trk,flow:true});return}ST.rstep=2;$('suGo').click();ST.rstep=1;return}
   leaveShow();}};
