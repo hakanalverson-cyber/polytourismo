@@ -309,7 +309,7 @@ const spd0=Math.hypot(c.vx,c.vz),fw=c.vx*Math.sin(c.yaw)+c.vz*Math.cos(c.yaw);
  c.driftTimer=Math.max(0,(c.driftTimer||0)-dt);
  hb=live&&c.driftTimer>0&&fw>15&&Math.abs(c.in.st)>.62&&nG>=2?1:0;
  if(!live||Math.abs(c.in.st)<.35||fw<15)c.driftTimer=0;c.drifting=!!hb;
- const sc=T.surf(c.x,c.z,c.y),mt=MATS[sc.road?(T.ice[sc.i]?'ice':'road'):(T.d.uniform?'road':T.d.off)];c.mt=mt;c.onRoad=sc.road;
+ const sc=T.surf(c.x,c.z,c.y),mt=MATS[sc.road?'road':T.d.off];c.mt=mt;c.onRoad=sc.road;
 let sr=(2.5-Math.min(spd0,40)*.03)*(hb?1.3:1)*(nG>=2?1:.25);const sy0=Math.sin(c.yaw),cy0=Math.cos(c.yaw);let vf0=c.vx*sy0+c.vz*cy0;
 c.yr+=(c.st*sr*clamp(vf0/6,-1,1)-c.yr)*Math.min(1,dt*9);c.yaw+=c.yr*dt;
 const fx_=Math.sin(c.yaw),fz_=Math.cos(c.yaw),rx=fz_,rz=-fx_;let vf=c.vx*fx_+c.vz*fz_,vr=c.vx*rx+c.vz*rz;
@@ -578,7 +578,7 @@ end=code.indexOf('let sr=',start);
 
 code=code.slice(0,start)+`
 const sc=T.surf(c.x,c.z,c.y);
-const mt=MATS[sc.road?(T.ice[sc.i]?'ice':'road'):(T.d.uniform?'road':T.d.off)];
+const mt=MATS[sc.road?'road':T.d.off];
 c.mt=mt;c.onRoad=sc.road;
 drift(c,dt,live,fw,nG>=2,!!sc.road);
 hb=c.drifting?1:0;
@@ -7902,7 +7902,7 @@ const P=window.PT8,RA=window.PT8_RA;
 if(!RA)return;
 const PI=Math.PI;
 const roadAtl={id:14,look:0,name:'Road Atlanta',desc:'braselton georgia / uphill T1 / esses / T10 / T12 dive',hw:7.5,bank:14,off:'grass',idw:.85,offs:0,amp:3,up:5,shoulder:17,
- sky:[0x3f86d2,0xcfe4f4],fog:0xcfe0ea,sun:0xfff0d0,hemi:[0xd4e8f8,0x4f7a3c],road:'#3b3d43',tod0:'day',ra:1,uniform:1,
+ sky:[0x3f86d2,0xcfe4f4],fog:0xcfe0ea,sun:0xfff0d0,hemi:[0xd4e8f8,0x4f7a3c],road:'#3b3d43',tod0:'day',ra:1,
  pts:RA.pts,walls:[],ice:[],boost:[],jumps:[]};
 D.push(roadAtl);
 P.TRACK_INFO.push({s:'TARMAC',tags:['ESSES','UPHILL T1','T10 COMPLEX','T12 DIVE']});
@@ -8242,14 +8242,17 @@ window.__optAction=k=>{if(k==='@tutorial')P.startTutorial()};
 'use strict';
 const P=window.PT8;
 P.LOG=[
+ {v:'0.06',d:'Oct 20, 2026',t:'Even road grip',items:[
+  'Every track now has the same grip along the whole road: no ice patches, and fords no longer cut grip.',
+  'Grass and other off-road ground are slippier than the road again.',
+  'Tarmac stays grippy and gravel stays slightly slippery, each at a steady level: grip no longer drops with speed on gravel.']},
  {v:'0.05',d:'Oct 20, 2026',t:'Loading scenes, rally split, podium',items:[
   'Animated podium: blocks rise, winner gets a shine, times and titles pop in.',
   'Career loads with a car cruising a city at night; Track loads with a trackside fly-by.',
   'WRC is now only the Stratos, Delta, 037, Polo and Impreza WRX Rally; the rest are Casual. R35, Civic Type R and AE86 left rally.',
   'WRC cars are phenomenal on gravel, Casual cars are good.',
   'Rally and Track garage sections start closed.',
-  'Career Cut-Up targets are much lower (max 2,000).',
-  'Road Atlanta now has the same grip across the whole surface.']},
+  'Career Cut-Up targets are much lower (max 2,000).']},
  {v:'0.04',d:'Oct 20, 2026',t:'Classes, tuning and economy',items:[
   'Pagani Zonda Cinque is now the Zonda R.',
   'Diablo, Huracan, 458 and 599 GTB moved to the low end of class A; the RS4 Avant is now upper-middle class B (and priced to match).',
@@ -8550,8 +8553,8 @@ function pickMode(m){if(m==='career'){ST.crank=null;ST.cev=null;openCareer()}els
  const g=document.createElement('button');g.innerHTML='<small>02</small> Garage';g.style.order=2;g.onclick=()=>openShow('garage',{player:0,cap:null,ret:'menu'});
  const b=document.createElement('button');b.innerHTML='<small>03</small> Brand Central';b.style.order=3;b.onclick=()=>openShow('brand',{player:0,cap:null,ret:'menu'});
  ma.append(g,b);bt[1].style.order=4;bt[1].innerHTML='<small>04</small> Settings';
- const lg=$('logo');if(lg)lg.innerHTML='POLY<br><span>GT</span><small>GRAND TOUR / V0.05</small>';
- const mt=document.querySelector('.menuTop');if(mt){mt.querySelector('.brandMark').textContent='PT / 98';const sm=mt.querySelector('small');if(sm)sm.textContent='V0.05'}
+ const lg=$('logo');if(lg)lg.innerHTML='POLY<br><span>GT</span><small>GRAND TOUR / V0.06</small>';
+ const mt=document.querySelector('.menuTop');if(mt){mt.querySelector('.brandMark').textContent='PT / 98';const sm=mt.querySelector('small');if(sm)sm.textContent='V0.06'}
  const f=document.createElement('div');f.className='mfoot';$('menu').appendChild(f);
  P.menuStats=()=>{const sv=P.SV();f.innerHTML='<span>Balance <b>'+fmtCr(sv.cr)+'</b></span><span>Career <b>'+P.RANKS[P.careerRank()].n+'</b></span><span>Races <b>'+sv.stats.races+'</b></span><span>Wins <b>'+sv.stats.wins+'</b></span><span style="margin-left:auto">Enter: play</span>'};
  P.menuStats()})();
@@ -8948,7 +8951,7 @@ const ow0=P.owns;P.owns=(id,alt)=>P._ro&&P.RALLY_CARS.includes(id)?true:ow0(id,a
 P.rallySel=p=>{const sv=P.SV();sv.rsel=sv.rsel||[];let s=sv.rsel[p];if(!s||!P.RALLY_CARS.includes(s.id))s=sv.rsel[p]={id:P.RALLY_CARS[p%P.RALLY_CARS.length],alt:0};return s};
 /* water: grip / speed drag */
 const mul0=P.mul;
-P.mul=c=>{const m=mul0(c);if(c.human&&RACE&&RACE.cfg&&RACE.cfg.rally){const o=(c.cs&&c.cs.off)||0;if(!RACE.cfg.circuit){if(o<.9){m.grip*=(.5+.45*.9)/(.5+.45*o);m.top*=(.78+.22*.9)/(.78+.22*o);m.acc*=(.6+.37*.9)/(.6+.37*o)}m.grip*=.74*(1-Math.min(.2,c.sp/110));m.top*=1.06;m.acc*=1.1;m.brk*=.52}{const dm=c.dmg||0;if(dm>0){m.acc*=1-.5*Math.pow(dm,1.2);m.top*=1-.32*dm;m.grip*=1-.14*dm;m.brk*=1-.3*dm}}if(c._hb){m.grip*=.3;m.brk*=.85;m.acc*=.8}}if(c._wet>0){const k=Math.min(1,c._wet);m.top*=1-.1*k;m.acc*=1-.18*k;m.grip*=1-.22*k;m.brk*=1-.12*k}return m};
+P.mul=c=>{const m=mul0(c);if(c.human&&RACE&&RACE.cfg&&RACE.cfg.rally){const o=(c.cs&&c.cs.off)||0;if(!RACE.cfg.circuit){if(o<.9){m.grip*=(.5+.45*.9)/(.5+.45*o);m.top*=(.78+.22*.9)/(.78+.22*o);m.acc*=(.6+.37*.9)/(.6+.37*o)}m.grip*=.72;m.top*=1.06;m.acc*=1.1;m.brk*=.52}{const dm=c.dmg||0;if(dm>0){m.acc*=1-.5*Math.pow(dm,1.2);m.top*=1-.32*dm;m.grip*=1-.14*dm;m.brk*=1-.3*dm}}if(c._hb){m.grip*=.3;m.brk*=.85;m.acc*=.8}}if(c._wet>0){const k=Math.min(1,c._wet);m.top*=1-.1*k;m.acc*=1-.18*k;m.brk*=1-.12*k}return m};
 function waterDepth(T,c){const F=T.fords;if(!F||!F.length)return 0;
  for(const f of F){const dx=c.x-f.x,dz=c.z-f.z,s=dx*f.s+dz*f.c;if(s>f.w+3||s<-f.w-3)continue;const l=dx*f.c-dz*f.s;if(Math.abs(l)>f.L*.8)continue;
   const g=T.terr?T.terr(c.x,c.z):f.y;const d=f.yw-Math.min(g,c.onRoad&&c.idx!=null?T.y[c.idx]:g);if(d>.1&&c.y-f.yw<1.1)return Math.min(1,d/.6)}

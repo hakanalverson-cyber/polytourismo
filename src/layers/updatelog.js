@@ -3,14 +3,17 @@
 'use strict';
 const P=window.PT8;
 P.LOG=[
+ {v:'0.06',d:'Oct 20, 2026',t:'Even road grip',items:[
+  'Every track now has the same grip along the whole road: no ice patches, and fords no longer cut grip.',
+  'Grass and other off-road ground are slippier than the road again.',
+  'Tarmac stays grippy and gravel stays slightly slippery, each at a steady level: grip no longer drops with speed on gravel.']},
  {v:'0.05',d:'Oct 20, 2026',t:'Loading scenes, rally split, podium',items:[
   'Animated podium: blocks rise, winner gets a shine, times and titles pop in.',
   'Career loads with a car cruising a city at night; Track loads with a trackside fly-by.',
   'WRC is now only the Stratos, Delta, 037, Polo and Impreza WRX Rally; the rest are Casual. R35, Civic Type R and AE86 left rally.',
   'WRC cars are phenomenal on gravel, Casual cars are good.',
   'Rally and Track garage sections start closed.',
-  'Career Cut-Up targets are much lower (max 2,000).',
-  'Road Atlanta now has the same grip across the whole surface.']},
+  'Career Cut-Up targets are much lower (max 2,000).']},
  {v:'0.04',d:'Oct 20, 2026',t:'Classes, tuning and economy',items:[
   'Pagani Zonda Cinque is now the Zonda R.',
   'Diablo, Huracan, 458 and 599 GTB moved to the low end of class A; the RS4 Avant is now upper-middle class B (and priced to match).',
