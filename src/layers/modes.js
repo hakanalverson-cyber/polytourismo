@@ -79,7 +79,7 @@ function trafficTick(Rc,dt){const T=Rc.T,N=T.N;spaceTraffic(Rc,dt);
   if(Rc.heavy&&t.dir>0){t.chg-=dt;if(t.chg<=0){const nl=t.tl<-.5?-.25:-.75;if(laneClear(Rc,t,nl)){t.chg=rnd(3,10);t.tl=nl}else t.chg=.7}}t.lat+=(t.tl-t.lat)*Math.min(1,dt*2);
   t.idx=(t.idx+t.dir*t.v*dt/T.sp+N)%N;placeTraffic(t,T);
   m.g.visible=!t.gapHide;m.sh.visible=!t.gapHide&&!(P.realShadows&&Rc.scene.userData.sun);
-  m.g.position.set(t.x,t.y+.83,t.z);m.g.rotation.set(t.pitch,t.yaw,0,'YXZ');m.sh.position.set(t.x,t.y+.08,t.z);m.sh.rotation.z=0}
+  m.g.position.set(t.x,t.y+.83,t.z);m.g.rotation.set(t.pitch,t.yaw,0,'YXZ');if(window.__wheels&&!t.gapHide)try{window.__wheels(m,t.v,Math.max(-1,Math.min(1,(t.tl-t.lat)*t.dir*2.5)),dt)}catch(e){}m.sh.position.set(t.x,t.y+.08,t.z);m.sh.rotation.z=0}
  for(const c of Rc.cars){if(!c.human||c.fin)continue;
   c.comboT-=dt;if(c.comboT<=0)c.combo=0;if(c.popT>0)c.popT-=dt;
   const fx_=Math.sin(c.yaw),fz_=Math.cos(c.yaw),rx_=Math.cos(c.yaw),rz_=-Math.sin(c.yaw);
