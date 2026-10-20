@@ -20,6 +20,10 @@ src=rep(src,"c.exTarget=c.safeUnw-(kind==='cut'?CUT_BACK:FALL_BACK);","c.exTarge
 src=rep(src,"SHORTCUT / SET BACK 450 M","SHORTCUT / SET BACK 10 M")
 src=rep(src,"if(d>50){explode(c,'cut');return}if(Math.abs(d)<=50){c.safeIdx=sf.i;c.safeUnw+=d}","if(d>50){if(window.PTO&&PTO.shortcutPenalty===false){c.safeIdx=sf.i;c.safeUnw+=d}else{explode(c,'cut');return}}else if(Math.abs(d)<=50){c.safeIdx=sf.i;c.safeUnw+=d}")
 src=rep(src,"explode(c,landsOnFarRoad(c)?'cut':'fall')","explode(c,landsOnFarRoad(c)&&!(window.PTO&&PTO.shortcutPenalty===false)?'cut':'fall')")
+
+# render-time ground contact: smooth the road-grade tilt and the body lift so slope changes never jitter
+src=rep(src,"const i=close.i,j=(i+2)%T.N,k=(i-2+T.N)%T.N,grade=(T.y[j]-T.y[k])/(4*T.sp),delta=wr(c.yaw-T.psi[i]);c.vTp=-Math.atan(grade*Math.cos(delta)-T.bank[i]*Math.sin(delta));c.vTr=-Math.atan(T.bank[i]*Math.cos(delta)+grade*Math.sin(delta));}","const i=close.i,j=(i+5)%T.N,k=(i-5+T.N)%T.N,grade=(T.y[j]-T.y[k])/(10*T.sp),delta=wr(c.yaw-T.psi[i]),tp_=-Math.atan(grade*Math.cos(delta)-T.bank[i]*Math.sin(delta)),tr_=-Math.atan(T.bank[i]*Math.cos(delta)+grade*Math.sin(delta)),kf_=1-Math.exp(-dtf*9);c.vTp=c.vTp===undefined?tp_:c.vTp+(tp_-c.vTp)*kf_;c.vTr=c.vTr===undefined?tr_:c.vTr+(tr_-c.vTr)*kf_;}")
+src=rep(src,"v.position.y+=lift;m.exhaustRig.position.y=v.position.y;}","c._lf=(c._lf===undefined||c.respT>.3)?lift:c._lf+(lift-c._lf)*(1-Math.exp(-dtf*12));v.position.y+=c._lf;m.exhaustRig.position.y=v.position.y;}")
 src=rep(src,"const G0=26,K=46,DM=3.6,L0=.62,RW=.38,WX=.98,WZ=1.65,IP=1.5,IR=.8,TOP=38,TOPB=52,ACC=24,BRK=40,REV=16,ROLL=3.5,DRAG=.0007,GRIP=9;","let G0=26,K=80,DM=7,L0=.62,RW=.38,WX=.98,WZ=1.65,IP=1.5,IR=.8,TOP=38,TOPB=52,ACC=24,BRK=40,REV=16,ROLL=3.5,DRAG=.0007,GRIP=9;")
 src=rep(src,"FX.length>=260","FX.length>=420")
 src=rep(src,"MS.tick(T0);R.setScissorTest","MS.tick(Math.max(0,T0));R.setScissorTest")

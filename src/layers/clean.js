@@ -2,6 +2,9 @@
 (function v9clean(){
 'use strict';
 const P=window.PT8;
+/* minimal scrollbars everywhere (replaces the default browser bars) */
+{const st=document.createElement('style');st.id='ptScroll';st.textContent='*{scrollbar-width:thin;scrollbar-color:rgba(170,195,190,.38) transparent}*::-webkit-scrollbar{width:5px;height:5px;background:transparent}*::-webkit-scrollbar-track{background:transparent}*::-webkit-scrollbar-thumb{background:rgba(170,195,190,.34);border-radius:5px;border:0}*::-webkit-scrollbar-thumb:hover{background:rgba(205,225,220,.62)}*::-webkit-scrollbar-corner{background:transparent}*::-webkit-scrollbar-button{display:none;width:0;height:0}';document.head.appendChild(st)}
+
 /* a proper chequered start line: fine grid that follows the real road surface, drawn over it */
 function startLine(sc,T){
  const old=[];sc.children.forEach(o=>{const m=o.material;if(o.isMesh&&!o.isInstancedMesh&&m&&!Array.isArray(m)&&m.map&&m.map.image&&m.map.image.width===16&&m.map.image.height===2)old.push(o)});
@@ -250,5 +253,15 @@ function cover(sc,T){
  if(cfg.nf)mk(new THREE.OctahedronGeometry(.13,0),cfg.nf*2,cfg.f,1.1,1.9,.5)}
 const bw0=buildWorld;buildWorld=function(T){const sc=bw0.apply(this,arguments);try{city(sc,T)}catch(e){console.warn('city',e)}try{tunnel(sc,T)}catch(e){console.warn('tunnel',e)}try{lotsAll(sc,T)}catch(e){console.warn('lots',e)}try{cover(sc,T)}catch(e){console.warn('cover',e)}try{lamps(sc,T)}catch(e){console.warn('lamps',e)}return sc};
 const at0=P.applyTod;P.applyTod=function(sc,T,key){const r=at0.apply(this,arguments);try{if(T&&T.d&&T.d.city)setPano(sc,key)}catch(e){console.warn('pano',e)}try{WIN.value=key==='night'?1.5:(key==='sunset'||key==='dawn')?.3:0;const g=sc&&sc.userData&&sc.userData.lamps;if(g){g.visible=key==='night'||key==='dawn'||key==='sunset';const pm=sc.userData.lampPool;if(pm)pm.material.color.setScalar(key==='night'?1:key==='dawn'||key==='sunset'?.45:0);if(g.visible&&sc.userData.lampPos&&sc.userData.lampPos.length)ensureLights(sc)}}catch(e){console.warn('lampTod',e)}return r};
+/* ---------- visual smoothing: the body, tilt and wheel travel are low-pass filtered at render time so ground-height kinks on slopes never show as jitter (physics is untouched) ---------- */
+{const uvJ=updateVisual;updateVisual=function(c,T,t){const m=c&&c.m;let S=null,dt=Math.min(.05,Math.max(.001,dtf));
+  if(m&&m.wheels){S=c._sv||(c._sv={y:c.y,p:c.pitch,r:c.roll,l:[0,0,0,0],init:0});const k=1-Math.exp(-dt/.055);
+   if(!S.init||c.respT>.4||c.exp>0){S.l=m.wheels.map(w=>w.len);S.init=1}else m.wheels.forEach((w,i)=>{S.l[i]+=(w.len-S.l[i])*k;w.len=S.l[i]})}
+  const hold=m&&m.wheels&&c.pitch,sp0=c.pitch,sr0=c.roll,sy0=c.y;
+  if(S){const kk=1-Math.exp(-dt/.05),kp=1-Math.exp(-dt/.07);if(Math.abs(c.y-S.y)>.9||c.respT>.4||c.exp>0){S.y=c.y;S.p=c.pitch;S.r=c.roll}else{S.y+=(c.y-S.y)*kk;S.p+=(c.pitch-S.p)*kp;S.r+=(c.roll-S.r)*kp}
+   /* feed the smoothed pose to the renderer only, then restore the physics state */
+   c.y=S.y;c.pitch=S.p;c.roll=S.r}
+  let out;try{out=uvJ.apply(this,arguments)}finally{if(S){c.y=sy0;c.pitch=sp0;c.roll=sr0}}return out}}
+
 const uv0=updateVisual;updateVisual=function(c,T,t){const r=uv0.apply(this,arguments);try{if(c===(RACE&&(RACE.cars.find(q=>q.human)||RACE.cars[0])))lampFrame();leanShadow(c)}catch(e){if(!window._lfw){window._lfw=1;console.warn('lampFrame',e&&e.stack||e)}}return r};
 })();

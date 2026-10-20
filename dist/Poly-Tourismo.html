@@ -365,9 +365,9 @@ m.wheels.forEach((w,i)=>{w.pv.position.set(WL[i][0],-.1-w.len,WL[i][1]);if(i<2)w
 m.sw.rotation.z=-c.st*1.2;m.drv.position.y=.5+Math.sin(t*9)*.01*c.sp/20;m.drv.rotation.z=-c.st*.12;m.drv.rotation.x=-clamp((c.vy)*.02,-.2,.2);if(m.prop)m.prop.rotation.y=t*(8+c.sp*.5);
 m.tl.emissiveIntensity=c.in.br>0?1.6:.3;
  if(m.visualModel){const v=m.visualModel;v.position.y=-.95+m.visualHeight/2;const close=T.surf(c.x,c.z,c.y);
- const over=!T.d.gravel&&close.road&&c.y-close.h<1.65;if(over){const i=close.i,j=(i+2)%T.N,k=(i-2+T.N)%T.N,grade=(T.y[j]-T.y[k])/(4*T.sp),delta=wr(c.yaw-T.psi[i]);c.vTp=-Math.atan(grade*Math.cos(delta)-T.bank[i]*Math.sin(delta));c.vTr=-Math.atan(T.bank[i]*Math.cos(delta)+grade*Math.sin(delta));}
+ const over=!T.d.gravel&&close.road&&c.y-close.h<1.65;if(over){const i=close.i,j=(i+5)%T.N,k=(i-5+T.N)%T.N,grade=(T.y[j]-T.y[k])/(10*T.sp),delta=wr(c.yaw-T.psi[i]),tp_=-Math.atan(grade*Math.cos(delta)-T.bank[i]*Math.sin(delta)),tr_=-Math.atan(T.bank[i]*Math.cos(delta)+grade*Math.sin(delta)),kf_=1-Math.exp(-dtf*9);c.vTp=c.vTp===undefined?tp_:c.vTp+(tp_-c.vTp)*kf_;c.vTr=c.vTr===undefined?tr_:c.vTr+(tr_-c.vTr)*kf_;}
  let nr=0;for(const w of m.wheels)if(w.s&&w.s.road)nr++;c.vBl=(c.vBl||0)+((over?nr/4:0)-(c.vBl||0))*(1-Math.exp(-dtf*7));if(c.vBl>.002)m.g.rotation.set(lerp(c.pitch,c.vTp,c.vBl),c.yaw,lerp(c.roll,c.vTr,c.vBl),'YXZ');
- m.g.updateMatrixWorld(true);let lift=0;for(const x of [-.78,.78])for(const z of [-1.65,1.65]){const p=m.g.localToWorld(new V(x,-.95,z)),road=T.surf(p.x,p.z,c.y+.5);if(c.y-road.h<1.65)lift=Math.max(lift,road.h+.07-p.y)}v.position.y+=lift;m.exhaustRig.position.y=v.position.y;}
+ m.g.updateMatrixWorld(true);let lift=0;for(const x of [-.78,.78])for(const z of [-1.65,1.65]){const p=m.g.localToWorld(new V(x,-.95,z)),road=T.surf(p.x,p.z,c.y+.5);if(c.y-road.h<1.65)lift=Math.max(lift,road.h+.07-p.y)}c._lf=(c._lf===undefined||c.respT>.3)?lift:c._lf+(lift-c._lf)*(1-Math.exp(-dtf*12));v.position.y+=c._lf;m.exhaustRig.position.y=v.position.y;}
  m.fl.forEach(f=>{f.visible=c.boost>0;f.scale.z=.8+Math.random()*.25});
  c.fxTime=(c.fxTime||0)+dtf;if(c.fxTime>.17){c.fxTime=0;if(c.drifting&&(c.ptBlend||0)>.72&&c.sp>22&&Math.abs(wr(Math.atan2(c.vx,c.vz)-c.yaw))>.34)for(const side of [-1,1])fx(c.x-Math.sin(c.yaw)*1.6+Math.cos(c.yaw)*side*.8,c.y-.4,c.z-Math.cos(c.yaw)*1.6-Math.sin(c.yaw)*side*.8,c.dts>.7?0xc4e1e4:0xd9ccb0,1,1.4,.3,.12,1.5);}
 
@@ -9343,7 +9343,7 @@ Object.defineProperty(P,'_to',{get:()=>_to,set:v=>{_to=!!v;upd()},configurable:t
 /* classes follow perf points so a higher-points car can never sit in a lower class than a lower-points one */
 P.CLASS_AT=[600,720,840,960];
 P.reclass=()=>{P.CARS.forEach(c=>{if(c.rallyOnly||c.trackOnly)return;const v=P.pp(c);c.cls=v<P.CLASS_AT[0]?'D':v<P.CLASS_AT[1]?'C':v<P.CLASS_AT[2]?'B':v<P.CLASS_AT[3]?'A':'S'});
- const ci=c=>P.CLS.indexOf(c.cls);P.SORTED.sort((a,b)=>ci(a)-ci(b)||P.pp(b)-P.pp(a))};
+ const ci=c=>P.CLS.indexOf(c.cls);P.SORTED.sort((a,b)=>ci(a)-ci(b)||P.pp(a)-P.pp(b))};
 P.reclass();
 /* garage and HUD read true per-gear flat-out speeds */
 P.gearTops=car=>P.GT(car).map((_,i)=>P.effTop(car,i));
@@ -9620,6 +9620,9 @@ P.animals=()=>AN;
 (function v9clean(){
 'use strict';
 const P=window.PT8;
+/* minimal scrollbars everywhere (replaces the default browser bars) */
+{const st=document.createElement('style');st.id='ptScroll';st.textContent='*{scrollbar-width:thin;scrollbar-color:rgba(170,195,190,.38) transparent}*::-webkit-scrollbar{width:5px;height:5px;background:transparent}*::-webkit-scrollbar-track{background:transparent}*::-webkit-scrollbar-thumb{background:rgba(170,195,190,.34);border-radius:5px;border:0}*::-webkit-scrollbar-thumb:hover{background:rgba(205,225,220,.62)}*::-webkit-scrollbar-corner{background:transparent}*::-webkit-scrollbar-button{display:none;width:0;height:0}';document.head.appendChild(st)}
+
 /* a proper chequered start line: fine grid that follows the real road surface, drawn over it */
 function startLine(sc,T){
  const old=[];sc.children.forEach(o=>{const m=o.material;if(o.isMesh&&!o.isInstancedMesh&&m&&!Array.isArray(m)&&m.map&&m.map.image&&m.map.image.width===16&&m.map.image.height===2)old.push(o)});
@@ -9868,6 +9871,16 @@ function cover(sc,T){
  if(cfg.nf)mk(new THREE.OctahedronGeometry(.13,0),cfg.nf*2,cfg.f,1.1,1.9,.5)}
 const bw0=buildWorld;buildWorld=function(T){const sc=bw0.apply(this,arguments);try{city(sc,T)}catch(e){console.warn('city',e)}try{tunnel(sc,T)}catch(e){console.warn('tunnel',e)}try{lotsAll(sc,T)}catch(e){console.warn('lots',e)}try{cover(sc,T)}catch(e){console.warn('cover',e)}try{lamps(sc,T)}catch(e){console.warn('lamps',e)}return sc};
 const at0=P.applyTod;P.applyTod=function(sc,T,key){const r=at0.apply(this,arguments);try{if(T&&T.d&&T.d.city)setPano(sc,key)}catch(e){console.warn('pano',e)}try{WIN.value=key==='night'?1.5:(key==='sunset'||key==='dawn')?.3:0;const g=sc&&sc.userData&&sc.userData.lamps;if(g){g.visible=key==='night'||key==='dawn'||key==='sunset';const pm=sc.userData.lampPool;if(pm)pm.material.color.setScalar(key==='night'?1:key==='dawn'||key==='sunset'?.45:0);if(g.visible&&sc.userData.lampPos&&sc.userData.lampPos.length)ensureLights(sc)}}catch(e){console.warn('lampTod',e)}return r};
+/* ---------- visual smoothing: the body, tilt and wheel travel are low-pass filtered at render time so ground-height kinks on slopes never show as jitter (physics is untouched) ---------- */
+{const uvJ=updateVisual;updateVisual=function(c,T,t){const m=c&&c.m;let S=null,dt=Math.min(.05,Math.max(.001,dtf));
+  if(m&&m.wheels){S=c._sv||(c._sv={y:c.y,p:c.pitch,r:c.roll,l:[0,0,0,0],init:0});const k=1-Math.exp(-dt/.055);
+   if(!S.init||c.respT>.4||c.exp>0){S.l=m.wheels.map(w=>w.len);S.init=1}else m.wheels.forEach((w,i)=>{S.l[i]+=(w.len-S.l[i])*k;w.len=S.l[i]})}
+  const hold=m&&m.wheels&&c.pitch,sp0=c.pitch,sr0=c.roll,sy0=c.y;
+  if(S){const kk=1-Math.exp(-dt/.05),kp=1-Math.exp(-dt/.07);if(Math.abs(c.y-S.y)>.9||c.respT>.4||c.exp>0){S.y=c.y;S.p=c.pitch;S.r=c.roll}else{S.y+=(c.y-S.y)*kk;S.p+=(c.pitch-S.p)*kp;S.r+=(c.roll-S.r)*kp}
+   /* feed the smoothed pose to the renderer only, then restore the physics state */
+   c.y=S.y;c.pitch=S.p;c.roll=S.r}
+  let out;try{out=uvJ.apply(this,arguments)}finally{if(S){c.y=sy0;c.pitch=sp0;c.roll=sr0}}return out}}
+
 const uv0=updateVisual;updateVisual=function(c,T,t){const r=uv0.apply(this,arguments);try{if(c===(RACE&&(RACE.cars.find(q=>q.human)||RACE.cars[0])))lampFrame();leanShadow(c)}catch(e){if(!window._lfw){window._lfw=1;console.warn('lampFrame',e&&e.stack||e)}}return r};
 })();
 
