@@ -106,7 +106,61 @@ src=rep(src,"c.farT=near?0:c.farT+dt;","c.farT=(near||(window.PT8&&PT8.nearBarn&
 src=rep(src,"{u:'KeyI',d:'KeyK',l:'KeyJ',r:'KeyL',h:'KeyU'}","{u:'KeyI',d:'KeyK',l:'KeyJ',r:'KeyL',h:'KeyM'}")
 src=rep(src,"{u:'Numpad8',d:'Numpad5',l:'Numpad4',r:'Numpad6',h:'Numpad0'}","{u:'KeyT',d:'KeyG',l:'KeyF',r:'KeyH',h:'KeyB'}")
 
-parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','cars10','audio','modes','tracks','tracks2','extra','race2','elim','tod','harbor','props','bld','stages','ra_data','tracks3','weather','ambience','tutorial','hud2','shade','liveries','ui','rally','trackmode','realspeed','barn','animals','perf']  if os.path.exists(f'{SRC}/layers/{n}.js')]
+# cleanup: the grey grandstand blocks go; the box skyscrapers on Midnight Overpass are replaced by pack buildings (city.js)
+src=rep(src,"if(d.id===0||d.id===3){for(let k=90;k<T.N;k+=180){","if(false){for(let k=90;k<T.N;k+=180){")
+src=rep(src,"for(let j=0;j<32;j++){const a=j/32*PI*2,h=70+r()*140","for(let j=0;j<(d.id===3?0:32);j++){const a=j/32*PI*2,h=70+r()*140")
+src=rep(src,"for(let g=0;g<3;g++){const bl=place(70,24,","for(let g=0;g<0;g++){const bl=place(70,24,")
+
+# a few models ship one malformed wheel (scrambled/stretched); when an axle's two wheels disagree in width after squaring up, the odd one becomes a mirror of its partner
+src=rep(src,"      front:k<2,angle:0\n    };\n  });","""      front:k<2,angle:0
+    };
+  });
+  {const wid=w=>{let a=1e9,b=-1e9;w.spin.children.forEach(m=>{const p=m.geometry.attributes.position;for(let n=0;n<p.count;n++){a=Math.min(a,p.getX(n));b=Math.max(b,p.getX(n))}});return b-a};
+   const mir=g=>{const o=new THREE.BufferGeometry();for(const nm in g.attributes){const a=g.attributes[nm],v=Float32Array.from(a.array),is=a.itemSize;for(let n=0;n+2<a.count;n+=3)for(let j=0;j<is;j++){const t=v[(n+1)*is+j];v[(n+1)*is+j]=v[(n+2)*is+j];v[(n+2)*is+j]=t}if(nm==='position'||nm==='normal')for(let n=0;n<a.count;n++)v[n*is]*=-1;o.setAttribute(nm,new THREE.BufferAttribute(v,is))}return o};
+   for(const[a,b2]of[[0,1],[2,3]]){const A=car.ptWheels[a],B=car.ptWheels[b2],wa=wid(A),wb=wid(B),bad=wa>wb*1.25?A:wb>wa*1.25?B:null;if(!bad)continue;const good=bad===A?B:A;
+     bad.spin.children.slice().forEach(m=>{bad.spin.remove(m)});good.spin.children.forEach(m=>{bad.spin.add(new THREE.Mesh(mir(m.geometry),m.material))});bad.pivot.position.set(-good.pivot.position.x,good.pivot.position.y,good.pivot.position.z);bad.radius=good.radius}}""")
+
+# squaring up wheels: models that bake toe/camber into the wheel meshes get their ring plane re-aligned to the axle; a scrambled wheel becomes a mirror of its partner
+src=rep(src,"      front:k<2,angle:0\n    };\n  });","""      front:k<2,angle:0
+    };
+  });
+  {const gs=w=>w.spin.children.map(m=>m.geometry),
+   pts=w=>{const o=[];for(const g of gs(w)){const p=g.attributes.position;for(let n=0;n<p.count;n++)o.push([p.getX(n),p.getY(n),p.getZ(n)])}return o},
+   wid=w=>{let a=1e9,b=-1e9;for(const q of pts(w)){a=Math.min(a,q[0]);b=Math.max(b,q[0])}return b-a},
+   ringN=w=>{const P=pts(w),bn=new Array(36).fill(0);for(const q of P){const k=Math.min(35,Math.floor((Math.atan2(q[2],q[1])+Math.PI)/(Math.PI*2)*36));bn[k]=Math.max(bn[k],Math.hypot(q[1],q[2]))}
+     const sb=bn.filter(v=>v>.05).sort((u,v)=>u-v),rm=sb.length?sb[sb.length>>1]:0,ring=P.filter(q=>{const r=Math.hypot(q[1],q[2]);return r>rm*.88&&r<rm*1.15});if(ring.length<12)return null;
+     const c=[0,0,0];ring.forEach(q=>{c[0]+=q[0];c[1]+=q[1];c[2]+=q[2]});for(let i=0;i<3;i++)c[i]/=ring.length;const C=[[0,0,0],[0,0,0],[0,0,0]];ring.forEach(q=>{const d=[q[0]-c[0],q[1]-c[1],q[2]-c[2]];for(let i=0;i<3;i++)for(let j=0;j<3;j++)C[i][j]+=d[i]*d[j]});
+     const tr=C[0][0]+C[1][1]+C[2][2];let n=[1,.01,.01];for(let k=0;k<60;k++){const m=[0,0,0];for(let i=0;i<3;i++)for(let j=0;j<3;j++)m[i]+=((i===j?tr:0)-C[i][j])*n[j];const l=Math.hypot(m[0],m[1],m[2])||1;n=[m[0]/l,m[1]/l,m[2]/l]}
+     if(n[0]<0)n=[-n[0],-n[1],-n[2]];return{n,c}},
+   mir=g=>{const o=new THREE.BufferGeometry();for(const nm in g.attributes){const a=g.attributes[nm],v=Float32Array.from(a.array),is=a.itemSize;for(let n=0;n+2<a.count;n+=3)for(let j=0;j<is;j++){const t=v[(n+1)*is+j];v[(n+1)*is+j]=v[(n+2)*is+j];v[(n+2)*is+j]=t}if(nm==='position'||nm==='normal')for(let n=0;n<a.count;n++)v[n*is]*=-1;o.setAttribute(nm,new THREE.BufferAttribute(v,is))}return o};
+   const tilt=w=>{const P=pts(w);let rm=0;P.forEach(q=>rm=Math.max(rm,Math.hypot(q[1],q[2])));const ring=P.filter(q=>Math.hypot(q[1],q[2])>rm*.9);if(ring.length<8)return 99;
+     const c=[0,0,0];ring.forEach(q=>{c[0]+=q[0];c[1]+=q[1];c[2]+=q[2]});for(let i=0;i<3;i++)c[i]/=ring.length;const C=[[0,0,0],[0,0,0],[0,0,0]];ring.forEach(q=>{const d=[q[0]-c[0],q[1]-c[1],q[2]-c[2]];for(let i=0;i<3;i++)for(let j=0;j<3;j++)C[i][j]+=d[i]*d[j]});
+     const tr=C[0][0]+C[1][1]+C[2][2];let n=[1,.01,.01];for(let k=0;k<60;k++){const m=[0,0,0];for(let i=0;i<3;i++)for(let j=0;j<3;j++)m[i]+=((i===j?tr:0)-C[i][j])*n[j];const l=Math.hypot(m[0],m[1],m[2])||1;n=[m[0]/l,m[1]/l,m[2]/l]}
+     const wv=(()=>{let a=1e9,b=-1e9;P.forEach(q=>{a=Math.min(a,q[0]);b=Math.max(b,q[0])});return b-a})();return Math.max(Math.acos(Math.min(1,Math.abs(n[0])))*57.3,wv>.36?30:0)};
+   const T_=car.ptWheels.map(tilt);
+   car.ptWheels.forEach((w,k)=>{if(T_[k]<6)return;let best=-1;car.ptWheels.forEach((o,j)=>{if(j!==k&&T_[j]<3&&(best<0||((j&1)===(k&1)&&(best&1)!==(k&1))))best=j});if(best<0)return;
+     const g=car.ptWheels[best],same=(best&1)===(k&1),sc=w.radius/g.radius;w.spin.children.slice().forEach(m=>w.spin.remove(m));
+     g.spin.children.forEach(m=>{let ng=same?m.geometry.clone():mir(m.geometry);ng.scale(1,sc,sc);w.spin.add(new THREE.Mesh(ng,m.material))});w.pivot.position.x=(same?1:-1)*0+w.pivot.position.x})}""")
+
+# squaring up wheels: models that bake toe/camber into the wheel meshes get their ring plane re-aligned to the axle; a scrambled wheel becomes a mirror of its partner
+src=rep(src,"      front:k<2,angle:0\n    };\n  });","""      front:k<2,angle:0
+    };
+  });
+  {const gs=w=>w.spin.children.map(m=>m.geometry),
+   pts=w=>{const o=[];for(const g of gs(w)){const p=g.attributes.position;for(let n=0;n<p.count;n++)o.push([p.getX(n),p.getY(n),p.getZ(n)])}return o},
+   wid=w=>{let a=1e9,b=-1e9;for(const q of pts(w)){a=Math.min(a,q[0]);b=Math.max(b,q[0])}return b-a},
+   ringN=w=>{const P=pts(w),bn=new Array(36).fill(0);for(const q of P){const k=Math.min(35,Math.floor((Math.atan2(q[2],q[1])+Math.PI)/(Math.PI*2)*36));bn[k]=Math.max(bn[k],Math.hypot(q[1],q[2]))}
+     const sb=bn.filter(v=>v>.05).sort((u,v)=>u-v),rm=sb.length?sb[sb.length>>1]:0,ring=P.filter(q=>{const r=Math.hypot(q[1],q[2]);return r>rm*.88&&r<rm*1.15});if(ring.length<12)return null;
+     const c=[0,0,0];ring.forEach(q=>{c[0]+=q[0];c[1]+=q[1];c[2]+=q[2]});for(let i=0;i<3;i++)c[i]/=ring.length;const C=[[0,0,0],[0,0,0],[0,0,0]];ring.forEach(q=>{const d=[q[0]-c[0],q[1]-c[1],q[2]-c[2]];for(let i=0;i<3;i++)for(let j=0;j<3;j++)C[i][j]+=d[i]*d[j]});
+     const tr=C[0][0]+C[1][1]+C[2][2];let n=[1,.01,.01];for(let k=0;k<60;k++){const m=[0,0,0];for(let i=0;i<3;i++)for(let j=0;j<3;j++)m[i]+=((i===j?tr:0)-C[i][j])*n[j];const l=Math.hypot(m[0],m[1],m[2])||1;n=[m[0]/l,m[1]/l,m[2]/l]}
+     if(n[0]<0)n=[-n[0],-n[1],-n[2]];return{n,c}},
+   mir=g=>{const o=new THREE.BufferGeometry();for(const nm in g.attributes){const a=g.attributes[nm],v=Float32Array.from(a.array),is=a.itemSize;for(let n=0;n+2<a.count;n+=3)for(let j=0;j<is;j++){const t=v[(n+1)*is+j];v[(n+1)*is+j]=v[(n+2)*is+j];v[(n+2)*is+j]=t}if(nm==='position'||nm==='normal')for(let n=0;n<a.count;n++)v[n*is]*=-1;o.setAttribute(nm,new THREE.BufferAttribute(v,is))}return o};
+   for(const w of car.ptWheels)for(let it=0;it<5;it++){const r=ringN(w);if(!r)break;const ang=Math.acos(Math.min(1,r.n[0]));if(ang<(it?.02:.14)||ang>.75)break;
+     const M=new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(r.n[0],r.n[1],r.n[2]),new THREE.Vector3(1,0,0)));
+     for(const g of gs(w)){g.translate(-r.c[0],-r.c[1],-r.c[2]);g.applyMatrix4(M);g.translate(r.c[0],r.c[1],r.c[2])}}
+   for(const[a,b2]of[[0,1],[2,3]]){const A=car.ptWheels[a],B=car.ptWheels[b2],wa=wid(A),wb=wid(B),bad=wa>wb*1.25?A:wb>wa*1.25?B:null;if(!bad)continue;const good=bad===A?B:A;
+     bad.spin.children.slice().forEach(m=>bad.spin.remove(m));good.spin.children.forEach(m=>bad.spin.add(new THREE.Mesh(mir(m.geometry),m.material)));bad.pivot.position.set(-good.pivot.position.x,good.pivot.position.y,good.pivot.position.z);bad.radius=good.radius}}""")
+parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','cars10','audio','modes','tracks','tracks2','extra','race2','elim','tod','harbor','props','bld','stages','ra_data','tracks3','weather','ambience','tutorial','hud2','shade','ui','rally','trackmode','realspeed','barn','animals','clean','perf']  if os.path.exists(f'{SRC}/layers/{n}.js')]
 css=open(f'{SRC}/style.css').read()
 import base64
 b64=lambda f:base64.b64encode(open(W+'/assets/'+f,'rb').read()).decode()

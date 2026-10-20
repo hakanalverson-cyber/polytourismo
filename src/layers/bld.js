@@ -28,20 +28,32 @@ put('cabinW','FarmerHouse');put('cabinR','ResidentBuilding_03');put('cabinS','Re
 put('farmhouse','FarmerHouse');put('silo','Silo_01');put('silo2','Silo_02');put('coop','ChickenCoop');put('greenhouse','GreenMouse');put('store','StoreBuilding_01');put('outhouse','Outhouses');
 put('warehouse','CommercialBuilding_01');put('shopC','CommercialBuilding_03');put('shopD','CommercialBuilding_02');
 put('towerA','CompanyBuilding_01');put('towerB','CompanyBuilding_04');put('blockA','ResidentBuilding_04');put('blockB','ResidentBuilding_05');put('blockC','ResidentBuilding_06');
+put('treeA','Tree_02');put('treeB','Tree_04');put('treeC','Tree_05');put('treeD','Tree_07');put('bushA','Bush_01');put('bushB','Bush_02');put('hay','Haystack_04');put('hay2','Haystack_01');put('well','Well_02');put('crateW','WoodenCrates_01');
 const add=(map,list)=>{const p=PLAN[map];if(!p)return;p.field=(p.field||[]).concat(list)};
 add('Pinewood Stage',[['farmhouse',1,16,120],['silo',1,16,110],['coop',1,12,80],['barn2',1,16,120],['outhouse',2,10,70]]);
 add('Highmoor Stage',[['farmhouse',1,16,130],['silo2',1,14,110],['barn2',1,16,120]]);
 add('Coastal Run',[['greenhouse',1,18,120]]);
-add('Afterhours Loop',[['towerA',2,16,100],['towerB',2,16,100],['blockA',2,16,100],['blockB',2,16,100],['blockC',1,16,100],['shopD',2,14,90]]);
 add('Harbor Lights',[['warehouse',3,16,140],['shopC',2,14,120],['shopD',1,14,120]]);
 
+/* richer scenery: pack trees and bushes through every map */
+add('Quarry Circuit',[['treeA',96,9,150],['treeB',80,9,150],['treeD',80,9,150],['treeC',48,9,150],['bushA',144,5,150],['bushB',144,5,150],['hay',6,14,120],['boulderG',20,12,260]]);
+add('Canyon Viaduct',[['bushB',96,5,150],['bushA',54,5,150],['cactus',30,8,230],['boulderR',24,12,260]]);
+add('Alpine Pass',[['treeC',128,9,150],['treeB',54,9,150],['bushB',48,5,150],['boulderG',16,12,240]]);
+add('Afterhours Loop',[['treeA',48,5,90],['treeD',48,5,90],['bushA',80,4,80],['bushB',70,4,80]]);
+add('Pinewood Stage',[['treeB',176,6,150],['treeC',176,6,150],['treeA',96,6,150],['bushA',160,4,150],['bushB',128,4,150]]);
+add('Redrock Stage',[['bushB',70,5,150],['cactus',24,6,200]]);
+add('Highmoor Stage',[['treeC',48,10,150],['bushA',144,4,150],['bushB',112,4,150],['hay2',6,10,80],['boulderG',16,12,220]]);
+add('Coastal Run',[['treeA',64,8,150],['treeD',64,8,150],['bushA',112,5,150],['bushB',80,5,150]]);
+add('Frostline Stage',[['treeC',80,8,150]]);
+add('Harbor Lights',[['bushB',22,6,100]]);
+PLAN['Road Atlanta']=PLAN['Road Atlanta']||{edge:[],field:[['treeA',64,14,150],['treeB',48,14,150],['treeD',64,14,150],['bushA',96,8,150],['bushB',96,8,150],['hay',4,16,120]]};
 /* "random grey boxes": the container offices go */
 for(const k in PLAN){const p=PLAN[k];if(p.field)p.field=p.field.filter(f=>f[0]!=='officeC')}
 
 /* ---------- farmsteads: the pack's barn, crop plots, haystacks, well, crates, feeders and trees ---------- */
-const WHT=new THREE.Color(1,1,1);const FARMS={'Pinewood Stage':2,'Highmoor Stage':1,'Coastal Run':2,'Mangrove Ford':2,'Terrace Run':1,'Autumn Ridge':2,'Road Atlanta':1};
+const WHT=new THREE.Color(1,1,1);const HAM={'Quarry Circuit':2,'Canyon Viaduct':1,'Alpine Pass':2,'Coastal Run':1,'Pinewood Stage':1,'Highmoor Stage':1,'Terrace Run':1,'Autumn Ridge':1,'Mangrove Ford':1,'Redrock Stage':1};const FARMS={'Pinewood Stage':2,'Highmoor Stage':1,'Coastal Run':2,'Mangrove Ford':2,'Terrace Run':1,'Autumn Ridge':2,'Road Atlanta':1};
 const rng=s=>{let a=s>>>0||1;return()=>((a=Math.imul(a^a>>>15,a|1),a^=a+Math.imul(a^a>>>7,a|61),((a^a>>>14)>>>0)/4294967296))};
-function farms(T,sc){const n=FARMS[T.d&&T.d.name];if(!n||T.d.flat||T.d.harbor)return;
+function farms(T,sc){const nF=FARMS[T.d&&T.d.name]||0,n=nF+(HAM[T.d&&T.d.name]||0);if(!n||T.d.flat||T.d.harbor)return;
  const N=T.N,r=rng(T.d.id*977+3),R=(a,b)=>a+(b-a)*r(),px=[],pz=[],ph=[];let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9,lo=1e9;
  for(let i=0;i<N;i++){x0=Math.min(x0,T.x[i]);x1=Math.max(x1,T.x[i]);z0=Math.min(z0,T.z[i]);z1=Math.max(z1,T.z[i]);lo=Math.min(lo,T.y[i]);if(i%2===0){px.push(T.x[i]);pz.push(T.z[i]);ph.push(T.hw[i])}}
  const near=(x,z)=>{let b=1e9,bi=0;for(let i=0;i<px.length;i++){const d=Math.hypot(x-px[i],z-pz[i])-ph[i];if(d<b){b=d;bi=i}}return[b,bi]};
@@ -55,6 +67,13 @@ function farms(T,sc){const n=FARMS[T.d&&T.d.name];if(!n||T.d.flat||T.d.harbor)re
    let mn=1e9,mx=-1e9;for(let a=0;a<12;a++){const h=T.terr(x+Math.cos(a*.5236)*16,z+Math.sin(a*.5236)*16);mn=Math.min(mn,h);mx=Math.max(mx,h)}if(mx-mn>2.2||wet(x,z))continue;
    if(!free(x,z,14))continue;site={x,z,yaw:Math.atan2(T.x[bi*2]-x,T.z[bi*2]-z)}}
   if(!site)continue;const{x,z,yaw}=site,s_=Math.sin(yaw),c_=Math.cos(yaw),W=(lx,lz)=>[x+c_*lx+s_*lz,z-s_*lx+c_*lz];
+  if(f>=nF){/* hamlet: a ring of houses around a well, with trees, bushes and hay */
+   const HS=['ResidentBuilding_01','ResidentBuilding_02','ResidentBuilding_03','ResidentBuilding_05','StoreBuilding_01','FarmerHouse'],k=4+Math.floor(r()*2),a0=R(0,6.28);
+   put('Well_02',x,z,0,1.6,.9);
+   for(let q=0;q<k;q++){const a=a0+q*6.283/k+R(-.25,.25),rr=R(10,13),[hx,hz]=[x+Math.cos(a)*rr,z+Math.sin(a)*rr];put(HS[Math.floor(r()*HS.length)],hx,hz,Math.atan2(x-hx,z-hz),6,2)}
+   for(let q=0;q<9;q++){const a=R(0,6.283),rr=R(15,24);put(['Tree_02','Tree_04','Tree_05','Tree_07','Bush_01','Bush_02'][Math.floor(r()*6)],x+Math.cos(a)*rr,z+Math.sin(a)*rr,R(0,6.283),1.6,1.2)}
+   for(const[nm,ax,az]of[['Haystack_04',4,3],['WoodenCrates_01',-4,2],['Haystack_01',3,-5],['AnimalFeeder_01',-3,-5]])put(nm,x+ax,z+az,R(0,6.28),1.4,.9);
+   continue}
   const bname=r()<.5?'Barn_02':'Barn_01';let[bx,bz]=W(0,0);put(bname,bx,bz,yaw,9,2.2);
   if(r()<.7){[bx,bz]=W(-12,2);put('FarmerHouse',bx,bz,yaw,6,2)}
   [bx,bz]=W(-7.5,-9);put(r()<.5?'Silo_01':'Silo_02',bx,bz,yaw,2.4,1.6);

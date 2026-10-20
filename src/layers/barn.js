@@ -12,7 +12,7 @@ P.barnFound=id=>!!(sv().barn&&sv().barn[id]);
 {const mk=P.makeAI;P.makeAI=function(){return mk.apply(this,arguments).map(a=>P.BARN_IDS.includes(a.id)?Object.assign(a,{id:'merc'}):a)}}
 let B=null;/* barn in the current race */
 const M_=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.92,metalness:0,flatShading:true},o||{}));
-function build(sc,T,cfg){
+function site(T,cfg){
  const N=T.N,hw=k=>T.hw[k],at=(k,l)=>{const c=Math.cos(T.psi[k]),s=Math.sin(T.psi[k]);return[T.x[k]+c*l,T.z[k]-s*l]};
  /* find calm, empty ground to one side of the road, not close to any other stretch of track */
  let best=null;
@@ -23,21 +23,24 @@ function build(sc,T,cfg){
    let dmin=1e9;for(let i=0;i<N;i+=3){const d=Math.hypot(T.x[i]-x,T.z[i]-z)-hw(i);if(d<dmin)dmin=d}
    const dy=Math.abs(ty-T.y[k]);if(dy>7||dmin<40)continue;
    const sc_=sl*3+pm*1.2+dy*.4+f*.15;if(!best||sc_<best.s)best={s:sc_,k,side,off,x,z,y:ty}}}
- if(!best)return null;
+ return best}
+function build(sc,T,cfg){
+ const N=T.N,hw=k=>T.hw[k],at=(k,l)=>{const c=Math.cos(T.psi[k]),s=Math.sin(T.psi[k]);return[T.x[k]+c*l,T.z[k]-s*l]};
+ const best=T.barnSite||site(T,cfg);if(!best)return null;
  const k=best.k,rx=at(k,best.side*(hw(k)+3)),dirx=rx[0]-best.x,dirz=rx[1]-best.z,dl=Math.hypot(dirx,dirz),fx=dirx/dl,fz=dirz/dl,yaw=Math.atan2(fx,fz);
  const pre=sc.children.slice();
- /* graded yard: level the ground around the barn so grass never pokes through the floor, blend the edges back into the hills */
+ /* the ground around the barn was graded flat when the track was sampled (see grade()), so the barn sits level on real terrain */
  const lw=(x,z)=>[best.x+x*fz+z*fx,best.z-x*fx+z*fz];
- const CX=10,ZB=-9,ZF=16,MG=5;let flatY=-1e9;
- for(let x=-CX;x<=CX;x+=2.5)for(let z=ZB;z<=ZF;z+=2.5){const[wx,wz]=lw(x,z);flatY=Math.max(flatY,T.terr(wx,wz))}
- flatY+=.1;best.y=flatY;
- const padY0=(wx,wz)=>{const dx=wx-best.x,dz=wz-best.z,x=dx*fz-dz*fx,z=dx*fx+dz*fz;return padY(x,z)};
- const padY=(x,z)=>{const d=Math.max(0,Math.abs(x)-CX,ZB-z,z-ZF),w=Math.min(1,d/MG),e=w*w*(3-2*w),[wx,wz]=lw(x,z);return flatY*(1-e)+(T.terr(wx,wz)+.05)*e};
- {const xs=[],zs=[];for(let x=-CX-MG;x<=CX+MG+.01;x+=2.5)xs.push(x);for(let z=ZB-MG;z<=ZF+MG+.01;z+=2.5)zs.push(z);
-  const pos=[],idx=[];for(const z of zs)for(const x of xs){const[wx,wz]=lw(x,z);pos.push(wx,padY(x,z),wz)}
+ const flatY=best.y;
+ const padY=(x,z)=>{const[wx,wz]=lw(x,z);return T.terr(wx,wz)+.06};
+ const padY0=(wx,wz)=>{const dx=wx-best.x,dz=wz-best.z;return padY(dx*fz-dz*fx,dx*fx+dz*fz)};
+ {const XM=14,Z0=-11,Z1=20,st=2,xs=[],zs=[];for(let x=-XM;x<=XM+.01;x+=st)xs.push(x);for(let z=Z0;z<=Z1+.01;z+=st)zs.push(z);
+  const pos=[],uv=[],idx=[];zs.forEach((z,j)=>xs.forEach((x,i)=>{const[wx,wz]=lw(x,z);pos.push(wx,T.terr(wx,wz)+.07,wz);uv.push(i/(xs.length-1),j/(zs.length-1))}));
   for(let j=0;j<zs.length-1;j++)for(let i=0;i<xs.length-1;i++){const a=j*xs.length+i,b=a+1,c=a+xs.length,d=c+1;idx.push(a,c,b,b,c,d)}
-  const pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));pg.setIndex(idx);pg.computeVertexNormals();
-  const pm=new THREE.Mesh(pg,new THREE.MeshStandardMaterial({color:0x8a7352,roughness:1,flatShading:true,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}));pm.receiveShadow=true;sc.add(pm)}
+  const pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));pg.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));pg.setIndex(idx);pg.computeVertexNormals();
+  const cv=document.createElement('canvas');cv.width=cv.height=64;{const c=cv.getContext('2d'),gr=c.createRadialGradient(32,32,8,32,32,31);gr.addColorStop(0,'rgba(150,124,88,1)');gr.addColorStop(.62,'rgba(150,124,88,.95)');gr.addColorStop(1,'rgba(150,124,88,0)');c.fillStyle=gr;c.fillRect(0,0,64,64)}
+  const tx=new THREE.CanvasTexture(cv);
+  const pm=new THREE.Mesh(pg,new THREE.MeshStandardMaterial({map:tx,transparent:true,depthWrite:false,roughness:1,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3}));pm.receiveShadow=true;sc.add(pm)}
  const g=new THREE.Group();g.position.set(best.x,best.y,best.z);g.rotation.y=yaw;sc.add(g);
  const found=P.barnFound(cfg.car);
  /* barn shell, 9 wide x 13 deep, door end toward the road (+z in local space) */
@@ -91,17 +94,25 @@ function build(sc,T,cfg){
   run_(seg(-4,FZ1,-FX,FZ1).concat(seg(-FX,FZ1,-FX,FZ0).slice(1),seg(-FX,FZ0,FX,FZ0).slice(1),seg(FX,FZ0,FX,FZ1).slice(1),seg(FX,FZ1,4,FZ1).slice(1)))}
  /* yard dressing from the pack: hay, crates, a well, trees and bushes around the barn, clear of the trail */
  if(P.BLD&&P.PROPKIT){const dress=[['Haystack_04',8,-3,.4],['Haystack_01',9.5,-.6,-.3],['Haystack_02',-8.6,-4.5,1],['WoodenCrates_01',-7.2,6,.3],['WoodenCrates_01',-8.3,7.4,-.4],['Well_02',7.8,9,0],['AnimalFeeder_01',-9,-1,1.57],['Tree_07',-14,-2,0],['Tree_04',13.5,4,1],['Tree_05',-13,12,2],['Tree_02',14,-8,3],['Bush_01',-10,10,0],['Bush_02',10.5,-7,1],['Bush_01',-11,-8,2],['Bush_02',11,13,0]];
-  for(const[nm,lx,lz,ry]of dress){const q=P.BLD[nm];if(!q)continue;const m=new THREE.Mesh(q.g.clone(),P.PROPKIT.MAT);m.position.set(lx,padY(lx,lz)-flatY,lz);m.rotation.y=ry;m.castShadow=true;m.receiveShadow=true;g.add(m)}}
+  for(const[nm,lx,lz,ry]of dress){const q=P.BLD[nm];if(!q)continue;const m=new THREE.Mesh(q.g.clone(),P.PROPKIT.MAT);m.position.set(lx,padY(lx,lz)-.06-flatY,lz);m.rotation.y=ry;m.castShadow=true;m.receiveShadow=true;g.add(m)}}
  /* a faded sign beside the trail mouth, well off the line of travel */
  {const a_=tp[1],b_=tp[3],tx=b_[0]-a_[0],tz=b_[1]-a_[1],tl=Math.hypot(tx,tz)||1,sx=tp[2][0]+(-tz/tl)*5.6,sz=tp[2][1]+(tx/tl)*5.6,sg=new THREE.Group();sg.position.set(sx,T.terr(sx,sz),sz);sg.rotation.y=Math.atan2(-tz,-tx)+PI/2;sc.add(sg);const pl=new THREE.Mesh(new THREE.BoxGeometry(.12,1.8,.12),M_(0x5a4634));pl.position.y=.9;sg.add(pl);const bd=new THREE.Mesh(new THREE.BoxGeometry(1.0,.5,.07),M_(0xb9a27a));bd.position.set(0,1.6,0);sg.add(bd)}
  /* the real thing is the pack's barn: shown closed until the reveal, then swapped for the open-door barn while the screen is black */
- let pk=null,pkMat=null;{const q=P.BLD&&P.BLD.Barn_02;if(q&&!found){pkMat=P.PROPKIT.MAT.clone();pkMat.side=THREE.DoubleSide;pk=new THREE.Mesh(q.g.clone(),pkMat);pk.castShadow=true;pk.receiveShadow=true;g.add(pk);shell.forEach(o=>o.visible=false);doors.forEach(d=>d.piv.visible=false);R.localClippingEnabled=true}}
+ let pk=null,pkMat=null;{const q=P.BLD&&P.BLD.Barn_02;if(q){pkMat=P.PROPKIT.MAT.clone();pkMat.side=THREE.DoubleSide;pk=new THREE.Mesh(q.g.clone(),pkMat);pk.castShadow=true;pk.receiveShadow=true;g.add(pk);shell.forEach(o=>o.visible=false);doors.forEach(d=>d.piv.visible=false);R.localClippingEnabled=true}}
  const door={x:best.x+fx*(D/2+2.5),z:best.z+fz*(D/2+2.5)};
  const light=new THREE.PointLight(0xffd9a0,0,18,1.6);light.position.set(0,3.2,1);g.add(light);
  B={pk,pkMat,shell,cfg,g,doors,light,car:null,found,x:best.x,z:best.z,y:best.y,fx,fz,yaw,door,D,sc,T};
  /* a found barn stays open and empty */
- if(found){doors.forEach(d=>d.piv.rotation.y=d.sd*1.75)}
+ if(found)openPk(B);
  return B}
+function openPk(b){if(!b.pk)return;b.g.updateMatrixWorld(true);const m_=b.g.matrixWorld,bx=[[1,0,0,-2.7],[-1,0,0,-2.7],[0,1,0,-4.3],[0,-1,0,0],[0,0,1,-9],[0,0,-1,5.6]];b.pkMat.clippingPlanes=bx.map(([nx,ny,nz,c])=>new THREE.Plane(new THREE.Vector3(nx,ny,nz),c).applyMatrix4(m_));b.pkMat.clipIntersection=true;b.pkMat.needsUpdate=true}
+/* level the ground under and around the barn: a gentle cut/fill pad blended into the hills (before any mesh or prop samples the terrain) */
+function grade(T,cfg){const best=site(T,cfg);if(!best)return;
+ const k=best.k,rx=(()=>{const c=Math.cos(T.psi[k]),s=Math.sin(T.psi[k]),l=best.side*(T.hw[k]+3);return[T.x[k]+c*l,T.z[k]-s*l]})(),dx=rx[0]-best.x,dz=rx[1]-best.z,dl=Math.hypot(dx,dz),fx=dx/dl,fz=dz/dl;
+ let sum=0,n=0;for(let x=-5;x<=5;x+=2.5)for(let z=-7;z<=7;z+=2.5){sum+=T.terr(best.x+x*fz+z*fx,best.z-x*fx+z*fz);n++}
+ best.y=sum/n+.05;T.barnSite=best;const t0=T.terr,fy=best.y;
+ T.terr=(x,z)=>{const h=t0(x,z),ddx=x-best.x,ddz=z-best.z,lx=ddx*fz-ddz*fx,lz=ddx*fx+ddz*fz,ax=Math.max(0,Math.abs(lx)-7.5),az=lz<-8.5?-8.5-lz:Math.max(0,lz-14),d=Math.hypot(ax,az);if(d>16)return h;const w=1-Math.min(1,d/16),e=w*w*(3-2*w);return h+(fy-h)*e}}
+const ssB=sampleTrack;sampleTrack=function(d){const T=ssB.apply(this,arguments);try{const cfg=BARNS[d&&d.name];if(cfg&&!d.gravel&&!T.barnSite)grade(T,cfg)}catch(e){console.error('barn grade',e)}return T};
 const bw=buildWorld;buildWorld=function(T){const sc=bw.apply(this,arguments);B=null;try{const cfg=BARNS[T.d&&T.d.name];if(cfg&&!(T.d&&T.d.gravel))build(sc,T,cfg)}catch(e){console.error('barn',e)}return sc};
 P.barnInfo=()=>B&&{x:B.x,y:B.y,z:B.z,door:B.door,yaw:B.yaw,found:B.found};
 P.barnT=t=>{if(BN)BN.t=t};
@@ -118,7 +129,7 @@ function barnCar(){const id=B.cfg.car,idx=P.modelOf(id,0),src=CAR_MODELS[idx];if
  const bb=new THREE.Box3().setFromObject(model),sz=bb.getSize(new THREE.Vector3()),ct=bb.getCenter(new THREE.Vector3()),k=(src.userData.gl||4.4)/Math.max(sz.x,sz.z,.001);
  ctd.position.set(-ct.x,-bb.min.y,-ct.z);grp.scale.setScalar(k);grp.rotation.y=(sz.x>sz.z?PI/2:0)+PI+.3;
  grp.position.set(0,.27,-1.1);B.g.add(grp);return{g:grp}}
-function startScene(){if(BN||!B||B.found)return;const car=B.car||barnCar();if(!car)return;B.car=car;if(B.pk){B.g.updateMatrixWorld(true);const m_=B.g.matrixWorld,bx=[[1,0,0,-2.7],[-1,0,0,-2.7],[0,1,0,-4.3],[0,-1,0,0],[0,0,1,-9],[0,0,-1,5.6]];/* clip a doorway box out of the pack barn's front wall */B.pkMat.clippingPlanes=bx.map(([nx,ny,nz,c])=>new THREE.Plane(new THREE.Vector3(nx,ny,nz),c).applyMatrix4(m_));B.pkMat.clipIntersection=true;B.pkMat.needsUpdate=true;B.doors.forEach(d=>{d.piv.visible=true;d.piv.position.z=7.35})}car.g.visible=true;
+function startScene(){if(BN||!B||B.found)return;const car=B.car||barnCar();if(!car)return;B.car=car;openPk(B);car.g.visible=true;
  BN={t:0,ph:0,cardUp:false};RACE.cars.forEach(c=>{if(c.m&&c.m.g)c.m.g.visible=false});document.body.classList.add('barnscene');const f=fadeEl();f.style.transition='opacity .6s';f.style.opacity=1;if(P.sfx)P.sfx('whoosh');prompt(false)}
 function endScene(){const id=B.cfg.car,s=sv();s.owned[id]=(s.owned[id]||0)|1;s.barn=s.barn||{};s.barn[id]=1;P.save();B.found=true;if(card)card.style.display='none';
  BN.ph=4;BN.t=0;const f=fadeEl();f.style.transition='opacity .6s';f.style.opacity=1}

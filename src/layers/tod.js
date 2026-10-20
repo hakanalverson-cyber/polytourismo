@@ -6,7 +6,7 @@ const TOD={
  dawn:{n:'DAWN',sky:[0x3f5596,0xffb08a],fog:0xe9bfa6,hemi:[0xc2c4ff,0x5b4b59,.92],sun:[0xffb272,.9,[220,60,-140]],mul:[1.04,.99,.97],add:[.012,.004,0],sat:.95,exp:1,stars:0},
  day:{n:'DAY',sky:null,fog:null,hemi:null,sun:null,mul:[1,1,1],add:[0,0,0],sat:1,exp:1,stars:0},
  sunset:{n:'SUNSET',sky:[0x2a2e6c,0xff7a3c],fog:0xe58f66,hemi:[0xffc090,0x4a3448,.88],sun:[0xff7428,1.05,[-240,42,120]],mul:[1.08,.95,.9],add:[.02,0,0],sat:1.08,exp:1.02,stars:0},
- night:{n:'NIGHT',sky:[0x03060f,0x1a2452],fog:0x0a1030,hemi:[0x5c72c4,0x0b0e1c,.62],sun:[0x93abff,.5,[120,200,-90]],mul:[.92,.97,1.1],add:[0,.003,.018],sat:.78,exp:1.12,stars:1}};
+ night:{n:'NIGHT',sky:[0x02040d,0x15214c],fog:0x080d28,hemi:[0x3b4e98,0x070a16,.3],sun:[0x7f98ff,.36,[120,200,-90]],mul:[.8,.9,1.1],add:[0,.002,.016],sat:.92,exp:1.15,stars:1}};
 P.TOD=TOD;D[3].tod0='night';if(D[5])D[5].tod0='sunset';if(D[6])D[6].tod0='dawn';P.TOD_ORDER=['dawn','day','sunset','night'];
 const U=window.TODU;
 const setU=(m,a,s)=>{U.mul.value.set(m[0],m[1],m[2]);U.add.value.set(a[0],a[1],a[2]);U.sat.value=s};
