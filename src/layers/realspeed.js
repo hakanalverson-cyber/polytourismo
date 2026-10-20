@@ -42,6 +42,8 @@ P.reclass=()=>{P.CARS.forEach(c=>{const v=P.pp(c);c.cls=v<P.CLASS_AT[0]?'D':v<P.
 P.reclass();
 /* garage and HUD read true per-gear flat-out speeds */
 P.gearTops=car=>P.GT(car).map((_,i)=>P.effTop(car,i));
+/* every car, in every mode, uses its real gearbox */
+P.CARS.forEach(c=>{if(!(c.id in P.REALGEARS))P.REALGEARS[c.id]=c.real||6});P.rallyGears(true);
 /* gravel stages: cap at 120 mph so a 200 mph car can still read a narrow stage */
 const mul0=P.mul;
 P.mul=c=>{const m=mul0(c);const Rc=RACE;if(c.human&&Rc&&Rc.cfg&&Rc.cfg.rally&&!Rc.cfg.circuit&&c.cs&&c.cs.mph>120){if(!c.cs._cf)c.cs._cf=eq(120,c.cs.acc)/c.cs.top;m.top*=c.cs._cf}return m};

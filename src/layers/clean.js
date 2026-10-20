@@ -251,7 +251,37 @@ function cover(sc,T){
  /* (grass tufts read as grey cones under the hazy grade, so only the flowers and the dry-scrub variants are kept) */
  if(!cfg.nf)mk(new THREE.IcosahedronGeometry(.5,0),Math.round(cfg.nt*.35),cfg.t,1.0,1.9,.35);
  if(cfg.nf)mk(new THREE.OctahedronGeometry(.13,0),cfg.nf*2,cfg.f,1.1,1.9,.5)}
-const bw0=buildWorld;buildWorld=function(T){const sc=bw0.apply(this,arguments);try{city(sc,T)}catch(e){console.warn('city',e)}try{tunnel(sc,T)}catch(e){console.warn('tunnel',e)}try{lotsAll(sc,T)}catch(e){console.warn('lots',e)}try{cover(sc,T)}catch(e){console.warn('cover',e)}try{lamps(sc,T)}catch(e){console.warn('lamps',e)}return sc};
+
+/* ---------- Harbor Lights: a proper harbour town of pack buildings around the docks ---------- */
+function harborTown(sc,T){
+ if(!(T.d&&T.d.harbor)||!P.BLD||!P.PROPKIT)return;
+ const N=T.N,rx=[],rz=[],rh=[];for(let i=0;i<N;i+=2){rx.push(T.x[i]);rz.push(T.z[i]);rh.push(T.hw[i])}
+ const near=(x,z)=>{let b=1e9;for(let i=0;i<rx.length;i++){const d=Math.hypot(x-rx[i],z-rz[i])-rh[i];if(d<b)b=d}return b};
+ const nearest=(x,z)=>{let b=1e9,k=0;for(let i=0;i<rx.length;i++){const d=Math.hypot(x-rx[i],z-rz[i]);if(d<b){b=d;k=i}}return k};
+ const WATER=(x,z)=>(x>215&&z>5)||z>315,land=(x,z,m)=>!WATER(x,z)&&!WATER(x+m,z)&&!WATER(x-m,z)&&!WATER(x,z+m)&&!WATER(x,z-m);
+ let seed=991,r=()=>((seed=(seed*1664525+1013904223)>>>0)/4294967296);
+ const occ=(sc.userData.occ||[]).slice(),log=sc.userData.props||(sc.userData.props=[]),out={};
+ const clear=(x,z,rad)=>{for(const q of occ)if(Math.hypot(q[0]-x,q[1]-z)<q[2]+rad)return false;return true};
+ const LOW=['ResidentBuilding_01','ResidentBuilding_02','ResidentBuilding_03','ResidentBuilding_06','CommercialBuilding_03','StoreBuilding_01','ResidentBuilding_05'],
+  MID=['CommercialBuilding_01','CommercialBuilding_02','ResidentBuilding_04','CompanyBuilding_03','CompanyBuilding_04'],TOW=['CompanyBuilding_01','CompanyBuilding_02','CompanyBuilding_03','CompanyBuilding_04','CommercialBuilding_01','ResidentBuilding_04'],
+  SHED=['Barn_01','Barn_02','GreenMouse','StoreBuilding_01','CommercialBuilding_03'];
+ const place=(list,sMin,sMax,dMin,dMax,tries,cnt,face)=>{let n=0;for(let t=0;t<tries&&n<cnt;t++){const x=-660+r()*1320,z=-660+r()*1320;if(!land(x,z,14))continue;const d=near(x,z);if(d<dMin||d>dMax)continue;
+   const nm=list[Math.floor(r()*list.length)],g=P.BLD[nm];if(!g)continue;const s=sMin+r()*(sMax-sMin),rad=Math.max(g.w,g.d)*s*.5+1.2;if(!clear(x,z,rad))continue;
+   const k=nearest(x,z),yaw=face?Math.atan2(rx[k]-x,rz[k]-z)+(Math.round(r()*2)-1)*0:(Math.round(r()*4))*Math.PI/2;occ.push([x,z,rad]);(out[nm]=out[nm]||[]).push([x,.02,z,yaw,s]);log.push({n:nm,x,z,y:.02,fr:rad,sk:.5,s});n++}return n};
+ place(SHED,1.0,1.6,26,100,3000,70,true);
+ place(LOW,1.0,1.6,26,90,9000,260,true);
+ place(MID,1.2,2.0,60,190,9000,230,true);
+ place(TOW,1.6,2.7,130,340,9000,190,true);
+ place(TOW,2.2,3.5,260,600,9000,140,true);
+ /* trees and hedges between the blocks */
+ const TR=['Tree_02','Tree_04','Tree_05','Tree_07'].filter(n=>P.BLD[n]);
+ for(let t=0,n=0;t<1500&&n<110;t++){const x=-660+r()*1320,z=-660+r()*1320;if(!land(x,z,8)||near(x,z)<12)continue;if(!clear(x,z,2))continue;const nm=TR[Math.floor(r()*TR.length)];(out[nm]=out[nm]||[]).push([x,.02,z,r()*6.28,1.1+r()*.7,1]);occ.push([x,z,1.6])}
+ const dum=new THREE.Object3D(),col=new THREE.Color();
+ for(const nm in out){const L=out[nm],im=new THREE.InstancedMesh(P.BLD[nm].g.clone(),P.PROPKIT.MAT,L.length);
+  L.forEach((q,i)=>{dum.position.set(q[0],q[1],q[2]);dum.rotation.set(0,q[3],0);dum.scale.set(q[4],q[4],q[4]);dum.updateMatrix();im.setMatrixAt(i,dum.matrix);if(q[5]===1){col.setHSL(.27+r()*.08,.35,.78+r()*.2)}else{const h=.02+r()*.12,pale=r()<.45;col.setHSL(pale?.55+r()*.1:h,.12+r()*.28,.66+r()*.28)}im.setColorAt(i,col)});
+  im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true;im.frustumCulled=false;im.castShadow=false;im.receiveShadow=false;im.userData.ptProp=nm;sc.add(im)}
+}
+const bw0=buildWorld;buildWorld=function(T){const sc=bw0.apply(this,arguments);try{city(sc,T)}catch(e){console.warn('city',e)}try{harborTown(sc,T)}catch(e){console.warn('harborTown',e)}try{tunnel(sc,T)}catch(e){console.warn('tunnel',e)}try{lotsAll(sc,T)}catch(e){console.warn('lots',e)}try{cover(sc,T)}catch(e){console.warn('cover',e)}try{lamps(sc,T)}catch(e){console.warn('lamps',e)}return sc};
 const at0=P.applyTod;P.applyTod=function(sc,T,key){const r=at0.apply(this,arguments);try{if(T&&T.d&&T.d.city)setPano(sc,key)}catch(e){console.warn('pano',e)}try{WIN.value=key==='night'?1.5:(key==='sunset'||key==='dawn')?.3:0;const g=sc&&sc.userData&&sc.userData.lamps;if(g){g.visible=key==='night'||key==='dawn'||key==='sunset';const pm=sc.userData.lampPool;if(pm)pm.material.color.setScalar(key==='night'?1:key==='dawn'||key==='sunset'?.45:0);if(g.visible&&sc.userData.lampPos&&sc.userData.lampPos.length)ensureLights(sc)}}catch(e){console.warn('lampTod',e)}return r};
 /* ---------- visual smoothing: the body, tilt and wheel travel are low-pass filtered at render time so ground-height kinks on slopes never show as jitter (physics is untouched) ---------- */
 {const uvJ=updateVisual;updateVisual=function(c,T,t){const m=c&&c.m;let S=null,dt=Math.min(.05,Math.max(.001,dtf));

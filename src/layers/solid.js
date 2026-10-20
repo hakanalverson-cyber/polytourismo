@@ -20,7 +20,7 @@ function grid(T){const x=X(T),g=new Map(),put=(k,o)=>{let l=g.get(k);if(!l){l=[]
  for(const p of x.pts)put(Math.floor(p[0]/8)+','+Math.floor(p[1]/8),p);
  T._bg=g;return g}
 let cd=0;
-function hit(Rc,c,v,nx,nz){if(cd>0)return;cd=.3;Rc.shake=Math.max(Rc.shake||0,Math.min(1,v/16));if(P.sfx)P.sfx('crash')}
+function hit(Rc,c,v,nx,nz){if(cd>0)return;cd=.3;Rc.shake=Math.max(Rc.shake||0,Math.min(1,v/16));if(P.sfx)P.sfx('crash');if(P.dmgOn&&P.dmgOn(Rc)&&P.hurt&&!((c.cdT||0)>0)){c.cdT=.35;P.hurt(Rc,c,v,nx,nz)}}
 function bStep(Rc,dt){const T=Rc.T;if(!T||Rc.state!=='race')return;cd-=dt;const g=T._bg||grid(T);if(!g.size)return;
  for(const c of Rc.cars){if(!c.human||c.fin||c.respT>0||c.exp>0)continue;const cx=Math.floor(c.x/8),cz=Math.floor(c.z/8),gy=T.terr?T.terr(c.x,c.z):c.y;if(c.y-gy>3.2)continue;
   for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const l=g.get((cx+a)+','+(cz+b));if(!l)continue;

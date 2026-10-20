@@ -37,7 +37,7 @@ function tick(Rc,dt){const T=Rc.T,en=endur(Rc),pit=Rc.pit,N=T.N;
   /* pit zone */
   const inZ=pit&&c.idx>=pit.a&&c.idx<=pit.b&&c.sp<80;c.inPit=inZ;
   if(c.human){
-   if(c.pitSvc){c.pitT+=dt;if(c.pitT>=c.pitNeed){c.tyre=1;c.fuel=1;c.pitSvc=false;c.pitDone=true;c.pitCount=(c.pitCount||0)+1;P.sfx('buy')}}
+   if(c.pitSvc){c.pitT+=dt;if(c.pitT>=c.pitNeed){c.tyre=1;c.fuel=1;c.dmg=0;c.pitSvc=false;c.pitDone=true;c.pitCount=(c.pitCount||0)+1;P.sfx('buy')}}
    else if(!c.pitDone&&c.sp<2.2&&needOf(c)>.04){c.pitSvc=true;c.pitT=0;c.pitNeed=1.3+needOf(c)*3.2;P.sfx('click')}
    if(c.sp>6)c.pitDone=false;
   }
@@ -52,7 +52,7 @@ P.aiPost=(c,dt)=>{const Rc=RACE;if(!endur(Rc)||c.human||!Rc.pit||c.fin)return;co
  if(!inZ){c.pitWant=false;c.pitSeen=false;return}
  if(!c.pitSeen){c.pitSeen=true;c.pitWant=lapsLeft>1.3&&((c.tyre!=null&&c.tyre<.42)||(c.fuel!=null&&c.fuel<.2))}
  if(c.pitWant){const I=c.in;if(c.sp>7){I.th=0;I.br=1}else I.th=Math.min(I.th,.4);
-  if(c.idx>=pit.mid&&c.sp<9){c.tyre=1;c.fuel=1;c.pitWant=false;c.pitCount=(c.pitCount||0)+1}}};
+  if(c.idx>=pit.mid&&c.sp<9){c.tyre=1;c.fuel=1;c.dmg=0;c.pitWant=false;c.pitCount=(c.pitCount||0)+1}}};
 
 /* ---------- HUD add-on ---------- */
 const hudOld=hudUpdate;

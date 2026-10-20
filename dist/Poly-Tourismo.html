@@ -5831,6 +5831,8 @@ body.barnscene #cd,body.barnscene #mm,body.barnscene #huds,body.barnscene #rlDas
 .trk .bnh{margin-left:auto;flex:none;color:#f2c76b;display:inline-flex;align-items:center;opacity:.95}
 .trk .bnh.got{color:#ffffff55}
 .chip.bn{color:#f2c76b;border-color:#f2c76b66}
+.txrow{display:flex;align-items:center;gap:8px;margin-top:6px}.txrow small{font:700 9px var(--mn);letter-spacing:.2em;color:var(--dim);text-transform:uppercase}.txrow .seg .btn{padding:3px 8px;font-size:10px}
+.txrow .seg{display:flex;flex-wrap:nowrap}.txrow .seg .btn{white-space:nowrap}
 </style><script>
 /* ===== Poly Tourismo v8 layer: core (economy, gears, AI, race flow, modes) ===== */
 (function v8core(){
@@ -5922,6 +5924,10 @@ const LOOSE=['grass','sand','snow','dirt','scrub'];
 const lerpf=(a,b,t)=>a+(b-a)*t;
 
 /* ---------------- gears: double-tap detection ---------------- */
+/* per-player transmission: PT8.TX[p] true = automatic, false = manual, undefined = follow the old global AUTO SHIFT setting */
+try{PT8.TX=JSON.parse(localStorage.getItem('pt9-tx')||'[]')}catch(e){PT8.TX=[]}if(!Array.isArray(PT8.TX))PT8.TX=[];
+PT8.setTX=(p,v)=>{PT8.TX[p]=!!v;try{localStorage.setItem('pt9-tx',JSON.stringify(PT8.TX))}catch(e){}};
+PT8.isAuto=c=>{const v=c&&c.human?PT8.TX[c.k|0]:undefined;return v===undefined||v===null?!!(window.PTO&&PTO.autoShift):!!v};
 const taps=[0,1,2,3].map(()=>({u:0,d:0}));
 addEventListener('keydown',e=>{if(e.repeat)return;for(let p=0;p<4;p++){const k=KM[p];if(e.code===k.u)taps[p].u++;if(e.code===k.d)taps[p].d++}});
 function shiftGear(c,d,auto){const cs_=c.cs||BYID.merc,G_=GT(cs_),n=clamp((c.gear|0)+(d>0?1:-1),0,G_.length-1);if(n===(c.gear|0))return false;const rr=c.sp/Math.max(1,(PT8.effTop?PT8.effTop(cs_,c.gear|0)*1.03:cs_.top*G_[c.gear|0].top)*(c.mt?c.mt.top:1));if(!auto&&d>0&&rr>=.8&&rr<=1.06){c.pb=1.1;c.perfect=1}else c.perfect=0;
@@ -5930,7 +5936,7 @@ function autoGear(c,dt,mt,fac,auto){const cs=c.cs,G_=GT(cs),NG=G_.length,g=c.gea
  if(want<g&&!(c.sp<ce(g)*.55))want=g;if(want!==g){c.gearHold=(c.gearHold||0)-dt;if(c.gearHold<=0){shiftGear(c,want>g?1:-1,auto);c.gearHold=auto?.5:.35}}else c.gearHold=.2}
 function gearLogic(c,live,dt){const p=c.k,tp=taps[p],now=performance.now();
  if(c.seenU===undefined){c.seenU=tp.u;c.seenD=tp.d;c.lastU=0;c.lastD=0}
- if(window.PTO&&PTO.autoShift){c.seenU=tp.u;c.seenD=tp.d;if(live)autoGear(c,dt||.016,c.mt||MATS.road,.93,true);return}
+ if(PT8.isAuto(c)){c.seenU=tp.u;c.seenD=tp.d;if(live)autoGear(c,dt||.016,c.mt||MATS.road,.93,true);return}
  if(tp.u!==c.seenU){c.seenU=tp.u;if(live&&c.lastU&&now-c.lastU<340){shiftGear(c,1);c.lastU=0}else c.lastU=now}
  if(tp.qu){tp.qu=0;if(live)shiftGear(c,1)}if(tp.qd){tp.qd=0;if(live)shiftGear(c,-1)}
  if(tp.d!==c.seenD){c.seenD=tp.d;if(live&&c.lastD&&now-c.lastD<340){shiftGear(c,-1);c.lastD=0}else c.lastD=now}
@@ -6916,7 +6922,7 @@ function tick(Rc,dt){const T=Rc.T,en=endur(Rc),pit=Rc.pit,N=T.N;
   /* pit zone */
   const inZ=pit&&c.idx>=pit.a&&c.idx<=pit.b&&c.sp<80;c.inPit=inZ;
   if(c.human){
-   if(c.pitSvc){c.pitT+=dt;if(c.pitT>=c.pitNeed){c.tyre=1;c.fuel=1;c.pitSvc=false;c.pitDone=true;c.pitCount=(c.pitCount||0)+1;P.sfx('buy')}}
+   if(c.pitSvc){c.pitT+=dt;if(c.pitT>=c.pitNeed){c.tyre=1;c.fuel=1;c.dmg=0;c.pitSvc=false;c.pitDone=true;c.pitCount=(c.pitCount||0)+1;P.sfx('buy')}}
    else if(!c.pitDone&&c.sp<2.2&&needOf(c)>.04){c.pitSvc=true;c.pitT=0;c.pitNeed=1.3+needOf(c)*3.2;P.sfx('click')}
    if(c.sp>6)c.pitDone=false;
   }
@@ -6931,7 +6937,7 @@ P.aiPost=(c,dt)=>{const Rc=RACE;if(!endur(Rc)||c.human||!Rc.pit||c.fin)return;co
  if(!inZ){c.pitWant=false;c.pitSeen=false;return}
  if(!c.pitSeen){c.pitSeen=true;c.pitWant=lapsLeft>1.3&&((c.tyre!=null&&c.tyre<.42)||(c.fuel!=null&&c.fuel<.2))}
  if(c.pitWant){const I=c.in;if(c.sp>7){I.th=0;I.br=1}else I.th=Math.min(I.th,.4);
-  if(c.idx>=pit.mid&&c.sp<9){c.tyre=1;c.fuel=1;c.pitWant=false;c.pitCount=(c.pitCount||0)+1}}};
+  if(c.idx>=pit.mid&&c.sp<9){c.tyre=1;c.fuel=1;c.dmg=0;c.pitWant=false;c.pitCount=(c.pitCount||0)+1}}};
 
 /* ---------- HUD add-on ---------- */
 const hudOld=hudUpdate;
@@ -7186,15 +7192,16 @@ function buildHarbor(T){const d=T.d,N=T.N,r=rngf(8*77+5),sc=new THREE.Scene(),H=
   for(const sd of[-1,1])mesh(new THREE.BoxGeometry(.8,8,.8),mat(0xdddddd),sd*(T.hw[0]+1.2),4,0,ar);
   mesh(new THREE.BoxGeometry(T.hw[0]*2+3.6,2.2,.6),new THREE.MeshBasicMaterial({map:ctex(32,4,(x,w,h)=>{for(let i=0;i<32;i++)for(let j=0;j<4;j++){x.fillStyle=(i+j)&1?'#fff':'#111';x.fillRect(i,j,1,1)}})}),0,8.4,0,ar);
   const sl=mesh(new THREE.PlaneGeometry(T.hw[0]*2,2.4),new THREE.MeshBasicMaterial({map:ctex(16,2,(x,w,h)=>{for(let i=0;i<16;i++){x.fillStyle=i&1?'#fff':'#111';x.fillRect(i,0,1,1);x.fillStyle=i&1?'#111':'#fff';x.fillRect(i,1,1,1)}})}),T.x[0],T.y[0]+.1,T.z[0],sc);sl.rotation.order='YXZ';sl.rotation.set(-Math.PI/2,T.psi[0],0)}
+ const occ=sc.userData.occ=[];
  /* ----- scatter helper (land only, away from the road) ----- */
  const rd=(x,z)=>{let b=1e9;for(let i=0;i<N;i+=2){const dd=Math.hypot(x-T.x[i],z-T.z[i]);if(dd<b)b=dd}return b};
  const scatter=(cnt,lo,hi,fn)=>{const out=[];for(let t=0;t<cnt*30&&out.length<cnt;t++){const x=-640+r()*1280,z=-640+r()*1280;if(WATER(x,z)||Math.abs(x)>700)continue;const q=rd(x,z);if(q<lo||q>=hi)continue;fn(x,z,out,q)}return out};
  /* containers (quay) */
  {const cols=[0xc0392b,0x2c6fb0,0xd98324,0x3f8a4a,0x8a8f95,0xe8e0c8];
-  const list=[];scatter(70,16,70,(x,z,o)=>{const rot=r()<.5?0:Math.PI/2,st=1+(r()*2.4|0);for(let s=0;s<st;s++)list.push([x,1.3+s*2.6,z,2.5,2.6,6.1,rot])});
+  const list=[];scatter(70,16,70,(x,z,o)=>{const rot=r()<.5?0:Math.PI/2,st=1+(r()*2.4|0);occ.push([x,z,7]);for(let s=0;s<st;s++)list.push([x,1.3+s*2.6,z,2.5,2.6,6.1,rot])});
   instB(sc,new THREE.BoxGeometry(1,1,1),flat(0xffffff),list,cols)}
  /* warehouses */
- {const list=[];scatter(26,38,170,(x,z,o)=>{const w=24+r()*30,dp=20+r()*26,h=9+r()*7;list.push([x,h/2,z,w,h,dp,(r()*4|0)*Math.PI/2])});
+ {const list=[];scatter(26,38,170,(x,z,o)=>{const w=24+r()*30,dp=20+r()*26,h=9+r()*7;occ.push([x,z,Math.max(w,dp)*.75]);list.push([x,h/2,z,w,h,dp,(r()*4|0)*Math.PI/2])});
   instB(sc,new THREE.BoxGeometry(1,1,1),flat(0xffffff),list,[0xa8664a,0x4f7f8f,0xc89a5a,0x6f8a62,0xb0554a,0xd8c27a]);
   instB(sc,new THREE.BoxGeometry(1,1,1),flat(0x555a60),list.map(p=>[p[0],p[4]+.4,p[2],p[3]*1.02,.8,p[5]*1.02,p[6]]))}
  /* alley buildings behind the facade walls: taller blocks give the skyline */
@@ -8468,6 +8475,7 @@ function drawTod(cv,trk,tod){const g=cv.getContext('2d'),W=cv.width,H=cv.height,
 /* ================= SETUP ================= */
 const MODE_NAME={ta:'TIME <em>ATTACK</em>',mp:'LOCAL <em>MULTIPLAYER</em>',cutup:'CUT<em>-UP</em>',elim:'<em>ELIMINATION</em>',rally:'<em>RALLY</em>',track:'<em>TRACK</em>'};
 const selCar=p=>{if(ST.mode==='rally'&&P.rallySel)return P.rallySel(p);if(ST.mode==='track'&&P.trackSel)return P.trackSel(p);const sv=P.SV();let s=sv.sel[p]||sv.sel[0];if(!P.owns(s.id,s.alt)){const o=P.ownedList()[0]||BYID.merc;s={id:o.id,alt:P.owns(o.id,0)?0:1};P.setSel(p,s.id,s.alt)}return s};
+const dmgOf=m=>{const v=(ST.dmgBy||{})[m];return v!==undefined?v:(m==='rally'||m==='track'?'1':'0')};
 const effTod=()=>ST.todUser||D[ST.track].tod0||'day';
 const seg=(items,cur)=>items.map(([v,l])=>`<button class="btn sm ${v===cur?'sel':''}" data-v="${v}"><span>${l}</span></button>`).join('');
 function renderSetup(){const m=ST.mode;$('suTitle').innerHTML=MODE_NAME[m];
@@ -8495,14 +8503,15 @@ function renderSetup(){const m=ST.mode;$('suTitle').innerHTML=MODE_NAME[m];
 
  if(ST.players>=2&&m!=='rally'&&m!=='track'&&m!=='ta'){const kc=(l,c)=>`<i class="kc${c?' '+c:''}">${l}</i>`,np=P.p2Keys==='numpad';cfg+=`<div class="p2kb"><h4>Player 2 keys <small>click a layout</small></h4><div class="kbs"><button class="kbo${np?'':' on'}" data-k="arrows"><div class="kg">${kc('PgUp','sh')}${kc('&uarr;','gas')}${kc('PgDn','sh')}${kc('&larr;','st')}${kc('&darr;','br')}${kc('&rarr;','st')}</div><b>Arrow keys</b><small>PgUp / PgDn shift</small></button><button class="kbo${np?' on':''}" data-k="numpad"><div class="kg">${kc('7','sh')}${kc('8','gas')}${kc('9','sh')}${kc('4','st')}${kc('5','br')}${kc('6','st')}</div><b>Numpad 8 4 5 6</b><small>7 down &middot; 9 up</small></button></div></div>`}
  if(m==='mp'||m==='elim')cfg+=`<div class="row8"><b>Weather</b><span class="seg" id="cWx">${seg(P.WX_ORDER.map(k=>[k,P.WX[k].n[0]+P.WX[k].n.slice(1).toLowerCase()]),ST.wx||'clear')}</span></div>`;
+ cfg+=`<div class="row8"><b>Damage</b><span class="seg" id="cDmg">${seg([['0','Off'],['1','On']],dmgOf(m))}</span></div>`;
  $('suCfg').innerHTML=cfg;
  const td=effTod();$('suTod').innerHTML=`<div class="tod"><h4 style="margin:0 0 7px;font:700 10px var(--mn);letter-spacing:.3em;color:var(--dim)">TIME OF DAY</h4><canvas id="todPrev" width="168" height="70"></canvas><span class="seg" id="cTod">${seg(P.TOD_ORDER.map(k=>[k,P.TOD[k].n]),td)}</span></div>`;
  drawTod($('todPrev'),ST.track,td);
  const bind=(id,k,num)=>{const e=$(id);if(e)$$('button',e).forEach(b=>b.onclick=()=>{ST[k]=num?+b.dataset.v:b.dataset.v;if(k==='players'&&(ST.mode==='mp'||ST.mode==='elim')&&ST.players+ST.cpus>8)ST.cpus=8-ST.players;renderSetup()})};
- $$('.p2kb .kbo',root).forEach(b=>b.onclick=()=>{P.setP2Keys(b.dataset.k);P.sfx('select');renderSetup()});bind('cLaps','laps',1);bind('cRL','rlaps',1);bind('cIv','iv',1);bind('cWx','wx',0);bind('cEnd','endurS',0);{const e=$('cRev');if(e)$$('button',e).forEach(b=>b.onclick=()=>{ST.rev=b.dataset.v==='1';renderSetup()})}bind('cPl','players',1);bind('cCpu','cpus',1);bind('cDif','diff',1);bind('cCc','cc',0);bind('cTime','time',1);bind('cTr','traffic',0);bind('cTod','todUser',0);
+ $$('.p2kb .kbo',root).forEach(b=>b.onclick=()=>{P.setP2Keys(b.dataset.k);P.sfx('select');renderSetup()});bind('cLaps','laps',1);bind('cRL','rlaps',1);bind('cIv','iv',1);bind('cWx','wx',0);bind('cEnd','endurS',0);{const e=$('cRev');if(e)$$('button',e).forEach(b=>b.onclick=()=>{ST.rev=b.dataset.v==='1';renderSetup()})}bind('cPl','players',1);bind('cCpu','cpus',1);bind('cDif','diff',1);bind('cCc','cc',0);bind('cTime','time',1);bind('cTr','traffic',0);bind('cTod','todUser',0);{const e=$('cDmg');if(e)$$('button',e).forEach(b=>b.onclick=()=>{(ST.dmgBy=ST.dmgBy||{})[m]=b.dataset.v;P.sfx('select');renderSetup()})}
  const np=m==='ta'?1:ST.players;let dv='<h4 style="margin:6px 0 8px;font:700 10px var(--mn);letter-spacing:.3em;color:var(--dim)">VEHICLES</h4>';
- for(let p=0;p<np;p++){const s=selCar(p),c=BYID[s.id];dv+=`<div class="drv" style="border-left-color:${['#f1f3f5','#f2c76b','#7fd68a','#ef6a5a'][p]}"><div><b>${np>1?'P'+(p+1)+' &middot; ':''}${c.name}${s.alt?' ALT':''}</b><input class="nm" data-p="${p}" maxlength="12" spellcheck="false" placeholder="Name (P${p+1})" value="${((ST.names||[])[p]||'').replace(/[<>&"]/g,'')}"><small>Class <span class="cls ${c.cls}">${c.cls}</span> &middot; ${c.type}${m==='rally'?' &middot; RALLY SPEC':''}</small><div class="fxrow">${fxChip(m==='rally'?{...c,off:Math.max(c.off,.9)}:c,!!D[ST.track].gravel)}</div></div><span class="lvth" data-id="${s.id}" data-alt="${s.alt?1:0}"></span><button class="btn sm" data-p="${p}"><span>Garage</span></button></div>`}
- $('suDrv').innerHTML=dv;$$('#suDrv .lvth',root).forEach(e=>{const t=P.livThumb&&P.livThumb(e.dataset.id,+e.dataset.alt,84);if(t)e.appendChild(t)});$$('#suDrv input.nm',root).forEach(i=>i.oninput=()=>{(ST.names=ST.names||[])[+i.dataset.p]=i.value});$$('#suDrv button',root).forEach(b=>b.onclick=()=>openShow('garage',{player:+b.dataset.p,cap:null,ret:'s8setup',rally:ST.mode==='rally',track:ST.mode==='track'}));
+ for(let p=0;p<np;p++){const s=selCar(p),c=BYID[s.id];dv+=`<div class="drv" style="border-left-color:${['#f1f3f5','#f2c76b','#7fd68a','#ef6a5a'][p]}"><div><b>${np>1?'P'+(p+1)+' &middot; ':''}${c.name}${s.alt?' ALT':''}</b><input class="nm" data-p="${p}" maxlength="12" spellcheck="false" placeholder="Name (P${p+1})" value="${((ST.names||[])[p]||'').replace(/[<>&"]/g,'')}"><small>Class <span class="cls ${c.cls}">${c.cls}</span> &middot; ${c.type}${m==='rally'?' &middot; RALLY SPEC':''}</small><div class="txrow"><small>${c.real||6}-speed</small><span class="seg txs" data-p="${p}">${seg([['0','Manual'],['1','Auto']],P.isAuto({human:true,k:p})?'1':'0')}</span></div><div class="fxrow">${fxChip(m==='rally'?{...c,off:Math.max(c.off,.9)}:c,!!D[ST.track].gravel)}</div></div><span class="lvth" data-id="${s.id}" data-alt="${s.alt?1:0}"></span><button class="btn sm" data-p="${p}"><span>Garage</span></button></div>`}
+ $('suDrv').innerHTML=dv;$$('#suDrv .lvth',root).forEach(e=>{const t=P.livThumb&&P.livThumb(e.dataset.id,+e.dataset.alt,84);if(t)e.appendChild(t)});$$('#suDrv input.nm',root).forEach(i=>i.oninput=()=>{(ST.names=ST.names||[])[+i.dataset.p]=i.value});$$('#suDrv .txs',root).forEach(e=>$$('button',e).forEach(b=>b.onclick=()=>{P.setTX(+e.dataset.p,b.dataset.v==='1');P.sfx('select');renderSetup()}));$$('#suDrv .drv > button',root).forEach(b=>b.onclick=()=>openShow('garage',{player:+b.dataset.p,cap:null,ret:'s8setup',rally:ST.mode==='rally',track:ST.mode==='track'}));
 {const sec=$('s8setup'),r2=isRL(m)&&ST.rstep===2;sec.classList.toggle('rs1',isRL(m)&&!r2);sec.classList.toggle('rs2',r2);
   let st=$('suSteps');if(!st){st=document.createElement('div');st.id='suSteps';st.className='steps';$('suTitle').after(st)}
   st.style.display=isRL(m)?'':'none';st.innerHTML=`<i class="${r2?'':'on'}">1 &middot; ${m==='track'?'Circuit':'Stage'}</i><i class="${r2?'on':''}">2 &middot; Car</i>`;
@@ -8522,6 +8531,7 @@ $('suGo').onclick=()=>{if(isRL(ST.mode)&&ST.rstep!==2){P.sfx('select');openShow(
  else if(m==='mp'){const df=[{cl:['C','B'],sk:.78},{cl:['B','A'],sk:.88},{cl:['A','S'],sk:.97}][ST.diff];cfg={mode:'mp',track:ST.track,laps:ST.laps,humans,ai:ST.cpus?P.makeAI({n:ST.cpus,classes:(ST.cc&&ST.cc!=='auto')?[ST.cc]:df.cl,skill:df.sk,rally:!!d.gravel}):[],tod,endur,rev:!!ST.rev,weather:ST.wx||'clear'}}
  else if(m==='elim'){const df=[{cl:['C','B'],sk:.78},{cl:['B','A'],sk:.88},{cl:['A','S'],sk:.97}][ST.diff],n=Math.max(1,Math.min(ST.cpus||3,8-ST.players));cfg={mode:'elim',track:ST.track,laps:99,humans,ai:P.makeAI({n,classes:(ST.cc&&ST.cc!=='auto')?[ST.cc]:df.cl,skill:df.sk,rally:!!d.gravel}),tod,endur:false,rev:!!ST.rev,interval:ST.iv||30,weather:ST.wx||'clear'}}
  else cfg={mode:'cutup',track:ST.track,time:ST.time,humans,ai:[],traffic:ST.traffic,tod};
+ cfg.dmg=dmgOf(m)==='1';
  P.launch(cfg)};
 
 /* ================= CAREER ================= */
@@ -8837,7 +8847,7 @@ function fxStep(c,Rc,dt){roost(c,Rc,dt);if(c.human)smokeFx(c,Rc,dt);const T=Rc.T
   else if(was&&c.human&&c.sp>6)P.sfx&&P.sfx('splash',Math.min(.8,c.sp/60))}
  if(c.human&&Rc.cfg&&!Rc.cfg.noFx)stageFx(c,T,dt)}
 const sc0=stepCar;
-stepCar=function(c,dt){const Rc=RACE,rl=!!(Rc&&Rc.cfg&&Rc.cfg.rally&&c.human&&!c.forceAI),auto=!!(window.PTO&&PTO.autoShift);
+stepCar=function(c,dt){const Rc=RACE,rl=!!(Rc&&Rc.cfg&&Rc.cfg.rally&&c.human&&!c.forceAI),auto=P.isAuto(c);
  if(rl){if(c.rg===undefined)c.rg=c.gear|0;if(!auto)c.gear=c.rg;c._hb=!(S&&S.drv&&S.drv.length>1)&&Rc.state==='race'&&!c.fin&&c.respT<=0&&!(c.exp>0)&&!paused&&down.has(RK[curP].hb)}
  sc0.apply(this,arguments);
  if(rl){if(auto)c.rg=c.gear|0;else c.gear=c.rg;handbrakeFx(c,dt)}
@@ -8880,11 +8890,12 @@ hudUpdate=()=>{hu0();const Rc=RACE;if(!Rc||!Rc.cfg||!Rc.cfg.rally)return;
 const REAL0={lr:6,ford:6,merc:7,ster:7,art:8,ferr:7,zen:7,must:6,urus:8,m8:8,amg:9,gtr:6,por:7,p1:7};const REAL=new Proxy(REAL0,{get:(t,k)=>t[k]||(P.BYID[k]&&P.BYID[k].real)||6});
 const gtOrig={};
 function gearTable(n){const R0=n<=2?2.2:n<=4?3.4:n===5?4.2:n===6?5.2:n===7?5.8:n===8?6.4:7.2,t=[];for(let i=0;i<n;i++){const u=n>1?i/(n-1):1;t.push({top:Math.pow(R0,-Math.pow(1-u,1.5)),acc:.66+.44*Math.pow(1-u,1.5)})}return t}
-function rallyGears(on){for(const id in REAL){const car=BYID[id];if(!car)continue;const arr=P.GT(car);
+function rallyGears(on){on=true;for(const id in REAL){const car=BYID[id];if(!car)continue;const arr=P.GT(car);
  if(on){if(!gtOrig[id])gtOrig[id]=arr.map(g=>({top:g.top,acc:g.acc}));const t=gearTable(REAL[id]);arr.length=0;t.forEach(g=>arr.push(g))}
  else if(gtOrig[id]){arr.length=0;gtOrig[id].forEach(g=>arr.push(g));delete gtOrig[id]}}}
 P.rallyGears=rallyGears;P.REALGEARS=REAL;
 const RK=[{dn:'KeyQ',up:'KeyE',hb:'Space',cam:'KeyC',n:['Q','E','SPACE','C']},{dn:'PageUp',up:'PageDown',hb:'ShiftRight',cam:'Slash',n:['PG UP','PG DN','R-SHIFT','/']},{dn:'KeyU',up:'KeyO',hb:'KeyM',cam:'KeyP',n:['U','O','M','P']},{dn:'KeyR',up:'KeyY',hb:'KeyB',cam:'KeyV',n:['R','Y','B','V']}];
+{const ia=P.isAuto;P.isAuto=c=>{if(c&&c.human&&RACE&&RACE.cfg&&RACE.cfg.rally&&S&&S.drv&&S.drv[S.i]){const v=P.TX[S.drv[S.i].p];if(v!==undefined&&v!==null)return !!v}return ia(c)}}
 const MOVE=['W A S D','Arrow keys','I J K L','T F G H'];P.rallyP2=np=>{MOVE[1]=np?'Numpad 8 4 5 6':'Arrow keys';Object.assign(RK[1],np?{dn:'Numpad7',up:'Numpad9',n:['7','9',RK[1].n[2],RK[1].n[3]]}:{dn:'PageUp',up:'PageDown',n:['PG UP','PG DN',RK[1].n[2],RK[1].n[3]]});[RK[1].dn,RK[1].up].forEach(x=>GAME_KEYS.add(x))};
 RK.forEach(k=>[k.dn,k.up,k.hb,k.cam].forEach(x=>GAME_KEYS.add(x)));
 let curP=0;const camPref={};const CAMS=['CHASE','HOOD','FAR CHASE'];
@@ -8897,7 +8908,7 @@ function handbrakeFx(c,dt){if(!c._hb||c.sp<5||c.exp>0)return;const st=c.in?c.in.
  c.yaw+=st*Math.min(1,c.sp/16)*1.25*dt;const f=1-.18*dt;c.vx*=f;c.vz*=f;c.drifting=true}
 addEventListener('keydown',e=>{const Rc=RACE;if(!Rc||!Rc.cfg||!Rc.cfg.rally||Rc.prep||Rc.replay||e.repeat||paused)return;const k=RK[curP],c=human(Rc);if(!c||c.forceAI||scr!=='game')return;
  if(e.code===k.cam){c.camMode=((c.camMode||0)+1)%CAMS.length;camPref[curP]=c.camMode;if(P.sfx)P.sfx('click');toast(CAMS[c.camMode])}
- else if((e.code===k.up||e.code===k.dn)&&Rc.state==='race'&&!c.fin&&!(window.PTO&&PTO.autoShift))shiftR(c,e.code===k.up?1:-1)});
+ else if((e.code===k.up||e.code===k.dn)&&Rc.state==='race'&&!c.fin&&!P.isAuto(c))shiftR(c,e.code===k.up?1:-1)});
 let tEl=null,tH=0;function toast(t){if(!tEl){tEl=document.createElement('div');tEl.id='rlToast';document.body.appendChild(tEl)}tEl.textContent=t;tEl.style.opacity=1;clearTimeout(tH);tH=setTimeout(()=>{tEl.style.opacity=0},1100)}
 /* tarmac at 200 mph: steering authority falls with speed so a tap stays a tap (lateral pull stays roughly constant above ~90 mph) */
 {const ip0=P.inPost;P.inPost=(c,dt)=>{if(ip0)ip0(c,dt);const Rc=RACE;if(Rc&&Rc.cfg&&c.human&&!c.forceAI&&c.in&&c.sp>40)c.in.st*=Math.pow(40/c.sp,.85)}}
@@ -8951,7 +8962,7 @@ function statUpdate(Rc,c){if(!stEl){stEl=document.createElement('div');stEl.id='
  stEl.style.display='flex'}
 function dashUpdate(Rc,c){const d=mkDash(),on=scr==='game'&&!Rc.prep&&!Rc.replay&&!c.fin;d.style.display=on?'flex':'none';bodyCls('rallyhud',on);if(!on){if(stEl)stEl.style.display='none';return}
  const T=Rc.T,car=c.cs||BYID.merc,G=P.GT(car),gi=Math.min(c.gear|0,G.length-1),mt=(c.mt&&c.mt.top)||1,lim=(CIR()&&P.effTop?P.effTop(car,gi)*1.03:car.top*G[gi].top)*mt,rev=.2+.8*Math.min(1.05,c.sp/Math.max(1,lim)),kmh=Math.round(c.sp*2.23694),N=T.N;
- drawGauge(q$('rdG'),{rev,kmh,gear:gi+1,gi,NG:G.length,lim:Math.round(lim*2.23694),flash:c.gearFlash>0,shift:rev>.9&&gi<G.length-1&&Rc.state==='race'&&!(window.PTO&&PTO.autoShift)});
+ drawGauge(q$('rdG'),{rev,kmh,gear:gi+1,gi,NG:G.length,lim:Math.round(lim*2.23694),flash:c.gearFlash>0,shift:rev>.9&&gi<G.length-1&&Rc.state==='race'&&!P.isAuto(c)});
  const tot=N*Rc.laps,pr=Math.max(0,Math.min(1,c.unw/tot));q$('rdPct').textContent=Math.round(pr*100)+'%';q$('rdBar').style.width=pr*100+'%';q$('rdRem').textContent=Math.max(0,(tot-c.unw)*T.sp/1000).toFixed(1)+' km left';
  const cps=P.cpsOf(T),K=cps.length,n=(Rc.splits||[]).length,lapI=Math.floor(n/K);let cpT='FINISH',cd=(Rc.laps*N-c.unw)*T.sp;if(lapI<Rc.laps&&K&&n<K*Rc.laps){cpT='CP '+(n%K+1)+' / '+(K+1);cd=(lapI*N+cps[n%K]-c.unw)*T.sp}q$('rdCp').textContent=cpT+'  '+Math.max(0,Math.round(cd))+' m';
  const i0=c.idx||0;q$('rdAl').textContent=Math.round(c.y)+' m';
@@ -9046,11 +9057,12 @@ function crashStep(Rc,dt){const c=human(Rc);if(!c)return;const T=Rc.T;if(!T.soli
   for(const s of l){const dx=c.x-s[0],dz=c.z-s[1],d=Math.hypot(dx,dz),R=s[2]+1.05;if(d>=R||d<.001)continue;const nx=dx/d,nz=dz/d,vn=c.vx*nx+c.vz*nz;
    if(Math.abs(c.y-(T.terr?T.terr(s[0],s[1]):c.y))>3.5)continue;c.x+=nx*(R-d);c.z+=nz*(R-d);
    if(vn<0){c.vx-=1.28*vn*nx;c.vz-=1.28*vn*nz;c.vx*=.82;c.vz*=.82;if(-vn>2.2&&c.cdT<=0){c.cdT=.35;hurt(Rc,c,-vn,nx,nz)}}}}}
-function hurt(Rc,c,v,nx,nz){const was=c.dmg||0,add=Math.min(.55,Math.pow(v/26,1.55)*.85);c.dmg=Math.min(1,was+add);c.hits=(c.hits||0)+1;Rc.shake=Math.max(Rc.shake||0,Math.min(1.2,v/14));
+function hurt(Rc,c,v,nx,nz){if(!P.dmgOn(Rc)){Rc.shake=Math.max(Rc.shake||0,Math.min(1,v/16));if(P.sfx)P.sfx('crash');return}const was=c.dmg||0,add=Math.min(.55,Math.pow(v/26,1.55)*.85);c.dmg=Math.min(1,was+add);c.hits=(c.hits||0)+1;Rc.shake=Math.max(Rc.shake||0,Math.min(1.2,v/14));
  c.yaw+=(Math.random()<.5?-1:1)*Math.min(.5,v*.02);if(!c._pull)c._pull=(Math.random()<.5?-1:1);
  if(P.sfx)P.sfx('crash');const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);
  for(let k=0;k<10;k++)P.puff(c.x-nx*1.1,c.y+.2,c.z-nz*1.1,-nx*rnd(1,6)+rnd(-2,2),rnd(1,5),-nz*rnd(1,6)+rnd(-2,2),k%2?[1,.7,.2]:[.55,.5,.45],rnd(.12,.3),rnd(.4,.9),.95,14);
  const lv=c.dmg>=.8?'ENGINE FAILING':c.dmg>=.5?'HEAVY DAMAGE':c.dmg>=.2?(was<.2?'ENGINE DAMAGED':''):'';if(lv&&(was<.2&&c.dmg>=.2||was<.5&&c.dmg>=.5||was<.8&&c.dmg>=.8))toast(lv)}
+P.hurt=(Rc,c,v,nx,nz)=>hurt(Rc,c,v,nx,nz);P.smokeFx=(c,Rc,dt)=>smokeFx(c,Rc,dt);P.statUpdate=(Rc,c)=>statUpdate(Rc,c);
 function smokeFx(c,Rc,dt){const dm=c.dmg||0;if(dm<.18||c.exp>0||c.respT>0)return;const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);
  const rate=(4+dm*26)*(c.sp>3?1:.6);c._smA=(c._smA||0)+dt*rate;
  while(c._smA>=1){c._smA--;const dark=Math.min(1,(dm-.18)/.6),g=.62-.5*dark,hot=dm>.75;
@@ -9349,6 +9361,8 @@ P.reclass=()=>{P.CARS.forEach(c=>{const v=P.pp(c);c.cls=v<P.CLASS_AT[0]?'D':v<P.
 P.reclass();
 /* garage and HUD read true per-gear flat-out speeds */
 P.gearTops=car=>P.GT(car).map((_,i)=>P.effTop(car,i));
+/* every car, in every mode, uses its real gearbox */
+P.CARS.forEach(c=>{if(!(c.id in P.REALGEARS))P.REALGEARS[c.id]=c.real||6});P.rallyGears(true);
 /* gravel stages: cap at 120 mph so a 200 mph car can still read a narrow stage */
 const mul0=P.mul;
 P.mul=c=>{const m=mul0(c);const Rc=RACE;if(c.human&&Rc&&Rc.cfg&&Rc.cfg.rally&&!Rc.cfg.circuit&&c.cs&&c.cs.mph>120){if(!c.cs._cf)c.cs._cf=eq(120,c.cs.acc)/c.cs.top;m.top*=c.cs._cf}return m};
@@ -9871,7 +9885,37 @@ function cover(sc,T){
  /* (grass tufts read as grey cones under the hazy grade, so only the flowers and the dry-scrub variants are kept) */
  if(!cfg.nf)mk(new THREE.IcosahedronGeometry(.5,0),Math.round(cfg.nt*.35),cfg.t,1.0,1.9,.35);
  if(cfg.nf)mk(new THREE.OctahedronGeometry(.13,0),cfg.nf*2,cfg.f,1.1,1.9,.5)}
-const bw0=buildWorld;buildWorld=function(T){const sc=bw0.apply(this,arguments);try{city(sc,T)}catch(e){console.warn('city',e)}try{tunnel(sc,T)}catch(e){console.warn('tunnel',e)}try{lotsAll(sc,T)}catch(e){console.warn('lots',e)}try{cover(sc,T)}catch(e){console.warn('cover',e)}try{lamps(sc,T)}catch(e){console.warn('lamps',e)}return sc};
+
+/* ---------- Harbor Lights: a proper harbour town of pack buildings around the docks ---------- */
+function harborTown(sc,T){
+ if(!(T.d&&T.d.harbor)||!P.BLD||!P.PROPKIT)return;
+ const N=T.N,rx=[],rz=[],rh=[];for(let i=0;i<N;i+=2){rx.push(T.x[i]);rz.push(T.z[i]);rh.push(T.hw[i])}
+ const near=(x,z)=>{let b=1e9;for(let i=0;i<rx.length;i++){const d=Math.hypot(x-rx[i],z-rz[i])-rh[i];if(d<b)b=d}return b};
+ const nearest=(x,z)=>{let b=1e9,k=0;for(let i=0;i<rx.length;i++){const d=Math.hypot(x-rx[i],z-rz[i]);if(d<b){b=d;k=i}}return k};
+ const WATER=(x,z)=>(x>215&&z>5)||z>315,land=(x,z,m)=>!WATER(x,z)&&!WATER(x+m,z)&&!WATER(x-m,z)&&!WATER(x,z+m)&&!WATER(x,z-m);
+ let seed=991,r=()=>((seed=(seed*1664525+1013904223)>>>0)/4294967296);
+ const occ=(sc.userData.occ||[]).slice(),log=sc.userData.props||(sc.userData.props=[]),out={};
+ const clear=(x,z,rad)=>{for(const q of occ)if(Math.hypot(q[0]-x,q[1]-z)<q[2]+rad)return false;return true};
+ const LOW=['ResidentBuilding_01','ResidentBuilding_02','ResidentBuilding_03','ResidentBuilding_06','CommercialBuilding_03','StoreBuilding_01','ResidentBuilding_05'],
+  MID=['CommercialBuilding_01','CommercialBuilding_02','ResidentBuilding_04','CompanyBuilding_03','CompanyBuilding_04'],TOW=['CompanyBuilding_01','CompanyBuilding_02','CompanyBuilding_03','CompanyBuilding_04','CommercialBuilding_01','ResidentBuilding_04'],
+  SHED=['Barn_01','Barn_02','GreenMouse','StoreBuilding_01','CommercialBuilding_03'];
+ const place=(list,sMin,sMax,dMin,dMax,tries,cnt,face)=>{let n=0;for(let t=0;t<tries&&n<cnt;t++){const x=-660+r()*1320,z=-660+r()*1320;if(!land(x,z,14))continue;const d=near(x,z);if(d<dMin||d>dMax)continue;
+   const nm=list[Math.floor(r()*list.length)],g=P.BLD[nm];if(!g)continue;const s=sMin+r()*(sMax-sMin),rad=Math.max(g.w,g.d)*s*.5+1.2;if(!clear(x,z,rad))continue;
+   const k=nearest(x,z),yaw=face?Math.atan2(rx[k]-x,rz[k]-z)+(Math.round(r()*2)-1)*0:(Math.round(r()*4))*Math.PI/2;occ.push([x,z,rad]);(out[nm]=out[nm]||[]).push([x,.02,z,yaw,s]);log.push({n:nm,x,z,y:.02,fr:rad,sk:.5,s});n++}return n};
+ place(SHED,1.0,1.6,26,100,3000,70,true);
+ place(LOW,1.0,1.6,26,90,9000,260,true);
+ place(MID,1.2,2.0,60,190,9000,230,true);
+ place(TOW,1.6,2.7,130,340,9000,190,true);
+ place(TOW,2.2,3.5,260,600,9000,140,true);
+ /* trees and hedges between the blocks */
+ const TR=['Tree_02','Tree_04','Tree_05','Tree_07'].filter(n=>P.BLD[n]);
+ for(let t=0,n=0;t<1500&&n<110;t++){const x=-660+r()*1320,z=-660+r()*1320;if(!land(x,z,8)||near(x,z)<12)continue;if(!clear(x,z,2))continue;const nm=TR[Math.floor(r()*TR.length)];(out[nm]=out[nm]||[]).push([x,.02,z,r()*6.28,1.1+r()*.7,1]);occ.push([x,z,1.6])}
+ const dum=new THREE.Object3D(),col=new THREE.Color();
+ for(const nm in out){const L=out[nm],im=new THREE.InstancedMesh(P.BLD[nm].g.clone(),P.PROPKIT.MAT,L.length);
+  L.forEach((q,i)=>{dum.position.set(q[0],q[1],q[2]);dum.rotation.set(0,q[3],0);dum.scale.set(q[4],q[4],q[4]);dum.updateMatrix();im.setMatrixAt(i,dum.matrix);if(q[5]===1){col.setHSL(.27+r()*.08,.35,.78+r()*.2)}else{const h=.02+r()*.12,pale=r()<.45;col.setHSL(pale?.55+r()*.1:h,.12+r()*.28,.66+r()*.28)}im.setColorAt(i,col)});
+  im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true;im.frustumCulled=false;im.castShadow=false;im.receiveShadow=false;im.userData.ptProp=nm;sc.add(im)}
+}
+const bw0=buildWorld;buildWorld=function(T){const sc=bw0.apply(this,arguments);try{city(sc,T)}catch(e){console.warn('city',e)}try{harborTown(sc,T)}catch(e){console.warn('harborTown',e)}try{tunnel(sc,T)}catch(e){console.warn('tunnel',e)}try{lotsAll(sc,T)}catch(e){console.warn('lots',e)}try{cover(sc,T)}catch(e){console.warn('cover',e)}try{lamps(sc,T)}catch(e){console.warn('lamps',e)}return sc};
 const at0=P.applyTod;P.applyTod=function(sc,T,key){const r=at0.apply(this,arguments);try{if(T&&T.d&&T.d.city)setPano(sc,key)}catch(e){console.warn('pano',e)}try{WIN.value=key==='night'?1.5:(key==='sunset'||key==='dawn')?.3:0;const g=sc&&sc.userData&&sc.userData.lamps;if(g){g.visible=key==='night'||key==='dawn'||key==='sunset';const pm=sc.userData.lampPool;if(pm)pm.material.color.setScalar(key==='night'?1:key==='dawn'||key==='sunset'?.45:0);if(g.visible&&sc.userData.lampPos&&sc.userData.lampPos.length)ensureLights(sc)}}catch(e){console.warn('lampTod',e)}return r};
 /* ---------- visual smoothing: the body, tilt and wheel travel are low-pass filtered at render time so ground-height kinks on slopes never show as jitter (physics is untouched) ---------- */
 {const uvJ=updateVisual;updateVisual=function(c,T,t){const m=c&&c.m;let S=null,dt=Math.min(.05,Math.max(.001,dtf));
@@ -9908,7 +9952,7 @@ function grid(T){const x=X(T),g=new Map(),put=(k,o)=>{let l=g.get(k);if(!l){l=[]
  for(const p of x.pts)put(Math.floor(p[0]/8)+','+Math.floor(p[1]/8),p);
  T._bg=g;return g}
 let cd=0;
-function hit(Rc,c,v,nx,nz){if(cd>0)return;cd=.3;Rc.shake=Math.max(Rc.shake||0,Math.min(1,v/16));if(P.sfx)P.sfx('crash')}
+function hit(Rc,c,v,nx,nz){if(cd>0)return;cd=.3;Rc.shake=Math.max(Rc.shake||0,Math.min(1,v/16));if(P.sfx)P.sfx('crash');if(P.dmgOn&&P.dmgOn(Rc)&&P.hurt&&!((c.cdT||0)>0)){c.cdT=.35;P.hurt(Rc,c,v,nx,nz)}}
 function bStep(Rc,dt){const T=Rc.T;if(!T||Rc.state!=='race')return;cd-=dt;const g=T._bg||grid(T);if(!g.size)return;
  for(const c of Rc.cars){if(!c.human||c.fin||c.respT>0||c.exp>0)continue;const cx=Math.floor(c.x/8),cz=Math.floor(c.z/8),gy=T.terr?T.terr(c.x,c.z):c.y;if(c.y-gy>3.2)continue;
   for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const l=g.get((cx+a)+','+(cz+b));if(!l)continue;
@@ -9918,6 +9962,19 @@ function bStep(Rc,dt){const T=Rc.T;if(!T||Rc.state!=='race')return;cd-=dt;const 
 const bw=buildWorld;buildWorld=function(T){const sc=bw.apply(this,arguments);try{collect(sc,T)}catch(e){console.warn('solid',e)}return sc};
 
 const st0=step;step=function(dt){st0.apply(this,arguments);try{if(RACE)bStep(RACE,dt)}catch(e){if(!P._sErr){P._sErr=1;console.warn('solid',e)}}};
+})();
+
+/* ===== Poly Tourismo v9 layer: damage (optional in every mode: bin it and the car really is hurt) ===== */
+(function v9damage(){
+'use strict';
+const P=window.PT8;
+P.dmgOn=Rc=>{const c=Rc&&Rc.cfg;return !!c&&(c.dmg!==undefined?!!c.dmg:!!c.rally)};
+/* outside rally the rally layer's multipliers don't run, so a hurt car loses power / grip here */
+const m0=P.mul;P.mul=c=>{const m=m0(c);const Rc=RACE;if(c.human&&c.dmg>0&&!(Rc&&Rc.cfg&&Rc.cfg.rally)){const dm=c.dmg;m.acc*=1-.5*Math.pow(dm,1.2);m.top*=1-.32*dm;m.grip*=1-.14*dm;m.brk*=1-.3*dm}return m};
+const st0=step;step=function(dt){st0.apply(this,arguments);try{const Rc=RACE;if(!Rc||!Rc.cfg||Rc.cfg.rally)return;const on=P.dmgOn(Rc);let first=null;
+ for(const c of Rc.cars){if(!c.human)continue;if(c.cdT>0)c.cdT-=dt;if(on&&P.smokeFx)P.smokeFx(c,Rc,dt);if(!first)first=c}
+ if(on&&first&&Rc.state==='race'&&P.statUpdate)P.statUpdate(Rc,first)}catch(e){if(!P._dErr){P._dErr=1;console.warn('damage',e)}}};
+const sh0=show;show=function(id){if(id!=='game'&&id!=='pause'){const e=document.getElementById('rlStat');if(e)e.style.display='none'}return sh0.apply(this,arguments)};
 })();
 
 /* ===== Poly Tourismo v9 layer: perf (performance options: presets, pixel density cap, FPS counter, HUD DOM caching) ===== */

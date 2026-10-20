@@ -88,6 +88,10 @@ const LOOSE=['grass','sand','snow','dirt','scrub'];
 const lerpf=(a,b,t)=>a+(b-a)*t;
 
 /* ---------------- gears: double-tap detection ---------------- */
+/* per-player transmission: PT8.TX[p] true = automatic, false = manual, undefined = follow the old global AUTO SHIFT setting */
+try{PT8.TX=JSON.parse(localStorage.getItem('pt9-tx')||'[]')}catch(e){PT8.TX=[]}if(!Array.isArray(PT8.TX))PT8.TX=[];
+PT8.setTX=(p,v)=>{PT8.TX[p]=!!v;try{localStorage.setItem('pt9-tx',JSON.stringify(PT8.TX))}catch(e){}};
+PT8.isAuto=c=>{const v=c&&c.human?PT8.TX[c.k|0]:undefined;return v===undefined||v===null?!!(window.PTO&&PTO.autoShift):!!v};
 const taps=[0,1,2,3].map(()=>({u:0,d:0}));
 addEventListener('keydown',e=>{if(e.repeat)return;for(let p=0;p<4;p++){const k=KM[p];if(e.code===k.u)taps[p].u++;if(e.code===k.d)taps[p].d++}});
 function shiftGear(c,d,auto){const cs_=c.cs||BYID.merc,G_=GT(cs_),n=clamp((c.gear|0)+(d>0?1:-1),0,G_.length-1);if(n===(c.gear|0))return false;const rr=c.sp/Math.max(1,(PT8.effTop?PT8.effTop(cs_,c.gear|0)*1.03:cs_.top*G_[c.gear|0].top)*(c.mt?c.mt.top:1));if(!auto&&d>0&&rr>=.8&&rr<=1.06){c.pb=1.1;c.perfect=1}else c.perfect=0;
@@ -96,7 +100,7 @@ function autoGear(c,dt,mt,fac,auto){const cs=c.cs,G_=GT(cs),NG=G_.length,g=c.gea
  if(want<g&&!(c.sp<ce(g)*.55))want=g;if(want!==g){c.gearHold=(c.gearHold||0)-dt;if(c.gearHold<=0){shiftGear(c,want>g?1:-1,auto);c.gearHold=auto?.5:.35}}else c.gearHold=.2}
 function gearLogic(c,live,dt){const p=c.k,tp=taps[p],now=performance.now();
  if(c.seenU===undefined){c.seenU=tp.u;c.seenD=tp.d;c.lastU=0;c.lastD=0}
- if(window.PTO&&PTO.autoShift){c.seenU=tp.u;c.seenD=tp.d;if(live)autoGear(c,dt||.016,c.mt||MATS.road,.93,true);return}
+ if(PT8.isAuto(c)){c.seenU=tp.u;c.seenD=tp.d;if(live)autoGear(c,dt||.016,c.mt||MATS.road,.93,true);return}
  if(tp.u!==c.seenU){c.seenU=tp.u;if(live&&c.lastU&&now-c.lastU<340){shiftGear(c,1);c.lastU=0}else c.lastU=now}
  if(tp.qu){tp.qu=0;if(live)shiftGear(c,1)}if(tp.qd){tp.qd=0;if(live)shiftGear(c,-1)}
  if(tp.d!==c.seenD){c.seenD=tp.d;if(live&&c.lastD&&now-c.lastD<340){shiftGear(c,-1);c.lastD=0}else c.lastD=now}

@@ -57,7 +57,7 @@ function fxStep(c,Rc,dt){roost(c,Rc,dt);if(c.human)smokeFx(c,Rc,dt);const T=Rc.T
   else if(was&&c.human&&c.sp>6)P.sfx&&P.sfx('splash',Math.min(.8,c.sp/60))}
  if(c.human&&Rc.cfg&&!Rc.cfg.noFx)stageFx(c,T,dt)}
 const sc0=stepCar;
-stepCar=function(c,dt){const Rc=RACE,rl=!!(Rc&&Rc.cfg&&Rc.cfg.rally&&c.human&&!c.forceAI),auto=!!(window.PTO&&PTO.autoShift);
+stepCar=function(c,dt){const Rc=RACE,rl=!!(Rc&&Rc.cfg&&Rc.cfg.rally&&c.human&&!c.forceAI),auto=P.isAuto(c);
  if(rl){if(c.rg===undefined)c.rg=c.gear|0;if(!auto)c.gear=c.rg;c._hb=!(S&&S.drv&&S.drv.length>1)&&Rc.state==='race'&&!c.fin&&c.respT<=0&&!(c.exp>0)&&!paused&&down.has(RK[curP].hb)}
  sc0.apply(this,arguments);
  if(rl){if(auto)c.rg=c.gear|0;else c.gear=c.rg;handbrakeFx(c,dt)}
@@ -100,11 +100,12 @@ hudUpdate=()=>{hu0();const Rc=RACE;if(!Rc||!Rc.cfg||!Rc.cfg.rally)return;
 const REAL0={lr:6,ford:6,merc:7,ster:7,art:8,ferr:7,zen:7,must:6,urus:8,m8:8,amg:9,gtr:6,por:7,p1:7};const REAL=new Proxy(REAL0,{get:(t,k)=>t[k]||(P.BYID[k]&&P.BYID[k].real)||6});
 const gtOrig={};
 function gearTable(n){const R0=n<=2?2.2:n<=4?3.4:n===5?4.2:n===6?5.2:n===7?5.8:n===8?6.4:7.2,t=[];for(let i=0;i<n;i++){const u=n>1?i/(n-1):1;t.push({top:Math.pow(R0,-Math.pow(1-u,1.5)),acc:.66+.44*Math.pow(1-u,1.5)})}return t}
-function rallyGears(on){for(const id in REAL){const car=BYID[id];if(!car)continue;const arr=P.GT(car);
+function rallyGears(on){on=true;for(const id in REAL){const car=BYID[id];if(!car)continue;const arr=P.GT(car);
  if(on){if(!gtOrig[id])gtOrig[id]=arr.map(g=>({top:g.top,acc:g.acc}));const t=gearTable(REAL[id]);arr.length=0;t.forEach(g=>arr.push(g))}
  else if(gtOrig[id]){arr.length=0;gtOrig[id].forEach(g=>arr.push(g));delete gtOrig[id]}}}
 P.rallyGears=rallyGears;P.REALGEARS=REAL;
 const RK=[{dn:'KeyQ',up:'KeyE',hb:'Space',cam:'KeyC',n:['Q','E','SPACE','C']},{dn:'PageUp',up:'PageDown',hb:'ShiftRight',cam:'Slash',n:['PG UP','PG DN','R-SHIFT','/']},{dn:'KeyU',up:'KeyO',hb:'KeyM',cam:'KeyP',n:['U','O','M','P']},{dn:'KeyR',up:'KeyY',hb:'KeyB',cam:'KeyV',n:['R','Y','B','V']}];
+{const ia=P.isAuto;P.isAuto=c=>{if(c&&c.human&&RACE&&RACE.cfg&&RACE.cfg.rally&&S&&S.drv&&S.drv[S.i]){const v=P.TX[S.drv[S.i].p];if(v!==undefined&&v!==null)return !!v}return ia(c)}}
 const MOVE=['W A S D','Arrow keys','I J K L','T F G H'];P.rallyP2=np=>{MOVE[1]=np?'Numpad 8 4 5 6':'Arrow keys';Object.assign(RK[1],np?{dn:'Numpad7',up:'Numpad9',n:['7','9',RK[1].n[2],RK[1].n[3]]}:{dn:'PageUp',up:'PageDown',n:['PG UP','PG DN',RK[1].n[2],RK[1].n[3]]});[RK[1].dn,RK[1].up].forEach(x=>GAME_KEYS.add(x))};
 RK.forEach(k=>[k.dn,k.up,k.hb,k.cam].forEach(x=>GAME_KEYS.add(x)));
 let curP=0;const camPref={};const CAMS=['CHASE','HOOD','FAR CHASE'];
@@ -117,7 +118,7 @@ function handbrakeFx(c,dt){if(!c._hb||c.sp<5||c.exp>0)return;const st=c.in?c.in.
  c.yaw+=st*Math.min(1,c.sp/16)*1.25*dt;const f=1-.18*dt;c.vx*=f;c.vz*=f;c.drifting=true}
 addEventListener('keydown',e=>{const Rc=RACE;if(!Rc||!Rc.cfg||!Rc.cfg.rally||Rc.prep||Rc.replay||e.repeat||paused)return;const k=RK[curP],c=human(Rc);if(!c||c.forceAI||scr!=='game')return;
  if(e.code===k.cam){c.camMode=((c.camMode||0)+1)%CAMS.length;camPref[curP]=c.camMode;if(P.sfx)P.sfx('click');toast(CAMS[c.camMode])}
- else if((e.code===k.up||e.code===k.dn)&&Rc.state==='race'&&!c.fin&&!(window.PTO&&PTO.autoShift))shiftR(c,e.code===k.up?1:-1)});
+ else if((e.code===k.up||e.code===k.dn)&&Rc.state==='race'&&!c.fin&&!P.isAuto(c))shiftR(c,e.code===k.up?1:-1)});
 let tEl=null,tH=0;function toast(t){if(!tEl){tEl=document.createElement('div');tEl.id='rlToast';document.body.appendChild(tEl)}tEl.textContent=t;tEl.style.opacity=1;clearTimeout(tH);tH=setTimeout(()=>{tEl.style.opacity=0},1100)}
 /* tarmac at 200 mph: steering authority falls with speed so a tap stays a tap (lateral pull stays roughly constant above ~90 mph) */
 {const ip0=P.inPost;P.inPost=(c,dt)=>{if(ip0)ip0(c,dt);const Rc=RACE;if(Rc&&Rc.cfg&&c.human&&!c.forceAI&&c.in&&c.sp>40)c.in.st*=Math.pow(40/c.sp,.85)}}
@@ -171,7 +172,7 @@ function statUpdate(Rc,c){if(!stEl){stEl=document.createElement('div');stEl.id='
  stEl.style.display='flex'}
 function dashUpdate(Rc,c){const d=mkDash(),on=scr==='game'&&!Rc.prep&&!Rc.replay&&!c.fin;d.style.display=on?'flex':'none';bodyCls('rallyhud',on);if(!on){if(stEl)stEl.style.display='none';return}
  const T=Rc.T,car=c.cs||BYID.merc,G=P.GT(car),gi=Math.min(c.gear|0,G.length-1),mt=(c.mt&&c.mt.top)||1,lim=(CIR()&&P.effTop?P.effTop(car,gi)*1.03:car.top*G[gi].top)*mt,rev=.2+.8*Math.min(1.05,c.sp/Math.max(1,lim)),kmh=Math.round(c.sp*2.23694),N=T.N;
- drawGauge(q$('rdG'),{rev,kmh,gear:gi+1,gi,NG:G.length,lim:Math.round(lim*2.23694),flash:c.gearFlash>0,shift:rev>.9&&gi<G.length-1&&Rc.state==='race'&&!(window.PTO&&PTO.autoShift)});
+ drawGauge(q$('rdG'),{rev,kmh,gear:gi+1,gi,NG:G.length,lim:Math.round(lim*2.23694),flash:c.gearFlash>0,shift:rev>.9&&gi<G.length-1&&Rc.state==='race'&&!P.isAuto(c)});
  const tot=N*Rc.laps,pr=Math.max(0,Math.min(1,c.unw/tot));q$('rdPct').textContent=Math.round(pr*100)+'%';q$('rdBar').style.width=pr*100+'%';q$('rdRem').textContent=Math.max(0,(tot-c.unw)*T.sp/1000).toFixed(1)+' km left';
  const cps=P.cpsOf(T),K=cps.length,n=(Rc.splits||[]).length,lapI=Math.floor(n/K);let cpT='FINISH',cd=(Rc.laps*N-c.unw)*T.sp;if(lapI<Rc.laps&&K&&n<K*Rc.laps){cpT='CP '+(n%K+1)+' / '+(K+1);cd=(lapI*N+cps[n%K]-c.unw)*T.sp}q$('rdCp').textContent=cpT+'  '+Math.max(0,Math.round(cd))+' m';
  const i0=c.idx||0;q$('rdAl').textContent=Math.round(c.y)+' m';
@@ -266,11 +267,12 @@ function crashStep(Rc,dt){const c=human(Rc);if(!c)return;const T=Rc.T;if(!T.soli
   for(const s of l){const dx=c.x-s[0],dz=c.z-s[1],d=Math.hypot(dx,dz),R=s[2]+1.05;if(d>=R||d<.001)continue;const nx=dx/d,nz=dz/d,vn=c.vx*nx+c.vz*nz;
    if(Math.abs(c.y-(T.terr?T.terr(s[0],s[1]):c.y))>3.5)continue;c.x+=nx*(R-d);c.z+=nz*(R-d);
    if(vn<0){c.vx-=1.28*vn*nx;c.vz-=1.28*vn*nz;c.vx*=.82;c.vz*=.82;if(-vn>2.2&&c.cdT<=0){c.cdT=.35;hurt(Rc,c,-vn,nx,nz)}}}}}
-function hurt(Rc,c,v,nx,nz){const was=c.dmg||0,add=Math.min(.55,Math.pow(v/26,1.55)*.85);c.dmg=Math.min(1,was+add);c.hits=(c.hits||0)+1;Rc.shake=Math.max(Rc.shake||0,Math.min(1.2,v/14));
+function hurt(Rc,c,v,nx,nz){if(!P.dmgOn(Rc)){Rc.shake=Math.max(Rc.shake||0,Math.min(1,v/16));if(P.sfx)P.sfx('crash');return}const was=c.dmg||0,add=Math.min(.55,Math.pow(v/26,1.55)*.85);c.dmg=Math.min(1,was+add);c.hits=(c.hits||0)+1;Rc.shake=Math.max(Rc.shake||0,Math.min(1.2,v/14));
  c.yaw+=(Math.random()<.5?-1:1)*Math.min(.5,v*.02);if(!c._pull)c._pull=(Math.random()<.5?-1:1);
  if(P.sfx)P.sfx('crash');const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);
  for(let k=0;k<10;k++)P.puff(c.x-nx*1.1,c.y+.2,c.z-nz*1.1,-nx*rnd(1,6)+rnd(-2,2),rnd(1,5),-nz*rnd(1,6)+rnd(-2,2),k%2?[1,.7,.2]:[.55,.5,.45],rnd(.12,.3),rnd(.4,.9),.95,14);
  const lv=c.dmg>=.8?'ENGINE FAILING':c.dmg>=.5?'HEAVY DAMAGE':c.dmg>=.2?(was<.2?'ENGINE DAMAGED':''):'';if(lv&&(was<.2&&c.dmg>=.2||was<.5&&c.dmg>=.5||was<.8&&c.dmg>=.8))toast(lv)}
+P.hurt=(Rc,c,v,nx,nz)=>hurt(Rc,c,v,nx,nz);P.smokeFx=(c,Rc,dt)=>smokeFx(c,Rc,dt);P.statUpdate=(Rc,c)=>statUpdate(Rc,c);
 function smokeFx(c,Rc,dt){const dm=c.dmg||0;if(dm<.18||c.exp>0||c.respT>0)return;const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);
  const rate=(4+dm*26)*(c.sp>3?1:.6);c._smA=(c._smA||0)+dt*rate;
  while(c._smA>=1){c._smA--;const dark=Math.min(1,(dm-.18)/.6),g=.62-.5*dark,hot=dm>.75;

@@ -724,3 +724,5 @@ body.barnscene #cd,body.barnscene #mm,body.barnscene #huds,body.barnscene #rlDas
 .trk .bnh{margin-left:auto;flex:none;color:#f2c76b;display:inline-flex;align-items:center;opacity:.95}
 .trk .bnh.got{color:#ffffff55}
 .chip.bn{color:#f2c76b;border-color:#f2c76b66}
+.txrow{display:flex;align-items:center;gap:8px;margin-top:6px}.txrow small{font:700 9px var(--mn);letter-spacing:.2em;color:var(--dim);text-transform:uppercase}.txrow .seg .btn{padding:3px 8px;font-size:10px}
+.txrow .seg{display:flex;flex-wrap:nowrap}.txrow .seg .btn{white-space:nowrap}

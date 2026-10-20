@@ -86,15 +86,16 @@ function buildHarbor(T){const d=T.d,N=T.N,r=rngf(8*77+5),sc=new THREE.Scene(),H=
   for(const sd of[-1,1])mesh(new THREE.BoxGeometry(.8,8,.8),mat(0xdddddd),sd*(T.hw[0]+1.2),4,0,ar);
   mesh(new THREE.BoxGeometry(T.hw[0]*2+3.6,2.2,.6),new THREE.MeshBasicMaterial({map:ctex(32,4,(x,w,h)=>{for(let i=0;i<32;i++)for(let j=0;j<4;j++){x.fillStyle=(i+j)&1?'#fff':'#111';x.fillRect(i,j,1,1)}})}),0,8.4,0,ar);
   const sl=mesh(new THREE.PlaneGeometry(T.hw[0]*2,2.4),new THREE.MeshBasicMaterial({map:ctex(16,2,(x,w,h)=>{for(let i=0;i<16;i++){x.fillStyle=i&1?'#fff':'#111';x.fillRect(i,0,1,1);x.fillStyle=i&1?'#111':'#fff';x.fillRect(i,1,1,1)}})}),T.x[0],T.y[0]+.1,T.z[0],sc);sl.rotation.order='YXZ';sl.rotation.set(-Math.PI/2,T.psi[0],0)}
+ const occ=sc.userData.occ=[];
  /* ----- scatter helper (land only, away from the road) ----- */
  const rd=(x,z)=>{let b=1e9;for(let i=0;i<N;i+=2){const dd=Math.hypot(x-T.x[i],z-T.z[i]);if(dd<b)b=dd}return b};
  const scatter=(cnt,lo,hi,fn)=>{const out=[];for(let t=0;t<cnt*30&&out.length<cnt;t++){const x=-640+r()*1280,z=-640+r()*1280;if(WATER(x,z)||Math.abs(x)>700)continue;const q=rd(x,z);if(q<lo||q>=hi)continue;fn(x,z,out,q)}return out};
  /* containers (quay) */
  {const cols=[0xc0392b,0x2c6fb0,0xd98324,0x3f8a4a,0x8a8f95,0xe8e0c8];
-  const list=[];scatter(70,16,70,(x,z,o)=>{const rot=r()<.5?0:Math.PI/2,st=1+(r()*2.4|0);for(let s=0;s<st;s++)list.push([x,1.3+s*2.6,z,2.5,2.6,6.1,rot])});
+  const list=[];scatter(70,16,70,(x,z,o)=>{const rot=r()<.5?0:Math.PI/2,st=1+(r()*2.4|0);occ.push([x,z,7]);for(let s=0;s<st;s++)list.push([x,1.3+s*2.6,z,2.5,2.6,6.1,rot])});
   instB(sc,new THREE.BoxGeometry(1,1,1),flat(0xffffff),list,cols)}
  /* warehouses */
- {const list=[];scatter(26,38,170,(x,z,o)=>{const w=24+r()*30,dp=20+r()*26,h=9+r()*7;list.push([x,h/2,z,w,h,dp,(r()*4|0)*Math.PI/2])});
+ {const list=[];scatter(26,38,170,(x,z,o)=>{const w=24+r()*30,dp=20+r()*26,h=9+r()*7;occ.push([x,z,Math.max(w,dp)*.75]);list.push([x,h/2,z,w,h,dp,(r()*4|0)*Math.PI/2])});
   instB(sc,new THREE.BoxGeometry(1,1,1),flat(0xffffff),list,[0xa8664a,0x4f7f8f,0xc89a5a,0x6f8a62,0xb0554a,0xd8c27a]);
   instB(sc,new THREE.BoxGeometry(1,1,1),flat(0x555a60),list.map(p=>[p[0],p[4]+.4,p[2],p[3]*1.02,.8,p[5]*1.02,p[6]]))}
  /* alley buildings behind the facade walls: taller blocks give the skyline */
