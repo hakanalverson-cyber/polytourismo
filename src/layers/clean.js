@@ -59,9 +59,19 @@ function city(sc,T){
  const tryPlace=(list,sMin,sMax,dMin,dMax,tries,cnt,box)=>{let n=0;for(let t=0;t<tries&&n<cnt;t++){const x=x0-box+r()*(x1-x0+2*box),z=z0-box+r()*(z1-z0+2*box),d=near(x,z);if(d<dMin||d>dMax)continue;
    const nm=list[Math.floor(r()*list.length)],g=P.BLD[nm];if(!g)continue;const s=sMin+r()*(sMax-sMin),rad=Math.max(g.w,g.d)*s*.52+1.5;if(!clear(x,z,rad))continue;
    const k=nearest(x,z),yaw=Math.atan2(rx[k]-x,rz[k]-z),y=T.terr(x,z);placed.push([x,z,rad]);(out[nm]=out[nm]||[]).push([x,y,z,yaw,s]);log.push({n:nm,x,z,y,fr:rad,sk:.5,s});n++}return n};
- tryPlace(LOW,1.4,2.0,16,34,160,18,40);
- tryPlace(TOW,2.6,4.2,26,90,500,34,140);
- tryPlace(TOW,4.2,7.6,80,560,900,64,460);
+ /* street wall: continuous front line of normal-size buildings along both sides, then a second row, then towers that grow with distance */
+ const row=(list,sMin,sMax,off,gapMin,gapMax,keepRoad)=>{for(const side of[-1,1]){let nextS=0,acc=0,px=T.x[0],pz=T.z[0];for(let i=0;i<T.N;i+=1){acc+=Math.hypot(T.x[i]-px,T.z[i]-pz);px=T.x[i];pz=T.z[i];if(acc<nextS)continue;
+   const nm=list[Math.floor(r()*list.length)],g=P.BLD[nm];if(!g)continue;const s=sMin+r()*(sMax-sMin),wd=Math.max(g.w,g.d)*s;
+   const l=side*(T.hw[i]+off+wd*.5),c=Math.cos(T.psi[i]),sn=Math.sin(T.psi[i]),x=T.x[i]+c*l,z=T.z[i]-sn*l;
+   if(near(x,z)<T.hw[i]+off*.8+wd*.35){acc=nextS-1;continue}
+   if(!clear(x,z,wd*.42)){continue}
+   const k=nearest(x,z),yaw=Math.atan2(rx[k]-x,rz[k]-z),y=T.terr(x,z);placed.push([x,z,wd*.42]);(out[nm]=out[nm]||[]).push([x,y,z,yaw,s]);log.push({n:nm,x,z,y,fr:wd*.42,sk:.5,s});
+   nextS=acc+wd*.9+gapMin+r()*(gapMax-gapMin)}}};
+ row(LOW,.8,1.1,13,1,4);
+ row(LOW.concat(TOW.slice(4)),1.0,1.5,13+16,2,8);
+ tryPlace(TOW,1.6,2.4,48,100,500,40,140);
+ tryPlace(TOW,2.4,3.6,95,200,700,50,260);
+ tryPlace(TOW,3.6,5.5,190,520,900,50,460);
  const dum=new THREE.Object3D(),col=new THREE.Color();
  for(const nm in out){const L=out[nm],im=new THREE.InstancedMesh(P.BLD[nm].g.clone(),P.PROPKIT.MAT,L.length);
   L.forEach((q,i)=>{dum.position.set(q[0],q[1],q[2]);dum.rotation.set(0,q[3],0);dum.scale.setScalar(q[4]);dum.updateMatrix();im.setMatrixAt(i,dum.matrix);const h=.55+r()*.35;col.setHSL(h,.18+r()*.25,.62+r()*.3);im.setColorAt(i,col)});
