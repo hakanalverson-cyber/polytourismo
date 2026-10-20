@@ -33,7 +33,7 @@ const hex3=h=>[((h>>16)&255)/255,((h>>8)&255)/255,(h&255)/255];
 /* wheel dust & dirt on loose ground */
 const prevVis=updateVisual;
 updateVisual=(c,T,t)=>{prevVis(c,T,t);const Rc=RACE;if(!Rc||!Rc.dust||c.exp>0||c.respT>0)return;
- const loose=(T.d.gravel&&c.onRoad&&!T.ice[c.idx])||!c.onRoad;if(!loose||c.sp<4)return;
+ const loose=((T.d.gravel||(T.gv&&T.gv[c.idx]))&&c.onRoad&&!T.ice[c.idx])||!c.onRoad;if(!loose||c.sp<4)return;
  const dcol=T.d.dust||0xb89c70,base=hex3(dcol),dk=hex3(T.d.dirt||0x5a4630);
  const slide=Math.abs(wr(Math.atan2(c.vx,c.vz)-c.yaw)),rate=clamp((c.sp-3)/13,0,1)*(c.onRoad?32:46)*(1+Math.min(1.8,slide*3)+(c.drifting?.6:0));
  c.dAcc=(c.dAcc||0)+dtf*rate;const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);

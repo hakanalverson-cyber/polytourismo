@@ -25,7 +25,7 @@ sampleTrack=d=>{const T=ps(d);if(!d.span)return T;
  const N=T.N;T.sg=new Uint8Array(N);T.lampOff=new Float32Array(N);
  for(let i=0;i<N;i++){const x=T.x[i],z=T.z[i];let sg;
   if(x>=ISL.x0+.5)sg=2;else if(x>=COAST&&z>-30)sg=1;else if(z<-45||x<-485)sg=3;else sg=0;
-  T.sg[i]=sg;T.wall[i]=1;T.wh[i]=sg===1?1.15:1.0;if(sg!==2)T.br[i]=1;
+  T.sg[i]=sg;T.wall[i]=sg===3?0:1;T.wh[i]=sg===1?1.15:1.0;if(sg!==2)T.br[i]=1;
   T.lampOff[i]=sg===1?.95:sg===2?1.9:3.2}
  /* flare: within 30 m of the island the deck widens to the pavement width and the barrier slopes away to nothing */
  {const isl=[];for(let i=0;i<N;i++)if(T.sg[i]===2)isl.push(i);T.fl=new Float32Array(N);T.vh=new Float32Array(N);const base=new Float32Array(N);
@@ -127,8 +127,14 @@ function buildSpan(T){const d=T.d,N=T.N,r=rngf(8*77+11),sc=new THREE.Scene();
  /* ----- road surface ----- */
  const PO={polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2};
  {const am=new THREE.MeshStandardMaterial(Object.assign({map:T_ASPH(),roughness:.9,side:THREE.DoubleSide},PO)),gm2=new THREE.MeshStandardMaterial(Object.assign({map:T_GRAVEL(),roughness:1,side:THREE.DoubleSide},PO));
-  for(const [a,b] of runs(T,i=>T.sg[i]!==3))sc.add(strip(T,a,b,k=>-T.hw[k],k=>T.hw[k],.03,am,6,10));
-  for(const [a,b] of runs(T,i=>T.sg[i]===3))sc.add(strip(T,a,b+1,k=>-T.hw[k],k=>T.hw[k],.03,gm2,6,10))}
+  for(const [a,b] of runs(T,i=>T.sg[i]!==3))sc.add(strip(T,a,b+1,k=>-T.hw[k],k=>T.hw[k],.03,am,6,10));
+  for(const [a,b] of runs(T,i=>T.sg[i]===3))sc.add(strip(T,a,b+1,k=>-T.hw[k],k=>T.hw[k],.03,gm2,6,10));
+  /* soft dirt shoulders that fade the path into the ground */
+  const vt=(flip)=>{const t=ctex(32,8,(x,w,h)=>{const rr=rngf(21);for(let i=0;i<w;i++){const u=flip?1-i/(w-1):i/(w-1),al=Math.pow(Math.max(0,1-u),1.2);for(let j=0;j<h;j++){const n=.75+.25*rr();x.fillStyle='rgba('+(150*n|0)+','+(128*n|0)+','+(92*n|0)+','+(al*(.7+.3*rr())).toFixed(3)+')';x.fillRect(i,j,1,1)}}});t.magFilter=THREE.LinearFilter;return t};
+  const vm=[vt(0),vt(1)].map(t=>new THREE.MeshStandardMaterial({map:t,transparent:true,depthWrite:false,roughness:1,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}));
+  for(const [a,b] of runs(T,i=>T.sg[i]===3)){
+   sc.add(strip(T,a,b+1,k=>T.hw[k]-.3,k=>T.hw[k]+3.2,.02,vm[0],6,4));
+   sc.add(strip(T,a,b+1,k=>-T.hw[k]-3.2,k=>-T.hw[k]+.3,.02,vm[1],6,4))}}
  const concM=new THREE.MeshStandardMaterial({map:T_SLAB(),roughness:1,side:THREE.DoubleSide}),steelM=flat(0x4a4d52,{side:THREE.DoubleSide}),orgM=new THREE.MeshStandardMaterial({map:T_ORANGE(),roughness:.8,side:THREE.DoubleSide,flatShading:true});
  const trussM=new THREE.MeshStandardMaterial({map:T_TRUSS(),roughness:.8,side:THREE.DoubleSide,alphaTest:.5});
  const jumps=T.jumps||[],broken=jumps.length>0;
@@ -291,10 +297,7 @@ function forest(sc,T,r,U){const N=T.N,g=T._tg,B=P.BLD,MAT=P.PROPKIT&&P.PROPKIT.M
   /* split-rail fence round the pad, open at the road side */
   if(B.WoodFence_02){const ring=[],hs=12.5;for(let q=-hs;q<hs;q+=3){ring.push([q+1.5,-hs,0],[q+1.5,hs,0],[-hs,q+1.5,Math.PI/2],[hs,q+1.5,Math.PI/2])}
    const ca=Math.cos(s.yaw),sa=Math.sin(s.yaw),rows=[];for(const [dx,dz,yw] of ring){if(dz>hs-.1&&Math.abs(dx)<5)continue;const x=s.x+dx*ca+dz*sa,z=s.z-dx*sa+dz*ca;rows.push([x,T.terr(x,z)-.08,z,s.yaw+yw,1.1,1.1,1.1])}packInst('WoodFence_02',rows)}
-  if(HP&&HP.ready){if(k===0&&HP.defs.tractor)HP.add(sc,'tractor',[[s.x+Math.cos(s.yaw)*9-Math.sin(s.yaw)*3,gy+.02,s.z-Math.sin(s.yaw)*9-Math.cos(s.yaw)*3,s.yaw+1.2,1.5]]);if(k===3&&HP.defs.van)HP.add(sc,'van',[[s.x+Math.cos(s.yaw)*3,gy+.02,s.z-Math.sin(s.yaw)*3,s.yaw+.5,1.2]])}
-  /* a rough gravel drive from the pad to the road */
-  {const dr=new THREE.Mesh(new THREE.PlaneGeometry(4.5,27),new THREE.MeshStandardMaterial({color:0x6e5f44,roughness:1,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}));
-   dr.rotation.x=-Math.PI/2;dr.rotation.z=-s.yaw;dr.position.set(s.x+Math.sin(s.yaw)*13.5,gy+.06,s.z+Math.cos(s.yaw)*13.5);sc.add(dr)}});
+  });
  /* chevron boards on the outside of the sharp bends */
  {const bd=[],po=[],cm=new THREE.MeshStandardMaterial({map:T_CHEV(),roughness:.8});
   for(let i=0;i<N;i+=2){if(T.sg[i]!==3)continue;const a=T.psi[(i+9)%N],b=T.psi[(i-9+N)%N];let dp=a-b;while(dp>Math.PI)dp-=6.2832;while(dp<-Math.PI)dp+=6.2832;if(Math.abs(dp)<.62)continue;if(((i/2)|0)%3)continue;

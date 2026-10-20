@@ -19,7 +19,7 @@ updateVisual=(c,T,t)=>{prev(c,T,t);const m=c.m;if(!m||!RACE)return;const dt=Math
  if(amt>0&&c.respT<=0&&!(c.exp>0)&&!c.cool0){
   const yawR=wr(c.yaw-(c.pyaw===undefined?c.yaw:c.pyaw))/dt;c.pyaw=c.yaw;
   const al=clamp(c.sp*yawR,-26,26),ac=((c.sp-(c.psp===undefined?c.sp:c.psp))/dt);c.psp=c.sp;
-  const rough=(c.mt&&c.mt!==undefined&&(c.mt.grip<.9||T.d.gravel))?clamp(c.sp/30,0,1):0;
+  const rough=(c.mt&&c.mt!==undefined&&(c.mt.grip<.9||T.d.gravel||(T.gv&&T.gv[c.idx])))?clamp(c.sp/30,0,1):0;
   const lim=RL?1.5:1,tr=clamp(al*.0032*amt,-.11*lim,.11*lim)+(rough?(Math.random()-.5)*.016*rough*amt:0),tp=clamp(-ac*.0021*amt,-.07*lim,.07*lim)+(rough?(Math.random()-.5)*.02*rough*amt:0);
   const w0=RL?8.6:10.5,zt=RL?.42:.3+.15*(1-amt);c.swr=c.swr||0;c.swp=c.swp||0;c.swvr=c.swvr||0;c.swvp=c.swvp||0;
   /* semi-implicit spring: underdamped so the body rocks */

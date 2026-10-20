@@ -43,7 +43,7 @@ function stageFx(c,T,dt){const nm=T.d.name,sc=RACE.scene,sy=Math.sin(c.yaw),cy=M
   while(c._fA>=1){c._fA--;const a=rnd(0,6.283),r=rnd(3,26);P.puff(c.x+Math.cos(a)*r+sy*c.sp*.6,c.y+rnd(.5,5),c.z+Math.sin(a)*r+cy*c.sp*.6,rnd(.2,1),rnd(.1,.5),rnd(-.5,.5),[1,.88,.5],rnd(.08,.15),rnd(3,4.5),.55,.12)}}
  else if(nm==='Mangrove Ford'){c._fA=(c._fA||0)+dt*5;
   while(c._fA>=1){c._fA--;const a=rnd(0,6.283),r=rnd(4,28);P.puff(c.x+Math.cos(a)*r+sy*c.sp*.6,c.y+rnd(.4,3),c.z+Math.sin(a)*r+cy*c.sp*.6,rnd(-.3,.3),rnd(.1,.4),rnd(-.3,.3),[1,.97,.7],rnd(.08,.14),rnd(2.5,4),.7,-.05)}}}
-function roost(c,Rc,dt){const T=Rc.T;if(!c.human||!T.d.gravel||c.exp>0||c.respT>0||!c.onRoad||c.sp<5||c._wet>0||!Rc.dust)return;
+function roost(c,Rc,dt){const T=Rc.T;if(!c.human||!(T.d.gravel||(T.gv&&T.gv[c.idx]))||c.exp>0||c.respT>0||!c.onRoad||c.sp<5||c._wet>0||!Rc.dust)return;
  const slide=Math.abs(wrp(Math.atan2(c.vx,c.vz)-c.yaw)),rate=Math.min(1,(c.sp-4)/14)*(24+c.sp*.7)*(1+Math.min(1.8,slide*3)+(c._hb?1.2:0)+Math.max(0,c.in&&c.in.th||0)*.3);
  c._gA=(c._gA||0)+dt*rate;const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw),hx=T.d.dust||0xb89c70,bs=[((hx>>16)&255)/255,((hx>>8)&255)/255,(hx&255)/255].map(v=>v*v),dh=T.d.dirt||0x5a4630,dk=[((dh>>16)&255)/255,((dh>>8)&255)/255,(dh&255)/255].map(v=>v*v);
  while(c._gA>=1){c._gA--;const wi=2+(Math.random()<.5?0:1),w=c.m.wheels[wi];if(!w||!w.g)continue;
