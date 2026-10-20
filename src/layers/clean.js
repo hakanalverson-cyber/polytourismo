@@ -271,12 +271,12 @@ function harborTown(sc,T){
  const LOW=['CommercialBuilding_03','CommercialBuilding_02','ResidentBuilding_04'],
   MID=['CommercialBuilding_01','CommercialBuilding_02','ResidentBuilding_04','CompanyBuilding_03','CompanyBuilding_04'],TOW=['CompanyBuilding_01','CompanyBuilding_02','CompanyBuilding_03','CompanyBuilding_04'],
   SHED=[];
- const place=(list,sMin,sMax,dMin,dMax,tries,cnt,grid)=>{let n=0;for(let t=0;t<tries&&n<cnt;t++){let x=-660+r()*1320,z=-660+r()*1320;x=Math.round(x/grid)*grid;z=Math.round(z/grid)*grid;if(!land(x,z,14))continue;const d=near(x,z);if(d<dMin||d>dMax)continue;
-   const nm=list[Math.floor(r()*list.length)],g=P.BLD[nm];if(!g)continue;const s=sMin+r()*(sMax-sMin),rad=Math.max(g.w,g.d)*s*.5+1.2;if(!clear(x,z,rad))continue;
-   const k=nearest(x,z),yaw=Math.round(Math.atan2(rx[k]-x,rz[k]-z)/(Math.PI/2))*Math.PI/2;occ.push([x,z,rad]);(out[nm]=out[nm]||[]).push([x,.02,z,yaw,s]);log.push({n:nm,x,z,y:.02,fr:rad,sk:.5,s});n++}return n};
+ const place=(list,sMin,sMax,dMin,dMax,tries,cnt,grid)=>{let n=0;for(let t=0;t<tries&&n<cnt;t++){let x=-660+r()*1320,z=-660+r()*1320;x=Math.round(x/grid)*grid+(r()-.5)*grid*.7;z=Math.round(z/grid)*grid+(r()-.5)*grid*.7;if(!land(x,z,14))continue;const d=near(x,z);if(d<dMin+r()*r()*(dMax-dMin)*.5||d>dMax)continue;
+   const nm=list[Math.floor(r()*list.length)],g=P.BLD[nm];if(!g)continue;const s=sMin+Math.pow(r(),1.4)*(sMax-sMin),rad=Math.max(g.w,g.d)*s*.5+1.2+r()*r()*8;if(!clear(x,z,rad))continue;const sy=.85+r()*.5;
+   const k=nearest(x,z),yaw=Math.round(Math.atan2(rx[k]-x,rz[k]-z)/(Math.PI/2))*Math.PI/2+(r()<.3?(r()-.5)*.35:0);occ.push([x,z,rad]);(out[nm]=out[nm]||[]).push([x,.02,z,yaw,s,0,sy]);log.push({n:nm,x,z,y:.02,fr:rad,sk:.5,s});n++}return n};
  /* low-rise streets near the quay, mid-rise behind, towers on the far ring; everything on a lattice and square to the street */
- place(LOW,1.25,1.4,12,70,9000,260,22);
- place(MID,1.5,1.7,40,160,9000,220,30);
+ place(LOW,1.0,1.75,12,70,9000,260,22);
+ place(MID,1.3,2.0,40,160,9000,220,30);
  place(TOW,2.0,2.4,150,340,9000,150,46);
  place(TOW,2.8,3.3,280,600,9000,120,60);
  /* trees and hedges between the blocks */
@@ -284,7 +284,7 @@ function harborTown(sc,T){
  for(let t=0,n=0;t<1500&&n<110;t++){const x=-660+r()*1320,z=-660+r()*1320;if(!land(x,z,8)||near(x,z)<12)continue;if(!clear(x,z,2))continue;const nm=TR[Math.floor(r()*TR.length)];(out[nm]=out[nm]||[]).push([x,.02,z,r()*6.28,1.1+r()*.7,1]);occ.push([x,z,1.6])}
  const dum=new THREE.Object3D(),col=new THREE.Color();
  for(const nm in out){const L=out[nm],im=new THREE.InstancedMesh(P.BLD[nm].g.clone(),P.PROPKIT.MAT,L.length);
-  L.forEach((q,i)=>{dum.position.set(q[0],q[1],q[2]);dum.rotation.set(0,q[3],0);dum.scale.set(q[4],q[4],q[4]);dum.updateMatrix();im.setMatrixAt(i,dum.matrix);if(q[5]===1){col.setHSL(.27+r()*.08,.35,.78+r()*.2)}else{const PAL=[[.07,.28,.62],[.09,.22,.74],[.06,.3,.5],[.58,.1,.72],[.12,.18,.78],[.0,.04,.66],[.1,.14,.58]],ck=(Math.floor(q[0]/110)*73856093^Math.floor(q[2]/110)*19349663)>>>0,pk=PAL[ck%PAL.length];col.setHSL(pk[0],pk[1],pk[2]+(r()-.5)*.06)}im.setColorAt(i,col)});
+  L.forEach((q,i)=>{dum.position.set(q[0],q[1],q[2]);dum.rotation.set(0,q[3],0);dum.scale.set(q[4],q[4]*(q[6]||1),q[4]);dum.updateMatrix();im.setMatrixAt(i,dum.matrix);if(q[5]===1){col.setHSL(.27+r()*.08,.35,.78+r()*.2)}else{const PAL=[[.07,.28,.62],[.09,.22,.74],[.06,.3,.5],[.58,.1,.72],[.12,.18,.78],[.0,.04,.66],[.1,.14,.58]],ck=(Math.floor(q[0]/110)*73856093^Math.floor(q[2]/110)*19349663)>>>0,pk=PAL[r()<.55?ck%PAL.length:Math.floor(r()*PAL.length)];col.setHSL(pk[0]+(r()-.5)*.03,pk[1],pk[2]+(r()-.5)*.1)}im.setColorAt(i,col)});
   im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true;im.frustumCulled=false;im.castShadow=false;im.receiveShadow=false;im.userData.ptProp=nm;sc.add(im)}
 }
 const bw0=buildWorld;buildWorld=function(T){const sc=bw0.apply(this,arguments);try{city(sc,T)}catch(e){console.warn('city',e)}try{harborTown(sc,T)}catch(e){console.warn('harborTown',e)}try{tunnel(sc,T)}catch(e){console.warn('tunnel',e)}try{lotsAll(sc,T)}catch(e){console.warn('lots',e)}try{cover(sc,T)}catch(e){console.warn('cover',e)}try{lamps(sc,T)}catch(e){console.warn('lamps',e)}return sc};

@@ -7224,7 +7224,7 @@ sampleTrack=d=>{const T=ps(d);if(!d.harbor)return T;
 /* ---------- textures ---------- */
 const T_ASPH=()=>ctex(32,32,(x,w,h)=>{x.fillStyle='#3b3e44';x.fillRect(0,0,w,h);const r=rngf(4);for(let i=0;i<70;i++){x.fillStyle=r()<.5?'#00000022':'#ffffff10';x.fillRect(r()*w|0,r()*h|0,1,1)}x.fillStyle='#ffffffb0';x.fillRect(1,0,1,h);x.fillRect(w-2,0,1,h);x.fillStyle='#e8e0b0';x.fillRect(w/2-1,0,2,h/2)});
 const T_PLANK=()=>ctex(32,32,(x,w,h)=>{const r=rngf(9);for(let i=0;i<4;i++){const t=r()*.5;x.fillStyle=`rgb(${176+t*26|0},${132+t*22|0},${86+t*16|0})`;x.fillRect(0,i*8,w,8);x.fillStyle='#7a5a3a';x.fillRect(0,i*8+7,w,1);x.fillStyle='#00000010';x.fillRect((r()*w)|0,i*8,1,7)}x.fillStyle='#ffffffa0';x.fillRect(0,0,1,h);x.fillRect(w-1,0,1,h)});
-const T_COBBLE=()=>ctex(32,32,(x,w,h)=>{const r=rngf(3);x.fillStyle='#4a4742';x.fillRect(0,0,w,h);for(let j=0;j<8;j++)for(let i=0;i<8;i++){const o=(j&1)*2,t=r();x.fillStyle=`rgb(${100+t*50|0},${96+t*46|0},${88+t*40|0})`;x.fillRect(i*4+o,j*4,3,3)}});
+const T_COBBLE=()=>ctex(32,32,(x,w,h)=>{const r=rngf(3);x.fillStyle='#6a665f';x.fillRect(0,0,w,h);for(let j=0;j<8;j++)for(let i=0;i<8;i++){const o=(j&1)*2,t=r();x.fillStyle=`rgb(${112+t*26|0},${106+t*24|0},${98+t*22|0})`;x.fillRect(i*4+o,j*4,3,3)}});
 const T_TILE=()=>ctex(16,16,(x,w,h)=>{for(let j=0;j<4;j++)for(let i=0;i<4;i++){x.fillStyle=(i+j)&1?'#e2d6bf':'#b08a6e';x.fillRect(i*4,j*4,4,4)}});
 const T_FACADE=seed=>ctex(64,128,(x,w,h)=>{const r=rngf(seed),cols=['#d8b99a','#c9877a','#e3d6a5','#9db8a8','#b9a0b8','#d4a373'];x.fillStyle=cols[seed%cols.length];x.fillRect(0,0,w,h);
  x.fillStyle='#00000012';for(let y=0;y<h;y+=6)x.fillRect(0,y,w,1);
@@ -7282,23 +7282,23 @@ function buildHarbor(T){const d=T.d,N=T.N,r=rngf(8*77+5),sc=new THREE.Scene(),H=
  mesh(new THREE.SphereGeometry(40,12,8),new THREE.MeshBasicMaterial({color:d.sun,fog:false}),-500,420,-1000,sc);
  /* water everywhere, land with a harbour-basin hole */
  const wm=new THREE.MeshStandardMaterial({color:0x0d6a99,roughness:1,metalness:0,flatShading:true});
- const sea=mesh(new THREE.PlaneGeometry(6000,6000),wm,0,-1.3,0,sc);sea.rotation.x=-Math.PI/2;sc.userData.harbor={water:wm};
+ const sea=mesh(new THREE.PlaneGeometry(6000,6000),wm,0,-1.8,0,sc);sea.rotation.x=-Math.PI/2;sc.userData.harbor={water:wm};
  const bed=mesh(new THREE.PlaneGeometry(6000,6000),flat(0x1a4a5e),0,-9,0,sc);bed.rotation.x=-Math.PI/2;
  const shp=new THREE.Shape();shp.moveTo(-760,-760);shp.lineTo(760,-760);shp.lineTo(760,760);shp.lineTo(-760,760);shp.lineTo(-760,-760);
  const hole=new THREE.Path();[[215,5],[760,5],[760,760],[-760,760],[-760,315],[215,315]].forEach((p,i)=>i?hole.lineTo(p[0],-p[1]):hole.moveTo(p[0],-p[1]));shp.holes.push(hole);
  /* shape is XY; map y=-z so rotating -90deg about X lands it on the ground */
- {const g=new THREE.ShapeGeometry(shp);const gm=new THREE.MeshStandardMaterial({map:T_CONC_G(),roughness:1,polygonOffset:true,polygonOffsetFactor:2,polygonOffsetUnits:2});const land=new THREE.Mesh(g,gm);land.rotation.x=-Math.PI/2;land.position.y=-.3;sc.add(land)}
+ {const g=new THREE.ShapeGeometry(shp);const gm=new THREE.MeshStandardMaterial({map:T_CONC_G(),roughness:1,polygonOffset:true,polygonOffsetFactor:2,polygonOffsetUnits:2});const land=new THREE.Mesh(g,gm);land.rotation.x=-Math.PI/2;land.position.y=-.06;sc.add(land)}
  function T_CONC_G(){const t=ctex(16,16,(x,w,h)=>{x.fillStyle='#7b7e80';x.fillRect(0,0,w,h);x.fillStyle='#0000001a';x.fillRect(0,0,w,1);x.fillRect(0,0,1,h);const rr=rngf(2);for(let i=0;i<20;i++){x.fillStyle=rr()<.5?'#ffffff10':'#00000014';x.fillRect(rr()*w|0,rr()*h|0,2,1)}});t.repeat.set(160,160);return t}
  /* quay edge: stone face + curb along the basin outline */
  const seg2=[[[215,5],[215,315]],[[215,5],[760,5]],[[-760,315],[215,315]]];
  for(const [a,b] of seg2){const len=Math.hypot(b[0]-a[0],b[1]-a[1]),m=mesh(new THREE.BoxGeometry(len,1.6,1.2),flat(0x6a6d70),(a[0]+b[0])/2,-.7,(a[1]+b[1])/2,sc);m.rotation.y=-Math.atan2(b[1]-a[1],b[0]-a[0])}
  /* ----- road surfaces ----- */
- const PO={polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2};const asph=new THREE.MeshStandardMaterial(Object.assign({map:T_ASPH(),roughness:.9,side:THREE.DoubleSide},PO));sc.add(ribbon(T,k=>-T.hw[k],k=>T.hw[k],10,.07,asph,6));
+ const PO={polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2};const asph=new THREE.MeshStandardMaterial(Object.assign({map:T_ASPH(),roughness:.9,side:THREE.DoubleSide},PO));sc.add(ribbon(T,k=>-T.hw[k],k=>T.hw[k],10,.03,asph,6));
  const hw=k=>T.hw[k];
  const plank=new THREE.MeshStandardMaterial({map:T_PLANK(),roughness:1,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4}),cob=new THREE.MeshStandardMaterial({map:T_COBBLE(),roughness:1,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4}),tile=new THREE.MeshStandardMaterial({map:T_TILE(),roughness:.7,side:THREE.DoubleSide});
- sc.add(strip(T,H.pier[0],H.pier[1],k=>-hw(k),k=>hw(k),.09,plank,6));
+ sc.add(strip(T,H.pier[0],H.pier[1],k=>-hw(k),k=>hw(k),.03,plank,6));
  const paveM=new THREE.MeshStandardMaterial({map:T_PAVE(),roughness:1,side:THREE.DoubleSide}),curbM=new THREE.MeshStandardMaterial({color:0xb9b6ae,roughness:1,side:THREE.DoubleSide});
- for(const [a0,a1] of H.alleys){sc.add(strip(T,a0,a1,k=>-hw(k),k=>hw(k),.09,cob,5));
+ for(const [a0,a1] of H.alleys){sc.add(strip(T,a0,a1,k=>-hw(k),k=>hw(k),.03,cob,5));
   /* kerb face + raised pavement on both sides: the paving sits strictly outside the drivable width */
   for(const sd of[-1,1]){sc.add(strip(T,a0,a1,k=>sd*(hw(k)+.02),k=>sd*(hw(k)+1.95),.2,paveM,3,2));
    const pos=[],idx=[],n=a1-a0+1;for(let q=0;q<n;q++){const k=(a0+q)%T.N,f=frame(T,k,sd*(hw(k)+.02));pos.push(f[0],T.y[k]+.07,f[1],f[0],T.y[k]+.2,f[1])}
@@ -7308,7 +7308,7 @@ function buildHarbor(T){const d=T.d,N=T.N,r=rngf(8*77+5),sc=new THREE.Scene(),H=
  /* ----- walls: concrete barrier on the quay, wooden rail on pier/restaurant, tall painted facades in the alleys ----- */
  const cat=new Uint8Array(N);const inAl=i=>H.alleys.some(a=>i>=a[0]&&i<=a[1]);for(let i=0;i<N;i++){cat[i]=inAl(i)?2:((i>=H.pier[0]&&i<=H.pier[1])||(i>=H.rest[0]&&i<=H.rest[1]))?1:0}
  const mats=[new THREE.MeshStandardMaterial({map:T_CONC(),side:THREE.DoubleSide,roughness:.9}),new THREE.MeshStandardMaterial({map:T_RAIL(),side:THREE.DoubleSide,roughness:.9}),new THREE.MeshStandardMaterial({map:T_BRICKW(),side:THREE.DoubleSide,roughness:.95})];
- for(let c=0;c<3;c++){const W=Object.create(T);W.wh=Float32Array.from(T.wh,(h,i)=>cat[i]===c?h:0);if(c===2)W.hw=Float32Array.from(T.hw,h=>h+1.7);sc.add(wallMesh(W,1,mats[c]));sc.add(wallMesh(W,-1,mats[c]))}
+ for(let c=0;c<3;c++){const W=Object.create(T);W.wall=Uint8Array.from(T.wall,(w,i)=>cat[i]===c?w:0);W.wh=Float32Array.from(T.wh,(h,i)=>cat[i]===c?(c<2?Math.min(h,c?1.2:1.0):h):0);if(c===2)W.hw=Float32Array.from(T.hw,h=>h+1.7);sc.add(wallMesh(W,1,mats[c]));sc.add(wallMesh(W,-1,mats[c]))}
  /* top trim along the alley walls */
  {const W=Object.create(T);W.wh=Float32Array.from(T.wh,(h,i)=>cat[i]===2?.0:-.3)}
  /* ----- start arch ----- */
@@ -7342,7 +7342,8 @@ function buildHarbor(T){const d=T.d,N=T.N,r=rngf(8*77+5),sc=new THREE.Scene(),H=
   instB(sc,new THREE.CylinderGeometry(1,1,1,6),flat(0x3a2a1c),tab);instB(sc,new THREE.CylinderGeometry(1,1,1,10),flat(0xf6f0e0),tops);
   instB(sc,new THREE.BoxGeometry(1,1,1),flat(0xa04a2c),chr);instB(sc,new THREE.IcosahedronGeometry(1,0),flat(0x3f8a4a),plant);
   instB(sc,new THREE.CylinderGeometry(1,1,1,5),new THREE.MeshBasicMaterial({color:0xffd27a}),cand);
-  instB(sc,new THREE.SphereGeometry(1,8,6),new THREE.MeshBasicMaterial({color:0xffe2a0}),bulbs);
+  {const cords=bulbs.map(b=>[b[0],(8.2+b[1])/2,b[2],.035,8.2-b[1]+.1,.035]),shades=bulbs.map(b=>[b[0],b[1]+.05,b[2],1,.55,1]),glow=bulbs.map(b=>[b[0],b[1]-.12,b[2],.26,.26,.26]);
+   instB(sc,new THREE.CylinderGeometry(1,1,1,4),flat(0x20252b),cords);instB(sc,new THREE.CylinderGeometry(.28,.62,1,12,1,true),flat(0x2f6a4c,{side:THREE.DoubleSide}),shades);instB(sc,new THREE.SphereGeometry(1,8,6),new THREE.MeshBasicMaterial({color:0xffe2a0}),glow)}
   /* entrance portals + signs */
   for(const [k,flip] of [[a,0],[b,1]]){const f=frame(T,k,0),g=new THREE.Group();g.position.set(f[0],0,f[1]);g.rotation.y=f[2]+(flip?Math.PI:0);sc.add(g);
    mesh(new THREE.BoxGeometry(W*2+2,2.4,1.2),flat(0x8a4a38),0,10.9,0,g);for(const sd of [-1,1])mesh(new THREE.BoxGeometry(1.2,10.4,1.2),flat(0x8a4a38),sd*(W+.4),5.2,0,g);
@@ -7397,20 +7398,18 @@ function harborDress(sc,T,H,X){const HP=P.HP;if(!HP||!HP.ready){console.warn('ha
  /* 4) crate rows on the west quay edge (x<215, z 60..310): stay >14 m from the asphalt */
  for(let z=70;z<312;z+=7+r()*8){const nm=pick(STACK),x=207-r()*4;if(!nm)continue;const s=fitW(nm,/stacked/.test(nm)?4:3);if(rd(x,z)<12||!free(x,z,3))continue;put(nm,x,z,Math.round(r()*2)*Math.PI/2,s);occ.push([x,z,3])}
  /* 5) ships: moored in the east basin and out at sea, plus rowboats and a wreck */
- const wl=-1.3,ship=(nm,x,z,yaw,len)=>{const d=D(nm);if(!d)return;const s=len/Math.max(d.d,d.w);put(nm,x,z,yaw,s,{y:wl-d.min.y*s-d.h*s*.03})};
- ship('ship_dark',470,95,0,52);ship('ship_light',560,215,Math.PI,50);ship('ship_dark',690,120,Math.PI,56);ship('ship_wreck',690,290,.5,46);
- ship('ship_light',60,400,Math.PI/2,54);ship('ship_dark',310,420,-Math.PI/2,60);ship('ship_light',-170,470,Math.PI/2,50);ship('ship_dark',560,470,Math.PI/2,64);ship('ship_dark',420,330,.6,46);
- for(const [x,z,yaw] of[[290,150,.3],[300,205,-.5],[276,115,1.2],[380,40,.2],[390,190,2.4],[236,230,0]]){const nm=r()<.5?'boat_large':'boat_small';if(D(nm))put(nm,x,z,yaw,fit(nm,1.4),{y:wl-.05})}
-
+ /* small boats tied up around the piers (the only boat models available that aren't medieval) */
+ const wl=-1.8;
+ for(const [x,z,yaw] of[[290,150,.3],[300,205,-.5],[276,115,1.2],[236,230,0],[238,60,1.4],[236,290,.1]]){const nm=r()<.5?'boat_large':'boat_small';if(D(nm))put(nm,x,z,yaw,fitW(nm,5.2),{y:wl-.05})}
  /* 7) grass: soft green patches on the open ground, bushes and tufts along the verges, more trees */
  {const gp=[],gm=new THREE.MeshStandardMaterial({color:0x6fae52,roughness:1,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
-  for(let t=0;t<2600&&gp.length<190;t++){const x=-640+r()*1280,z=-640+r()*1280,rad=7+r()*13;if(!land(x,z,rad)||rd(x,z)<10+rad*.5||!free(x,z,rad*.5))continue;gp.push([x,-.27,z,rad,1,rad*(.7+r()*.5)])}
+  for(let t=0;t<2600&&gp.length<190;t++){const x=-640+r()*1280,z=-640+r()*1280,rad=7+r()*13;if(!land(x,z,rad)||rd(x,z)<10+rad*.5||!free(x,z,rad*.5))continue;gp.push([x,-.045,z,rad,1,rad*(.7+r()*.5)])}
   if(gp.length){const im=instB(sc,new THREE.CircleGeometry(1,12),gm,gp.map(q=>[q[0],q[1],q[2],q[3],q[5],1]));im.rotation.x=0;
    /* circles lie in XY: rotate each instance flat */const o=new THREE.Object3D();gp.forEach((q,i)=>{o.position.set(q[0],q[1],q[2]);o.rotation.set(-Math.PI/2,0,r()*6.28);o.scale.set(q[3],q[5],1);o.updateMatrix();im.setMatrixAt(i,o.matrix)});im.instanceMatrix.needsUpdate=true}
   const GR=['bush'].filter(D),TR=['Tree_02','Tree_04','Tree_05','Tree_07'].filter(n=>P.BLD&&P.BLD[n]),HB2=['Bush_01','Bush_02'].filter(n=>P.BLD&&P.BLD[n]);
-  for(let t=0,n=0;t<3000&&n<260;t++){const x=-640+r()*1280,z=-640+r()*1280,q=rd(x,z);if(!land(x,z,3)||q<9||q>70||!free(x,z,2))continue;put('bush',x,z,r()*6.28,fit('bush',1.2+r()*1.6),{y:-.25,tint:pick([0xffffff,0xd8f0c0,0xbfe0a0])});occ.push([x,z,1.5]);n++}
+  for(let t=0,n=0;t<3000&&n<260;t++){const x=-640+r()*1280,z=-640+r()*1280,q=rd(x,z);if(!land(x,z,3)||q<9||q>70||!free(x,z,2))continue;put('bush',x,z,r()*6.28,fit('bush',1.2+r()*1.6),{y:-.04,tint:pick([0xffffff,0xd8f0c0,0xbfe0a0])});occ.push([x,z,1.5]);n++}
   /* kerbside bushes along the open road shoulders */
-  for(let k=8;k<N;k+=Math.round(16/T.sp)){if(H.alleys.some(a=>k>=a[0]-2&&k<=a[1]+2)||(k>=H.rest[0]-2&&k<=H.rest[1]+2)||(k>=H.pier[0]-2&&k<=H.pier[1]+2))continue;const sd=r()<.5?-1:1,f=frame(T,k,sd*(T.hw[k]+10+r()*5));if(!land(f[0],f[1],2)||!free(f[0],f[1],1.5))continue;put('bush',f[0],f[1],r()*6.28,fit('bush',1.4+r()),{y:-.25});occ.push([f[0],f[1],1.5])}}
+  for(let k=8;k<N;k+=Math.round(16/T.sp)){if(H.alleys.some(a=>k>=a[0]-2&&k<=a[1]+2)||(k>=H.rest[0]-2&&k<=H.rest[1]+2)||(k>=H.pier[0]-2&&k<=H.pier[1]+2))continue;const sd=r()<.5?-1:1,f=frame(T,k,sd*(T.hw[k]+10+r()*5));if(!land(f[0],f[1],2)||!free(f[0],f[1],1.5))continue;put('bush',f[0],f[1],r()*6.28,fit('bush',1.4+r()),{y:-.04});occ.push([f[0],f[1],1.5])}}
  /* 8) drifting smoke from chimneys, sheds and cranes */
  if(smk.length){const cv=document.createElement('canvas');cv.width=cv.height=64;const g=cv.getContext('2d'),gr=g.createRadialGradient(32,32,0,32,32,32);[[0,.7],[.4,.4],[.7,.14],[1,0]].forEach(([o,a])=>gr.addColorStop(o,`rgba(235,235,235,${a})`));g.fillStyle=gr;g.fillRect(0,0,64,64);
   const tx=new THREE.CanvasTexture(cv),puffs=[],grp=new THREE.Group();sc.add(grp);const C=7;
@@ -8352,9 +8351,10 @@ P.LOG=[
  {v:'0.03',d:'Oct 20, 2026',t:'Harbor rework, new streetlights',items:[
   'Harbor Lights rebuilt: a new, more varied road with a long run of brick alleyways, the boardwalk pier and the restaurant kept.',
   'Alleys are brick walls with doors, windows, awnings, pipes and fire escapes, kerbed pavements outside the road, bins, hydrants and crates, and real buildings rising behind them.',
-  'Real low-poly ships (sailing ships, steamers, rowboats and a wreck) in the harbor and out at sea.',
+  'Small boats tied up around the piers.',
   'A container yard with stacked cargo pods, depots, trucks, cranes and wind turbines, assembled from open-source (CC0) models by Kenney and KayKit plus the building pack.',
   'Pavement and ground textures no longer sit on the road surface.',
+  'Harbor Lights fixes: no more brick strips along the track, no grey wall spikes at alley exits, boardwalk and road at the same height, crates sit on the ground, restaurant lamps hang from cords, calmer cobblestones, and more varied houses (size, colour, spacing, setback).',
   'Harbor Lights: houses sit closer to the road, with grass patches, bushes and drifting chimney smoke added.',
   'All streetlights on every map: new lamp model, a much wider and softer pool of light, a smoother glow, and lights that fade in and out instead of popping. Harbor Lights now has streetlights too.',
   'Only the rally mode has a loading screen now; everything else launches straight in. The loader car\'s front wheels point straight.',
@@ -10219,12 +10219,12 @@ function harborTown(sc,T){
  const LOW=['CommercialBuilding_03','CommercialBuilding_02','ResidentBuilding_04'],
   MID=['CommercialBuilding_01','CommercialBuilding_02','ResidentBuilding_04','CompanyBuilding_03','CompanyBuilding_04'],TOW=['CompanyBuilding_01','CompanyBuilding_02','CompanyBuilding_03','CompanyBuilding_04'],
   SHED=[];
- const place=(list,sMin,sMax,dMin,dMax,tries,cnt,grid)=>{let n=0;for(let t=0;t<tries&&n<cnt;t++){let x=-660+r()*1320,z=-660+r()*1320;x=Math.round(x/grid)*grid;z=Math.round(z/grid)*grid;if(!land(x,z,14))continue;const d=near(x,z);if(d<dMin||d>dMax)continue;
-   const nm=list[Math.floor(r()*list.length)],g=P.BLD[nm];if(!g)continue;const s=sMin+r()*(sMax-sMin),rad=Math.max(g.w,g.d)*s*.5+1.2;if(!clear(x,z,rad))continue;
-   const k=nearest(x,z),yaw=Math.round(Math.atan2(rx[k]-x,rz[k]-z)/(Math.PI/2))*Math.PI/2;occ.push([x,z,rad]);(out[nm]=out[nm]||[]).push([x,.02,z,yaw,s]);log.push({n:nm,x,z,y:.02,fr:rad,sk:.5,s});n++}return n};
+ const place=(list,sMin,sMax,dMin,dMax,tries,cnt,grid)=>{let n=0;for(let t=0;t<tries&&n<cnt;t++){let x=-660+r()*1320,z=-660+r()*1320;x=Math.round(x/grid)*grid+(r()-.5)*grid*.7;z=Math.round(z/grid)*grid+(r()-.5)*grid*.7;if(!land(x,z,14))continue;const d=near(x,z);if(d<dMin+r()*r()*(dMax-dMin)*.5||d>dMax)continue;
+   const nm=list[Math.floor(r()*list.length)],g=P.BLD[nm];if(!g)continue;const s=sMin+Math.pow(r(),1.4)*(sMax-sMin),rad=Math.max(g.w,g.d)*s*.5+1.2+r()*r()*8;if(!clear(x,z,rad))continue;const sy=.85+r()*.5;
+   const k=nearest(x,z),yaw=Math.round(Math.atan2(rx[k]-x,rz[k]-z)/(Math.PI/2))*Math.PI/2+(r()<.3?(r()-.5)*.35:0);occ.push([x,z,rad]);(out[nm]=out[nm]||[]).push([x,.02,z,yaw,s,0,sy]);log.push({n:nm,x,z,y:.02,fr:rad,sk:.5,s});n++}return n};
  /* low-rise streets near the quay, mid-rise behind, towers on the far ring; everything on a lattice and square to the street */
- place(LOW,1.25,1.4,12,70,9000,260,22);
- place(MID,1.5,1.7,40,160,9000,220,30);
+ place(LOW,1.0,1.75,12,70,9000,260,22);
+ place(MID,1.3,2.0,40,160,9000,220,30);
  place(TOW,2.0,2.4,150,340,9000,150,46);
  place(TOW,2.8,3.3,280,600,9000,120,60);
  /* trees and hedges between the blocks */
@@ -10232,7 +10232,7 @@ function harborTown(sc,T){
  for(let t=0,n=0;t<1500&&n<110;t++){const x=-660+r()*1320,z=-660+r()*1320;if(!land(x,z,8)||near(x,z)<12)continue;if(!clear(x,z,2))continue;const nm=TR[Math.floor(r()*TR.length)];(out[nm]=out[nm]||[]).push([x,.02,z,r()*6.28,1.1+r()*.7,1]);occ.push([x,z,1.6])}
  const dum=new THREE.Object3D(),col=new THREE.Color();
  for(const nm in out){const L=out[nm],im=new THREE.InstancedMesh(P.BLD[nm].g.clone(),P.PROPKIT.MAT,L.length);
-  L.forEach((q,i)=>{dum.position.set(q[0],q[1],q[2]);dum.rotation.set(0,q[3],0);dum.scale.set(q[4],q[4],q[4]);dum.updateMatrix();im.setMatrixAt(i,dum.matrix);if(q[5]===1){col.setHSL(.27+r()*.08,.35,.78+r()*.2)}else{const PAL=[[.07,.28,.62],[.09,.22,.74],[.06,.3,.5],[.58,.1,.72],[.12,.18,.78],[.0,.04,.66],[.1,.14,.58]],ck=(Math.floor(q[0]/110)*73856093^Math.floor(q[2]/110)*19349663)>>>0,pk=PAL[ck%PAL.length];col.setHSL(pk[0],pk[1],pk[2]+(r()-.5)*.06)}im.setColorAt(i,col)});
+  L.forEach((q,i)=>{dum.position.set(q[0],q[1],q[2]);dum.rotation.set(0,q[3],0);dum.scale.set(q[4],q[4]*(q[6]||1),q[4]);dum.updateMatrix();im.setMatrixAt(i,dum.matrix);if(q[5]===1){col.setHSL(.27+r()*.08,.35,.78+r()*.2)}else{const PAL=[[.07,.28,.62],[.09,.22,.74],[.06,.3,.5],[.58,.1,.72],[.12,.18,.78],[.0,.04,.66],[.1,.14,.58]],ck=(Math.floor(q[0]/110)*73856093^Math.floor(q[2]/110)*19349663)>>>0,pk=PAL[r()<.55?ck%PAL.length:Math.floor(r()*PAL.length)];col.setHSL(pk[0]+(r()-.5)*.03,pk[1],pk[2]+(r()-.5)*.1)}im.setColorAt(i,col)});
   im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true;im.frustumCulled=false;im.castShadow=false;im.receiveShadow=false;im.userData.ptProp=nm;sc.add(im)}
 }
 const bw0=buildWorld;buildWorld=function(T){const sc=bw0.apply(this,arguments);try{city(sc,T)}catch(e){console.warn('city',e)}try{harborTown(sc,T)}catch(e){console.warn('harborTown',e)}try{tunnel(sc,T)}catch(e){console.warn('tunnel',e)}try{lotsAll(sc,T)}catch(e){console.warn('lots',e)}try{cover(sc,T)}catch(e){console.warn('cover',e)}try{lamps(sc,T)}catch(e){console.warn('lamps',e)}return sc};

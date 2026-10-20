@@ -6,9 +6,10 @@ P.LOG=[
  {v:'0.03',d:'Oct 20, 2026',t:'Harbor rework, new streetlights',items:[
   'Harbor Lights rebuilt: a new, more varied road with a long run of brick alleyways, the boardwalk pier and the restaurant kept.',
   'Alleys are brick walls with doors, windows, awnings, pipes and fire escapes, kerbed pavements outside the road, bins, hydrants and crates, and real buildings rising behind them.',
-  'Real low-poly ships (sailing ships, steamers, rowboats and a wreck) in the harbor and out at sea.',
+  'Small boats tied up around the piers.',
   'A container yard with stacked cargo pods, depots, trucks, cranes and wind turbines, assembled from open-source (CC0) models by Kenney and KayKit plus the building pack.',
   'Pavement and ground textures no longer sit on the road surface.',
+  'Harbor Lights fixes: no more brick strips along the track, no grey wall spikes at alley exits, boardwalk and road at the same height, crates sit on the ground, restaurant lamps hang from cords, calmer cobblestones, and more varied houses (size, colour, spacing, setback).',
   'Harbor Lights: houses sit closer to the road, with grass patches, bushes and drifting chimney smoke added.',
   'All streetlights on every map: new lamp model, a much wider and softer pool of light, a smoother glow, and lights that fade in and out instead of popping. Harbor Lights now has streetlights too.',
   'Only the rally mode has a loading screen now; everything else launches straight in. The loader car\'s front wheels point straight.',
