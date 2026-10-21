@@ -345,7 +345,7 @@ function setStudioCar(idx){ensureStudio();if(S.idx===idx)return;const src=CAR_MO
  S.turn.add(wrap);S.car=wrap;S.mir=mir;S.idx=idx;lastPhotoKey=''}
 function studioOn(){if(STU.on)return;STU.on=true;document.body.classList.add('studio');$('c').style.imageRendering='auto';STU.tm=R.toneMapping;R.toneMapping=THREE.NoToneMapping;R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;sizeStudio()}
 function sizeStudio(){const d=Math.min(devicePixelRatio||1,2);R.setPixelRatio(1);R.setSize(Math.max(2,innerWidth*d|0),Math.max(2,innerHeight*d|0),false)}
-function studioOff(){if(!STU.on)return;STU.on=false;document.body.classList.remove('studio');$('c').style.imageRendering='';R.toneMapping=STU.tm;R.setRenderTarget(null);rs()}
+P.makePost=makePost;P.sizeNative=sizeStudio;function studioOff(){if(!STU.on)return;STU.on=false;document.body.classList.remove('studio');$('c').style.imageRendering='';R.toneMapping=STU.tm;R.setRenderTarget(null);rs()}
 const rs0=rs;rs=()=>{if(STU.on)sizeStudio();else rs0()};
 function drawShow(dt){studioOn();ensureStudio();const car=BYID[SR.id],idx=P.modelOf(SR.id,SR.alt);if(S.idx!==idx&&CAR_MODELS[idx])setStudioCar(idx);
  if(P.LV)P.LV.studio(S,SR);
@@ -512,7 +512,7 @@ addEventListener('keydown',e=>{
 frame=function(n){requestAnimationFrame(frame);const dt=Math.min(.05,Math.max(0,(n-last)/1000));last=n;dtf=dt;T0+=dt;
  if(RACE&&(scr==='game'||scr==='pause'||scr==='s8res')){if(!paused)step(dt);drawRace(dt);if(scr==='game')hudUpdate()}
  else if(scr==='s8show'){if(!inGrid())drawShow(dt)}
- else if(scr==='menu'||scr==='s8cards'||scr==='s8setup'||scr==='s8career'||scr==='s8res'){MS=MS||menuScene();MS.tick(Math.max(0,T0));R.setScissorTest(false);R.setViewport(0,0,R.domElement.width,R.domElement.height);R.render(MS.sc,MS.cam)}};
+ else if(scr==='menu'||scr==='s8cards'||scr==='s8setup'||scr==='s8career'||scr==='s8res'){MS=MS||menuScene();MS.tick(Math.max(0,T0));R.setScissorTest(false);R.setViewport(0,0,R.domElement.width,R.domElement.height);MS.draw?MS.draw():R.render(MS.sc,MS.cam)}};
 /* pause menu */
 (function(){const b=$('pause').querySelector('.b'),opt=[...b.querySelectorAll('button')].pop();b.innerHTML='<button id="pRes">Resume</button><button id="pRst">Restart</button><button id="pQuit">Quit to menu</button>';b.appendChild(opt);
  $('pRes').onclick=()=>resume();$('pRst').onclick=()=>{startRace()};$('pQuit').onclick=()=>{const r=RACE_RET();P.cleanupRace();show(r);if(r==='s8setup')renderSetup();if(r==='s8career')renderCareer()};
