@@ -42,6 +42,13 @@ function bStep(Rc,dt){const T=Rc.T;if(!T||Rc.state!=='race')return;cd-=dt;const 
     if(vn<0){c.vx-=1.25*vn*nx;c.vz-=1.25*vn*nz;c.vx*=.88;c.vz*=.88;if(-vn>2.2)hit(Rc,c,-vn,nx,nz)}}}c._px=c.x;c._pz=c.z}}
 const bw=buildWorld;buildWorld=function(T){const sc=bw.apply(this,arguments);try{collect(sc,T)}catch(e){console.warn('solid',e)}return sc};
 
+/* grip: a car hugging the road edge (or bouncing off it) keeps road grip, so cornering never falls to the off-road material mid-turn */
+{const sk=sampleTrack;sampleTrack=function(d){const T=sk.apply(this,arguments);const s0=T.surf;if(!s0||!T.grid)return T;
+ T.surf=(x,z,y)=>{const r=s0(x,z,y);if(r.road||T.d.city&&0)return r;const N=T.N,cx=Math.floor(x/16),cz=Math.floor(z/16);let nb=1e9,ni=-1,nl=0;
+  for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const ids=T.grid.get((cx+a)*8192+(cz+b));if(!ids)continue;
+   for(const i of ids){const j=(i+1)%N;if(T.gap[i]||T.gap[j])continue;const dx=T.x[j]-T.x[i],dz=T.z[j]-T.z[i],l2=dx*dx+dz*dz||1,f=Math.max(0,Math.min(1,((x-T.x[i])*dx+(z-T.z[i])*dz)/l2));
+    const px=T.x[i]+dx*f,pz=T.z[i]+dz*f,lat=(x-px)*Math.cos(T.psi[i])-(z-pz)*Math.sin(T.psi[i]),dd=Math.abs(lat)-T.hw[i];if(dd<=1.4&&dd<nb&&T.y[i]<=y+1.6){nb=dd;ni=i;nl=lat}}}
+  if(ni>=0){r.near=1;r.i=ni;r.lat=nl}return r};return T}}
 /* kerb/tunnel wall, true-position version: base clamp uses last frame's lateral and stops once road=0, so a fast car could cross the 0.9m margin in one frame and leave */
 function kerb(Rc,dt){const T=Rc.T;if(!T||Rc.state!=='race'||!T.wall)return;const N=T.N;
  for(const c of Rc.cars){if(!c.human||c.fin||c.respT>0||c.exp>0){c._wl=null;continue}
