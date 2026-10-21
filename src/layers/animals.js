@@ -97,4 +97,6 @@ function tick(dt){if(!AN||!RACE||RACE.T!==AN.T||dt<=0)return;const T=AN.T,cars=R
   a.mx.update(step)}}
 const stp=step;step=dt=>{stp(dt);try{tick(dt)}catch(e){if(!tick.err){tick.err=1;console.warn('animal tick',e)}}};
 P.animals=()=>AN;
+/* shared with the Free Roam herds */
+P.animalKit={get SP(){return SP},clone,RUN};
 })();

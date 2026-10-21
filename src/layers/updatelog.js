@@ -3,6 +3,12 @@
 'use strict';
 const P=window.PT8;
 P.LOG=[
+ {v:'0.06',d:'Oct 21, 2026',t:'Free Roam makeover',items:[
+  'The whole Free Roam map is rebuilt from open-source (CC0) models: a model-built town with towers, shops, houses and a park fountain; roadside villages, farms with barns, silos, crop plots and tractors; a wind farm, camp, harbour and roadside diners.',
+  'New roads: a north bypass, a south coast road, a west coast road and dirt lanes to the farms. Rolling hills, patchwork fields, new tree and boulder models and a sky with drifting clouds.',
+  'Cows, horses, deer and more graze near farms and in the meadows, and bolt when you drive too close.',
+  'Your garage is now a closed room with a corner desk, TV lounge, workbench, tyres, rug, posters and a window onto the dusk.',
+  'Stops are marked by a simple floating icon (a house for your garage) instead of the light beam.']},
  {v:'0.05',d:'Oct 21, 2026',t:'Free Roam',items:[
   'Career is now Free Roam: pick it and the screen fades to black, then you are dropped on your street in an open world about 6.7 km across, with a coast, a lake, a mountain pass, a forest, a town and an airfield.',
   'The world streams in chunks around your car and fades into distance haze, with a light blur at the edge of the view, so a big map stays smooth.',

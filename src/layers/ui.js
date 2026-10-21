@@ -351,6 +351,7 @@ function drawShow(dt){studioOn();ensureStudio();if(P.studioDress)P.studioDress(S
  if(P.LV)P.LV.studio(S,SR);
  SR.ang+=dt*(SR.drag?0:.35)+SR.vel*dt;SR.vel*=Math.pow(.05,dt);S.turn.rotation.y=SR.ang;
  const W=R.domElement.width,H=R.domElement.height;S.cam.aspect=W/H;const ca=.55+Math.sin(T0*.17)*.12;{const dz=CARDS()?8.4:10.2;S.cam.position.set(Math.sin(ca)*dz,(CARDS()?2.2:2.5)+Math.sin(T0*.23)*.15,Math.cos(ca)*dz)};S.cam.lookAt(0,.75,0);
+ if(P.hcam){S.cam.position.set(...P.hcam.p);S.cam.lookAt(...P.hcam.l)}
  S.cam.setViewOffset(W,H,-W*(CARDS()?.075:0),H*.02,W,H);S.cam.updateProjectionMatrix();
  R.setScissorTest(false);R.setViewport(0,0,W,H);S.post.render(S.sc,S.cam);R.setRenderTarget(null);
  const key=idx+'|'+(window.PT7&&window.PT7.photos[idx]?1:0);if(key!==lastPhotoKey&&CAR_MODELS[idx]){lastPhotoKey=key;fillPhotos(idx)}}
