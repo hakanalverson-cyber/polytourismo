@@ -1,21 +1,27 @@
 #!/usr/bin/env python3
-"""Split dist/Poly-Tourismo.html into a small index.html + data files so it fits the 16 MB artifact page limit."""
-import re,os,sys,json
+"""Split dist/Poly-Tourismo.html into a small index.html + data files (<16 MB page limit for in-app artifacts).
+Game code stays inline; only the big base64 blobs move to files, read with a synchronous same-origin XHR.
+Music tracks are read lazily (textContent getter) so the first load is ~9 MB."""
+import re,os,sys
 src=sys.argv[1] if len(sys.argv)>1 else 'dist/Poly-Tourismo.html';out=sys.argv[2] if len(sys.argv)>2 else '/tmp/art'
-os.makedirs(out,exist_ok=True);s=open(src).read()
-man=[];keep=[];pos=0;n=0
-for m in re.finditer(r'<script([^>]*)>(.*?)</script>',s,re.S):
-    keep.append(s[pos:m.start()]);pos=m.end();at=m.group(1)
-    if 'src=' in at: keep.append(m.group(0));continue
-    fn='d%02d.txt'%n;n+=1;open(os.path.join(out,fn),'w').write(m.group(2))
-    idm=re.search(r'id="([^"]+)"',at);ty=re.search(r'type="([^"]+)"',at)
-    man.append({'f':fn,'t':ty.group(1) if ty else '','id':idm.group(1) if idm else '','n':len(m.group(2))})
-keep.append(s[pos:])
-h=''.join(keep)
+os.makedirs(out,exist_ok=True);s=open(src).read();n=[0]
+def dump(txt):
+    fn='d%02d.txt'%n[0];n[0]+=1;open(os.path.join(out,fn),'w').write(txt);return fn
+def blk(m):
+    at,body=m.group(1),m.group(2)
+    if 'src=' in at or len(body)<300000: return m.group(0)
+    if 'type="text/plain"' in at:
+        fn=dump(body);idm=re.search(r'id="([^"]+)"',at).group(1)
+        return '<script%s></script><script>__lazy("%s","%s")</script>'%(at,idm,fn)
+    def cst(c):
+        v=c.group(2)
+        if len(v)<300000: return c.group(0)
+        return 'var %s=__ld("%s")'%(c.group(1),dump(v))
+    return '<script%s>%s</script>'%(at,re.sub(r'const (\w+)="([^"]*)"',cst,body))
+h=re.sub(r'<script([^>]*)>(.*?)</script>',blk,s,flags=re.S)
 h=re.sub(r'<!DOCTYPE[^>]*>','',h,flags=re.I);h=re.sub(r'</?(html|head|body)[^>]*>','',h,flags=re.I);h=re.sub(r'<meta charset[^>]*>','',h,count=1)
-loader="""<script>(async()=>{const M=%s,tot=M.reduce((a,x)=>a+x.n,0);let got=0;const fail=e=>{const d=document.createElement('div');d.style.cssText='position:fixed;inset:0;z-index:2147483647;background:#0b0e12;color:#fff;font:14px sans-serif;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center';d.textContent='Poly GT could not load ('+e+'). Reload the page.';document.documentElement.appendChild(d)};
-try{const bar=document.getElementById('ptBootBar')||document.getElementById('ptBoot');const R=await Promise.all(M.map(async x=>{const r=await fetch(x.f);if(!r.ok)throw new Error(x.f+' '+r.status);const t=await r.text();got+=x.n;if(bar&&bar.style)bar.dataset.p=Math.round(got/tot*100);return t}));
-M.forEach((x,i)=>{const e=document.createElement('script');if(x.t)e.type=x.t;if(x.id)e.id=x.id;e.text=R[i];document.body.appendChild(e)})}catch(e){fail(e&&e.message||e)}})();</script>"""%json.dumps(man)
-# loader goes where the first game script was: after all markup (end of file)
-open(os.path.join(out,'index.html'),'w').write(h.rstrip()+'\n'+loader)
-print(len(h),'index bytes;',len(man),'data files')
+ldr='<script>function __ld(f){var x=new XMLHttpRequest();x.open("GET",f,false);x.send();if(x.status!==200&&x.status!==0)throw new Error(f+" "+x.status);return x.responseText}function __lazy(id,f){var e=document.getElementById(id),c=null;Object.defineProperty(e,"textContent",{get:function(){return c===null?(c=__ld(f)):c},configurable:true})}</script>'
+i=h.index('<script')
+h=h[:i]+ldr+h[i:]
+open(os.path.join(out,'index.html'),'w').write(h)
+print(len(h),'index bytes;',n[0],'data files')
