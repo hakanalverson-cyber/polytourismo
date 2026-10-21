@@ -136,8 +136,8 @@ function buildSpan(T){const d=T.d,N=T.N,r=rngf(8*77+11),sc=new THREE.Scene();
       if(r<d){im.data[o]=148*c;im.data[o+1]=128*c;im.data[o+2]=95*c;im.data[o+3]=255}else im.data[o+3]=0}}
     x.putImageData(im,0,0)});pe_tex.magFilter=pe_tex.minFilter=THREE.NearestFilter;
   const pem=new THREE.MeshStandardMaterial({map:pe_tex,transparent:true,depthWrite:false,roughness:1,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-8,polygonOffsetUnits:-8});
-  for(const [a,b] of runs(T,i=>T.sg[i]===3)){const a0=(a-1+N)%N;sc.add(strip(T,a0,a0+(b+1-(a-1)),k=>-T.hw[k],k=>T.hw[k],.03,gm2,6,10));
-    sc.add(strip(T,b+1,b+1+EX,k=>-T.hw[k],k=>T.hw[k],.07,pem,EX*T.sp,10))}}
+  for(const [a,b] of runs(T,i=>T.sg[i]===3)){const a0=(a-1+N)%N;sc.add(strip(T,a0,a0+(b+1-(a-1))+1,k=>-T.hw[k],k=>T.hw[k],.03,gm2,6,10));
+    sc.add(strip(T,b-1,b+1+EX,k=>-T.hw[k],k=>T.hw[k],.07,pem,(EX+2)*T.sp,10))}}
  const concM=new THREE.MeshStandardMaterial({map:T_SLAB(),roughness:1,side:THREE.DoubleSide}),steelM=flat(0x4a4d52,{side:THREE.DoubleSide}),orgM=new THREE.MeshStandardMaterial({map:T_ORANGE(),roughness:.8,side:THREE.DoubleSide,flatShading:true});
  const trussM=new THREE.MeshStandardMaterial({map:T_TRUSS(),roughness:.8,side:THREE.DoubleSide,alphaTest:.5});
  const jumps=T.jumps||[],broken=jumps.length>0;
