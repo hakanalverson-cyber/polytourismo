@@ -17,10 +17,10 @@ function startLine(sc,T){
  const tx=new THREE.CanvasTexture(cv);tx.magFilter=tx.minFilter=THREE.NearestFilter;tx.generateMipmaps=false;
  const rows=Rr*RS;
  for(let r=0;r<=rows;r++){const a=(r/rows-.5)*len*Rr;for(let i=0;i<=C;i++){const l=(i/C-.5)*2*hw,x=T.x[k]+lx*l+fx*a,z=T.z[k]+lz*l+fz*a;
-   const s=T.surf?T.surf(x,z,T.y[k]+3):null;let y=s&&s.road&&isFinite(s.h)?s.h:T.y[k]-l*T.bank[k];pos.push(x,y+.03,z);uv.push(i/C,r/rows)}}
+   const s=T.surf?T.surf(x,z,T.y[k]+3):null;let y=s&&s.road&&isFinite(s.h)?s.h:T.y[k]-l*T.bank[k];pos.push(x,y+.1,z);uv.push(i/C,r/rows)}}
  for(let r=0;r<rows;r++)for(let i=0;i<C;i++){const a=r*(C+1)+i,b=a+1,d=a+C+1,e=d+1;idx.push(a,d,b,b,d,e)}
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);
- const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({map:tx,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-8,polygonOffsetUnits:-8}));m.userData.noChunk=1;m.frustumCulled=false;sc.add(m)}
+ const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({map:tx,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-12,polygonOffsetUnits:-12}));m.userData.noChunk=1;m.frustumCulled=false;sc.add(m)}
 const bw=buildWorld;buildWorld=function(T){const sc=bw.apply(this,arguments);try{startLine(sc,T)}catch(e){console.warn('startLine',e)}return sc};
 
 /* ---------- night: windows glow, lamp posts with light pools, halos ---------- */

@@ -136,12 +136,12 @@ function buildSpan(T){const d=T.d,N=T.N,r=rngf(8*77+11),sc=new THREE.Scene();
     const im=x.createImageData(w,h);
     for(let j=0;j<h;j++){const p=flip?j/(h-1):1-j/(h-1);for(let i=0;i<w;i++){const u=i/(w-1),e=Math.abs(u-.5)*2,sp=rr(),nz=vn(u,j/(h-1)),
       tr=Math.exp(-Math.pow((u-.27)/.06,2))+Math.exp(-Math.pow((u-.69)/.06,2)),
-      al=Math.min(.96,(Math.pow(p,1.9)*(.4+.6*e*e)+tr*Math.pow(p,1.3)*.75+(p>.82?(p-.82)*3:0))*(.45+.8*nz)*(.85+.3*sp)),q=.86+.28*sp,o=(j*w+i)*4;
+      pf=Math.max(0,Math.min(1,(p-.4)/.3)),full=pf*pf*(3-2*pf),al=Math.min(1,Math.max(Math.min(.96,(Math.pow(p,1.9)*(.4+.6*e*e)+tr*Math.pow(p,1.3)*.75)*(.45+.8*nz)*(.85+.3*sp)),full)),q=(.86+.28*sp)*(1-tr*.1*p),o=(j*w+i)*4;
       im.data[o]=157*q;im.data[o+1]=139*q;im.data[o+2]=104*q;im.data[o+3]=Math.max(0,al)*255}}
-    x.putImageData(im,0,0)});t.magFilter=t.minFilter=THREE.LinearFilter;return t};  const dm=[dt_(0),dt_(1)].map(t=>new THREE.MeshStandardMaterial({map:t,transparent:true,depthWrite:false,roughness:1,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3})),L14=Math.round(60/T.sp);
+    x.putImageData(im,0,0)});t.magFilter=t.minFilter=THREE.LinearFilter;return t};  const dm=[dt_(0),dt_(1)].map(t=>new THREE.MeshStandardMaterial({map:t,transparent:true,depthWrite:false,roughness:1,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-8,polygonOffsetUnits:-8})),L14=Math.round(60/T.sp);
   for(let i=0;i<N;i++){const n=(i+1)%N;
-   if(T.sg[i]!==3&&T.sg[n]===3)sc.add(strip(T,(i-L14+N)%N,(i-L14+N)%N+L14,k=>-T.hw[k],k=>T.hw[k],.045,dm[0],L14*T.sp,10));
-   if(T.sg[i]===3&&T.sg[n]!==3)sc.add(strip(T,n,n+L14,k=>-T.hw[k],k=>T.hw[k],.045,dm[1],L14*T.sp,10))}}
+   if(T.sg[i]!==3&&T.sg[n]===3)sc.add(strip(T,(i-L14+N)%N,(i-L14+N)%N+L14,k=>-T.hw[k],k=>T.hw[k],.07,dm[0],L14*T.sp,10));
+   if(T.sg[i]===3&&T.sg[n]!==3)sc.add(strip(T,n,n+L14,k=>-T.hw[k],k=>T.hw[k],.07,dm[1],L14*T.sp,10))}}
  const concM=new THREE.MeshStandardMaterial({map:T_SLAB(),roughness:1,side:THREE.DoubleSide}),steelM=flat(0x4a4d52,{side:THREE.DoubleSide}),orgM=new THREE.MeshStandardMaterial({map:T_ORANGE(),roughness:.8,side:THREE.DoubleSide,flatShading:true});
  const trussM=new THREE.MeshStandardMaterial({map:T_TRUSS(),roughness:.8,side:THREE.DoubleSide,alphaTest:.5});
  const jumps=T.jumps||[],broken=jumps.length>0;
