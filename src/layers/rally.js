@@ -535,19 +535,13 @@ function jumpFrame(now){
  const dt=Math.max(0,Math.min(.05,(now-J.last)/1000||0));J.last=now;
  if(!J.size())return;jumpUpdate(J,dt);jumpDraw(J)}
 P._jumpAt=t=>{const J=JS;if(!J)return 0;J.on=false;cancelAnimationFrame(J.raf);J.size();J.t=0;J.dust.forEach(d=>d.m.visible=false);for(let i=0;i<Math.round(t*30);i++)jumpUpdate(J,1/30);jumpDraw(J);return 1};
-P.rallyIntro=(open,track,o)=>{o=o||{};let e=$i('rlLoad');
- if(!e){e=document.createElement('div');e.id='rlLoad';e.innerHTML=`<div class="rl-jump"></div><div class="rl-lt"><small>PREPARING</small><h2>RALLY</h2><p>LOADING STAGES</p><div class="rl-pb"><u></u></div></div>`;document.body.appendChild(e)}
- {const t=e.querySelector('h2'),p_=e.querySelector('p');if(t)t.textContent=o.title||'RALLY';if(p_)p_.textContent=o.sub||'LOADING STAGES'}
- e.classList.remove('on','done','ready');void e.offsetWidth;e.classList.add('on');const t0=performance.now();
- let J=null;
- /* 1) get everything ready and paint one still frame; nothing animates while the heavy work runs */
- try{J=jumpInit(e.querySelector('.rl-jump'));try{const sel=o.car||P.rallySel(0);J.setCar(P.modelOf(sel.id,sel.alt?1:0))}catch(er){console.error('loadcar',er)}try{setScene(J,o.scene)}catch(er){console.error('scene',er);J.alt=null;J.sc.add(J.car.g)}J.on=false;J.size();J.dust.forEach(d=>d.m.visible=false);J.t=0;J.acc=0;for(let i=0;i<40;i++)jumpUpdate(J,1/30);jumpDraw(J)}catch(err){console.error('jump',err);J=null}
- const finish=()=>{
-  /* 2) all loaded: now play the shot smoothly, then fade out */
-  e.classList.add('ready');if(J){try{J.on=true;J.last=performance.now();cancelAnimationFrame(J.raf);J.raf=requestAnimationFrame(jumpFrame)}catch(er){}}
-  setTimeout(()=>{e.classList.add('done');setTimeout(()=>{e.classList.remove('on','done','ready');if(J){J.on=false;cancelAnimationFrame(J.raf)}},650)},1500)};
- requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(()=>{try{open()}catch(err){console.error(err)}
-  (P.stageRender&&track!=null&&!o.noStage?P.stageRender(track):Promise.resolve()).catch(()=>{}).then(()=>setTimeout(finish,60))},80)))};
+P.rallyIntro=(open,track,o)=>{o=o||{};let e=$i('rlFade');
+ /* black fade instead of a loading screen: fade to black, do the heavy work unseen, fade back in */
+ if(!e){e=document.createElement('div');e.id='rlFade';e.style.cssText='position:fixed;inset:0;background:#000;z-index:99999;opacity:0;pointer-events:none;transition:opacity .35s ease';document.body.appendChild(e)}
+ e.style.pointerEvents='auto';void e.offsetWidth;e.style.opacity='1';
+ const finish=()=>{e.style.transition='opacity .7s ease';e.style.opacity='0';setTimeout(()=>{e.style.pointerEvents='none';e.style.transition='opacity .35s ease'},720)};
+ setTimeout(()=>{requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(()=>{try{open()}catch(err){console.error(err)}
+  (P.stageRender&&track!=null&&!o.noStage?P.stageRender(track):Promise.resolve()).catch(()=>{}).then(()=>setTimeout(finish,120))},40)))},380)};
 /* every mode gets the car loading screen */
 P.launchWithIntro=cfg=>{if(P._introBusy)return;const rally=cfg.mode==='rally'&&!cfg.circuit,circ=!!cfg.circuit,mm=cfg.cutup?'cutup':cfg.mode;
  if(!rally){P.launch(cfg);return}
