@@ -7,18 +7,22 @@ const O=()=>window.PTO||{master:.7,sfx:.65,engine:.55};
 const TR={baby:['Baby So Free','mus_baby'],supreme:['Supreme Moment','mus_supreme'],space:['Space','mus_space'],glass:['Glasstress','mus_glass'],body:['Body And Mind','mus_body'],cafe:['Café de Flore','mus_cafe'],nocomm:['No Communication No Love','mus_nocomm'],lizzie:["Lizzie's Balloon",'mus_lizzie']};
 const MENU=['baby','supreme','space','glass','nocomm','lizzie'],urls={};
 function urlOf(k){if(urls[k])return urls[k];const e=document.getElementById(TR[k][1]);if(!e)return null;const b=atob(e.textContent.trim()),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return urls[k]=URL.createObjectURL(new Blob([u],{type:'audio/mpeg'}))}
-let deck=[],cur=null,au=null,vol=0,want=null,pop=null,popT=0;
-function shuffle(){deck=MENU.slice();for(let i=deck.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[deck[i],deck[j]]=[deck[j],deck[i]]}if(deck[0]===cur&&deck.length>1)deck.push(deck.shift())}
-function popup(k){try{if(!pop){pop=document.createElement('div');pop.style.cssText='position:fixed;right:2.2vw;bottom:3.2vh;z-index:99999;pointer-events:none;background:rgba(10,14,18,.82);border-left:3px solid #e9d9a6;padding:10px 18px 10px 14px;color:#eef1ef;font:600 13px/1.25 system-ui,sans-serif;letter-spacing:.06em;opacity:0;transform:translateX(18px);transition:opacity .5s,transform .5s;backdrop-filter:blur(4px)';document.body.appendChild(pop)}
- pop.innerHTML='<div style="font-size:10px;opacity:.6;letter-spacing:.18em;margin-bottom:3px">NOW PLAYING</div><div style="font-size:15px">'+TR[k][0].toUpperCase()+'</div>';pop.style.opacity=1;pop.style.transform='none';clearTimeout(popT);popT=setTimeout(()=>{pop.style.opacity=0;pop.style.transform='translateX(18px)'},5200)}catch(e){}}
-function play(k,loop){const u=urlOf(k);if(!u)return;if(au){au.pause();au=null}au=new Audio(u);au.loop=!!loop;au.volume=0;cur=k;au.onended=()=>{if(!loop){au=null;cur=null}};au.play().catch(()=>{au=null;cur=null});popup(k)}
-/* which track belongs to this screen? */
+let deck=[],menuKey=null,pop=null,popT=0,shown='',blockedUntilGesture=false;const AU={};
+function shuffle(last){deck=MENU.slice();for(let i=deck.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[deck[i],deck[j]]=[deck[j],deck[i]]}if(deck[0]===last&&deck.length>1)deck.push(deck.shift())}
+function popup(k){try{const txt=TR[k][0];if(!pop){pop=document.createElement('div');pop.style.cssText='position:fixed;right:2.4vw;bottom:3.4vh;z-index:99999;pointer-events:none;color:#eef1ef;font:600 12px/1.3 system-ui,sans-serif;letter-spacing:.14em;text-align:right;opacity:0;transform:translateY(6px);transition:opacity .6s ease,transform .6s ease;text-shadow:0 1px 10px #000a,0 0 2px #0008;padding-right:12px;border-right:2px solid rgba(233,217,166,.85)';document.body.appendChild(pop)}
+ clearTimeout(popT);pop.innerHTML='<div style="font-size:9px;opacity:.6;letter-spacing:.28em;margin-bottom:4px">NOW PLAYING</div><div style="font-size:14px">'+txt.toUpperCase()+'</div>';requestAnimationFrame(()=>{pop.style.opacity=1;pop.style.transform='none'});popT=setTimeout(()=>{pop.style.opacity=0;pop.style.transform='translateY(6px)'},5000)}catch(e){}}
+/* one Audio element per track; paused (never dropped) when the screen changes, so a song always plays out to its end */
+function el(k,loop){let a=AU[k];if(a)return a;const u=urlOf(k);if(!u)return null;a=AU[k]=new Audio(u);a.loop=!!loop;a.preload='auto';a._v=0;a._k=k;a._ann=false;a._t=0;
+ if(!loop)a.addEventListener('ended',()=>{delete AU[k];if(menuKey===k)menuKey=null});return a}
 function wanted(){if(scr==='game')return null;if(document.body.classList.contains('studio')){const kd=P.SR&&P.SR.kind;return kd==='brand'?'cafe':(P.SR&&(P.SR.rally||P.SR.trk))?'menu':'body'}return'menu'}
-function tick(){const on=P.aud&&P.aud.on()&&!document.hidden,w=on?wanted():null,t=O().master;
- if(w!==want){want=w;if(w&&w!=='menu'&&cur!==w){play(w,true)}else if(w==='menu'&&MENU.indexOf(cur)<0){cur=null}}
- if(w==='menu'&&!au){if(!deck.length)shuffle();play(deck.shift(),false)}
- const target=w?Math.min(1,.8*t*1.25):0;vol+=(target-vol)*(target>vol?.06:.18);if(au){au.volume=Math.max(0,Math.min(1,vol));if(!w&&vol<.01){au.pause();au=null;cur=null}}}
+function tick(){const on=P.aud&&P.aud.on()&&!document.hidden,w=on?wanted():null,t=O().master;let key=null;
+ if(w==='menu'){if(!menuKey){if(!deck.length)shuffle(null);menuKey=deck.shift()}key=menuKey}else if(w==='body'||w==='cafe')key=w;
+ for(const k in AU){const a=AU[k];if(k!==key){a._v+=(0-a._v)*.15;a.volume=Math.max(0,Math.min(1,a._v));if(a._v<.01&&!a.paused)a.pause()}}
+ if(!key)return;const a=el(key,key==='body'||key==='cafe');if(!a)return;
+ a._v+=(Math.min(1,t)-a._v)*.06;a.volume=Math.max(0,Math.min(1,a._v));
+ if(a.paused&&!blockedUntilGesture&&!a._pend){a._pend=1;a.play().then(()=>{a._pend=0;if(!a._ann){a._ann=true;popup(key)}}).catch(()=>{a._pend=0;blockedUntilGesture=true})}}
 setInterval(tick,200);
+addEventListener('pointerdown',()=>{blockedUntilGesture=false},true);addEventListener('keydown',()=>{blockedUntilGesture=false},true);
 /* a faint wind under the menus */
 function init(){if(M)return M;const ac=P.audioReady&&P.audioReady(),nb=P.aud&&P.aud.nb();if(!ac||!nb)return null;
  const wg=ac.createGain();wg.gain.value=0;const wf=ac.createBiquadFilter();wf.type='bandpass';wf.frequency.value=380;wf.Q.value=.45;const ws=ac.createBufferSource();ws.buffer=nb;ws.loop=true;ws.connect(wf);wf.connect(wg);wg.connect(P.aud.mg());ws.start();

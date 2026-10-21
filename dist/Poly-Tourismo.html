@@ -8528,18 +8528,22 @@ const O=()=>window.PTO||{master:.7,sfx:.65,engine:.55};
 const TR={baby:['Baby So Free','mus_baby'],supreme:['Supreme Moment','mus_supreme'],space:['Space','mus_space'],glass:['Glasstress','mus_glass'],body:['Body And Mind','mus_body'],cafe:['Café de Flore','mus_cafe'],nocomm:['No Communication No Love','mus_nocomm'],lizzie:["Lizzie's Balloon",'mus_lizzie']};
 const MENU=['baby','supreme','space','glass','nocomm','lizzie'],urls={};
 function urlOf(k){if(urls[k])return urls[k];const e=document.getElementById(TR[k][1]);if(!e)return null;const b=atob(e.textContent.trim()),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return urls[k]=URL.createObjectURL(new Blob([u],{type:'audio/mpeg'}))}
-let deck=[],cur=null,au=null,vol=0,want=null,pop=null,popT=0;
-function shuffle(){deck=MENU.slice();for(let i=deck.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[deck[i],deck[j]]=[deck[j],deck[i]]}if(deck[0]===cur&&deck.length>1)deck.push(deck.shift())}
-function popup(k){try{if(!pop){pop=document.createElement('div');pop.style.cssText='position:fixed;right:2.2vw;bottom:3.2vh;z-index:99999;pointer-events:none;background:rgba(10,14,18,.82);border-left:3px solid #e9d9a6;padding:10px 18px 10px 14px;color:#eef1ef;font:600 13px/1.25 system-ui,sans-serif;letter-spacing:.06em;opacity:0;transform:translateX(18px);transition:opacity .5s,transform .5s;backdrop-filter:blur(4px)';document.body.appendChild(pop)}
- pop.innerHTML='<div style="font-size:10px;opacity:.6;letter-spacing:.18em;margin-bottom:3px">NOW PLAYING</div><div style="font-size:15px">'+TR[k][0].toUpperCase()+'</div>';pop.style.opacity=1;pop.style.transform='none';clearTimeout(popT);popT=setTimeout(()=>{pop.style.opacity=0;pop.style.transform='translateX(18px)'},5200)}catch(e){}}
-function play(k,loop){const u=urlOf(k);if(!u)return;if(au){au.pause();au=null}au=new Audio(u);au.loop=!!loop;au.volume=0;cur=k;au.onended=()=>{if(!loop){au=null;cur=null}};au.play().catch(()=>{au=null;cur=null});popup(k)}
-/* which track belongs to this screen? */
+let deck=[],menuKey=null,pop=null,popT=0,shown='',blockedUntilGesture=false;const AU={};
+function shuffle(last){deck=MENU.slice();for(let i=deck.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[deck[i],deck[j]]=[deck[j],deck[i]]}if(deck[0]===last&&deck.length>1)deck.push(deck.shift())}
+function popup(k){try{const txt=TR[k][0];if(!pop){pop=document.createElement('div');pop.style.cssText='position:fixed;right:2.4vw;bottom:3.4vh;z-index:99999;pointer-events:none;color:#eef1ef;font:600 12px/1.3 system-ui,sans-serif;letter-spacing:.14em;text-align:right;opacity:0;transform:translateY(6px);transition:opacity .6s ease,transform .6s ease;text-shadow:0 1px 10px #000a,0 0 2px #0008;padding-right:12px;border-right:2px solid rgba(233,217,166,.85)';document.body.appendChild(pop)}
+ clearTimeout(popT);pop.innerHTML='<div style="font-size:9px;opacity:.6;letter-spacing:.28em;margin-bottom:4px">NOW PLAYING</div><div style="font-size:14px">'+txt.toUpperCase()+'</div>';requestAnimationFrame(()=>{pop.style.opacity=1;pop.style.transform='none'});popT=setTimeout(()=>{pop.style.opacity=0;pop.style.transform='translateY(6px)'},5000)}catch(e){}}
+/* one Audio element per track; paused (never dropped) when the screen changes, so a song always plays out to its end */
+function el(k,loop){let a=AU[k];if(a)return a;const u=urlOf(k);if(!u)return null;a=AU[k]=new Audio(u);a.loop=!!loop;a.preload='auto';a._v=0;a._k=k;a._ann=false;a._t=0;
+ if(!loop)a.addEventListener('ended',()=>{delete AU[k];if(menuKey===k)menuKey=null});return a}
 function wanted(){if(scr==='game')return null;if(document.body.classList.contains('studio')){const kd=P.SR&&P.SR.kind;return kd==='brand'?'cafe':(P.SR&&(P.SR.rally||P.SR.trk))?'menu':'body'}return'menu'}
-function tick(){const on=P.aud&&P.aud.on()&&!document.hidden,w=on?wanted():null,t=O().master;
- if(w!==want){want=w;if(w&&w!=='menu'&&cur!==w){play(w,true)}else if(w==='menu'&&MENU.indexOf(cur)<0){cur=null}}
- if(w==='menu'&&!au){if(!deck.length)shuffle();play(deck.shift(),false)}
- const target=w?Math.min(1,.8*t*1.25):0;vol+=(target-vol)*(target>vol?.06:.18);if(au){au.volume=Math.max(0,Math.min(1,vol));if(!w&&vol<.01){au.pause();au=null;cur=null}}}
+function tick(){const on=P.aud&&P.aud.on()&&!document.hidden,w=on?wanted():null,t=O().master;let key=null;
+ if(w==='menu'){if(!menuKey){if(!deck.length)shuffle(null);menuKey=deck.shift()}key=menuKey}else if(w==='body'||w==='cafe')key=w;
+ for(const k in AU){const a=AU[k];if(k!==key){a._v+=(0-a._v)*.15;a.volume=Math.max(0,Math.min(1,a._v));if(a._v<.01&&!a.paused)a.pause()}}
+ if(!key)return;const a=el(key,key==='body'||key==='cafe');if(!a)return;
+ a._v+=(Math.min(1,t)-a._v)*.06;a.volume=Math.max(0,Math.min(1,a._v));
+ if(a.paused&&!blockedUntilGesture&&!a._pend){a._pend=1;a.play().then(()=>{a._pend=0;if(!a._ann){a._ann=true;popup(key)}}).catch(()=>{a._pend=0;blockedUntilGesture=true})}}
 setInterval(tick,200);
+addEventListener('pointerdown',()=>{blockedUntilGesture=false},true);addEventListener('keydown',()=>{blockedUntilGesture=false},true);
 /* a faint wind under the menus */
 function init(){if(M)return M;const ac=P.audioReady&&P.audioReady(),nb=P.aud&&P.aud.nb();if(!ac||!nb)return null;
  const wg=ac.createGain();wg.gain.value=0;const wf=ac.createBiquadFilter();wf.type='bandpass';wf.frequency.value=380;wf.Q.value=.45;const ws=ac.createBufferSource();ws.buffer=nb;ws.loop=true;ws.connect(wf);wf.connect(wg);wg.connect(P.aud.mg());ws.start();
@@ -9296,26 +9300,26 @@ refreshMenuCars();MS=null;
 /* ===== Poly GT layer: cinematic menu. Still-frame "photo shoots" (dark studio, neon street, sunset road, foggy dawn, tunnel, concrete bunker) cut in between the moving drive-by ===== */
 (function cinema(){
 'use strict';
-const P=window.PT8,V3=THREE.Vector3,base=menuScene;
+const P=window.PT8;
 const cl=(x,a,b)=>Math.max(a,Math.min(b,x)),sm=x=>{x=cl(x,0,1);return x*x*(3-2*x)};
 /* shots: car name, set, camera start/end (x = right of the car, z = in front of its nose), lens, optional paint tint */
+const C={cnt:'LAMBORGHINI COUNTACH',f40:'FERRARI F40',r34:'NISSAN SKYLINE GT-R R34',sup:'TOYOTA SUPRA A80 (JTCC)',gt2:'PORSCHE 911 GT2 RS',f1:'MCLAREN F1 GTR',dia:'LAMBORGHINI DIABLO',vey:'BUGATTI VEYRON',p918:'PORSCHE 918 SPYDER',c3:'CHEVROLET CORVETTE C3',hur:'LAMBORGHINI HURACAN',chg:'DODGE CHARGER R/T',ave:'LAMBORGHINI AVENTADOR SV',mur:'LAMBORGHINI MURCIELAGO',zon:'PAGANI ZONDA CINQUE',r8:'AUDI R8',s15:'NISSAN SILVIA S15',nsx:'HONDA NSX (NA1)',evo:'MITSUBISHI LANCER EVO X',gt350:'SHELBY GT350 (1965)',dmc:'DELOREAN DMC-12',amg:'MERCEDES-AMG GT',vip:'DODGE VIPER (GEN 5)',m3:'BMW M3 (E90)',mar:'FERRARI 575M MARANELLO',sup2:'PLYMOUTH SUPERBIRD',gal:'LAMBORGHINI GALLARDO SL',ven:'LAMBORGHINI VENENO',t930:'PORSCHE 911 TURBO (930)',rwb:'PORSCHE 911 CARRERA RWB'};
+/* cars: [name, x, z, yaw in degrees]; nose points +z at yaw 0, +yaw swings it toward +x. Cameras look from a to b over the shot. */
 const SH=[
- {car:'LAMBORGHINI COUNTACH',env:'void',a:[[3.8,.62,5.6],[0,.55,0]],b:[[2.6,.66,6.4],[0,.55,.4]],fov:34},
- {car:'LAMBORGHINI COUNTACH',env:'void',a:[[-5.4,.9,-3.4],[0,.5,0]],b:[[-6.2,1,-1.6],[0,.5,.2]],fov:32},
- {car:'LAMBORGHINI COUNTACH',env:'sunset',a:[[6.8,.8,2.4],[0,.6,0]],b:[[6.4,.85,-1.2],[0,.6,0]],fov:30},
- {car:'FERRARI F40',env:'tunnel',a:[[2.6,.8,-7],[0,.6,0]],b:[[1.6,.9,-5.2],[0,.6,0]],fov:34},
- {car:'NISSAN SKYLINE GT-R R34',env:'neon',a:[[3.6,.7,5.2],[0,.6,0]],b:[[4.4,.8,4.4],[0,.6,.2]],fov:36},
- {car:'TOYOTA SUPRA A80 (JTCC)',env:'neon',a:[[-5.8,.8,3.2],[0,.6,0]],b:[[-6.4,.9,.8],[0,.6,0]],fov:32},
- {car:'PORSCHE 911 GT2 RS',env:'dawn',a:[[4.6,1.1,6.4],[0,.6,0]],b:[[5.4,1.3,5.4],[0,.6,0]],fov:34},
- {car:'MCLAREN F1 GTR',env:'bunker',a:[[3.2,.7,4.9],[0,.6,0]],b:[[2.2,.7,5.4],[0,.6,.3]],fov:36},
- {car:'LAMBORGHINI DIABLO',env:'sunset',a:[[-6.2,.9,-2.8],[0,.6,0]],b:[[-6.6,.9,-.4],[0,.6,0]],fov:30},
- {car:'BUGATTI VEYRON',env:'void',a:[[3.9,.9,-5.6],[0,.6,0]],b:[[4.6,1,-4.4],[0,.6,0]],fov:34},
- {car:'PORSCHE 918 SPYDER',env:'dawn',a:[[-4.6,.8,5.6],[0,.6,0]],b:[[-3.8,.8,6.4],[0,.6,.2]],fov:35},
- {car:'CHEVROLET CORVETTE C3',env:'sunset',a:[[4.2,.7,5.2],[0,.55,0]],b:[[5,.7,4],[0,.55,0]],fov:34},
- {car:'LAMBORGHINI HURACAN',env:'neon',a:[[3.2,.55,5.2],[.9,.45,2]],b:[[3.9,.62,5.6],[.9,.45,2]],fov:34},
- {car:'LAMBORGHINI COUNTACH',env:'bunker',a:[[1.5,.7,4.6],[.6,.55,2.6]],b:[[1.2,.72,4.2],[.5,.55,2.4]],fov:30},
- {car:'DODGE CHARGER R/T',env:'tunnel',a:[[-3.2,.9,6.4],[0,.7,0]],b:[[-2.4,1,5.6],[0,.7,0]],fov:34},
- {car:'FERRARI F40',env:'void',a:[[0,.5,6.8],[0,.6,0]],b:[[0,.7,5.2],[0,.6,0]],fov:36}];
+ {env:'void',cars:[[C.cnt,0,0,-18],[C.f40,-4.2,-4.5,8],[C.dia,4.6,-5.5,-8],[C.ven,-8.4,-9,14],[C.ave,8.6,-10,-12]],a:[[6.5,.8,8],[0,.7,-3]],b:[[4,.9,9.5],[0,.7,-3.5]],fov:36},
+ {env:'bunker',cars:[[C.f1,-7.5,0,0],[C.mur,-3.75,.6,0],[C.cnt,0,0,0],[C.gal,3.75,.5,0],[C.ven,7.5,0,0]],a:[[-9,.75,9.5],[0,.7,0]],b:[[-3,.8,9.5],[2,.7,0]],fov:38},
+ {env:'neon',cars:[[C.r34,-2.6,0,0],[C.sup,2.6,4,0],[C.nsx,-2.6,8.5,0],[C.s15,2.6,13,0],[C.evo,-2.6,17.5,0]],a:[[0,.75,-7.5],[0,.7,10]],b:[[.6,.8,-5.5],[0,.7,11]],fov:42},
+ {env:'sunset',cars:[[C.c3,0,-6,0],[C.gt350,0,0,0],[C.chg,0,6,0],[C.sup2,0,12,0]],a:[[10,.9,8],[0,.6,3]],b:[[10,.9,-2],[0,.6,3]],fov:30},
+ {env:'tunnel',cars:[[C.f40,-2.6,0,6],[C.gt2,2.4,-5,-5],[C.zon,-2.5,-10,5],[C.vip,2.5,-15,-6]],a:[[0,.9,8],[0,.7,-6]],b:[[0,1,5.5],[0,.7,-6]],fov:40},
+ {env:'dawn',cars:[[C.p918,0,0,-30],[C.r8,-5.6,3,20],[C.amg,5.4,2,-70],[C.t930,-3.4,-5.8,55],[C.rwb,3.6,-6.6,-25]],a:[[8,5.4,10],[0,.4,-1]],b:[[6,4.2,11.5],[0,.4,-1]],fov:34},
+ {env:'void',cars:[[C.cnt,0,2.6,0],[C.f40,2.6,0,90],[C.dia,0,-2.6,180],[C.hur,-2.6,0,270]],a:[[0,11,.2],[0,0,0]],b:[[.5,9,-.4],[0,0,0]],fov:36},
+ {env:'bunker',cars:[[C.cnt,0,0,-22],[C.f40,-5.2,-3.4,12]],a:[[2.2,.55,4.6],[.7,.55,1.6]],b:[[1.4,.6,4.4],[.6,.55,1.7]],fov:30},
+ {env:'neon',cars:[[C.hur,0,0,-35],[C.ave,-5.4,-3,20],[C.gal,5.6,-4,-15]],a:[[-3.6,.5,6.6],[0,.5,0]],b:[[-1.8,.55,7],[.5,.5,0]],fov:34},
+ {env:'sunset',cars:[[C.cnt,0,0,0],[C.dia,-4.6,-5,0],[C.mar,4.6,-4,0],[C.p918,-9,-10,0],[C.r34,9,-9,0]],a:[[2,.65,-6.5],[0,.7,4]],b:[[1,.7,-8.5],[0,.7,4]],fov:36},
+ {env:'dawn',cars:[[C.dmc,0,0,-60],[C.m3,-6,-1,-80],[C.evo,6.2,0,-40]],a:[[-9,1.1,9],[0,.7,0]],b:[[-5,1,10.5],[0,.7,0]],fov:34},
+ {env:'tunnel',cars:[[C.chg,0,0,0],[C.sup2,-5,-5,-6],[C.c3,5,-5,6]],a:[[-5.5,.65,6.6],[0,.7,0]],b:[[-4,.7,7.2],[0,.7,0]],fov:34},
+ {env:'void',cars:[[C.r34,0,0,25],[C.sup,-5.4,2,-15],[C.s15,5.2,2,30],[C.nsx,-2.4,-6,10],[C.evo,2.6,-6.4,-20]],a:[[0,.7,10],[0,.7,0]],b:[[0,.8,8],[0,.7,0]],fov:36},
+ {env:'bunker',cars:[[C.cnt,-3.2,0,0],[C.cnt,3.2,0,0],[C.f1,0,-5.4,0]],a:[[0,.5,7.5],[0,.7,-1]],b:[[0,.6,5.8],[0,.7,-1]],fov:38}];
 const blob=(()=>{let t=null;return()=>{if(t)return t;const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d'),g=x.createRadialGradient(64,64,4,64,64,62);g.addColorStop(0,'rgba(0,0,0,.95)');g.addColorStop(.55,'rgba(0,0,0,.55)');g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(0,0,128,128);return t=new THREE.CanvasTexture(c)}})();
 const bm=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.8},o||{})),em=c=>new THREE.MeshBasicMaterial({color:c}),box=(g,m,x,y,z,p)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(g[0],g[1],g[2]),m);o.position.set(x,y,z);p.add(o);return o};
 /* environments: [background, fog colour, fog near, fog far, hemi sky, hemi ground, hemi power, key colour, key power, key pos, rim colour, rim power, point lights, build()] */
@@ -9329,10 +9333,9 @@ const ENV={
  sunset:{bg:0x5a2208,fog:[0x7a3210,25,110],hs:0xffb078,hg:0x2a1608,hp:.9,kc:0xffa04a,kp:2.8,kp3:[-14,2.4,10],rc:0x6a7fc0,rp:.8,rp3:[10,4,-8],pts:[],
   build(g){const f=new THREE.Mesh(new THREE.PlaneGeometry(60,200),bm(0x202225,{roughness:.9}));f.rotation.x=-Math.PI/2;g.add(f);for(const s of[-1,1])box([.18,.02,200],em(0xe8e0c0),s*5.4,.02,0,g);for(let i=0;i<20;i++)box([.18,.02,2.6],em(0xe8e0c0),0,.02,-60+i*6,g);
    const sun=new THREE.Mesh(new THREE.CircleGeometry(14,40),new THREE.MeshBasicMaterial({color:0xffc06a,fog:false}));sun.position.set(-30,9,-80);sun.rotation.y=.35;g.add(sun);
-   for(const s of[-1,1])for(let i=0;i<10;i++){const h=1+(i*5%4),t=new THREE.Mesh(new THREE.ConeGeometry(2.2,h*4,6),bm(0x1c2a12));t.position.set(s*(14+(i*3%7)),h*2,-70+i*14);g.add(t)}}},
+   }},
  dawn:{bg:0x8fa4b0,fog:[0x9eb2bd,10,70],hs:0xd8e6ee,hg:0x4a5a52,hp:1.1,kc:0xfff0d0,kp:1.7,kp3:[-6,6,8],rc:0xa8c8e0,rp:.9,rp3:[8,3,-6],pts:[],
-  build(g){const f=new THREE.Mesh(new THREE.PlaneGeometry(60,200),bm(0x2c3033,{roughness:.5,metalness:.1}));f.rotation.x=-Math.PI/2;g.add(f);const gr=new THREE.Mesh(new THREE.PlaneGeometry(200,200),bm(0x2f4a30));gr.rotation.x=-Math.PI/2;gr.position.y=-.02;g.add(gr);for(let i=0;i<20;i++)box([.18,.02,2.6],em(0xdcd8c8),0,.02,-60+i*6,g);
-   for(const s of[-1,1])for(let i=0;i<14;i++){const h=2+(i*5%4),t=new THREE.Mesh(new THREE.ConeGeometry(1.8,h*3,6),bm(0x20381f));t.position.set(s*(8+(i*3%6)),h*1.5,-50+i*8);g.add(t)}}},
+  build(g){const f=new THREE.Mesh(new THREE.PlaneGeometry(60,200),bm(0x2c3033,{roughness:.5,metalness:.1}));f.rotation.x=-Math.PI/2;g.add(f);const gr=new THREE.Mesh(new THREE.PlaneGeometry(200,200),bm(0x2f4a30));gr.rotation.x=-Math.PI/2;gr.position.y=-.02;g.add(gr);for(let i=0;i<20;i++)box([.18,.02,2.6],em(0xdcd8c8),0,.02,-60+i*6,g);}},
  tunnel:{bg:0x040404,fog:[0x080604,6,44],hs:0x8a6a3a,hg:0x0a0806,hp:.55,kc:0xffb55a,kp:1.3,kp3:[3,5,6],rc:0xff8a2a,rp:1.6,rp3:[-4,3,-8],pts:[[0xff9a3a,3.2,[0,4.2,3]],[0xff9a3a,2.6,[0,4.2,-9]]],
   build(g){const f=new THREE.Mesh(new THREE.PlaneGeometry(16,120),bm(0x15130f,{roughness:.35,metalness:.3}));f.rotation.x=-Math.PI/2;g.add(f);box([.6,8,120],bm(0x1c1a17),-8.3,4,0,g);box([.6,8,120],bm(0x1c1a17),8.3,4,0,g);box([17,.6,120],bm(0x1c1a17),0,8,0,g);
    for(let i=0;i<14;i++){box([2.4,.2,.5],em(0xffc070),0,7.6,-40+i*6,g);box([.3,.3,.8],em(0xffc070),-7.6,1.2,-40+i*6,g);box([.3,.3,.8],em(0xffc070),7.6,1.2,-40+i*6,g)}box([.2,.02,120],em(0xe8d8a0),-3.4,.02,0,g);box([.2,.02,120],em(0xe8d8a0),3.4,.02,0,g)}},
@@ -9348,28 +9351,25 @@ function build(sc,id){if(cache[id])return cache[id];const car=P.BYID[id],idx=P.m
  const L=Math.max(sz.x,sz.z)*k,W=Math.min(sz.x,sz.z)*k,sh=new THREE.Mesh(new THREE.PlaneGeometry(W*1.9,L*1.25),new THREE.MeshBasicMaterial({map:blob(),transparent:true,depthWrite:false}));sh.rotation.x=-Math.PI/2;sh.position.y=.02;outer.add(sh);
  return cache[id]={g:outer,L}}
 function photo(){const sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(34,1,.1,300),hemi=new THREE.HemisphereLight(0xffffff,0x222222,1),key=new THREE.DirectionalLight(0xffffff,2),rim=new THREE.DirectionalLight(0xffffff,1),p1=new THREE.PointLight(0xffffff,0,26),p2=new THREE.PointLight(0xffffff,0,26),env=new THREE.Group(),fade=new THREE.Mesh(new THREE.PlaneGeometry(4,4),new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:1,depthTest:false,depthWrite:false,fog:false}));
- sc.add(hemi,key,rim,p1,p2,env,cam);fade.renderOrder=999;fade.position.z=-.3;cam.add(fade);let curEnv=null,curCar=null;
+ sc.add(hemi,key,rim,p1,p2,env,cam);fade.renderOrder=999;fade.position.z=-.3;cam.add(fade);let curEnv=null,curCars=[];
  return{sc,cam,fade,set(s){const e=ENV[s.env];if(curEnv!==s.env){env.clear();e.build(env);curEnv=s.env}
   sc.background=new THREE.Color(e.bg);sc.fog=new THREE.Fog(e.fog[0],e.fog[1],e.fog[2]);hemi.color.setHex(e.hs);hemi.groundColor.setHex(e.hg);hemi.intensity=e.hp;key.color.setHex(e.kc);key.intensity=e.kp;key.position.set(...e.kp3);rim.color.setHex(e.rc);rim.intensity=e.rp;rim.position.set(...e.rp3);
   [p1,p2].forEach((p,i)=>{const q=e.pts[i];p.intensity=q?q[1]:0;if(q){p.color.setHex(q[0]);p.position.set(...q[2])}});
-  if(curCar)sc.remove(curCar);const c=carById(s.car),b=c&&build(sc,c.id);curCar=b?b.g:null;if(curCar)sc.add(curCar);return !!curCar}}}
-/* chapters: a shuffled run of stills, then the old moving cinematic, and round again */
-let ph=null,old=null;
-function menuScene2(){const pt=photo();let t0=performance.now()/1000,order=[],pos=0,mode='still',shotT=0,cur=null,mov=0;
- const DUR=7.2,FADE=.7;
- function next(){if(!order.length||pos>=order.length){order=SH.map((s,i)=>i).sort(()=>Math.random()-.5).slice(0,5);pos=0;mode='move';mov=0;return}
-  const s=SH[order[pos++]];if(!pt.set(s)){return next()}cur=s;mode='still';shotT=0}
- const self={get sc(){return mode==='move'&&old?old.sc:pt.sc},get cam(){return mode==='move'&&old?old.cam:pt.cam},
+  curCars.forEach(o=>sc.remove(o));curCars=[];let ok=true;s.cars.forEach((q,i)=>{const c=carById(q[0]),b=c&&build(sc,c.id);if(!b){if(i===0)ok=false;return}const o=b.g.clone(true);o.position.set(q[1],0,q[2]);o.rotation.y=(q[3]||0)*Math.PI/180;sc.add(o);curCars.push(o)});return ok&&curCars.length>0}}}
+/* a shuffled run of stills, forever */
+function menuScene2(){const pt=photo();let t0=performance.now()/1000,order=[],cur=null,shotT=0,last=-1;
+ const DUR=7.4,FADE=.8;
+ function next(){if(!order.length){order=SH.map((_,i)=>i).sort(()=>Math.random()-.5);if(order[0]===last)order.push(order.shift())}
+  const k=order.shift(),s=SH[k];last=k;if(!pt.set(s))return next();cur=s;shotT=0}
+ const self={sc:pt.sc,cam:pt.cam,
   tick(time){const now=performance.now()/1000,dt=Math.min(.1,now-t0);t0=now;const W=innerWidth,H=innerHeight;
-   if(!cur&&mode==='still')next();
-   if(mode==='move'){if(!old)old=base();mov+=dt;old.tick(time);old.cam.aspect=W/H;old.cam.updateProjectionMatrix();if(mov>14)next();return}
-   shotT+=dt;const u=cl(shotT/DUR,0,1),e=sm(u),A=cur.a,B=cur.b,c=pt.cam;
+   if(!cur)next();shotT+=dt;const u=cl(shotT/DUR,0,1),e=sm(u),A=cur.a,B=cur.b,c=pt.cam;
    c.position.set(A[0][0]+(B[0][0]-A[0][0])*e,A[0][1]+(B[0][1]-A[0][1])*e,A[0][2]+(B[0][2]-A[0][2])*e);
-   const lk=[A[1][0]+(B[1][0]-A[1][0])*e,A[1][1]+(B[1][1]-A[1][1])*e,A[1][2]+(B[1][2]-A[1][2])*e];c.lookAt(lk[0],lk[1],lk[2]);
-   c.fov=cur.fov;c.aspect=W/H;c.updateProjectionMatrix();c.setViewOffset(W,H,-W*.12,0,W,H);
+   c.lookAt(A[1][0]+(B[1][0]-A[1][0])*e,A[1][1]+(B[1][1]-A[1][1])*e,A[1][2]+(B[1][2]-A[1][2])*e);
+   c.fov=cur.fov;c.aspect=W/H;c.updateProjectionMatrix();c.setViewOffset(W,H,-W*.1,0,W,H);
    pt.fade.material.opacity=shotT<FADE?1-sm(shotT/FADE):shotT>DUR-FADE?sm((shotT-(DUR-FADE))/FADE):0;pt.fade.scale.setScalar(Math.max(1,W/H)*2);
    if(shotT>=DUR)next()}};
- window.__cin={self,pt,SH,go(i){const s=SH[i];pt.set(s);cur=s;mode='still';shotT=1.2;order=[];pos=99}};
+ window.__cin={self,pt,SH,go(i){const s=SH[i];pt.set(s);cur=s;shotT=1.2;order=[]}};
  return self}
 menuScene=menuScene2;
 })();
