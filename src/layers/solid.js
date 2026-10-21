@@ -42,5 +42,19 @@ function bStep(Rc,dt){const T=Rc.T;if(!T||Rc.state!=='race')return;cd-=dt;const 
     if(vn<0){c.vx-=1.25*vn*nx;c.vz-=1.25*vn*nz;c.vx*=.88;c.vz*=.88;if(-vn>2.2)hit(Rc,c,-vn,nx,nz)}}}c._px=c.x;c._pz=c.z}}
 const bw=buildWorld;buildWorld=function(T){const sc=bw.apply(this,arguments);try{collect(sc,T)}catch(e){console.warn('solid',e)}return sc};
 
-const st0=step;step=function(dt){st0.apply(this,arguments);try{if(RACE)bStep(RACE,dt)}catch(e){if(!P._sErr){P._sErr=1;console.warn('solid',e)}}};
+/* kerb/tunnel wall, true-position version: base clamp uses last frame's lateral and stops once road=0, so a fast car could cross the 0.9m margin in one frame and leave */
+function kerb(Rc,dt){const T=Rc.T;if(!T||Rc.state!=='race'||!T.wall)return;const N=T.N;
+ for(const c of Rc.cars){if(!c.human||c.fin||c.respT>0||c.exp>0){c._wl=null;continue}
+  const i0=c.idx|0;let best=null;
+  for(let k=-12;k<=45;k++){const i=(i0+k+N)%N,j=(i+1)%N;if(T.gap[i]||T.gap[j])continue;
+   const dx=T.x[j]-T.x[i],dz=T.z[j]-T.z[i],l2=dx*dx+dz*dz||1,f=Math.max(0,Math.min(1,((c.x-T.x[i])*dx+(c.z-T.z[i])*dz)/l2));
+   const px=T.x[i]+dx*f,pz=T.z[i]+dz*f,ps=T.psi[i],lat=(c.x-px)*Math.cos(ps)-(c.z-pz)*Math.sin(ps);
+   const dd=Math.hypot(c.x-px,c.z-pz);if(!best||dd<best.dd)best={i,lat,ps,dd}}
+  if(!best){c._wl=null;continue}
+  const i=best.i,lim=T.hw[i]-.9;
+  if(T.wall[i]&&Math.abs(best.lat)>lim&&c._wl!=null&&Math.abs(c._wl)<=lim+.3&&c.y-T.y[i]<3){
+   const sg=Math.sign(best.lat),nx=Math.cos(best.ps)*sg,nz=-Math.sin(best.ps)*sg,ov=Math.abs(best.lat)-lim;c.x-=nx*ov;c.z-=nz*ov;
+   const vn=c.vx*nx+c.vz*nz;if(vn>0){c.vx-=1.3*vn*nx;c.vz-=1.3*vn*nz;if(vn>4){c.hl=1;if(c.human)Rc.shake=Math.min(1,vn/20)}}
+   c._wl=sg*lim}else c._wl=best.lat}}
+const st0=step;step=function(dt){st0.apply(this,arguments);try{if(RACE){kerb(RACE,dt);bStep(RACE,dt)}}catch(e){if(!P._sErr){P._sErr=1;console.warn('solid',e)}}};
 })();
