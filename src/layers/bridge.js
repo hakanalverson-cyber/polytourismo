@@ -195,7 +195,7 @@ function buildSpan(T){const d=T.d,N=T.N,r=rngf(8*77+11),sc=new THREE.Scene();
    mesh(new THREE.BoxGeometry(3.3,1.0,2.7),flat(0x8f3220),0,TOPY+.5,lz,g);mesh(new THREE.SphereGeometry(.45,8,6),new THREE.MeshBasicMaterial({color:0xff2a1a}),0,TOPY+1.4,lz,g)}
   /* portal beams between the legs (clear of the roadway) */
   if(tx===TOWX[0]){const sg=mesh(new THREE.PlaneGeometry(13,2.1),new THREE.MeshBasicMaterial({map:T_SIGN('GRAND VALLEY BRIDGE','#1d4d34','#f6f1e6')}),-1.34,y+TOWH-2.5,0,g);sg.rotation.y=-Math.PI/2}
-  for(const [by,bh] of[[y+7.5,2.4],[y+13.5,2.0],[y+TOWH-2.5,2.8]]){mesh(new THREE.BoxGeometry(2.6,bh,(LAT+2.1)*2),orgM,0,by,0,g);
+  for(const [by,bh] of[[y+13.5,2.0],[y+TOWH-2.5,2.8]]){mesh(new THREE.BoxGeometry(2.6,bh,(LAT+2.1)*2),orgM,0,by,0,g);
    const x=mesh(new THREE.PlaneGeometry((LAT+.2)*2,bh*.0+4.6),new THREE.MeshStandardMaterial({map:T_TRUSS(),side:THREE.DoubleSide,alphaTest:.5,roughness:.8}),0,by-bh/2-2.3,0,g);x.rotation.y=Math.PI/2}}
  /* ----- broken ends, fallen deck, warning boards ----- */
  if(broken){const c=jumps[0];let gl=0;for(let k=0;k<40;k++)if(T.gap[(c+k)%N])gl++;
