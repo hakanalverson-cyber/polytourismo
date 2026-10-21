@@ -143,7 +143,7 @@ function pickMode(m){if(m==='career'){ST.crank=null;ST.cev=null;openCareer()}els
  const lg=$('logo');if(lg)lg.innerHTML='POLY<br><span>TOURISMO</span><small>GRAND TOUR / V9</small>';
  const mt=document.querySelector('.menuTop');if(mt){mt.querySelector('.brandMark').textContent='PT / 98';const sm=mt.querySelector('small');if(sm)sm.textContent='V9'}
  const f=document.createElement('div');f.className='mfoot';$('menu').appendChild(f);
- P.menuStats=()=>{const sv=P.SV();f.innerHTML='<span>Balance <b>'+fmtCr(sv.cr)+'</b></span><span>Career <b>'+P.RANKS[P.careerRank()].n+'</b></span><span>Races <b>'+sv.stats.races+'</b></span><span>Wins <b>'+sv.stats.wins+'</b></span><span style="margin-left:auto">Enter: play</span>'};
+ P.menuStats=()=>{const sv=P.SV();f.innerHTML='<span>Balance <b>'+fmtCr(sv.cr)+'</b></span><span>Career <b>'+P.RANKS[P.careerRank()].n+'</b></span><span>Races <b>'+sv.stats.races+'</b></span><span>Wins <b>'+sv.stats.wins+'</b></span>'};
  P.menuStats()})();
 
 /* ================= TRACK PREVIEW (map + elevation) ================= */
