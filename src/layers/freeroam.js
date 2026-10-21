@@ -208,11 +208,14 @@ setInterval(()=>{const h=$q('frHud'),b=$q('frBlur');if(!h)return;const on=FR&&RA
 /* home garage studio dressing: called by the studio each frame */
 let HOME=null,HOME_ENV=null;
 function homeGarage(S){if(HOME)return HOME;const g=new THREE.Group(),PI=Math.PI;
-  /* the old-factory hall (low-poly bake of the supplied model): vertex colours + flat shading */
+  /* the old-factory hall: textured shell (async glb) + decimated pipe/tank machinery as vertex-coloured soup */
   try{const b=atob(FAC_B64),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);const nv=u.length/9,pp=new Int16Array(u.buffer.slice(0,nv*6)),cc=u.subarray(nv*6),Pf=new Float32Array(nv*3),Cf=new Float32Array(nv*3);
-   for(let i=0;i<nv*3;i++){Pf[i]=pp[i]*.001;Cf[i]=Math.pow(cc[i]/255,2.1)*.55}
+   for(let i=0;i<nv*3;i++){Pf[i]=pp[i]*.001;Cf[i]=Math.pow(cc[i]/255,2.1)*.8}
    const ge=new THREE.BufferGeometry();ge.setAttribute('position',new THREE.BufferAttribute(Pf,3));ge.setAttribute('color',new THREE.BufferAttribute(Cf,3));ge.computeVertexNormals();
-   const hall=new THREE.Mesh(ge,new THREE.MeshStandardMaterial({vertexColors:true,side:THREE.DoubleSide,roughness:.9,metalness:.05}));hall.receiveShadow=true;hall.castShadow=true;g.add(hall)}catch(e){console.warn('factory',e)}
+   g.add(new THREE.Mesh(ge,new THREE.MeshStandardMaterial({vertexColors:true,side:THREE.DoubleSide,roughness:.75,metalness:.35})))}catch(e){console.warn('factory',e)}
+  (async()=>{try{const raw=atob(FACS_B64),u=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)u[i]=raw.charCodeAt(i);
+   const ab=await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();const cib=window.createImageBitmap;window.createImageBitmap=undefined;
+   try{new THREE.GLTFLoader().parse(ab,'',gl=>{gl.scene.traverse(m=>{if(m.isMesh){const mt=m.material;mt.side=THREE.DoubleSide;mt.roughness=.85;mt.metalness=0;mt.envMapIntensity=.4;m.receiveShadow=true;m.castShadow=true}});g.add(gl.scene)},e=>console.warn('factory glb',e))}finally{window.createImageBitmap=cib}}catch(e){console.warn('factory glb',e)}})();
   const Sm=(o)=>new THREE.MeshStandardMaterial(Object.assign({side:THREE.DoubleSide,roughness:.75,metalness:.2},o));
   const glow=(r,gg,b)=>new THREE.MeshBasicMaterial({color:new THREE.Color().setRGB(r,gg,b)});
   const M=(c,r,m)=>Sm({color:c,roughness:r==null?.7:r,metalness:m==null?.2:m});

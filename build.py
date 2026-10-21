@@ -212,7 +212,7 @@ b64=lambda f:base64.b64encode(open(W+'/assets/'+f,'rb').read()).decode()
 ANIM='<script>const ANIM_B64="'+b64('animals.bin')+'",ANIM_META='+open(W+'/assets/animals.json').read()+';</script>'
 BLD='<script>const BLD_B64="'+b64('bld.bin')+'",BLD_META='+open(W+'/assets/bld.json').read()+';</script>'
 FRM='<script>const FRM_B64="'+b64('frm.bin')+'",FRM_META='+open(W+'/assets/frm.json').read()+';</script>'
-FAC='<script>const FAC_B64="'+b64('factory.bin')+'";</script>'
+FAC='<script>const FAC_B64="'+b64('factory.bin')+'",FACS_B64="'+b64('factory_shell.glb.gz')+'";</script>'
 HPACK='<script>const HPACK_B64="'+b64('harbor_pack.glb.gz')+'";</script>'
 MUS=''.join('<script type="text/plain" id="mus_%s">%s</script>'%(k,base64.b64encode(open(W+'/assets/music/'+f+'.mp3','rb').read()).decode()) for k,f in [('baby','baby_so_free'),('supreme','supreme_moment'),('space','space'),('glass','glasstress'),('body','body_and_mind'),('nocomm','no_comm'),('cd','gt_countdown'),('lizzie','lizzie'),('cafe','cafe_de_flore')])
 CARS10='<script>const CAR10_BIN_B64="'+b64('cars_v10.bin.gz')+'",CAR10_TEX_B64="'+b64('cars_v10_tex.png')+'",CAR10_META='+open(W+'/assets/cars_v10.json').read()+';</script>'
