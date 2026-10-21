@@ -68,13 +68,13 @@ step=dt=>{st0(dt);if(!A||!prof)return;const Rc=RACE;if(!Rc||!Rc.cars)return;
  /* start-line roar: strongest on the grid and the first seconds */
  if(Rc.t<7)cr=Math.max(cr,Math.min(1,(7-Rc.t)/4)*.9);
  const u=Math.min(1,sp/65),G=A.g,S=(n,val,tc)=>G[n].g.gain.setTargetAtTime(val,t,tc||.12);
- S('wind',(prof.wind*.03+u*u*.13*prof.wind)*(tn?.2:1)*(1-airb*.3));G.wind.f.frequency.setTargetAtTime(320+u*900,t,.2);
+ S('wind',0);G.wind.f.frequency.setTargetAtTime(320+u*900,t,.2);
  const surf=(g||off>.5)?1:0;S('roll',(.025+u*.085)*(airb?0:1)*(surf?.7:1)*(tn?1.3:1));
  S('crunch',airb?0:u*(surf?.17+off*.1:.015),.1);G.crunch.f.frequency.setTargetAtTime(1500+u*1400,t,.2);
- const bd=prof.bed[1],bi=BEDS[prof.bed[0]]||BEDS.gust;S('bed',bd*.05*(tn?.3:1),.4);A.lg.gain.setTargetAtTime(bd*.05*bi.depth*(tn?.3:1),t,.5);
- S('tun',tn?.16*u+.03:0,.2);A.hg.gain.setTargetAtTime((A.hgT?.012:0)+(tn?.01:0),t,.5);
- S('crowd',cr*.1,.35);G.crowd.f.frequency.setTargetAtTime(750+cr*500+Math.sin(Rc.t*1.7)*140,t,.3);
- nextEv-=dt;if(nextEv<=0&&prof.ev.length){nextEv=6+Math.random()*12;const k=prof.ev[Math.random()*prof.ev.length|0];if(!tn)EV[k](t+.05,(Math.random()*2-1)*.8)}};
+ const bd=prof.bed[1],bi=BEDS[prof.bed[0]]||BEDS.gust;S('bed',0,.4);A.lg.gain.setTargetAtTime(0,t,.5);
+ S('tun',0,.2);A.hg.gain.setTargetAtTime(0,t,.5);
+ S('crowd',0,.35);G.crowd.f.frequency.setTargetAtTime(750+cr*500+Math.sin(Rc.t*1.7)*140,t,.3);
+ nextEv-=dt;if(false&&nextEv<=0&&prof.ev.length){nextEv=6+Math.random()*12;const k=prof.ev[Math.random()*prof.ev.length|0];if(!tn)EV[k](t+.05,(Math.random()*2-1)*.8)}};
 /* menus & pause: let the beds die away */
 P.ambDbg={A:()=>A,EV,prof:()=>prof};
 document.addEventListener('visibilitychange',()=>{if(A&&document.hidden)A.bus.gain.value=0});
