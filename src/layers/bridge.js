@@ -131,13 +131,15 @@ function buildSpan(T){const d=T.d,N=T.N,r=rngf(8*77+11),sc=new THREE.Scene();
   for(const [a,b] of runs(T,i=>T.sg[i]!==3))sc.add(strip(T,a,T.sg[(b+1)%N]===3?b:b+1,k=>-T.hw[k],k=>T.hw[k],.03,am,6,10));
   /* gravel extends slightly past asphalt boundary; pixelated dithered edge where it splits off */
   const EX=Math.round(32/T.sp); // gravel trickles off over ~32 m of tarmac
-  const pe_tex=ctex(26,64,(x,w,h)=>{const rng=rngf(77),im=x.createImageData(w,h);
-    for(let j=0;j<h;j++){const p=j/(h-1);for(let i=0;i<w;i++){const o=(j*w+i)*4,u=i/(w-1),rd=Math.min(Math.abs(u-.27),Math.abs(u-.69)),rut=Math.max(0,1-rd/.07),d=Math.max(Math.pow(p,2.2)*.92,rut*Math.pow(p,.9)*.85),r=rng(),c=(.85+.3*rng())*(1-.22*rut*Math.min(1,p*1.6));
+  const pe_=(flip)=>{const t=ctex(26,64,(x,w,h)=>{const rng=rngf(flip?78:77),im=x.createImageData(w,h);
+    for(let j=0;j<h;j++){const p=flip?1-j/(h-1):j/(h-1);for(let i=0;i<w;i++){const o=(j*w+i)*4,u=i/(w-1),rd=Math.min(Math.abs(u-.27),Math.abs(u-.69)),rut=Math.max(0,1-rd/.07),d=Math.max(Math.pow(p,2.2)*.92,rut*Math.pow(p,.9)*.85),r=rng(),c=(.85+.3*rng())*(1-.22*rut*Math.min(1,p*1.6));
       if(r<d){im.data[o]=148*c;im.data[o+1]=128*c;im.data[o+2]=95*c;im.data[o+3]=255}else im.data[o+3]=0}}
-    x.putImageData(im,0,0)});pe_tex.magFilter=pe_tex.minFilter=THREE.NearestFilter;
-  const pem=new THREE.MeshStandardMaterial({map:pe_tex,transparent:true,depthWrite:false,roughness:1,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-8,polygonOffsetUnits:-8});
+    x.putImageData(im,0,0)});t.magFilter=t.minFilter=THREE.NearestFilter;return new THREE.MeshStandardMaterial({map:t,transparent:true,depthWrite:false,roughness:1,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-8,polygonOffsetUnits:-8})};
+  const pem=pe_(0),pem2=pe_(1);
   for(const [a,b] of runs(T,i=>T.sg[i]===3)){const a0=(a-1+N)%N;sc.add(strip(T,a0,a0+(b+1-(a-1))+1,k=>-T.hw[k],k=>T.hw[k],.03,gm2,6,10));
-    sc.add(strip(T,b-1,b+1+EX,k=>-T.hw[k],k=>T.hw[k],.07,pem,(EX+2)*T.sp,10))}}
+    sc.add(strip(T,b-1,b+1+EX,k=>-T.hw[k],k=>T.hw[k],.07,pem,(EX+2)*T.sp,10));
+    /* and the same trickle where the path starts, spilling back onto the island road */
+    sc.add(strip(T,(a0-EX+N)%N,(a0-EX+N)%N+EX+2,k=>-T.hw[k],k=>T.hw[k],.07,pem2,(EX+2)*T.sp,10))}}
  const concM=new THREE.MeshStandardMaterial({map:T_SLAB(),roughness:1,side:THREE.DoubleSide}),steelM=flat(0x4a4d52,{side:THREE.DoubleSide}),orgM=new THREE.MeshStandardMaterial({map:T_ORANGE(),roughness:.8,side:THREE.DoubleSide,flatShading:true});
  const trussM=new THREE.MeshStandardMaterial({map:T_TRUSS(),roughness:.8,side:THREE.DoubleSide,alphaTest:.5});
  const jumps=T.jumps||[],broken=jumps.length>0;
