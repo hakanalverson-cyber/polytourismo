@@ -14,12 +14,12 @@ function popup(k){try{const txt=TR[k][0];if(!pop){pop=document.createElement('di
 /* one Audio element per track; paused (never dropped) when the screen changes, so a song always plays out to its end */
 function el(k,loop){let a=AU[k];if(a)return a;const u=urlOf(k);if(!u)return null;a=AU[k]=new Audio(u);a.loop=!!loop;a.preload='auto';a._v=0;a._k=k;a._ann=false;a._t=0;
  if(!loop)a.addEventListener('ended',()=>{delete AU[k];if(menuKey===k)menuKey=null});return a}
-function wanted(){if(scr==='game')return null;if(scr==='s8show'){const kd=P.SR&&P.SR.kind;return kd==='brand'?'cafe':(P.SR&&(P.SR.rally||P.SR.trk))?'menu':'body'}return'menu'}
+function wanted(){if(scr==='game')return(typeof RACE!=='undefined'&&RACE&&RACE.mode==='free')?'menu':null;if(scr==='s8show'){const kd=P.SR&&P.SR.kind;return kd==='brand'?'cafe':(P.SR&&(P.SR.rally||P.SR.trk))?'menu':'body'}return'menu'}
 function tick(){const on=P.aud&&P.aud.on()&&!document.hidden,w=on?wanted():null,t=O().master;let key=null;
  if(w==='menu'){if(!menuKey){if(!deck.length)shuffle(null);menuKey=deck.shift()}key=menuKey}else if(w==='body'||w==='cafe')key=w;
  for(const k in AU){const a=AU[k];if(k!==key){a._v+=(0-a._v)*.22;a.volume=Math.max(0,Math.min(1,a._v));if(a._v<.01&&!a.paused)a.pause()}}
  if(!key)return;const a=el(key,key==='body'||key==='cafe');if(!a)return;
- a._v+=(Math.min(1,t)-a._v)*.12;a.volume=Math.max(0,Math.min(1,a._v));
+ a._v+=(Math.min(1,t)*(scr==='game'?.4:1)-a._v)*.12;a.volume=Math.max(0,Math.min(1,a._v));
  if(a.paused&&!blockedUntilGesture&&!a._pend){a._pend=1;a.play().then(()=>{a._pend=0;hint(false);if(!a._ann){a._ann=true;popup(key)}}).catch(()=>{a._pend=0;blockedUntilGesture=true;hint(true)})}}
 setInterval(tick,200);
 /* browsers refuse sound until the first click or key press, so start inside that very event and show a small hint until then */

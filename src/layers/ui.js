@@ -76,7 +76,7 @@ const evIcon={race:'<svg class="ic" viewBox="0 0 22 22"><path d="M4 20V3h2v2h12l
 root.innerHTML=`
 <section class="v8s" id="s8cards"><div class="hdr"><h2>SELECT <em>MODE</em></h2><div class="sp"></div>${crHTML}</div>
 <div class="cards">
- <div class="card big" data-m="career"><span class="num">01</span><div class="ico" data-i="ca"></div><div class="tx"><h3>Career</h3><div class="sub">Rookie to legend / events &amp; prizes</div></div></div>
+ <div class="card big" data-m="career"><span class="num">01</span><div class="ico" data-i="ca"></div><div class="tx"><h3>Free Roam</h3><div class="sub">Open world / garage, jobs &amp; events</div></div></div>
  <div class="card big" data-m="rally"><span class="num">02</span><div class="ico" data-i="ra"></div><div class="tx"><h3>Rally</h3><div class="sub">Water fords / new stages / take turns</div></div></div>
  <div class="card big" data-m="track"><span class="num">03</span><div class="ico" data-i="tk"></div><div class="tx"><h3>Track</h3><div class="sub">Tarmac circuit / race cars, 200 mph</div></div></div>
  <div class="qplabel"><i></i>QUICK PLAY<i></i></div>
@@ -93,7 +93,7 @@ root.innerHTML=`
 <div class="pnl"><div id="suCfg"></div><div id="suTod"></div><div id="suDrv"></div></div></div>
 <div class="foot8"><button class="btn" data-a="back"><span>&lt; Back</span></button><div class="hint8" id="suHint"></div><button class="btn go" id="suGo"><span>Start</span></button></div></section>
 
-<section class="v8s" id="s8career"><div class="hdr"><h2>CAREER <em id="cTitle">ROOKIE</em></h2><small id="cSub"></small><div class="sp"></div>${crHTML}</div>
+<section class="v8s" id="s8career"><div class="hdr"><h2>RACE OFFICE <em id="cTitle">ROOKIE</em></h2><small id="cSub"></small><div class="sp"></div>${crHTML}</div>
 <div class="cols" style="grid-template-columns:minmax(430px,56%) 1fr"><div class="pnl"><div class="rankbar" id="rankbar"></div><div class="evl" id="evList"></div></div><div class="pnl" id="evDet"></div></div>
 <div class="foot8"><button class="btn" data-a="back"><span>&lt; Back</span></button><div class="hint8">Podium to clear an event &middot; final needs 3 events cleared</div><span style="width:90px"></span></div></section>
 
@@ -115,7 +115,7 @@ show=n=>{const was=scr;if(was&&was!==n&&MENUS.includes(n)&&was!=='game'&&was!=='
  if(['menu','s8cards','s8setup','s8career','s8res'].includes(n))refreshMenuCars();
  if(n==='menu'&&P.menuStats)P.menuStats()};
 function refreshMenuCars(){const sv=P.SV();for(let i=0;i<4;i++){const s=sv.sel[i];carChoices[i]=P.modelOf(s.id,s.alt)}}
-const goBack={s8cards:()=>show('menu'),s8setup:()=>{if(isRL(ST.mode)&&ST.rstep===2){ST.rstep=1;renderSetup();return}show(ST.ret)},s8career:()=>show('s8cards'),s8res:()=>resContinue()};
+const goBack={s8cards:()=>show('menu'),s8setup:()=>{if(isRL(ST.mode)&&ST.rstep===2){ST.rstep=1;renderSetup();return}show(ST.ret)},s8career:()=>{if(P.frBack&&P.frBack())return;show('s8cards')},s8res:()=>resContinue()};
 const leaveShow=()=>{const r=SR.ret;if(r==='s8res_back'){renderSetup();show('s8setup');return}show(r);if(r==='s8setup')renderSetup();if(r==='s8career')renderCareer()};
 function fadeTo(fn){const f=$('shFade');f.classList.add('on');setTimeout(()=>{try{fn()}catch(e){console.error('fadeTo',e&&e.stack||e)}setTimeout(()=>f.classList.remove('on'),260)},230)}
 const inGrid=()=>CARDS()&&SR.view==='grid',inCar=()=>CARDS()&&SR.view==='car';
@@ -125,14 +125,14 @@ function gridMove(d){const ord=(SR.order||[]);if(!ord.length)return;const i=Math
 goBack.s8show=()=>{if(inCar()){fadeTo(()=>{SR.view='grid';renderShow();$('shList').scrollTop=SR.gridScroll||0});return}leaveShow()};
 root.addEventListener('click',e=>{const b=e.target.closest('[data-a="back"]');if(b){(goBack[scr]||(()=>{}))()}});
 const rawEsc=esc;esc=()=>{if(goBack[scr]){goBack[scr]();return}rawEsc()};
-const RACE_RET=()=>{const c=P.lastCfg;return c&&c.ev?'s8career':(c&&c.mode?'s8setup':'s8cards')};
+const RACE_RET=()=>{const c=P.lastCfg;return c&&c.mode==='free'?'s8cards':c&&c.ev?'s8career':(c&&c.mode?'s8setup':'s8cards')};
 toSetup=()=>{if(scr==='menu'||scr==='setup'){openCards();return}if(RACE)P.cleanupRace();show(RACE_RET())};
 function openCards(){show('s8cards');setFoc(foc)}
 let foc=0;
 function setFoc(i){const cs=$$('.card',root);foc=(i+cs.length)%cs.length;cs.forEach((c,k)=>c.classList.toggle('foc',k===foc))}
 $$('.card',root).forEach((c,k)=>{c.onmouseenter=()=>setFoc(k);c.onclick=()=>pickMode(c.dataset.m)});
 const barnIcon=d=>{const b=P.BARNS&&P.BARNS[d.name];if(!b||d.gravel)return '';const f=P.barnFound&&P.barnFound(b.car);return `<span class="bnh ${f?'got':''}" title="${f?'Barn find collected':'Barn find hidden here'}"><svg viewBox="0 0 16 16" width="15" height="15" shape-rendering="crispEdges"><path d="M8 1.5 1.5 7.5h2V14h3.6v-3.8h1.8V14h3.6V7.5h2z" fill="currentColor"/></svg></span>`};const isStg=i=>P.STAGES.indexOf(i)>=0,isTrk=i=>(P.TRK_TRACKS||[]).indexOf(i)>=0,okTrack=(m,i)=>m==='rally'?isStg(i):m==='track'?isTrk(i):(!isStg(i)&&!isTrk(i)),firstTrack=m=>m==='rally'?P.STAGES[0]:m==='track'?P.TRK_TRACKS[0]:0,isRL=m=>m==='rally'||m==='track';
-function pickMode(m){if(m==='career'){ST.crank=null;ST.cev=null;openCareer()}else{ST.mode=m;P._to=m==='track';P._ro=m==='rally';if(isRL(m))ST.rstep=1;if(!okTrack(m,ST.track))ST.track=firstTrack(m);ST.ret='s8cards';if(m==='rally'&&P.rallyIntro){P.rallyIntro(()=>{renderSetup();show('s8setup');if(P.prewarmStages)setTimeout(P.prewarmStages,1500)},ST.track)}else{renderSetup();show('s8setup')}}}
+function pickMode(m){if(m==='career'){P.sfx&&P.sfx('select');P.freeEnter()}else{ST.mode=m;P._to=m==='track';P._ro=m==='rally';if(isRL(m))ST.rstep=1;if(!okTrack(m,ST.track))ST.track=firstTrack(m);ST.ret='s8cards';if(m==='rally'&&P.rallyIntro){P.rallyIntro(()=>{renderSetup();show('s8setup');if(P.prewarmStages)setTimeout(P.prewarmStages,1500)},ST.track)}else{renderSetup();show('s8setup')}}}
 
 /* ---- main menu ---- */
 (function(){const ma=document.querySelector('.menuActions'),bt=ma.querySelectorAll('button');
@@ -332,7 +332,7 @@ function ensureStudio(){if(S)return S;
  const rim2=new THREE.DirectionalLight(0xffd2b0,.35);rim2.position.set(9,3,-7);sc.add(rim2);
  const turn=new THREE.Group();sc.add(turn);turn.add(wl2,wl3);
  const cam=new THREE.PerspectiveCamera(30,1,.1,100);
- S={sc,cam,turn,floor,idx:-1,car:null,mir:null,post:makePost(),key};return S}
+ S={sc,cam,turn,floor,idx:-1,car:null,mir:null,post:makePost(),key,wall:wl,dark,ring:top};return S}
 function setStudioCar(idx){ensureStudio();if(S.idx===idx)return;const src=CAR_MODELS[idx];if(!src)return;
  if(S.car){S.turn.remove(S.car)}
  const model=src.clone(true),car=new THREE.Group(),centered=new THREE.Group();centered.add(model);car.add(centered);centered.updateMatrixWorld(true);
@@ -347,7 +347,7 @@ function studioOn(){if(STU.on)return;STU.on=true;document.body.classList.add('st
 function sizeStudio(){const d=Math.min(devicePixelRatio||1,2);R.setPixelRatio(1);R.setSize(Math.max(2,innerWidth*d|0),Math.max(2,innerHeight*d|0),false)}
 P.makePost=makePost;P.sizeNative=sizeStudio;function studioOff(){if(!STU.on)return;STU.on=false;document.body.classList.remove('studio');$('c').style.imageRendering='';R.toneMapping=STU.tm;R.setRenderTarget(null);rs()}
 const rs0=rs;rs=()=>{if(STU.on)sizeStudio();else rs0()};
-function drawShow(dt){studioOn();ensureStudio();const car=BYID[SR.id],idx=P.modelOf(SR.id,SR.alt);if(S.idx!==idx&&CAR_MODELS[idx])setStudioCar(idx);
+function drawShow(dt){studioOn();ensureStudio();if(P.studioDress)P.studioDress(S,SR);const car=BYID[SR.id],idx=P.modelOf(SR.id,SR.alt);if(S.idx!==idx&&CAR_MODELS[idx])setStudioCar(idx);
  if(P.LV)P.LV.studio(S,SR);
  SR.ang+=dt*(SR.drag?0:.35)+SR.vel*dt;SR.vel*=Math.pow(.05,dt);S.turn.rotation.y=SR.ang;
  const W=R.domElement.width,H=R.domElement.height;S.cam.aspect=W/H;const ca=.55+Math.sin(T0*.17)*.12;{const dz=CARDS()?8.4:10.2;S.cam.position.set(Math.sin(ca)*dz,(CARDS()?2.2:2.5)+Math.sin(T0*.23)*.15,Math.cos(ca)*dz)};S.cam.lookAt(0,.75,0);

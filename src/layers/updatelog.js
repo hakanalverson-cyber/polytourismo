@@ -3,6 +3,11 @@
 'use strict';
 const P=window.PT8;
 P.LOG=[
+ {v:'0.05',d:'Oct 21, 2026',t:'Free Roam',items:[
+  'Career is now Free Roam: pick it and the screen fades to black, then you are dropped on your street in an open world about 6.7 km across, with a coast, a lake, a mountain pass, a forest, a town and an airfield.',
+  'The world streams in chunks around your car and fades into distance haze, with a light blur at the edge of the view, so a big map stays smooth.',
+  'Your garage is the house on your street and opens the same car viewer, now inside a garage. Brand Central, a tune shop (garage and tuning), a gas station and a race office are all in town; the race office holds the old career events and prizes.',
+  'Make money with delivery jobs from the job board, drift scores at Drift Pier, speed traps around the island, airfield top-speed runs, the summit overlook and the car meet. M opens the map and lets you set a GPS marker.']},
  {v:'0.04',d:'Oct 20, 2026',t:'New track: Grand Valley',items:[
   'Harbor Lights is gone, replaced by Grand Valley, the first track of a brand-new roster: a short, low orange suspension bridge with two towers, hangers and cables, leading to a walled island city.',
   'City Island is built from the building pack and KayKit buildings: unbroken rows of buildings face every shore, corner towers, brick gate houses over both roads, shopfronts, trees, hydrants, bins and rooftop water towers. Any gap between buildings is a tiny alley with dumpsters, bins and crates; larger leftovers become pocket parks.',
