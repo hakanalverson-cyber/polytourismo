@@ -93,14 +93,14 @@ def('buoy',[Sp(.55,0xd23a2a,0,.15,0),Cy(0,.3,.7,0xf2f2f2,0,.5,0,null,6),Sp(.1,0x
 
 /* ---------- placement plan per track (by name) ---------- */
 const PLAN={
- 'Quarry Circuit':   {edge:[['pole',1,60,10],['post',0,42,2.4]],field:[['truckY',3,26,150],['truckO',2,26,150],['officeC',3,18,90],['barrels',6,10,90],['cones',5,7,40],['bbA',2,18,120],['boulderG',16,14,230],['cairn',3,12,80],['tentR',2,12,40],['tentB',2,12,40]],fence:[0x8a8f94,2]},
+ 'Quarry Circuit':   {edge:[['pole',1,60,10]],field:[['truckY',3,26,150],['truckO',2,26,150],['officeC',3,18,90],['barrels',6,10,90],['cones',5,7,40],['bbA',2,18,120],['boulderG',16,14,230],['cairn',3,12,80],['tentR',2,12,40],['tentB',2,12,40]],fence:[0x8a8f94,2]},
  'Canyon Viaduct':{edge:[['pole',-1,70,10]],field:[['hoodoo',9,30,260],['arch',2,30,260],['boulderR',20,14,230],['cactus',14,10,150],['truckO',1,24,120],['bbB',2,20,120],['tentG',2,12,40],['tentR',1,12,40],['cairn',4,12,90]]},
- 'Alpine Pass':{edge:[['snowpole',0,24,3.4],['post',0,42,2.4]],field:[['chalet',8,16,150],['cairn',8,10,120],['sheepA',0,0,0],['boulderG',10,14,200],['tentB',2,12,40],['tentR',1,12,40],['bbB',1,20,120]],flock:[['sheepA',6,4,18,130]],fence:[0x9a7a52,2]},
+ 'Alpine Pass':{edge:[['snowpole',0,24,3.4]],field:[['chalet',8,16,150],['cairn',8,10,120],['sheepA',0,0,0],['boulderG',10,14,200],['tentB',2,12,40],['tentR',1,12,40],['bbB',1,20,120]],flock:[['sheepA',6,4,18,130]],fence:[0x9a7a52,2]},
  'Afterhours Loop':{edge:[],field:[['bbA',3,14,100],['bbB',3,14,100],['bbC',3,14,100],['busstop',4,6,40],['dumpster',6,6,60],['cones',6,6,40],['officeC',2,14,70]]},
- 'Pinewood Stage':{edge:[['pole',1,60,9],['post',0,42,2.4]],field:[['cabinW',4,14,110],['cabinR',2,14,110],['barn',1,16,120],['logs',7,8,70],['stump',16,5,60],['bale',6,6,40],['tentR',2,12,40],['tentB',2,12,40],['boulderG',8,12,160]],fence:[0x9a7a52,2]},
+ 'Pinewood Stage':{edge:[['pole',1,60,9]],field:[['cabinW',4,14,110],['cabinR',2,14,110],['barn',1,16,120],['logs',7,8,70],['stump',16,5,60],['bale',6,6,40],['tentR',2,12,40],['tentB',2,12,40],['boulderG',8,12,160]],fence:[0x9a7a52,2]},
  'Redrock Stage':{edge:[['pole',-1,70,10]],field:[['cactus',36,7,170],['hoodoo',9,30,260],['arch',2,30,260],['pump',4,20,150],['cabinA',3,14,120],['boulderR',14,12,200],['tentG',2,12,40],['tentR',1,12,40]]},
- 'Highmoor Stage':{edge:[['post',0,42,2.4]],field:[['cabinS',5,14,130],['turbine',4,40,260],['cairn',8,8,100],['bale',4,6,40],['boulderG',12,12,180],['tentB',2,12,40],['tentG',2,12,40]],flock:[['sheepA',9,4,22,170]]},
- 'Coastal Run':{edge:[['post',0,42,2.4]],field:[['lighthouse',1,25,260,'high'],['turbine',3,40,240],['cabinH',4,14,120],['boulderG',6,12,140],['tentR',2,12,40],['tentG',2,12,40],['bale',3,6,40],['fish',5,0,260,'water'],['sail',6,0,260,'water'],['buoy',8,0,260,'water']],fence:[0xe9e2d0,2,'cliff']},
+ 'Highmoor Stage':{edge:[],field:[['cabinS',5,14,130],['turbine',4,40,260],['cairn',8,8,100],['bale',4,6,40],['boulderG',12,12,180],['tentB',2,12,40],['tentG',2,12,40]],flock:[['sheepA',9,4,22,170]]},
+ 'Coastal Run':{edge:[],field:[['lighthouse',1,25,260,'high'],['turbine',3,40,240],['cabinH',4,14,120],['boulderG',6,12,140],['tentR',2,12,40],['tentG',2,12,40],['bale',3,6,40],['fish',5,0,260,'water'],['sail',6,0,260,'water'],['buoy',8,0,260,'water']],fence:[0xe9e2d0,2,'cliff']},
  'Frostline Stage':{edge:[['pole',1,70,9],['snowpole',0,24,3.4]],field:[['snowman',6,5,60],['cabinF',5,14,120],['logs',6,8,70],['stump',8,5,60],['bale',4,6,40],['tentR',2,12,40],['tentB',2,12,40],['boulderS',8,12,160]],fence:[0x9a7a52,2]}
 };
 

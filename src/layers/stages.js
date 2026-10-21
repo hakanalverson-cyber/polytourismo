@@ -160,7 +160,7 @@ Object.assign(PLAN,{
  'Mangrove Ford':{edge:[['reeds',0,13,3.2]],field:[['mangrove',150,7,150],['palm',70,7,120],['reeds',60,4,60],['stilthut',3,16,110],['canoe',3,10,50],['boulderG',5,12,100],['tentR',2,12,40],['tentB',2,12,40],['stump',6,5,50]]},
  'Terrace Run':{edge:[['cypress',0,26,3.5]],field:[['vines',34,9,120],['olive',80,6,130],['cypress',70,6,130],['stonehut',5,16,110],['haystack',10,8,70],['bale',6,6,40],['boulderG',7,12,120],['tentR',2,12,40],['tentB',2,12,40],['cairn',4,10,80]]},
  'Ashfall Stage':{edge:[],field:[['ashrock',90,5,130],['ashrockL',20,12,160],['vent',20,7,130],['obsidian',24,6,120],['sulfur',16,6,80],['deadtree',34,6,140],['tentR',2,12,40],['tentB',2,12,40]]},
- 'Autumn Ridge':{edge:[['post',0,42,2.4]],field:[['maple',60,7,130],['birch',50,7,130],['pumpkins',9,8,60],['scarecrow',3,10,60],['cabinW',4,14,110],['barn',1,16,120],['logs',7,8,70],['stump',14,5,60],['bale',8,6,40],['boulderG',8,12,160],['tentR',2,12,40],['tentB',2,12,40]],fence:[0x9a7a52,2]}});
+ 'Autumn Ridge':{edge:[],field:[['maple',60,7,130],['birch',50,7,130],['pumpkins',9,8,60],['scarecrow',3,10,60],['cabinW',4,14,110],['barn',1,16,120],['logs',7,8,70],['stump',14,5,60],['bale',8,6,40],['boulderG',8,12,160],['tentR',2,12,40],['tentB',2,12,40]],fence:[0x9a7a52,2]}});
 
 /* ---------------- backdrop panoramas ---------------- */
 function pano(T,kind){const d=T.d,W=4096,Hh=512,hz=352,fog=H(d.fog),cv=document.createElement('canvas');cv.width=W;cv.height=Hh;const g=cv.getContext('2d'),r=rngf(d.id*57+3);
