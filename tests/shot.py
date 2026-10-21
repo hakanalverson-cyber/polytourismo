@@ -17,8 +17,8 @@ def run(html,steps,out_prefix='s',size=(1280,720)):
             elif 'GLTFLoader' in u: r.fulfill(path=ROOT+'/node_modules/three/examples/js/loaders/GLTFLoader.js',content_type='application/javascript')
             else: r.abort()
         pg.route('**/*',lambda r: r.continue_() if r.request.url.startswith('file:') else route(r))
-        pg.goto('file://'+html)
-        pg.wait_for_timeout(1500)
+        pg.goto('file://'+html,timeout=240000,wait_until='commit')
+        pg.wait_for_timeout(40000)
         for i,s in enumerate(steps):
             if s[0]=='js': 
                 try: print('JS->',pg.evaluate(s[1]))

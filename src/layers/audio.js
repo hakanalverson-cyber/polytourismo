@@ -77,7 +77,7 @@ function killEng(e){try{e.os.forEach(x=>{x.o.stop();x.o.disconnect()});e.lfo.sto
 function tick(c,i){if(!on()){return}
  try{ctx();let e=eng[i];const car0=c.cs||P.BYID.merc;if(e&&e.id!==car0.id){const old=e;eng[i]=null;killEng(old);e=null}if(!e)e=eng[i]=mkEng(car0);const a=AC,t=a.currentTime,live=RACE&&scr==='game'&&!paused;
  const car=c.cs||P.BYID.merc,gi=c.gear|0,ceil=Math.max(8,car.top*P.GT(car)[Math.min(gi,P.GT(car).length-1)].top*.92),r=Math.min(1.05,c.sp/ceil),th=c.in?c.in.th:0;
- const rpm=Math.max(.14,Math.min(1,.14+r*.86+(c.shiftT>0?-.18:0)+th*.04));e.rpm+=(rpm-e.rpm)*.35;
+ const cnt=RACE&&RACE.state==='count'&&c.human&&!c.cool;const rpm=cnt?Math.min(1,.16+th*.72+(th>.5?Math.sin(t*38)*.03:0)):Math.max(.14,Math.min(1,.14+r*.86+(c.shiftT>0?-.18:0)+th*.04));e.rpm+=(rpm-e.rpm)*.35;
  const pr=e.pr,base=pr.f0+e.rpm*(pr.f1-pr.f0);
  e.os.forEach(x=>{x.o.frequency.setTargetAtTime(base*x.w[1],t,.04);if(x.w[3])x.g.gain.setTargetAtTime(x.w[2]*Math.pow(e.rpm,2)*(.4+th*.6),t,.06)});
  e.lfo.frequency.setTargetAtTime(pr.lr[0]+e.rpm*(pr.lr[1]-pr.lr[0]),t,.05);e.ld.gain.setTargetAtTime(pr.lf*.5*(1-th*.45),t,.06);

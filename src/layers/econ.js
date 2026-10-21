@@ -35,7 +35,7 @@ P.tuneCost=(id,alt,k,v)=>{const d=P.TUNE.find(x=>x.k===k);if(!d)return 0;let cur
 /* 6) 3-2-1 countdown when resuming from pause */
 {const rs0=resume;let tok=0;
  const el=()=>{let e=document.getElementById('ptCD');if(!e){e=document.createElement('div');e.id='ptCD';e.style.cssText='position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;pointer-events:none;font:900 italic min(34vh,260px)/1 var(--mn,monospace);color:#fff;text-shadow:0 6px 40px #000c,0 0 8px #000;letter-spacing:.04em';document.body.appendChild(e)}return e};
- resume=function(){if(tok)return;const my=++tok,e=el();paused=true;down.clear();show('game');
+ resume=function(){if(tok)return;if(RACE&&RACE.state==='count'){down.clear();show('game');return rs0.apply(this,arguments)}const my=++tok,e=el();paused=true;down.clear();show('game');
   const show1=n=>{if(my!==tok)return;if(scr!=='game'){e.style.display='none';tok=0;return}e.textContent=n;e.style.display='flex';e.style.animation='none';void e.offsetWidth;e.style.animation='ptCD .9s ease-out both'};
   const sync=PT8.cdBegin?PT8.cdBegin():{at:[.24,1.23,2.23,3.2],syn:1};
   [3,2,1].forEach((n,i)=>setTimeout(()=>{show1(n);if(sync.syn)try{PT8.sfx('cdTick')}catch(er){}},sync.at[i]*1000));
