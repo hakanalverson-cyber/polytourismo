@@ -210,12 +210,12 @@ let HOME=null,HOME_ENV=null;
 function homeGarage(S){if(HOME)return HOME;const g=new THREE.Group(),PI=Math.PI;
   /* the old-factory hall: textured shell (async glb) + decimated pipe/tank machinery as vertex-coloured soup */
   try{const b=atob(FAC_B64),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);const nv=u.length/9,pp=new Int16Array(u.buffer.slice(0,nv*6)),cc=u.subarray(nv*6),Pf=new Float32Array(nv*3),Cf=new Float32Array(nv*3);
-   for(let i=0;i<nv*3;i++){Pf[i]=pp[i]*.001;Cf[i]=Math.pow(cc[i]/255,2.1)*.8}
+   for(let i=0;i<nv*3;i++){Pf[i]=pp[i]*.001;Cf[i]=Math.pow(cc[i]/255,2.1)*.4}
    const ge=new THREE.BufferGeometry();ge.setAttribute('position',new THREE.BufferAttribute(Pf,3));ge.setAttribute('color',new THREE.BufferAttribute(Cf,3));ge.computeVertexNormals();
    g.add(new THREE.Mesh(ge,new THREE.MeshStandardMaterial({vertexColors:true,side:THREE.DoubleSide,roughness:.75,metalness:.35})))}catch(e){console.warn('factory',e)}
   (async()=>{try{const raw=atob(FACS_B64),u=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)u[i]=raw.charCodeAt(i);
    const ab=await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();const cib=window.createImageBitmap;window.createImageBitmap=undefined;
-   try{new THREE.GLTFLoader().parse(ab,'',gl=>{gl.scene.traverse(m=>{if(m.isMesh){const mt=m.material;mt.side=THREE.DoubleSide;mt.roughness=.85;mt.metalness=0;mt.envMapIntensity=.25;mt.color&&mt.color.setScalar(.42);m.receiveShadow=true;m.castShadow=true}});g.add(gl.scene)},e=>console.warn('factory glb',e))}finally{window.createImageBitmap=cib}}catch(e){console.warn('factory glb',e)}})();
+   try{new THREE.GLTFLoader().parse(ab,'',gl=>{gl.scene.traverse(m=>{if(m.isMesh){const mt=m.material;mt.side=THREE.DoubleSide;mt.roughness=.85;mt.metalness=0;mt.envMapIntensity=.25;mt.color&&mt.color.setScalar(.11);m.receiveShadow=true;m.castShadow=true;const bx=new THREE.Box3().setFromObject(m),sz=bx.getSize(new THREE.Vector3());if(sz.y<.3&&bx.max.y<.2&&sz.x*sz.z>20){mt.roughness=.22;mt.metalness=.2;mt.envMapIntensity=.4;mt.transparent=true;mt.opacity=.8;mt.color&&mt.color.setScalar(.16)}}});g.add(gl.scene)},e=>console.warn('factory glb',e))}finally{window.createImageBitmap=cib}}catch(e){console.warn('factory glb',e)}})();
   const Sm=(o)=>new THREE.MeshStandardMaterial(Object.assign({side:THREE.DoubleSide,roughness:.75,metalness:.2},o));
   const glow=(r,gg,b)=>new THREE.MeshBasicMaterial({color:new THREE.Color().setRGB(r,gg,b)});
   const M=(c,r,m)=>Sm({color:c,roughness:r==null?.7:r,metalness:m==null?.2:m});
@@ -229,19 +229,19 @@ function homeGarage(S){if(HOME)return HOME;const g=new THREE.Group(),PI=Math.PI;
   B(1.0,1.15,.55,3.55,.58,2.4,M(0x8e211a,.5,.4),PI/2);B(1.04,.06,.6,3.55,1.18,2.4,DARKM,PI/2);
   for(let i=0;i<3;i++)cyl(.02,.2,.5,-3.4+i*.5,.25,4.8-i*.4,M(0xff6a18,.6,0),0,0,10);
   /* lighting: dim cool fill, a few warm hanging work-lights down the aisle, a shadow-casting key */
-  g.add(new THREE.HemisphereLight(0x8fa0bd,0x1a1613,.12));
+  g.add(new THREE.HemisphereLight(0x8fa0bd,0x1a1613,.03));
   const spot=(x,y,z,tx,tz,c,i,ang,sh)=>{const l=new THREE.SpotLight(c,i,26,ang,.8,1.4);l.position.set(x,y,z);l.target.position.set(tx,0,tz);g.add(l,l.target);if(sh){l.castShadow=true;l.shadow.mapSize.set(1024,1024);l.shadow.bias=-.0005;l.shadow.radius=5;l.shadow.camera.near=1.5;l.shadow.camera.far=22}return l};
-  spot(-1.0,4.5,2.5,0,0,0xdfe8ff,1.0,.7,true);spot(2.5,4.5,-3,0,-1,0xffe2bc,.7,.8,false);spot(-2.5,4.5,-8,-1,-6,0xffd0a0,.6,.8,false);
-  for(const [x,y,z,c,i,d] of[[0,3.2,4,0xffd0a0,.9,9],[-2,3.2,-3,0xffc890,.8,9],[2,3.2,-9,0xffc890,.7,9],[0,1.2,-14,0xff9a50,.7,6],[-3.6,2.0,5,0x6aa8ff,.5,6]]){const pl=new THREE.PointLight(c,i,d,1.6);pl.position.set(x,y,z);g.add(pl)}
+  spot(-1.0,4.5,2.5,0,0,0xdfe8ff,.4,.7,true);spot(2.5,4.5,-3,0,-1,0xffe2bc,.3,.8,false);spot(-2.5,4.5,-8,-1,-6,0xffd0a0,.25,.8,false);
+  for(const [x,y,z,c,i,d] of[[0,3.2,4,0xffd0a0,.35,9],[-2,3.2,-3,0xffc890,.3,9],[2,3.2,-9,0xffc890,.25,9],[0,1.2,-14,0xff9a50,.3,6],[-3.6,2.0,5,0x6aa8ff,.2,6]]){const pl=new THREE.PointLight(c,i,d,1.6);pl.position.set(x,y,z);g.add(pl)}
   for(const [x,z] of[[0,4],[-2,-3],[2,-9]]){const bl=new THREE.Mesh(new THREE.SphereGeometry(.12,10,8),glow(2.4,1.7,.9));bl.position.set(x,3.5,z);g.add(bl);cyl(.012,.012,1.3,x,4.15,z,BLK,0,0,5)}
   g.traverse(m=>{if(m.isMesh&&m.material&&!m.material.isMeshBasicMaterial&&!m.material.transparent&&!m.userData.noshadow){m.castShadow=true;m.receiveShadow=true}});
   /* a small baked reflection map so the car paint picks up warm light */
   try{const tmp=new THREE.Scene();tmp.background=new THREE.Color(0x0a0a0c);const em=(w,h,x,y,z,c,rx)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:c,side:THREE.DoubleSide}));m.position.set(x,y,z);m.rotation.x=rx||0;tmp.add(m)};
-   for(let k=-2;k<=2;k++)em(.3,6,k*2.2,6,0,0xffe6bb,Math.PI/2);em(10,3,0,3,-8,0x2a3140);em(6,2.5,-8,3,0,0x4a2a14);
+   for(let k=-2;k<=2;k++)em(.3,6,k*2.2,6,0,0x6a5538,Math.PI/2);em(10,3,0,3,-8,0x2a3140);em(6,2.5,-8,3,0,0x4a2a14);
    const pm=new THREE.PMREMGenerator(R);HOME_ENV=pm.fromScene(tmp,.04).texture;pm.dispose()}catch(e){console.warn('garage env',e)}
   g.visible=false;S.sc.add(g);return HOME=g}
 P.studioDress=(S,SR)=>{if(!S)return;const home=!!(SR&&SR.home&&SR.kind==='garage'&&FR);if(S.wall){S.wall.visible=!home;if(S.dark)S.dark.visible=!home;if(S.ring)S.ring.visible=!home}
- const g=home?homeGarage(S):HOME;if(g)g.visible=home;if(S.floor){S.floor.visible=!home;S.floor.material.color.setHex(0x16191f)}S.sc.background.setHex(home?0x0e0d0c:0x0b0d11);P.homeCamOn=home;S.sc.environment=home?HOME_ENV:null;S.turn&&S.turn.children.forEach(o=>{if(o.geometry&&o.geometry.type==='RingGeometry')o.visible=!home});S.sc.traverse(o=>{if(o.isSpotLight){if(o.userData.i0==null)o.userData.i0=o.intensity;o.intensity=o.userData.i0*(home?.45:1)}});if(S.cam&&S.cam.fov!==(home?36:30)){S.cam.fov=home?36:30;S.cam.updateProjectionMatrix()}};
-P.homeCam=t=>({p:[2.9+Math.sin(t*.13)*.5,1.2+Math.sin(t*.21)*.06,5.4+Math.cos(t*.11)*.3],l:[-.3,.62,-.6]});
+ const g=home?homeGarage(S):HOME;if(g)g.visible=home;if(S.floor){S.floor.visible=!home;S.floor.material.color.setHex(0x16191f)}S.sc.background.setHex(home?0x0e0d0c:0x0b0d11);P.homeCamOn=home;if(S.turn){S.turn.scale.setScalar(home?.78:1);S.turn.position.z=home?-2.6:0;if(S.mir){if(home){if(S.mir.parent!==S.turn)S.turn.add(S.mir)}else if(S.mir.parent)S.mir.parent.remove(S.mir)}}S.sc.environment=home?HOME_ENV:null;S.turn&&S.turn.children.forEach(o=>{if(o.geometry&&o.geometry.type==='RingGeometry')o.visible=!home});S.sc.traverse(o=>{if(o.isSpotLight){if(o.userData.i0==null)o.userData.i0=o.intensity;o.intensity=o.userData.i0*(home?.45:1)}});if(S.cam&&S.cam.fov!==(home?36:30)){S.cam.fov=home?36:30;S.cam.updateProjectionMatrix()}};
+P.homeCam=t=>({p:[2.6+Math.sin(t*.13)*.4,.62+Math.sin(t*.21)*.04,6.4+Math.cos(t*.11)*.25],l:[-.2,.55,-3]});
 P.FRdebug=()=>FR;P.homeGroup=()=>HOME;
 })();
