@@ -38,7 +38,7 @@ P.tuneCost=(id,alt,k,v)=>{const d=P.TUNE.find(x=>x.k===k);if(!d)return 0;let cur
  resume=function(){if(tok)return;const my=++tok,e=el();paused=true;down.clear();show('game');
   let n=3;const tick=()=>{if(my!==tok)return;if(scr!=='game'){e.style.display='none';tok=0;return}
    if(n===0){e.style.display='none';tok=0;rs0();return}
-   e.textContent=n;e.style.display='flex';e.style.animation='none';void e.offsetWidth;e.style.animation='ptCD .9s ease-out both';try{beep(n>1?520:780,.14,'square',.2)}catch(er){}n--;setTimeout(tick,1000)};
+   e.textContent=n;e.style.display='flex';e.style.animation='none';void e.offsetWidth;e.style.animation='ptCD .9s ease-out both';try{PT8.sfx(n>1?'cdTick':'cdGo')}catch(er){}n--;setTimeout(tick,1000)};
   tick()};
  const o=show;show=function(n){if(n!=='game'){tok=0;const e=document.getElementById('ptCD');if(e)e.style.display='none'}return o.apply(this,arguments)}}
 })();

@@ -18,6 +18,8 @@ src=src.replace("color:d.id==3?0x7af0ff:0xfff0c8","color:d.id==3?0xffe2a8:0xfff0
 # per-jump overrides: d.jumps=[[ctrl,frac,gapMetres,rampHeight]] (a long snapped-bridge gap needs a taller ramp)
 src=rep(src,"gl=Math.max(2,Math.round(8/sp));","gl=Math.max(2,Math.round((jp[2]||8)/sp)),JH=jp[3]||4.4,JL=jp[3]?jp[3]*.78:3.45;")
 src=rep(src,"T.y[(c-rl+k+N)%N]+=4.4*u*u*(2-u);","T.y[(c-rl+k+N)%N]+=JH*u*u*(2-u);")
+src=rep(src,"m!=n&&m>0)beep(600,.12);","m!=n&&m>0)PT8.sfx('cdTick');")
+src=rep(src,"Rc.t=0;beep(1200,.4);","Rc.t=0;PT8.sfx('cdGo');")
 src=rep(src,"T.y[(c+k)%N]+=lerp(4.4,3.45,k/gl);","T.y[(c+k)%N]+=lerp(JH,JL,k/gl);")
 src=rep(src,"T.y[(c+gl+k)%N]+=3.45*(1-sm(0,1,k/rl));","T.y[(c+gl+k)%N]+=JL*(1-sm(0,1,k/rl));")
 # respawns near a long gap start well back so the car can build speed again
@@ -200,7 +202,7 @@ src=rep(src,"      front:k<2,angle:0\n    };\n  });","""      front:k<2,angle:0
      for(const g of gs(w)){g.translate(-r.c[0],-r.c[1],-r.c[2]);g.applyMatrix4(M);g.translate(r.c[0],r.c[1],r.c[2])}}
    for(const[a,b2]of[[0,1],[2,3]]){const A=car.ptWheels[a],B=car.ptWheels[b2],wa=wid(A),wb=wid(B),bad=wa>wb*1.25?A:wb>wa*1.25?B:null;if(!bad)continue;const good=bad===A?B:A;
      bad.spin.children.slice().forEach(m=>bad.spin.remove(m));good.spin.children.forEach(m=>bad.spin.add(new THREE.Mesh(mir(m.geometry),m.material)));bad.pivot.position.set(-good.pivot.position.x,good.pivot.position.y,good.pivot.position.z);bad.radius=good.radius}}""")
-parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','cars10','audio','modes','tracks','hpack','tracks2','extra','race2','elim','tod','bridge','props','bld','stages','ra_data','tracks3','weather','ambience','tutorial','updatelog','hud2','shade','ui','rally','trackmode','realspeed','barn','animals','clean','solid','damage','perf','econ']  if os.path.exists(f'{SRC}/layers/{n}.js')]
+parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','cars10','audio','modes','tracks','hpack','tracks2','extra','race2','elim','tod','bridge','props','bld','stages','ra_data','tracks3','weather','ambience','menuaudio','tutorial','updatelog','hud2','shade','ui','rally','trackmode','realspeed','barn','animals','clean','solid','damage','perf','econ']  if os.path.exists(f'{SRC}/layers/{n}.js')]
 css=open(f'{SRC}/style.css').read()
 import base64
 b64=lambda f:base64.b64encode(open(W+'/assets/'+f,'rb').read()).decode()
