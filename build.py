@@ -212,7 +212,7 @@ b64=lambda f:base64.b64encode(open(W+'/assets/'+f,'rb').read()).decode()
 ANIM='<script>const ANIM_B64="'+b64('animals.bin')+'",ANIM_META='+open(W+'/assets/animals.json').read()+';</script>'
 BLD='<script>const BLD_B64="'+b64('bld.bin')+'",BLD_META='+open(W+'/assets/bld.json').read()+';</script>'
 FRM='<script>const FRM_B64="'+b64('frm.bin')+'",FRM_META='+open(W+'/assets/frm.json').read()+';</script>'
-FAC='<script>const FAC_B64="'+b64('factory.bin')+'",FACS_B64="'+b64('factory_shell.glb.gz')+'";</script>'
+#FAC='<script>const FAC_B64="'+b64('factory.bin')+'",FACS_B64="'+b64('factory_shell.glb.gz')+'";</script>'
 HPACK='<script>const HPACK_B64="'+b64('harbor_pack.glb.gz')+'";</script>'
 MUS=''.join('<script type="text/plain" id="mus_%s">%s</script>'%(k,base64.b64encode(open(W+'/assets/music/'+f+'.mp3','rb').read()).decode()) for k,f in [('baby','baby_so_free'),('supreme','supreme_moment'),('space','space'),('glass','glasstress'),('body','body_and_mind'),('nocomm','no_comm'),('cd','gt_countdown'),('lizzie','lizzie'),('cafe','cafe_de_flore')])
 CARS10='<script>const CAR10_BIN_B64="'+b64('cars_v10.bin.gz')+'",CAR10_TEX_B64="'+b64('cars_v10_tex.png')+'",CAR10_META='+open(W+'/assets/cars_v10.json').read()+';</script>'
@@ -241,7 +241,7 @@ src=src.replace('<title>Poly Tourismo v7</title>','<title>Poly Tourismo</title>'
 src=src.replace('<body>','<body><div id="ptBoot">POLY TOURISMO<i></i><small>LOADING</small></div>',1)
 BOOT_JS='<script>(function(){function done(){var b=document.getElementById("ptBoot"),c=document.getElementById("ptBootCss");if(!b)return;b.style.opacity=0;setTimeout(function(){if(c)c.remove();b.remove()},260)}function go(){requestAnimationFrame(function(){requestAnimationFrame(function(){setTimeout(done,350)})})}if(document.readyState==="complete")go();else addEventListener("load",go);setTimeout(done,8000)})();</script>'
 GLTF='<script>'+open(W+'/assets/GLTFLoader.r128.js').read()+'</script>'
-add=GLTF+ANIM+BLD+FRM+FAC+CARS10+HPACK+MUS+'<style id="v8css">'+css+'</style><script>\n'+'\n'.join(parts)+'\n</script>'
+add=GLTF+ANIM+BLD+FRM+CARS10+HPACK+MUS+'<style id="v8css">'+css+'</style><script>\n'+'\n'.join(parts)+'\n</script>'
 i=src.rindex('</body>') if '</body>' in src else len(src)
 src=src[:i]+add+BOOT_JS+src[i:]
 
