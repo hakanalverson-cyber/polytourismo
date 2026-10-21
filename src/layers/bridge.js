@@ -132,7 +132,7 @@ function buildSpan(T){const d=T.d,N=T.N,r=rngf(8*77+11),sc=new THREE.Scene();
   /* gravel extends slightly past asphalt boundary; pixelated dithered edge where it splits off */
   const EX=Math.round(32/T.sp); // gravel trickles off over ~32 m of tarmac
   const pe_tex=ctex(26,64,(x,w,h)=>{const rng=rngf(77),im=x.createImageData(w,h);
-    for(let j=0;j<h;j++){const p=j/(h-1);for(let i=0;i<w;i++){const o=(j*w+i)*4,u=i/(w-1),tr=(Math.abs(u-.27)<.09||Math.abs(u-.69)<.09)?.12:0,d=Math.pow(p,2.2)*.92+tr*p,r=rng(),c=.85+.3*rng();
+    for(let j=0;j<h;j++){const p=j/(h-1);for(let i=0;i<w;i++){const o=(j*w+i)*4,u=i/(w-1),rd=Math.min(Math.abs(u-.27),Math.abs(u-.69)),rut=Math.max(0,1-rd/.07),d=Math.max(Math.pow(p,2.2)*.92,rut*Math.pow(p,.9)*.85),r=rng(),c=(.85+.3*rng())*(1-.22*rut*Math.min(1,p*1.6));
       if(r<d){im.data[o]=148*c;im.data[o+1]=128*c;im.data[o+2]=95*c;im.data[o+3]=255}else im.data[o+3]=0}}
     x.putImageData(im,0,0)});pe_tex.magFilter=pe_tex.minFilter=THREE.NearestFilter;
   const pem=new THREE.MeshStandardMaterial({map:pe_tex,transparent:true,depthWrite:false,roughness:1,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-8,polygonOffsetUnits:-8});
