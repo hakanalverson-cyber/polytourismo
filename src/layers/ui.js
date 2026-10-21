@@ -6,7 +6,7 @@ const $$=(s,r)=>[...(r||document).querySelectorAll(s)];
 const root=document.createElement('div');root.id='v8';document.body.appendChild(root);
 const SCREENS=['s8cards','s8setup','s8career','s8show','s8res'];
 const ST={mode:'ta',track:0,laps:3,rlaps:1,players:1,cpus:3,diff:1,time:120,traffic:'light',todUser:null,ret:'s8cards',cev:null,crank:null};
-const SR={cat:'ALL',kind:'garage',player:0,cap:null,ret:'s8setup',id:'merc',alt:0,ang:.6,vel:0,drag:false,rally:false};
+const SR={cat:'ALL',kind:'garage',player:0,cap:null,ret:'s8setup',id:'merc',alt:0,ang:.6,vel:0,drag:false,rally:false};P.SR=SR;
 const crHTML='<div class="crbox"><small>BALANCE</small><b class="crv"></b></div>';
 
 /* ================= pixel icons (drawn at 40x40, shown crisp) ================= */
