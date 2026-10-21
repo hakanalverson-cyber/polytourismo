@@ -311,8 +311,8 @@ function forest(sc,T,r,U){const N=T.N,g=T._tg,B=P.BLD,MAT=P.PROPKIT&&P.PROPKIT.M
  /* overhead sign gantries: bridge approach and the forest road leaving the island */
  const gantry=(tx,tz,txt,bg)=>{let bi=0,bd=1e9;for(let i=0;i<N;i++){const d=Math.hypot(T.x[i]-tx,T.z[i]-tz);if(d<bd){bd=d;bi=i}}
   const f=frame(T,bi,0),gp=new THREE.Group();gp.position.set(f[0],T.y[bi],f[1]);gp.rotation.y=f[2];sc.add(gp);const W2=T.hw[bi]+2.2,steel=flat(0x6a6f76);
-  for(const sd of[-1,1])mesh(new THREE.BoxGeometry(.7,7.4,.7),steel,sd*W2,3.7,0,gp);mesh(new THREE.BoxGeometry(W2*2+.7,.7,.7),steel,0,7.2,0,gp);
-  const sm=new THREE.MeshBasicMaterial({map:T_SIGN(txt,bg,'#f6f1e6')});for(const dz of[-.45,.45]){const pl=mesh(new THREE.PlaneGeometry(10,2.5),sm,0,5.7,dz,gp);if(dz>0)pl.rotation.y=0;else pl.rotation.y=Math.PI}};
+  for(const sd of[-1,1])mesh(new THREE.BoxGeometry(.7,12.4,.7),steel,sd*W2,6.2,0,gp);mesh(new THREE.BoxGeometry(W2*2+.7,.7,.7),steel,0,12.2,0,gp);
+  const sm=new THREE.MeshBasicMaterial({map:T_SIGN(txt,bg,'#f6f1e6')});for(const dz of[-.45,.45]){const pl=mesh(new THREE.PlaneGeometry(10.8,3.6),sm,0,10.3,dz,gp);if(dz>0)pl.rotation.y=0;else pl.rotation.y=Math.PI}};
  gantry(-395,30,'GRAND VALLEY BRIDGE','#1d4d34');gantry(-105,-96,'FOREST ROAD','#5a3a1e');
  /* the channel: buoys and a few boats */
  {const bu=[];for(let n=0,t=0;n<16&&t<200;t++){const x=-318+r()*250,z=-48+r()*170;if(Math.abs(z-BZ)<17)continue;bu.push([x,SEA+.25,z,.55,1.1,.55,0])}

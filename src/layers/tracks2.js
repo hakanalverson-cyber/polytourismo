@@ -12,7 +12,7 @@ const sp=[[-470,30,2],[-420,30,3.2],[-375,30,5],[-330,30,6.4],[-300,30,7.1],[-26
  [-75,-92,1.1,6],[-125,-100,1.9,6],[-170,-128,3.2,6],[-195,-175,4.8,6],[-175,-225,6.5,6],[-215,-270,8,6],[-285,-285,8.8,6],[-345,-262,8,6],[-365,-215,6.4,6],[-335,-170,5,6],[-370,-128,4,6],
  [-430,-130,3.4,6],[-490,-165,4.4,6],[-550,-200,6,6],[-615,-190,7,6],[-660,-145,6.2,6],[-665,-90,4.8,6],[-640,-55,3.8,6],[-615,0,3,6],[-570,40,2.4,6],[-520,45,2.1,7.5]];
 const span={id:8,name:'Grand Valley',desc:'suspension bridge / island city / forest valley',hw:8,bank:0,off:'city',idw:0,offs:0,amp:0,up:0,shoulder:8,flat:1,allWalls:1,span:1,biome:'harbor',tod0:'day',
- sky:[0x3a82d6,0xb6dcf4],fog:0xbcd6e8,sun:0xfff4de,hemi:[0xdcecff,0x6a6a60],road:'#3b3e44',dust:0xb89c70,dirt:0x6b5a3e,walls:[],ice:[],boost:[],jumps:[],pts:sp};
+ sky:[0x3a82d6,0xb6dcf4],fog:0xbcd6e8,sun:0xfff4de,hemi:[0xdcecff,0x6a6a60],road:'#3b3e44',dust:0x8c6a42,dirt:0x4e3a22,walls:[],ice:[],boost:[],jumps:[],pts:sp};
 const frost={id:9,look:4,name:'Frostline Stage',desc:'frozen forest / ice ruts / hairpins',hw:5.5,bank:8,shoulder:6,gravel:1,ice:[],walls:[],boost:[],off:'snow',idw:.86,offs:0,amp:6.5,up:36,biome:'forest',frost:1,tod0:'dawn',
  sky:[0x8fb0d0,0xe9f1f8],fog:0xd6e3ee,sun:0xfff4e0,hemi:[0xe6f0fa,0x7a8a9a],road:'#a3a9b0',dust:0xf2f6fa,dirt:0xdfe6ee,
  pts:[[-120,-240,10],[0,-255,14],[110,-225,22],[200,-250,30],[290,-190,36],[310,-100,30],[250,-40,24],[160,-70,28],[100,-10,34],[150,60,40],[250,90,36],[300,160,28],[250,230,20],[150,250,14],[60,200,10],[-30,240,6],[-120,215,8],[-190,150,14],[-140,80,20],[-210,20,26],[-290,-30,22],[-290,-120,16],[-220,-190,12]],tunnels:0};
