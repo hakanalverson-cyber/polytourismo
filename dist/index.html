@@ -9392,13 +9392,11 @@ function menuScene2(){const pt=photo();let t0=performance.now()/1000,order=[],cu
  window.__cin={self,pt,SH,go(i){const s=SH[i];pt.set(s);cur=s;shotT=1.2;order=[]}};
  return self}
 
-/* Brand Central: a shutter opens on the way in, a quick black dip on the way out */
+/* Brand Central: a one second fade up from black on the way in, a quick black dip on the way out */
 (function(){const mk=(css)=>{const d=document.createElement('div');d.style.cssText='position:fixed;left:0;width:100%;pointer-events:none;'+css;return d};
  let top=null,bot=null,line=null,dip=null,was=false;
  function ensure(){if(top)return;top=mk('top:0;height:50.2%;background:#000;z-index:99998;transform:translateY(-101%);will-change:transform');bot=mk('bottom:0;height:50.2%;background:#000;z-index:99998;transform:translateY(101%);will-change:transform');line=mk('top:50%;height:2px;background:linear-gradient(90deg,transparent,#fff,transparent);z-index:99999;opacity:0;box-shadow:0 0 22px 4px rgba(255,235,190,.6)');dip=mk('top:0;height:100%;background:#000;z-index:99997;opacity:0');document.body.append(top,bot,line,dip)}
- function open_(){ensure();for(const e of[top,bot])e.style.transition='none';top.style.transform='none';bot.style.transform='none';line.style.transition='none';line.style.opacity=1;line.style.transform='scaleX(.15)';
-  void top.offsetWidth;setTimeout(()=>{line.style.transition='transform .35s ease-out';line.style.transform='scaleX(1)'},40);
-  setTimeout(()=>{for(const e of[top,bot])e.style.transition='transform .95s cubic-bezier(.77,0,.18,1)';top.style.transform='translateY(-101%)';bot.style.transform='translateY(101%)';line.style.transition='opacity .6s ease .15s';line.style.opacity=0},420)}
+ function open_(){ensure();dip.style.transition='none';dip.style.opacity=1;void dip.offsetWidth;setTimeout(()=>{dip.style.transition='opacity 1s ease';dip.style.opacity=0},60)}
  function dip_(){ensure();dip.style.transition='none';dip.style.opacity=1;void dip.offsetWidth;setTimeout(()=>{dip.style.transition='opacity .55s ease';dip.style.opacity=0},160)}
  new MutationObserver(()=>{const st=document.body.classList.contains('studio'),brand=st&&P.SR&&P.SR.kind==='brand';if(brand&&!was)open_();else if(!st&&was)dip_();was=brand}).observe(document.body,{attributes:true,attributeFilter:['class']})})();
 menuScene=menuScene2;
@@ -10837,7 +10835,7 @@ body.ptTitle #menu{opacity:0!important;pointer-events:none!important}
 #ptTitle .bar.t{top:0;transform-origin:top}#ptTitle .bar.b{bottom:0;transform-origin:bottom}
 #ptTitle.on .bar{transform:none}
 #ptTitle .lg{font:900 italic min(12vw,150px)/.86 system-ui,sans-serif;letter-spacing:.01em;text-align:center;opacity:0;transform:translateY(14px) scale(.98);transition:opacity 1.2s ease .5s,transform 1.6s cubic-bezier(.2,.7,.2,1) .5s;
- background:linear-gradient(100deg,#fff 0%,#fff 38%,#9fb0b4 50%,#fff 62%,#fff 100%);background-size:260% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:ptSheen 5.5s ease-in-out 1.8s infinite}
+ background:linear-gradient(100deg,#fff 0%,#fff 38%,#9fb0b4 50%,#fff 62%,#fff 100%);background-size:260% 100%;padding:0 .16em 0 .06em;-webkit-background-clip:text;background-clip:text;color:transparent;animation:ptSheen 5.5s ease-in-out 1.8s infinite}
 #ptTitle .lg i{display:block;color:transparent;background:linear-gradient(100deg,#8a98a0,#5b6a72);-webkit-background-clip:text;background-clip:text}
 #ptTitle.on .lg{opacity:1;transform:none}
 #ptTitle .sub{margin-top:2.2vh;font:600 min(1.5vw,13px)/1 system-ui,sans-serif;letter-spacing:.7em;margin-right:-.7em;opacity:0;transition:opacity 1s ease 1.1s;color:#b9c4c6}
@@ -10847,7 +10845,7 @@ body.ptTitle #menu{opacity:0!important;pointer-events:none!important}
 #ptTitle .pr{position:absolute;bottom:15vh;font:700 min(1.7vw,15px)/1 system-ui,sans-serif;letter-spacing:.55em;margin-right:-.55em;opacity:0;color:#fff}
 #ptTitle.on .pr{animation:ptBlink 2.2s ease-in-out 2.2s infinite}
 #ptTitle .vv{position:absolute;right:3vw;bottom:11vh;font:600 10px/1 system-ui,sans-serif;letter-spacing:.3em;opacity:.45}
-@keyframes ptSheen{0%,55%{background-position:130% 0}100%{background-position:-130% 0}}
+@keyframes ptSheen{0%,50%{background-position:175% 0}100%{background-position:-175% 0}}
 @keyframes ptBlink{0%,100%{opacity:.25}50%{opacity:1}}`;document.head.appendChild(st);
 const d=document.createElement('div');d.id='ptTitle';d.innerHTML='<div class="bar t"></div><div class="bar b"></div><div class="lg">POLY<i>GT</i></div><div class="sub">GRAND TOUR</div><div class="ln"></div><div class="pr">PRESS ANY BUTTON</div><div class="vv">MOTOR DIVISION</div>';
 document.body.appendChild(d);document.body.classList.add('ptTitle');requestAnimationFrame(()=>requestAnimationFrame(()=>d.classList.add('on')));

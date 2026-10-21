@@ -90,13 +90,11 @@ function menuScene2(){const pt=photo();let t0=performance.now()/1000,order=[],cu
  window.__cin={self,pt,SH,go(i){const s=SH[i];pt.set(s);cur=s;shotT=1.2;order=[]}};
  return self}
 
-/* Brand Central: a shutter opens on the way in, a quick black dip on the way out */
+/* Brand Central: a one second fade up from black on the way in, a quick black dip on the way out */
 (function(){const mk=(css)=>{const d=document.createElement('div');d.style.cssText='position:fixed;left:0;width:100%;pointer-events:none;'+css;return d};
  let top=null,bot=null,line=null,dip=null,was=false;
  function ensure(){if(top)return;top=mk('top:0;height:50.2%;background:#000;z-index:99998;transform:translateY(-101%);will-change:transform');bot=mk('bottom:0;height:50.2%;background:#000;z-index:99998;transform:translateY(101%);will-change:transform');line=mk('top:50%;height:2px;background:linear-gradient(90deg,transparent,#fff,transparent);z-index:99999;opacity:0;box-shadow:0 0 22px 4px rgba(255,235,190,.6)');dip=mk('top:0;height:100%;background:#000;z-index:99997;opacity:0');document.body.append(top,bot,line,dip)}
- function open_(){ensure();for(const e of[top,bot])e.style.transition='none';top.style.transform='none';bot.style.transform='none';line.style.transition='none';line.style.opacity=1;line.style.transform='scaleX(.15)';
-  void top.offsetWidth;setTimeout(()=>{line.style.transition='transform .35s ease-out';line.style.transform='scaleX(1)'},40);
-  setTimeout(()=>{for(const e of[top,bot])e.style.transition='transform .95s cubic-bezier(.77,0,.18,1)';top.style.transform='translateY(-101%)';bot.style.transform='translateY(101%)';line.style.transition='opacity .6s ease .15s';line.style.opacity=0},420)}
+ function open_(){ensure();dip.style.transition='none';dip.style.opacity=1;void dip.offsetWidth;setTimeout(()=>{dip.style.transition='opacity 1s ease';dip.style.opacity=0},60)}
  function dip_(){ensure();dip.style.transition='none';dip.style.opacity=1;void dip.offsetWidth;setTimeout(()=>{dip.style.transition='opacity .55s ease';dip.style.opacity=0},160)}
  new MutationObserver(()=>{const st=document.body.classList.contains('studio'),brand=st&&P.SR&&P.SR.kind==='brand';if(brand&&!was)open_();else if(!st&&was)dip_();was=brand}).observe(document.body,{attributes:true,attributeFilter:['class']})})();
 menuScene=menuScene2;
