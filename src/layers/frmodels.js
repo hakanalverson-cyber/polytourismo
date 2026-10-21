@@ -17,10 +17,19 @@ if(typeof BLD_B64!=='undefined'){
   for(let i=0;i<m.ni;i++){mnx=Math.min(mnx,Pf[i*3]);mny=Math.min(mny,Pf[i*3+1]);mnz=Math.min(mnz,Pf[i*3+2])}
   M['b_'+m.name]={P:Pf,C:Cf,n:m.ni,min:[mnx,mny,mnz],size:m.size}}}
 /* prop-library geometry (poles, boulders, billboards, tents…) pulled in lazily once the props layer exists */
-FM.lib=n=>{const k='l_'+n;if(M[k])return M[k];const K=P.PROPKIT;if(!K||!K.LIB[n])return null;const g=K.LIB[n].g.toNonIndexed(),p=g.attributes.position.array,c=g.attributes.color,nv=p.length/3,Cf=new Float32Array(nv*3);
+FM.lib=n=>{const k='l_'+n;if(M[k])return M[k];const K=P.PROPKIT;if(!K||!K.LIB[n])return null;const g0=K.LIB[n].g,g=g0.index?g0.toNonIndexed():g0,p=g.attributes.position.array,c=g.attributes.color,nv=p.length/3,Cf=new Float32Array(nv*3);
  for(let i=0;i<nv;i++){Cf[i*3]=c?c.getX(i):.7;Cf[i*3+1]=c?c.getY(i):.7;Cf[i*3+2]=c?c.getZ(i):.7}
  g.computeBoundingBox();const b=g.boundingBox;return M[k]={P:new Float32Array(p),C:Cf,n:nv,min:[b.min.x,b.min.y,b.min.z],size:[b.max.x-b.min.x,b.max.y-b.min.y,b.max.z-b.min.z]}};
-FM.get=n=>M[n]||(n.slice(0,2)==='l_'?FM.lib(n.slice(2)):null);
+/* bridge-map city pack (KayKit, CC0): bake the palette texture into vertex colours so it merges into the chunk meshes */
+const TX=new Map();
+function texData(im){let t=TX.get(im);if(t)return t;const cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;const cx=cv.getContext('2d');cx.drawImage(im,0,0);t={d:cx.getImageData(0,0,cv.width,cv.height).data,w:cv.width,h:cv.height};TX.set(im,t);return t}
+FM.hp=n=>{const k='h_'+n;if(M[k])return M[k];const H=P.HP;if(!H||!H.ready||!H.defs[n])return null;const d=H.defs[n],Pa=[],Ca=[];
+ for(const part of d.parts){const g=part.geo,pos=g.attributes.position,uv=g.attributes.uv,idx=g.index,map=part.mat.map,mc=part.mat.color||{r:1,g:1,b:1};let tx=null;if(map&&map.image&&map.image.width)try{tx=texData(map.image)}catch(e){}
+  const cnt=idx?idx.count:pos.count;for(let q=0;q<cnt;q++){const i=idx?idx.getX(q):q;Pa.push(pos.getX(i),pos.getY(i),pos.getZ(i));let r=1,gg=1,b=1;
+   if(tx&&uv){let u=uv.getX(i),v=uv.getY(i);u-=Math.floor(u);v-=Math.floor(v);const x=Math.min(tx.w-1,Math.floor(u*tx.w)),y=Math.min(tx.h-1,Math.floor((map.flipY?1-v:v)*tx.h)),o=(y*tx.w+x)*4;r=Math.pow(tx.d[o]/255,2.1);gg=Math.pow(tx.d[o+1]/255,2.1);b=Math.pow(tx.d[o+2]/255,2.1)}
+   Ca.push(r*mc.r,gg*mc.g,b*mc.b)}}
+ return M[k]={P:new Float32Array(Pa),C:new Float32Array(Ca),n:Pa.length/3,min:[d.min.x,d.min.y,d.min.z],size:[d.max.x-d.min.x,d.max.y-d.min.y,d.max.z-d.min.z]}};
+FM.get=n=>M[n]||(n.slice(0,2)==='l_'?FM.lib(n.slice(2)):n.slice(0,2)==='h_'?FM.hp(n.slice(2)):null);
 /* append a model to a GB builder: x,y,z = base centre, s = uniform scale, ry = yaw (same convention as GB.box) */
 FM.put=(G,n,x,y,z,s,ry,o)=>{const m=FM.get(n);if(!m)return false;o=o||{};const c=Math.cos(ry||0),sn=Math.sin(ry||0),sx=s,sy=s*(o.sy||1),t=o.tint||null,mn=m.min,cx=(mn[0]+m.size[0]/2),cz=(mn[2]+m.size[2]/2),by=o.noGround?0:mn[1],v=o.v||0,pos=G.pos,col=G.col,Pf=m.P,Cf=m.C;
  for(let i=0,e=m.n;i<e;i++){const px=(Pf[i*3]-cx)*sx,py=(Pf[i*3+1]-by)*sy,pz=(Pf[i*3+2]-cz)*sx;pos.push(x+px*c+pz*sn,y+py,z-px*sn+pz*c);

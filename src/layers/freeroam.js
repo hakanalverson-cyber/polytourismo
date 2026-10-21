@@ -90,9 +90,9 @@ function makeClouds(){const pos=[],n=[],ico=new THREE.IcosahedronGeometry(1,0),i
  const m=new THREE.Mesh(g,new THREE.MeshLambertMaterial({color:0xffffff,emissive:0x8a94a6,fog:false,transparent:true,opacity:.94}));m.frustumCulled=false;m.renderOrder=-1;return m}
 /* ================= scene: sky, sun, water, beacons, parked cars ================= */
 const hexs=h=>'#'+h.toString(16).padStart(6,'0');
-function parkedBuilder(g){const ids=['merc','f40','dia','hur','r8','gt2','mur','nsx','amg','mar','ven','ave'],list=g.userData.cars,sub=new THREE.Group();sub.userData.shared=true;
+function parkedBuilder(g){const ids=(P.FRD&&P.FRD.cars)||['merc'],list=g.userData.cars,sub=new THREE.Group();sub.userData.shared=true;
  const known=(P.CARS||[]).map(c=>c.id);const pool=ids.filter(i=>known.indexOf(i)>=0);const use=pool.length?pool:known;if(!use.length)return;
- for(const e of list){const id=use[((e[3]*7+Math.floor(e[0]))%use.length+use.length)%use.length],idx=P.modelOf(id,0),src=typeof CAR_MODELS!=='undefined'&&CAR_MODELS[idx];if(!src)continue;
+ for(const e of list){const id=use[(Math.floor(Math.abs(e[3]*7.31+e[0]*.37+e[1]*.19))%use.length+use.length)%use.length],idx=P.modelOf(id,0),src=typeof CAR_MODELS!=='undefined'&&CAR_MODELS[idx];if(!src)continue;
   const model=src.clone(true),car=new THREE.Group(),ctd=new THREE.Group();ctd.add(model);car.add(ctd);ctd.updateMatrixWorld(true);const bb=new THREE.Box3().setFromObject(model),sz=bb.getSize(new THREE.Vector3()),ct=bb.getCenter(new THREE.Vector3()),k=(src.userData.gl?src.userData.gl*1.093:4.7)/Math.max(sz.x,sz.z,.001);
   ctd.position.set(-ct.x,-bb.min.y,-ct.z);car.scale.setScalar(k);car.rotation.y=(sz.x>sz.z?Math.PI/2:0);const o=new THREE.Group();o.add(car);o.position.set(e[0],F.Hf(e[0],e[1])+.04,e[1]);o.rotation.y=e[2];
   o.traverse(m=>{if(m.isMesh){m.castShadow=true;m.receiveShadow=true;m.userData.shared=true}});sub.add(o);g.userData.pts.push([e[0],e[1],1.5])}
@@ -159,7 +159,7 @@ $q('frMapCv')&&0;document.addEventListener('click',e=>{if(e.target&&e.target.id=
 /* ================= per-frame logic ================= */
 const wrap=a=>{while(a>Math.PI)a-=6.2832;while(a<-Math.PI)a+=6.2832;return a};
 function frTick(dt){const Rc=RACE,c=Rc.cars[0],T=Rc.T;if(c.respT>0&&c.respT>.85){}
- FR.t+=dt;const fx=Math.sin(c.yaw),fz=Math.cos(c.yaw);FR.W.update(c.x,c.z,fx,fz,5);if(P.frAnimalsTick){if(!FR.an&&P.frAnimalsInit)FR.an=P.frAnimalsInit(F);try{P.frAnimalsTick(FR.an,FR.sc,F,c,dt)}catch(e){if(!FR.anErr){FR.anErr=1;console.warn('herds',e)}}}
+ FR.t+=dt;const fx=Math.sin(c.yaw),fz=Math.cos(c.yaw);FR.W.update(c.x,c.z,fx,fz,5);if(P.frLifeTick){if(!FR.lf&&P.frLifeInit)FR.lf=P.frLifeInit(F,FR.sc);try{P.frLifeTick(FR.lf,FR.sc,F,c,dt)}catch(e){if(!FR.lfErr){FR.lfErr=1;console.warn('life',e)}}}if(P.frAnimalsTick){if(!FR.an&&P.frAnimalsInit)FR.an=P.frAnimalsInit(F);try{P.frAnimalsTick(FR.an,FR.sc,F,c,dt)}catch(e){if(!FR.anErr){FR.anErr=1;console.warn('herds',e)}}}
  FR.sky.position.set(c.x,0,c.z);FR.clouds.position.set(c.x,0,c.z);FR.clouds.rotation.y+=dt*.004;const sd=FR.sun.userData.d0||FR.sun.position.clone().normalize();FR.disc.position.set(c.x+sd.x*1300,sd.y*1300,c.z+sd.z*1300);FR.water.position.x=c.x;FR.water.position.z=c.z;
  const h=F.Hf(c.x,c.z);
  if(h<-.45&&c.y<.5){const k=Math.exp(-dt*2.2);c.vx*=k;c.vz*=k;FR.wet+=dt;if(FR.wet>2.4){safeRespawn(c);FR.wet=0;toast('CAR RECOVERED',' #4d9bff')}}else FR.wet=Math.max(0,FR.wet-dt*.5);
