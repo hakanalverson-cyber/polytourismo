@@ -7,8 +7,8 @@ body.ptTitle #menu{opacity:0!important;pointer-events:none!important}
 #menu{transition:opacity .9s ease .25s}
 #ptTitle{position:fixed;inset:0;z-index:99990;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#f3f5f4;font-family:system-ui,sans-serif;cursor:pointer;user-select:none;transition:opacity .9s ease;background:radial-gradient(ellipse at 50% 55%,rgba(0,0,0,.1) 0%,rgba(0,0,0,.55) 62%,rgba(0,0,0,.88) 100%)}
 #ptTitle.out{opacity:0;pointer-events:none}
-#ptTitle .bar{position:absolute;left:0;width:100%;height:9vh;background:#000;transform:scaleY(0);transition:transform 1.1s cubic-bezier(.7,0,.2,1)}
-#ptTitle .bar.t{top:0;transform-origin:top}#ptTitle .bar.b{bottom:0;transform-origin:bottom}
+#ptTitle .bar{margin:0;display:block;position:absolute;left:-4px;width:calc(100% + 8px);height:calc(9vh + 4px);background:#000;transform:scaleY(0);transition:transform 1.1s cubic-bezier(.7,0,.2,1)}
+#ptTitle .bar.t{top:-4px;transform-origin:top}#ptTitle .bar.b{bottom:-4px;transform-origin:bottom}
 #ptTitle.on .bar{transform:none}
 #ptTitle .lg{font:900 italic min(12vw,150px)/.86 system-ui,sans-serif;letter-spacing:.01em;text-align:center;opacity:0;transform:translateY(14px) scale(.98);transition:opacity 1.2s ease .5s,transform 1.6s cubic-bezier(.2,.7,.2,1) .5s;
  background:linear-gradient(100deg,#fff 0%,#fff 38%,#9fb0b4 50%,#fff 62%,#fff 100%);background-size:260% 100%;padding:0 .16em 0 .06em;-webkit-background-clip:text;background-clip:text;color:transparent;animation:ptSheen 5.5s ease-in-out 1.8s infinite}
