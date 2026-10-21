@@ -129,19 +129,14 @@ function buildSpan(T){const d=T.d,N=T.N,r=rngf(8*77+11),sc=new THREE.Scene();
  const PO={polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2};
  {const am=new THREE.MeshStandardMaterial(Object.assign({map:T_ASPH(),roughness:.9,side:THREE.DoubleSide},PO)),gm2=new THREE.MeshStandardMaterial(Object.assign({map:T_GRAVEL(),roughness:1,side:THREE.DoubleSide},PO));am.name='ROAD';gm2.name='ROAD';
   for(const [a,b] of runs(T,i=>T.sg[i]!==3))sc.add(strip(T,a,T.sg[(b+1)%N]===3?b:b+1,k=>-T.hw[k],k=>T.hw[k],.03,am,6,10));
-  for(const [a,b] of runs(T,i=>T.sg[i]===3)){const a0=(a-1+N)%N;sc.add(strip(T,a0,a0+(b+1-(a-1)),k=>-T.hw[k],k=>T.hw[k],.03,gm2,6,10))}
-  /* dirt creeps onto the tarmac: gravel fades in over 60 m before the path starts, tyre tracks first, and fades out over 60 m after it ends */
-  const dt_=(flip)=>{const t=ctex(128,256,(x,w,h)=>{const rr=rngf(flip?33:34),gw=9,gh=17,gr=[];for(let i=0;i<gw*gh;i++)gr.push(rr());
-    const vn=(u,v)=>{const fx=u*(gw-1),fy=v*(gh-1),i=Math.min(gw-2,fx|0),j=Math.min(gh-2,fy|0),a=fx-i,b=fy-j,s=q=>q*q*(3-2*q),aa=s(a),bb=s(b);return(gr[j*gw+i]*(1-aa)+gr[j*gw+i+1]*aa)*(1-bb)+(gr[(j+1)*gw+i]*(1-aa)+gr[(j+1)*gw+i+1]*aa)*bb};
-    const im=x.createImageData(w,h);
-    for(let j=0;j<h;j++){const p=flip?j/(h-1):1-j/(h-1);for(let i=0;i<w;i++){const u=i/(w-1),e=Math.abs(u-.5)*2,sp=rr(),nz=vn(u,j/(h-1)),
-      tr=Math.exp(-Math.pow((u-.27)/.06,2))+Math.exp(-Math.pow((u-.69)/.06,2)),
-      pf=Math.max(0,Math.min(1,(p-.4)/.3)),full=pf*pf*(3-2*pf),al=Math.min(1,Math.max(Math.min(.96,(Math.pow(p,1.9)*(.4+.6*e*e)+tr*Math.pow(p,1.3)*.75)*(.45+.8*nz)*(.85+.3*sp)),full)),rb=(u>.26&&u<.36)||(u>.68&&u<.78)?.14:0,q=(.86+.28*sp)*(1-rb*pf*1-tr*.22*Math.pow(p,.8))*((u>.47&&u<.57)?1+.07*pf:1),o=(j*w+i)*4;
-      im.data[o]=157*q;im.data[o+1]=139*q;im.data[o+2]=104*q;im.data[o+3]=Math.max(0,al)*255}}
-    x.putImageData(im,0,0)});t.magFilter=t.minFilter=THREE.LinearFilter;return t};  const dm=[dt_(0),dt_(1)].map(t=>new THREE.MeshStandardMaterial({map:t,transparent:true,depthWrite:false,roughness:1,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-8,polygonOffsetUnits:-8})),L14=Math.round(60/T.sp);
-  for(let i=0;i<N;i++){const n=(i+1)%N;
-   if(T.sg[i]!==3&&T.sg[n]===3)sc.add(strip(T,(i-L14+N)%N,(i-L14+N)%N+L14,k=>-T.hw[k],k=>T.hw[k],.07,dm[0],L14*T.sp,10));
-   if(T.sg[i]===3&&T.sg[n]!==3)sc.add(strip(T,n,n+L14,k=>-T.hw[k],k=>T.hw[k],.07,dm[1],L14*T.sp,10))}}
+  /* gravel extends slightly past asphalt boundary; pixelated dithered edge where it splits off */
+  const EX=8; // samples to extend gravel into asphalt at exit end (~24 m)
+  const pe_tex=ctex(32,64,(x,w,h)=>{const rng=rngf(77),BS=5,bw=Math.ceil(w/BS),bh=Math.ceil(h/BS),bd=Array.from({length:bw*bh},()=>rng()),im=x.createImageData(w,h);
+    for(let j=0;j<h;j++){const p=1-j/(h-1);for(let i=0;i<w;i++){const bi=Math.floor(i/BS),bj=Math.floor(j/BS),bv=bd[bj*bw+bi],o=(j*w+i)*4;if(bv<p){im.data[o]=148;im.data[o+1]=128;im.data[o+2]=95;im.data[o+3]=255}else im.data[o+3]=0}}
+    x.putImageData(im,0,0)});pe_tex.magFilter=pe_tex.minFilter=THREE.NearestFilter;
+  const pem=new THREE.MeshStandardMaterial({map:pe_tex,transparent:true,depthWrite:false,roughness:1,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-8,polygonOffsetUnits:-8});
+  for(const [a,b] of runs(T,i=>T.sg[i]===3)){const a0=(a-1+N)%N;sc.add(strip(T,a0,a0+(b+1-(a-1))+EX,k=>-T.hw[k],k=>T.hw[k],.03,gm2,6,10));
+    sc.add(strip(T,b+1,b+1+EX,k=>-T.hw[k],k=>T.hw[k],.07,pem,EX*T.sp,10))}}
  const concM=new THREE.MeshStandardMaterial({map:T_SLAB(),roughness:1,side:THREE.DoubleSide}),steelM=flat(0x4a4d52,{side:THREE.DoubleSide}),orgM=new THREE.MeshStandardMaterial({map:T_ORANGE(),roughness:.8,side:THREE.DoubleSide,flatShading:true});
  const trussM=new THREE.MeshStandardMaterial({map:T_TRUSS(),roughness:.8,side:THREE.DoubleSide,alphaTest:.5});
  const jumps=T.jumps||[],broken=jumps.length>0;
