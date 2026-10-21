@@ -8541,9 +8541,12 @@ function tick(){const on=P.aud&&P.aud.on()&&!document.hidden,w=on?wanted():null,
  for(const k in AU){const a=AU[k];if(k!==key){a._v+=(0-a._v)*.22;a.volume=Math.max(0,Math.min(1,a._v));if(a._v<.01&&!a.paused)a.pause()}}
  if(!key)return;const a=el(key,key==='body'||key==='cafe');if(!a)return;
  a._v+=(Math.min(1,t)-a._v)*.12;a.volume=Math.max(0,Math.min(1,a._v));
- if(a.paused&&!blockedUntilGesture&&!a._pend){a._pend=1;a.play().then(()=>{a._pend=0;if(!a._ann){a._ann=true;popup(key)}}).catch(()=>{a._pend=0;blockedUntilGesture=true})}}
+ if(a.paused&&!blockedUntilGesture&&!a._pend){a._pend=1;a.play().then(()=>{a._pend=0;hint(false);if(!a._ann){a._ann=true;popup(key)}}).catch(()=>{a._pend=0;blockedUntilGesture=true;hint(true)})}}
 setInterval(tick,200);
-addEventListener('pointerdown',()=>{blockedUntilGesture=false},true);addEventListener('keydown',()=>{blockedUntilGesture=false},true);
+/* browsers refuse sound until the first click or key press, so start inside that very event and show a small hint until then */
+let hnt=null;function hint(on){try{if(!hnt){hnt=document.createElement('div');hnt.textContent='CLICK OR PRESS ANY KEY FOR MUSIC';hnt.style.cssText='position:fixed;right:2.4vw;bottom:3.4vh;z-index:99999;pointer-events:none;color:#eef1ef;font:600 10px/1 system-ui,sans-serif;letter-spacing:.28em;opacity:0;transition:opacity .6s;text-shadow:0 1px 8px #000a';document.body.appendChild(hnt)}hnt.style.opacity=on&&scr!=='game'?.7:0}catch(e){}}
+const gest=()=>{blockedUntilGesture=false;tick()};for(const ev of['pointerdown','mousedown','keydown','touchstart','click'])addEventListener(ev,gest,true);
+tick();
 /* a faint wind under the menus */
 function init(){if(M)return M;const ac=P.audioReady&&P.audioReady(),nb=P.aud&&P.aud.nb();if(!ac||!nb)return null;
  const wg=ac.createGain();wg.gain.value=0;const wf=ac.createBiquadFilter();wf.type='bandpass';wf.frequency.value=380;wf.Q.value=.45;const ws=ac.createBufferSource();ws.buffer=nb;ws.loop=true;ws.connect(wf);wf.connect(wg);wg.connect(P.aud.mg());ws.start();
@@ -9081,7 +9084,7 @@ function makePost(){
    bright.uniforms.t.value=rt.S.texture;o.pass(bright,rt.B);let src=rt.B.texture,sw=rt.B.width,sh=rt.B.height;
    for(let l=0;l<3;l++){blur.uniforms.t.value=src;blur.uniforms.d.value.set(1/(l?rt['V'+(l-1)].width:sw),0);o.pass(blur,rt['H'+l]);blur.uniforms.t.value=rt['H'+l].texture;blur.uniforms.d.value.set(0,1/rt['H'+l].height);o.pass(blur,rt['V'+l]);src=rt['V'+l].texture}
    comp.uniforms.tS.value=rt.S.texture;comp.uniforms.b0.value=rt.V0.texture;comp.uniforms.b1.value=rt.V1.texture;comp.uniforms.b2.value=rt.V2.texture;o.pass(comp,null)}};
- return o}
+ o.bl=comp.uniforms.bl;o.th=bright.uniforms.th;return o}
 function ensureStudio(){if(S)return S;
  const sc=new THREE.Scene();sc.background=new THREE.Color(0x0b0d11);
  /* environment: dark room with softboxes, baked to PMREM for glossy paint reflections */
@@ -9312,7 +9315,7 @@ const SH=[
  {env:'sunset',cars:[[C.c3,0,-6,0],[C.gt350,0,0,0],[C.chg,0,6,0],[C.sup2,0,12,0]],a:[[10,.9,8],[0,.6,3]],b:[[10,.9,-2],[0,.6,3]],fov:30},
  {env:'tunnel',cars:[[C.f40,-2.6,0,6],[C.gt2,2.4,-5,-5],[C.zon,-2.5,-10,5],[C.vip,2.5,-15,-6]],a:[[0,.9,8],[0,.7,-6]],b:[[0,1,5.5],[0,.7,-6]],fov:40},
  {env:'dawn',cars:[[C.p918,0,0,-30],[C.r8,-5.6,3,20],[C.amg,5.4,2,-70],[C.t930,-3.4,-5.8,55],[C.rwb,3.6,-6.6,-25]],a:[[8,5.4,10],[0,.4,-1]],b:[[6,4.2,11.5],[0,.4,-1]],fov:34},
- {env:'void',cars:[[C.cnt,0,2.6,0],[C.f40,2.6,0,90],[C.dia,0,-2.6,180],[C.hur,-2.6,0,270]],a:[[0,11,.2],[0,0,0]],b:[[.5,9,-.4],[0,0,0]],fov:36},
+ {env:'void',cars:[[C.cnt,0,4.6,90],[C.f40,4.6,0,180],[C.dia,0,-4.6,270],[C.hur,-4.6,0,0]],a:[[0,6.6,11.5],[0,.2,.4]],b:[[3.6,6.8,10],[0,.2,.4]],fov:46},
  {env:'bunker',cars:[[C.cnt,0,0,-22],[C.f40,-5.2,-3.4,12]],a:[[2.2,.55,4.6],[.7,.55,1.6]],b:[[1.4,.6,4.4],[.6,.55,1.7]],fov:30},
  {env:'neon',cars:[[C.hur,0,0,-35],[C.ave,-5.4,-3,20],[C.gal,5.6,-4,-15]],a:[[-3.6,.5,6.6],[0,.5,0]],b:[[-1.8,.55,7],[.5,.5,0]],fov:34},
  {env:'sunset',cars:[[C.cnt,0,0,0],[C.dia,-4.6,-5,0],[C.mar,4.6,-4,0],[C.p918,-9,-10,0],[C.r34,9,-9,0]],a:[[2,.65,-6.5],[0,.7,4]],b:[[1,.7,-8.5],[0,.7,4]],fov:36},
@@ -9370,7 +9373,7 @@ function photo(){const sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(34,1
 const ST={on:false},SCR=['menu','s8cards','s8setup','s8career','s8res'];let POST=null;
 function off(){if(!ST.on)return;ST.on=false;R.toneMapping=ST.tm;R.shadowMap.enabled=ST.se;R.shadowMap.type=ST.st;$('c').style.imageRendering='';R.setRenderTarget(null);try{rs()}catch(e){}}
 function draw(pt){if(!ST.on){ST.on=true;ST.tm=R.toneMapping;ST.se=R.shadowMap.enabled;ST.st=R.shadowMap.type;R.toneMapping=THREE.NoToneMapping;R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;$('c').style.imageRendering='auto'}
- const d=Math.min(devicePixelRatio||1,2);if(R.domElement.width!==Math.max(2,innerWidth*d|0)||R.domElement.height!==Math.max(2,innerHeight*d|0))P.sizeNative();POST=POST||P.makePost();
+ const d=Math.min(devicePixelRatio||1,2);if(R.domElement.width!==Math.max(2,innerWidth*d|0)||R.domElement.height!==Math.max(2,innerHeight*d|0))P.sizeNative();if(!POST){POST=P.makePost();POST.bl.value=.2;POST.th.value=2.1}
  const W=R.domElement.width,H=R.domElement.height;R.setScissorTest(false);R.setViewport(0,0,W,H);POST.render(pt.sc,pt.cam);R.setRenderTarget(null)}
 const sh0=show;show=function(n){if(ST.on&&SCR.indexOf(n)<0)off();return sh0.apply(this,arguments)};setInterval(()=>{if(ST.on&&SCR.indexOf(scr)<0)off()},200);
 /* a shuffled run of stills, forever */

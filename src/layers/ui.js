@@ -306,7 +306,7 @@ function makePost(){
    bright.uniforms.t.value=rt.S.texture;o.pass(bright,rt.B);let src=rt.B.texture,sw=rt.B.width,sh=rt.B.height;
    for(let l=0;l<3;l++){blur.uniforms.t.value=src;blur.uniforms.d.value.set(1/(l?rt['V'+(l-1)].width:sw),0);o.pass(blur,rt['H'+l]);blur.uniforms.t.value=rt['H'+l].texture;blur.uniforms.d.value.set(0,1/rt['H'+l].height);o.pass(blur,rt['V'+l]);src=rt['V'+l].texture}
    comp.uniforms.tS.value=rt.S.texture;comp.uniforms.b0.value=rt.V0.texture;comp.uniforms.b1.value=rt.V1.texture;comp.uniforms.b2.value=rt.V2.texture;o.pass(comp,null)}};
- return o}
+ o.bl=comp.uniforms.bl;o.th=bright.uniforms.th;return o}
 function ensureStudio(){if(S)return S;
  const sc=new THREE.Scene();sc.background=new THREE.Color(0x0b0d11);
  /* environment: dark room with softboxes, baked to PMREM for glossy paint reflections */

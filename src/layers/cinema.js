@@ -13,7 +13,7 @@ const SH=[
  {env:'sunset',cars:[[C.c3,0,-6,0],[C.gt350,0,0,0],[C.chg,0,6,0],[C.sup2,0,12,0]],a:[[10,.9,8],[0,.6,3]],b:[[10,.9,-2],[0,.6,3]],fov:30},
  {env:'tunnel',cars:[[C.f40,-2.6,0,6],[C.gt2,2.4,-5,-5],[C.zon,-2.5,-10,5],[C.vip,2.5,-15,-6]],a:[[0,.9,8],[0,.7,-6]],b:[[0,1,5.5],[0,.7,-6]],fov:40},
  {env:'dawn',cars:[[C.p918,0,0,-30],[C.r8,-5.6,3,20],[C.amg,5.4,2,-70],[C.t930,-3.4,-5.8,55],[C.rwb,3.6,-6.6,-25]],a:[[8,5.4,10],[0,.4,-1]],b:[[6,4.2,11.5],[0,.4,-1]],fov:34},
- {env:'void',cars:[[C.cnt,0,2.6,0],[C.f40,2.6,0,90],[C.dia,0,-2.6,180],[C.hur,-2.6,0,270]],a:[[0,11,.2],[0,0,0]],b:[[.5,9,-.4],[0,0,0]],fov:36},
+ {env:'void',cars:[[C.cnt,0,4.6,90],[C.f40,4.6,0,180],[C.dia,0,-4.6,270],[C.hur,-4.6,0,0]],a:[[0,6.6,11.5],[0,.2,.4]],b:[[3.6,6.8,10],[0,.2,.4]],fov:46},
  {env:'bunker',cars:[[C.cnt,0,0,-22],[C.f40,-5.2,-3.4,12]],a:[[2.2,.55,4.6],[.7,.55,1.6]],b:[[1.4,.6,4.4],[.6,.55,1.7]],fov:30},
  {env:'neon',cars:[[C.hur,0,0,-35],[C.ave,-5.4,-3,20],[C.gal,5.6,-4,-15]],a:[[-3.6,.5,6.6],[0,.5,0]],b:[[-1.8,.55,7],[.5,.5,0]],fov:34},
  {env:'sunset',cars:[[C.cnt,0,0,0],[C.dia,-4.6,-5,0],[C.mar,4.6,-4,0],[C.p918,-9,-10,0],[C.r34,9,-9,0]],a:[[2,.65,-6.5],[0,.7,4]],b:[[1,.7,-8.5],[0,.7,4]],fov:36},
@@ -71,7 +71,7 @@ function photo(){const sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(34,1
 const ST={on:false},SCR=['menu','s8cards','s8setup','s8career','s8res'];let POST=null;
 function off(){if(!ST.on)return;ST.on=false;R.toneMapping=ST.tm;R.shadowMap.enabled=ST.se;R.shadowMap.type=ST.st;$('c').style.imageRendering='';R.setRenderTarget(null);try{rs()}catch(e){}}
 function draw(pt){if(!ST.on){ST.on=true;ST.tm=R.toneMapping;ST.se=R.shadowMap.enabled;ST.st=R.shadowMap.type;R.toneMapping=THREE.NoToneMapping;R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;$('c').style.imageRendering='auto'}
- const d=Math.min(devicePixelRatio||1,2);if(R.domElement.width!==Math.max(2,innerWidth*d|0)||R.domElement.height!==Math.max(2,innerHeight*d|0))P.sizeNative();POST=POST||P.makePost();
+ const d=Math.min(devicePixelRatio||1,2);if(R.domElement.width!==Math.max(2,innerWidth*d|0)||R.domElement.height!==Math.max(2,innerHeight*d|0))P.sizeNative();if(!POST){POST=P.makePost();POST.bl.value=.2;POST.th.value=2.1}
  const W=R.domElement.width,H=R.domElement.height;R.setScissorTest(false);R.setViewport(0,0,W,H);POST.render(pt.sc,pt.cam);R.setRenderTarget(null)}
 const sh0=show;show=function(n){if(ST.on&&SCR.indexOf(n)<0)off();return sh0.apply(this,arguments)};setInterval(()=>{if(ST.on&&SCR.indexOf(scr)<0)off()},200);
 /* a shuffled run of stills, forever */
