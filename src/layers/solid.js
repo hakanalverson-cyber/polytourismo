@@ -39,7 +39,7 @@ function bStep(Rc,dt){const T=Rc.T;if(!T||Rc.state!=='race')return;cd-=dt;const 
    for(const s of l){let qx,qz,r;if(s.length===5){const dx=s[2]-s[0],dz=s[3]-s[1],ll=dx*dx+dz*dz||1,t=Math.max(0,Math.min(1,((c.x-s[0])*dx+(c.z-s[1])*dz)/ll));qx=s[0]+dx*t;qz=s[1]+dz*t;r=s[4]}else{qx=s[0];qz=s[1];r=s[2]}
     const ex=c.x-qx,ez=c.z-qz,d=Math.hypot(ex,ez),R=r+.88;if(d>=R||d<.001)continue;const nx=ex/d,nz=ez/d,vn=c.vx*nx+c.vz*nz;c.x+=nx*(R-d);c.z+=nz*(R-d);
     {const vt=Math.abs(-c.vx*nz+c.vz*nx);if(vt>8&&P.scrapeFx&&((c._scT=(c._scT||0)-dt)<=0)){c._scT=.05;P.scrapeFx(c,c.x-nx*.9,c.y+.3,c.z-nz*.9,vt,nx,nz)}}
-    if(vn<0){c.vx-=1.25*vn*nx;c.vz-=1.25*vn*nz;c.vx*=.88;c.vz*=.88;if(-vn>2.2)hit(Rc,c,-vn,nx,nz)}}}c._px=c.x;c._pz=c.z}}
+    if(vn<0){c.vx-=1.25*vn*nx;c.vz-=1.25*vn*nz;const sp0=Math.hypot(c.vx,c.vz),k=Math.min(1,-vn/Math.max(1,sp0+-vn)*3);const ds=1-.12*k;c.vx*=ds;c.vz*=ds;if(-vn>2.2)hit(Rc,c,-vn,nx,nz)}slide(c,-nx,-nz,dt)}}c._px=c.x;c._pz=c.z}}
 const bw=buildWorld;buildWorld=function(T){const sc=bw.apply(this,arguments);try{collect(sc,T)}catch(e){console.warn('solid',e)}return sc};
 
 /* grip: a car hugging the road edge (or bouncing off it) keeps road grip, so cornering never falls to the off-road material mid-turn */
@@ -49,6 +49,14 @@ const bw=buildWorld;buildWorld=function(T){const sc=bw.apply(this,arguments);try
    for(const i of ids){const j=(i+1)%N;if(T.gap[i]||T.gap[j])continue;const dx=T.x[j]-T.x[i],dz=T.z[j]-T.z[i],l2=dx*dx+dz*dz||1,f=Math.max(0,Math.min(1,((x-T.x[i])*dx+(z-T.z[i])*dz)/l2));
     const px=T.x[i]+dx*f,pz=T.z[i]+dz*f,lat=(x-px)*Math.cos(T.psi[i])-(z-pz)*Math.sin(T.psi[i]),dd=Math.abs(lat)-T.hw[i];if(dd<=1.4&&dd<nb&&T.y[i]<=y+1.6){nb=dd;ni=i;nl=lat}}}
   if(ni>=0){r.near=1;r.i=ni;r.lat=nl}return r};return T}}
+/* glancing contact: the wall turns the nose toward its own tangent so the car slides out instead of grinding its speed away pointing into it */
+function slide(c,nx,nz,dt){const tx=-nz,tz=nx,vt=c.vx*tx+c.vz*tz,sp=Math.hypot(c.vx,c.vz);
+ if(sp<4&&c.in&&Math.abs(c.in.st)>.2&&c.in.th>0)c.yaw+=c.in.st*1.7*dt; /* pinned nose-first: let the wheel still swing the nose round */
+
+ if(sp<2&&c.in&&c.in.th>0){c._pin=(c._pin||0)+dt;if(c._pin>.6){c._pin=0;c.vx=-nx*3.5;c.vz=-nz*3.5;const hs=Math.sin(c.yaw)*tx+Math.cos(c.yaw)*tz,sg=hs>=0?1:-1;let d=Math.atan2(tx*sg,tz*sg)-c.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));c.yaw+=d*.6}}else if(sp>=2)c._pin=0;
+ if(sp<6)return;
+ const sg=vt>=0?1:-1;if(Math.abs(vt)<sp*.5)return;let d=Math.atan2(tx*sg,tz*sg)-c.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));if(Math.abs(d)>1.05)return;
+ c.yaw+=d*Math.min(1,dt*9)}
 /* kerb/tunnel wall, true-position version: base clamp uses last frame's lateral and stops once road=0, so a fast car could cross the 0.9m margin in one frame and leave */
 function kerb(Rc,dt){const T=Rc.T;if(!T||Rc.state!=='race'||!T.wall)return;const N=T.N;
  for(const c of Rc.cars){if(!c.human||c.fin||c.respT>0||c.exp>0){c._wl=null;continue}
@@ -62,6 +70,6 @@ function kerb(Rc,dt){const T=Rc.T;if(!T||Rc.state!=='race'||!T.wall)return;const
   if(T.wall[i]&&Math.abs(best.lat)>lim&&c._wl!=null&&Math.abs(c._wl)<=lim+.3&&c.y-T.y[i]<3){
    const sg=Math.sign(best.lat),nx=Math.cos(best.ps)*sg,nz=-Math.sin(best.ps)*sg,ov=Math.abs(best.lat)-lim;c.x-=nx*ov;c.z-=nz*ov;
    const vn=c.vx*nx+c.vz*nz;if(vn>0){c.vx-=1.3*vn*nx;c.vz-=1.3*vn*nz;if(vn>4){c.hl=1;if(c.human)Rc.shake=Math.min(1,vn/20)}}
-   c._wl=sg*lim}else c._wl=best.lat}}
-const st0=step;step=function(dt){st0.apply(this,arguments);try{if(RACE){kerb(RACE,dt);bStep(RACE,dt)}}catch(e){if(!P._sErr){P._sErr=1;console.warn('solid',e)}}};
+   c._wl=sg*lim;slide(c,nx,nz,dt)}else{c._wl=best.lat;if(T.wall[i]&&Math.abs(best.lat)>lim-.35){const sg=Math.sign(best.lat);slide(c,Math.cos(best.ps)*sg,-Math.sin(best.ps)*sg,dt)}}}}
+const st0=step;step=function(dt){st0.apply(this,arguments);try{if(RACE){if(!P.noKerb)kerb(RACE,dt);if(!P.noBS)bStep(RACE,dt)}}catch(e){if(!P._sErr){P._sErr=1;console.warn('solid',e)}}};
 })();
