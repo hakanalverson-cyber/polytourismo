@@ -79,14 +79,14 @@ function panoRally(T){const d=T.d,W=4096,H=512,hz=352,fog=new THREE.Color(d.fog)
   for(let i=0;i<7;i++){const x=r()*W,w=60+r()*80;g.fillStyle=mix(0x6a6c62,.35);g.beginPath();g.moveTo(x,hz);g.lineTo(x+w*.2,hz-26-r()*20);g.lineTo(x+w*.5,hz-14);g.lineTo(x+w*.8,hz-32-r()*16);g.lineTo(x+w,hz);g.fill()}
   g.fillStyle=gr(hz-80,hz+30,'#ffffff00','#ffffff55');g.fillRect(0,hz-80,W,110);g.fillStyle=gr(hz,H,mix(0x4d6240,.25),mix(0x55683f,.15));g.fillRect(0,hz,W,H-hz)}
  const t=new THREE.CanvasTexture(cv);t.encoding=THREE.sRGBEncoding;t.wrapS=THREE.RepeatWrapping;t.magFilter=t.minFilter=THREE.LinearFilter;t.generateMipmaps=false;
- const b=T.bounds,m=new THREE.Mesh(new THREE.CylinderGeometry(1300,1300,480,72,1,true),new THREE.MeshBasicMaterial({map:t,transparent:true,side:THREE.BackSide,fog:false,depthWrite:false}));m.position.set((b[0]+b[1])/2,90,(b[2]+b[3])/2);m.renderOrder=-2;return m}
+ const b=T.bounds,m=new THREE.Mesh(new THREE.CylinderGeometry(1300,1300,480,72,1,true),new THREE.MeshBasicMaterial({map:t,transparent:true,side:THREE.BackSide,fog:false,depthWrite:false}));m.position.set((b[0]+b[1])/2,90,(b[2]+b[3])/2);m.renderOrder=-2;m.frustumCulled=false;m.userData.skyAt=[0,90,0];return m}
 
 /* ---------------- rally world ---------------- */
 function buildRally(T){const d=T.d,sc=new THREE.Scene(),r=rngf(d.id*91+13),N=T.N,K=P.kappa(T);
  sc.fog=new THREE.Fog(d.fog,120,520);sc.add(new THREE.HemisphereLight(d.hemi[0],d.hemi[1],1.1));const sun=new THREE.DirectionalLight(d.sun,1.0);sun.position.set(-150,250,100);sc.add(sun);
  const sk=ctex(2,64,(x,w,h)=>{const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,'#'+d.sky[0].toString(16).padStart(6,'0'));g.addColorStop(.5,'#'+d.sky[1].toString(16).padStart(6,'0'));g.addColorStop(1,'#'+d.sky[1].toString(16).padStart(6,'0'));x.fillStyle=g;x.fillRect(0,0,w,h)});
- sc.add(new THREE.Mesh(new THREE.SphereGeometry(1500,16,12),new THREE.MeshBasicMaterial({map:sk,side:THREE.BackSide,fog:false})));
- mesh(new THREE.SphereGeometry(40,12,8),new THREE.MeshBasicMaterial({color:d.sun,fog:false}),-500,420,-1000,sc);
+ {const dm=new THREE.Mesh(new THREE.SphereGeometry(1500,16,12),new THREE.MeshBasicMaterial({map:sk,side:THREE.BackSide,fog:false}));dm.frustumCulled=false;dm.userData.skyAt=[0,null,0];sc.userData.skyRide=1;sc.add(dm);
+ const sd=mesh(new THREE.SphereGeometry(40,12,8),new THREE.MeshBasicMaterial({color:d.sun,fog:false}),-500,420,-1000,sc);sd.frustumCulled=false;sd.userData.skyAt='rel'}
  /* terrain */
  let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;for(let i=0;i<N;i++){x0=Math.min(x0,T.x[i]);x1=Math.max(x1,T.x[i]);z0=Math.min(z0,T.z[i]);z1=Math.max(z1,T.z[i])}x0-=190;x1+=190;z0-=190;z1+=190;T.bounds=[x0,x1,z0,z1];
  const cs=4,sx=Math.ceil((x1-x0)/cs),sz=Math.ceil((z1-z0)/cs),W1=sx+1,hts=new Float32Array(W1*(sz+1)),pos=new Float32Array(hts.length*3),col=new Float32Array(hts.length*3),idx=[];
@@ -194,7 +194,8 @@ function buildRally(T){const d=T.d,sc=new THREE.Scene(),r=rngf(d.id*91+13),N=T.N
  if(peeps.length){instC(sc,new THREE.CylinderGeometry(.22,.26,1.0,5),flat(0xffffff),peeps.map(p=>[p[0],p[1]-.3,p[2],1]),[0xd9382a,0x2f6fd0,0xf2c230,0x2fa05a,0x111111,0xe8e8e8,0xff7a2a]);instC(sc,new THREE.SphereGeometry(.2,5,4),flat(0xe3b58d),peeps.map(p=>[p[0],p[1]+.4,p[2],1]))}
  if(flags.length){instC(sc,new THREE.CylinderGeometry(.04,.05,4,4),flat(0x444444),flags.map(p=>[p[0],p[1],p[2],1]));instC(sc,new THREE.BoxGeometry(.9,.55,.04),flat(0xffffff),flags.map(p=>[p[0]+.45,p[1]+1.6,p[2],1]),[0xd9382a,0xf2c230,0x2f6fd0])}
  /* distant ring of hills */
- for(let j=0;j<30;j++){const a=j/30*PI*2,h=60+r()*110,dist=640+r()*110,col=d.biome==='forest'?0x3b5a48:d.biome==='desert'?0xa8603a:0x66705a;mesh(new THREE.ConeGeometry(90+r()*70,h,6),flat(col),Math.sin(a)*dist+(x0+x1)/2*0,h*.32,Math.cos(a)*dist,sc)}
+ {const big=Math.hypot(x1-x0,z1-z0)>1500,hx=big?(x0+x1)/2:0,hz=big?(z0+z1)/2:0,hr=big?Math.hypot(x1-x0,z1-z0)/2+300:640;
+ for(let j=0;j<(big?44:30);j++){const a=j/(big?44:30)*PI*2,h=60+r()*110,dist=hr+r()*110,col=d.biome==='forest'?0x3b5a48:d.biome==='desert'?0xa8603a:0x66705a;mesh(new THREE.ConeGeometry(90+r()*70,h,6),flat(col),hx+Math.sin(a)*dist,h*.32,hz+Math.cos(a)*dist,sc)}}
  sc.add(panoRally(T));
  styleScene(sc);
  return sc}

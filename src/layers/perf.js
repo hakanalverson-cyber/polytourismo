@@ -77,7 +77,7 @@ P.chunkScene=chunkScene;
 /* tiles / prop cells that lie wholly beyond the fog are pure fog colour: skip them (per camera) */
 const _c=new THREE.Vector3(),_cp=new THREE.Vector3();
 {const r0=R.render.bind(R),cache=new WeakMap();
- R.render=function(scene,cam){if(scene&&scene.isScene&&scene.fog&&cam&&cam.isCamera){let L=cache.get(scene);if(!L||L.n!==scene.children.length){L=[];scene.traverse(o=>{if(o.userData&&o.userData.fogCull&&o.geometry)L.push(o)});L.n=scene.children.length;cache.set(scene,L)}
+ R.render=function(scene,cam){if(scene&&scene.isScene&&scene.fog&&cam&&cam.isCamera){if(P.skyTrack)P.skyTrack(scene,cam);let L=cache.get(scene);if(!L||L.n!==scene.children.length){L=[];scene.traverse(o=>{if(o.userData&&o.userData.fogCull&&o.geometry)L.push(o)});L.n=scene.children.length;cache.set(scene,L)}
    const far=scene.fog.far*1.03;cam.getWorldPosition(_cp);
    for(const o of L){const bs=o.geometry.boundingSphere;if(!bs)continue;_c.copy(bs.center);if(o.parent&&o.parent.matrixWorld)_c.applyMatrix4(o.matrixWorld);const sc_=Math.max(o.scale.x,o.scale.y,o.scale.z);const dn=Math.max(0,_c.distanceTo(_cp)-bs.radius*sc_);let vis=dn<far;if(vis&&o.userData.lodHi!==undefined)vis=dn>=o.userData.lodLo&&dn<o.userData.lodHi;o.visible=vis}}
   return r0(scene,cam)}}

@@ -3,14 +3,14 @@
 'use strict';
 const P=window.PT8,IM=window.PT8_IMOLA;
 if(!IM||!P.TRK_TRACKS)return;
-const PI=Math.PI,IMK=1.6;/* Imola stretched to 1.6x so a lap is a proper length */
+const PI=Math.PI,IMK=1,IMY=1;/* data is already at real size (4,909 m lap, 1 unit = 1 m) */
 const imola={id:15,look:0,name:'Imola',desc:'italian grand prix circuit / chicanes / sand traps / tyre walls',hw:7.4,bank:12,off:'grass',idw:.85,offs:0,amp:2.6,up:4,shoulder:17,
  sky:[0x3f86d2,0xcfe4f4],fog:0xcfe0ea,sun:0xfff0d0,hemi:[0xd4e8f8,0x4f7a3c],road:'#3b3d43',tod0:'day',imola:1,
- pts:IM.pts.map(q=>[q[0]*IMK,q[1]*IMK,q[2]*IMK,q[3]]),walls:[],ice:[],boost:[],jumps:[]};
+ pts:IM.pts.map(q=>[q[0]*IMK,q[1]*IMK,q[2]*IMY,q[3]]),walls:[],ice:[],boost:[],jumps:[]};
 D.push(imola);
 P.TRACK_INFO.push({s:'TARMAC',tags:['CHICANES','SAND TRAPS','TYRE WALLS','KERBS']});
 P.TRK_TRACKS.push(D.length-1);
-P.MEDAL_REF[D.length-1]=64;
+P.MEDAL_REF[D.length-1]=96;
 MATS.sandtrap={grip:.42,top:.5,acc:.4};
 const IMX=D.length-1;
 

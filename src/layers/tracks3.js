@@ -3,10 +3,10 @@
 'use strict';
 const P=window.PT8,RA=window.PT8_RA;
 if(!RA)return;
-const PI=Math.PI;
+const PI=Math.PI,RAK=1,RAY=1;/* data is already at real size (4,088 m lap, 1 unit = 1 m) */
 const roadAtl={id:14,look:0,name:'Road Atlanta',desc:'braselton georgia / uphill T1 / esses / T10 / T12 dive',hw:7.5,bank:14,off:'grass',idw:.85,offs:0,amp:3,up:5,shoulder:17,
  sky:[0x3f86d2,0xcfe4f4],fog:0xcfe0ea,sun:0xfff0d0,hemi:[0xd4e8f8,0x4f7a3c],road:'#3b3d43',tod0:'day',ra:1,
- pts:RA.pts,walls:[],ice:[],boost:[],jumps:[]};
+ pts:RA.pts.map(q=>[q[0]*RAK,q[1]*RAK,q[2]*RAY]),walls:[],ice:[],boost:[],jumps:[]};
 D.push(roadAtl);
 P.TRACK_INFO.push({s:'TARMAC',tags:['ESSES','UPHILL T1','T10 COMPLEX','T12 DIVE']});
 P.TRK_TRACKS=[D.length-1];
@@ -25,7 +25,7 @@ function dressRA(T,sc){
  /* backdrop mountains were laid out for a ~600 m world: push them out so nothing stands in or over this much bigger circuit */
  sc.traverse(o=>{const q=o.geometry&&o.geometry.parameters;if(q&&o.geometry.type==='ConeGeometry'&&q.radius>=80&&q.height>=60){o.position.x*=2.0;o.position.z*=2.0}});
  /* corner indices on the sampled track */
- const M={};for(const k in RA.marks){const p=RA.pts[RA.marks[k]];M[k]=near(T,p[0],p[1])}
+ const M={};for(const k in RA.marks){const p=RA.pts[RA.marks[k]];M[k]=near(T,p[0]*RAK,p[1]*RAK)}
  /* curvature per sample (positive = turning left for the car, because lateral +l is the car's left) */
  const curv=new Float32Array(N);for(let i=0;i<N;i++)curv[i]=wrp(T.psi[(i+5)%N]-T.psi[(i-5+N)%N])/(10*T.sp);
  /* distance from road centre line for any x,z */

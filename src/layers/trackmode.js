@@ -35,7 +35,7 @@ P._to=false;
 const ow1=P.owns;P.owns=(id,alt)=>P._to&&P.TRACK_CARS.includes(id)?true:ow1(id,alt);
 P.trackSel=p=>{const sv=P.SV();sv.tsel=sv.tsel||[];let s=sv.tsel[p];if(!s||!P.TRACK_CARS.includes(s.id))s=sv.tsel[p]={id:P.TRACK_CARS[p%P.TRACK_CARS.length],alt:0};return s};
 /* medals follow the car: platinum is the clean-lap pace of a 165 mph car (R33), scaled by real top speed, so every car gets a fair target */
-P.MEDAL_REF[14]=85.9;
+P.MEDAL_REF[14]=87.9;
 const mf=P.medalFor,mtm=P.medalTime,MD=P.MEDALS;
 const trRef=(track,car)=>{const k=+String(track).replace('r','');if(!(P.TRK_TRACKS||[]).includes(k)||!car||!car._tk)return null;return P.MEDAL_REF[k]*Math.pow(165/car._tk.mph,.35)};
 P.medalFor=(track,car,lap)=>{const r=trRef(track,car);if(r==null)return mf(track,car,lap);if(lap==null)return -1;for(let i=0;i<MD.length;i++)if(lap<=r*MD[i].f)return i;return MD.length};

@@ -343,7 +343,7 @@ function makePost(){
    o.rt.B=new THREE.WebGLRenderTarget(Math.max(2,w>>1),Math.max(2,h>>1),opt())},
   pass(m,rt){quad.material=m;R.setRenderTarget(rt);R.render(scQ,camQ)},
   render(scene,cam){const w=R.domElement.width,h=R.domElement.height;o.resize(w,h);const rt=o.rt;
-   R.setRenderTarget(rt.S);R.clear();R.render(scene,cam);
+   R.setRenderTarget(rt.S);R.clear();P.skyTrack&&P.skyTrack(scene,cam);R.render(scene,cam);
    bright.uniforms.t.value=rt.S.texture;o.pass(bright,rt.B);let src=rt.B.texture,sw=rt.B.width,sh=rt.B.height;
    for(let l=0;l<3;l++){blur.uniforms.t.value=src;blur.uniforms.d.value.set(1/(l?rt['V'+(l-1)].width:sw),0);o.pass(blur,rt['H'+l]);blur.uniforms.t.value=rt['H'+l].texture;blur.uniforms.d.value.set(0,1/rt['H'+l].height);o.pass(blur,rt['V'+l]);src=rt['V'+l].texture}
    comp.uniforms.tS.value=rt.S.texture;comp.uniforms.b0.value=rt.V0.texture;comp.uniforms.b1.value=rt.V1.texture;comp.uniforms.b2.value=rt.V2.texture;o.pass(comp,null)}};
@@ -443,6 +443,9 @@ function thumbFor(id){if(THC.has(id))return THC.get(id);
  TH.r.render(TH.sc,TH.cam);const cv=document.createElement('canvas');cv.width=336;cv.height=200;cv.getContext('2d').drawImage(TH.r.domElement,0,0);TH.sc.remove(car_);
  THC.set(id,cv);return cv}
 function pumpThumbs(){if(thRun)return;thRun=1;const go=()=>{const j=THQ.shift();if(!j){thRun=0;return}try{if(j.cv.isConnected){const t=thumbFor(j.id);if(t){j.cv.getContext('2d').drawImage(t,0,0,j.cv.width,j.cv.height);j.cv.classList.add('rdy')}}}catch(e){}setTimeout(go,8)};setTimeout(go,10)}
+/* big tracks: the sky dome, sun and panorama ride along with the camera so they never run out */
+const SKC=new WeakMap();P.skyTrack=(sc,cm)=>{if(!sc||!cm||!sc.isScene)return;let L=SKC.get(sc);if(!L||L.n!==sc.children.length){L=[];L.n=sc.children.length;for(const o of sc.children){const g=o.geometry;if(!g||!o.isMesh)continue;const pr=g.parameters||{};if(g.type==='SphereGeometry'&&pr.radius===1500)L.push([o,0,null,0]);else if(g.type==='SphereGeometry'&&pr.radius===40&&o.material&&o.material.fog===false)L.push([o,'rel']);else if(g.type==='CylinderGeometry'&&pr.radiusTop===1300&&pr.openEnded)L.push([o,0,90,0])}SKC.set(sc,L)}
+ for(const e of L){const o=e[0];let f=e.slice(1);if(f[0]==='rel'){f=o.userData.skyOff||(o.userData.skyOff=[o.position.x,o.position.y,o.position.z])}o.frustumCulled=false;o.position.set(cm.position.x+f[0],f[1]===null?cm.position.y:f[1],cm.position.z+f[2]);o.updateMatrixWorld()}};
 /* results screen: a large render of the player's car, and a two-column layout (standings left, car + payout right) */
 let TB=null;const TBC=new Map();
 function carBig(id){if(TBC.has(id))return TBC.get(id);const W=720,H=430;
