@@ -926,3 +926,7 @@ b,strong,h1,h2,h3,button,.btn,.gtab,.gti b,.hdr h2,#gtBar .gtl,.gtp,.crbox b,.qc
 #s8show.gtb.mkc .gtstrip{justify-content:flex-start;height:190px;padding-top:34px;bottom:96px}
 .gtstrip .gc{flex:0 0 204px;max-width:204px}
 .gtstrip .gc.sel{transform:translateY(-8px)}
+
+.mklogo.img{display:flex;align-items:center;justify-content:center;background:#e9eef2;padding:5px;box-sizing:border-box}
+.mklogo.img img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+.mk .mklogo.img{margin-bottom:8px}.gtmk .mklogo.img{margin-bottom:16px}
