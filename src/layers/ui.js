@@ -103,7 +103,7 @@ root.innerHTML=`
 <div class="foot8"><button class="btn" data-a="back"><span>&lt; Back</span></button><div class="hint8">Podium to clear an event &middot; final needs 3 events cleared</div><span style="width:90px"></span></div></section>
 
 <section class="v8s clear" id="s8show"><div class="hdr"><h2 id="shTitle">GARAGE</h2><small id="shSub"></small><button class="btn" id="shCars"><span>All cars</span></button><div class="sp"></div>${crHTML}</div>
-<div class="gtmk" id="shMk"></div><div class="lst" id="shList"></div><div class="stat" id="shStat"></div><div class="drag">Drag to rotate</div>
+<div class="gtmk" id="shMk"></div><div class="gtstrip" id="shStrip"></div><div class="lst" id="shList"></div><div class="stat" id="shStat"></div><div class="drag">Drag to rotate</div>
 <div class="bot"><button class="btn" data-a="back"><span>&lt; Back</span></button><div class="gnav" id="shNav"><button class="btn" id="shPrev"><span>&lsaquo;</span></button><em id="shPos"></em><button class="btn" id="shNext"><span>&rsaquo;</span></button></div><div class="ptabs" id="shTabs"></div><div class="sw" id="shSw"></div><button class="btn" id="shLv" style="display:none"><span>Livery</span></button><div style="flex:1"></div><button class="btn go" id="shAct"><span>Select</span></button></div><div class="flash8" id="shFlash"></div><div class="shfade" id="shFade"></div></section>
 
 <section class="v8s" id="s8res"><div class="box" id="resBox"></div></section>`;
@@ -127,7 +127,7 @@ const inGrid=()=>CARDS()&&SR.view==='grid',inCar=()=>CARDS()&&SR.view==='car';
 function openCar(id){const box=$('shList');SR.gridScroll=box?box.scrollTop:0;P.sfx&&P.sfx('select');fadeTo(()=>{SR.id=id;SR.alt=0;SR.view='car';renderShow()})}
 function flipCar(d){const ord=(SR.order||[]).map(id=>BYID[id]);if(ord.length<2)return;const i=Math.max(0,ord.findIndex(c=>c.id===SR.id));SR.id=ord[(i+d+ord.length)%ord.length].id;SR.alt=0;P.sfx&&P.sfx('select');renderShow()}
 function gridMove(d){const ord=(SR.order||[]);if(!ord.length)return;const i=Math.max(0,ord.indexOf(SR.id));SR.id=ord[Math.max(0,Math.min(ord.length-1,i+d))];const box=$('shList');$$('.gc.sel',box).forEach(x=>x.classList.remove('sel'));const el=box.querySelector('.gc[data-id="'+SR.id+'"]');if(el){el.classList.add('sel');el.scrollIntoView({block:'nearest'})}}
-goBack.s8show=()=>{if(inCar()){fadeTo(()=>{SR.view='grid';renderShow();$('shList').scrollTop=SR.gridScroll||0});return}leaveShow()};
+goBack.s8show=()=>{if(SR.kind==='brand'&&SR.mk){SR.mk=null;P.sfx&&P.sfx('back');fadeTo(()=>renderShow());return}if(inCar()){fadeTo(()=>{SR.view='grid';renderShow();$('shList').scrollTop=SR.gridScroll||0});return}leaveShow()};
 root.addEventListener('click',e=>{const b=e.target.closest('[data-a="back"]');if(b){(goBack[scr]||(()=>{}))()}});
 const rawEsc=esc;esc=()=>{if(goBack[scr]){goBack[scr]();return}rawEsc()};
 const RACE_RET=()=>{const c=P.lastCfg;return c&&c.mode==='free'?'s8cards':c&&c.ev?'s8career':(c&&c.mode?'s8setup':'s8cards')};
@@ -418,13 +418,12 @@ P.makePost=makePost;P.sizeNative=sizeStudio;function studioOff(){if(!STU.on)retu
 const rs0=rs;rs=()=>{if(STU.on)sizeStudio();else rs0()};
 function drawShow(dt){studioOn();ensureStudio();if(P.studioDress)P.studioDress(S,SR);const car=BYID[SR.id],idx=P.modelOf(SR.id,SR.alt);if(S.idx!==idx&&CAR_MODELS[idx])setStudioCar(idx);
  if(P.LV)P.LV.studio(S,SR);
- {const gtb=SR.kind==='brand';S.sc.background.setHex(gtb?0x000000:0x0b0d11);S.wall.visible=!gtb;S.wl2.visible=S.wl3.visible=!gtb;S.floor.material.color.setHex(gtb?0x020203:0x16191f);S.ring&&(S.ring.visible=!gtb)}
- {const gtb=SR.kind==='brand';S.sc.background.setHex(gtb?0x000000:0x0b0d11);S.wall.visible=!gtb;S.wl2.visible=S.wl3.visible=!gtb;S.floor.material.color.setHex(gtb?0x020203:0x16191f);S.ring&&(S.ring.visible=!gtb)}
+ {const gtb=SR.kind==='brand';if(S.car)S.car.visible=!(gtb&&!SR.mk)}
  if(S.rev)stepReveal(P.revFix!=null?0:dt);else{SR.ang+=dt*(SR.drag?0:.35)+SR.vel*dt;SR.vel*=Math.pow(.05,dt);S.turn.rotation.y=SR.ang}
- const W=R.domElement.width,H=R.domElement.height;S.cam.aspect=W/H;const ca=.55+Math.sin(T0*.17)*.12;{const dz=CARDS()?8.4:10.2;S.cam.position.set(Math.sin(ca)*dz,(CARDS()?2.2:2.5)+Math.sin(T0*.23)*.15,Math.cos(ca)*dz)};S.cam.lookAt(SR.kind==='brand'?1.5:0,.75,0);
+ const W=R.domElement.width,H=R.domElement.height;S.cam.aspect=W/H;const ca=.55+Math.sin(T0*.17)*.12;{const dz=CARDS()?8.4:(SR.kind==='brand'?12.4:10.2);S.cam.position.set(Math.sin(ca)*dz,(CARDS()?2.2:2.5)+Math.sin(T0*.23)*.15,Math.cos(ca)*dz)};S.cam.lookAt(SR.kind==='brand'?2.4:0,.75,0);
  if(P.homeCamOn&&P.homeCam&&!P.hcam){const h=P.homeCam(T0);S.cam.position.set(...h.p);S.cam.lookAt(...h.l)}
  if(P.hcam){S.cam.position.set(...P.hcam.p);S.cam.lookAt(...P.hcam.l)}
- S.cam.setViewOffset(W,H,-W*(CARDS()?.075:0),H*.02,W,H);S.cam.updateProjectionMatrix();
+ S.cam.setViewOffset(W,H,-W*(CARDS()?.075:0),H*(SR.kind==='brand'?.1:.02),W,H);S.cam.updateProjectionMatrix();
  R.setScissorTest(false);R.setViewport(0,0,W,H);S.post.render(S.sc,S.cam);R.setRenderTarget(null);
  const key=idx+'|'+(window.PT7&&window.PT7.photos[idx]?1:0);if(key!==lastPhotoKey&&CAR_MODELS[idx]){lastPhotoKey=key;fillPhotos(idx)}}
 
@@ -445,6 +444,22 @@ function thumbFor(id){if(THC.has(id))return THC.get(id);
  THC.set(id,cv);return cv}
 function pumpThumbs(){if(thRun)return;thRun=1;const go=()=>{const j=THQ.shift();if(!j){thRun=0;return}try{if(j.cv.isConnected){const t=thumbFor(j.id);if(t){j.cv.getContext('2d').drawImage(t,0,0,j.cv.width,j.cv.height);j.cv.classList.add('rdy')}}}catch(e){}setTimeout(go,8)};setTimeout(go,10)}
 function cardHTML(c,sv){const o=!c.lk;return `<div class="gc ${o?'':'lock'} ${c.barn&&!o?'bn':''} ${c.id===SR.id&&o?'sel':''} ${c.off?'off':''}" data-id="${c.id}"><div class="th"><canvas width="336" height="200" data-id="${c.id}"></canvas>${!o&&c.barn?'<i>?</i>':''}</div><b>${o||!c.barn?c.name:'???'}</b><small><span class="cls ${c.cls}">${c.cls}</span>${c.off?'Class cap':o?c.type:(c.barn?'Hidden on a map':'Not owned')}</small></div>`}
+
+/* ---- Brand Central: manufacturer list, then that maker's cars as a card strip ---- */
+const MK2=['ALFA ROMEO','ASTON MARTIN','LAND ROVER','DE TOMASO','ROLLS ROYCE','MERCEDES BENZ'];
+const MKA={'MERCEDES-AMG':'MERCEDES-BENZ','VW':'VOLKSWAGEN','VOLKSWAGON':'VOLKSWAGEN'};MK2.push('W MOTORS','TOMMY KAIRA');const makerOf=c=>{const n=String(c.name||'').toUpperCase();for(const m of MK2)if(n.startsWith(m+' '))return m;const f=n.split(' ')[0];return MKA[f]||f};
+P.makerOf=makerOf;
+function brandHTML(list,sv){
+ if(SR.mk)return '';
+ const g={};list.forEach(c=>{(g[makerOf(c)]=g[makerOf(c)]||[]).push(c)});
+ return '<div class="mkg">'+Object.keys(g).sort().map(k=>{const v=g[k],lo=Math.min(...v.map(c=>c.price)),ow=v.filter(c=>(sv.owned[c.id]||0)>0).length;return `<div class="mk" data-mk="${k}">${P.LOGO?P.LOGO(k,46):''}<b>${k}</b><span>${v.length} car${v.length>1?'s':''}</span><small>from ${fmtCr(lo)}${ow?' &middot; '+ow+' owned':''}</small></div>`}).join('')+'</div>'}
+function brandStrip(list,sv){const st=$('shStrip');if(!st)return;
+ if(!SR.mk){st.innerHTML='';return}
+ const v=list.filter(c=>makerOf(c)===SR.mk).sort((a,b)=>P.pp(BYID[a.id])-P.pp(BYID[b.id])||a.price-b.price);
+ st.innerHTML=v.map(c=>{const o=(sv.owned[c.id]||0)>0;return `<div class="gc ${c.id===SR.id?'sel':''}" data-id="${c.id}"><div class="th"><canvas width="336" height="200" data-id="${c.id}"></canvas></div><b>${c.name}</b><small><span class="cls ${c.cls}">${c.cls}</span>${o?'Owned':fmtCr(c.price)}</small></div>`}).join('');
+ $$('.gc',st).forEach(e=>e.onclick=()=>{if(e.dataset.id===SR.id)return;SR.id=e.dataset.id;SR.alt=0;P.sfx&&P.sfx('select');renderShow()});
+ THQ.length=0;$$('.gc canvas',st).forEach(cv=>{const t=THC.get(cv.dataset.id);if(t){cv.getContext('2d').drawImage(t,0,0,cv.width,cv.height);cv.classList.add('rdy')}else{THQ.push({cv,id:cv.dataset.id})}});pumpThumbs();
+ const sel=st.querySelector('.gc.sel');if(sel)st.scrollLeft=sel.offsetLeft-st.clientWidth/2+sel.clientWidth/2}
 function cardsHTML(list,sv){
  const byPP=(a,b)=>P.pp(BYID[a.id])-P.pp(BYID[b.id])||a.price-b.price;list=list.slice().sort(byPP);const reg=list.filter(c=>!c.barn),barn=list.filter(c=>c.barn),cats=(P.CATS||[]).filter(k=>reg.some(c=>c.cat===k));
  const own=c=>!c.lk&&!c.off;let h='',order=[];
@@ -464,7 +479,7 @@ function bindCards(list){const box=$('shList');
  const sel=box.querySelector('.gc.sel');if(sel&&!SR.noScroll){const r=sel.getBoundingClientRect(),b=box.getBoundingClientRect();if(r.top<b.top+40||r.bottom>b.bottom)sel.scrollIntoView({block:'center'})}}
 function fillPhotos(idx){const box=$('shPhotos');if(!box)return;let ph=window.PT7&&(window.PT7.photos[idx]||(()=>{try{return window.PT7.makePhotos(idx)}catch(e){return null}})());box.innerHTML='';
  for(let i=0;i<3;i++){const cv=document.createElement('canvas');cv.width=96;cv.height=60;const g=cv.getContext('2d');g.fillStyle='#14181d';g.fillRect(0,0,96,60);if(ph&&ph[i]){try{g.drawImage(ph[i],0,0,96,60)}catch(e){}}box.appendChild(cv)}}
-function openShow(kind,o){SR.sec=0;P._ro=!!o.rally&&kind==='garage';P._to=!!o.track&&kind==='garage';SR.trk=!!o.track;SR.view='grid';SR.lv=false;SR.kind=kind;SR.player=o.player||0;SR.cap=o.cap==null?null:o.cap;SR.ret=o.ret||'menu';SR.rally=!!o.rally;SR.flow=!!o.flow;
+function openShow(kind,o){SR.sec=0;SR.mk=null;P._ro=!!o.rally&&kind==='garage';P._to=!!o.track&&kind==='garage';SR.trk=!!o.track;SR.view='grid';SR.lv=false;SR.kind=kind;SR.player=o.player||0;SR.cap=o.cap==null?null:o.cap;SR.ret=o.ret||'menu';SR.rally=!!o.rally;SR.flow=!!o.flow;
  const list=showList();if(kind==='garage'){const s=SR.rally?P.rallySel(SR.player):SR.trk?P.trackSel(SR.player):P.SV().sel[SR.player];const ok=list.find(c=>c.id===s.id&&!c.off&&!c.lk);const f=ok||list.find(c=>!c.off&&!c.lk)||list.find(c=>!c.lk)||BYID.merc;SR.id=f.id;SR.alt=(ok&&P.owns(f.id,s.alt))?s.alt:(P.owns(f.id,0)?0:1)}
  else{if(!BYID[SR.id])SR.id='merc';if(SR.alt&&!P.owns(SR.id,1))SR.alt=0}
  if(SR.flow){SR.cat=SR.trk?(BYID[SR.id].tdiv||'PRO'):(BYID[SR.id].rdiv||'WRC');SR.sec=0}
@@ -488,20 +503,22 @@ const barHTML=b=>{const pc=Math.round((b[3]-1)*100),w=Math.round(b[1]*100),w0=Ma
 function tuneHTML(car){const t=P.tuneGet(car.id,SR.alt);
  return `<div class="tune"><div class="th"><b>TUNING</b><button class="btn sm" id="tuReset"><span>Reset</span></button></div>`+P.TUNE.map(d=>{const v=t[d.k],pips=[];for(let i=-d.r;i<=d.r;i++)pips.push(`<i class="${i===0?'ctr ':''}${(v>0&&i>0&&i<=v)||(v<0&&i<0&&i>=v)?'on':''}"></i>`);
   return `<div class="tr"><span>${d.n}</span><button class="btn sm" data-k="${d.k}" data-d="-1"><span>&lsaquo;</span></button><div class="pp5">${pips.join('')}</div><button class="btn sm" data-k="${d.k}" data-d="1"><span>&rsaquo;</span></button><em>${v===0?'STOCK':v<0?d.lo:d.hi}${v&&d.r>1?' '+Math.abs(v):''}</em></div>`}).join('')+`<div class="tn">${P._tuneMsg?'<b style="color:var(--ac2)">'+P._tuneMsg+'</b><br>':''}Each step away from stock costs ${fmtCr(P.tuneBase(car.id))} x level (reset is free). Applies to races &amp; events; Time Attack runs stock.</div></div>`}
-function renderShow(){SR.alt=0;try{const c0=BYID[SR.id],mk=$('shMk');if(mk&&c0){const w=c0.name.split(' ');mk.innerHTML='<b>'+w[0]+'</b><span>'+w.slice(1).join(' ')+'</span><div class="cl"><i>CLASS '+c0.cls+'</i><i>'+(c0.type||'')+'</i></div>'}}catch(e){}{const sh=$('s8show');sh.classList.toggle('gtb',SR.kind==='brand');if(SR.kind!=='brand')sh.classList.remove('lo')}{const sh=$('s8show');sh.classList.toggle('gtb',SR.kind==='brand');if(SR.kind!=='brand')sh.classList.remove('lo')}const kind=SR.kind,sv=P.SV(),list=showList(),car=BYID[SR.id],owned=P.owns(car.id,0),ownAlt=P.owns(car.id,1);
+function renderShow(){SR.alt=0;try{const c0=BYID[SR.id],mk=$('shMk');if(mk&&c0){const m0=makerOf(c0);mk.innerHTML=(P.LOGO?P.LOGO(m0,76):'')+'<b>'+m0+'</b><span>'+c0.name.slice(m0.length).trim()+'</span><div class="cl"><i>CLASS '+c0.cls+'</i><i>'+(c0.type||'')+'</i></div>'}}catch(e){}{const sh=$('s8show');sh.classList.toggle('gtb',SR.kind==='brand');if(SR.kind!=='brand')sh.classList.remove('lo')}{const sh=$('s8show');sh.classList.toggle('gtb',SR.kind==='brand');if(SR.kind!=='brand')sh.classList.remove('lo')}const kind=SR.kind,sv=P.SV(),list=showList(),car=BYID[SR.id],owned=P.owns(car.id,0),ownAlt=P.owns(car.id,1);
  $('shTitle').innerHTML=kind==='garage'?(SR.rally?'RALLY <em>GARAGE</em>':SR.trk?'TRACK <em>GARAGE</em>':'YOUR <em>GARAGE</em>'):'BRAND <em>CENTRAL</em>';$('shSub').textContent=kind==='garage'?(SR.flow?(D[ST.track].name+' · '+(Math.round(tr(ST.track).L)*(ST.rlaps||1)/1000).toFixed(1)+' km · '+(ST.rlaps||1)+' lap'+((ST.rlaps||1)>1?'s':'')+' · '+((P.WX[ST.wx||'clear']||{n:'CLEAR'}).n)+' · '+((P.TOD[effTod()]||{n:''}).n)+' · '+ST.players+' driver'+(ST.players>1?'s':'')):SR.trk?'Circuit cars only / free to use':SR.rally?'Rally-spec all-wheel-drive cars with gravel tyres / free to use':(SR.cap?'Class '+SR.cap+' and below':'')):'Buy cars';
  const RG=(SR.rally||SR.trk)&&kind==='garage',dc=c=>RG?(SR.trk?c.tdiv:c.rdiv):c.cat,cats=RG?(SR.trk?['PRO','CLUB']:['WRC','CASUAL']):['ALL',...(P.CATS||[]),...(kind==='brand'?['OWNED']:[])],cnt=k=>list.filter(c=>k==='ALL'||(k==='OWNED'?(sv.owned[c.id]||0)>0:dc(c)===k)).length;
  if(!cats.includes(SR.cat))SR.cat=cats[0];
  const vis=list.filter(c=>SR.cat==='ALL'||(SR.cat==='OWNED'?(sv.owned[c.id]||0)>0:dc(c)===SR.cat));
 const secMode=true;let h='',last=null;
- if(CARDS()){h=cardsHTML(list,sv)}
+ if(kind==='brand'){h=brandHTML(list,sv)}
+ else if(CARDS()){h=cardsHTML(list,sv)}
  else if(secMode&&!SR.sec){h='<div class="secs">'+cats.filter(k=>k!=='ALL'&&cnt(k)).concat(RG?[]:['ALL']).map(k=>{const v=list.filter(c=>k==='ALL'||(k==='OWNED'?(sv.owned[c.id]||0)>0:dc(c)===k));const lo=Math.min(...v.map(c=>c.price));return `<button class="sect" data-cat="${k}"><b>${k==='ALL'?'ALL CARS':k}</b><small>${v.length} cars${kind==='brand'&&k!=='OWNED'?' &middot; from '+fmtCr(lo):''}</small></button>`}).join('')+'</div>'}
  else{
   if(secMode)h+=`<button class="secback" data-back="1"><span>&lsaquo; SECTIONS</span><i>${SR.cat==='ALL'?'ALL CARS':SR.cat} &middot; ${vis.length}</i></button>`;
   else h+='<div class="cats">'+cats.filter(k=>cnt(k)||k==='ALL').map(k=>`<button class="${k===SR.cat?'sel':''}" data-cat="${k}">${k==='ALL'?'ALL':k==='OWNED'?'OWNED':k}<i>${cnt(k)}</i></button>`).join('')+'</div>';
   for(const c of vis){if(c.cls!==last){last=c.cls;h+=`<div class="ch"><span class="cls ${c.cls}">${c.cls}</span> &nbsp;Class ${c.cls}</div>`}const o=(sv.owned[c.id]||0)>0;
    h+=`<div class="ci ${c.id===SR.id?'sel':''} ${c.off?'off':''}" data-id="${c.id}"><b>${c.name}</b><small>${kind==='brand'?(o?'Owned':fmtCr(c.price)):(c.off?'Class cap':c.type)}</small></div>`}}
- $('shList').innerHTML=h;$('shList').classList.toggle('cards',CARDS());$('s8show').classList.toggle('gv-grid',inGrid());$('s8show').classList.toggle('gv-car',inCar());if(inCar()){const o=SR.order||[];$('shPos').textContent=(o.indexOf(SR.id)+1)+' / '+o.length}if(CARDS())bindCards(list);$$('#shList .cats button',root).forEach(b=>b.onclick=()=>{SR.cat=b.dataset.cat;const v=list.filter(c=>SR.cat==='ALL'||(SR.cat==='OWNED'?(sv.owned[c.id]||0)>0:dc(c)===SR.cat));if(v.length&&!v.some(c=>c.id===SR.id)){SR.id=v[0].id;SR.alt=0}P.sfx('select');renderShow();$('shList').scrollTop=0});$$('#shList .ci',root).forEach(e=>e.onclick=()=>{SR.id=e.dataset.id;if(!P.owns(SR.id,SR.alt))SR.alt=0;renderShow()});
+ $('shList').innerHTML=h;{const sh=$('s8show'),bm=kind==='brand';sh.classList.toggle('mkl',bm&&!SR.mk);sh.classList.toggle('mkc',bm&&!!SR.mk);if(bm){$$('#shList .mk',root).forEach(e=>e.onclick=()=>{SR.mk=e.dataset.mk;const v=list.filter(c=>makerOf(c)===SR.mk).sort((a,b)=>P.pp(BYID[a.id])-P.pp(BYID[b.id])||a.price-b.price);const f=v.find(c=>!((sv.owned[c.id]||0)>0))||v[0];SR.id=f.id;SR.alt=0;P.sfx&&P.sfx('select');fadeTo(()=>renderShow())});brandStrip(list,sv)}}
+ $('shList').classList.toggle('cards',CARDS());$('s8show').classList.toggle('gv-grid',inGrid());$('s8show').classList.toggle('gv-car',inCar());if(inCar()){const o=SR.order||[];$('shPos').textContent=(o.indexOf(SR.id)+1)+' / '+o.length}if(CARDS())bindCards(list);$$('#shList .cats button',root).forEach(b=>b.onclick=()=>{SR.cat=b.dataset.cat;const v=list.filter(c=>SR.cat==='ALL'||(SR.cat==='OWNED'?(sv.owned[c.id]||0)>0:dc(c)===SR.cat));if(v.length&&!v.some(c=>c.id===SR.id)){SR.id=v[0].id;SR.alt=0}P.sfx('select');renderShow();$('shList').scrollTop=0});$$('#shList .ci',root).forEach(e=>e.onclick=()=>{SR.id=e.dataset.id;if(!P.owns(SR.id,SR.alt))SR.alt=0;renderShow()});
  $$('#shList .sect',root).forEach(b=>b.onclick=()=>{SR.cat=b.dataset.cat;SR.sec=1;const v=list.filter(c=>SR.cat==='ALL'||(SR.cat==='OWNED'?(sv.owned[c.id]||0)>0:dc(c)===SR.cat));if(v.length&&!v.some(c=>c.id===SR.id)){SR.id=v[0].id;SR.alt=0}P.sfx('select');renderShow();$('shList').scrollTop=0});
  $$('#shList .secback',root).forEach(b=>b.onclick=()=>{SR.sec=0;P.sfx('select');renderShow();$('shList').scrollTop=0});
  const sel=$$('#shList .ci.sel',root)[0];if(sel)sel.scrollIntoView({block:'nearest'});

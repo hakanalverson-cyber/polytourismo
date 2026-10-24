@@ -8,6 +8,7 @@ P.LOG=[
   'Brand Central: cars now drive up into the showroom with spinning wheels. Buying a car fades to black, shows its stats, and an Add to garage button brings you back as the car drives in from the side.',
   'Results are a Gran Turismo style table with rows sliding in. The main menu is a top tab bar with a Quickplay drop-down (Quick Race, Time Attack, Elimination, Cut-Up, Versus); Free Roam is parked for now.',
   'Brand Central is a black showroom: car on the left, specs and price on the right, Back bottom left, Buy bottom right, arrows to flip cars and an All cars list. Sharp corners and a calmer upright font everywhere.',
+  'Brand Central lists cars by manufacturer: pick a maker (with its logo), then browse that maker's cars as a card strip with Back and Buy buttons. Logos are CC0 vector marks from Simple Icons; makers without one get an initials badge.',
   'Class fixes: the RS4 Avant and a few other class B cars had class D top speeds and now match their class. Lighter default shadows and a lower pixel-density cap for better frame rates; adaptive resolution reacts faster.']},
  {v:'0.07',d:'Oct 24, 2026',t:'New track: Imola',items:[
   'Imola is a new circuit-mode track: the real Grand Prix layout, shrunk to about a third and with the tightest chicanes opened up, so a lap is short and busy. Only the road layout was used, the rest is built from scratch in the Poly GT low-poly look.',

@@ -876,13 +876,38 @@ b,strong,h1,h2,h3,button,.btn,.gtab,.gti b,.hdr h2,#gtBar .gtl,.gtp,.crbox b,.qc
 /* no gradients on the sides; panels are flat */
 .lst,.stat{-webkit-mask-image:none!important;mask-image:none!important}
 #s8show.gtb .stat{background:#06080bf2!important;border-left:1px solid #ffffff1c!important;padding-left:2.2vw!important;width:min(400px,32vw)!important}
-#s8show.gtb::before{background:linear-gradient(180deg,#000000a0 0%,transparent 12%,transparent 86%,#000000a0 100%)!important}
+#s8show.gtb::before{background:linear-gradient(180deg,#07090c66 0%,transparent 16%,transparent 80%,#07090c99 100%)!important}
 .gtmk{display:none}
 #s8show.gtb .gtmk{display:block;position:absolute;left:3.4vw;top:104px;z-index:2;pointer-events:none}
-.gtmk b{display:block;font-size:clamp(30px,5vw,64px);letter-spacing:.04em!important;font-weight:700!important;color:#fff;text-transform:uppercase;line-height:1}
+.gtmk b{display:block;font-size:clamp(26px,3.6vw,50px);letter-spacing:.04em!important;font-weight:700!important;color:#fff;text-transform:uppercase;line-height:1}
 .gtmk span{display:block;margin-top:10px;font-size:15px;color:#9fb0ba;letter-spacing:.14em!important;text-transform:uppercase}
 .gtmk .cl{display:flex;gap:8px;margin-top:18px}.gtmk .cl i{font-style:normal;font-size:10px;letter-spacing:.2em!important;padding:6px 10px;border:1px solid #ffffff33;color:#c4d1d8;text-transform:uppercase}
 #menu #gtBar{background:#0a0d11f2}
 .mfoot{background:#0a0d11f2!important}
 #gtBar .gtt .gtab{min-width:0;padding:0 24px}
 #gtBar .gtab:after{left:0;right:0}
+
+/* Brand Central: manufacturer list + card strip */
+#s8show.gtb #shCars{display:none!important}
+.gtstrip{display:none}
+#s8show.gtb.mkc .gtstrip{display:flex;position:absolute;left:3.4vw;right:3.4vw;bottom:104px;height:128px;gap:8px;overflow-x:auto;overflow-y:visible;z-index:3;padding-top:14px;scrollbar-width:none;align-items:flex-end}
+.gtstrip .gc{flex:0 0 168px;background:#0b0e12e6;border:1px solid #ffffff18;border-left:1px solid #ffffff18;transition:transform .18s,border-color .18s,background .18s}
+.gtstrip .gc.sel{transform:translateY(-12px);border-color:#ffffff66;border-top:3px solid var(--ac2,#f2c76b);background:#1a232cf2}
+.gtstrip .gc:hover{border-color:#ffffff55}
+.gtstrip .gc b{font-size:10px}.gtstrip .gc small{display:flex;gap:8px;align-items:center;font-size:10px;color:#9fb0ba}
+#s8show.gtb.mkl .stat,#s8show.gtb.mkl #shNav,#s8show.gtb.mkl .gtmk,#s8show.gtb.mkl #shAct,#s8show.gtb.mkl .ptabs,#s8show.gtb.mkl .sw{display:none!important}
+#s8show.gtb.mkl::before{background:linear-gradient(180deg,#07090cd9,#07090cb3)}
+#s8show.gtb.mkl .lst{display:block;left:3.4vw;right:3.4vw;top:96px;bottom:104px;width:auto;background:transparent;border:0;padding:0 4px;overflow:auto}
+#s8show.gtb.mkc .lst{display:none!important}
+.mkg{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.mk{cursor:pointer;display:flex;flex-direction:column;gap:6px;padding:20px 20px 16px;background:#0d1217;border:1px solid #ffffff14;border-left:3px solid transparent;min-height:104px;transition:background .15s,border-color .15s}
+.mk:hover{background:#18232d;border-left-color:var(--ac2,#f2c76b)}
+.mk b{font-size:19px;letter-spacing:.08em!important;color:#fff;font-weight:650!important}.mk span{font-size:11px;color:#9fb0ba;text-transform:uppercase;letter-spacing:.14em!important}.mk small{margin-top:auto;font-size:10px;color:#6f808b;letter-spacing:.1em!important;text-transform:uppercase}
+#s8show.gtb.mkc #shPrev{left:3.4vw}
+#s8show.gtb.mkc #shNav{top:36vh}
+
+#s8show.gtb #shNav{display:none!important}
+#s8show.gtb.mkc .gtstrip{height:150px;padding-top:24px;bottom:100px}
+
+.mklogo{display:block;color:#dfe7ec;flex:none}.mk .mklogo{margin-bottom:8px;opacity:.9}.mk:hover .mklogo{color:#fff}
+.gtmk .mklogo{margin-bottom:16px}
