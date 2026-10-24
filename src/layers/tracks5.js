@@ -4,13 +4,13 @@
 const P=window.PT8,RG=window.PT8_RING;
 if(!RG||!P.TRK_TRACKS)return;
 const ring={id:16,look:0,name:'Nordschleife',desc:'nurburgring / 20.8 km / karussell / flugplatz / the green hell',hw:5.2,bank:10,off:'grass',idw:.85,offs:0,amp:5,up:9,shoulder:14,
- sky:[0x5b8bc2,0xd3e0ea],fog:0xc8d6de,sun:0xfff0d8,hemi:[0xd6e4ee,0x4a6a3a],road:'#3a3c41',tod0:'day',ring:1,
+ sky:[0x5b8bc2,0xd3e0ea],fog:0xc8d6de,sun:0xfff0d8,hemi:[0xcfe0c4,0x2c4422],road:'#3a3c41',tod0:'day',ring:1,
  pts:RG.pts.map(q=>[q[0],q[1],q[2],q[3]]),walls:[],ice:[],boost:[],jumps:[]};
 D.push(ring);
 P.TRACK_INFO.push({s:'TARMAC',tags:['20.8 KM','KARUSSELL','FLUGPLATZ','290 M CLIMB']});
 P.TRK_TRACKS.push(D.length-1);
 const RX=D.length-1;P.RING_IDX=RX;
-P.MEDAL_REF[RX]=471;/* Mercedes AI lap 444.7 s x 1.06, same rule as Road Atlanta and Imola */
+P.MEDAL_REF[RX]=480;/* Mercedes AI lap 453.1 s x 1.06, same rule as Road Atlanta and Imola */
 MATS.sandtrap=MATS.sandtrap||{grip:.42,top:.5,acc:.4};
 
 /* ---------- corners (same rule as Imola: curvature above ~1/95 m for more than 18 m) ---------- */
@@ -77,10 +77,10 @@ function tileSystem(T,sc){
  function stepRow(j){const{t,cs,n}=j,r=j.row,z=t.Z*TS+r*cs;
   for(let i=0;i<=n;i++){const x=t.X*TS+i*cs,h=terrainBed(T,x,z),rd=_rd,ri=_ri,rs=_rs,k=r*(n+1)+i;j.h[k]=h;
    const v=T.nz(x*2.1,z*2.1)*.5+.5,v2=T.nz(x*.6+40,z*.6-17)*.5+.5,fo=forest(x,z);
-   let c=[.2+.06*v,.44+.1*v,.12+.03*v];
+   let c=[.13+.05*v,.36+.09*v,.08+.03*v];
    if(v2>.66){const q=Math.min(1,(v2-.66)*6);c=[lerp(c[0],.36,q),lerp(c[1],.5,q),lerp(c[2],.18,q)]}
-   if(fo>0){const q=fo*.85;c=[lerp(c[0],.17+.05*v,q),lerp(c[1],.27+.05*v,q),lerp(c[2],.1,q)]}
-   if(rd<26){const q=1-sm(9,26,rd),st=((Math.floor(x/7)+Math.floor(z/7))&1)?.03:-.02;c=[lerp(c[0],.25+st,q),lerp(c[1],.55+st,q),lerp(c[2],.14,q)]}
+   if(fo>0){const q=fo*.85;c=[lerp(c[0],.08+.04*v,q),lerp(c[1],.22+.05*v,q),lerp(c[2],.07,q)]}
+   if(rd<26){const q=1-sm(9,26,rd),st=((Math.floor(x/7)+Math.floor(z/7))&1)?.03:-.02;c=[lerp(c[0],.19+st,q),lerp(c[1],.47+st,q),lerp(c[2],.1,q)]}
    /* sand traps are painted into the ground itself, so they can never float above it */
    if(ri>=0&&T.trapS&&T.trapS[ri]&&rs===T.trapS[ri]&&rd>2.2&&rd<13.8){const q=.04*v;c=[.62+q,.55+q,.36+q*.5]}
    j.c[k*3]=c[0];j.c[k*3+1]=c[1];j.c[k*3+2]=c[2]}
@@ -135,14 +135,14 @@ function instC(sc,geo,m,list,tint){const im=new THREE.InstancedMesh(geo,m,list.l
 function buildRing(T){const d=T.d,N=T.N,sc=new THREE.Scene(),C=T._rc||cornersOf(T),curv=C.curv,corners=C.corners,infield=C.left;
  const rr=(()=>{let s=20832;return()=>((s=(s*1664525+1013904223)>>>0)/4294967296)})();
  sc.userData.ring=1;
- sc.fog=new THREE.Fog(d.fog,120,520);sc.add(new THREE.HemisphereLight(d.hemi[0],d.hemi[1],1.05));const sun=new THREE.DirectionalLight(d.sun,.95);sun.position.set(-150,250,100);sc.add(sun);
+ sc.fog=new THREE.Fog(d.fog,120,520);sc.add(new THREE.HemisphereLight(d.hemi[0],d.hemi[1],.92));const sun=new THREE.DirectionalLight(d.sun,1.0);sun.position.set(-150,250,100);sc.add(sun);
  const sk=ctex(2,64,(x,w,h)=>{const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,'#'+d.sky[0].toString(16).padStart(6,'0'));g.addColorStop(.5,'#'+d.sky[1].toString(16).padStart(6,'0'));g.addColorStop(1,'#'+d.sky[1].toString(16).padStart(6,'0'));x.fillStyle=g;x.fillRect(0,0,w,h)});
  {const dm=new THREE.Mesh(new THREE.SphereGeometry(1500,16,12),new THREE.MeshBasicMaterial({map:sk,side:THREE.BackSide,fog:false}));dm.frustumCulled=false;sc.add(dm);
   const sd=mesh(new THREE.SphereGeometry(40,12,8),new THREE.MeshBasicMaterial({color:d.sun,fog:false}),-500,420,-1000,sc);sd.frustumCulled=false}
  let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;for(let i=0;i<N;i++){x0=Math.min(x0,T.x[i]);x1=Math.max(x1,T.x[i]);z0=Math.min(z0,T.z[i]);z1=Math.max(z1,T.z[i])}T.bounds=[x0-190,x1+190,z0-190,z1+190];
  /* forest cover: dense Eifel woods with clearings and a few open meadows (the Flugplatz plateau, the Dottinger Hohe fields) */
- const open=[];for(const nm of['FLUGPLATZ','DOTTINGER HOHE','QUIDDELBACHER HOHE','ANTONIUSBUCHE']){const i=RG.marks[nm];if(i==null)continue;const p=RG.pts[i];open.push([p[0],p[1],nm==='DOTTINGER HOHE'?900:420])}
- T.forest=(x,z)=>{let f=clamp(((T.nz(x*.33+11,z*.33-7)*.5+.5)-.16)*3.4,0,1);for(const o of open){const e=Math.hypot(x-o[0],z-o[1])/o[2];if(e<1)f*=sm(.55,1,e)}if(T.castle){const e=Math.hypot(x-T.castle.x,z-T.castle.z);if(e<120)f=0}return f};
+ const open=[];for(const nm of['FLUGPLATZ','DOTTINGER HOHE','QUIDDELBACHER HOHE','ANTONIUSBUCHE']){const i=RG.marks[nm];if(i==null)continue;const p=RG.pts[i];open.push([p[0],p[1],nm==='DOTTINGER HOHE'?520:300])}
+ T.forest=(x,z)=>{/* the Eifel is forest almost everywhere: only a few clearings */let f=clamp(((T.nz(x*.33+11,z*.33-7)*.5+.5)+.12)*2.6,0,1);for(const o of open){const e=Math.hypot(x-o[0],z-o[1])/o[2];if(e<1)f*=sm(.55,1,e)}if(T.castle){const e=Math.hypot(x-T.castle.x,z-T.castle.z);if(e<120)f=0}return f};
  const at=(k,l,dy)=>{k=((k%N)+N)%N;const c=Math.cos(T.psi[k]),s=Math.sin(T.psi[k]),x=T.x[k]+c*l,z=T.z[k]-s*l,ry=T.y[k]-l*T.bank[k],ex=Math.abs(l)-T.hw[k];if(ex>1.2){/* sit on the ground the tiles are built from, never on a raised road level */return[x,terrainBed(T,x,z)+(dy||0)+.03,z]}return[x,ry+(dy||0),z]};
  const dRoad=(x,z,far)=>{const cx=Math.floor(x/16),cz=Math.floor(z/16),R=far||2;let b=1e9;for(let a=-R;a<=R;a++)for(let c=-R;c<=R;c++){const l=T.grid.get((cx+a)*8192+cz+c);if(!l)continue;for(const i of l){const dd=Math.hypot(x-T.x[i],z-T.z[i])-T.hw[i];if(dd<b)b=dd}}return b>=1e9?999:Math.max(0,b)};
  const M_=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.85,metalness:0,flatShading:true},o||{}));
@@ -196,23 +196,39 @@ function buildRing(T){const d=T.d,N=T.N,sc=new THREE.Scene(),C=T._rc||cornersOf(
    const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));gg.setIndex(idx);gg.computeVertexNormals();sc.add(new THREE.Mesh(gg,rail))}
   instC(g,new THREE.BoxGeometry(.16,1.1,.16),M_(0x6f797d),posts.map(p=>[p[0],p[1]+.55,p[2],1,1,1,p[6]]))}
  /* ---- tyre walls behind the gravel at the sharpest corners ---- */
- {const sharp=T.traps.slice().sort((a,b)=>b.pk-a.pk).slice(0,7),B=[],Wt=[],R=[];
-  for(const c of sharp){const side=c.dir>0?-1:1;for(let q=c.a-2;q<=c.b+6;q++){const k=((q%N)+N)%N,blk=Math.floor(q/4)%5;for(let row=0;row<2;row++){const l=side*(T.hw[k]+14.4-row*1.05);for(let h=0;h<3;h++){const p=at(k,l,.28+h*.52);(blk===0?Wt:blk===3?R:B).push([p[0],p[1],p[2],1,1,1,0])}}
-    if(P.addSeg){const p1=at(k,side*(T.hw[k]+13.9),0),p2=at(k+1,side*(T.hw[(k+1)%N]+13.9),0);P.addSeg(T,p1[0],p1[2],p2[0],p2[2],.9)}}}
-  const cg=new THREE.CylinderGeometry(.55,.55,.5,9);if(B.length)instC(g,cg,M_(0x1b1d21),B);if(Wt.length)instC(g,cg,M_(0xf1f1f1),Wt);if(R.length)instC(g,cg,M_(0xd8392f),R)}
+ {const sharp=T.traps.slice().sort((a,b)=>b.pk-a.pk).slice(0,7),B=[],TP=1.1;
+  /* tyres touch each other: walk the wall line in tyre-sized steps between track samples, two rows staggered, three high */
+  for(const c of sharp){const side=c.dir>0?-1:1;for(let row=0;row<2;row++){let carry=row*TP/2;
+    for(let q=c.a-2;q<c.b+6;q++){const k=((q%N)+N)%N,k2=(k+1)%N,l1=side*(T.hw[k]+14.4-row*1.05),l2=side*(T.hw[k2]+14.4-row*1.05),a=at(k,l1,0),b=at(k2,l2,0),seg=Math.hypot(b[0]-a[0],b[2]-a[2]);
+     for(let t=carry;t<seg;t+=TP){const f=t/seg,x=lerp(a[0],b[0],f),z=lerp(a[2],b[2],f),y=lerp(a[1],b[1],f);for(let h=0;h<3;h++)B.push([x,y+.28+h*.52,z,1,1,1,0])}
+     carry=((carry-seg)%TP+TP)%TP;
+     if(row===0&&P.addSeg){const p1=at(k,side*(T.hw[k]+13.9),0),p2=at(k2,side*(T.hw[k2]+13.9),0);P.addSeg(T,p1[0],p1[2],p2[0],p2[2],.9)}}}}
+  const cg=new THREE.CylinderGeometry(.56,.56,.5,10);if(B.length)instC(g,cg,M_(0x1b1d21),B)}
+ /* ---- forest backdrop: a painted strip of layered crowns (PNG) on two rows of cards behind the 3D tree band, so the
+   forest reads deep and lush without tens of thousands more trees. Cards follow the ground and break at clearings and other roads ---- */
+ if(window.PT8_RING_FOREST){const tx=new THREE.TextureLoader().load(window.PT8_RING_FOREST);tx.wrapS=THREE.RepeatWrapping;tx.encoding=THREE.sRGBEncoding;tx.anisotropy=4;
+  const nS=Math.round(N*.03);
+  for(const[off,Hh,tint,rep,u0]of[[46,24,0xffffff,96,0],[92,30,0xb9c7c2,120,.37]]){const fm=new THREE.MeshBasicMaterial({map:tx,color:tint,alphaTest:.5,side:THREE.DoubleSide});styleMaterial(fm);
+   for(const side of[-1,1]){const RO=side>0?T.railL:T.railR,pos=[],uv=[],idx=[];let prev=null,u=u0;
+    for(let i=0;i<=N;i+=2){const k=i%N,l=side*(T.hw[k]+RO[k]+off),c=Math.cos(T.psi[k]),sn=Math.sin(T.psi[k]),x=T.x[k]+c*l,z=T.z[k]-sn*l;
+     const ok=!(k<nS||k>N-20)&&T.forest(x,z)>.35&&dRoad(x,z,5)>off-6,cur={x,z,y:terrainBed(T,x,z)-1.6,ok};
+     if(prev&&prev.ok&&ok){const dx=x-prev.x,dz=z-prev.z,dl=Math.hypot(dx,dz),tx_=Math.sin(T.psi[k]),tz_=Math.cos(T.psi[k]);
+      if(dl>.5&&dl<T.sp*2*3&&(dx*tx_+dz*tz_)/dl>.2){const v=pos.length/3,u1=u+dl/rep;pos.push(prev.x,prev.y,prev.z,x,cur.y,z,x,cur.y+Hh,z,prev.x,prev.y+Hh,prev.z);uv.push(u,0,u1,0,u1,1,u,1);idx.push(v,v+1,v+2,v,v+2,v+3);u=u1}}
+     prev=cur}
+    if(pos.length){const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));gg.setIndex(idx);sc.add(new THREE.Mesh(gg,fm))}}}}
  /* ---- forest ---- */
  {const spr=[],dec=[],bush=[];
   const nS=Math.round(N*.03);
-  for(let i=0;i<N;i+=2){for(const side of[-1,1]){const RO=side>0?T.railL:T.railR;for(let t=0;t<4;t++){const l=side*(T.hw[i]+RO[i]+3.2+Math.pow(rr(),1.6)*170),startZ=(i<nS||i>N-20)&&Math.abs(l)<75,c=Math.cos(T.psi[i]),s=Math.sin(T.psi[i]),x=T.x[i]+c*l+(rr()-.5)*6,z=T.z[i]-s*l+(rr()-.5)*6;
+  for(let i=0;i<N;i+=2){for(const side of[-1,1]){const RO=side>0?T.railL:T.railR;for(let t=0;t<6;t++){const l=side*(T.hw[i]+RO[i]+5+(t<5?Math.pow(rr(),1.3)*40:40+rr()*90)),startZ=(i<nS||i>N-20)&&Math.abs(l)<75,c=Math.cos(T.psi[i]),s=Math.sin(T.psi[i]),x=T.x[i]+c*l+(rr()-.5)*6,z=T.z[i]-s*l+(rr()-.5)*6;
     const f=T.forest(x,z);if(startZ||rr()>f*.95+.03)continue;if(dRoad(x,z,1)<RO[i]+3)continue;const y=T.terr(x,z),sc_=.8+rr()*.75;(rr()<.72?spr:dec).push([x,y,z,sc_,0,0,rr()*6])}
    if(rr()<.25){const l=side*(T.hw[i]+RO[i]+1.6+rr()*2.5),p=at(i,l,0);bush.push([p[0],p[1]+.25,p[2],.6+rr()*.7,.5+rr()*.4,.6+rr()*.7,rr()*6])}}}
   const tk=M_(0x4a3424);
   instC(g,new THREE.CylinderGeometry(.24,.36,2.6,5),tk,spr.concat(dec).map(p=>[p[0],p[1]+1.3*p[3],p[2],p[3]]));
-  const ti=[0x24583a,0x1f4d34,0x2b6440,0x1b4630];
+  const ti=[0x0b4a1e,0x08401a,0x12572a,0x063816];
   instC(g,new THREE.ConeGeometry(2.6,4.6,7),M_(0xffffff),spr.map(p=>[p[0],p[1]+3.8*p[3],p[2],p[3],p[3],p[3],p[6]]),ti);
   instC(g,new THREE.ConeGeometry(1.9,4,7),M_(0xffffff),spr.map(p=>[p[0],p[1]+6.6*p[3],p[2],p[3],p[3],p[3],p[6]]),ti);
   instC(g,new THREE.ConeGeometry(1.2,3.4,7),M_(0xffffff),spr.map(p=>[p[0],p[1]+9*p[3],p[2],p[3],p[3],p[3],p[6]]),ti);
-  instC(g,new THREE.IcosahedronGeometry(2.8,0),M_(0xffffff),dec.map(p=>[p[0],p[1]+4.8*p[3],p[2],p[3],p[3]*1.05,p[3],p[6]]),[0x4d8b2f,0x5a9636,0x3f7a2c,0x6a9a3a]);
+  instC(g,new THREE.IcosahedronGeometry(2.8,0),M_(0xffffff),dec.map(p=>[p[0],p[1]+4.8*p[3],p[2],p[3],p[3]*1.05,p[3],p[6]]),[0x2f7d16,0x3a8a1c,0x236812,0x46921f]);
   instC(g,new THREE.IcosahedronGeometry(1,0),M_(0xffffff),bush,[0x3f6a30,0x4a7a34,0x355e2c]);
   T._trees=spr.length+dec.length}
  /* ---- signs: corner names, distance boards ---- */
@@ -261,7 +277,15 @@ function buildRing(T){const d=T.d,N=T.N,sc=new THREE.Scene(),C=T._rc||cornersOf(
     if(q%10===0){const l=side*(T.hw[k]+RO[k]+12+rr()*6),p=at(k,l,0);(rr()<.5?tents:vans).push([p[0],p[1],p[2],1,1,1,T.psi[k]+(rr()-.5)*.6])}}}
   if(peeps.length){instC(g,new THREE.CylinderGeometry(.22,.26,1.0,5),M_(0xffffff),peeps,[0xd8392f,0x2f6fd0,0xf2c230,0x2fa05a,0x111111,0xe8e8e8,0xff7a2a]);instC(g,new THREE.SphereGeometry(.2,5,4),M_(0xe3b58d),peeps.map(p=>[p[0],p[1]+.7,p[2],1]))}
   if(tents.length)instC(g,new THREE.ConeGeometry(2.6,2.4,4),M_(0xffffff),tents.map(p=>[p[0],p[1]+1.2,p[2],1,1,1,p[6]+PI/4]),[0xf1f1f1,0xd8392f,0x2c6cd0,0xf2c76b]);
-  if(vans.length){instC(g,new THREE.BoxGeometry(2.3,2.6,6),M_(0xffffff),vans.map(p=>[p[0],p[1]+1.5,p[2],1,1,1,p[6]]),[0xeeeeea,0xd9d2c0,0xc0d0dc]);for(const p of vans)if(P.addPt)P.addPt(T,p[0],p[2],2.4)}}
+  if(vans.length){/* camper vans: living box, low cab, dark window band, wheels (parts offset in each van's own frame) */
+   const part=(dx,dy,dz)=>vans.map(p=>{const c=Math.cos(p[6]),s=Math.sin(p[6]);return[p[0]+c*dx+s*dz,p[1]+dy,p[2]-s*dx+c*dz,1,1,1,p[6]]});
+   instC(g,new THREE.BoxGeometry(2.3,2.3,4.4),M_(0xffffff),part(0,1.65,-.7));
+   instC(g,new THREE.BoxGeometry(2.2,1.3,1.5),M_(0xffffff),part(0,1.15,2.3));
+   instC(g,new THREE.BoxGeometry(2.34,.5,3.6),M_(0x2a3036),part(0,2.05,-.5));
+   instC(g,new THREE.BoxGeometry(2.24,.55,.06),M_(0x2a3036),part(0,1.45,3.05));
+   instC(g,new THREE.BoxGeometry(2.36,.18,6.1),M_(0x8d949c),part(0,.86,0));
+   const wg=new THREE.CylinderGeometry(.38,.38,.28,10);wg.rotateZ(PI/2);for(const[dx,dz]of[[-1.05,2],[1.05,2],[-1.05,-1.8],[1.05,-1.8]])instC(g,wg,M_(0x16181b),part(dx,.4,dz));
+   for(const p of vans)if(P.addPt)P.addPt(T,p[0],p[2],2.4)}}
  /* ---- Nurburg castle ---- */
  if(T.castle){const{x,z}=T.castle,y=T.terr(x,z),cg=new THREE.Group();cg.position.set(x,y,z);g.add(cg);const st=M_(0x9a9182),rf=M_(0x5a4a40);
   const keep=new THREE.Mesh(new THREE.CylinderGeometry(6,7,26,10),st);keep.position.y=12;cg.add(keep);const kc=new THREE.Mesh(new THREE.CylinderGeometry(7,6.6,2,10),st);kc.position.y=25.5;cg.add(kc);
@@ -275,7 +299,14 @@ function buildRing(T){const d=T.d,N=T.N,sc=new THREE.Scene(),C=T._rc||cornersOf(
  tiles.update(T.x[0],T.z[0],1e9);
  return sc}
 
-const bwR=buildWorld;buildWorld=T=>T.d&&T.d.ring?buildRing(T):bwR(T);
+const bwR=buildWorld;/* the Eifel forest should look lush: richer colour grade on this track only (every time of day) */
+if(P.applyTod){const at0=P.applyTod;P.applyTod=(sc,T,key)=>{const r=at0(sc,T,key);if(T&&T.d&&T.d.ring&&window.TODU)window.TODU.sat.value*=1.45;return r}}
+buildWorld=T=>T.d&&T.d.ring?buildRing(T):bwR(T);
+/* running along the very edge (gutter, kerb) for a long way must not count as a shortcut: on this track the
+   last-safe point also follows the car while it stays right beside the road */
+{const st0=stepCar;stepCar=(c,dt)=>{const T=RACE&&RACE.T;if(T&&T.d&&T.d.ring&&!(c.exp>0)&&c.safeIdx!=null&&c.idx!=null){const N=T.N,k=((c.idx%N)+N)%N;
+  if(Math.hypot(c.x-T.x[k],c.z-T.z[k])<T.hw[k]+4){let d=k-c.safeIdx;d=((d+N/2)%N+N)%N-N/2;if(d>0&&d<=40){c.safeIdx=k;c.safeUnw+=d}}}
+ return st0(c,dt)}}
 
 /* every render of a ring scene: the panorama rides with the camera at eye height, and terrain tiles are streamed in around it (a few ms per frame) */
 {const r0=R.render.bind(R),cp=new THREE.Vector3();

@@ -1,0 +1,1 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",900],["shot","np1"],["wait",1200],["js","(()=>{const e=document.getElementById('ptNowPlaying');return e?e.getBoundingClientRect().toJSON():'none'})()"],["shot","np2"]]
