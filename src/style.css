@@ -921,3 +921,8 @@ b,strong,h1,h2,h3,button,.btn,.gtab,.gti b,.hdr h2,#gtBar .gtl,.gtp,.crbox b,.qc
 #s8show.gtb.mkc .gtstrip{justify-content:safe center;height:172px;gap:10px}
 .gtstrip .gc{flex:1 0 196px;max-width:250px}
 .gtstrip .gc b{font-size:11px}.gtstrip .gc small{font-size:11px}
+
+/* strip: left aligned again, same card size, room for the raised accent stroke */
+#s8show.gtb.mkc .gtstrip{justify-content:flex-start;height:190px;padding-top:34px;bottom:96px}
+.gtstrip .gc{flex:0 0 204px;max-width:204px}
+.gtstrip .gc.sel{transform:translateY(-8px)}
