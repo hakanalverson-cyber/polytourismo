@@ -103,7 +103,7 @@ root.innerHTML=`
 <div class="foot8"><button class="btn" data-a="back"><span>&lt; Back</span></button><div class="hint8">Podium to clear an event &middot; final needs 3 events cleared</div><span style="width:90px"></span></div></section>
 
 <section class="v8s clear" id="s8show"><div class="hdr"><h2 id="shTitle">GARAGE</h2><small id="shSub"></small><button class="btn" id="shCars"><span>All cars</span></button><div class="sp"></div>${crHTML}</div>
-<div class="lst" id="shList"></div><div class="stat" id="shStat"></div><div class="drag">Drag to rotate</div>
+<div class="gtmk" id="shMk"></div><div class="lst" id="shList"></div><div class="stat" id="shStat"></div><div class="drag">Drag to rotate</div>
 <div class="bot"><button class="btn" data-a="back"><span>&lt; Back</span></button><div class="gnav" id="shNav"><button class="btn" id="shPrev"><span>&lsaquo;</span></button><em id="shPos"></em><button class="btn" id="shNext"><span>&rsaquo;</span></button></div><div class="ptabs" id="shTabs"></div><div class="sw" id="shSw"></div><button class="btn" id="shLv" style="display:none"><span>Livery</span></button><div style="flex:1"></div><button class="btn go" id="shAct"><span>Select</span></button></div><div class="flash8" id="shFlash"></div><div class="shfade" id="shFade"></div></section>
 
 <section class="v8s" id="s8res"><div class="box" id="resBox"></div></section>`;
@@ -134,11 +134,12 @@ const RACE_RET=()=>{const c=P.lastCfg;return c&&c.mode==='free'?'s8cards':c&&c.e
 toSetup=()=>{if(scr==='menu'||scr==='setup'){openCards();return}if(RACE)P.cleanupRace();show(RACE_RET())};
 function openCards(){show('s8cards');setFoc(foc)}
 let foc=0;
-function setFoc(i){const cs=$$('#s8cards .card',root);foc=(i+cs.length)%cs.length;cs.forEach((c,k)=>c.classList.toggle('foc',k===foc))}
-$$('#s8cards .card',root).forEach((c,k)=>{c.onmouseenter=()=>setFoc(k);c.onclick=()=>pickMode(c.dataset.m)});
-let qf=0;const setQf=i=>{const cs=$$('#s8quick .qc',root);qf=(i+cs.length)%cs.length;cs.forEach((c,k)=>c.classList.toggle('foc',k===qf))};
+let kbMode=false;addEventListener('keydown',()=>{kbMode=true},true);addEventListener('mousemove',()=>{if(kbMode){kbMode=false;$$('.card.foc,.qc.foc',root).forEach(c=>c.classList.remove('foc'))}},true);
+function setFoc(i,hv){const cs=$$('#s8cards .card',root);foc=(i+cs.length)%cs.length;cs.forEach((c,k)=>c.classList.toggle('foc',(kbMode||hv)&&k===foc))}
+$$('#s8cards .card',root).forEach((c,k)=>{c.onmouseenter=()=>setFoc(k,1);c.onclick=()=>pickMode(c.dataset.m)});
+let qf=0;const setQf=(i,hv)=>{const cs=$$('#s8quick .qc',root);qf=(i+cs.length)%cs.length;cs.forEach((c,k)=>c.classList.toggle('foc',(kbMode||hv)&&k===qf))};
 function quickPick(c){P.sfx&&P.sfx('select');if(c.dataset.p)ST.players=+c.dataset.p;pickMode(c.dataset.m);ST.ret='s8quick'}
-$$('#s8quick .qc',root).forEach((c,k)=>{c.onmouseenter=()=>setQf(k);c.onclick=()=>quickPick(c)});
+$$('#s8quick .qc',root).forEach((c,k)=>{c.onmouseenter=()=>setQf(k,1);c.onclick=()=>quickPick(c)});
 const barnIcon=d=>{const b=P.BARNS&&P.BARNS[d.name];if(!b||d.gravel)return '';const f=P.barnFound&&P.barnFound(b.car);return `<span class="bnh ${f?'got':''}" title="${f?'Barn find collected':'Barn find hidden here'}"><svg viewBox="0 0 16 16" width="15" height="15" shape-rendering="crispEdges"><path d="M8 1.5 1.5 7.5h2V14h3.6v-3.8h1.8V14h3.6V7.5h2z" fill="currentColor"/></svg></span>`};const isStg=i=>P.STAGES.indexOf(i)>=0,isTrk=i=>(P.TRK_TRACKS||[]).indexOf(i)>=0,okTrack=(m,i)=>m==='rally'?isStg(i):isTrk(i),firstTrack=m=>m==='rally'?P.STAGES[0]:P.TRK_TRACKS[0],isRL=m=>m==='rally'||m==='track';
 function pickMode(m){if(m==='quick'){P.sfx&&P.sfx('select');show('s8quick');setQf(0)}else{ST.mode=m;P._to=m==='track';P._ro=m==='rally';if(isRL(m))ST.rstep=1;if(!okTrack(m,ST.track))ST.track=firstTrack(m);ST.ret='s8cards';if(m==='rally'&&P.rallyIntro){P.rallyIntro(()=>{renderSetup();show('s8setup');if(P.prewarmStages)setTimeout(P.prewarmStages,1500)},ST.track)}else{renderSetup();show('s8setup')}}}
 
@@ -166,22 +167,23 @@ const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="current
  const dd=document.createElement('div');dd.id='gtDrop';
  dd.innerHTML=SUBS.map((u,i)=>'<button class="gti" data-i="'+i+'">'+ic(u.i)+'<span><b>'+u.n+'</b><em>'+u.d+'</em></span></button>').join('');
  menu.append(bar,dd);
- let mf=0,md=0;
+ let mf=0,md=-1,act=false;
  const tabs=()=>[...bar.querySelectorAll('.gtt .gtab')],items=()=>[...dd.children];
- const paint=()=>{tabs().forEach((t,i)=>t.classList.toggle('foc',i===mf));dd.classList.toggle('on',mf===0);const l=dd.children;[...l].forEach((e,i)=>e.classList.toggle('foc',i===md));const r=tabs()[0].getBoundingClientRect();if(r.width)dd.style.left=r.left+'px'};
+ const paint=()=>{tabs().forEach((t,i)=>t.classList.toggle('foc',act&&i===mf));dd.classList.toggle('on',act&&mf===0);const l=dd.children;[...l].forEach((e,i)=>e.classList.toggle('foc',act&&i===md));const r=tabs()[0].getBoundingClientRect();if(r.width)dd.style.left=r.left+'px'};
  const goMenu=m=>{pickMode(m);ST.ret='menu'};
  const subGo=i=>{const u=SUBS[i];P.sfx&&P.sfx('select');if(u.p)ST.players=u.p;goMenu(u.m)};
- const tabGo=i=>{const k=TABS[i].k;if(k==='quick'){md=Math.max(0,md);paint();return}P.sfx&&P.sfx('select');if(k==='rally'||k==='track')goMenu(k);else openShow(k,{player:0,cap:null,ret:'menu'})};
- tabs().forEach((t,i)=>{t.onmouseenter=()=>{mf=i;paint()};t.onclick=()=>tabGo(i)});
- items().forEach((e,i)=>{e.onmouseenter=()=>{md=i;paint()};e.onclick=()=>subGo(i)});
+ const tabGo=i=>{const k=TABS[i].k;if(k==='quick'){act=true;md=Math.max(0,md);paint();return}P.sfx&&P.sfx('select');if(k==='rally'||k==='track')goMenu(k);else openShow(k,{player:0,cap:null,ret:'menu'})};
+ tabs().forEach((t,i)=>{t.onmouseenter=()=>{act=true;mf=i;md=-1;paint()};t.onclick=()=>tabGo(i)});
+ const leave=e=>{const to=e.relatedTarget;if(to&&(bar.contains(to)||dd.contains(to)))return;act=false;md=-1;paint()};bar.addEventListener('mouseleave',leave);dd.addEventListener('mouseleave',leave);
+ items().forEach((e,i)=>{e.onmouseenter=()=>{act=true;md=i;paint()};e.onclick=()=>subGo(i)});
  $('gtSet').onclick=()=>bt[1].click();$('gtLog').onclick=()=>P.openUpdateLog&&P.openUpdateLog();
  const m0=P.menuStats;P.menuStats=()=>{m0();const b=$('gtBal');if(b)b.textContent=fmtCr(P.SV().cr);paint()};P.menuStats();
- P.menuKey=e=>{const c=e.code;
+ P.menuKey=e=>{const c=e.code;if(/^(Arrow|Key[WASD]|Enter|Space)/.test(c))act=true;
   if(c==='ArrowRight'||c==='KeyD'){mf=(mf+1)%TABS.length;paint();return true}
   if(c==='ArrowLeft'||c==='KeyA'){mf=(mf+TABS.length-1)%TABS.length;paint();return true}
-  if(c==='ArrowDown'||c==='KeyS'){if(mf===0){md=Math.min(SUBS.length-1,md+1);paint()}return true}
+  if(c==='ArrowDown'||c==='KeyS'){if(mf===0){md=Math.min(SUBS.length-1,md+1);paint()}else paint();return true}
   if(c==='ArrowUp'||c==='KeyW'){if(mf===0){md=Math.max(0,md-1);paint()}return true}
-  if(c==='Enter'||c==='Space'){if(mf===0)subGo(md);else tabGo(mf);return true}
+  if(c==='Enter'||c==='Space'){if(mf===0&&md>=0)subGo(md);else tabGo(mf);return true}
   return false};
  paint();addEventListener('resize',paint)})();
 
@@ -416,8 +418,8 @@ P.makePost=makePost;P.sizeNative=sizeStudio;function studioOff(){if(!STU.on)retu
 const rs0=rs;rs=()=>{if(STU.on)sizeStudio();else rs0()};
 function drawShow(dt){studioOn();ensureStudio();if(P.studioDress)P.studioDress(S,SR);const car=BYID[SR.id],idx=P.modelOf(SR.id,SR.alt);if(S.idx!==idx&&CAR_MODELS[idx])setStudioCar(idx);
  if(P.LV)P.LV.studio(S,SR);
- {const gtb=SR.kind==='brand';S.sc.background.setHex(gtb?0x000000:0x0b0d11);S.wall.visible=!gtb;S.wl2.visible=S.wl3.visible=!gtb;S.floor.material.color.setHex(gtb?0x050607:0x16191f);S.ring&&(S.ring.visible=!gtb)}
- {const gtb=SR.kind==='brand';S.sc.background.setHex(gtb?0x000000:0x0b0d11);S.wall.visible=!gtb;S.wl2.visible=S.wl3.visible=!gtb;S.floor.material.color.setHex(gtb?0x050607:0x16191f);S.ring&&(S.ring.visible=!gtb)}
+ {const gtb=SR.kind==='brand';S.sc.background.setHex(gtb?0x000000:0x0b0d11);S.wall.visible=!gtb;S.wl2.visible=S.wl3.visible=!gtb;S.floor.material.color.setHex(gtb?0x020203:0x16191f);S.ring&&(S.ring.visible=!gtb)}
+ {const gtb=SR.kind==='brand';S.sc.background.setHex(gtb?0x000000:0x0b0d11);S.wall.visible=!gtb;S.wl2.visible=S.wl3.visible=!gtb;S.floor.material.color.setHex(gtb?0x020203:0x16191f);S.ring&&(S.ring.visible=!gtb)}
  if(S.rev)stepReveal(P.revFix!=null?0:dt);else{SR.ang+=dt*(SR.drag?0:.35)+SR.vel*dt;SR.vel*=Math.pow(.05,dt);S.turn.rotation.y=SR.ang}
  const W=R.domElement.width,H=R.domElement.height;S.cam.aspect=W/H;const ca=.55+Math.sin(T0*.17)*.12;{const dz=CARDS()?8.4:10.2;S.cam.position.set(Math.sin(ca)*dz,(CARDS()?2.2:2.5)+Math.sin(T0*.23)*.15,Math.cos(ca)*dz)};S.cam.lookAt(SR.kind==='brand'?1.5:0,.75,0);
  if(P.homeCamOn&&P.homeCam&&!P.hcam){const h=P.homeCam(T0);S.cam.position.set(...h.p);S.cam.lookAt(...h.l)}
@@ -486,7 +488,7 @@ const barHTML=b=>{const pc=Math.round((b[3]-1)*100),w=Math.round(b[1]*100),w0=Ma
 function tuneHTML(car){const t=P.tuneGet(car.id,SR.alt);
  return `<div class="tune"><div class="th"><b>TUNING</b><button class="btn sm" id="tuReset"><span>Reset</span></button></div>`+P.TUNE.map(d=>{const v=t[d.k],pips=[];for(let i=-d.r;i<=d.r;i++)pips.push(`<i class="${i===0?'ctr ':''}${(v>0&&i>0&&i<=v)||(v<0&&i<0&&i>=v)?'on':''}"></i>`);
   return `<div class="tr"><span>${d.n}</span><button class="btn sm" data-k="${d.k}" data-d="-1"><span>&lsaquo;</span></button><div class="pp5">${pips.join('')}</div><button class="btn sm" data-k="${d.k}" data-d="1"><span>&rsaquo;</span></button><em>${v===0?'STOCK':v<0?d.lo:d.hi}${v&&d.r>1?' '+Math.abs(v):''}</em></div>`}).join('')+`<div class="tn">${P._tuneMsg?'<b style="color:var(--ac2)">'+P._tuneMsg+'</b><br>':''}Each step away from stock costs ${fmtCr(P.tuneBase(car.id))} x level (reset is free). Applies to races &amp; events; Time Attack runs stock.</div></div>`}
-function renderShow(){SR.alt=0;{const sh=$('s8show');sh.classList.toggle('gtb',SR.kind==='brand');if(SR.kind!=='brand')sh.classList.remove('lo')}{const sh=$('s8show');sh.classList.toggle('gtb',SR.kind==='brand');if(SR.kind!=='brand')sh.classList.remove('lo')}const kind=SR.kind,sv=P.SV(),list=showList(),car=BYID[SR.id],owned=P.owns(car.id,0),ownAlt=P.owns(car.id,1);
+function renderShow(){SR.alt=0;try{const c0=BYID[SR.id],mk=$('shMk');if(mk&&c0){const w=c0.name.split(' ');mk.innerHTML='<b>'+w[0]+'</b><span>'+w.slice(1).join(' ')+'</span><div class="cl"><i>CLASS '+c0.cls+'</i><i>'+(c0.type||'')+'</i></div>'}}catch(e){}{const sh=$('s8show');sh.classList.toggle('gtb',SR.kind==='brand');if(SR.kind!=='brand')sh.classList.remove('lo')}{const sh=$('s8show');sh.classList.toggle('gtb',SR.kind==='brand');if(SR.kind!=='brand')sh.classList.remove('lo')}const kind=SR.kind,sv=P.SV(),list=showList(),car=BYID[SR.id],owned=P.owns(car.id,0),ownAlt=P.owns(car.id,1);
  $('shTitle').innerHTML=kind==='garage'?(SR.rally?'RALLY <em>GARAGE</em>':SR.trk?'TRACK <em>GARAGE</em>':'YOUR <em>GARAGE</em>'):'BRAND <em>CENTRAL</em>';$('shSub').textContent=kind==='garage'?(SR.flow?(D[ST.track].name+' · '+(Math.round(tr(ST.track).L)*(ST.rlaps||1)/1000).toFixed(1)+' km · '+(ST.rlaps||1)+' lap'+((ST.rlaps||1)>1?'s':'')+' · '+((P.WX[ST.wx||'clear']||{n:'CLEAR'}).n)+' · '+((P.TOD[effTod()]||{n:''}).n)+' · '+ST.players+' driver'+(ST.players>1?'s':'')):SR.trk?'Circuit cars only / free to use':SR.rally?'Rally-spec all-wheel-drive cars with gravel tyres / free to use':(SR.cap?'Class '+SR.cap+' and below':'')):'Buy cars';
  const RG=(SR.rally||SR.trk)&&kind==='garage',dc=c=>RG?(SR.trk?c.tdiv:c.rdiv):c.cat,cats=RG?(SR.trk?['PRO','CLUB']:['WRC','CASUAL']):['ALL',...(P.CATS||[]),...(kind==='brand'?['OWNED']:[])],cnt=k=>list.filter(c=>k==='ALL'||(k==='OWNED'?(sv.owned[c.id]||0)>0:dc(c)===k)).length;
  if(!cats.includes(SR.cat))SR.cat=cats[0];

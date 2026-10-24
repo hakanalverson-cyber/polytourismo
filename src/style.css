@@ -872,3 +872,17 @@ b,strong,h1,h2,h3,button,.btn,.gtab,.gti b,.hdr h2,#gtBar .gtl,.gtp,.crbox b,.qc
 #s8show.gtb #shPrev{left:3.4vw}#s8show.gtb #shNext{left:calc(66vw - 60px)}
 #s8show.gtb .bot{left:3.4vw;right:3.4vw;bottom:3.4vh}
 #s8show.gtb #shAct{min-width:240px;height:54px;font-size:15px;letter-spacing:.14em!important}
+
+/* no gradients on the sides; panels are flat */
+.lst,.stat{-webkit-mask-image:none!important;mask-image:none!important}
+#s8show.gtb .stat{background:#06080bf2!important;border-left:1px solid #ffffff1c!important;padding-left:2.2vw!important;width:min(400px,32vw)!important}
+#s8show.gtb::before{background:linear-gradient(180deg,#000000a0 0%,transparent 12%,transparent 86%,#000000a0 100%)!important}
+.gtmk{display:none}
+#s8show.gtb .gtmk{display:block;position:absolute;left:3.4vw;top:104px;z-index:2;pointer-events:none}
+.gtmk b{display:block;font-size:clamp(30px,5vw,64px);letter-spacing:.04em!important;font-weight:700!important;color:#fff;text-transform:uppercase;line-height:1}
+.gtmk span{display:block;margin-top:10px;font-size:15px;color:#9fb0ba;letter-spacing:.14em!important;text-transform:uppercase}
+.gtmk .cl{display:flex;gap:8px;margin-top:18px}.gtmk .cl i{font-style:normal;font-size:10px;letter-spacing:.2em!important;padding:6px 10px;border:1px solid #ffffff33;color:#c4d1d8;text-transform:uppercase}
+#menu #gtBar{background:#0a0d11f2}
+.mfoot{background:#0a0d11f2!important}
+#gtBar .gtt .gtab{min-width:0;padding:0 24px}
+#gtBar .gtab:after{left:0;right:0}
