@@ -966,3 +966,52 @@ b,strong,h1,h2,h3,button,.btn,.gtab,.gti b,.hdr h2,#gtBar .gtl,.gtp,.crbox b,.qc
 @media(max-width:900px){.rsgrid{grid-template-columns:1fr}.rsR{order:-1}}
 /* drop-down: no side border so the yellow bar sits flush with the tab's left edge */
 #gtDrop{border-left:0!important;border-right:0!important;box-shadow:inset -1px 0 #ffffff1c,0 18px 40px #0008}
+
+/* ===== card look (garage-style): dark panel, framed picture, white outline when selected ===== */
+.gtstrip .gc{background:#10151af0!important;border:1px solid #ffffff1c!important;border-left:1px solid #ffffff1c!important;border-top:1px solid #ffffff1c!important;padding:8px 8px 10px!important;gap:6px!important;box-sizing:border-box}
+.gtstrip .gc .th{background:repeating-linear-gradient(90deg,#ffffff05 0 2px,transparent 2px 4px),radial-gradient(ellipse at 50% 80%,#566271 0%,#2c343e 55%,#1a2027 100%)}
+.gtstrip .gc b{font-size:12px!important;color:#fff;letter-spacing:.04em}
+.gtstrip .gc small{font-size:10px!important;color:#9aa8b1}
+.gtstrip .gc .cls{display:inline-block;min-width:16px;text-align:center;padding:1px 4px;font-weight:700;font-size:10px;color:#0a0e12;background:#d9dee2}
+.gtstrip .gc:hover{background:#18202af0!important;border-color:#ffffff44!important}
+.gtstrip .gc.sel{transform:none!important;background:#18202af5!important;border:1px solid #ffffff1c!important;outline:2px solid #fff;outline-offset:-1px}
+.gtstrip .gc.sel b{color:#fff}
+.gtstrip .gc.lock b,.gtstrip .gc.lock small{color:#ffffff80}
+.gtstrip .gc.lock .th{background:radial-gradient(ellipse at 50% 80%,#4a5460 0%,#262d36 60%,#161b21 100%)}
+#s8show.gtb.mkc .gtstrip{padding-top:10px!important;height:176px!important}
+/* quickplay drop-down: same card treatment */
+#gtDrop{padding:8px;gap:6px;background:#0a0e12f2}
+.gti{border:1px solid #ffffff1c!important;background:#ffffff0b!important;border-bottom:1px solid #ffffff1c!important;min-height:56px!important;padding:0 16px!important}
+.gti.foc{background:#ffffff14!important;outline:2px solid #fff;outline-offset:-1px;min-height:68px!important;color:#fff}
+.gti.foc:before{display:none!important}
+.gti .mi{width:24px;height:24px}
+
+/* ===== card look (garage-style): dark panel, framed picture, white outline when selected ===== */
+.gtstrip .gc{background:#10151af0!important;border:1px solid #ffffff1c!important;padding:8px 8px 10px!important;gap:6px!important;box-sizing:border-box}
+.gtstrip .gc .th{background:repeating-linear-gradient(90deg,#ffffff05 0 2px,transparent 2px 4px),radial-gradient(ellipse at 50% 80%,#566271 0%,#2c343e 55%,#1a2027 100%)}
+.gtstrip .gc b{font-size:12px!important;color:#fff;letter-spacing:.04em}
+.gtstrip .gc small{font-size:10px!important;color:#9aa8b1}
+.gtstrip .gc:hover{background:#18202af0!important;border-color:#ffffff44!important}
+.gtstrip .gc.sel{transform:none!important;background:#18202af5!important;border:1px solid #ffffff1c!important;outline:2px solid #fff;outline-offset:-1px}
+.gtstrip .gc.sel b{color:#fff}
+.gtstrip .gc.lock b,.gtstrip .gc.lock small{color:#ffffff80}
+#s8show.gtb.mkc .gtstrip{padding-top:10px!important;height:176px!important}
+#gtDrop{padding:8px;gap:6px;background:#0a0e12f2}
+.gti{border:1px solid #ffffff1c!important;background:#ffffff0b!important;min-height:56px!important;padding:0 16px!important}
+.gti.foc{background:#ffffff14!important;outline:2px solid #fff;outline-offset:-1px;min-height:68px!important;color:#fff}
+.gti.foc:before{display:none!important}
+
+/* ===== card look (garage-style): dark panel, framed picture, white outline when selected ===== */
+.gtstrip .gc{background:#10151af0!important;border:1px solid #ffffff1c!important;padding:8px 8px 10px!important;gap:6px!important;box-sizing:border-box}
+.gtstrip .gc .th{background:repeating-linear-gradient(90deg,#ffffff05 0 2px,transparent 2px 4px),radial-gradient(ellipse at 50% 80%,#566271 0%,#2c343e 55%,#1a2027 100%)}
+.gtstrip .gc b{font-size:12px!important;color:#fff;letter-spacing:.04em}
+.gtstrip .gc small{font-size:10px!important;color:#9aa8b1}
+.gtstrip .gc:hover{background:#18202af0!important;border-color:#ffffff44!important}
+.gtstrip .gc.sel{transform:none!important;background:#18202af5!important;border:1px solid #ffffff1c!important;outline:2px solid #fff;outline-offset:-1px}
+.gtstrip .gc.sel b{color:#fff}
+.gtstrip .gc.lock b,.gtstrip .gc.lock small{color:#ffffff80}
+#s8show.gtb.mkc .gtstrip{padding-top:10px!important;height:176px!important}
+#gtDrop{padding:8px;gap:6px;background:#0a0e12f2}
+.gti{border:1px solid #ffffff1c!important;background:#ffffff0b!important;min-height:56px!important;padding:0 16px!important}
+.gti.foc{background:#ffffff14!important;outline:2px solid #fff;outline-offset:-1px;min-height:68px!important;color:#fff}
+.gti.foc:before{display:none!important}

@@ -153,7 +153,7 @@ const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="current
  const lg=$('logo');if(lg)lg.innerHTML='POLY<br><span>GT</span><small>GRAN TURISMO STYLE RACING</small>';
  const mt=document.querySelector('.menuTop');if(mt){mt.querySelector('.brandMark').textContent='POLY GT';const sm=mt.querySelector('small');if(sm)sm.textContent='V9'}
  const f=document.createElement('div');f.className='mfoot';$('menu').appendChild(f);
- P.menuStats=()=>{const sv=P.SV();f.innerHTML='<span>Balance <b>'+fmtCr(sv.cr)+'</b></span><span>Career <b>'+P.RANKS[P.careerRank()].n+'</b></span><span>Races <b>'+sv.stats.races+'</b></span><span>Wins <b>'+sv.stats.wins+'</b></span>'};
+ P.menuStats=()=>{const sv=P.SV();f.innerHTML='<span>Cars owned <b>'+Object.keys(sv.owned||{}).filter(k=>sv.owned[k]>0).length+'</b></span><span>Career <b>'+P.RANKS[P.careerRank()].n+'</b></span><span>Races <b>'+sv.stats.races+'</b></span><span>Wins <b>'+sv.stats.wins+'</b></span>'};
  P.menuStats()
  /* ---- GT-style top bar: tabs along the top, a drop-down list under the focused tab ---- */
  const menu=$('menu');
