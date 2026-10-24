@@ -44,7 +44,7 @@ const HERDS={
  'Terrace Run':[['Alpaca',2,3,4],['Donkey',1,2,2],['Stag',1,2,2]],
  'Ashfall Stage':[['Deer',2,2,3],['Wolf',1,2,2],['Fox',1,1,2]],
  'Autumn Ridge':[['Deer',1,2,3],['Stag',1,2,2],['Fox',1,1,2],['Horse',1,2,3]],
- 'Road Atlanta':[['Horse',1,2,3],['WhiteHorse',1,2,2],['Cow',2,3,4]]};
+ 'Imola':[['Horse',1,2,3],['Cow',1,2,3]],'Road Atlanta':[['Horse',1,2,3],['WhiteHorse',1,2,2],['Cow',2,3,4]]};
 let AN=null;/* animals of the race scene being played */
 const rng=s=>{let a=s>>>0||1;return()=>((a=Math.imul(a^a>>>15,a|1),a^=a+Math.imul(a^a>>>7,a|61),((a^a>>>14)>>>0)/4294967296))};
 function spawn(sc,T){AN=null;const plan=HERDS[T.d&&T.d.name];if(!plan||!P.animalsReady||(window.PTO&&window.PTO.animals===false))return;

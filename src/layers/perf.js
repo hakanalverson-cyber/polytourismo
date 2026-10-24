@@ -29,7 +29,7 @@ let fe=null,n=0,t0=performance.now(),worst=0,lt=t0;
 
 /* ---- spatial chunking: every instanced prop mesh (trees, rocks, buildings...) was drawn in full, twice (camera + shadow map), every frame
    because its single bounding sphere could not be culled. Split them into ~100 m cells so the frustum (and the shadow frustum) cull them. ---- */
-const CELL=160;
+const CELL=160,LOD1=150,LOD2=280;
 function chunkScene(sc){const list=[];sc.traverse(o=>{if(o.isInstancedMesh&&!o.userData.noChunk&&o.count*((o.geometry.index?o.geometry.index.count:o.geometry.attributes.position.count)/3)>5000)list.push(o)});
  const m=new THREE.Matrix4(),pv=new THREE.Vector3(),sv=new THREE.Vector3(),col=new THREE.Color(),zero=new THREE.Vector3();
  for(const o of list){const geo=o.geometry;if(!geo.boundingSphere)geo.computeBoundingSphere();const gc=geo.boundingSphere.center,gr=geo.boundingSphere.radius,cells=new Map(),ic=o.instanceColor?o.instanceColor.array:null;
@@ -37,15 +37,22 @@ function chunkScene(sc){const list=[];sc.traverse(o=>{if(o.isInstancedMesh&&!o.u
    const k=Math.floor(e[12]/CELL)+','+Math.floor(e[14]/CELL);let c=cells.get(k);if(!c){c={ids:[]};cells.set(k,c)}c.ids.push(i)}
   if(cells.size<2)continue;
   const par=o.parent;if(!par)continue;
-  for(const c of cells.values()){const n=c.ids.length,im=new THREE.InstancedMesh(null,o.material,n);
-   let cx=0,cy=0,cz=0;const ctr=[];
-   c.ids.forEach((id,j)=>{o.getMatrixAt(id,m);im.setMatrixAt(j,m);if(ic){col.setRGB(ic[id*3],ic[id*3+1],ic[id*3+2]);im.setColorAt(j,col)}
+  const mk=(ids,gk,lo,hi)=>{const n=ids.length,im=new THREE.InstancedMesh(null,o.material,n);
+   let cx=0,cy=0,cz=0;const ctr=[],mm=new THREE.Matrix4();
+   ids.forEach((id,j)=>{o.getMatrixAt(id,m);if(gk!==1){const e=m.elements;for(let q=0;q<12;q++)if(q%4!==3)e[q]*=gk;/* thinned copies stand a little bigger so the distant treeline keeps its mass */}
+    im.setMatrixAt(j,m);if(ic){col.setRGB(ic[id*3],ic[id*3+1],ic[id*3+2]);im.setColorAt(j,col)}
     pv.copy(gc).applyMatrix4(m);const sx=Math.hypot(m.elements[0],m.elements[1],m.elements[2]),sy=Math.hypot(m.elements[4],m.elements[5],m.elements[6]),sz=Math.hypot(m.elements[8],m.elements[9],m.elements[10]);
     ctr.push([pv.x,pv.y,pv.z,gr*Math.max(sx,sy,sz)]);cx+=pv.x;cy+=pv.y;cz+=pv.z});
    cx/=n;cy/=n;cz/=n;let rad=0;for(const q of ctr)rad=Math.max(rad,Math.hypot(q[0]-cx,q[1]-cy,q[2]-cz)+q[3]);
    const g=new THREE.BufferGeometry();if(geo.index)g.setIndex(geo.index);for(const nme in geo.attributes)g.setAttribute(nme,geo.attributes[nme]);g.groups=geo.groups.slice();g.boundingSphere=new THREE.Sphere(new THREE.Vector3(cx,cy,cz),rad);g.boundingBox=geo.boundingBox;
    im.geometry=g;im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true;
-   im.position.copy(o.position);im.quaternion.copy(o.quaternion);im.scale.copy(o.scale);im.castShadow=o.castShadow;im.receiveShadow=o.receiveShadow;im.renderOrder=o.renderOrder;im.name=o.name;im.userData=Object.assign({},o.userData);im.layers.mask=o.layers.mask;im.frustumCulled=true;if(o.material.fog!==false)im.userData.fogCull=1;par.add(im)}
+   im.position.copy(o.position);im.quaternion.copy(o.quaternion);im.scale.copy(o.scale);im.castShadow=o.castShadow&&lo<1;im.receiveShadow=o.receiveShadow;im.renderOrder=o.renderOrder;im.name=o.name;im.userData=Object.assign({},o.userData);im.layers.mask=o.layers.mask;im.frustumCulled=true;if(o.material.fog!==false)im.userData.fogCull=1;
+   if(hi<1e9||lo>0){im.userData.lodLo=lo;im.userData.lodHi=hi;im.userData.fogCull=1}
+   par.add(im)};
+  for(const c of cells.values()){const ids=c.ids,n=ids.length;
+   /* dense cells get distance LODs: full density up close, every 2nd / 4th instance (slightly larger) farther out; sparse cells and fog-free meshes stay whole */
+   if(n>=6&&o.material.fog!==false&&!P.noLod){mk(ids,1,0,LOD1);mk(ids.filter((_,j)=>j%2===0),1.18,LOD1,LOD2);mk(ids.filter((_,j)=>j%4===0),1.38,LOD2,1e9)}
+   else mk(ids,1,0,1e9)}
   par.remove(o)}}
 
 /* big static meshes (terrain, road ribbons) are single objects too: cut them into tiles so only the visible tiles are drawn, and only the few tiles
@@ -72,7 +79,7 @@ const _c=new THREE.Vector3(),_cp=new THREE.Vector3();
 {const r0=R.render.bind(R),cache=new WeakMap();
  R.render=function(scene,cam){if(scene&&scene.isScene&&scene.fog&&cam&&cam.isCamera){let L=cache.get(scene);if(!L||L.n!==scene.children.length){L=[];scene.traverse(o=>{if(o.userData&&o.userData.fogCull&&o.geometry)L.push(o)});L.n=scene.children.length;cache.set(scene,L)}
    const far=scene.fog.far*1.03;cam.getWorldPosition(_cp);
-   for(const o of L){const bs=o.geometry.boundingSphere;if(!bs)continue;_c.copy(bs.center);if(o.parent&&o.parent.matrixWorld)_c.applyMatrix4(o.matrixWorld);const sc_=Math.max(o.scale.x,o.scale.y,o.scale.z);o.visible=_c.distanceTo(_cp)-bs.radius*sc_<far}}
+   for(const o of L){const bs=o.geometry.boundingSphere;if(!bs)continue;_c.copy(bs.center);if(o.parent&&o.parent.matrixWorld)_c.applyMatrix4(o.matrixWorld);const sc_=Math.max(o.scale.x,o.scale.y,o.scale.z);const dn=Math.max(0,_c.distanceTo(_cp)-bs.radius*sc_);let vis=dn<far;if(vis&&o.userData.lodHi!==undefined)vis=dn>=o.userData.lodLo&&dn<o.userData.lodHi;o.visible=vis}}
   return r0(scene,cam)}}
 
 /* adaptive resolution: if the game can't hold ~55 fps the render size eases down (never below 62%) and creeps back up when there is headroom,

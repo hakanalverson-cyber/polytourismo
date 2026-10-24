@@ -3,6 +3,10 @@
 'use strict';
 const P=window.PT8;
 P.LOG=[
+ {v:'0.07',d:'Oct 24, 2026',t:'New track: Imola',items:[
+  'Imola is a new circuit-mode track: the real Grand Prix layout, shrunk to about a third and with the tightest chicanes opened up, so a lap is short and busy. Only the road layout was used, the rest is built from scratch in the Poly GT low-poly look.',
+  'Real race track furniture: red and white kerbs on every corner, raked sand traps on the outside of each corner that really bog you down, painted tyre walls at the sharpest corners, guardrails, pit wall and pit garages, a control tower, grandstands, a footbridge, grid boxes, corner boards and marshal posts.',
+  'Performance: dense forests now thin out with distance, and the night city uses fewer dynamic lights.']},
  {v:'0.06',d:'Oct 21, 2026',t:'Free Roam makeover',items:[
   'The whole Free Roam map is rebuilt from open-source (CC0) models: a model-built town with towers, shops, houses and a park fountain; roadside villages, farms with barns, silos, crop plots and tractors; a wind farm, camp, harbour and roadside diners.',
   'New roads: a north bypass, a south coast road, a west coast road and dirt lanes to the farms. Rolling hills, patchwork fields, new tree and boulder models and a sky with drifting clouds.',

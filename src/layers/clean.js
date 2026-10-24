@@ -74,8 +74,8 @@ function setPano(sc,key){let m=null;sc.children.forEach(o=>{if(o.isMesh&&o.geome
  if(key==='night'){m.material.map=ud.nightMap;m.material.color.setRGB(1,1,1)}else{m.material.map=dayPano();m.material.color.setRGB(...(key==='sunset'?[1,.78,.66]:key==='dawn'?[.95,.84,.82]:[1,1,1]))}
  m.material.needsUpdate=true}
 
-const LTS=[];let lampSc=null;const NL=6;
-function ensureLights(sc){if(LTS.length&&lampSc===sc)return;LTS.length=0;lampSc=sc;for(let i=0;i<NL;i++){const l=new THREE.PointLight(0xffd29a,0,48,1.5);l.userData.lampLight=1;l.userData.li=-1;sc.add(l);LTS.push(l)}}
+const LTS=[];let lampSc=null;const NL=3;
+function ensureLights(sc){if(LTS.length&&lampSc===sc)return;LTS.length=0;lampSc=sc;for(let i=0;i<NL;i++){const l=new THREE.PointLight(0xffd29a,0,58,1.5);l.userData.lampLight=1;l.userData.li=-1;sc.add(l);LTS.push(l)}}
 /* lights keep their lamp until it falls out of range and has faded out, so nothing ever pops; intensity eases with distance */
 function lampFrame(){const Rc=RACE;if(!Rc||!Rc.scene)return;const sc=Rc.scene,g=sc.userData&&sc.userData.lamps,pos=sc.userData&&sc.userData.lampPos;
  if(!g||!pos||!LTS.length||lampSc!==sc)return;const on=g.visible,c0=Rc.cars.find(c=>c.human)||Rc.cars[0];if(!c0)return;
@@ -84,7 +84,7 @@ function lampFrame(){const Rc=RACE;if(!Rc||!Rc.scene)return;const sc=Rc.scene,g=
  for(const l of LTS){const li=l.userData.li;
   if(li>=0&&wset.has(li)){continue}
   if(l.intensity<.03){const nx=want.find(w=>!used.has(w[1]));if(nx){l.userData.li=nx[1];used.add(nx[1]);const p=pos[nx[1]];l.position.set(p[0],p[1]-.4,p[2])}else l.userData.li=-1}}
- for(const l of LTS){const li=l.userData.li;let tgt=0;if(on&&li>=0&&wset.has(li)){const u=Math.max(0,1-wset.get(li)/R);tgt=3.2*u*u*(3-2*u)}l.intensity+=(tgt-l.intensity)*.1}
+ for(const l of LTS){const li=l.userData.li;let tgt=0;if(on&&li>=0&&wset.has(li)){const u=Math.max(0,1-wset.get(li)/R);tgt=4.4*u*u*(3-2*u)}l.intensity+=(tgt-l.intensity)*.1}
  }
 function leanShadow(c){const Rc=RACE;if(!Rc||!Rc.scene)return;const sc=Rc.scene,g=sc.userData&&sc.userData.lamps,pos=sc.userData&&sc.userData.lampPos;if(!g||!g.visible||!pos||!c.m||!c.m.sh||!c.m.sh.visible)return;
  let bd=1e9,bi=-1;for(let i=0;i<pos.length;i++){const d=Math.hypot(pos[i][0]-c.x,pos[i][2]-c.z);if(d<bd){bd=d;bi=i}}if(bi<0||bd>30)return;
@@ -243,6 +243,7 @@ const COVER={
  'Canyon Viaduct':{t:[0xb98f55,0xa57c48,0xcfa66a],f:[],nt:1400,nf:0},
  'Redrock Stage':{t:[0xb1703a,0xa05f30,0xc98a50],f:[],nt:1400,nf:0},
  'Ashfall Stage':{t:[0x5a5350,0x6a625e],f:[],nt:900,nf:0},
+ 'Imola':{t:[0x6fae5c,0x5e9c52,0x86c070],f:[0xffffff,0xffe27a],nt:700,nf:200},
  'Road Atlanta':{t:[0x6fae5c,0x5e9c52,0x86c070],f:[0xffffff,0xffe27a],nt:1800,nf:400},
  'Alpine Pass':{t:[0x7a8a78,0x66786a],f:[],nt:500,nf:0}};
 function cover(sc,T){

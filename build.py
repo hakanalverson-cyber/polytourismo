@@ -37,7 +37,7 @@ src=rep(src,"const wx=c.x-fx_*1.3,wz=c.z-fz_*1.3;fx(wx,c.y-.4,wz,","const _w=WL[
 src=rep(src,"for(const side of [-1,1])fx(c.x-Math.sin(c.yaw)*1.6+Math.cos(c.yaw)*side*.8,c.y-.4,c.z-Math.cos(c.yaw)*1.6-Math.sin(c.yaw)*side*.8,","for(const side of [-1,1])fx(c.x+Math.cos(c.yaw)*WL[side<0?2:3][0]+Math.sin(c.yaw)*WL[2][1],c.y-.55,c.z-Math.sin(c.yaw)*WL[side<0?2:3][0]+Math.cos(c.yaw)*WL[2][1],")
 src=rep(src,"function wheels(car,speed,steer,dt){","window.__wheels=(a,b,c,d)=>wheels(a,b,c,d);function wheels(car,speed,steer,dt){")
 src=rep(src,"MATS[sc.road?(T.ice[sc.i]?'ice':'road'):T.d.off]","MATS[(sc.road||sc.near)?'road':T.d.off]",2)
-src=rep(src,"MATS[(sc.road||sc.near)?'road':T.d.off]","MATS[(sc.road||sc.near)?(T.gv&&T.gv[sc.i]?'gravelR':'road'):T.d.off]",2)
+src=rep(src,"MATS[(sc.road||sc.near)?'road':T.d.off]","MATS[(sc.road||sc.near)?(T.gv&&T.gv[sc.i]?'gravelR':'road'):(sc.trap?'sandtrap':T.d.off)]",2)
 src=rep(src,"out.push(shot(shoots.A,56,[3.3,.6,5.4],[0,.8,0],1.15,-.02,0,.08));","out.push(shot(shoots.A,56,[-3.1,.55,5.6],[0,.8,0],-1.0,-.02,0,-.06));")
 src=rep(src,"out.push(shot(shoots.B,46,[6.2,1.9,6.8],[0,1,0],2.1,-.1,.1,0));","out.push(shot(shoots.B,46,[5.4,2.3,7.4],[0,1,0],2.55,-.08,-.08,0));")
 src=rep(src,"out.push(shot(shoots.C,34,[2.8,1.25,-9],[0,.95,0],0,0,0,-.03));","out.push(shot(shoots.C,34,[3.8,1.05,-8.4],[0,.95,0],.4,0,0,.03));")
@@ -206,7 +206,7 @@ src=rep(src,"let bi=c.idx,bd=1e9;for(let k=-6;k<=30;k++){","let bi=c.idx,bd=1e9;
 src=rep(src,"c.wrong=hd<-3&&live?c.wrong+dt:0;","c.wrong=!T.free&&hd<-3&&live?c.wrong+dt:0;")
 src=rep(src,"if(live&&(c.y<T.y[c.idx]-12||Math.abs(c.roll)>.68","if(live&&((!T.free&&c.y<T.y[c.idx]-12)||Math.abs(c.roll)>.68")
 src=rep(src," if(!live)return;\n const sf=T.surf(c.x,c.z,c.y);"," if(!live||T.free)return;\n const sf=T.surf(c.x,c.z,c.y);")
-parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','frmodels','frdress','frtown','frworld','freeroam','cars10','audio','modes','tracks','hpack','tracks2','extra','race2','elim','tod','bridge','props','bld','stages','ra_data','tracks3','weather','ambience','menuaudio','tutorial','updatelog','hud2','shade','ui','cinema','rally','trackmode','realspeed','barn','animals','franimals','frlife','clean','solid','damage','perf','econ','frhud','title']  if os.path.exists(f'{SRC}/layers/{n}.js')]
+parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','frmodels','frdress','frtown','frworld','freeroam','cars10','audio','modes','tracks','hpack','tracks2','extra','race2','elim','tod','bridge','props','bld','stages','ra_data','tracks3','imola_data','tracks4','weather','ambience','menuaudio','tutorial','updatelog','hud2','shade','ui','cinema','rally','trackmode','realspeed','barn','animals','franimals','frlife','clean','solid','damage','perf','econ','frhud','title']  if os.path.exists(f'{SRC}/layers/{n}.js')]
 css=open(f'{SRC}/style.css').read()
 import base64
 b64=lambda f:base64.b64encode(open(W+'/assets/'+f,'rb').read()).decode()
