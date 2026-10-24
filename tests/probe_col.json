@@ -1,0 +1,2 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",2500],
+["js","(()=>{PT8.launch({mode:'mp',rally:true,circuit:true,track:14,laps:1,humans:[{id:'merc',alt:0}],ai:[]});const m={};RACE.scene.traverse(o=>{if(o.isMesh&&o.geometry.type==='IcosahedronGeometry'){const k=o.geometry.parameters.radius+'/'+(o.isInstancedMesh?'I'+o.count:'M')+'/'+(o.material.color&&o.material.color.getHexString())+'/vc'+o.material.vertexColors+'/'+(o.parent&&o.parent.name);m[k]=(m[k]||0)+1}});return JSON.stringify(m)})()"]]

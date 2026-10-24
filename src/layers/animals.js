@@ -44,7 +44,8 @@ const HERDS={
  'Terrace Run':[['Alpaca',2,3,4],['Donkey',1,2,2],['Stag',1,2,2]],
  'Ashfall Stage':[['Deer',2,2,3],['Wolf',1,2,2],['Fox',1,1,2]],
  'Autumn Ridge':[['Deer',1,2,3],['Stag',1,2,2],['Fox',1,1,2],['Horse',1,2,3]],
- 'Imola':[['Horse',1,2,3],['Cow',1,2,3]],'Road Atlanta':[['Horse',1,2,3],['WhiteHorse',1,2,2],['Cow',2,3,4]]};
+ 'Imola':[['Horse',2,2,3],['Cow',2,2,3],['Donkey',1,2,2],['Deer',1,2,3],['Fox',1,1,2]],'Road Atlanta':[['Horse',1,2,3],['WhiteHorse',1,2,2],['Cow',2,3,4],['Deer',2,2,4],['Fox',1,1,2]],
+ 'Nordschleife':[['Deer',4,2,4],['Stag',2,1,2],['Fox',2,1,2],['Cow',2,3,4],['Horse',1,2,3],['Wolf',1,1,2]]};
 let AN=null;/* animals of the race scene being played */
 const rng=s=>{let a=s>>>0||1;return()=>((a=Math.imul(a^a>>>15,a|1),a^=a+Math.imul(a^a>>>7,a|61),((a^a>>>14)>>>0)/4294967296))};
 function spawn(sc,T){AN=null;const plan=HERDS[T.d&&T.d.name];if(!plan||!P.animalsReady||(window.PTO&&window.PTO.animals===false))return;
@@ -60,9 +61,9 @@ function spawn(sc,T){AN=null;const plan=HERDS[T.d&&T.d.name];if(!plan||!P.animal
   return y};
  const list=[];
  for(const[name,herds,mn,mx]of plan){const sp=SP[name];if(!sp)continue;
-  for(let h=0;h<herds;h++){let cx,cz,cy=null;for(let t=0;t<200&&cy==null;t++){cx=R(x0-150,x1+150);cz=R(z0-150,z1+150);const d=road(cx,cz);if(d<26||d>150)continue;cy=ok(cx,cz,22)}
+  for(let h=0;h<herds;h++){let cx,cz,cy=null;for(let t=0;t<200&&cy==null;t++){if(T.animalAt){const p=T.animalAt(r);if(!p)continue;cx=p[0];cz=p[1];cy=ok(cx,cz,10);continue}cx=R(x0-150,x1+150);cz=R(z0-150,z1+150);const d=road(cx,cz);if(d<26||d>150)continue;cy=ok(cx,cz,22)}
    if(cy==null)continue;const n=Math.round(R(mn,mx));
-   for(let q=0;q<n;q++){let ax,az,ay=null;for(let t=0;t<12&&ay==null;t++){const a=R(0,6.283),rr=R(2,6);ax=cx+Math.cos(a)*rr;az=cz+Math.sin(a)*rr;ay=ok(ax,az,14)}
+   for(let q=0;q<n;q++){let ax,az,ay=null;for(let t=0;t<12&&ay==null;t++){const a=R(0,6.283),rr=R(2,6);ax=cx+Math.cos(a)*rr;az=cz+Math.sin(a)*rr;ay=ok(ax,az,T.animalAt?8:14)}
     if(ay==null)continue;
     const root=clone(sp),g=new THREE.Group();g.add(root);root.scale.setScalar(sp.k*R(.94,1.06));g.position.set(ax,ay,az);g.rotation.y=R(0,6.283);sc.add(g);
     root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=false;o.userData.shd=1}});
