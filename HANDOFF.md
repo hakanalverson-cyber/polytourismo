@@ -15,6 +15,7 @@ Needs: `npm install` (three@0.128 in node_modules, used by tests), Python 3 with
 4. Honest, concise reports. Only existing cars. Big visual work one step at a time with screenshots.
 5. Keep the Artifact updated and a lite build emailable. Deliver `/mnt/user-data/outputs/Poly-GT.html` and `Poly-GT-lite.html`.
 6. Free Roam is parked: the user will upload a template file later; don't work on it.
+7. After every change, attach the lite HTML in the chat reply (user asked: "from now on, put the lite html in chat").
 
 ## Shipping routine
 ```
