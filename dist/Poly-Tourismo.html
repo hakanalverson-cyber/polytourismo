@@ -9789,7 +9789,7 @@ function tileSystem(T,sc){
    if(v2>.66){const q=Math.min(1,(v2-.66)*6);c=[lerp(c[0],.36,q),lerp(c[1],.5,q),lerp(c[2],.18,q)]}
    if(fo>0){const q=fo*.85;c=[lerp(c[0],.08+.04*v,q),lerp(c[1],.22+.05*v,q),lerp(c[2],.07,q)]}
    if(rd<26){const q=1-sm(9,26,rd),st=((Math.floor(x/7)+Math.floor(z/7))&1)?.03:-.02;c=[lerp(c[0],.19+st,q),lerp(c[1],.47+st,q),lerp(c[2],.1,q)]}
-   if(rd<40&&T.openF){const q=T.openF(x,z)*(1-sm(26,40,rd))*(.75+.25*v2);if(q>0)c=[lerp(c[0],.36+.04*v,q),lerp(c[1],.4+.03*v,q),lerp(c[2],.15,q)]}
+   if(rd<40&&T.openF){const q=T.openF(x,z)*(1-sm(16,26,rd))*(.75+.25*v2);if(q>0)c=[lerp(c[0],.36+.04*v,q),lerp(c[1],.4+.03*v,q),lerp(c[2],.15,q)]}
    /* sand traps are painted into the ground itself, so they can never float above it */
    if(ri>=0&&T.trapS&&T.trapS[ri]&&rs===T.trapS[ri]&&rd>2.2&&rd<13.8){const q=.04*v;c=[.62+q,.55+q,.36+q*.5]}
    j.c[k*3]=c[0];j.c[k*3+1]=c[1];j.c[k*3+2]=c[2]}
@@ -9850,12 +9850,12 @@ function buildRing(T){const d=T.d,N=T.N,sc=new THREE.Scene(),C=T._rc||cornersOf(
   const sd=mesh(new THREE.SphereGeometry(40,12,8),new THREE.MeshBasicMaterial({color:d.sun,fog:false}),-500,420,-1000,sc);sd.frustumCulled=false}
  let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;for(let i=0;i<N;i++){x0=Math.min(x0,T.x[i]);x1=Math.max(x1,T.x[i]);z0=Math.min(z0,T.z[i]);z1=Math.max(z1,T.z[i])}T.bounds=[x0-190,x1+190,z0-190,z1+190];
  /* forest cover: dense Eifel woods with clearings and a few open meadows (the Flugplatz plateau, the Dottinger Hohe fields) */
- const open=[];for(const nm of['FLUGPLATZ','DOTTINGER HOHE','QUIDDELBACHER HOHE','ANTONIUSBUCHE']){const i=RG.marks[nm];if(i==null)continue;const p=RG.pts[i];open.push([p[0],p[1],nm==='DOTTINGER HOHE'?420:260])}
+ const open=[];for(const nm of['FLUGPLATZ','DOTTINGER HOHE','QUIDDELBACHER HOHE','ANTONIUSBUCHE']){const i=RG.marks[nm];if(i==null)continue;const p=RG.pts[i];open.push([p[0],p[1],nm==='DOTTINGER HOHE'?300:190])}
  /* clearings are grassy banks along the road with the forest standing back: openF says how deep in a clearing a point is */
  T.openF=(x,z)=>{let o=0;for(const q of open){const e=Math.hypot(x-q[0],z-q[1])/q[2];if(e<1)o=Math.max(o,1-sm(.55,1,e))}return o};
- T.forest0=(x,z)=>clamp(((T.nz(x*.33+11,z*.33-7)*.5+.5)+.12)*2.6,0,1);
+ T.forest0=(x,z)=>clamp(.86+.14*(T.nz(x*.33+11,z*.33-7)*.5+.5),0,1);/* solid forest everywhere: only the named clearings open it up */
  /* dist = metres from the road edge: past the grass banks (about 38 m) even a clearing is forest again */
- T.forest=(x,z,dist)=>{let f=T.forest0(x,z);if(!(dist>38))for(const o of open){const e=Math.hypot(x-o[0],z-o[1])/o[2];if(e<1)f*=sm(.55,1,e)}if(T.castle){const e=Math.hypot(x-T.castle.x,z-T.castle.z);if(e<120)f=0}return f};
+ T.forest=(x,z,dist)=>{let f=T.forest0(x,z);if(!(dist>24))for(const o of open){const e=Math.hypot(x-o[0],z-o[1])/o[2];if(e<1)f*=sm(.55,1,e)}if(T.castle){const e=Math.hypot(x-T.castle.x,z-T.castle.z);if(e<120)f=0}return f};
  const at=(k,l,dy)=>{k=((k%N)+N)%N;const c=Math.cos(T.psi[k]),s=Math.sin(T.psi[k]),x=T.x[k]+c*l,z=T.z[k]-s*l,ry=T.y[k]-l*T.bank[k],ex=Math.abs(l)-T.hw[k];if(ex>1.2){/* sit on the ground the tiles are built from, never on a raised road level */return[x,terrainBed(T,x,z)+(dy||0)+.03,z]}return[x,ry+(dy||0),z]};
  const dRoad=(x,z,far)=>{const cx=Math.floor(x/16),cz=Math.floor(z/16),R=far||2;let b=1e9;for(let a=-R;a<=R;a++)for(let c=-R;c<=R;c++){const l=T.grid.get((cx+a)*8192+cz+c);if(!l)continue;for(const i of l){const dd=Math.hypot(x-T.x[i],z-T.z[i])-T.hw[i];if(dd<b)b=dd}}return b>=1e9?999:Math.max(0,b)};
  const M_=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.85,metalness:0,flatShading:true},o||{}));
@@ -9942,7 +9942,7 @@ function buildRing(T){const d=T.d,N=T.N,sc=new THREE.Scene(),C=T._rc||cornersOf(
    forest reads deep and lush without tens of thousands more trees. Cards follow the ground and break at clearings and other roads ---- */
  if(window.PT8_RING_FOREST){const tx=new THREE.TextureLoader().load(window.PT8_RING_FOREST);tx.wrapS=THREE.RepeatWrapping;tx.encoding=THREE.sRGBEncoding;tx.anisotropy=4;
   const nS=Math.round(N*.03);
-  for(const[off,Hh,tint,rep,u0]of[[46,24,0xffffff,96,0],[92,30,0xb9c7c2,120,.37]]){const fm=new THREE.MeshBasicMaterial({map:tx,color:tint,alphaTest:.5,side:THREE.DoubleSide});styleMaterial(fm);
+  for(const[off,Hh,tint,rep,u0]of[[30,24,0xffffff,96,0],[58,30,0xb9c7c2,120,.37]]){const fm=new THREE.MeshBasicMaterial({map:tx,color:tint,alphaTest:.5,side:THREE.DoubleSide});styleMaterial(fm);
    for(const side of[-1,1]){const RO=side>0?T.railL:T.railR,pos=[],uv=[],idx=[],pt=[];
     for(let i=0;i<N;i+=2){const k=i,l=side*(T.hw[k]+RO[k]+off),c=Math.cos(T.psi[k]),sn=Math.sin(T.psi[k]),x=T.x[k]+c*l,z=T.z[k]-sn*l;
      pt.push({k,x,z,y:terrainBed(T,x,z)-1.6,ok:!(k<nS*.4||k>N-8)&&T.forest(x,z,off)>.15&&dRoad(x,z,5)>off-6})}
@@ -9957,8 +9957,8 @@ function buildRing(T){const d=T.d,N=T.N,sc=new THREE.Scene(),C=T._rc||cornersOf(
  /* ---- forest ---- */
  {const spr=[],dec=[],bush=[];
   const nS=Math.round(N*.03);
-  for(let i=0;i<N;i+=2){for(const side of[-1,1]){const RO=side>0?T.railL:T.railR;for(let t=0;t<6;t++){const l=side*(T.hw[i]+RO[i]+5+(t<5?Math.pow(rr(),1.3)*40:40+rr()*90)),startZ=(i<nS||i>N-20)&&Math.abs(l)<32,c=Math.cos(T.psi[i]),s=Math.sin(T.psi[i]),x=T.x[i]+c*l+(rr()-.5)*6,z=T.z[i]-s*l+(rr()-.5)*6;
-    const f=T.forest(x,z,Math.abs(l)-T.hw[i]-RO[i]);if(startZ||rr()>f*.95+.03)continue;if(dRoad(x,z,1)<RO[i]+3)continue;const y=T.terr(x,z),sc_=.8+rr()*.75;(rr()<.72?spr:dec).push([x,y,z,sc_,0,0,rr()*6])}
+  for(let i=0;i<N;i+=2){for(const side of[-1,1]){const RO=side>0?T.railL:T.railR;for(let t=0;t<6;t++){const l=side*(T.hw[i]+RO[i]+3+(t<5?Math.pow(rr(),1.5)*28:28+rr()*40)),startZ=(i<nS||i>N-20)&&Math.abs(l)<32,c=Math.cos(T.psi[i]),s=Math.sin(T.psi[i]),x=T.x[i]+c*l+(rr()-.5)*6,z=T.z[i]-s*l+(rr()-.5)*6;
+    const f=T.forest(x,z,Math.abs(l)-T.hw[i]-RO[i]);if(startZ||rr()>f*.95+.03)continue;if(dRoad(x,z,1)<RO[i]+2.2)continue;const y=T.terr(x,z),sc_=.8+rr()*.75;(rr()<.72?spr:dec).push([x,y,z,sc_,0,0,rr()*6])}
    if(rr()<.25){const l=side*(T.hw[i]+RO[i]+1.6+rr()*2.5),p=at(i,l,0);bush.push([p[0],p[1]+.25,p[2],.6+rr()*.7,.5+rr()*.4,.6+rr()*.7,rr()*6])}}}
   const tk=M_(0x4a3424);
   instC(g,new THREE.CylinderGeometry(.24,.36,2.6,5),tk,spr.concat(dec).map(p=>[p[0],p[1]+1.3*p[3],p[2],p[3]]));
@@ -10355,6 +10355,7 @@ P.LOG=[
   'Nordschleife layout re-traced from a real layout map: the swoops, the Karussell hook and the long Doettinger Hoehe diagonal are where they belong. Corners sit at roughly their real distances and keep their old heights.',
   'Lusher Eifel forest: trees right up to the verge, a painted forest backdrop on two layers behind them for depth, richer greens. Tyre walls are one solid wall of touching tyres, the plain white boxes are now camper vans, concrete walls line the main straight.',
   'Nordschleife clearings look like the real thing: grassy banks, catch fencing at the famous spots and fan writing on the asphalt. The forest backdrop has a tree-canopy outline and no hard edge, and the grandstands are gone.',
+  'Nordschleife forest is solid all the way round: no random bare patches, trees and the canopy backdrop come right up behind the Armco, and only the real open spots (Flugplatz, Quiddelbacher Hoehe, Doettinger Hoehe, Antoniusbuche) have smaller clearings.',
   'Road Atlanta, Imola and the Nordschleife: no pyramid hills, roofs or tents anywhere; no centre line; red/white kerbs only at the corners instead of a grey strip round the whole lap. Elevation rebuilt from real figures: the Nordschleife drops about 290 m to Breidscheid and climbs up to 17 % out of the Karussell, Road Atlanta has its 24 m of climb and drop around T1, T3 and the T12 dive, and Imola climbs to Piratella and Variante Alta. Medal times re-checked.',
   'Quick Play (Quick Race, Time Attack, Elimination, Cut-Up, Versus) has the 10 original maps; Road Atlanta, Imola and the Nordschleife are exclusive to Track mode.',
   'Track previews are white with numbered corners tinted by how tight they are. The Now Playing card sits in the bottom-right corner.',
