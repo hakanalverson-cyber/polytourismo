@@ -911,3 +911,9 @@ b,strong,h1,h2,h3,button,.btn,.gtab,.gti b,.hdr h2,#gtBar .gtl,.gtp,.crbox b,.qc
 
 .mklogo{display:block;color:#dfe7ec;flex:none}.mk .mklogo{margin-bottom:8px;opacity:.9}.mk:hover .mklogo{color:#fff}
 .gtmk .mklogo{margin-bottom:16px}
+
+/* Brand Central v2: transparent info panel, strip clear of it, scrollable */
+#s8show.gtb .stat{background:transparent!important;border-left:0!important;text-shadow:0 1px 8px #000b}
+#s8show.gtb.mkc .gtstrip{right:calc(min(400px,32vw) + 3.4vw);overflow-x:auto;scrollbar-width:thin;scrollbar-color:#ffffff40 transparent;pointer-events:auto}
+.gtstrip::-webkit-scrollbar{height:6px}.gtstrip::-webkit-scrollbar-thumb{background:#ffffff40}
+.gtstrip .gc{cursor:pointer}

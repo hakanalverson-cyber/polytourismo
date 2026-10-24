@@ -420,7 +420,7 @@ function drawShow(dt){studioOn();ensureStudio();if(P.studioDress)P.studioDress(S
  if(P.LV)P.LV.studio(S,SR);
  {const gtb=SR.kind==='brand';if(S.car)S.car.visible=!(gtb&&!SR.mk)}
  if(S.rev)stepReveal(P.revFix!=null?0:dt);else{SR.ang+=dt*(SR.drag?0:.35)+SR.vel*dt;SR.vel*=Math.pow(.05,dt);S.turn.rotation.y=SR.ang}
- const W=R.domElement.width,H=R.domElement.height;S.cam.aspect=W/H;const ca=.55+Math.sin(T0*.17)*.12;{const dz=CARDS()?8.4:(SR.kind==='brand'?12.4:10.2);S.cam.position.set(Math.sin(ca)*dz,(CARDS()?2.2:2.5)+Math.sin(T0*.23)*.15,Math.cos(ca)*dz)};S.cam.lookAt(SR.kind==='brand'?2.4:0,.75,0);
+ const W=R.domElement.width,H=R.domElement.height;S.cam.aspect=W/H;const ca=.55+Math.sin(T0*.17)*.12;{const dz=CARDS()?8.4:(SR.kind==='brand'?12.4:10.2);S.cam.position.set(Math.sin(ca)*dz,(CARDS()?2.2:2.5)+Math.sin(T0*.23)*.15,Math.cos(ca)*dz)};S.cam.lookAt(SR.kind==='brand'?.5:0,.75,0);
  if(P.homeCamOn&&P.homeCam&&!P.hcam){const h=P.homeCam(T0);S.cam.position.set(...h.p);S.cam.lookAt(...h.l)}
  if(P.hcam){S.cam.position.set(...P.hcam.p);S.cam.lookAt(...P.hcam.l)}
  S.cam.setViewOffset(W,H,-W*(CARDS()?.075:0),H*(SR.kind==='brand'?.1:.02),W,H);S.cam.updateProjectionMatrix();
@@ -459,7 +459,8 @@ function brandStrip(list,sv){const st=$('shStrip');if(!st)return;
  st.innerHTML=v.map(c=>{const o=(sv.owned[c.id]||0)>0;return `<div class="gc ${c.id===SR.id?'sel':''}" data-id="${c.id}"><div class="th"><canvas width="336" height="200" data-id="${c.id}"></canvas></div><b>${c.name}</b><small><span class="cls ${c.cls}">${c.cls}</span>${o?'Owned':fmtCr(c.price)}</small></div>`}).join('');
  $$('.gc',st).forEach(e=>e.onclick=()=>{if(e.dataset.id===SR.id)return;SR.id=e.dataset.id;SR.alt=0;P.sfx&&P.sfx('select');renderShow()});
  THQ.length=0;$$('.gc canvas',st).forEach(cv=>{const t=THC.get(cv.dataset.id);if(t){cv.getContext('2d').drawImage(t,0,0,cv.width,cv.height);cv.classList.add('rdy')}else{THQ.push({cv,id:cv.dataset.id})}});pumpThumbs();
- const sel=st.querySelector('.gc.sel');if(sel)st.scrollLeft=sel.offsetLeft-st.clientWidth/2+sel.clientWidth/2}
+ SR.order=v.map(c=>c.id);if(!st._wh){st._wh=1;st.addEventListener('wheel',e=>{if(Math.abs(e.deltaY)>Math.abs(e.deltaX)){e.preventDefault();st.scrollLeft+=e.deltaY}},{passive:false})}
+ const sel=st.querySelector('.gc.sel');if(sel){const x=sel.offsetLeft-st.clientWidth/2+sel.clientWidth/2;st.scrollLeft=x}}
 function cardsHTML(list,sv){
  const byPP=(a,b)=>P.pp(BYID[a.id])-P.pp(BYID[b.id])||a.price-b.price;list=list.slice().sort(byPP);const reg=list.filter(c=>!c.barn),barn=list.filter(c=>c.barn),cats=(P.CATS||[]).filter(k=>reg.some(c=>c.cat===k));
  const own=c=>!c.lk&&!c.off;let h='',order=[];
@@ -552,7 +553,7 @@ $('shAct').onclick=()=>{const car=BYID[SR.id];
  else{const it=showList().find(c=>c.id===car.id);if(it.off||!P.owns(car.id,SR.alt))return;if(SR.rally){const sv=P.SV();(sv.rsel=sv.rsel||[])[SR.player]={id:car.id,alt:SR.alt?1:0};P.save()}else if(SR.trk){const sv=P.SV();(sv.tsel=sv.tsel||[])[SR.player]={id:car.id,alt:SR.alt?1:0};P.save()}else P.setSel(SR.player,car.id,SR.alt);P.sfx('select');
   if(SR.flow){if(SR.player<ST.players-1){openShow('garage',{player:SR.player+1,cap:null,ret:'s8setup',rally:SR.rally,track:SR.trk,flow:true});return}ST.rstep=2;$('suGo').click();ST.rstep=1;return}
   leaveShow();}};
-(function(){const el=$('s8show');let lx=0;el.addEventListener('pointerdown',e=>{if(e.target.closest('.lst,.stat,.bot,.hdr'))return;SR.drag=true;lx=e.clientX;el.setPointerCapture(e.pointerId)});el.addEventListener('pointermove',e=>{if(!SR.drag)return;const d=e.clientX-lx;lx=e.clientX;SR.ang+=d*.01;SR.vel=d*.5});el.addEventListener('pointerup',()=>{SR.drag=false});el.addEventListener('pointercancel',()=>{SR.drag=false})})();
+(function(){const el=$('s8show');let lx=0;el.addEventListener('pointerdown',e=>{if(e.target.closest('.lst,.stat,.bot,.hdr,.gtstrip,.gtmk'))return;SR.drag=true;lx=e.clientX;el.setPointerCapture(e.pointerId)});el.addEventListener('pointermove',e=>{if(!SR.drag)return;const d=e.clientX-lx;lx=e.clientX;SR.ang+=d*.01;SR.vel=d*.5});el.addEventListener('pointerup',()=>{SR.drag=false});el.addEventListener('pointercancel',()=>{SR.drag=false})})();
 
 /* ================= RESULTS ================= */
 /* ---------- leaderboard: podium + full table with best lap, driver, car and a title for each driver ---------- */
