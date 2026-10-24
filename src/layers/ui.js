@@ -586,13 +586,11 @@ P.lbTitles=(rows,mode)=>{const T=rows.map(()=>[]);let fi=-1,fb=1e9;rows.forEach(
  rows.forEach((r,i)=>{if(r.place===1)T[i].push(mode==='elim'?'LAST ONE STANDING':'WINNER');else if(r.place<=3&&r.time!=null)T[i].push('PODIUM');else if(r.time!=null)T[i].push('FINISHER')});
  if(fi>=0&&rows.length>1)T[fi].push('FASTEST LAP');else if(fi>=0&&rows.length===1)T[fi].push('BEST LAP');
  rows.forEach((r,i)=>{if(r.medal!=null&&r.medal>=0&&P.MEDALS[r.medal])T[i].push(P.MEDALS[r.medal].n+' MEDAL')});return T};
-P.lbHTML=(rows,o)=>{o=o||{};const mode=o.mode||'race',T=P.lbTitles(rows,mode),cut=mode==='cutup';let fi=-1,fb=1e9;rows.forEach((r,i)=>{if(r.best!=null&&r.best<fb){fb=r.best;fi=i}});
- const big=r=>cut?(r.score||0).toLocaleString('en-US'):(r.time!=null?fmtT(r.time):(r.txt||'--'));
- const chips=i=>T[i].map(t=>`<em class="lbt${/FASTEST|BEST LAP/.test(t)?' fl':/WINNER|LAST ONE|TOP SCORER/.test(t)?' win':''}">${t}</em>`).join('');
- const gcol=r=>r.human&&r.col?r.col:'';
- let h='<div class="lb gt"><div class="gthead"><span>POS</span><span>DRIVER</span><span class="gtc">CAR</span>'+(cut?'<span class="gtr">SCORE</span>':'<span class="gtr">BEST LAP</span><span class="gtr">TIME</span>')+'</div>'+rows.map((r,i)=>{
-  const best=i===fi&&rows.length>1;
-  return `<div class="gtrow${r.human?' me':''}${r.place===1?' w':''}" style="--i:${i};--c:${gcol(r)||'#8fa6b2'}"><b class="gtp">${r.place}</b><span class="gtn"><i>${lbEsc(r.name)}${r.loan?' (loaner)':''}</i><span class="gtt">${chips(i)}</span></span><span class="gtc">${lbEsc(r.car)}</span>`+(cut?`<strong class="gtr">${(r.score||0).toLocaleString('en-US')}<small>${lbEsc(r.extra)}</small></strong>`:`<span class="gtr${best?' lbfl':''}">${r.best!=null?fmtT(r.best):'--'}</span><strong class="gtr">${r.time!=null?fmtT(r.time):(r.txt?lbEsc(r.txt):(r.lapsDown?'+'+r.lapsDown+' lap':'...'))}${r.gap?`<small class="lbgap">${r.gap}</small>`:''}</strong>`)+'</div>'}).join('')+'</div>';return h};
+P.lbHTML=(rows,o)=>{o=o||{};const mode=o.mode||'race',cut=mode==='cutup';let fi=-1,fb=1e9;rows.forEach((r,i)=>{if(r.best!=null&&r.best<fb){fb=r.best;fi=i}});
+ /* minimal standings, the same in every mode: position, driver (car underneath), best lap, time. No chips, no colour blocks; the player's row is the bright one */
+ let h='<div class="lb lbm'+(cut?' cut':'')+'"><div class="lbmh"><span>POS</span><span>DRIVER</span>'+(cut?'<span class="r">SCORE</span>':'<span class="r">BEST</span><span class="r">TIME</span>')+'</div>'+rows.map((r,i)=>{
+  const fl=i===fi&&rows.length>1;
+  return `<div class="lbmr${r.human?' me':''}" style="--i:${i}"><b>${r.place}</b><span class="n"><i>${lbEsc(r.name)}${r.loan?' (loaner)':''}</i><small>${lbEsc(r.car)}</small></span>`+(cut?`<strong class="r">${(r.score||0).toLocaleString('en-US')}${r.extra?`<small>${lbEsc(r.extra)}</small>`:''}</strong>`:`<span class="r${fl?' fl':''}">${r.best!=null?fmtT(r.best):'--'}</span><strong class="r">${r.time!=null?fmtT(r.time):(r.txt?lbEsc(r.txt):(r.lapsDown?'+'+r.lapsDown+' lap':'--'))}${r.gap?`<small>${r.gap}</small>`:''}</strong>`)+'</div>'}).join('')+'</div>';return h};
 let RES=null;
 P.renderResults=res=>{RES=res;const mode=res.mode;
  let h=`<h1>${res.title}</h1><div class="sub">${res.sub}</div>`;
@@ -601,7 +599,7 @@ P.renderResults=res=>{RES=res;const mode=res.mode;
  if(res.medal!=null&&res.medal>=0){const md=P.MEDALS[res.medal];h+=`<span class="medalbig" style="background:${md.col}">${md.n} medal</span>`}
  res.notes.forEach(n=>h+=`<span class="goal ok">${n}</span>`);
  if(mode==='cutup')h+=P.lbHTML(res.rows,{mode:'cutup'});
- else if(mode==='ta'){const r=res.rows[0];h+=`<div class="lbp me lbsolo"><span class="lbname">${lbEsc(r.name||'DRIVER')}</span><small>${lbEsc(r.car||'')}</small><strong>${r.best!=null?fmtT(r.best):'--'}</strong><span class="lbbest">BEST LAP</span><div class="lbts">${P.lbTitles([Object.assign({place:1,time:r.time},r)],'ta')[0].map(t=>`<em class="lbt win">${t}</em>`).join('')}</div></div><table class="rt"><tr><th>Lap</th><th>Time</th></tr>`+(r.laps||[]).map((t,i)=>`<tr class="${t===r.best?'hum':''}"><td class="pl">${i+1}</td><td>${fmtT(t)}${t===r.best?'  best':''}</td></tr>`).join('')+`</table><div style="font-size:11px;letter-spacing:.16em;color:var(--dim)">TOTAL <b style="color:#fff">${fmtT(r.time)}</b></div>`}
+ else if(mode==='ta'){const r=res.rows[0];h+=P.lbHTML([Object.assign({place:1},r)],{mode:'ta'})+'<div class="lbml">'+(r.laps||[]).map((t,i)=>`<div class="${t===r.best?'b':''}"><span>LAP ${i+1}</span><span>${fmtT(t)}</span></div>`).join('')+'</div>'}
  else h+=P.lbHTML(res.rows,{mode:mode});
  h+='<div>'+res.pay.map(p=>`<div class="pay"><span>${p.l}</span><span>+${fmtCr(p.v)}</span></div>`).join('')+`<div class="pay tot"><span>Total earned</span><span>+${fmtCr(res.total)}</span></div><div class="pay"><span>Balance</span><span>${fmtCr(res.balance)}</span></div></div>`;
  const career=res.cfg&&res.cfg.ev;

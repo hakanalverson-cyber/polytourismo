@@ -1,0 +1,5 @@
+[["wait",3000],
+["js","(()=>{const t0=performance.now();const i=PT8.RING_IDX;PT8.launch({mode:'mp',rally:true,circuit:true,track:i,laps:1,humans:[{id:'merc',alt:0}],ai:[]});const T=RACE.T,sc=RACE.scene;let tiles=sc.userData.ringTiles;return JSON.stringify({ms:Math.round(performance.now()-t0),L:Math.round(T.L),N:T.N,live:tiles&&tiles.live.size,need:tiles&&tiles.need.size,trees:T._trees,traps:T.traps.length,kids:sc.children.length})})()"],
+["wait",6000],["shot","start"],
+["js","(()=>{RACE.state='race';const c=RACE.cars[0];c.forceAI=1;c.ai={skill:1,lat:0,name:'T'};return 1})()"],["wait",15000],["shot","run1"],
+["js","(()=>{const c=RACE.cars[0];const t=RACE.scene.userData.ringTiles;return JSON.stringify({unw:c.unw,sp:Math.round(c.sp*3.6),live:t.live.size,pend:t.pending()})})()"]]

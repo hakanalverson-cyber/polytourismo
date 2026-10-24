@@ -3,6 +3,11 @@
 'use strict';
 const P=window.PT8;
 P.LOG=[
+ {v:'0.09',d:'Oct 24, 2026',t:'New track: the Nordschleife',items:[
+  'The Nurburgring Nordschleife is a new circuit-mode track and by far the longest in the game: a 20.8 km lap with about 290 m of climb, from Hatzenbach, Flugplatz and Aremberg down to Breidscheid, up through Kesselchen to the banked Karussell, round Brunnchen and Pflanzgarten and back along the Dottinger Hohe. The layout was rebuilt from the real corner sequence and lap length, not from a surveyed map, so it is close to the real track but not exact.',
+  'Armco on both sides of the whole lap, kerbs on every corner, gravel traps and tyre walls at the slowest corners, dense Eifel forest, spectator camps at the famous corners, corner name boards and km boards, bridges, the T13 grandstand and Nurburg castle on its hill.',
+  'No lag on the long lap: the landscape is built in tiles a few milliseconds at a time around the camera and dropped again behind you, and distant scenery is thinned and culled. Medal times were calibrated with the same rule as Road Atlanta and Imola.',
+  'Results screen is minimal and the same in every mode: position, driver with the car underneath, best lap and time, with your row highlighted. No coloured chips or blocks.']},
  {v:'0.08',d:'Oct 24, 2026',t:'Tracks, menus and Brand Central',items:[
   'Road Atlanta and Imola were re-traced from real layout maps and sized to their real lap lengths (4,088 m and 4,909 m, 1 unit = 1 m), with real-scale widths and roughly real elevation. Medal times were recalibrated. The sky and distant hills now follow the camera on big tracks.',
   'Brand Central cards and the Quickplay drop-down use the garage card look with a white outline on the selected one. The menu footer shows cars owned. Imola is 1.6x longer.',

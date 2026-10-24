@@ -1015,3 +1015,34 @@ b,strong,h1,h2,h3,button,.btn,.gtab,.gti b,.hdr h2,#gtBar .gtl,.gtp,.crbox b,.qc
 .gti{border:1px solid #ffffff1c!important;background:#ffffff0b!important;min-height:56px!important;padding:0 16px!important}
 .gti.foc{background:#ffffff14!important;outline:2px solid #fff;outline-offset:-1px;min-height:68px!important;color:#fff}
 .gti.foc:before{display:none!important}
+/* ===== results: minimal standings, one look for every mode (race, time attack, elimination, cut-up, versus, track, rally) ===== */
+#s8res .box{background:#0b0e12!important;border-top:1px solid #ffffff2e!important}
+#s8res h1{font-style:normal!important;font-weight:700!important;letter-spacing:.16em!important;font-size:clamp(20px,3.6vh,30px)!important}
+#s8res .sub{color:#8f9ba3!important;letter-spacing:.22em!important;margin:6px 0 18px!important}
+#s8res .goal,#s8res .promo{display:block;width:max-content;max-width:100%;background:none!important;border:0!important;border-left:2px solid #ffffff40!important;padding:2px 0 2px 10px!important;margin:0 0 8px!important;font-size:11px!important;letter-spacing:.18em!important;color:#c9d1d6!important}
+#s8res .goal.ok{border-left-color:#7fd68a!important}#s8res .goal.no{border-left-color:#ef6a5a!important}
+#s8res .medalbig{display:block;width:max-content;background:none!important;color:#fff!important;border-left:2px solid currentColor;padding:2px 0 2px 10px!important;margin:0 0 8px!important;font-size:11px!important;letter-spacing:.18em!important}
+.lbm{margin:6px 0 4px}
+.lbmh,.lbmr{display:grid;grid-template-columns:44px minmax(0,1fr) 110px 130px;align-items:center;gap:14px;padding:0 4px}
+.lbmh{font-size:10px;letter-spacing:.22em;color:#6f7c84;height:26px;border-bottom:1px solid #ffffff26}
+.lbmr{min-height:52px;border-bottom:1px solid #ffffff12;color:#aeb8be;animation:lbmIn .35s ease-out both;animation-delay:calc(var(--i)*40ms)}
+.lbmr b{font-size:18px;font-weight:600;color:#7f8b92;font-variant-numeric:tabular-nums}
+.lbmr .n{display:flex;flex-direction:column;gap:3px;min-width:0}
+.lbmr .n i{font-style:normal;font-size:15px;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lbmr .n small{font-size:10px;letter-spacing:.14em;color:#6f7c84;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lbmr .r,.lbmh .r{text-align:right;font-variant-numeric:tabular-nums}
+.lbmr span.r{font-size:13px;color:#8f9ba3}.lbmr span.r.fl{color:#c58bff}
+.lbmr strong.r{font-size:16px;font-weight:600;color:#d7dde1}
+.lbmr .r small{display:block;font-size:10px;font-weight:400;color:#6f7c84;margin-top:2px}
+.lbmr.me{color:#fff;box-shadow:inset 2px 0 0 #fff;background:#ffffff08}.lbmr.me b,.lbmr.me strong.r{color:#fff}
+.lbm.cut .lbmh,.lbm.cut .lbmr{grid-template-columns:44px minmax(0,1fr) 150px}
+.lbml{margin:10px 0 0;max-width:420px}
+.lbml div{display:flex;justify-content:space-between;padding:6px 4px;font-size:12px;letter-spacing:.14em;color:#8f9ba3;border-bottom:1px solid #ffffff0d;font-variant-numeric:tabular-nums}
+.lbml div.b{color:#fff}
+#s8res .pay{border-bottom:1px solid #ffffff0d!important;color:#aeb8be}
+#s8res .pay.tot{border-top:1px solid #ffffff40!important;color:#fff!important}
+.rscar{background:#0f1418!important;border-top:0!important}
+.rscar .rsn{background:none!important}
+@keyframes lbmIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media(max-width:640px){.lbmh,.lbmr{grid-template-columns:30px minmax(0,1fr) 96px;gap:10px}.lbm:not(.cut) .lbmh span.r:nth-of-type(3),.lbmr span.r{display:none}}
+@media (prefers-reduced-motion:reduce){.lbmr{animation:none}}

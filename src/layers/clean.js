@@ -29,6 +29,7 @@ const WIN={value:0};
 const glowTex=(rgb,hard)=>{const cv=document.createElement('canvas');cv.width=cv.height=64;const c=cv.getContext('2d'),g=c.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,`rgba(${rgb},1)`);g.addColorStop(hard||.25,`rgba(${rgb},.55)`);g.addColorStop(1,`rgba(${rgb},0)`);c.fillStyle=g;c.fillRect(0,0,64,64);const t=new THREE.CanvasTexture(cv);return t};
 let TXH=null,TXP=null;
 function lamps(sc,T){
+ if(T.d&&T.d.ring)return;/* the Nordschleife has no street lights */
  TXH=TXH||(()=>{const cv=document.createElement('canvas');cv.width=cv.height=64;const c=cv.getContext('2d'),g=c.createRadialGradient(32,32,0,32,32,32);[0,.04,.08,.14,.2,.3,.4,.5,.62,.75,.88,1].forEach(o=>g.addColorStop(o,`rgba(255,226,170,${(Math.exp(-o*o*9)*(1-o*o)*.9).toFixed(3)})`));c.fillStyle=g;c.fillRect(0,0,64,64);return new THREE.CanvasTexture(cv)})();
  const N=T.N,K=P.PROPKIT,log=sc.userData.props||[],have=log.filter(p=>p.n==='lamp'&&isFinite(p.yaw)),L=[];
  const grp=new THREE.Group();grp.visible=false;grp.userData.noChunk=1;sc.add(grp);sc.userData.lamps=grp;
