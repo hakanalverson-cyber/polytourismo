@@ -9,6 +9,7 @@ P.LOG=[
   'No lag on the long lap: the landscape is built in tiles a few milliseconds at a time around the camera and dropped again behind you, and distant scenery is thinned and culled. Medal times were calibrated with the same rule as Road Atlanta and Imola.',
   'Results screen is minimal and the same in every mode: position, driver with the car underneath, best lap and time, with your row highlighted. No coloured chips or blocks.']},
  {v:'0.08',d:'Oct 24, 2026',t:'Tracks, menus and Brand Central',items:[
+  'The original maps are back in the track picker for Quick Race, Time Attack, Elimination, Cut-Up and Versus, alongside Road Atlanta and Imola. Track mode still has only the circuit tracks and Rally only the stages.',
   'Road Atlanta and Imola were re-traced from real layout maps and sized to their real lap lengths (4,088 m and 4,909 m, 1 unit = 1 m), with real-scale widths and roughly real elevation. Medal times were recalibrated. The sky and distant hills now follow the camera on big tracks.',
   'Brand Central cards and the Quickplay drop-down use the garage card look with a white outline on the selected one. The menu footer shows cars owned. Imola is 1.6x longer.',
   'Results screen redone: bigger standings with square row ends, a larger player row, a render of your car, and payouts beside it. The menu drop-down now lines up flush with its tab.',
