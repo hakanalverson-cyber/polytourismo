@@ -4,13 +4,13 @@
 const P=window.PT8,IM=window.PT8_IMOLA;
 if(!IM||!P.TRK_TRACKS)return;
 const PI=Math.PI,IMK=1,IMY=1;/* data is already at real size (4,909 m lap, 1 unit = 1 m) */
-const imola={id:15,look:0,name:'Imola',desc:'italian grand prix circuit / chicanes / sand traps / tyre walls',hw:7.4,bank:12,off:'grass',idw:.85,offs:0,amp:2.6,up:4,shoulder:17,
+const imola={id:15,look:0,name:'Imola',desc:'italian grand prix circuit / chicanes / sand traps / tyre walls',hw:7.4,bank:5,off:'grass',idw:.85,offs:0,amp:2.6,up:4,shoulder:17,
  sky:[0x3f86d2,0xcfe4f4],fog:0xcfe0ea,sun:0xfff0d0,hemi:[0xd4e8f8,0x4f7a3c],road:'#3b3d43',tod0:'day',imola:1,
  pts:IM.pts.map(q=>[q[0]*IMK,q[1]*IMK,q[2]*IMY,q[3]]),walls:[],ice:[],boost:[],jumps:[]};
 D.push(imola);
 P.TRACK_INFO.push({s:'TARMAC',tags:['CHICANES','SAND TRAPS','TYRE WALLS','KERBS']});
 P.TRK_TRACKS.push(D.length-1);
-P.MEDAL_REF[D.length-1]=98.5;
+P.MEDAL_REF[D.length-1]=103.9;
 MATS.sandtrap={grip:.42,top:.5,acc:.4};
 const IMX=D.length-1;
 
@@ -124,11 +124,10 @@ function dressIM(T,sc){
  /* ---- Romagna parkland: plane trees and oaks in rows, poplars and cypress, umbrella pines; Emilia hills on the horizon ---- */
  {const tm=M_(0x5a3b26),tint=(geo,mt,list,cols,f)=>{/* one mesh per colour: plain material colours survive the scene's mesh merging */const ob=new THREE.Object3D();cols.forEach((cc,ci)=>{const sub=list.filter((p,i)=>i%cols.length===ci);if(!sub.length)return;const im=new THREE.InstancedMesh(geo,cols.length>1||mt.color.getHex()===0xffffff?M_(cc):mt,sub.length);sub.forEach((p,i)=>{f(ob,p);ob.updateMatrix();im.setMatrixAt(i,ob.matrix)});g.add(im)})};
   P.circuitWoods(T,sc,g,{seed:4909,set:22,rows:3,copses:22,tint:0x6a865e,cardH:17,start:[-14,Math.round(N*.08)],cluster:0,
-   kinds:[{w:.55,build:(g,L)=>{tint(new THREE.CylinderGeometry(.28,.4,3.6,5),tm,L,[0x6a5038],(o,p)=>{o.position.set(p[0],p[1]+1.8*p[3],p[2]);o.scale.setScalar(p[3])});
-     tint(new THREE.IcosahedronGeometry(3.2,1),M_(0xffffff),L,[0x24601a,0x1e5616,0x2c6a1e,0x1a4e12],(o,p)=>{o.position.set(p[0],p[1]+6.4*p[3],p[2]);o.scale.set(p[3]*1.1,p[3]*.95,p[3]*1.1);o.rotation.set(0,p[4],0)})}},
-    {w:.25,build:(g,L)=>{tint(new THREE.IcosahedronGeometry(1.5,1),M_(0xffffff),L,[0x0e3a16,0x12421a,0x0b3212],(o,p)=>{o.position.set(p[0],p[1]+5*p[3],p[2]);o.scale.set(p[3],p[3]*3.6,p[3]);o.rotation.set(0,p[4],0)})}},
-    {w:.2,build:(g,L)=>{tint(new THREE.CylinderGeometry(.24,.34,7,5),tm,L,[0x6a5038],(o,p)=>{o.position.set(p[0],p[1]+3.5*p[3],p[2]);o.scale.setScalar(p[3])});
-     tint(new THREE.IcosahedronGeometry(3,1),M_(0xffffff),L,[0x164a18,0x1c521c],(o,p)=>{o.position.set(p[0],p[1]+7.6*p[3],p[2]);o.scale.set(p[3]*1.35,p[3]*.5,p[3]*1.35);o.rotation.set(0,p[4],0)})}}],
+   /* plane trees and oaks, cypress (a narrowed Quaternius conifer), umbrella pines: CC0 models from trees_q.js */
+   kinds:[{w:.55,build:(g,L)=>P.qMix(g,['oak3','oak4','oak5'],L,[13,12,11],[0xffffff,0xf0f8e0,0xe4eed6])},
+    {w:.25,build:(g,L)=>P.qMix(g,['pine4','pine2'],L,[13,14],[0xd8e2d0,0xc8d4c2],{sx:.42})},
+    {w:.2,build:(g,L)=>P.qMix(g,['umb1','umb2'],L,[12,13],[0xffffff,0xeef6e0])}],
    pano:()=>P.hillPano(49,0xcfe0ea,[{base:296,amp:60,col:0x6a8496,fog:.62},{base:318,amp:42,col:0x5f7f52,fog:.5,trees:14,fields:40},{base:338,amp:22,col:0x4a7340,fog:.34,trees:12}],(g,W,H,hz,mix,r)=>{
      /* the town on the hill: terracotta roofs and a bell tower */
      for(const cx of[W*.31,W*.78]){for(let i=0;i<26;i++){const x=cx+(r()-.5)*240,w=10+r()*16,h=8+r()*10,y=hz-14-r()*10;g.fillStyle=mix(0xd9cdb5,.45);g.fillRect(x,y-h,w,h);g.fillStyle=mix(0xb0583a,.42);g.beginPath();g.moveTo(x-2,y-h);g.lineTo(x+w/2,y-h-5);g.lineTo(x+w+2,y-h);g.fill()}

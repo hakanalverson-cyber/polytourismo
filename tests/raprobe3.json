@@ -1,0 +1,1 @@
+[["wait", 2000], ["js", "(()=>{PT8.launch({mode:'mp',rally:true,circuit:true,track:14,laps:1,humans:[{id:'c102',alt:0}],ai:[]});const T=RACE.T,o=[];for(let k=370;k<450;k+=3){o.push([k,+T.y[k].toFixed(2),+T.bank[k].toFixed(3),+T.hw[k].toFixed(1),T.wall[k],T.gap[k],T.br?T.br[k]:-1,T.jump?1:0])}return JSON.stringify({o,jumps:T.jumps,keys:Object.keys(T).join(',')})})()"]]

@@ -4,7 +4,7 @@
 const P=window.PT8,RA=window.PT8_RA;
 if(!RA)return;
 const PI=Math.PI,RAK=1,RAY=1;/* data is already at real size (4,088 m lap, 1 unit = 1 m) */
-const roadAtl={id:14,look:0,name:'Road Atlanta',desc:'braselton georgia / uphill T1 / esses / T10 / T12 dive',hw:7.5,bank:14,off:'grass',idw:.85,offs:0,amp:3,up:5,shoulder:17,
+const roadAtl={id:14,look:0,name:'Road Atlanta',desc:'braselton georgia / uphill T1 / esses / T10 / T12 dive',hw:7.5,bank:5,off:'grass',idw:.85,offs:0,amp:3,up:5,shoulder:17,
  sky:[0x3f86d2,0xcfe4f4],fog:0xcfe0ea,sun:0xfff0d0,hemi:[0xd4e8f8,0x4f7a3c],road:'#3b3d43',tod0:'day',ra:1,
  pts:RA.pts.map(q=>[q[0]*RAK,q[1]*RAK,q[2]*RAY]),walls:[],ice:[],boost:[],jumps:[]};
 D.push(roadAtl);
@@ -40,7 +40,7 @@ function circuitWoods(T,sc,g,o){
  const[x0,x1,z0,z1]=T.bounds;for(let t=0;t<o.copses*30&&t<4000;t++){const cx=x0+(x1-x0)*rr(),cz=z0+(z1-z0)*rr(),d=dRoad(cx,cz);if(d<o.set+30)continue;const R=10+rr()*16,n=Math.round(R*R*.09);
   for(let q=0;q<n;q++){const a=rr()*6.283,rad=Math.sqrt(rr())*R,x=cx+Math.cos(a)*rad,z=cz+Math.sin(a)*rad;if(dRoad(x,z)<o.set+20||!clear(x,z))continue;put(x,z,(.9+.3*rr())*(1+.15*(1-rad/R)),rr()*6)}if(--o.copses<=0)break}
  o.kinds.forEach((k,i)=>k.build(g,lists[i]));
- if(bush.length){const geo=new THREE.IcosahedronGeometry(1.3,0),ob=new THREE.Object3D(),bc=o.bush||[0x1a4414,0x1f4c18,0x163a12];bc.forEach((cc,ci)=>{const sub=bush.filter((p,i)=>i%bc.length===ci);if(!sub.length)return;const im=new THREE.InstancedMesh(geo,new THREE.MeshStandardMaterial({color:cc,roughness:.9,flatShading:true}),sub.length);sub.forEach((p,i)=>{ob.position.set(p[0],p[1]+.5*p[3],p[2]);ob.scale.set(p[3]*1.3,p[3]*.75,p[3]*1.3);ob.rotation.set(0,p[4],0);ob.updateMatrix();im.setMatrixAt(i,ob.matrix)});g.add(im)})}
+ if(bush.length)P.qMix(g,['bush1','bush2'],bush.map(p=>[p[0],p[1],p[2],p[3]*1.1,p[4]]),1.6,[0xffffff,0xe2ecda,0xd2dec8]);
  /* canopy card behind the rows, height easing in and out wherever it has to stop */
  if(window.PT8_RING_FOREST){const tx=new THREE.TextureLoader().load(window.PT8_RING_FOREST);tx.wrapS=THREE.RepeatWrapping;tx.encoding=THREE.sRGBEncoding;tx.anisotropy=4;
   const fm=new THREE.MeshBasicMaterial({map:tx,color:o.tint,alphaTest:.5,side:THREE.DoubleSide});const BACK=o.set+o.rows*4+8,Hh=o.cardH,rep=80;
@@ -166,11 +166,9 @@ function dressRA(T,sc){
  /* ---- Georgia woods: loblolly pines (tall bare trunks, crowns on top) with hardwoods mixed in ---- */
  {const tm=M_(0x5a3b26),tint=(geo,mt,list,cols,f)=>{/* one mesh per colour: plain material colours survive the scene's mesh merging */const ob=new THREE.Object3D();cols.forEach((cc,ci)=>{const sub=list.filter((p,i)=>i%cols.length===ci);if(!sub.length)return;const im=new THREE.InstancedMesh(geo,cols.length>1||mt.color.getHex()===0xffffff?M_(cc):mt,sub.length);sub.forEach((p,i)=>{f(ob,p);ob.updateMatrix();im.setMatrixAt(i,ob.matrix)});g.add(im)})};
   circuitWoods(T,sc,g,{seed:4088,set:24,rows:4,copses:26,tint:0x5d7a60,cardH:20,start:[-40,Math.round(N*.06)],cluster:1,
-   kinds:[{w:.7,build:(g,L)=>{tint(new THREE.CylinderGeometry(.22,.32,9,5),tm,L,[0x5a3b26],(o,p)=>{o.position.set(p[0],p[1]+4.5*p[3],p[2]);o.scale.setScalar(p[3]);o.rotation.set(0,p[4],0)});
-     tint(new THREE.IcosahedronGeometry(2.6,0),M_(0xffffff),L,[0x0d3a14,0x10421a,0x0a3010,0x134a1c],(o,p)=>{o.position.set(p[0],p[1]+10.4*p[3],p[2]);o.scale.set(p[3]*1.15,p[3]*.85,p[3]*1.15);o.rotation.set(0,p[4],0)});
-     tint(new THREE.IcosahedronGeometry(1.8,0),M_(0xffffff),L,[0x14481c,0x0f3c16],(o,p)=>{o.position.set(p[0]+.5*p[3],p[1]+12.3*p[3],p[2]-.3*p[3]);o.scale.set(p[3],p[3]*.8,p[3]);o.rotation.set(0,p[4],0)})}},
-    {w:.3,build:(g,L)=>{tint(new THREE.CylinderGeometry(.3,.42,4,5),tm,L,[0x5a3b26],(o,p)=>{o.position.set(p[0],p[1]+2*p[3],p[2]);o.scale.setScalar(p[3])});
-     tint(new THREE.IcosahedronGeometry(3.4,1),M_(0xffffff),L,[0x1f5a12,0x266414,0x1a4e10],(o,p)=>{o.position.set(p[0],p[1]+6.2*p[3],p[2]);o.scale.set(p[3],p[3]*.9,p[3]);o.rotation.set(0,p[4],0)})}}],
+   /* loblolly pines (tall, crowns high up) with hardwoods mixed in: Quaternius CC0 models from trees_q.js */
+   kinds:[{w:.7,build:(g,L)=>P.qMix(g,['pine2','pine3','pine4'],L,[19,17,18],[0xffffff,0xe8f2dc,0xdbe6cf,0xf4fbe6])},
+    {w:.3,build:(g,L)=>P.qMix(g,['oak4','oak3','umb2'],L,[12,13,12],[0xffffff,0xeef6dc,0xe2ecd2])}],
    pano:()=>hillPano(77,0xcfe0ea,[{base:300,amp:46,col:0x5e7d8c,fog:.62},{base:322,amp:34,col:0x4b6e58,fog:.5,trees:22},{base:340,amp:20,col:0x355a3a,fog:.34,trees:16}])})}
  styleScene(g);sc.add(g);
 }

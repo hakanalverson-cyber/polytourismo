@@ -10,7 +10,7 @@ D.push(ring);
 P.TRACK_INFO.push({s:'TARMAC',tags:['20.8 KM','KARUSSELL','FLUGPLATZ','290 M CLIMB']});
 P.TRK_TRACKS.push(D.length-1);
 const RX=D.length-1;P.RING_IDX=RX;
-P.MEDAL_REF[RX]=487;/* Mercedes AI lap 459.8 s x 1.06, same rule as Road Atlanta and Imola */
+P.MEDAL_REF[RX]=521;/* Mercedes AI lap 491.1 s on the OSM layout x 1.06, same rule as Road Atlanta and Imola */
 MATS.sandtrap=MATS.sandtrap||{grip:.42,top:.5,acc:.4};
 
 /* ---------- corners (same rule as Imola: curvature above ~1/95 m for more than 18 m) ---------- */
@@ -257,14 +257,11 @@ function buildRing(T){const d=T.d,N=T.N,sc=new THREE.Scene(),C=T._rc||cornersOf(
     /* low bushes along the foot of the tree line hide the trunks and make the edge read as one clean wall of green */
     for(let a=0;a<seg;a+=2.6){if(rr()<.35)continue;const u=a/seg,l=side*(E[k]-.2+rr()*1.2),x=T.x[k]+fx*u+c*l,z=T.z[k]+fz*u-s*l;if(dRoad(x,z,1)<7)continue;
      bush.push([x,T.terr(x,z)+.35,z,.9+rr()*.6,.6+rr()*.35,.9+rr()*.6,rr()*6])}}}
-  const tk=M_(0x4a3424);
-  instC(g,new THREE.CylinderGeometry(.24,.36,2.6,5),tk,spr.concat(dec).map(p=>[p[0],p[1]+1.3*p[3],p[2],p[3]]));
-  const ti=[0x0b4a1e,0x08401a,0x12572a,0x063816];
-  instC(g,new THREE.ConeGeometry(2.6,4.6,7),M_(0xffffff),spr.map(p=>[p[0],p[1]+3.8*p[3],p[2],p[3],p[3],p[3],p[6]]),ti);
-  instC(g,new THREE.ConeGeometry(1.9,4,7),M_(0xffffff),spr.map(p=>[p[0],p[1]+6.6*p[3],p[2],p[3],p[3],p[3],p[6]]),ti);
-  instC(g,new THREE.ConeGeometry(1.2,3.4,7),M_(0xffffff),spr.map(p=>[p[0],p[1]+9*p[3],p[2],p[3],p[3],p[3],p[6]]),ti);
-  instC(g,new THREE.IcosahedronGeometry(2.8,0),M_(0xffffff),dec.map(p=>[p[0],p[1]+4.8*p[3],p[2],p[3],p[3]*1.05,p[3],p[6]]),[0x2f7d16,0x3a8a1c,0x236812,0x46921f]);
-  instC(g,new THREE.IcosahedronGeometry(1,0),M_(0xffffff),bush,[0x2f5a26,0x386a2c,0x2a5223]);
+  /* Quaternius CC0 spruces / broadleaves / bushes (trees_q.js), split across models so the line never repeats one shape */
+  if(P.qTrees){const by=(L,n)=>[...Array(n)].map((_,j)=>L.filter((p,i)=>i%n===j)),ti=[0xffffff,0xe6f0dc,0xd6e2cc,0xf2fae6];
+   const S=by(spr,3);['pine1','pine2','pine3'].forEach((n,j)=>P.qTrees(g,n,S[j].map(p=>[p[0],p[1],p[2],p[3],p[6]]),[15,13.5,14.5][j],ti));
+   const Dd=by(dec,3);['oak3','oak5','birch4'].forEach((n,j)=>P.qTrees(g,n,Dd[j].map(p=>[p[0],p[1],p[2],p[3],p[6]]),[12,10.5,12][j],[0xffffff,0xeaf4dc,0xfff6e0]));
+   const B=by(bush,2);['bush1','bush2'].forEach((n,j)=>P.qTrees(g,n,B[j].map(p=>[p[0],p[1]-.35,p[2],p[3]*.8,p[6]]),1.5,[0xffffff,0xe4eedc]))}
   T._trees=spr.length+dec.length}
  /* ---- canopy card: one painted strip (PNG) behind the tree rows. Its height eases in and out over ~8 links wherever it has to
    stop (another part of the track, the castle), so it never ends in a hard cut ---- */
