@@ -82,7 +82,7 @@ const _c=new THREE.Vector3(),_cp=new THREE.Vector3();
    for(const o of L){const bs=o.geometry.boundingSphere;if(!bs)continue;_c.copy(bs.center);if(o.parent&&o.parent.matrixWorld)_c.applyMatrix4(o.matrixWorld);const sc_=Math.max(o.scale.x,o.scale.y,o.scale.z);const dn=Math.max(0,_c.distanceTo(_cp)-bs.radius*sc_);let vis=dn<far;if(vis&&o.userData.lodHi!==undefined)vis=dn>=o.userData.lodLo&&dn<o.userData.lodHi;o.visible=vis}}
   return r0(scene,cam)}}
 
-/* adaptive resolution: if the game can't hold ~55 fps the render size eases down (never below 62%) and creeps back up when there is headroom,
+/* adaptive resolution: if the game can't hold ~55 fps the render size eases down (never below 50%) and creeps back up when there is headroom,
    so "max graphics" keeps full quality on machines that can take it and stays smooth on ones that can't. PTO.adaptRes=false turns it off. */
 {let acc=0,frames=0,slow=0,t0=performance.now(),lastUp=0,lt2=t0;
  (function tick(now){requestAnimationFrame(tick);const d=now-lt2;lt2=now;if(d>0&&d<250){acc+=d;frames++;if(d>24)slow++}
@@ -90,8 +90,8 @@ const _c=new THREE.Vector3(),_cp=new THREE.Vector3();
   const fps=frames*1000/Math.max(1,acc),bad=slow/Math.max(1,frames);acc=0;frames=0;slow=0;t0=now;
   if(!ingame||O().adaptRes===false||frames<0)return;
   let nd=P.dynRes;
-  if(fps<50||bad>.25)nd=Math.max(.62,nd-(fps<38?.14:.07));
-  else if(fps>58&&nd<1&&now-lastUp>5000){nd=Math.min(1,nd+.05);lastUp=now}
+  if(fps<52||bad>.2)nd=Math.max(.5,nd-(fps<40?.18:.09));
+  else if(fps>58&&nd<1&&now-lastUp>8000){nd=Math.min(1,nd+.05);lastUp=now}
   if(Math.abs(nd-P.dynRes)>.01){P.dynRes=nd;rs();/* resizing clears the canvas: redraw immediately, in the same task, so no black frame is ever presented */try{if(typeof drawRace==='function'&&RACE)drawRace(.0001)}catch(e){}}})(performance.now())}
 rs();
 })();

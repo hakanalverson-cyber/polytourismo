@@ -12,7 +12,9 @@ P.CARS.forEach(c=>{if(c.rdiv==='WRC')c.off=Math.max(c.off||0,1);else if(c.rdiv==
 const FIX={};const nudge=(c,m)=>{const t=o=>{if(!o)return;o.acc=+(o.acc*m).toFixed(2);o.grip=+(o.grip*m).toFixed(3);o.brk=+(o.brk*m).toFixed(3)};t(c);t(c._std);t(c._tk)};
 const set=(id,target)=>{const c=P.BYID[id];if(!c)return;const p0=P.pp(c);FIX[id]=target;nudge(c,Math.max(.94,Math.min(1.12,1+(target/p0-1)*.25)))};
 set('c30',692);set('c33',700);set('c78',704);set('c88',708);   /* Diablo, Huracan, 458, 599: low class A */
-set('lr',648);                                                  /* RS4 Avant: upper-middle class B */
+/* RS4 Avant and a few B cars had class-D top speeds (RS4 went 77 mph while its class does ~115): give them real class-B straight-line speed */
+{const sp=(id,top,acc)=>{const c=P.BYID[id];if(!c)return;[c,c._std,c._tk].forEach(o=>{if(!o)return;if(o.top!=null)o.top=top;if(o.topG!=null){o.topG=top;o.mphG=Math.round(top*2.237);if(o.mph!=null&&!o.mphR)o.mph=o.mphG;if(o.mph!=null&&o===c&&!P.REALMPH_ON)o.mph=o.mphG}if(acc&&o.acc!=null)o.acc=acc})};
+ sp('lr',54,30);sp('c131',48);sp('c65',48);sp('c108',48)}
 /* track-only cars sit higher in their class and are a touch sharper at what they do */
 {const tk=new Set([...(P.TRACK_CARS||[]),...P.CARS.filter(c=>c.trackOnly).map(c=>c.id)]);
  tk.forEach(id=>{const c=P.BYID[id];if(!c||FIX[id]!=null)return;const p0=P.pp(c);FIX[id]=Math.min(p0+30,ceil(p0));nudge(c,1.03)})}

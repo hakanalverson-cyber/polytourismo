@@ -100,8 +100,9 @@ function dressIM(T,sc){
   const hut=new THREE.Mesh(new THREE.BoxGeometry(2,2.2,2),M_(0xf2c76b));hut.position.y=1.1;mp.add(hut);const rf=new THREE.Mesh(new THREE.BoxGeometry(2.6,.3,2.6),M_(0xd8392f));rf.position.y=2.3;mp.add(rf);const fp=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,3.4,5),M_(0xcfd3d6));fp.position.set(1.1,3.7,0);mp.add(fp);const fl=new THREE.Mesh(new THREE.BoxGeometry(.05,.7,1.1),MB([0xf2c76b,0xffffff,0x2c6cd0][i%3]));fl.position.set(1.1,5.2,.55);mp.add(fl)});
  /* start/finish: gantry, painted line + grid boxes, pit row, tower, stands, footbridge, advert boards */
  {  /* grid boxes behind the line */
-  for(let q=1;q<=8;q++){const k=(0-q*4+N*2)%N;for(const s of[-1,1]){const[bx,by,bz]=at(k,s*T.hw[k]*.45,.09),bx2=new THREE.Mesh(new THREE.PlaneGeometry(3.1,5),MB(0xf1f1f1));bx2.rotation.x=-PI/2;bx2.rotation.order='YXZ';bx2.rotation.y=T.psi[k];bx2.position.set(bx,by,bz);g.add(bx2);
-     const inn=new THREE.Mesh(new THREE.PlaneGeometry(2.7,4.6),MB(0x3b3d43));inn.rotation.copy(bx2.rotation);inn.position.set(bx,by+.01,bz);g.add(inn)}}
+  /* exactly where gridSlot() puts the cars: row = slot>>1 at -(5+row*5) samples, lateral +-0.36 x hw[0] */
+  for(let row=0;row<6;row++){const k=(((-(5+row*5))%N)+N)%N;for(const s of[-1,1]){const[bx,by,bz]=at(k,s*T.hw[0]*.36,.09),bx2=new THREE.Mesh(new THREE.PlaneGeometry(3.1,5.4),MB(0xf1f1f1));bx2.rotation.x=-PI/2;bx2.rotation.order='YXZ';bx2.rotation.y=T.psi[k];bx2.position.set(bx,by,bz);g.add(bx2);
+     const inn=new THREE.Mesh(new THREE.PlaneGeometry(2.7,5),MB(0x3b3d43));inn.rotation.copy(bx2.rotation);inn.position.set(bx,by+.012,bz);g.add(inn)}}
   /* pit buildings on the infield side */
   const is=infield;for(let q=0;q<6;q++){const k=(10+q*10)%N,[px,py,pz]=at(k,is*(T.hw[k]+17),0),b=new THREE.Group();b.position.set(px,T.terr(px,pz),pz);b.rotation.y=T.psi[k];g.add(b);
    const bl=new THREE.Mesh(new THREE.BoxGeometry(9,4.2,9),M_(q%2?0xd7d9d4:0xc7cbc5));bl.position.y=2.1;b.add(bl);const rf=new THREE.Mesh(new THREE.BoxGeometry(10,.5,10),M_(0x2c3238));rf.position.y=4.4;b.add(rf);

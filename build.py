@@ -126,7 +126,7 @@ src=src[:j0]+newcc+src[j1:]
 
 
 # ---- v9e: auto-shift option, reverse tracks ----
-src=rep(src,"hillHold:true,cameraDistance:1,","hillHold:true,autoShift:false,perfPreset:'HIGH',maxDensity:1.5,shadowRate:2,shadowRes:1536,showFps:false,cameraDistance:1,")
+src=rep(src,"hillHold:true,cameraDistance:1,","hillHold:true,autoShift:false,perfPreset:'MEDIUM',maxDensity:1.25,shadowRate:2,shadowRes:1024,showFps:false,cameraDistance:1,")
 src=rep(src,"['hillHold','HILL HOLD']","['hillHold','HILL HOLD'],\n  ['autoShift','AUTO SHIFT'],\n  ['shortcutPenalty','SHORTCUT PENALTY'],\n  ['@tutorial','TUTORIAL','@btn','PLAY']")
 src=rep(src,"\n AUDIO:[","\n PERFORMANCE:[\n  ['perfPreset','PRESET',['MINIMUM','LOW','MEDIUM','HIGH','ULTRA','CUSTOM']],\n  ['maxDensity','MAX PIXEL DENSITY',1,2,.25],\n  ['resolution','RENDER SCALE',.5,1,.05],\n  ['shadows','SHADOWS'],\n  ['shadowRate','SHADOW UPDATE EVERY N FRAMES',1,4,1],\n  ['shadowRes','SHADOW QUALITY',[512,1024,1536,2048]],\n  ['effects','PARTICLES',[0,1,2]],\n  ['fogReach','FOG DISTANCE',350,1100,50],\n  ['showFps','SHOW FPS']\n ],\n AUDIO:[")
 src=rep(src,"function apply(){\n  rs();","function apply(){\n  if(window.PT8&&PT8.perfPre)PT8.perfPre();\n  rs();")

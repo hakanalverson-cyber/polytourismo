@@ -3,6 +3,11 @@
 'use strict';
 const P=window.PT8;
 P.LOG=[
+ {v:'0.08',d:'Oct 24, 2026',t:'Tracks, menus and Brand Central',items:[
+  'Regular modes now use the track-style maps (Road Atlanta and Imola); the old quickplay maps are out of the picker for now. Grid boxes line up exactly with where the cars spawn.',
+  'Brand Central: cars now drive up into the showroom with spinning wheels. Buying a car fades to black, shows a showcase with photos and stats, and an Add to garage button brings you back.',
+  'Results are a Gran Turismo style table with rows sliding in, and the main menu is a row of tiles.',
+  'Class fixes: the RS4 Avant and a few other class B cars had class D top speeds and now match their class. Lighter default shadows and a lower pixel-density cap for better frame rates; adaptive resolution reacts faster.']},
  {v:'0.07',d:'Oct 24, 2026',t:'New track: Imola',items:[
   'Imola is a new circuit-mode track: the real Grand Prix layout, shrunk to about a third and with the tightest chicanes opened up, so a lap is short and busy. Only the road layout was used, the rest is built from scratch in the Poly GT low-poly look.',
   'Real race track furniture: red and white kerbs on every corner, raked sand traps on the outside of each corner that really bog you down, painted tyre walls at the sharpest corners, guardrails, pit wall and pit garages, a control tower, grandstands, a footbridge, grid boxes, corner boards and marshal posts.',
