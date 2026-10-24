@@ -10,7 +10,7 @@ D.push(ring);
 P.TRACK_INFO.push({s:'TARMAC',tags:['20.8 KM','KARUSSELL','FLUGPLATZ','290 M CLIMB']});
 P.TRK_TRACKS.push(D.length-1);
 const RX=D.length-1;P.RING_IDX=RX;
-P.MEDAL_REF[RX]=480;/* Mercedes AI lap 453.1 s x 1.06, same rule as Road Atlanta and Imola */
+P.MEDAL_REF[RX]=487;/* Mercedes AI lap 459.8 s x 1.06, same rule as Road Atlanta and Imola */
 MATS.sandtrap=MATS.sandtrap||{grip:.42,top:.5,acc:.4};
 
 /* ---------- corners (same rule as Imola: curvature above ~1/95 m for more than 18 m) ---------- */
@@ -165,9 +165,9 @@ function buildRing(T){const d=T.d,N=T.N,sc=new THREE.Scene(),C=T._rc||cornersOf(
    for(let q=0;q<n;q++){const i=base+q*2;idx.push(i,i+1,i+2,i+1,i+3,i+2)}base+=(n+1)*2}
   if(!pos.length)return;const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));gg.setIndex(idx);gg.computeVertexNormals();const m=new THREE.Mesh(gg,mt);g.add(m);return m};
  /* ---- kerbs on every corner ---- */
- const curbTex=ctex(2,8,(x,w,h)=>{for(let j=0;j<8;j++){x.fillStyle=j<4?'#d8392f':'#f1f1f1';x.fillRect(0,j,w,1)}}),curbM=new THREE.MeshStandardMaterial({map:curbTex,roughness:.8,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
+ const curbTex=ctex(2,8,(x,w,h)=>{for(let j=0;j<8;j++){x.fillStyle=j<4?'#e01a14':'#f4f4f4';x.fillRect(0,j,w,1)}}),curbM=new THREE.MeshStandardMaterial({map:curbTex,roughness:.8,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
  {const inR=[],inL=[];for(const c of corners){const a=((c.a-2)%N+N)%N,b=c.b+2;(c.dir>0?inL:inR).push([a,b])}
-  strip(inL,1,-.15,1.3,.07,curbM,2.8);strip(inR,-1,-.15,1.3,.07,curbM,2.8)}
+  strip(inL,1,-.15,1.3,.07,curbM,2.0);strip(inR,-1,-.15,1.3,.07,curbM,2.0)}
  /* ---- the Karussell: the famous banked concrete bowl on the inside ---- */
  {const km=RG.marks.KARUSSELL;if(km!=null){const p=RG.pts[km],k0=nearIdx(T,p[0],p[1]);const c=corners.find(c=>k0>=c.a-30&&k0<=c.b+30);if(c){const side=c.dir>0?1:-1;
    const ct=ctex(16,16,(x,w,h)=>{x.fillStyle='#a7a7a0';x.fillRect(0,0,w,h);x.fillStyle='#8c8c86';x.fillRect(0,0,w,1);x.fillRect(0,0,1,h);x.fillStyle='rgba(0,0,0,.06)';x.fillRect(3,5,4,2);x.fillRect(9,11,3,2)});
@@ -306,7 +306,10 @@ function buildRing(T){const d=T.d,N=T.N,sc=new THREE.Scene(),C=T._rc||cornersOf(
     for(let n=0;n<3;n++){if(rr()<.35)continue;const l=side*(T.hw[k]+RO[k]+1.4+rr()*7),p=at(k,l,0);peeps.push([p[0],p[1]+.55,p[2],1,1,1,rr()*6])}
     if(q%10===0){const l=side*(T.hw[k]+RO[k]+12+rr()*6),p=at(k,l,0);(rr()<.5?tents:vans).push([p[0],p[1],p[2],1,1,1,T.psi[k]+(rr()-.5)*.6])}}}
   if(peeps.length){instC(g,new THREE.CylinderGeometry(.22,.26,1.0,5),M_(0xffffff),peeps,[0xd8392f,0x2f6fd0,0xf2c230,0x2fa05a,0x111111,0xe8e8e8,0xff7a2a]);instC(g,new THREE.SphereGeometry(.2,5,4),M_(0xe3b58d),peeps.map(p=>[p[0],p[1]+.7,p[2],1]))}
-  if(tents.length)instC(g,new THREE.ConeGeometry(2.6,2.4,4),M_(0xffffff),tents.map(p=>[p[0],p[1]+1.2,p[2],1,1,1,p[6]+PI/4]),[0xf1f1f1,0xd8392f,0x2c6cd0,0xf2c76b]);
+  if(tents.length){/* flat-topped gazebos: canopy with a valance on four poles */
+   const tp=(dx,dy,dz)=>tents.map(p=>{const c=Math.cos(p[6]),s=Math.sin(p[6]);return[p[0]+c*dx+s*dz,p[1]+dy,p[2]-s*dx+c*dz,1,1,1,p[6]]});
+   instC(g,new THREE.BoxGeometry(3.2,.45,3.2),M_(0xffffff),tp(0,2.35,0),[0xf1f1f1,0xd8392f,0x2c6cd0,0xf2c76b]);
+   const pole=new THREE.CylinderGeometry(.05,.05,2.2,4);for(const[dx,dz]of[[-1.5,-1.5],[1.5,-1.5],[-1.5,1.5],[1.5,1.5]])instC(g,pole,M_(0xb8bcc0),tp(dx,1.1,dz))}
   if(vans.length){/* camper vans: living box, low cab, dark window band, wheels (parts offset in each van's own frame) */
    const part=(dx,dy,dz)=>vans.map(p=>{const c=Math.cos(p[6]),s=Math.sin(p[6]);return[p[0]+c*dx+s*dz,p[1]+dy,p[2]-s*dx+c*dz,1,1,1,p[6]]});
    instC(g,new THREE.BoxGeometry(2.3,2.3,4.4),M_(0xffffff),part(0,1.65,-.7));
@@ -320,7 +323,7 @@ function buildRing(T){const d=T.d,N=T.N,sc=new THREE.Scene(),C=T._rc||cornersOf(
  if(T.castle){const{x,z}=T.castle,y=T.terr(x,z),cg=new THREE.Group();cg.position.set(x,y,z);g.add(cg);const st=M_(0x9a9182),rf=M_(0x5a4a40);
   const keep=new THREE.Mesh(new THREE.CylinderGeometry(6,7,26,10),st);keep.position.y=12;cg.add(keep);const kc=new THREE.Mesh(new THREE.CylinderGeometry(7,6.6,2,10),st);kc.position.y=25.5;cg.add(kc);
   for(let q=0;q<10;q++){const a=q/10*PI*2,w=new THREE.Mesh(new THREE.BoxGeometry(14,7,2.2),st);w.position.set(Math.cos(a)*22,2.5,Math.sin(a)*22);w.rotation.y=-a+PI/2;cg.add(w)}
-  for(const a of[.3,2.4,4.4]){const tw=new THREE.Mesh(new THREE.CylinderGeometry(3,3.4,11,8),st);tw.position.set(Math.cos(a)*23,4.5,Math.sin(a)*23);cg.add(tw);const cn=new THREE.Mesh(new THREE.ConeGeometry(3.8,5,8),rf);cn.position.set(Math.cos(a)*23,12.5,Math.sin(a)*23);cg.add(cn)}}
+  for(const a of[.3,2.4,4.4]){const tw=new THREE.Mesh(new THREE.CylinderGeometry(3,3.4,11,8),st);tw.position.set(Math.cos(a)*23,4.5,Math.sin(a)*23);cg.add(tw);const cn=new THREE.Mesh(new THREE.CylinderGeometry(3.7,3.7,1.2,8),st);cn.position.set(Math.cos(a)*23,10.6,Math.sin(a)*23);cg.add(cn)}}
  styleScene(g);sc.add(g);
  const pn=panoRing(T);sc.add(pn);
  styleScene(sc);

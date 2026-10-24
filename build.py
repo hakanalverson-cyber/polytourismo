@@ -16,6 +16,9 @@ src=src.replace("['#ff5a7a66','#7af0ff55','#ffd77a55'][i%3]","['#ffd98a55','#fff
 src=src.replace("color:d.id==3?0x7af0ff:0xfff0c8","color:d.id==3?0xffe2a8:0xfff0c8")
 
 # per-jump overrides: d.jumps=[[ctrl,frac,gapMetres,rampHeight]] (a long snapped-bridge gap needs a taller ramp)
+# real circuits (Road Atlanta, Imola): no centre line, and the grey/white full-lap edge strip becomes plain asphalt run-off (kerbs live only at corners)
+src=rep(src,"x.fillStyle='#e8e8e8';x.fillRect(w/2-1,0,2,h/2)}","if(!(d.ra||d.imola)){x.fillStyle='#e8e8e8';x.fillRect(w/2-1,0,2,h/2)}}")
+src=rep(src,"const ct=ctex(8,8,(x,w,h)=>{x.fillStyle='#e8e8e8';x.fillRect(0,0,w,h);x.fillStyle='#6d7375';x.fillRect(0,0,w,h/2)})","const ct=ctex(8,8,(x,w,h)=>{if(d.ra||d.imola){x.fillStyle=d.road;x.fillRect(0,0,w,h);return}x.fillStyle='#e8e8e8';x.fillRect(0,0,w,h);x.fillStyle='#6d7375';x.fillRect(0,0,w,h/2)})")
 src=rep(src,"gl=Math.max(2,Math.round(8/sp));","gl=Math.max(2,Math.round((jp[2]||8)/sp)),JH=jp[3]||4.4,JL=jp[3]?jp[3]*.78:3.45;")
 src=rep(src,"T.y[(c-rl+k+N)%N]+=4.4*u*u*(2-u);","T.y[(c-rl+k+N)%N]+=JH*u*u*(2-u);")
 src=rep(src,"const n=Math.ceil(Rc.cd);Rc.cd-=dt;const m=Math.ceil(Rc.cd);if(m!=n&&m>0)beep(600,.12);$('cd').textContent=Rc.cd>0?Math.ceil(Rc.cd):'GO!';if(Rc.cd<=0){Rc.state='race';Rc.t=0;beep(1200,.4);","const cs=PT8.cdStep(Rc,dt);$('cd').textContent=cs.txt;if(cs.go){Rc.state='race';Rc.t=0;")

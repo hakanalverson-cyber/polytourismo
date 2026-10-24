@@ -22,8 +22,8 @@ function dressRA(T,sc){
  /* off the paving, everything sits on the real ground (never floats, never sinks under the grass) */
  const at=(k,l,dy)=>{k=((k%N)+N)%N;const c=Math.cos(T.psi[k]),s=Math.sin(T.psi[k]),x=T.x[k]+c*l,z=T.z[k]-s*l,ry=T.y[k]-l*T.bank[k],ex=Math.abs(l)-T.hw[k];if(ex>1.2){/* sit on the ground the terrain mesh is built from, never on a raised road level */return[x,terrainBed(T,x,z)+(dy||0)+.03,z]}return[x,ry+(dy||0),z]};
  const g=new THREE.Group();g.name='raDress';
- /* backdrop mountains were laid out for a ~600 m world: push them out so nothing stands in or over this much bigger circuit */
- sc.traverse(o=>{const q=o.geometry&&o.geometry.parameters;if(q&&o.geometry.type==='ConeGeometry'&&q.radius>=80&&q.height>=60){o.position.x*=2.0;o.position.z*=2.0}});
+ /* no pyramid hills on the circuits: drop the stock backdrop cones */
+ {const rm=[];sc.traverse(o=>{const q=o.geometry&&o.geometry.parameters;if(q&&o.geometry.type==='ConeGeometry'&&q.radius>=80)rm.push(o)});rm.forEach(o=>o.parent.remove(o))}
  /* corner indices on the sampled track */
  const M={};for(const k in RA.marks){const p=RA.pts[RA.marks[k]];M[k]=near(T,p[0]*RAK,p[1]*RAK)}
  /* curvature per sample (positive = turning left for the car, because lateral +l is the car's left) */
@@ -49,11 +49,11 @@ function dressRA(T,sc){
   if(!pos.length)return;const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));gg.setIndex(idx);gg.computeVertexNormals();const m=new THREE.Mesh(gg,mt);g.add(m);return m};
  /* ---- corner ranges from curvature ---- */
  const corners=[];{let s=-1;for(let i=0;i<N;i++){const on=Math.abs(curv[i])>.0085;if(on&&s<0)s=i;if(!on&&s>=0){if(i-s>8)corners.push({a:s,b:i,dir:Math.sign(curv[Math.round((s+i)/2)])});s=-1}}}
- const curbTex=ctex(2,8,(x,w,h)=>{for(let j=0;j<8;j++){x.fillStyle=j<4?'#d8392f':'#f1f1f1';x.fillRect(0,j,w,1)}}),curbM=new THREE.MeshStandardMaterial({map:curbTex,roughness:.8,side:THREE.DoubleSide});
+ const curbTex=ctex(2,8,(x,w,h)=>{for(let j=0;j<8;j++){x.fillStyle=j<4?'#e01a14':'#f4f4f4';x.fillRect(0,j,w,1)}}),curbM=new THREE.MeshStandardMaterial({map:curbTex,roughness:.8,side:THREE.DoubleSide});
  curbTex.repeat.set(1,1);
  const inR=[],outR=[],inL=[],outL=[];
  for(const c of corners){const a=Math.max(0,c.a-3),b=c.b+3;/* inside of a left turn is +l */ (c.dir>0?inL:inR).push([a,b]);(c.dir>0?outR:outL).push([a+4,c.b-2])}
- strip(inL,1,.9,2.6,.075,curbM,2.8);strip(inR,-1,.9,2.6,.075,curbM,2.8);strip(outL,1,.9,2.2,.072,curbM,2.8);strip(outR,-1,.9,2.2,.072,curbM,2.8);
+ strip(inL,1,.9,2.6,.075,curbM,2.0);strip(inR,-1,.9,2.6,.075,curbM,2.0);strip(outL,1,.9,2.2,.072,curbM,2.0);strip(outR,-1,.9,2.2,.072,curbM,2.0);
  /* paint-your-own gravel run-off strips on the outside of corners */
  const gm=M_(0x9a8460,{roughness:1});for(const c of corners){const a=Math.max(0,c.a-2),b=c.b+2;strip([[a,b]],c.dir>0?-1:1,2.4,11,.03,gm,6)}
  /* ---- guardrail: outside of corners, far from the racing line ---- */
@@ -115,7 +115,7 @@ function dressRA(T,sc){
   const ban=new THREE.Mesh(new THREE.PlaneGeometry(wd*1.5,1.6),new THREE.MeshBasicMaterial({map:signCanvas('ROAD ATLANTA',512,64,'#2c6cd0','#f1f1f1',34),side:THREE.DoubleSide}));ban.position.set(0,10.4,2.05);bp.add(ban);const ban2=ban.clone();ban2.position.z=-2.05;bp.add(ban2);
   const rail=new THREE.Mesh(new THREE.BoxGeometry(wd*2,.12,.12),M_(0xf1f1f1));for(const z of[-1.9,1.9]){const r=rail.clone();r.position.set(0,10.2,z);bp.add(r)}}
  /* ---- hospitality tents + billboards around the paddock ---- */
- for(let q=0;q<5;q++){const k=(60+q*22)%N,[px,py,pz]=at(k,-(T.hw[k]+60),0),tn=new THREE.Group();tn.position.set(px,T.terr(px,pz),pz);tn.rotation.y=T.psi[k];g.add(tn);const bd=new THREE.Mesh(new THREE.BoxGeometry(10,3,14),M_([0xf1f1f1,0xd8392f,0x2c6cd0,0xf2c76b,0xe9e9e9][q]));bd.position.y=1.5;tn.add(bd);const tp=new THREE.Mesh(new THREE.ConeGeometry(8.5,3,4),M_(0xf1f1f1));tp.position.y=4.5;tp.rotation.y=PI/4;tn.add(tp)}
+ for(let q=0;q<5;q++){const k=(60+q*22)%N,[px,py,pz]=at(k,-(T.hw[k]+60),0),tn=new THREE.Group();tn.position.set(px,T.terr(px,pz),pz);tn.rotation.y=T.psi[k];g.add(tn);const bd=new THREE.Mesh(new THREE.BoxGeometry(10,3,14),M_([0xf1f1f1,0xd8392f,0x2c6cd0,0xf2c76b,0xe9e9e9][q]));bd.position.y=1.5;tn.add(bd);const tp=new THREE.Mesh(new THREE.BoxGeometry(10.6,.5,14.6),M_(0xf1f1f1));tp.position.y=3.25;tn.add(tp)}
  styleScene(g);sc.add(g);
 }
 /* the Quarry world's tunnel does not belong on Road Atlanta (the look is borrowed, the tunnel slot is not) */

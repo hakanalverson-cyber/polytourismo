@@ -10,7 +10,7 @@ const imola={id:15,look:0,name:'Imola',desc:'italian grand prix circuit / chican
 D.push(imola);
 P.TRACK_INFO.push({s:'TARMAC',tags:['CHICANES','SAND TRAPS','TYRE WALLS','KERBS']});
 P.TRK_TRACKS.push(D.length-1);
-P.MEDAL_REF[D.length-1]=96;
+P.MEDAL_REF[D.length-1]=98.5;
 MATS.sandtrap={grip:.42,top:.5,acc:.4};
 const IMX=D.length-1;
 
@@ -36,7 +36,7 @@ function dressIM(T,sc){
  const lerp=(a,b,t)=>a+(b-a)*t;
  const at=(k,l,dy)=>{k=((k%N)+N)%N;const c=Math.cos(T.psi[k]),s=Math.sin(T.psi[k]),x=T.x[k]+c*l,z=T.z[k]-s*l,ry=T.y[k]-l*T.bank[k],ex=Math.abs(l)-T.hw[k];if(ex>1.2){/* sit on the ground the terrain mesh is built from, never on a raised road level */return[x,terrainBed(T,x,z)+(dy||0)+.03,z]}return[x,ry+(dy||0),z]};
  const g=new THREE.Group();g.name='imolaDress';
- sc.traverse(o=>{const q=o.geometry&&o.geometry.parameters;if(q&&o.geometry.type==='ConeGeometry'&&q.radius>=80&&q.height>=60){o.position.x*=1.6;o.position.z*=1.6}});
+ {const rm=[];sc.traverse(o=>{const q=o.geometry&&o.geometry.parameters;if(q&&o.geometry.type==='ConeGeometry'&&q.radius>=80)rm.push(o)});rm.forEach(o=>o.parent.remove(o))}
  const dRoad=(x,z)=>{const cx=Math.floor(x/16),cz=Math.floor(z/16);let b=1e9;for(let a=-2;a<=2;a++)for(let c=-2;c<=2;c++){const l=T.grid.get((cx+a)*8192+cz+c);if(!l)continue;for(const i of l){const d=Math.hypot(x-T.x[i],z-T.z[i])-T.hw[i];if(d<b)b=d}}return b>=1e9?999:Math.max(0,b)};
  /* terrain: bright arcade green, mown stripes near the road */
  let ter=null,most=0;sc.traverse(o=>{if(o.isMesh&&o.geometry&&o.geometry.attributes.color&&o.geometry.attributes.position.count>most){most=o.geometry.attributes.position.count;ter=o}});
@@ -54,10 +54,10 @@ function dressIM(T,sc){
    for(let q=0;q<n;q++){const i=base+q*2;idx.push(i,i+1,i+2,i+1,i+3,i+2)}base+=(n+1)*2}
   if(!pos.length)return;const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));gg.setIndex(idx);gg.computeVertexNormals();const m=new THREE.Mesh(gg,mt);g.add(m);return m};
  /* kerbs: red/white on the inside of every corner, a short outside kerb on exit */
- const curbTex=ctex(2,8,(x,w,h)=>{for(let j=0;j<8;j++){x.fillStyle=j<4?'#d8392f':'#f1f1f1';x.fillRect(0,j,w,1)}}),curbM=new THREE.MeshStandardMaterial({map:curbTex,roughness:.8,side:THREE.DoubleSide});
+ const curbTex=ctex(2,8,(x,w,h)=>{for(let j=0;j<8;j++){x.fillStyle=j<4?'#e01a14':'#f4f4f4';x.fillRect(0,j,w,1)}}),curbM=new THREE.MeshStandardMaterial({map:curbTex,roughness:.8,side:THREE.DoubleSide});
  const inR=[],outR=[],inL=[],outL=[];
  for(const c of corners){const a=Math.max(0,c.a-3),b=c.b+3;(c.dir>0?inL:inR).push([a,b]);(c.dir>0?outR:outL).push([a+4,c.b-2])}
- strip(inL,1,.9,2.6,.075,curbM,2.8);strip(inR,-1,.9,2.6,.075,curbM,2.8);strip(outL,1,.9,2.2,.072,curbM,2.8);strip(outR,-1,.9,2.2,.072,curbM,2.8);
+ strip(inL,1,.9,2.6,.075,curbM,2.0);strip(inR,-1,.9,2.6,.075,curbM,2.0);strip(outL,1,.9,2.2,.072,curbM,2.0);strip(outR,-1,.9,2.2,.072,curbM,2.0);
  /* SAND TRAPS on the outside of every corner (really slow: cars bog down in them) with a rake-line pattern */
  const sandTex=ctex(32,32,(x,w,h)=>{x.fillStyle='#e6d29b';x.fillRect(0,0,w,h);x.fillStyle='#d4bd80';for(let j=0;j<h;j+=4)x.fillRect(0,j,w,1);x.fillStyle='#f1e3b4';for(let j=2;j<h;j+=8)x.fillRect(0,j,w,1)});
  const sandM=new THREE.MeshStandardMaterial({map:sandTex,roughness:1,side:THREE.DoubleSide});sandTex.wrapS=sandTex.wrapT=THREE.RepeatWrapping;
