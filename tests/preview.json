@@ -1,0 +1,5 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",2500],
+["js","(()=>{document.querySelector('#s8cards .card[data-m=track]').click();return 1})()"],["wait",2500],["shot","pv_ra"],
+["js","(()=>{const l=[...document.querySelectorAll('#trkList .trk')];l[1].click();return l.length})()"],["wait",1500],["shot","pv_im"],
+["js","(()=>{const l=[...document.querySelectorAll('#trkList .trk')];l[2].click();return PT8.trackCorners(PT8.RING_IDX).list.length})()"],["wait",1500],["shot","pv_ring"],
+["js","(()=>{const r=[];for(let i=0;i<40;i++){try{r.push(i+':'+PT8.trackCorners(i).list.length)}catch(e){break}}return r.join(' ')})()"]]

@@ -190,20 +190,48 @@ const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="current
 /* ================= TRACK PREVIEW (map + elevation) ================= */
 const TS=[];function tr(i){return TS[i]||(TS[i]=sampleTrack(D[i]))}
 function mix3(a,b,t){return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t]}
+/* corners for the track previews: severity per sample (0 straight .. 4 hairpin) and a numbered list in lap order */
+P.SEV_COL=['#f1f3f5','#f2df6b','#f2a43a','#e8572f','#c22a4a'];
+P.trackCorners=i=>{const T=tr(i);if(T._cn)return T._cn;const N=T.N,w=Math.max(1,Math.round(10/T.sp)),kap=new Float32Array(N),sev=new Uint8Array(N);
+ for(let k=0;k<N;k++)kap[k]=wr(T.psi[(k+w)%N]-T.psi[(k-w+N)%N])/(2*w*T.sp);
+ const sm_=new Float32Array(N),w2=Math.max(1,Math.round(8/T.sp));for(let k=0;k<N;k++){let a=0;for(let q=-w2;q<=w2;q++)a+=kap[(k+q+N)%N];sm_[k]=a/(2*w2+1)}
+ const lv=r=>r>170?0:r>90?1:r>50?2:r>25?3:4;for(let k=0;k<N;k++)sev[k]=lv(1/Math.max(1e-6,Math.abs(sm_[k])));
+ /* a corner is a run of curvature (gaps under ~25 m merged) that turns at least 30 degrees */
+ const on=k=>Math.abs(sm_[k])>1/170,list=[];let k0=0;while(k0<N&&on(k0))k0++;
+ for(let q=0;q<N;){const k=(k0+q)%N;if(!on(k)){q++;continue}let e=q,gap=0,dir=Math.sign(sm_[k]);
+  while(e+1<N){const kk=(k0+e+1)%N;if(on(kk)&&Math.sign(sm_[kk])===dir){e++;gap=0}else if(gap*T.sp<25&&!(on(kk)&&Math.sign(sm_[kk])!==dir)){e++;gap++}else break}
+  e-=gap;let turn=0,pk=0,pi=k;for(let j=q;j<=e;j++){const kk=(k0+j)%N;turn+=sm_[kk]*T.sp;if(Math.abs(sm_[kk])>pk){pk=Math.abs(sm_[kk]);pi=kk}}
+  if(Math.abs(turn)>.52)list.push({k:pi,dir,sev:Math.max(1,sev[pi]),turn});q=e+1}
+ /* corners closer together than the map can show become one number (a chicane or an S on a long track) */
+ {let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;for(let k=0;k<N;k++){x0=Math.min(x0,T.x[k]);x1=Math.max(x1,T.x[k]);z0=Math.min(z0,T.z[k]);z1=Math.max(z1,T.z[k])}
+  const sep=.035*Math.max(x1-x0,z1-z0);for(let j=list.length-1;j>0;j--){const a=list[j-1],b=list[j];if(Math.hypot(T.x[a.k]-T.x[b.k],T.z[a.k]-T.z[b.k])<sep){const keep=Math.abs(a.turn)>=Math.abs(b.turn)?a:b;keep.sev=Math.max(a.sev,b.sev);keep.turn=Math.sign(keep.turn)*(Math.abs(a.turn)+Math.abs(b.turn));list.splice(j-1,2,keep)}}}
+ /* long tracks: keep only the biggest corners so the numbers stay readable */
+ let lim=.52;while(list.length>24){lim+=.08;for(let j=list.length-1;j>=0;j--)if(Math.abs(list[j].turn)<lim)list.splice(j,1)}
+ list.sort((a,b)=>a.k-b.k);list.forEach((c,n)=>c.n=n+1);return T._cn={sev,list}};
 function drawTrack(cv,i,full){const T=tr(i),g=cv.getContext('2d'),W=cv.width,H=cv.height;g.clearRect(0,0,W,H);g.fillStyle='#07090c';g.fillRect(0,0,W,H);
  const mapH=full?H*.7:H,pad=full?22:3;let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9,y0=1e9,y1=-1e9;for(let k=0;k<T.N;k++){x0=Math.min(x0,T.x[k]);x1=Math.max(x1,T.x[k]);z0=Math.min(z0,T.z[k]);z1=Math.max(z1,T.z[k]);y0=Math.min(y0,T.y[k]);y1=Math.max(y1,T.y[k])}
  const s=Math.min((W-pad*2)/(x1-x0),(mapH-pad*2)/(z1-z0)),ox=W/2-(x0+x1)/2*s,oz=mapH/2-(z0+z1)/2*s;
  if(full){g.strokeStyle='#ffffff0a';g.lineWidth=1;for(let x=0;x<W;x+=24){g.beginPath();g.moveTo(x+.5,0);g.lineTo(x+.5,mapH);g.stroke()}for(let y=0;y<mapH;y+=24){g.beginPath();g.moveTo(0,y+.5);g.lineTo(W,y+.5);g.stroke()}}
  g.lineCap='butt';g.lineJoin='round';
  g.strokeStyle='#000';g.lineWidth=full?9:4;g.beginPath();for(let k=0;k<=T.N;k+=2){const q=k%T.N;k?g.lineTo(T.x[q]*s+ox,T.z[q]*s+oz):g.moveTo(T.x[q]*s+ox,T.z[q]*s+oz)}g.stroke();
- const yr=Math.max(1,y1-y0),LO=[58,104,128],HI=[242,199,107];g.lineWidth=full?4.5:2.2;
- for(let k=0;k<T.N;k+=2){const a=k,b=(k+2)%T.N,u=(T.y[a]-y0)/yr,c=mix3(LO,HI,u);g.strokeStyle=T.gap[a]?'#e6e9ee':`rgb(${c[0]|0},${c[1]|0},${c[2]|0})`;g.beginPath();g.moveTo(T.x[a]*s+ox,T.z[a]*s+oz);g.lineTo(T.x[b]*s+ox,T.z[b]*s+oz);g.stroke()}
- g.fillStyle='#e6e9ee';g.fillRect(T.x[0]*s+ox-3,T.z[0]*s+oz-3,6,6);
+ const yr=Math.max(1,y1-y0),cn=P.trackCorners(i);g.lineWidth=full?4.5:2.2;
+ /* white track, corners tinted by how tight they are */
+ g.strokeStyle=P.SEV_COL[0];g.beginPath();for(let k=0;k<=T.N;k+=2){const q=k%T.N;k?g.lineTo(T.x[q]*s+ox,T.z[q]*s+oz):g.moveTo(T.x[q]*s+ox,T.z[q]*s+oz)}g.stroke();
+ g.lineCap='round';for(let k=0;k<T.N;k++){const sv=cn.sev[k];if(!sv&&!T.gap[k])continue;const b=(k+1)%T.N;g.strokeStyle=T.gap[k]?'#5d6670':P.SEV_COL[sv];g.beginPath();g.moveTo(T.x[k]*s+ox,T.z[k]*s+oz);g.lineTo(T.x[b]*s+ox,T.z[b]*s+oz);g.stroke()}g.lineCap='butt';
+ {/* start line: a short tick across the track, small enough not to hide the corner next to it */const c=Math.cos(T.psi[0]),sn=Math.sin(T.psi[0]),L=full?7:3.2,x=T.x[0]*s+ox,y=T.z[0]*s+oz;g.strokeStyle='#07090c';g.lineWidth=full?4:2.4;g.beginPath();g.moveTo(x-c*L,y+sn*L);g.lineTo(x+c*L,y+sn*L*-1);g.stroke();g.strokeStyle='#f1f3f5';g.lineWidth=full?2:1.2;g.beginPath();g.moveTo(x-c*L,y+sn*L);g.lineTo(x+c*L,y-sn*L);g.stroke()}
+ if(full){g.font='bold 10px monospace';g.textAlign='center';g.textBaseline='middle';const R=cn.list.length>40?6:7.5;
+  const used=[],w=Math.max(2,Math.round(30/T.sp));for(const q of cn.list){const k=q.k,ax=T.x[k]*s+ox,ay=T.z[k]*s+oz,a=(k-w+T.N)%T.N,b=(k+w)%T.N;
+   /* the chord between points either side of the apex lies inside the corner, so the outside is away from it */
+   let nx=ax-((T.x[a]+T.x[b])/2*s+ox),ny=ay-((T.z[a]+T.z[b])/2*s+oz),nl=Math.hypot(nx,ny);if(nl<1e-3){nx=Math.cos(T.psi[k]);ny=-Math.sin(T.psi[k]);nl=1}nx/=nl;ny/=nl;
+   let x,y;const tries=[R+5,R*2.6+5,-(R+5),R*4+5];for(const o of tries){x=ax+nx*o;y=ay+ny*o;if(!used.some(u=>Math.hypot(u[0]-x,u[1]-y)<R*2.05))break}used.push([x,y]);
+   g.fillStyle='#07090ce0';g.beginPath();g.arc(x,y,R,0,7);g.fill();g.strokeStyle=P.SEV_COL[q.sev];g.lineWidth=1;g.stroke();g.fillStyle='#f1f3f5';g.font='bold '+(R>7?10:8)+'px monospace';g.fillText(String(q.n),x,y+.5)}
+  g.textBaseline='alphabetic'}
  if(full){for(const j of T.jumps||[]){g.fillStyle='#e6e9ee';g.beginPath();g.arc(T.x[j]*s+ox,T.z[j]*s+oz,4,0,7);g.fill()}
   const ph=H*.24,py=H-ph-8;g.fillStyle='#0b0e12';g.fillRect(10,py,W-20,ph);g.strokeStyle='#2a3340';g.strokeRect(10.5,py+.5,W-21,ph-1);
   g.fillStyle='#f1f3f522';g.beginPath();g.moveTo(10,py+ph);for(let k=0;k<=T.N;k+=3){const q=Math.min(k,T.N-1),x=10+(W-20)*k/T.N,y=py+ph-3-(T.y[q]-y0)/yr*(ph-10);g.lineTo(x,y)}g.lineTo(W-10,py+ph);g.fill();
   g.strokeStyle='#f1f3f5';g.lineWidth=1.6;g.beginPath();for(let k=0;k<T.N;k+=3){const x=10+(W-20)*k/T.N,y=py+ph-3-(T.y[k]-y0)/yr*(ph-10);k?g.lineTo(x,y):g.moveTo(x,y)}g.stroke();
-  g.fillStyle='#7b8594';g.font='9px monospace';g.textAlign='left';g.fillText('ELEV '+Math.round(y0)+'-'+Math.round(y1)+' M',16,py+12);g.textAlign='right';g.fillText(Math.round(T.L)+' M',W-16,py+12)}}
+  g.fillStyle='#7b8594';g.font='9px monospace';g.textAlign='left';g.fillText('ELEV '+Math.round(y0)+'-'+Math.round(y1)+' M',16,py+12);g.textAlign='right';g.fillText(Math.round(T.L)+' M',W-16,py+12);
+  {/* corner colour key */g.textAlign='left';const items=[[1,'FAST'],[2,'MEDIUM'],[3,'SLOW'],[4,'HAIRPIN']];let tw=0;for(const[,nm]of items)tw+=g.measureText(nm).width+28;let lx=W/2-tw/2;for(const[sv,nm]of items){g.fillStyle=P.SEV_COL[sv];g.fillRect(lx,py-10,10,3);g.fillStyle='#7b8594';g.fillText(nm,lx+14,py-5);lx+=g.measureText(nm).width+28}}}}
 
 /* ================= TIME OF DAY preview (small pixel render) ================= */
 const BIOME={grass:[90,150,82],sand:[214,178,122],snow:[226,234,244],city:[38,38,58],forest:[62,112,64],desert:[200,143,94],moor:[106,127,78],harbor:[168,170,168]};
