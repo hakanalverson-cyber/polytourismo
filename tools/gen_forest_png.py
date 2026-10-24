@@ -21,19 +21,38 @@ def beech(cx,base,r,col,shade,light):
         x=cx+(random.random()-.3)*r*0.8;y=base-r*1.4+random.random()*r*0.5;rr=r*0.35
         d.ellipse([x-rr,y-rr*0.8,x+rr,y+rr*0.8],fill=light)
     d.ellipse([cx-r*0.9,base-r*0.9,cx+r*0.2,base-r*0.1],fill=shade)
-# three depth rows: back (bluish, tall), middle, front (rich green); every row wraps across the seam
-rows=[(150,(38,74,58),(30,60,50),(56,96,74),1.15,0.55),(190,(28,82,44),(20,62,34),(58,118,60),1.0,0.5),(232,(24,92,38),(16,66,28),(70,140,58),0.9,0.42)]
-for base,col,shade,light,hs,mix in rows:
-    x=-40
-    while x<W+40:
-        if random.random()<mix:
-            h=(95+random.random()*70)*hs;w=h*0.24
-            for ox in (0,-W,W):spruce(x+ox,base+random.random()*8,h,w,col,shade,light)
+# three depth rows of mostly broadleaf crowns (rounded canopy outline), a few spruce tips poking through
+def crown(cx,base,r,col,shade,light):
+    # a cumulus-like crown: big lumps along a dome, a lit cap on the upper right, shade at the lower left
+    lumps=[(0,-1.0,1.0)]+[(math.cos(a)*0.75,-0.75-math.sin(a)*0.45,0.55+random.random()*0.25) for a in [i*math.pi/6 for i in range(7)]]
+    for ox,oy,rr in lumps:
+        x=cx+ox*r;y=base+oy*r;R=rr*r
+        d.ellipse([x-R,y-R*0.9,x+R,y+R*0.9],fill=col)
+    for ox,oy,rr in lumps[1:4]:
+        x=cx+ox*r*0.9-r*0.15;y=base+oy*r+r*0.25;R=rr*r*0.75
+        d.ellipse([x-R,y-R*0.8,x+R,y+R*0.8],fill=shade)
+    for k in range(4):
+        x=cx+r*(0.05+random.random()*0.45);y=base-r*(1.25+random.random()*0.35);R=r*(0.22+random.random()*0.12)
+        d.ellipse([x-R,y-R*0.8,x+R,y+R*0.8],fill=light)
+rows=[(150,(44,82,62),(36,68,54),(62,104,78),1.25,0.18),(192,(34,92,46),(24,70,36),(66,128,62),1.05,0.14),(234,(30,104,40),(20,76,30),(84,152,62),0.9,0.10)]
+for base,col,shade,light,hs,sp in rows:
+    x=-60
+    while x<W+60:
+        if random.random()<sp:
+            h=(90+random.random()*50)*hs;w=h*0.22
+            for ox in (0,-W,W):spruce(x+ox,base+random.random()*6,h,w,col,shade,light)
+            x+=10+random.random()*10
         else:
-            r=(30+random.random()*22)*hs
-            c2=(col[0]+18,col[1]+22,col[2]-6);l2=(light[0]+30,light[1]+28,light[2]-10)
-            for ox in (0,-W,W):beech(x+ox,base+6,r,c2,shade,l2)
-        x+=14+random.random()*20
+            r=(34+random.random()*20)*hs
+            for ox in (0,-W,W):crown(x+ox,base+4,r,col,shade,light)
+            x+=r*(0.9+random.random()*0.5)
+# leaf texture: small light and dark flecks over the crowns, keyed off the colour underneath
+px=img.load()
+for k in range(1400):
+    x=random.randrange(W);y=random.randrange(20,232);c=px[x,y]
+    if c[3]<200:continue
+    f=random.choice((0.86,0.92,1.08,1.14));r=1.2+random.random()*1.6
+    d.ellipse([x-r,y-r*0.7,x+r,y+r*0.7],fill=(min(255,int(c[0]*f)),min(255,int(c[1]*f)),min(255,int(c[2]*f)),255))
 # ground band under the front row: dark undergrowth so the strip sits into the grass
 d.rectangle([0,232,W,H],fill=(18,48,24,255))
 for k in range(260):
