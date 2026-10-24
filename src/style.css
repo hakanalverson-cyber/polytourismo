@@ -43,11 +43,6 @@
 #logo small{display:block;font:700 11px var(--mn)!important;letter-spacing:.42em!important;color:var(--dim)!important;margin-top:18px!important}
 #menu .menuSub,#ver,.lineupLabel{display:none!important}
 #menu .menuActions{top:46vh!important;left:5vw!important;gap:2px!important;display:flex!important;flex-direction:column!important}
-#menu .menuActions button{min-width:300px!important;text-align:left!important;background:transparent!important;color:var(--dim)!important;border:0!important;border-left:3px solid transparent!important;border-bottom:1px solid #ffffff10!important;padding:13px 16px!important;font:700 14px var(--mn)!important;letter-spacing:.3em!important;text-transform:uppercase!important;clip-path:none!important;transform:none!important;box-shadow:none!important;transition:background .1s,color .1s,padding .1s}
-#menu .menuActions button small{color:#566070!important;font-size:10px!important;margin-right:16px!important;letter-spacing:.1em!important}
-#menu .menuActions button span{display:none!important}
-#menu .menuActions button:hover,#menu .menuActions button.foc{background:linear-gradient(90deg,#f1f3f522,transparent)!important;color:#fff!important;border-left-color:var(--ac)!important;padding-left:24px!important}
-#menu .menuActions button:hover small{color:var(--ac)!important}
 .mfoot{position:absolute;left:5vw;right:5vw;bottom:4vh;border-top:1px solid var(--ln);padding-top:10px;font-size:10px;letter-spacing:.2em;color:var(--dim);display:flex;gap:30px;pointer-events:none;text-transform:uppercase}
 .mfoot b{color:var(--tx)}
 /* ===== mode cards ===== */
@@ -290,7 +285,6 @@ body:after{background:repeating-linear-gradient(0deg,#00000010 0 1px,transparent
 /* menu */
 #logo{font:italic 900 clamp(30px,5vw,64px)/1 var(--hd)!important;letter-spacing:.04em!important}
 #logo small{font:700 11px var(--mn)!important;font-style:normal;letter-spacing:.3em!important}
-#menu .menuActions button{font:italic 900 15px var(--hd)!important;letter-spacing:.12em!important}
 .mfoot{border-top:0}
 /* ---- HUD: merged plates, red upshift dot ---- */
 .h8top{background:#080a0de6;border:0;border-left:3px solid var(--ac)}
@@ -350,8 +344,7 @@ body:after{background:repeating-linear-gradient(0deg,#00000010 0 1px,transparent
 /* v9 rev bar: classic tach colours; grey secondary text for contrast */
 .segs i.on.z0{background:#4fdc82}.segs i.on.z1{background:#ffd23f}.segs i.on.z2{background:#ff9a2f}.segs i.on.z3{background:#ff3b30}
 :root{--gr:#8e98a4}
-.hdr h2 em,#logo span,#menu .menuTop .brandMark,.h8pos i,.h8plate .bl,#s8res .sub,#menu .menuActions button:hover small,.rt th,.card h3 small{color:var(--gr)!important}
-.h8pos i{opacity:1}
+.hdr h2 em,#logo span,#menu .menuTop .brandMark,.h8pos i,.h8plate .bl,#s8res .sub,.h8pos i{opacity:1}
 .pp b{color:var(--gr)}
 .rt td.pl{color:var(--gr)}
 #mm{background:none!important;border:0!important;box-shadow:none!important;filter:drop-shadow(0 1px 3px #000a)}
@@ -798,11 +791,84 @@ body.barnscene #cd,body.barnscene #mm,body.barnscene #huds,body.barnscene #rlDas
 #resBox h1{font-style:italic;letter-spacing:.14em;text-transform:uppercase}
 @media(max-width:640px){.gthead,.gtrow{grid-template-columns:34px 1fr 84px 96px}.gtc{display:none}.gthead .gtc{display:none}}
 
-/* GT-style main menu: horizontal tile bar */
-#menu .menuActions{top:auto!important;bottom:11vh!important;left:5vw!important;right:5vw!important;flex-direction:row!important;gap:6px!important;align-items:flex-end}
-#menu .menuActions button{min-width:0!important;flex:1 1 0;max-width:230px;height:92px;display:flex!important;flex-direction:column!important;justify-content:flex-end!important;padding:12px 16px!important;border:0!important;border-top:3px solid #ffffff22!important;background:linear-gradient(180deg,#0c141acc,#070c10ee)!important;letter-spacing:.2em!important;font-size:13px!important;color:#b8c7cf!important;transition:transform .18s,height .18s,background .18s;clip-path:polygon(0 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%)!important}
-#menu .menuActions button small{display:block;margin:0 0 6px!important;font-size:11px!important;font-style:italic}
-#menu .menuActions button em{font-style:normal}
-#menu .menuActions button:hover,#menu .menuActions button.foc{height:112px;padding-left:16px!important;border-top-color:var(--ac)!important;background:linear-gradient(180deg,#1b2b36f2,#0d171dfa)!important;color:#fff!important;transform:translateY(-4px)}
-#menu .menuActions button:first-child{border-top-color:var(--ac)!important}
-.mfoot{bottom:3.5vh}
+/* ===== GT-style type: one clean sans everywhere ===== */
+:root{--gt:"Inter","SF Pro Display","Segoe UI","Helvetica Neue","Arial","Liberation Sans","DejaVu Sans",sans-serif;--mn:var(--gt);--hd:var(--gt)}
+*:not(canvas):not(svg):not(path){font-family:var(--gt)!important}
+body{font-variant-numeric:tabular-nums}
+h1,h2,h3,.hdr h2,.btn,.hdr h2 em{font-style:italic}
+
+/* ===== main menu: GT-style top bar + drop-down ===== */
+*{border-radius:0!important}
+#menu .menuActions,#menu #logo,#menu .menuTop{display:none!important}
+#gtBar{position:absolute;left:0;right:0;top:0;height:72px;display:flex;align-items:stretch;justify-content:space-between;background:linear-gradient(180deg,#0a0d11f2,#0a0d11cc);border-bottom:1px solid #ffffff1c;z-index:5}
+#gtBar .gtl{display:flex;align-items:center;padding:0 28px;font:italic 800 20px var(--gt);letter-spacing:.14em;color:#fff;border-right:1px solid #ffffff14}
+#gtBar .gtt{display:flex;flex:1;align-items:stretch;padding-left:8px}
+#gtBar .gtr{display:flex;align-items:stretch}
+.gtab{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-width:112px;padding:0 18px;color:#8fa0aa;font:700 10px var(--gt);letter-spacing:.18em;text-transform:uppercase;position:relative;transition:background .15s,color .15s}
+.gtab .mi{width:24px;height:24px}
+.gtab span{font-style:italic;white-space:nowrap}
+.gtab:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:3px;background:var(--ac2,#f2c76b);transform:scaleX(0);transition:transform .18s}
+.gtab.foc,.gtab:hover{background:#ffffff14;color:#fff}.gtab.foc:after,.gtab:hover:after{transform:scaleX(1)}
+.gtab.sm{min-width:84px}
+.gtbal{display:flex;flex-direction:column;justify-content:center;align-items:flex-end;padding:0 24px;border-left:1px solid #ffffff14;border-right:1px solid #ffffff14}
+.gtbal small{font:700 9px var(--gt);letter-spacing:.3em;color:#7d909a}.gtbal b{font:italic 800 20px var(--gt);color:var(--ac2,#f2c76b);letter-spacing:.04em}
+#gtDrop{position:absolute;top:72px;width:330px;background:#0c1015ee;border:1px solid #ffffff1c;border-top:0;z-index:5;display:none;flex-direction:column}
+#gtDrop.on{display:flex}
+.gti{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:16px;padding:0 20px;min-height:48px;color:#b8c7cf;border-bottom:1px solid #ffffff0d;position:relative}
+.gti .mi{width:22px;height:22px;flex:none}
+.gti span{display:flex;flex-direction:column;gap:0}.gti b{font:italic 700 14px var(--gt);letter-spacing:.06em}
+.gti em{font:400 11px var(--gt);font-style:normal;color:#8fa0aa;max-height:0;overflow:hidden;opacity:0;transition:max-height .2s,opacity .2s}
+.gti.foc{background:linear-gradient(90deg,#2b4a63f2,#1b2f40f2);color:#fff;min-height:64px}.gti.foc em{max-height:30px;opacity:1;margin-top:4px}
+.gti.foc:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--ac2,#f2c76b)}
+.mfoot{left:0!important;right:0!important;transform:none!important;bottom:0!important;height:34px;border-top:1px solid #ffffff1c!important;padding:0 28px!important;background:#0a0d11d9;justify-content:flex-start!important;align-items:center;z-index:4}
+#tutOffer{left:auto!important;right:28px!important;bottom:120px!important;transform:none!important}
+#menu .nowp,#menu #nowPlaying{bottom:48px!important}
+/* ===== quickplay mode selection ===== */
+#s8quick .qk{position:absolute;left:3.4vw;right:3.4vw;top:19vh;bottom:15vh;display:flex;gap:14px;align-items:stretch;justify-content:center;z-index:2}
+.qc{flex:1 1 0;max-width:19vw;position:relative;display:flex;flex-direction:column;padding:22px 20px 18px;cursor:pointer;background:linear-gradient(180deg,#121a21e6,#0a0f14f2);border:1px solid #ffffff18;border-radius:6px;transform:skewX(-4deg);transition:transform .22s,border-color .22s,background .22s,box-shadow .22s;overflow:hidden}
+.qc>*{transform:skewX(4deg)}
+.qc:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--ac2,#f2c76b);transform:scaleY(0);transform-origin:top;transition:transform .25s}
+.qc:hover,.qc.foc{transform:skewX(-4deg) translateY(-8px);border-color:#ffffff55;background:linear-gradient(180deg,#1c2a35f2,#0d141af8);box-shadow:0 22px 50px #000a}
+.qc:hover:before,.qc.foc:before{transform:scaleY(1)}
+.qc b{font:italic 800 13px var(--gt);letter-spacing:.3em;color:#6f808b}
+.qc .ico{flex:1;display:flex;align-items:center;justify-content:center;min-height:0}.qc .ico canvas{width:min(70%,17vh);height:auto;aspect-ratio:1;image-rendering:pixelated;filter:drop-shadow(0 8px 14px #0008)}
+.qc h3{margin:6px 0 8px;font-size:clamp(15px,2.3vh,21px);text-transform:uppercase;color:#fff}
+.qc.foc h3,.qc:hover h3{color:var(--ac2,#f2c76b)}
+.qc p{margin:0 0 14px;font-size:12px;line-height:1.5;color:#9fb0ba;min-height:54px}
+.qc .tg{min-height:50px;align-content:flex-start;display:flex;flex-wrap:wrap;gap:6px}.qc .tg i{font:700 9px var(--gt);font-style:normal;letter-spacing:.16em;padding:4px 8px;border:1px solid #ffffff2a;border-radius:3px;color:#c4d1d8}
+@media(max-width:820px){#s8quick .qk{flex-wrap:wrap;overflow:auto;top:16vh}.qc{max-width:none;flex:1 1 40%}}
+
+
+/* ===== Brand Central: GT dealership layout ===== */
+#shCars{display:none}
+#s8show.gtb #shCars{display:inline-flex;margin-left:18px}
+#s8show.gtb::before{background:linear-gradient(180deg,#000000b0 0%,transparent 16%,transparent 80%,#000000cc 100%)}
+#s8show.gtb .lst{display:none;top:90px;bottom:90px;background:#05070adf;border-right:1px solid #ffffff18}
+#s8show.gtb.lo .lst{display:block}
+#s8show.gtb .stat{top:88px;right:0;bottom:96px;max-height:none;width:min(430px,34vw);background:linear-gradient(270deg,#000000d9 70%,transparent);padding:10px 3.4vw 0 4vw;-webkit-mask-image:none;mask-image:none;overflow:auto}
+#s8show.gtb .stat #shPhotos,#s8show.gtb .drag,#s8show.gtb #shNav em{display:none!important}
+#s8show.gtb .stat h2,#s8show.gtb .stat .nm{text-align:right}
+#s8show.gtb #shNav{position:fixed;left:0;right:0;top:46vh;height:0;display:block;pointer-events:none;z-index:4}
+#s8show.gtb #shNav .btn{position:absolute;top:-38px;pointer-events:auto;width:54px;height:76px;padding:0;background:#0009;border:1px solid #ffffff2a;font-size:30px}
+#s8show.gtb #shPrev{left:3.4vw}#s8show.gtb #shNext{left:calc(66vw - 60px)}
+#s8show.gtb .bot{left:3.4vw;right:3.4vw;bottom:3.4vh}
+#s8show.gtb #shAct{min-width:240px;height:54px;font-size:15px;letter-spacing:.2em}
+
+/* ===== calmer type: upright, medium weight, modest tracking ===== */
+*:not(canvas):not(svg):not(path){font-style:normal!important;font-weight:500!important;letter-spacing:.05em!important}
+b,strong,h1,h2,h3,button,.btn,.gtab,.gti b,.hdr h2,#gtBar .gtl,.gtp,.crbox b,.qc h3,.card h3{font-weight:650!important}
+#gtBar .gtl{letter-spacing:.12em!important;font-weight:700!important}
+.gtab,.gtab span{letter-spacing:.1em!important}
+#ptTitle .lg,#ptTitle .lg i{font-weight:700!important;letter-spacing:.02em!important}
+#shCars{display:none}
+#s8show.gtb #shCars{display:inline-flex;margin-left:18px}
+#s8show.gtb::before{background:linear-gradient(180deg,#000000b0 0%,transparent 16%,transparent 80%,#000000cc 100%)}
+#s8show.gtb .lst{display:none;top:90px;bottom:90px;background:#05070adf;border-right:1px solid #ffffff18}
+#s8show.gtb.lo .lst{display:block}
+#s8show.gtb .stat{top:88px;right:0;bottom:96px;max-height:none;width:min(430px,34vw);background:linear-gradient(270deg,#000000d9 70%,transparent);padding:10px 3.4vw 0 4vw;-webkit-mask-image:none;mask-image:none;overflow:auto}
+#s8show.gtb .stat #shPhotos,#s8show.gtb .drag,#s8show.gtb #shNav em{display:none!important}
+#s8show.gtb #shNav{position:fixed;left:0;right:0;top:46vh;height:0;display:block;pointer-events:none;z-index:4}
+#s8show.gtb #shNav .btn{position:absolute;top:-38px;pointer-events:auto;width:54px;height:76px;padding:0;background:#0009;border:1px solid #ffffff2a;font-size:30px}
+#s8show.gtb #shPrev{left:3.4vw}#s8show.gtb #shNext{left:calc(66vw - 60px)}
+#s8show.gtb .bot{left:3.4vw;right:3.4vw;bottom:3.4vh}
+#s8show.gtb #shAct{min-width:240px;height:54px;font-size:15px;letter-spacing:.14em!important}

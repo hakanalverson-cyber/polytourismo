@@ -4,7 +4,7 @@
 const P=window.PT8,CARS=P.CARS,BYID=P.BYID,CLS=P.CLS,fmtCr=P.fmtCr,fmtT=P.fmtT,ord=P.ord,SORTED=P.SORTED;
 const $$=(s,r)=>[...(r||document).querySelectorAll(s)];
 const root=document.createElement('div');root.id='v8';document.body.appendChild(root);
-const SCREENS=['s8cards','s8setup','s8career','s8show','s8res'];
+const SCREENS=['s8cards','s8quick','s8setup','s8career','s8show','s8res'];
 const ST={mode:'ta',track:0,laps:3,rlaps:1,players:1,cpus:3,diff:1,time:120,traffic:'light',todUser:null,ret:'s8cards',cev:null,crank:null};
 const SR={cat:'ALL',kind:'garage',player:0,cap:null,ret:'s8setup',id:'merc',alt:0,ang:.6,vel:0,drag:false,rally:false};P.SR=SR;
 const crHTML='<div class="crbox"><small>BALANCE</small><b class="crv"></b></div>';
@@ -76,16 +76,21 @@ const evIcon={race:'<svg class="ic" viewBox="0 0 22 22"><path d="M4 20V3h2v2h12l
 root.innerHTML=`
 <section class="v8s" id="s8cards"><div class="hdr"><h2>SELECT <em>MODE</em></h2><div class="sp"></div>${crHTML}</div>
 <div class="cards">
- <div class="card big" data-m="career"><span class="num">01</span><div class="ico" data-i="ca"></div><div class="tx"><h3>Free Roam</h3><div class="sub">Open world / garage, jobs &amp; events</div></div></div>
+ <div class="card big" data-m="quick"><span class="num">01</span><div class="ico" data-i="ta"></div><div class="tx"><h3>Quickplay</h3><div class="sub">Time attack / races / elimination / cut-up</div></div></div>
  <div class="card big" data-m="rally"><span class="num">02</span><div class="ico" data-i="ra"></div><div class="tx"><h3>Rally</h3><div class="sub">Water fords / new stages / take turns</div></div></div>
  <div class="card big" data-m="track"><span class="num">03</span><div class="ico" data-i="tk"></div><div class="tx"><h3>Track</h3><div class="sub">Tarmac circuit / race cars, 200 mph</div></div></div>
- <div class="qplabel"><i></i>QUICK PLAY<i></i></div>
- <div class="card mini" data-m="ta"><span class="num">04</span><div class="ico" data-i="ta"></div><div class="tx"><h3>Time Attack</h3><div class="sub">Solo / medals</div></div></div>
- <div class="card mini" data-m="mp"><span class="num">05</span><div class="ico" data-i="mp"></div><div class="tx"><h3>Multiplayer</h3><div class="sub">1-4 drivers / split screen</div></div></div>
- <div class="card mini" data-m="cutup"><span class="num">06</span><div class="ico" data-i="cu"></div><div class="tx"><h3>Cut-Up</h3><div class="sub">Traffic / combo score</div></div></div>
- <div class="card mini" data-m="elim"><span class="num">07</span><div class="ico" data-i="el"></div><div class="tx"><h3>Elimination</h3><div class="sub">Last place is out</div></div></div>
 </div>
-<div class="foot8"><button class="btn" data-a="back"><span>&lt; Back</span></button><div class="hint8">Arrows / 1-7 select &middot; Enter confirm &middot; Esc back</div><span style="width:90px"></span></div></section>
+<div class="foot8"><button class="btn" data-a="back"><span>&lt; Back</span></button><div class="hint8">Arrows / 1-3 select &middot; Enter confirm &middot; Esc back</div><span style="width:90px"></span></div></section>
+
+<section class="v8s" id="s8quick"><div class="hdr"><h2>QUICK<em>PLAY</em></h2><small>CHOOSE HOW YOU WANT TO RACE</small><div class="sp"></div>${crHTML}</div>
+<div class="qk">
+ <div class="qc" data-m="mp" data-p="1"><b>01</b><div class="ico" data-i="mp"></div><h3>Quick Race</h3><p>You against the field. Pick the track, laps and rivals and go.</p><div class="tg"><i>SOLO</i><i>AI RIVALS</i><i>CREDITS</i></div></div>
+ <div class="qc" data-m="ta"><b>02</b><div class="ico" data-i="ta"></div><h3>Time Attack</h3><p>Just you and the clock. Chase gold, silver and bronze medals.</p><div class="tg"><i>SOLO</i><i>MEDALS</i><i>BEST LAP</i></div></div>
+ <div class="qc" data-m="elim"><b>03</b><div class="ico" data-i="el"></div><h3>Elimination</h3><p>Every few seconds the last car is out. Stay ahead to survive.</p><div class="tg"><i>AI RIVALS</i><i>SURVIVAL</i></div></div>
+ <div class="qc" data-m="cutup"><b>04</b><div class="ico" data-i="cu"></div><h3>Cut-Up</h3><p>Weave through traffic, build a combo and stack up the score.</p><div class="tg"><i>TRAFFIC</i><i>COMBO</i><i>SCORE</i></div></div>
+ <div class="qc" data-m="mp" data-p="2"><b>05</b><div class="ico" data-i="mp"></div><h3>Versus</h3><p>Split screen, 2 to 4 drivers on one screen. Settle it on track.</p><div class="tg"><i>2-4 PLAYERS</i><i>SPLIT SCREEN</i></div></div>
+</div>
+<div class="foot8"><button class="btn" data-a="back"><span>&lt; Back</span></button><div class="hint8">Arrows / 1-5 select &middot; Enter confirm &middot; Esc back</div><span style="width:90px"></span></div></section>
 
 <section class="v8s" id="s8setup"><div class="hdr"><h2 id="suTitle">TIME <em>ATTACK</em></h2><div class="sp"></div>${crHTML}</div>
 <div class="cols"><div class="pnl"><h4>Track</h4><div id="trkList"></div></div>
@@ -97,7 +102,7 @@ root.innerHTML=`
 <div class="cols" style="grid-template-columns:minmax(430px,56%) 1fr"><div class="pnl"><div class="rankbar" id="rankbar"></div><div class="evl" id="evList"></div></div><div class="pnl" id="evDet"></div></div>
 <div class="foot8"><button class="btn" data-a="back"><span>&lt; Back</span></button><div class="hint8">Podium to clear an event &middot; final needs 3 events cleared</div><span style="width:90px"></span></div></section>
 
-<section class="v8s clear" id="s8show"><div class="hdr"><h2 id="shTitle">GARAGE</h2><small id="shSub"></small><div class="sp"></div>${crHTML}</div>
+<section class="v8s clear" id="s8show"><div class="hdr"><h2 id="shTitle">GARAGE</h2><small id="shSub"></small><button class="btn" id="shCars"><span>All cars</span></button><div class="sp"></div>${crHTML}</div>
 <div class="lst" id="shList"></div><div class="stat" id="shStat"></div><div class="drag">Drag to rotate</div>
 <div class="bot"><button class="btn" data-a="back"><span>&lt; Back</span></button><div class="gnav" id="shNav"><button class="btn" id="shPrev"><span>&lsaquo;</span></button><em id="shPos"></em><button class="btn" id="shNext"><span>&rsaquo;</span></button></div><div class="ptabs" id="shTabs"></div><div class="sw" id="shSw"></div><button class="btn" id="shLv" style="display:none"><span>Livery</span></button><div style="flex:1"></div><button class="btn go" id="shAct"><span>Select</span></button></div><div class="flash8" id="shFlash"></div><div class="shfade" id="shFade"></div></section>
 
@@ -107,15 +112,15 @@ $$('.ico',root).forEach(e=>{e.appendChild(IC[e.dataset.i]())});
 /* ================= screen switching ================= */
 const rawShow=show;let prevScr='menu';
 const WP=document.createElement('div');WP.id='ptWipe';document.body.appendChild(WP);
-const MENUS=['menu','s8cards','s8setup','s8career','s8show','s8res'];let wipeT=0;
+const MENUS=['menu','s8cards','s8quick','s8setup','s8career','s8show','s8res'];let wipeT=0;
 function wipe(){try{WP.classList.remove('go');void WP.offsetWidth;WP.classList.add('go');clearTimeout(wipeT);wipeT=setTimeout(()=>WP.classList.remove('go'),600)}catch(e){}}
-show=n=>{const was=scr;if(was&&was!==n&&MENUS.includes(n)&&was!=='game'&&was!=='pause')wipe();rawShow(n);if(was!==n&&['s8cards','s8setup','s8career','s8show'].includes(n)){const e=$(n);e.classList.add('enter');clearTimeout(e._en);e._en=setTimeout(()=>e.classList.remove('enter'),900)}if(was!==n&&P.sfx&&['s8cards','s8setup','s8career','s8show','s8res','menu'].includes(n))P.sfx('whoosh');for(const id of SCREENS)$(id).classList.toggle('on',id===n);
+show=n=>{const was=scr;if(was&&was!==n&&MENUS.includes(n)&&was!=='game'&&was!=='pause')wipe();rawShow(n);if(was!==n&&['s8cards','s8quick','s8setup','s8career','s8show'].includes(n)){const e=$(n);e.classList.add('enter');clearTimeout(e._en);e._en=setTimeout(()=>e.classList.remove('enter'),900)}if(was!==n&&P.sfx&&['s8cards','s8quick','s8setup','s8career','s8show','s8res','menu'].includes(n))P.sfx('whoosh');for(const id of SCREENS)$(id).classList.toggle('on',id===n);
  $$('.crv',root).forEach(e=>e.textContent=fmtCr(P.SV().cr));
  if(was==='s8show'&&n!=='s8show')studioOff();
- if(['menu','s8cards','s8setup','s8career','s8res'].includes(n))refreshMenuCars();
+ if(['menu','s8cards','s8quick','s8setup','s8career','s8res'].includes(n))refreshMenuCars();
  if(n==='menu'&&P.menuStats)P.menuStats()};
 function refreshMenuCars(){const sv=P.SV();for(let i=0;i<4;i++){const s=sv.sel[i];carChoices[i]=P.modelOf(s.id,s.alt)}}
-const goBack={s8cards:()=>show('menu'),s8setup:()=>{if(isRL(ST.mode)&&ST.rstep===2){ST.rstep=1;renderSetup();return}show(ST.ret)},s8career:()=>{if(P.frBack&&P.frBack())return;show('s8cards')},s8res:()=>resContinue()};
+const goBack={s8cards:()=>show('menu'),s8quick:()=>show('s8cards'),s8setup:()=>{if(isRL(ST.mode)&&ST.rstep===2){ST.rstep=1;renderSetup();return}show(ST.ret)},s8career:()=>{if(P.frBack&&P.frBack())return;show('s8cards')},s8res:()=>resContinue()};
 const leaveShow=()=>{const r=SR.ret;if(r==='s8res_back'){renderSetup();show('s8setup');return}show(r);if(r==='s8setup')renderSetup();if(r==='s8career')renderCareer()};
 function fadeTo(fn){const f=$('shFade');f.classList.add('on');setTimeout(()=>{try{fn()}catch(e){console.error('fadeTo',e&&e.stack||e)}setTimeout(()=>f.classList.remove('on'),260)},230)}
 const inGrid=()=>CARDS()&&SR.view==='grid',inCar=()=>CARDS()&&SR.view==='car';
@@ -129,22 +134,56 @@ const RACE_RET=()=>{const c=P.lastCfg;return c&&c.mode==='free'?'s8cards':c&&c.e
 toSetup=()=>{if(scr==='menu'||scr==='setup'){openCards();return}if(RACE)P.cleanupRace();show(RACE_RET())};
 function openCards(){show('s8cards');setFoc(foc)}
 let foc=0;
-function setFoc(i){const cs=$$('.card',root);foc=(i+cs.length)%cs.length;cs.forEach((c,k)=>c.classList.toggle('foc',k===foc))}
-$$('.card',root).forEach((c,k)=>{c.onmouseenter=()=>setFoc(k);c.onclick=()=>pickMode(c.dataset.m)});
+function setFoc(i){const cs=$$('#s8cards .card',root);foc=(i+cs.length)%cs.length;cs.forEach((c,k)=>c.classList.toggle('foc',k===foc))}
+$$('#s8cards .card',root).forEach((c,k)=>{c.onmouseenter=()=>setFoc(k);c.onclick=()=>pickMode(c.dataset.m)});
+let qf=0;const setQf=i=>{const cs=$$('#s8quick .qc',root);qf=(i+cs.length)%cs.length;cs.forEach((c,k)=>c.classList.toggle('foc',k===qf))};
+function quickPick(c){P.sfx&&P.sfx('select');if(c.dataset.p)ST.players=+c.dataset.p;pickMode(c.dataset.m);ST.ret='s8quick'}
+$$('#s8quick .qc',root).forEach((c,k)=>{c.onmouseenter=()=>setQf(k);c.onclick=()=>quickPick(c)});
 const barnIcon=d=>{const b=P.BARNS&&P.BARNS[d.name];if(!b||d.gravel)return '';const f=P.barnFound&&P.barnFound(b.car);return `<span class="bnh ${f?'got':''}" title="${f?'Barn find collected':'Barn find hidden here'}"><svg viewBox="0 0 16 16" width="15" height="15" shape-rendering="crispEdges"><path d="M8 1.5 1.5 7.5h2V14h3.6v-3.8h1.8V14h3.6V7.5h2z" fill="currentColor"/></svg></span>`};const isStg=i=>P.STAGES.indexOf(i)>=0,isTrk=i=>(P.TRK_TRACKS||[]).indexOf(i)>=0,okTrack=(m,i)=>m==='rally'?isStg(i):isTrk(i),firstTrack=m=>m==='rally'?P.STAGES[0]:P.TRK_TRACKS[0],isRL=m=>m==='rally'||m==='track';
-function pickMode(m){if(m==='career'){P.sfx&&P.sfx('select');P.freeEnter()}else{ST.mode=m;P._to=m==='track';P._ro=m==='rally';if(isRL(m))ST.rstep=1;if(!okTrack(m,ST.track))ST.track=firstTrack(m);ST.ret='s8cards';if(m==='rally'&&P.rallyIntro){P.rallyIntro(()=>{renderSetup();show('s8setup');if(P.prewarmStages)setTimeout(P.prewarmStages,1500)},ST.track)}else{renderSetup();show('s8setup')}}}
+function pickMode(m){if(m==='quick'){P.sfx&&P.sfx('select');show('s8quick');setQf(0)}else{ST.mode=m;P._to=m==='track';P._ro=m==='rally';if(isRL(m))ST.rstep=1;if(!okTrack(m,ST.track))ST.track=firstTrack(m);ST.ret='s8cards';if(m==='rally'&&P.rallyIntro){P.rallyIntro(()=>{renderSetup();show('s8setup');if(P.prewarmStages)setTimeout(P.prewarmStages,1500)},ST.track)}else{renderSetup();show('s8setup')}}}
 
 /* ---- main menu ---- */
+const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+({play:'<path d="M7 4.5v15l12-7.5z" fill="currentColor"/>',garage:'<path d="M3 15l2-5.5C5.4 8.5 6.2 8 7.2 8h9.6c1 0 1.8.5 2.2 1.5L21 15v3h-3v-1.5H6V18H3z"/><circle cx="7.5" cy="13.2" r=".6" fill="currentColor"/><circle cx="16.5" cy="13.2" r=".6" fill="currentColor"/>',brand:'<path d="M4 12.5V5h7.5l8.5 8.5-7 7z"/><circle cx="8.2" cy="8.7" r="1.2" fill="currentColor"/>',set:'<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',log:'<path d="M5 6h14M5 12h14M5 18h9"/>'})[n]+'</svg><span>'+l+'</span>';P.mi=mi;
 (function(){const ma=document.querySelector('.menuActions'),bt=ma.querySelectorAll('button');
- bt[0].innerHTML='<small>01</small> Play';bt[0].style.order=1;bt[0].onclick=openCards;
- const g=document.createElement('button');g.innerHTML='<small>02</small> <em>My Garage</em>';g.style.order=2;g.onclick=()=>openShow('garage',{player:0,cap:null,ret:'menu'});
- const b=document.createElement('button');b.innerHTML='<small>03</small> Brand Central';b.style.order=3;b.onclick=()=>openShow('brand',{player:0,cap:null,ret:'menu'});
- ma.append(g,b);bt[1].style.order=4;bt[1].innerHTML='<small>04</small> Settings';
+ bt[0].innerHTML=mi('play','Play');bt[0].style.order=1;bt[0].onclick=openCards;
+ const g=document.createElement('button');g.innerHTML=mi('garage','Garage');g.style.order=2;g.onclick=()=>openShow('garage',{player:0,cap:null,ret:'menu'});
+ const b=document.createElement('button');b.innerHTML=mi('brand','Brand Central');b.style.order=3;b.onclick=()=>openShow('brand',{player:0,cap:null,ret:'menu'});
+ ma.append(g,b);bt[1].style.order=4;bt[1].innerHTML=mi('set','Settings');
  const lg=$('logo');if(lg)lg.innerHTML='POLY<br><span>GT</span><small>GRAN TURISMO STYLE RACING</small>';
  const mt=document.querySelector('.menuTop');if(mt){mt.querySelector('.brandMark').textContent='POLY GT';const sm=mt.querySelector('small');if(sm)sm.textContent='V9'}
  const f=document.createElement('div');f.className='mfoot';$('menu').appendChild(f);
  P.menuStats=()=>{const sv=P.SV();f.innerHTML='<span>Balance <b>'+fmtCr(sv.cr)+'</b></span><span>Career <b>'+P.RANKS[P.careerRank()].n+'</b></span><span>Races <b>'+sv.stats.races+'</b></span><span>Wins <b>'+sv.stats.wins+'</b></span>'};
- P.menuStats()})();
+ P.menuStats()
+ /* ---- GT-style top bar: tabs along the top, a drop-down list under the focused tab ---- */
+ const menu=$('menu');
+ const TABS=[{k:'quick',l:'Quickplay',i:'play'},{k:'rally',l:'Rally',i:'rally'},{k:'track',l:'Track',i:'track'},{k:'garage',l:'Garage',i:'garage'},{k:'brand',l:'Brand Central',i:'brand'}];
+ const SUBS=[{m:'mp',p:1,n:'Quick Race',d:'Race against the AI field.',i:'race'},{m:'ta',n:'Time Attack',d:'Just you and the clock. Chase medals.',i:'clock'},{m:'elim',n:'Elimination',d:'The last car is out every few seconds.',i:'elim'},{m:'cutup',n:'Cut-Up',d:'Weave through traffic and build a combo.',i:'cut'},{m:'mp',p:2,n:'Versus',d:'Split screen, 2 to 4 drivers.',i:'vs'}];
+ const sv=(n,x)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square">'+x+'</svg>';
+ const IX={rally:'<path d="M2 19l7-11 4 6 3-3 5 8z"/>',track:'<path d="M4 20V4h2v2h12l-3 4 3 4H6v6z"/>',race:'<path d="M4 20V4h2v2h12l-3 4 3 4H6v6z"/>',clock:'<circle cx="12" cy="13" r="8"/><path d="M12 13V8M9 3h6"/>',elim:'<circle cx="12" cy="12" r="8"/><path d="M6.5 6.5l11 11"/>',cut:'<path d="M3 17l5-10 4 7 3-4 6 7z"/>',vs:'<rect x="3" y="5" width="8" height="14"/><rect x="13" y="5" width="8" height="14"/>',cog:'<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',log:'<path d="M5 6h14M5 12h14M5 18h9"/>'};
+ const ic=k=>IX[k]?sv(k,IX[k]):mi(k,'').replace(/<span><\/span>/,'');
+ const bar=document.createElement('div');bar.id='gtBar';
+ bar.innerHTML='<div class="gtl">POLY GT</div><div class="gtt">'+TABS.map((t,i)=>'<button class="gtab" data-i="'+i+'">'+ic(t.i)+'<span>'+t.l+'</span></button>').join('')+'</div><div class="gtr"><div class="gtbal"><small>BALANCE</small><b id="gtBal"></b></div><button class="gtab sm" id="gtSet">'+sv('s',IX.cog)+'<span>Settings</span></button><button class="gtab sm" id="gtLog">'+sv('l',IX.log)+'<span>Update log</span></button></div>';
+ const dd=document.createElement('div');dd.id='gtDrop';
+ dd.innerHTML=SUBS.map((u,i)=>'<button class="gti" data-i="'+i+'">'+ic(u.i)+'<span><b>'+u.n+'</b><em>'+u.d+'</em></span></button>').join('');
+ menu.append(bar,dd);
+ let mf=0,md=0;
+ const tabs=()=>[...bar.querySelectorAll('.gtt .gtab')],items=()=>[...dd.children];
+ const paint=()=>{tabs().forEach((t,i)=>t.classList.toggle('foc',i===mf));dd.classList.toggle('on',mf===0);const l=dd.children;[...l].forEach((e,i)=>e.classList.toggle('foc',i===md));const r=tabs()[0].getBoundingClientRect();if(r.width)dd.style.left=r.left+'px'};
+ const goMenu=m=>{pickMode(m);ST.ret='menu'};
+ const subGo=i=>{const u=SUBS[i];P.sfx&&P.sfx('select');if(u.p)ST.players=u.p;goMenu(u.m)};
+ const tabGo=i=>{const k=TABS[i].k;if(k==='quick'){md=Math.max(0,md);paint();return}P.sfx&&P.sfx('select');if(k==='rally'||k==='track')goMenu(k);else openShow(k,{player:0,cap:null,ret:'menu'})};
+ tabs().forEach((t,i)=>{t.onmouseenter=()=>{mf=i;paint()};t.onclick=()=>tabGo(i)});
+ items().forEach((e,i)=>{e.onmouseenter=()=>{md=i;paint()};e.onclick=()=>subGo(i)});
+ $('gtSet').onclick=()=>bt[1].click();$('gtLog').onclick=()=>P.openUpdateLog&&P.openUpdateLog();
+ const m0=P.menuStats;P.menuStats=()=>{m0();const b=$('gtBal');if(b)b.textContent=fmtCr(P.SV().cr);paint()};P.menuStats();
+ P.menuKey=e=>{const c=e.code;
+  if(c==='ArrowRight'||c==='KeyD'){mf=(mf+1)%TABS.length;paint();return true}
+  if(c==='ArrowLeft'||c==='KeyA'){mf=(mf+TABS.length-1)%TABS.length;paint();return true}
+  if(c==='ArrowDown'||c==='KeyS'){if(mf===0){md=Math.min(SUBS.length-1,md+1);paint()}return true}
+  if(c==='ArrowUp'||c==='KeyW'){if(mf===0){md=Math.max(0,md-1);paint()}return true}
+  if(c==='Enter'||c==='Space'){if(mf===0)subGo(md);else tabGo(mf);return true}
+  return false};
+ paint();addEventListener('resize',paint)})();
 
 /* ================= TRACK PREVIEW (map + elevation) ================= */
 const TS=[];function tr(i){return TS[i]||(TS[i]=sampleTrack(D[i]))}
@@ -332,7 +371,7 @@ function ensureStudio(){if(S)return S;
  const rim2=new THREE.DirectionalLight(0xffd2b0,.35);rim2.position.set(9,3,-7);sc.add(rim2);
  const turn=new THREE.Group();sc.add(turn);turn.add(wl2,wl3);
  const cam=new THREE.PerspectiveCamera(30,1,.1,100);
- S={sc,cam,turn,floor,idx:-1,car:null,mir:null,post:makePost(),key,wall:wl,dark,ring:top};return S}
+ S={wl2,wl3,sc,cam,turn,floor,idx:-1,car:null,mir:null,post:makePost(),key,wall:wl,dark,ring:top};return S}
 function setStudioCar(idx){ensureStudio();if(S.idx===idx)return;const src=CAR_MODELS[idx];if(!src)return;
  if(S.car){S.turn.remove(S.car)}
  const model=src.clone(true),car=new THREE.Group(),centered=new THREE.Group();centered.add(model);car.add(centered);centered.updateMatrixWorld(true);
@@ -342,17 +381,17 @@ function setStudioCar(idx){ensureStudio();if(S.idx===idx)return;const src=CAR_MO
  /* put the lowest point on the floor */ wrap.position.y=0;car.position.y=0;centered.position.y=-bb.min.y;centered.position.x=-ctr.x;centered.position.z=-ctr.z;
  car.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{if(m&&m.isMeshStandardMaterial){m.envMapIntensity=.4}})}});
  const mir=wrap.clone(true);mir.scale.y=-1;mir.traverse(o=>{if(o.isMesh){o.castShadow=false;o.receiveShadow=false}});
- S.turn.add(wrap);S.car=wrap;S.mir=mir;S.idx=idx;S.carModel=model;lastPhotoKey='';if(SR.kind==='brand'&&!P.noReveal)startReveal(false)}
+ S.turn.add(wrap);S.car=wrap;S.mir=mir;S.idx=idx;S.carModel=model;lastPhotoKey='';}
 /* Brand Central reveal: the car rolls in and brakes onto the turntable, wheels spinning and front wheels steering, then its name card slides up */
 function startReveal(full){const w=S.car;if(!w||!S.carModel)return;const ps={g:w,visualModel:S.carModel};try{w.updateMatrixWorld(true);__wheels(ps,0,0,0)}catch(e){console.warn('reveal wheels',e)}
- const D=full?20:13,Tt=full?3.6:1.7;S.rev={t:0,T:Tt,D,ps,base:-.62,ang0:SR.ang,pend:false,full};if(full){const sh=$('s8show');if(sh){sh.style.transition='opacity .35s';sh.style.opacity=0;sh.style.pointerEvents='none'}}S.turn.rotation.y=S.rev.base;w.position.set(0,0,-D);
+ const D=full?20:13,Tt=full?3.6:1.7;S.rev={t:0,T:Tt,D,ps,base:-.62,ang0:SR.ang,pend:false,full};if(full){const sh=$('s8show');if(sh){sh.style.transition='opacity .35s';sh.style.opacity=0;sh.style.pointerEvents='none'}}S.turn.rotation.y=SIDE*Math.PI*.5;w.position.set(0,0,-D);
  let nm=$('shRev');if(!nm){nm=document.createElement('div');nm.id='shRev';nm.style.cssText='position:fixed;left:5vw;bottom:16vh;z-index:60;pointer-events:none;color:#fff;font:italic 800 clamp(30px,5.2vw,74px)/1 system-ui,sans-serif;letter-spacing:.01em;text-transform:uppercase;text-shadow:0 4px 30px #000a;opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.8,.2,1)';document.body.appendChild(nm)}
  const car=BYID[SR.id];if(!full){nm.innerHTML=''}else nm.innerHTML='<small style="display:block;margin-bottom:10px;font:700 clamp(10px,1.1vw,15px)/1 system-ui,sans-serif;letter-spacing:.4em;color:#f2c76b;font-style:normal">NEW CAR</small>'+(car?car.name:'')+'<small style="display:block;margin-top:8px;font:700 clamp(10px,1.1vw,15px)/1 system-ui,sans-serif;letter-spacing:.32em;color:#f2c76b;font-style:normal">'+(car&&car.cls?'CLASS '+car.cls+' &nbsp;/&nbsp; ':'')+(car&&car.type?car.type:'')+'</small>';nm.style.transition='none';nm.style.opacity=0;nm.style.transform='translateY(24px)';void nm.offsetWidth;nm.style.transition=''}
 function stepReveal(dt){const r=S.rev;if(!r)return;r.t+=dt;const u=Math.min(1,r.t/r.T),w=S.car;if(!w){S.rev=null;return}
- const rem=(1-u)*(1-u),v=2*r.D*(1-u)/r.T;w.position.z=-r.D*rem*REV_DIR;
+ const sm=Math.max(0,Math.min(1,(u-.45)/.55)),rem=(1-u)*(1-u),v=2*r.D*(1-u)/r.T;w.position.z=-r.D*rem*REV_DIR;
  w.rotation.x=-.035*(1-u)*(u>.35?1:u/.35)*REV_DIR; /* nose dips as it brakes */
- if(r.ps.ptWheels){try{__wheels(r.ps,v*REV_DIR,Math.sin(u*5.2)*1.4*(1-u),dt)}catch(e){}}
- S.turn.rotation.y=r.base;SR.ang=r.base;
+ if(r.ps.ptWheels){try{__wheels(r.ps,v*REV_DIR,SIDE*Math.sin(Math.PI*sm)*.9,dt)}catch(e){}}
+ const ez=sm*sm*(3-2*sm);S.turn.rotation.y=SIDE*Math.PI*.5*(1-ez)+r.base*ez;SR.ang=r.base;
  const nm=$('shRev');if(r.full&&nm&&u>.62&&!r.pend){r.pend=true;nm.style.opacity=1;nm.style.transform='none'}
  if(u>=1){w.position.z=0;w.rotation.x=0;S.rev=null;if(r.full){const sh=$('s8show');setTimeout(()=>{if(nm)nm.style.opacity=0;if(sh){sh.style.opacity='';sh.style.pointerEvents=''}},3400)}}}
 
@@ -363,15 +402,13 @@ function buyShowcase(car){let o=$('shBuy');if(!o){o=document.createElement('div'
  o.innerHTML='<div style="font:700 clamp(10px,1.2vw,15px)/1 system-ui;letter-spacing:.45em;color:#f2c76b">NEW CAR &middot; '+(car.cls?'CLASS '+car.cls:'')+'</div>'
   +'<div style="font:italic 800 clamp(28px,5vw,70px)/1 system-ui;text-transform:uppercase;letter-spacing:.01em">'+car.name+'</div>'
   +'<div style="font:700 clamp(10px,1.1vw,14px)/1 system-ui;letter-spacing:.3em;color:#9fb2bb">'+(car.type||'')+' &nbsp;/&nbsp; '+good+'</div>'
-  +'<div id="shBuyPh" style="display:flex;gap:1.4vw;width:min(1100px,92vw);justify-content:center"></div>'
   +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:2vw;width:min(900px,90vw)">'+f.bars.slice(0,4).map(b=>'<div><div style="font:700 11px/1 system-ui;letter-spacing:.25em;color:#7d909a;margin-bottom:8px">'+b[0].toUpperCase()+'</div><div style="font:italic 800 clamp(20px,2.6vw,36px)/1 system-ui">'+b[2]+'</div><div style="height:4px;background:#1b2329;margin-top:8px"><div style="height:100%;width:'+Math.round(b[1]*100)+'%;background:#f2c76b"></div></div></div>').join('')+'</div>'
   +'<button id="shBuyGo" style="margin-top:1.5vh;padding:14px 46px;font:italic 800 16px system-ui;letter-spacing:.3em;text-transform:uppercase;background:#e8edf0;color:#0a0f12;border:0;cursor:pointer;opacity:0;transition:opacity .6s ease">Add to garage</button>';
- const box=o.querySelector('#shBuyPh'),ph=window.PT7&&(window.PT7.photos[idx]||(()=>{try{return window.PT7.makePhotos(idx)}catch(e){return null}})());
  for(let i=0;i<3;i++){const cv=document.createElement('canvas');cv.width=420;cv.height=262;cv.style.cssText='width:30%;max-width:340px;height:auto;border:1px solid #ffffff22;opacity:0;transform:translateY(16px);transition:opacity .7s ease,transform .7s ease';const g=cv.getContext('2d');g.fillStyle='#0b0f13';g.fillRect(0,0,420,262);if(ph&&ph[i]){try{g.drawImage(ph[i],0,0,420,262)}catch(e){}}box.appendChild(cv);setTimeout(()=>{cv.style.opacity=1;cv.style.transform='none'},900+i*350)}
  const sh=$('s8show');o.style.pointerEvents='auto';void o.offsetWidth;o.style.opacity=1;
  setTimeout(()=>{const b=o.querySelector('#shBuyGo');if(b)b.style.opacity=1},2300);
  o.querySelector('#shBuyGo').onclick=()=>{P.sfx('select');o.style.opacity=0;o.style.pointerEvents='none';setTimeout(()=>{if(sh){sh.style.opacity='';sh.style.pointerEvents=''}startReveal(true)},560)}}
-const REV_DIR=1;
+const REV_DIR=1,SIDE=1;P.revSet=t=>{if(S&&S.rev)S.rev.t=t};P.revStart=()=>startReveal(true);
 
 function studioOn(){if(STU.on)return;STU.on=true;document.body.classList.add('studio');$('c').style.imageRendering='auto';STU.tm=R.toneMapping;R.toneMapping=THREE.NoToneMapping;R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;sizeStudio()}
 function sizeStudio(){const d=Math.min(devicePixelRatio||1,2);R.setPixelRatio(1);R.setSize(Math.max(2,innerWidth*d|0),Math.max(2,innerHeight*d|0),false)}
@@ -379,8 +416,10 @@ P.makePost=makePost;P.sizeNative=sizeStudio;function studioOff(){if(!STU.on)retu
 const rs0=rs;rs=()=>{if(STU.on)sizeStudio();else rs0()};
 function drawShow(dt){studioOn();ensureStudio();if(P.studioDress)P.studioDress(S,SR);const car=BYID[SR.id],idx=P.modelOf(SR.id,SR.alt);if(S.idx!==idx&&CAR_MODELS[idx])setStudioCar(idx);
  if(P.LV)P.LV.studio(S,SR);
- if(S.rev)stepReveal(dt);else{SR.ang+=dt*(SR.drag?0:.35)+SR.vel*dt;SR.vel*=Math.pow(.05,dt);S.turn.rotation.y=SR.ang}
- const W=R.domElement.width,H=R.domElement.height;S.cam.aspect=W/H;const ca=.55+Math.sin(T0*.17)*.12;{const dz=CARDS()?8.4:10.2;S.cam.position.set(Math.sin(ca)*dz,(CARDS()?2.2:2.5)+Math.sin(T0*.23)*.15,Math.cos(ca)*dz)};S.cam.lookAt(0,.75,0);
+ {const gtb=SR.kind==='brand';S.sc.background.setHex(gtb?0x000000:0x0b0d11);S.wall.visible=!gtb;S.wl2.visible=S.wl3.visible=!gtb;S.floor.material.color.setHex(gtb?0x050607:0x16191f);S.ring&&(S.ring.visible=!gtb)}
+ {const gtb=SR.kind==='brand';S.sc.background.setHex(gtb?0x000000:0x0b0d11);S.wall.visible=!gtb;S.wl2.visible=S.wl3.visible=!gtb;S.floor.material.color.setHex(gtb?0x050607:0x16191f);S.ring&&(S.ring.visible=!gtb)}
+ if(S.rev)stepReveal(P.revFix!=null?0:dt);else{SR.ang+=dt*(SR.drag?0:.35)+SR.vel*dt;SR.vel*=Math.pow(.05,dt);S.turn.rotation.y=SR.ang}
+ const W=R.domElement.width,H=R.domElement.height;S.cam.aspect=W/H;const ca=.55+Math.sin(T0*.17)*.12;{const dz=CARDS()?8.4:10.2;S.cam.position.set(Math.sin(ca)*dz,(CARDS()?2.2:2.5)+Math.sin(T0*.23)*.15,Math.cos(ca)*dz)};S.cam.lookAt(SR.kind==='brand'?1.5:0,.75,0);
  if(P.homeCamOn&&P.homeCam&&!P.hcam){const h=P.homeCam(T0);S.cam.position.set(...h.p);S.cam.lookAt(...h.l)}
  if(P.hcam){S.cam.position.set(...P.hcam.p);S.cam.lookAt(...P.hcam.l)}
  S.cam.setViewOffset(W,H,-W*(CARDS()?.075:0),H*.02,W,H);S.cam.updateProjectionMatrix();
@@ -447,7 +486,7 @@ const barHTML=b=>{const pc=Math.round((b[3]-1)*100),w=Math.round(b[1]*100),w0=Ma
 function tuneHTML(car){const t=P.tuneGet(car.id,SR.alt);
  return `<div class="tune"><div class="th"><b>TUNING</b><button class="btn sm" id="tuReset"><span>Reset</span></button></div>`+P.TUNE.map(d=>{const v=t[d.k],pips=[];for(let i=-d.r;i<=d.r;i++)pips.push(`<i class="${i===0?'ctr ':''}${(v>0&&i>0&&i<=v)||(v<0&&i<0&&i>=v)?'on':''}"></i>`);
   return `<div class="tr"><span>${d.n}</span><button class="btn sm" data-k="${d.k}" data-d="-1"><span>&lsaquo;</span></button><div class="pp5">${pips.join('')}</div><button class="btn sm" data-k="${d.k}" data-d="1"><span>&rsaquo;</span></button><em>${v===0?'STOCK':v<0?d.lo:d.hi}${v&&d.r>1?' '+Math.abs(v):''}</em></div>`}).join('')+`<div class="tn">${P._tuneMsg?'<b style="color:var(--ac2)">'+P._tuneMsg+'</b><br>':''}Each step away from stock costs ${fmtCr(P.tuneBase(car.id))} x level (reset is free). Applies to races &amp; events; Time Attack runs stock.</div></div>`}
-function renderShow(){SR.alt=0;const kind=SR.kind,sv=P.SV(),list=showList(),car=BYID[SR.id],owned=P.owns(car.id,0),ownAlt=P.owns(car.id,1);
+function renderShow(){SR.alt=0;{const sh=$('s8show');sh.classList.toggle('gtb',SR.kind==='brand');if(SR.kind!=='brand')sh.classList.remove('lo')}{const sh=$('s8show');sh.classList.toggle('gtb',SR.kind==='brand');if(SR.kind!=='brand')sh.classList.remove('lo')}const kind=SR.kind,sv=P.SV(),list=showList(),car=BYID[SR.id],owned=P.owns(car.id,0),ownAlt=P.owns(car.id,1);
  $('shTitle').innerHTML=kind==='garage'?(SR.rally?'RALLY <em>GARAGE</em>':SR.trk?'TRACK <em>GARAGE</em>':'YOUR <em>GARAGE</em>'):'BRAND <em>CENTRAL</em>';$('shSub').textContent=kind==='garage'?(SR.flow?(D[ST.track].name+' · '+(Math.round(tr(ST.track).L)*(ST.rlaps||1)/1000).toFixed(1)+' km · '+(ST.rlaps||1)+' lap'+((ST.rlaps||1)>1?'s':'')+' · '+((P.WX[ST.wx||'clear']||{n:'CLEAR'}).n)+' · '+((P.TOD[effTod()]||{n:''}).n)+' · '+ST.players+' driver'+(ST.players>1?'s':'')):SR.trk?'Circuit cars only / free to use':SR.rally?'Rally-spec all-wheel-drive cars with gravel tyres / free to use':(SR.cap?'Class '+SR.cap+' and below':'')):'Buy cars';
  const RG=(SR.rally||SR.trk)&&kind==='garage',dc=c=>RG?(SR.trk?c.tdiv:c.rdiv):c.cat,cats=RG?(SR.trk?['PRO','CLUB']:['WRC','CASUAL']):['ALL',...(P.CATS||[]),...(kind==='brand'?['OWNED']:[])],cnt=k=>list.filter(c=>k==='ALL'||(k==='OWNED'?(sv.owned[c.id]||0)>0:dc(c)===k)).length;
  if(!cats.includes(SR.cat))SR.cat=cats[0];
@@ -487,7 +526,7 @@ const secMode=true;let h='',last=null;
   else{act.innerHTML='<span>Buy '+fmtCr(price)+'</span>';if(sv.cr<price){act.classList.add('off');act.innerHTML='<span>Need '+fmtCr(price-sv.cr)+' more</span>'}}}
  else{const off=list.find(c=>c.id===car.id).off;act.classList.toggle('off',off||!altOwn);act.innerHTML='<span>'+(off?'Class cap':altOwn?(SR.flow?(SR.player<ST.players-1?'Next driver >':(SR.trk?'Start race':'Start stage')):'Select'):'Locked')+'</span>'}
  $$('.crv',root).forEach(e=>e.textContent=fmtCr(sv.cr))}
-$('shPrev').onclick=()=>flipCar(-1);$('shNext').onclick=()=>flipCar(1);
+$('shCars').onclick=()=>$('s8show').classList.toggle('lo');$('shCars').onclick=()=>$('s8show').classList.toggle('lo');$('shPrev').onclick=()=>flipCar(-1);$('shNext').onclick=()=>flipCar(1);
 $('shStat').addEventListener('input',e=>{if(e.target.id==='shNm')(ST.names=ST.names||[])[SR.player]=e.target.value});
 $('shAct').onclick=()=>{const car=BYID[SR.id];
  if(SR.kind==='brand'){if(P.buy(car.id,SR.alt)){P.sfx('buy');renderShow();buyShowcase(car)}}
@@ -531,21 +570,22 @@ function resContinue(){const cfg=RES&&RES.cfg;P.cleanupRace();if(cfg&&cfg.ev){if
 /* ================= keys ================= */
 let cheatBuf='';
 addEventListener('keydown',e=>{
- if(scr==='s8cards'){if(e.code==='ArrowRight'||e.code==='KeyD')setFoc(foc+1);else if(e.code==='ArrowLeft'||e.code==='KeyA')setFoc(foc-1);else if(e.code==='ArrowDown'||e.code==='KeyS')setFoc(foc<3?3+Math.min(3,foc+(foc>0?1:0)):foc);else if(e.code==='ArrowUp'||e.code==='KeyW')setFoc(foc>=3?Math.min(2,Math.max(0,foc-3)):foc);else if(/^Digit[1-7]$/.test(e.code))pickMode($$('.card',root)[+e.code[5]-1].dataset.m);else if(e.code==='Enter'||e.code==='Space')pickMode($$('.card',root)[foc].dataset.m);return}
+ if(scr==='s8cards'){const cs=$$('#s8cards .card',root);if(e.code==='ArrowRight'||e.code==='KeyD'||e.code==='ArrowDown')setFoc(foc+1);else if(e.code==='ArrowLeft'||e.code==='KeyA'||e.code==='ArrowUp')setFoc(foc-1);else if(/^Digit[1-3]$/.test(e.code)&&cs[+e.code[5]-1])pickMode(cs[+e.code[5]-1].dataset.m);else if(e.code==='Enter'||e.code==='Space')pickMode(cs[foc].dataset.m);return}
+ if(scr==='s8quick'){const cs=$$('#s8quick .qc',root);if(e.code==='ArrowRight'||e.code==='KeyD'||e.code==='ArrowDown')setQf(qf+1);else if(e.code==='ArrowLeft'||e.code==='KeyA'||e.code==='ArrowUp')setQf(qf-1);else if(/^Digit[1-5]$/.test(e.code)&&cs[+e.code[5]-1])quickPick(cs[+e.code[5]-1]);else if(e.code==='Enter'||e.code==='Space')quickPick(cs[qf]);return}
  if(scr==='s8show'){if(e.target&&e.target.tagName==='INPUT')return;if(SR.kind==='brand'){cheatBuf=(cheatBuf+(e.key.length===1?e.key.toLowerCase():'')).slice(-13);if(cheatBuf.endsWith('hakannowant')){cheatBuf='';const sv=P.SV();sv.owned={merc:1};sv.sel=sv.sel.map(()=>({id:'merc',alt:0}));P.save();SR.id='merc';SR.alt=0;renderShow();return}
   if(cheatBuf.endsWith('hakanwantsall')){cheatBuf='';const sv=P.SV();CARS.forEach(c=>{sv.owned[c.id]=3});P.save();renderShow();return}}
   if(CARDS()){if(inGrid()){if(e.code==='ArrowLeft'||e.code==='ArrowUp'){e.preventDefault();gridMove(-1)}else if(e.code==='ArrowRight'||e.code==='ArrowDown'){e.preventDefault();gridMove(1)}else if(e.code==='Enter'){if((P.SV().owned[SR.id]||0)>0)openCar(SR.id)}return}
    if(e.code==='ArrowLeft'||e.code==='KeyQ')flipCar(-1);else if(e.code==='ArrowRight'||e.code==='KeyE')flipCar(1);else if(e.code==='Enter')$('shAct').click();return}
   const list=(CARDS()&&SR.order)?SR.order.map(id=>BYID[id]):showList().filter(c=>!SR.sec||SR.cat==='ALL'||(SR.cat==='OWNED'?(P.SV().owned[c.id]||0)>0:((SR.rally||SR.trk)&&SR.kind==='garage'?(SR.trk?c.tdiv:c.rdiv):c.cat)===SR.cat)),i=Math.max(0,list.findIndex(c=>c.id===SR.id));if(!list.length)return;if(e.code==='ArrowDown'){SR.id=list[Math.min(list.length-1,i+1)].id;SR.alt=P.owns(SR.id,SR.alt)?SR.alt:0;renderShow()}else if(e.code==='ArrowUp'){SR.id=list[Math.max(0,i-1)].id;SR.alt=P.owns(SR.id,SR.alt)?SR.alt:0;renderShow()}else if(e.code==='ArrowLeft')SR.vel-=3;else if(e.code==='ArrowRight')SR.vel+=3;else if(e.code==='Enter')$('shAct').click();return}
  if(scr==='s8setup'&&e.code==='Enter'){$('suGo').click();return}
- if(scr==='menu'&&e.code==='Enter'){openCards();return}
+ if(scr==='menu'&&P.menuKey&&P.menuKey(e)){return}
  if(scr==='s8res'&&e.code==='Enter'){resContinue()}});
 
 /* ================= frame loop ================= */
 frame=function(n){requestAnimationFrame(frame);const dt=Math.min(.05,Math.max(0,(n-last)/1000));last=n;dtf=dt;T0+=dt;
  if(RACE&&(scr==='game'||scr==='pause'||scr==='s8res')){if(!paused)step(dt);drawRace(dt);if(scr==='game')hudUpdate()}
  else if(scr==='s8show'){if(!inGrid())drawShow(dt)}
- else if(scr==='menu'||scr==='s8cards'||scr==='s8setup'||scr==='s8career'||scr==='s8res'){MS=MS||menuScene();MS.tick(Math.max(0,T0));R.setScissorTest(false);R.setViewport(0,0,R.domElement.width,R.domElement.height);MS.draw?MS.draw():R.render(MS.sc,MS.cam)}};
+ else if(scr==='menu'||scr==='s8cards'||scr==='s8quick'||scr==='s8setup'||scr==='s8career'||scr==='s8res'){MS=MS||menuScene();MS.tick(Math.max(0,T0));R.setScissorTest(false);R.setViewport(0,0,R.domElement.width,R.domElement.height);MS.draw?MS.draw():R.render(MS.sc,MS.cam)}};
 /* pause menu */
 (function(){const b=$('pause').querySelector('.b'),opt=[...b.querySelectorAll('button')].pop();b.innerHTML='<button id="pRes">Resume</button><button id="pRst">Restart</button><button id="pQuit">Quit to menu</button>';b.appendChild(opt);
  $('pRes').onclick=()=>resume();$('pRst').onclick=()=>{startRace()};$('pQuit').onclick=()=>{const r=RACE_RET();P.cleanupRace();show(r);if(r==='s8setup')renderSetup();if(r==='s8career')renderCareer()};

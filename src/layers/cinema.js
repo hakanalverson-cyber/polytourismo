@@ -103,7 +103,7 @@ function photo(){const sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(34,1
   [p1,p2].forEach((p,i)=>{const q=e.pts[i];p.intensity=q?q[1]*.4:0;if(q){p.color.setHex(q[0]);p.position.set(...q[2])}});
   curCars.forEach(o=>sc.remove(o));curCars=[];let ok=true;s.cars.forEach((q,i)=>{const c=carById(q[0]),b=c&&build(sc,c.id);if(!b){if(i===0)ok=false;return}const o=b.g.clone(true);o.position.set(q[1],0,q[2]);o.rotation.y=(q[3]||0)*Math.PI/180;sc.add(o);curCars.push(o);const m=o.clone(true);m.scale.y=-1;m.traverse(q=>{if(q.isMesh){q.castShadow=false;q.receiveShadow=false}});sc.add(m);curCars.push(m)});return ok&&curCars.length>0}}}
 /* the studio's own render path (MSAA, bloom, tone map, vignette) at native resolution */
-const ST={on:false},SCR=['menu','s8cards','s8setup','s8career','s8res'];let POST=null;
+const ST={on:false},SCR=['menu','s8cards','s8quick','s8setup','s8career','s8res'];let POST=null;
 function off(){if(!ST.on)return;ST.on=false;R.toneMapping=ST.tm;R.shadowMap.enabled=ST.se;R.shadowMap.type=ST.st;$('c').style.imageRendering='';R.setRenderTarget(null);try{rs()}catch(e){}}
 function draw(pt){if(!ST.on){ST.on=true;ST.tm=R.toneMapping;ST.se=R.shadowMap.enabled;ST.st=R.shadowMap.type;R.toneMapping=THREE.NoToneMapping;R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;$('c').style.imageRendering='auto'}
  const d=Math.min(devicePixelRatio||1,2);if(R.domElement.width!==Math.max(2,innerWidth*d|0)||R.domElement.height!==Math.max(2,innerHeight*d|0))P.sizeNative();if(!POST){POST=P.makePost();POST.bl.value=.2;POST.th.value=2.1}
