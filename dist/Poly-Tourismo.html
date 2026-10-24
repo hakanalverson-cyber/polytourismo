@@ -6026,6 +6026,10 @@ b,strong,h1,h2,h3,button,.btn,.gtab,.gti b,.hdr h2,#gtBar .gtl,.gtp,.crbox b,.qc
 #s8show.gtb.mkc .gtstrip{right:calc(min(400px,32vw) + 3.4vw);overflow-x:auto;scrollbar-width:thin;scrollbar-color:#ffffff40 transparent;pointer-events:auto}
 .gtstrip::-webkit-scrollbar{height:6px}.gtstrip::-webkit-scrollbar-thumb{background:#ffffff40}
 .gtstrip .gc{cursor:pointer}
+/* card strip: centered, bigger cards that grow to fill the free width */
+#s8show.gtb.mkc .gtstrip{justify-content:safe center;height:172px;gap:10px}
+.gtstrip .gc{flex:1 0 196px;max-width:250px}
+.gtstrip .gc b{font-size:11px}.gtstrip .gc small{font-size:11px}
 </style><script>
 /* ===== Poly GT v8 layer: core (economy, gears, AI, race flow, modes) ===== */
 (function v8core(){
