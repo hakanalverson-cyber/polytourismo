@@ -1,0 +1,2 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",2000],
+["js","(()=>{const out=[];for(const m of ['ta','mp','elim','cutup','track']){const c=document.querySelector('#s8quick .qc[data-m='+m+']')||document.querySelector('#s8cards .card[data-m='+m+']');if(!c){out.push(m+':nocard');continue}c.click();out.push(m+':'+[...document.querySelectorAll('#trkList .trk b')].map(b=>b.textContent).join('|'))}return out.join(' ## ')})()"],["shot","qp"]]

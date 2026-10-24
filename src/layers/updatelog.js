@@ -9,6 +9,7 @@ P.LOG=[
   'No lag on the long lap: the landscape is built in tiles a few milliseconds at a time around the camera and dropped again behind you, and distant scenery is thinned and culled. Medal times were calibrated with the same rule as Road Atlanta and Imola.',
   'Nordschleife layout re-traced from a real layout map: the swoops, the Karussell hook and the long Doettinger Hoehe diagonal are where they belong. Corners sit at roughly their real distances and keep their old heights.',
   'Lusher Eifel forest: trees right up to the verge, a painted forest backdrop on two layers behind them for depth, richer greens. Tyre walls are one solid wall of touching tyres, the plain white boxes are now camper vans, concrete walls line the main straight.',
+  'Quick Play (Quick Race, Time Attack, Elimination, Cut-Up, Versus) has the 10 original maps; Road Atlanta, Imola and the Nordschleife are exclusive to Track mode.',
   'Track previews are white with numbered corners tinted by how tight they are. The Now Playing card sits in the bottom-right corner.',
   'Results screen is minimal and the same in every mode: position, driver with the car underneath, best lap and time, with your row highlighted. No coloured chips or blocks.']},
  {v:'0.08',d:'Oct 24, 2026',t:'Tracks, menus and Brand Central',items:[
