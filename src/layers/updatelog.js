@@ -4,6 +4,7 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.08',d:'Oct 24, 2026',t:'Tracks, menus and Brand Central',items:[
+  'Results screen redone: bigger standings with square row ends, a larger player row, a render of your car, and payouts beside it. The menu drop-down now lines up flush with its tab.',
   'Regular modes now use the track-style maps (Road Atlanta and Imola); the old quickplay maps are out of the picker for now. Grid boxes line up exactly with where the cars spawn.',
   'Brand Central: cars now drive up into the showroom with spinning wheels. Buying a car fades to black, shows its stats, and an Add to garage button brings you back as the car drives in from the side.',
   'Results are a Gran Turismo style table with rows sliding in. The main menu is a top tab bar with a Quickplay drop-down (Quick Race, Time Attack, Elimination, Cut-Up, Versus); Free Roam is parked for now.',

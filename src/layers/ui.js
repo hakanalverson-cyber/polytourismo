@@ -443,6 +443,26 @@ function thumbFor(id){if(THC.has(id))return THC.get(id);
  TH.r.render(TH.sc,TH.cam);const cv=document.createElement('canvas');cv.width=336;cv.height=200;cv.getContext('2d').drawImage(TH.r.domElement,0,0);TH.sc.remove(car_);
  THC.set(id,cv);return cv}
 function pumpThumbs(){if(thRun)return;thRun=1;const go=()=>{const j=THQ.shift();if(!j){thRun=0;return}try{if(j.cv.isConnected){const t=thumbFor(j.id);if(t){j.cv.getContext('2d').drawImage(t,0,0,j.cv.width,j.cv.height);j.cv.classList.add('rdy')}}}catch(e){}setTimeout(go,8)};setTimeout(go,10)}
+/* results screen: a large render of the player's car, and a two-column layout (standings left, car + payout right) */
+let TB=null;const TBC=new Map();
+function carBig(id){if(TBC.has(id))return TBC.get(id);const W=720,H=430;
+ if(!TB){const r=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});r.setPixelRatio(1);r.setSize(W,H,false);r.setClearColor(0,0);
+  const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight(0xffffff,0x56606c,1.05));const d=new THREE.DirectionalLight(0xfff4e6,1.1);d.position.set(5,8,7);sc.add(d);const d2=new THREE.DirectionalLight(0xbcd4ff,.5);d2.position.set(-6,3,-5);sc.add(d2);
+  const cam=new THREE.PerspectiveCamera(26,W/H,.1,100);cam.position.set(4.7,1.35,5.7);cam.lookAt(0,.6,0);TB={r,sc,cam}}
+ const src=CAR_MODELS[P.modelOf(id,0)];if(!src)return null;
+ const model=src.clone(true),car_=new THREE.Group(),ctd=new THREE.Group();ctd.add(model);car_.add(ctd);ctd.updateMatrixWorld(true);
+ const bb=new THREE.Box3().setFromObject(model),sz=bb.getSize(new THREE.Vector3()),ct=bb.getCenter(new THREE.Vector3()),k=(src.userData.gl?src.userData.gl*1.093:4.7)/Math.max(sz.x,sz.z,.001);
+ ctd.position.set(-ct.x,-bb.min.y,-ct.z);car_.scale.setScalar(k);car_.rotation.y=(sz.x>sz.z?Math.PI/2:0)+Math.PI;TB.sc.add(car_);
+ TB.r.render(TB.sc,TB.cam);const cv=document.createElement('canvas');cv.width=W;cv.height=H;cv.getContext('2d').drawImage(TB.r.domElement,0,0);TB.sc.remove(car_);TBC.set(id,cv);return cv}
+function resLayout(){const b=document.getElementById('resBox');if(!b||b.querySelector('.rsgrid')||!b.querySelector('.lb,.lbsolo'))return;
+ const kids=[...b.children],btn=kids[kids.length-1],pay=kids.find(e=>e.querySelector&&e.querySelector('.pay')),left=kids.filter(e=>e!==btn&&e!==pay);
+ let id=null;try{const h=RACE&&RACE.cars&&RACE.cars.find(c=>c.human);id=h&&h.carId}catch(e){}
+ const g=document.createElement('div');g.className='rsgrid';const L=document.createElement('div');L.className='rsL';const R=document.createElement('div');R.className='rsR';
+ left.forEach(e=>L.appendChild(e));
+ if(id&&BYID[id]){const c=BYID[id],cd=document.createElement('div');cd.className='rscar';cd.innerHTML='<canvas width="720" height="430"></canvas><div class="rsn"><b>'+lbEsc(c.name)+'</b><span><i class="cls '+c.cls+'">'+c.cls+'</i>'+lbEsc(c.type||'')+'</span></div>';R.appendChild(cd);
+  setTimeout(()=>{try{const t=carBig(id),cv=cd.querySelector('canvas');if(t){cv.getContext('2d').drawImage(t,0,0);cv.classList.add('rdy')}}catch(e){}},30)}
+ if(pay)R.appendChild(pay);g.appendChild(L);g.appendChild(R);b.insertBefore(g,btn);btn.classList.add('rsbtn')}
+try{const rb=document.getElementById('resBox');if(rb)new MutationObserver(resLayout).observe(rb,{childList:true})}catch(e){}
 function cardHTML(c,sv){const o=!c.lk;return `<div class="gc ${o?'':'lock'} ${c.barn&&!o?'bn':''} ${c.id===SR.id&&o?'sel':''} ${c.off?'off':''}" data-id="${c.id}"><div class="th"><canvas width="336" height="200" data-id="${c.id}"></canvas>${!o&&c.barn?'<i>?</i>':''}</div><b>${o||!c.barn?c.name:'???'}</b><small><span class="cls ${c.cls}">${c.cls}</span>${c.off?'Class cap':o?c.type:(c.barn?'Hidden on a map':'Not owned')}</small></div>`}
 
 /* ---- Brand Central: manufacturer list, then that maker's cars as a card strip ---- */

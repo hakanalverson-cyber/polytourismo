@@ -936,3 +936,33 @@ b,strong,h1,h2,h3,button,.btn,.gtab,.gti b,.hdr h2,#gtBar .gtl,.gtp,.crbox b,.qc
 /* strip runs the full width; the info panel sits above it */
 #s8show.gtb.mkc .gtstrip{right:3.4vw}
 #s8show.gtb.mkc .stat{bottom:auto;max-height:calc(100vh - 88px - 308px)}
+
+/* ===== results: wider screen, two columns, big car render, square-ended standings ===== */
+#s8res .box{width:min(1240px,95vw)!important;max-height:94vh;padding:30px 36px 28px!important}
+#s8res h1{font-size:clamp(26px,5vh,40px)!important}
+#s8res .sub{font-size:12px;margin:8px 0 14px}
+.rsgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,380px);gap:34px;align-items:start}
+.rsL{min-width:0}.rsR{display:flex;flex-direction:column;gap:18px;min-width:0}
+.rscar{position:relative;background:radial-gradient(ellipse at 50% 60%,#2a3640 0,#12181d 70%);border-top:2px solid #ffffff30;padding:6px 0 0}
+.rscar canvas{display:block;width:100%;height:auto;opacity:0;transition:opacity .5s}.rscar canvas.rdy{opacity:1}
+.rscar .rsn{display:flex;flex-direction:column;gap:6px;padding:10px 16px 14px;background:#0a0e12;border-top:1px solid #ffffff14}
+.rscar .rsn b{font-size:17px;letter-spacing:.08em;text-transform:uppercase;color:#fff}
+.rscar .rsn span{display:flex;gap:10px;align-items:center;font-size:11px;letter-spacing:.16em;color:#9db0ba;text-transform:uppercase}
+.rscar .rsn i{font-style:normal;padding:2px 8px;background:#fff;color:#0a0e12;font-weight:700}
+.rsR .pay{padding:9px 10px;font-size:13px}.rsR .pay.tot{font-size:18px}
+.rsbtn{margin-top:26px!important;padding-top:20px;border-top:1px solid #ffffff14}
+.rsbtn .btn{min-width:150px}
+/* standings: bigger rows, square ends */
+.gthead,.gtrow{grid-template-columns:52px minmax(100px,1fr) minmax(170px,1.3fr) 104px 124px!important;gap:12px!important;padding:0 18px!important}
+.gthead{height:30px!important;font-size:11px!important}
+.gtrow{height:58px!important;margin-bottom:5px!important;clip-path:none!important;border-left-width:5px!important}
+.gtrow.me{height:76px!important;border-left-width:6px!important;box-shadow:inset 0 0 0 1px #ffffff1c}
+.gtrow .gtp{font-size:28px!important}.gtrow.me .gtp{font-size:34px!important}
+.gtrow .gtn i{font-size:17px!important}.gtrow.me .gtn i{font-size:20px!important}
+.gtrow .gtc{font-size:12px!important}
+.gtrow .gtr{font-size:15px!important}.gtrow strong.gtr{font-size:19px!important}.gtrow.me strong.gtr{font-size:23px!important}
+.gtt .lbt{font-size:9px!important}
+.rl-spl span{padding:6px 12px;font-size:13px}
+@media(max-width:900px){.rsgrid{grid-template-columns:1fr}.rsR{order:-1}}
+/* drop-down: no side border so the yellow bar sits flush with the tab's left edge */
+#gtDrop{border-left:0!important;border-right:0!important;box-shadow:inset -1px 0 #ffffff1c,0 18px 40px #0008}

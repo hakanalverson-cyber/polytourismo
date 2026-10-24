@@ -1,0 +1,3 @@
+from shot import run,W
+steps=[('wait',8000),('js',"(()=>{document.getElementById('ptTitle').click();return 1})()"),('wait',4000),('js',"(()=>{const r=[...document.querySelectorAll('.gtab')].map(t=>t.textContent.trim());const q=[...document.querySelectorAll('.gtab')].find(t=>/quick/i.test(t.textContent));q.dispatchEvent(new MouseEvent('mouseenter',{bubbles:true}));q.click();const o=e=>{const b=e.getBoundingClientRect();return [b.left,b.top,b.right,b.bottom].map(Math.round).join(',')};return r.join('|')+' tab '+o(q)+' drop '+o(document.getElementById('gtDrop'))+' item '+(document.querySelector('.gti.foc')?o(document.querySelector('.gti.foc')):'none')+' bar '+o(document.getElementById('gtBar'))})()"),('wait',700),('shot','dd')]
+run(W+'/Poly-Tourismo.html',steps,'dd1')
