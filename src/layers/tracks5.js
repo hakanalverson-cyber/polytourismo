@@ -71,6 +71,9 @@ function tileSystem(T,sc){
  const N=T.N,d=T.d,grp=new THREE.Group();grp.name='ringTiles';grp.userData.noChunk=1;sc.add(grp);
  const need=new Map();
  for(let i=0;i<N;i+=4){const tx=Math.floor(T.x[i]/TS),tz=Math.floor(T.z[i]/TS);for(let a=-5;a<=5;a++)for(let b=-5;b<=5;b++){const X=tx+a,Z=tz+b,dd=Math.hypot((X+.5)*TS-T.x[i],(Z+.5)*TS-T.z[i]);if(dd>640)continue;const k=X*8192+Z,o=need.get(k);if(!o)need.set(k,{X,Z,d:dd});else if(dd<o.d)o.d=dd}}
+ /* the exact height of the drawn ground at (x,z): same grid size and diagonal as the tile that covers it (snap.js sits props on this) */
+ T.meshH=(x,z)=>{const X=Math.floor(x/TS),Z=Math.floor(z/TS),t=need.get(X*8192+Z);if(!t)return null;const cs=t.d<120?4:t.d<280?8:16,n=TS/cs,lx=(x-X*TS)/cs,lz=(z-Z*TS)/cs,i=Math.min(n-1,Math.floor(lx)),j=Math.min(n-1,Math.floor(lz)),fi=lx-i,fj=lz-j,H=(a,b)=>terrainBed(T,X*TS+a*cs,Z*TS+b*cs);
+  const ha1=H(i+1,j),hb=H(i,j+1);if(fi+fj<=1){const ha=H(i,j);return ha+fi*(ha1-ha)+fj*(hb-ha)}const hb1=H(i+1,j+1);return hb1+(1-fi)*(hb-hb1)+(1-fj)*(ha1-hb1)};
  const mt=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true,side:THREE.DoubleSide});styleMaterial(mt);
  const live=new Map();let job=null,want=[],lx=1e9,lz=1e9;
  const forest=T.forest;
@@ -246,7 +249,7 @@ function buildRing(T){const d=T.d,N=T.N,sc=new THREE.Scene(),C=T._rc||cornersOf(
   const cg=new THREE.CylinderGeometry(.56,.56,.5,10);if(B.length)instC(g,cg,M_(0x1b1d21),B)}
  /* ---- forest: a clean, continuous tree line on both sides at a set distance behind the Armco (T.edgeL / T.edgeR), rows of
    3D trees standing in front of one painted canopy card set well back, so the card only adds depth between and above the crowns ---- */
- {const spr=[],dec=[],bush=[],FR=4.8,ROWS=4;
+ {const spr=[],dec=[],bush=[],FR=5.5,ROWS=3;
   for(const side of[-1,1]){const E=side>0?T.edgeL:T.edgeR;
    for(let k=0;k<N;k++){const k2=(k+1)%N,c=Math.cos(T.psi[k]),s=Math.sin(T.psi[k]),fx=T.x[k2]-T.x[k],fz=T.z[k2]-T.z[k],seg=Math.hypot(fx,fz)||1;
     for(let a=0;a<seg;a+=FR)for(let r=0;r<ROWS;r++){if(rr()>(r<3?.94:.8))continue;
@@ -266,7 +269,7 @@ function buildRing(T){const d=T.d,N=T.N,sc=new THREE.Scene(),C=T._rc||cornersOf(
  /* ---- canopy card: one painted strip (PNG) behind the tree rows. Its height eases in and out over ~8 links wherever it has to
    stop (another part of the track, the castle), so it never ends in a hard cut ---- */
  if(window.PT8_RING_FOREST){const tx=new THREE.TextureLoader().load(window.PT8_RING_FOREST);tx.wrapS=THREE.RepeatWrapping;tx.encoding=THREE.sRGBEncoding;tx.anisotropy=4;
-  const fm=new THREE.MeshBasicMaterial({map:tx,color:0x8fa59a,alphaTest:.5,side:THREE.DoubleSide});styleMaterial(fm);const BACK=24,Hh=19,rep=80;
+  const fm=new THREE.MeshBasicMaterial({map:tx,color:0x5f7666,alphaTest:.5,side:THREE.DoubleSide});styleMaterial(fm);const BACK=40,Hh=12,rep=80;/* set well back, low and in shadow: depth between the crowns, not a wall */
   for(const side of[-1,1]){const E=side>0?T.edgeL:T.edgeR,pos=[],uv=[],idx=[],pt=[];
    for(let k=0;k<N;k+=2){const l=side*(E[k]+BACK),c=Math.cos(T.psi[k]),sn=Math.sin(T.psi[k]),x=T.x[k]+c*l,z=T.z[k]-sn*l;
     pt.push({k,x,z,y:terrainBed(T,x,z)-1.2,ok:dRoad(x,z,5)>E[k]+BACK-T.hw[k]-8&&T.forest(x,z,99)>.5})}
@@ -312,7 +315,7 @@ function buildRing(T){const d=T.d,N=T.N,sc=new THREE.Scene(),C=T._rc||cornersOf(
    const ban=new THREE.Mesh(new THREE.PlaneGeometry(wd*1.9,3.2),new THREE.MeshBasicMaterial({map:ctex(512,96,(c,W,H)=>{c.fillStyle='#10151b';c.fillRect(0,0,W,H);c.fillStyle='#d8392f';c.fillRect(0,H-12,W,12);c.fillStyle='#f1f1f1';c.font='bold 58px monospace';c.textAlign='center';c.textBaseline='middle';c.fillText('NORDSCHLEIFE',W/2,H/2-4)})}));ban.position.set(0,8.6,.65);gp.add(ban);const b2=ban.clone();b2.position.z=-.65;b2.rotation.y=PI;gp.add(b2)}
   /* low buildings behind the stands */
   for(let q=0;q<5;q++){const k=(20+q*16)%N,[px,py,pz]=at(k,infield*(T.hw[k]+T.railL[k]+16),0),b=new THREE.Group();b.position.set(px,T.terr(px,pz),pz);b.rotation.y=T.psi[k];g.add(b);
-   const bl=new THREE.Mesh(new THREE.BoxGeometry(9,4.6,12),M_(q%2?0xd7d9d4:0xc7cbc5));bl.position.y=2.3;b.add(bl);const rf=new THREE.Mesh(new THREE.BoxGeometry(10,.5,13),M_(0x2c3238));rf.position.y=4.8;b.add(rf);if(P.addPt)P.addPt(T,px,pz,6.5)}
+   const cb=P.kitCabin(12,9,q%2?0xd7d9d4:0xe3e5e2,q%2?0x2c6cd0:0xd8392f);cb.rotation.y=-infield*PI/2;b.add(cb);if(P.addPt)P.addPt(T,px,pz,6.5)}
   const fl=[],pl=[];for(let k=6;k<Math.round(N*.03);k+=9)for(const sd of[-1,1]){const RO=sd>0?T.railL:T.railR,p=at(k,sd*(T.hw[k]+RO[k]+1.2),0);pl.push([p[0],p[1]+4,p[2],1,8,1]);fl.push([p[0],p[1]+7,p[2],1,1,1,T.psi[k]])}
   instC(g,new THREE.CylinderGeometry(.07,.09,1,5),M_(0xcfd3d6),pl);instC(g,new THREE.BoxGeometry(2.2,1.3,.05),MB(0xffffff),fl,[0xd8392f,0xf2c76b,0x2c6cd0,0x10151b])}
  /* ---- spectator banks: campers, tents and crowds at the classic spots ---- */
@@ -322,18 +325,10 @@ function buildRing(T){const d=T.d,N=T.N,sc=new THREE.Scene(),C=T._rc||cornersOf(
     for(let n=0;n<3;n++){if(rr()<.35)continue;const l=side*(T.hw[k]+RO[k]+1.4+rr()*7),p=at(k,l,0);peeps.push([p[0],p[1]+.55,p[2],1,1,1,rr()*6])}
     if(q%10===0&&Math.abs(q)<=12){const l=side*(T.hw[k]+RO[k]+12+rr()*6),p=at(k,l,0);(rr()<.5?tents:vans).push([p[0],p[1],p[2],1,1,1,T.psi[k]+(rr()-.5)*.6])}}}
   if(peeps.length){instC(g,new THREE.CylinderGeometry(.22,.26,1.0,5),M_(0xffffff),peeps,[0xd8392f,0x2f6fd0,0xf2c230,0x2fa05a,0x111111,0xe8e8e8,0xff7a2a]);instC(g,new THREE.SphereGeometry(.2,5,4),M_(0xe3b58d),peeps.map(p=>[p[0],p[1]+.7,p[2],1]))}
-  if(tents.length){/* flat-topped gazebos: canopy with a valance on four poles */
-   const tp=(dx,dy,dz)=>tents.map(p=>{const c=Math.cos(p[6]),s=Math.sin(p[6]);return[p[0]+c*dx+s*dz,p[1]+dy,p[2]-s*dx+c*dz,1,1,1,p[6]]});
-   instC(g,new THREE.BoxGeometry(3.2,.45,3.2),M_(0xffffff),tp(0,2.35,0),[0xf1f1f1,0xd8392f,0x2c6cd0,0xf2c76b]);
-   const pole=new THREE.CylinderGeometry(.05,.05,2.2,4);for(const[dx,dz]of[[-1.5,-1.5],[1.5,-1.5],[-1.5,1.5],[1.5,1.5]])instC(g,pole,M_(0xb8bcc0),tp(dx,1.1,dz))}
-  if(vans.length){/* camper vans: living box, low cab, dark window band, wheels (parts offset in each van's own frame) */
-   const part=(dx,dy,dz)=>vans.map(p=>{const c=Math.cos(p[6]),s=Math.sin(p[6]);return[p[0]+c*dx+s*dz,p[1]+dy,p[2]-s*dx+c*dz,1,1,1,p[6]]});
-   instC(g,new THREE.BoxGeometry(2.3,2.3,4.4),M_(0xffffff),part(0,1.65,-.7));
-   instC(g,new THREE.BoxGeometry(2.2,1.3,1.5),M_(0xffffff),part(0,1.15,2.3));
-   instC(g,new THREE.BoxGeometry(2.34,.5,3.6),M_(0x2a3036),part(0,2.05,-.5));
-   instC(g,new THREE.BoxGeometry(2.24,.55,.06),M_(0x2a3036),part(0,1.45,3.05));
-   instC(g,new THREE.BoxGeometry(2.36,.18,6.1),M_(0x8d949c),part(0,.86,0));
-   const wg=new THREE.CylinderGeometry(.38,.38,.28,10);wg.rotateZ(PI/2);for(const[dx,dz]of[[-1.05,2],[1.05,2],[-1.05,-1.8],[1.05,-1.8]])instC(g,wg,M_(0x16181b),part(dx,.4,dz));
+  if(tents.length){/* gazebos: pyramid roofs on four poles, a few colours */
+   const cols=[0xf1f1f1,0xd8392f,0x2c6cd0,0xf2c76b];cols.forEach((c,ci)=>P.kitInstances(g,P.kitTent(c),tents.filter((p,i)=>i%cols.length===ci).map(p=>[p[0],p[1],p[2],p[6]])))}
+  if(vans.length){/* camper vans: one shaped body with windscreen, window band and wheels */
+   const cols=[0xf1f1f1,0xe8e2d0,0xd9dee2];cols.forEach((c,ci)=>P.kitInstances(g,P.kitVan(c),vans.filter((p,i)=>i%cols.length===ci).map(p=>[p[0],p[1],p[2],p[6]])))
    for(const p of vans)if(P.addPt)P.addPt(T,p[0],p[2],2.4)}}
  /* ---- Nurburg castle ---- */
  if(T.castle){const{x,z}=T.castle,y=T.terr(x,z),cg=new THREE.Group();cg.position.set(x,y,z);g.add(cg);const st=M_(0x9a9182),rf=M_(0x5a4a40);

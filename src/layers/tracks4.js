@@ -85,12 +85,8 @@ function dressIM(T,sc){
 
  /* helpers */
  const seats=ctex(16,8,(x,w,h)=>{x.fillStyle='#8d949c';x.fillRect(0,0,w,h);const pal=['#d8392f','#f1f1f1','#2c6cd0','#f2c76b'];for(let i=0;i<w;i+=2){x.fillStyle=pal[(i>>1)%4];x.fillRect(i,1,2,2);x.fillRect(i,5,2,2)}}),seatM=new THREE.MeshStandardMaterial({map:seats,roughness:.9});
- const stand=(k,l,len,rows)=>{const sg=l>0?1:-1,[px,py,pz]=at(k,l,0),grp=new THREE.Group(),gy=T.terr(px,pz);grp.position.set(px,gy,pz);grp.rotation.y=T.psi[k];g.add(grp);const top=Math.max(py-gy,0);
-  for(let r=0;r<rows;r++){const h=top+1.2+r*.95,b=new THREE.Mesh(new THREE.BoxGeometry(2.4,h+3,len),seatM);b.position.set(sg*r*2.4,(h-3)/2,0);grp.add(b)}
-  const roof=new THREE.Mesh(new THREE.BoxGeometry(rows*2.4+1.5,.4,len+1.5),MB(0xe9e9e9));roof.position.set(sg*(rows*1.2-1.2),top+rows*.95+6.2,0);grp.add(roof);
-  for(const sz of[-1,1]){const pl=new THREE.Mesh(new THREE.BoxGeometry(.35,rows*.95+6.5,.35),M_(0x9aa2a8));pl.position.set(sg*(rows*2.4-1.2),top+(rows*.95+6.5)/2-2,sz*len/2);grp.add(pl)}
-  if(P.addSeg){const a=Math.cos(T.psi[k]),b=Math.sin(T.psi[k]);}
-  return grp};
+ const stand=(k,l,len,rows)=>{const sg=l>0?1:-1,[px,py,pz]=at(k,l,0),grp=new THREE.Group(),gy=T.terr(px,pz);grp.position.set(px,gy,pz);grp.rotation.y=T.psi[k];g.add(grp);
+  const st=P.kitStand(len,Math.min(rows,9));st.rotation.y=-sg*PI/2;grp.add(st);return grp};
  const signCanvas=(txt,w,h,bg,fg,fs)=>ctex(w,h,(c,W,H)=>{c.fillStyle=bg;c.fillRect(0,0,W,H);c.strokeStyle=fg;c.lineWidth=3;c.strokeRect(3,3,W-6,H-6);c.fillStyle=fg;c.font='bold '+(fs||Math.floor(H*.5))+'px monospace';c.textAlign='center';c.textBaseline='middle';c.fillText(txt,W/2,H/2+2)});
  const board=(k,l,txt,wm,hm,bg,fg,yy)=>{const[px,py,pz]=at(k,l,0),grp=new THREE.Group();grp.position.set(px,py,pz);grp.rotation.y=T.psi[k]+PI;g.add(grp);
   const pl=new THREE.Mesh(new THREE.BoxGeometry(.18,(yy||2.4)+hm/2,.18),M_(0x666d73));pl.position.set(0,(yy||2.4)/2+hm/4,0);grp.add(pl);
@@ -98,7 +94,7 @@ function dressIM(T,sc){
  /* corner numbers + brake boards + marshal posts */
  corners.forEach((c,i)=>{const side=c.dir>0?-1:1;board((c.a-14+N)%N,side*(T.hw[c.a]+5),String(i+1),2.4,1.5,'#f2c76b','#10151b',2.1);
   const k=c.pi,[mx,my,mz]=at(k,side*(T.hw[k]+18.5),0),mp=new THREE.Group();mp.position.set(mx,my,mz);mp.rotation.y=T.psi[k];g.add(mp);
-  const hut=new THREE.Mesh(new THREE.BoxGeometry(2,2.2,2),M_(0xf2c76b));hut.position.y=1.1;mp.add(hut);const rf=new THREE.Mesh(new THREE.BoxGeometry(2.6,.3,2.6),M_(0xd8392f));rf.position.y=2.3;mp.add(rf);const fp=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,3.4,5),M_(0xcfd3d6));fp.position.set(1.1,3.7,0);mp.add(fp);const fl=new THREE.Mesh(new THREE.BoxGeometry(.05,.7,1.1),MB([0xf2c76b,0xffffff,0x2c6cd0][i%3]));fl.position.set(1.1,5.2,.55);mp.add(fl)});
+  const hut=P.kitHut();hut.rotation.y=-side*PI/2;mp.add(hut);const fp=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,3.4,5),M_(0xcfd3d6));fp.position.set(1.1,3.7,0);mp.add(fp);const fl=new THREE.Mesh(new THREE.BoxGeometry(.05,.7,1.1),MB([0xf2c76b,0xffffff,0x2c6cd0][i%3]));fl.position.set(1.1,5.2,.55);mp.add(fl)});
  /* start/finish: gantry, painted line + grid boxes, pit row, tower, stands, footbridge, advert boards */
  {  /* grid boxes behind the line */
   /* exactly where gridSlot() puts the cars: row = slot>>1 at -(5+row*5) samples, lateral +-0.36 x hw[0] */
@@ -106,9 +102,8 @@ function dressIM(T,sc){
      const inn=new THREE.Mesh(new THREE.PlaneGeometry(2.7,5),MB(0x3b3d43));inn.rotation.copy(bx2.rotation);inn.position.set(bx,by+.012,bz);g.add(inn)}}
   /* pit buildings on the infield side */
   const is=infield;for(let q=0;q<6;q++){const k=(10+q*10)%N,[px,py,pz]=at(k,is*(T.hw[k]+17),0),b=new THREE.Group();b.position.set(px,T.terr(px,pz),pz);b.rotation.y=T.psi[k];g.add(b);
-   const bl=new THREE.Mesh(new THREE.BoxGeometry(9,4.2,9),M_(q%2?0xd7d9d4:0xc7cbc5));bl.position.y=2.1;b.add(bl);const rf=new THREE.Mesh(new THREE.BoxGeometry(10,.5,10),M_(0x2c3238));rf.position.y=4.4;b.add(rf);
-   const dr=new THREE.Mesh(new THREE.BoxGeometry(.2,3,6.5),new THREE.MeshBasicMaterial({color:q%2?0x2c6cd0:0xd8392f}));dr.position.set(-is*4.6,2,0);b.add(dr);if(P.addPt){P.addPt(T,px,pz,5.2)}}
-  {const k=3,[px,py,pz]=at(k,is*(T.hw[k]+32),0),b=new THREE.Group();b.position.set(px,T.terr(px,pz),pz);b.rotation.y=T.psi[k];g.add(b);const tw=new THREE.Mesh(new THREE.BoxGeometry(6,22,6),M_(0xe3e5e2));tw.position.y=11;b.add(tw);const cab=new THREE.Mesh(new THREE.BoxGeometry(9,3.4,9),M_(0x2c3a4a,{metalness:.2}));cab.position.y=23.4;b.add(cab);const cr=new THREE.Mesh(new THREE.BoxGeometry(10,.5,10),M_(0xd8392f));cr.position.y=25.4;b.add(cr);if(P.addPt)P.addPt(T,px,pz,4.2)}
+   const ga=P.kitGarage(9.6,9);ga.rotation.y=-is*PI/2;b.add(ga);if(P.addPt){P.addPt(T,px,pz,5.2)}}
+  {const k=3,[px,py,pz]=at(k,is*(T.hw[k]+32),0),b=new THREE.Group();b.position.set(px,T.terr(px,pz),pz);b.rotation.y=T.psi[k];g.add(b);b.add(P.kitTower(20));if(P.addPt)P.addPt(T,px,pz,4.2)}
   stand(8,-infield*(T.hw[8]+20),60,9);stand(Math.round(N*.06),-infield*(T.hw[0]+20),40,7);
   const fl=[],pl=[];for(let k=4;k<Math.round(N*.075);k+=7)for(const sd of[-1,1]){const p=at(k,sd*(T.hw[k]+4.5),0);pl.push([p[0],p[1]+4,p[2],1,8,0]);fl.push([p[0],p[1]+7,p[2],1,1,T.psi[k]])}
   inst(g,new THREE.CylinderGeometry(.07,.09,1,5),M_(0xcfd3d6),pl);inst(g,new THREE.BoxGeometry(2.2,1.3,.05),MB(0xd8392f),fl)}
@@ -123,7 +118,7 @@ function dressIM(T,sc){
  /* tyre stacks as cones marking the pit exit, small detail */
  /* ---- Romagna parkland: plane trees and oaks in rows, poplars and cypress, umbrella pines; Emilia hills on the horizon ---- */
  {const tm=M_(0x5a3b26),tint=(geo,mt,list,cols,f)=>{/* one mesh per colour: plain material colours survive the scene's mesh merging */const ob=new THREE.Object3D();cols.forEach((cc,ci)=>{const sub=list.filter((p,i)=>i%cols.length===ci);if(!sub.length)return;const im=new THREE.InstancedMesh(geo,cols.length>1||mt.color.getHex()===0xffffff?M_(cc):mt,sub.length);sub.forEach((p,i)=>{f(ob,p);ob.updateMatrix();im.setMatrixAt(i,ob.matrix)});g.add(im)})};
-  P.circuitWoods(T,sc,g,{seed:4909,set:22,rows:3,copses:22,tint:0x6a865e,cardH:17,start:[-14,Math.round(N*.08)],cluster:0,
+  P.circuitWoods(T,sc,g,{seed:4909,set:22,rows:2,copses:12,tint:0x6a865e,cardH:17,start:[-14,Math.round(N*.08)],cluster:0,
    /* plane trees and oaks, cypress (a narrowed Quaternius conifer), umbrella pines: CC0 models from trees_q.js */
    kinds:[{w:.55,build:(g,L)=>P.qMix(g,['oak3','oak4','oak5'],L,[13,12,11],[0xffffff,0xf0f8e0,0xe4eed6])},
     {w:.25,build:(g,L)=>P.qMix(g,['pine4','pine2'],L,[13,14],[0xd8e2d0,0xc8d4c2],{sx:.42})},

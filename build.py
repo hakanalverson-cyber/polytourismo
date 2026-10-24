@@ -19,6 +19,12 @@ src=src.replace("color:d.id==3?0x7af0ff:0xfff0c8","color:d.id==3?0xffe2a8:0xfff0
 # real circuits (Road Atlanta, Imola): no centre line, and the grey/white full-lap edge strip becomes plain asphalt run-off (kerbs live only at corners)
 src=rep(src,"x.fillStyle='#e8e8e8';x.fillRect(w/2-1,0,2,h/2)}","if(!(d.ra||d.imola)){x.fillStyle='#e8e8e8';x.fillRect(w/2-1,0,2,h/2)}}")
 src=rep(src,"const ct=ctex(8,8,(x,w,h)=>{x.fillStyle='#e8e8e8';x.fillRect(0,0,w,h);x.fillStyle='#6d7375';x.fillRect(0,0,w,h/2)})","const ct=ctex(8,8,(x,w,h)=>{if(d.ra||d.imola){x.fillStyle=d.road;x.fillRect(0,0,w,h);return}x.fillStyle='#e8e8e8';x.fillRect(0,0,w,h);x.fillStyle='#6d7375';x.fillRect(0,0,w,h/2)})")
+# Grip: the drift mode only engages while the handbrake key is held (it used to switch on with every quick steering tap above 76 km/h)
+src=rep(src,"""if(!c.ptDrift&&o.drifts&&live&&ground&&road&&
+     fw>o.driftSpeed/3.6&&Math.abs(st)>.76&&
+     Math.abs(prev)<.55&&Math.abs(st-prev)>.5&&
+     (c.ptBlend||0)<.2) {""","""if(!c.ptDrift&&o.drifts&&live&&ground&&road&&fw>13&&Math.abs(st)>.3&&window.PT8_HB&&window.PT8_HB(c)) {""")
+src=rep(src,"if(!live||!o.drifts||fw<13||!road||c.ptNeutral>.32)","if(!live||!o.drifts||fw<13||!road||c.ptNeutral>.32||!(window.PT8_HB&&window.PT8_HB(c)))")
 src=rep(src,"gl=Math.max(2,Math.round(8/sp));","gl=Math.max(2,Math.round((jp[2]||8)/sp)),JH=jp[3]||4.4,JL=jp[3]?jp[3]*.78:3.45;")
 src=rep(src,"T.y[(c-rl+k+N)%N]+=4.4*u*u*(2-u);","T.y[(c-rl+k+N)%N]+=JH*u*u*(2-u);")
 src=rep(src,"const n=Math.ceil(Rc.cd);Rc.cd-=dt;const m=Math.ceil(Rc.cd);if(m!=n&&m>0)beep(600,.12);$('cd').textContent=Rc.cd>0?Math.ceil(Rc.cd):'GO!';if(Rc.cd<=0){Rc.state='race';Rc.t=0;beep(1200,.4);","const cs=PT8.cdStep(Rc,dt);$('cd').textContent=cs.txt;if(cs.go){Rc.state='race';Rc.t=0;")
@@ -60,8 +66,7 @@ src=rep(src,"['boostFov','BOOST FOV'],","")
 src=rep(src,"['units','SPEED UNITS',['kmh','mph']],","")
 src=rep(src,"units:'kmh',showroom","units:'mph',showroom")
 src=rep(src,"driftSpeed:76,","driftMph:47,")
-src=rep(src,"fw>o.driftSpeed/3.6&&","fw>o.driftMph/2.23694&&")
-src=rep(src,"['driftSpeed','DRIFT SPEED KMH',60,100,2],","['driftMph','DRIFT SPEED MPH',37,62,1],")
+src=rep(src,"['driftSpeed','DRIFT SPEED KMH',60,100,2],","")  # drifting now follows the handbrake key, so no speed threshold setting
 src=rep(src,"} catch(e) {}\n\nconst compile","} catch(e) {}\no.units='mph';\n\nconst compile")
 src=rep(src,"ABOVE 76 KM/H","ABOVE 47 MPH")
 
@@ -209,7 +214,7 @@ src=rep(src,"let bi=c.idx,bd=1e9;for(let k=-6;k<=30;k++){","let bi=c.idx,bd=1e9;
 src=rep(src,"c.wrong=hd<-3&&live?c.wrong+dt:0;","c.wrong=!T.free&&hd<-3&&live?c.wrong+dt:0;")
 src=rep(src,"if(live&&(c.y<T.y[c.idx]-12||Math.abs(c.roll)>.68","if(live&&((!T.free&&c.y<T.y[c.idx]-12)||Math.abs(c.roll)>.68")
 src=rep(src," if(!live)return;\n const sf=T.surf(c.x,c.z,c.y);"," if(!live||T.free)return;\n const sf=T.surf(c.x,c.z,c.y);")
-parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','frmodels','frdress','frtown','frworld','freeroam','cars10','audio','modes','tracks','hpack','tracks2','extra','race2','elim','tod','bridge','props','bld','stages','trees_q','ra_data','tracks3','imola_data','tracks4','ring_data','ring_forest','tracks5','logos','weather','ambience','menuaudio','tutorial','updatelog','hud2','shade','ui','cinema','rally','trackmode','realspeed','barn','animals','franimals','frlife','clean','solid','damage','perf','econ','frhud','title']  if os.path.exists(f'{SRC}/layers/{n}.js')]
+parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','frmodels','frdress','frtown','frworld','freeroam','cars10','audio','modes','tracks','hpack','tracks2','extra','race2','elim','tod','bridge','props','bld','stages','trees_q','propkit','ra_data','tracks3','imola_data','tracks4','ring_data','ring_forest','tracks5','logos','weather','ambience','menuaudio','tutorial','updatelog','hud2','shade','ui','cinema','rally','trackmode','realspeed','barn','animals','franimals','frlife','clean','solid','damage','grip','ride','snap','perf','econ','frhud','title']  if os.path.exists(f'{SRC}/layers/{n}.js')]
 css=open(f'{SRC}/style.css').read()
 import base64
 b64=lambda f:base64.b64encode(open(W+'/assets/'+f,'rb').read()).decode()

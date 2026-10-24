@@ -43,7 +43,7 @@ function circuitWoods(T,sc,g,o){
  if(bush.length)P.qMix(g,['bush1','bush2'],bush.map(p=>[p[0],p[1],p[2],p[3]*1.1,p[4]]),1.6,[0xffffff,0xe2ecda,0xd2dec8]);
  /* canopy card behind the rows, height easing in and out wherever it has to stop */
  if(window.PT8_RING_FOREST){const tx=new THREE.TextureLoader().load(window.PT8_RING_FOREST);tx.wrapS=THREE.RepeatWrapping;tx.encoding=THREE.sRGBEncoding;tx.anisotropy=4;
-  const fm=new THREE.MeshBasicMaterial({map:tx,color:o.tint,alphaTest:.5,side:THREE.DoubleSide});const BACK=o.set+o.rows*4+8,Hh=o.cardH,rep=80;
+  const fm=new THREE.MeshBasicMaterial({map:tx,color:new THREE.Color(o.tint).multiplyScalar(.78),alphaTest:.5,side:THREE.DoubleSide});const BACK=o.set+o.rows*4+22,Hh=o.cardH*.65,rep=80;/* back, low and shaded: depth, not a wall */
   for(const side of[-1,1]){const pos=[],uv=[],idx=[],pt=[];
    for(let k=0;k<N;k+=3){const l=side*(T.hw[k]+BACK),c=Math.cos(T.psi[k]),sn=Math.sin(T.psi[k]),x=T.x[k]+c*l,z=T.z[k]-sn*l;pt.push({k,x,z,y:terrainBed(T,x,z)-1,ok:!inStart(k)&&dRoad(x,z)>BACK-6&&clear(x,z)})}
    const M=pt.length,link=new Uint8Array(M);for(let q=0;q<M;q++){const a=pt[q],b=pt[(q+1)%M];if(!a.ok||!b.ok)continue;const dx=b.x-a.x,dz=b.z-a.z,dl=Math.hypot(dx,dz),tx_=Math.sin(T.psi[b.k]),tz_=Math.cos(T.psi[b.k]);if(dl>.5&&dl<T.sp*12&&(dx*tx_+dz*tz_)/dl>.35)link[q]=1}
@@ -123,11 +123,8 @@ function dressRA(T,sc){
   const im=inst(g,new THREE.CylinderGeometry(.55,.55,.5,8),M_(0x1c1e22),L)}
  /* ---- helper builders ---- */
  const seats=ctex(16,8,(x,w,h)=>{x.fillStyle='#8d949c';x.fillRect(0,0,w,h);const pal=['#d8392f','#f1f1f1','#2c6cd0','#f2c76b'];for(let i=0;i<w;i+=2){x.fillStyle=pal[(i>>1)%4];x.fillRect(i,1,2,2);x.fillRect(i,5,2,2)}}),seatM=new THREE.MeshStandardMaterial({map:seats,roughness:.9});
- const stand=(k,l,len,rows)=>{const sg=l>0?1:-1,[px,py,pz]=at(k,l,0),grp=new THREE.Group(),gy=T.terr(px,pz);grp.position.set(px,gy,pz);grp.rotation.y=T.psi[k];g.add(grp);const top=Math.max(py-gy,0);
-  for(let r=0;r<rows;r++){const h=top+1.2+r*.95,b=new THREE.Mesh(new THREE.BoxGeometry(2.4,h+3,len),seatM);b.position.set(sg*r*2.4,(h-3)/2,0);grp.add(b)}
-  const roof=new THREE.Mesh(new THREE.BoxGeometry(rows*2.4+1.5,.4,len+1.5),MB(0xe9e9e9));roof.position.set(sg*(rows*1.2-1.2),top+rows*.95+6.2,0);grp.add(roof);
-  for(const sz of[-1,1])for(let q=0;q<=2;q++){const pl=new THREE.Mesh(new THREE.BoxGeometry(.35,rows*.95+6.5,.35),M_(0x9aa2a8));pl.position.set(sg*(rows*2.4-1.2),top+(rows*.95+6.5)/2-2,sz*len/2*(q/2)*(q?1:0)+(q===0?0:0));grp.add(pl)}
-  return grp};
+ const stand=(k,l,len,rows)=>{const sg=l>0?1:-1,[px,py,pz]=at(k,l,0),grp=new THREE.Group(),gy=T.terr(px,pz);grp.position.set(px,gy,pz);grp.rotation.y=T.psi[k];g.add(grp);
+  const st=P.kitStand(len,Math.min(rows,9));st.rotation.y=-sg*PI/2;grp.add(st);return grp};
  const signCanvas=(txt,w,h,bg,fg,fs)=>ctex(w,h,(c,W,H)=>{c.fillStyle=bg;c.fillRect(0,0,W,H);c.strokeStyle=fg;c.lineWidth=3;c.strokeRect(3,3,W-6,H-6);c.fillStyle=fg;c.font='bold '+(fs||Math.floor(H*.5))+'px monospace';c.textAlign='center';c.textBaseline='middle';c.fillText(txt,W/2,H/2+2)});
  const board=(k,l,txt,wm,hm,bg,fg,yy)=>{const[px,py,pz]=at(k,l,0),grp=new THREE.Group();grp.position.set(px,py,pz);grp.rotation.y=T.psi[k]+PI;g.add(grp);
   const pl=new THREE.Mesh(new THREE.BoxGeometry(.18,(yy||2.4)+hm/2,.18),M_(0x666d73));pl.position.set(0,(yy||2.4)/2+hm/4,0);grp.add(pl);
@@ -145,10 +142,8 @@ function dressRA(T,sc){
   const ban=new THREE.Mesh(new THREE.PlaneGeometry(wd*1.9,3.6),new THREE.MeshBasicMaterial({map:ctex(512,96,(c,W,H)=>{c.fillStyle='#d8392f';c.fillRect(0,0,W,H);c.fillStyle='#f1f1f1';c.fillRect(0,H-12,W,12);c.fillStyle='#f1f1f1';c.font='bold 62px monospace';c.textAlign='center';c.textBaseline='middle';c.fillText('ROAD ATLANTA',W/2,H/2-4)}),side:THREE.DoubleSide}));ban.position.set(0,8.6,.1);gp.add(ban);
   /* pit building (infield, right) and control tower */
   for(let q=0;q<6;q++){const[px,py,pz]=at(10+q*18,-(T.hw[10]+22),0),b=new THREE.Group();b.position.set(px,T.terr(px,pz),pz);b.rotation.y=T.psi[10+q*18];g.add(b);
-   const bl=new THREE.Mesh(new THREE.BoxGeometry(9,4.2,17),M_(q%2?0xd7d9d4:0xc7cbc5));bl.position.y=2.1;b.add(bl);
-   const rf=new THREE.Mesh(new THREE.BoxGeometry(10,.5,18),M_(0x2c3238));rf.position.y=4.4;b.add(rf);
-   const dr=new THREE.Mesh(new THREE.BoxGeometry(.2,3,12),new THREE.MeshBasicMaterial({color:q%2?0x2c6cd0:0xd8392f}));dr.position.set(4.6,2,0);b.add(dr)}
-  {const[px,py,pz]=at(6,-(T.hw[6]+44),0),b=new THREE.Group();b.position.set(px,T.terr(px,pz),pz);b.rotation.y=T.psi[6];g.add(b);const tw=new THREE.Mesh(new THREE.BoxGeometry(6,22,6),M_(0xe3e5e2));tw.position.y=11;b.add(tw);const cab=new THREE.Mesh(new THREE.BoxGeometry(9,3.4,9),M_(0x2c3a4a,{metalness:.2}));cab.position.y=23.4;b.add(cab);const cr=new THREE.Mesh(new THREE.BoxGeometry(10,.5,10),M_(0xd8392f));cr.position.y=25.4;b.add(cr)}
+   const ga=P.kitGarage(17,9);ga.rotation.y=PI/2;b.add(ga)}
+  {const[px,py,pz]=at(6,-(T.hw[6]+44),0),b=new THREE.Group();b.position.set(px,T.terr(px,pz),pz);b.rotation.y=T.psi[6];g.add(b);b.add(P.kitTower(20))}
   /* main grandstand across the straight */
   stand(34,T.hw[34]+20,70,9);stand(115,T.hw[115]+20,44,7);
   /* flag poles + banners down both sides of the straight */
@@ -162,10 +157,10 @@ function dressRA(T,sc){
   const ban=new THREE.Mesh(new THREE.PlaneGeometry(wd*1.5,1.6),new THREE.MeshBasicMaterial({map:signCanvas('ROAD ATLANTA',512,64,'#2c6cd0','#f1f1f1',34),side:THREE.DoubleSide}));ban.position.set(0,10.4,2.05);bp.add(ban);const ban2=ban.clone();ban2.position.z=-2.05;bp.add(ban2);
   const rail=new THREE.Mesh(new THREE.BoxGeometry(wd*2,.12,.12),M_(0xf1f1f1));for(const z of[-1.9,1.9]){const r=rail.clone();r.position.set(0,10.2,z);bp.add(r)}}
  /* ---- hospitality tents + billboards around the paddock ---- */
- for(let q=0;q<5;q++){const k=(60+q*22)%N,[px,py,pz]=at(k,-(T.hw[k]+60),0),tn=new THREE.Group();tn.position.set(px,T.terr(px,pz),pz);tn.rotation.y=T.psi[k];g.add(tn);const bd=new THREE.Mesh(new THREE.BoxGeometry(10,3,14),M_([0xf1f1f1,0xd8392f,0x2c6cd0,0xf2c76b,0xe9e9e9][q]));bd.position.y=1.5;tn.add(bd);const tp=new THREE.Mesh(new THREE.BoxGeometry(10.6,.5,14.6),M_(0xf1f1f1));tp.position.y=3.25;tn.add(tp)}
+ for(let q=0;q<5;q++){const k=(60+q*22)%N,[px,py,pz]=at(k,-(T.hw[k]+60),0),tn=new THREE.Group();tn.position.set(px,T.terr(px,pz),pz);tn.rotation.y=T.psi[k];g.add(tn);const cb=P.kitCabin(14,8,0xe9ebe8,[0xd8392f,0x2c6cd0,0xf2c76b,0x2c6cd0,0xd8392f][q]);cb.rotation.y=PI/2;tn.add(cb)}
  /* ---- Georgia woods: loblolly pines (tall bare trunks, crowns on top) with hardwoods mixed in ---- */
  {const tm=M_(0x5a3b26),tint=(geo,mt,list,cols,f)=>{/* one mesh per colour: plain material colours survive the scene's mesh merging */const ob=new THREE.Object3D();cols.forEach((cc,ci)=>{const sub=list.filter((p,i)=>i%cols.length===ci);if(!sub.length)return;const im=new THREE.InstancedMesh(geo,cols.length>1||mt.color.getHex()===0xffffff?M_(cc):mt,sub.length);sub.forEach((p,i)=>{f(ob,p);ob.updateMatrix();im.setMatrixAt(i,ob.matrix)});g.add(im)})};
-  circuitWoods(T,sc,g,{seed:4088,set:24,rows:4,copses:26,tint:0x5d7a60,cardH:20,start:[-40,Math.round(N*.06)],cluster:1,
+  circuitWoods(T,sc,g,{seed:4088,set:24,rows:3,copses:14,tint:0x5d7a60,cardH:20,start:[-40,Math.round(N*.06)],cluster:1,
    /* loblolly pines (tall, crowns high up) with hardwoods mixed in: Quaternius CC0 models from trees_q.js */
    kinds:[{w:.7,build:(g,L)=>P.qMix(g,['pine2','pine3','pine4'],L,[19,17,18],[0xffffff,0xe8f2dc,0xdbe6cf,0xf4fbe6])},
     {w:.3,build:(g,L)=>P.qMix(g,['oak4','oak3','umb2'],L,[12,13,12],[0xffffff,0xeef6dc,0xe2ecd2])}],

@@ -3,6 +3,12 @@
 'use strict';
 const P=window.PT8;
 P.LOG=[
+ {v:'0.10',d:'Oct 24, 2026',t:'Grip, ride height, trees and props',items:[
+  'Grip fixed on every track: the car no longer slides when you tap the steering. The drift mode used to switch itself on with every quick steering tap above 47 mph, cutting sideways grip to a quarter; now it only engages while you hold the handbrake. Tarmac grip is also firmer for the player, so the car goes where it is pointed. Gravel, grass and ice keep their loose feel.',
+  'Cars sit on the road: every car was riding 6 to 10 cm above the surface. The body now settles so the tyres touch the ground under them, on every track.',
+  'Nothing floats: on every map, trees and props are now set onto the ground as it is actually drawn (the drawn ground is a triangle grid that differs from the smooth height used for placement by up to a metre on slopes).',
+  'Fewer, tidier trees on Road Atlanta, Imola and the Nordschleife: every tree keeps a clear space around it so crowns never stack, with fewer rows and clumps. The painted forest backdrop sits further back, lower and in shade, so it adds depth without reading as a wall.',
+  'New simple props instead of plain boxes: grandstands with stepped seat rows and a roof, pit garages with roller doors, paddock cabins with windows and awnings, a race-control tower with a glass cab, marshal huts with pitched roofs, gazebos and shaped camper vans.']},
  {v:'0.09',d:'Oct 24, 2026',t:'New track: the Nordschleife',items:[
   'The Nurburgring Nordschleife is a new circuit-mode track and by far the longest in the game: a 20.8 km lap with about 290 m of climb, from Hatzenbach, Flugplatz and Aremberg down to Breidscheid, up through Kesselchen to the banked Karussell, round Brunnchen and Pflanzgarten and back along the Dottinger Hohe. The layout was rebuilt from the real corner sequence and lap length, not from a surveyed map, so it is close to the real track but not exact.',
   'Armco on both sides of the whole lap, kerbs on every corner, gravel traps and tyre walls at the slowest corners, dense Eifel forest, spectator camps at the famous corners, corner name boards and km boards, bridges, the T13 grandstand and Nurburg castle on its hill.',

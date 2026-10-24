@@ -32,7 +32,12 @@ function geo(n){if(G[n])return G[n];const d=TD[n],dec=s=>{const b=atob(s),u=new 
  for(let t=0;t<ci.length;t++){const c=pal[ci[t]];for(let v=0;v<3;v++){const o=t*9+v*3;col[o]=c.r;col[o+1]=c.g;col[o+2]=c.b}}
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('color',new THREE.BufferAttribute(col,3));g.computeVertexNormals();g.computeBoundingSphere();return G[n]=g}
 /* plant a list of [x,y,z,scale,rotY] as instances of model n, h metres tall at scale 1; tints multiply the model colours per instance */
-P.qTrees=(par,n,list,h,tints,o)=>{if(!list.length)return null;o=o||{};const m=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.9,metalness:0,flatShading:true,side:THREE.DoubleSide}),im=new THREE.InstancedMesh(geo(n),m,list.length),ob=new THREE.Object3D(),c=new THREE.Color();
+/* spacing: every tree keeps clear of the trees already planted in the same group (crowns touch, never stack). The radius is a share of the
+   tree's height, so tall pines stand further apart than bushes. Lists can overlap (two rows from track parts that run close together). */
+const keep=(par,x,z,r,gk)=>{gk='_qg'+(gk||'');const G=par.userData[gk]||(par.userData[gk]=new Map()),C=8,cx=Math.floor(x/C),cz=Math.floor(z/C),R=Math.ceil(r*2/C);
+ for(let a=-R;a<=R;a++)for(let b=-R;b<=R;b++){const l=G.get((cx+a)*65536+cz+b);if(!l)continue;for(const q of l)if(Math.hypot(q[0]-x,q[1]-z)<(q[2]+r)*.85)return false}
+ const k=cx*65536+cz;let l=G.get(k);if(!l)G.set(k,l=[]);l.push([x,z,r]);return true};
+P.qTrees=(par,n,list,h,tints,o)=>{o=o||{};const wr=TD[n].r||.3;list=list.filter(p=>keep(par,p[0],p[2],p[3]*h*wr*(o.wide||1)*(o.sx||1)*(o.gap||1),o.grid||(/^bush/.test(n)?'b':'')));if(!list.length)return null;const m=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.9,metalness:0,flatShading:true,side:THREE.DoubleSide}),im=new THREE.InstancedMesh(geo(n),m,list.length),ob=new THREE.Object3D(),c=new THREE.Color();
  list.forEach((p,i)=>{const s=p[3]*h,w=o.wide||1;ob.position.set(p[0],p[1]-(o.sink||.3),p[2]);ob.scale.set(s*w*(o.sx||1),s,s*w*(o.sx||1));ob.rotation.set(0,p[4]||0,0);ob.updateMatrix();im.setMatrixAt(i,ob.matrix);
   if(tints){c.setHex(tints[(Math.floor(Math.abs(p[0]*7+p[2]*13))%tints.length)]);im.setColorAt(i,c)}});
  im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true;par.add(im);return im};
@@ -45,7 +50,7 @@ def main():
     root=sys.argv[1];data={};prev=[]
     for n,(f,t) in PICK.items():
         T,ci,pal,h=bake(os.path.join(root,f),t);q=np.clip(np.round(T*16000),-32767,32767).astype('<i2')
-        data[n]={'p':base64.b64encode(q.tobytes()).decode(),'c':base64.b64encode(ci.tobytes()).decode(),
+        rad=float(np.percentile(np.hypot(T[...,0],T[...,2]).ravel(),90));data[n]={'r':round(rad,3),'p':base64.b64encode(q.tobytes()).decode(),'c':base64.b64encode(ci.tobytes()).decode(),
                  'pal':['#%02x%02x%02x'%tuple(int(min(1,c)*255+.5) for c in p) for p in pal]}
         prev.append((n,T,ci,pal));print(n,len(ci),'tris','src h %.1f m'%h)
     js='/* Quaternius "Ultimate Nature" trees and bushes, CC0 1.0 (https://quaternius.com, via github.com/chibifire-stages/quaternius-stage),\n   decimated and baked by tools/tree_export.py: p = int16 xyz/16000 (1 unit tall), c = palette index per triangle */\nwindow.PT8_TREES='+json.dumps(data,separators=(',',':'))+';\n'+RUNTIME
