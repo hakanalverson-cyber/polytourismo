@@ -101,6 +101,10 @@ function dressIM(T,sc){
   if(!idx.length)continue;const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));gg.setIndex(idx);gg.computeVertexNormals();g.add(new THREE.Mesh(gg,mt))}
  /* BARRIERS along the survey's own lines */
  const LN={};if(IR&&IR.ln)for(const c in IR.ln){const meta=i16(IR.ln[c][0]),pts=i16(IR.ln[c][1]),out=[];let o=0;for(let i=0;i<meta.length;i+=3){const n=meta[i],p=[];for(let j=0;j<n;j++){p.push([pts[(o+j)*2]/4,pts[(o+j)*2+1]/4])}o+=n;out.push({p,h:meta[i+1]/10,b:meta[i+2]/10})}LN[c]=out}
+ /* a barrier never crosses the road: break a line wherever it touches the asphalt */
+ for(const c in LN){const out=[];for(const L of LN[c]){let cur=[];const push=()=>{if(cur.length>1)out.push({p:cur,h:L.h,b:L.b});cur=[]};
+   for(let i=0;i<L.p.length;i++){const[x,z]=L.p[i];let hit=dRoad(x,z)<.35;if(!hit&&i){const[xa,za]=L.p[i-1],n=Math.ceil(Math.hypot(x-xa,z-za));for(let t=1;t<n&&!hit;t++)hit=dRoad(xa+(x-xa)*t/n,za+(z-za)*t/n)<.35}
+    if(hit){push();if(dRoad(x,z)>=.35)cur.push(L.p[i])}else cur.push(L.p[i])}push()}LN[c]=out}
  const nearTrack=(x,z)=>dRoad(x,z)<45;
  /* walls: green with a white top beside the track, plain concrete further away; every link by the track is a collider */
  {const pos=[],col=[],idx=[],gC=lin(0x0c5a22),wC=lin(0xe9ebe6),cC=lin(0xb9bcb8);
@@ -130,18 +134,95 @@ function dressIM(T,sc){
     for(let t=0;t<n;t++){const f=t/n,x=x0+(x1-x0)*f,z=z0+(z1-z0)*f,y=gy(x,z),blk=Math.floor(cnt++/5)%9;for(let h=0;h<rows;h++)(blk===0?R:B).push([x,y+.25+h*.5,z,1,1,0])}
     if(nearTrack(x0,z0)&&P.addSeg)P.addSeg(T,x0,z0,x1,z1,.6)}}
   const cg=new THREE.CylinderGeometry(.55,.55,.5,8);if(B.length)inst(g,cg,M_(0x0c0d10),B);if(R.length)inst(g,cg,M_(0x6e0c08),R)}
- /* BLOCKS: every building, stand, tent, vehicle and prop of the survey, as flat-shaded boxes with its footprint and height. Never on the road */
+ /* BUILDINGS & OBJECTS: every object of the survey at its measured footprint and height, drawn as a clean low-poly model of its kind:
+    buildings with floors of windows, houses with pitched roofs, grandstands (open rakes, or covered stands up on legs under a roof),
+    tents, vans, trucks and boards; the pit building, its paddock block and the control tower are modelled by hand from the survey. Never on the road */
  const box=[];
- {const bx=IR&&IR.bx?i16(IR.bx):new Int16Array(0),n=bx.length/10,PL=(IR&&IR.pal||[]).map(c=>lin(c));
-  const TL=new Map();/* 250 m tiles, so each can be culled on its own */
-  for(let i=0;i<n;i++){const o=i*10,cx=bx[o]/4,cz=bx[o+1]/4,L=bx[o+2]/4,W=bx[o+3]/4,yb=bx[o+4]/10,yt=bx[o+5]/10,ang=bx[o+6]/1000;
-   const ca=Math.cos(ang),sa=Math.sin(ang),cs=[[-L/2,-W/2],[L/2,-W/2],[L/2,W/2],[-L/2,W/2]].map(([u,v])=>[cx+u*ca-v*sa,cz+u*sa+v*ca]);
-   if(yb<4.5){let onRoad=dRoad(cx,cz)<.6;for(const[x,z]of cs)if(dRoad(x,z)<.6)onRoad=true;if(onRoad)continue}
-   const gc=gy(cx,cz);let y0=gc+yb;if(yb<=0){for(const[x,z]of cs)y0=Math.min(y0,gy(x,z));y0-=.15}const y1=gc+yt;
-   const tc=PL[bx[o+7]]||lin(0x9aa0a6),sc=PL[bx[o+8]]||tc;
-   const P=[...cs.map(([x,z])=>[x,y0,z]),...cs.map(([x,z])=>[x,y1,z])],tk=Math.floor(cx/250)+','+Math.floor(cz/250);if(!TL.has(tk))TL.set(tk,{pos:[],col:[],idx:[]});const{pos,col,idx}=TL.get(tk);
-   for(const f of[[4,5,6,7],[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7],...(yb>0?[[3,2,1,0]]:[])]){const b=pos.length/3,cc=f[0]===4?tc:sc;for(const q of f){pos.push(...P[q]);col.push(cc.r,cc.g,cc.b)}idx.push(b,b+2,b+1,b,b+3,b+2)}
-   if(yb<=0&&yt>2)box.push([Math.min(...cs.map(c=>c[0]))-2,Math.max(...cs.map(c=>c[0]))+2,Math.min(...cs.map(c=>c[1]))-2,Math.max(...cs.map(c=>c[1]))+2])}
+ {const OB=(IR&&IR.ob)||[],TL=new Map(),C_=h=>lin(h);
+  const geo=k=>{if(!TL.has(k))TL.set(k,{pos:[],col:[],idx:[]});return TL.get(k)};
+  /* a drawing kit in a local frame (u along ang, v across, y up) at cx,cz */
+  const kit=(cx,cz,ang)=>{const ca=Math.cos(ang),sa=Math.sin(ang),{pos,col,idx}=geo(Math.floor(cx/250)+','+Math.floor(cz/250));
+   const P=(u,v,y)=>[cx+u*ca-v*sa,y,cz+u*sa+v*ca];
+   const quad=(a,b,c,d,cl)=>{const i=pos.length/3;for(const q of[a,b,c,d]){pos.push(q[0],q[1],q[2]);col.push(cl.r,cl.g,cl.b)}idx.push(i,i+2,i+1,i,i+3,i+2)};
+   const tri=(a,b,c,cl)=>{const i=pos.length/3;for(const q of[a,b,c]){pos.push(q[0],q[1],q[2]);col.push(cl.r,cl.g,cl.b)}idx.push(i,i+2,i+1)};
+   const bx=(u0,u1,v0,v1,ya,yb,sc,tc,bc)=>{const a=P(u0,v0,ya),b=P(u1,v0,ya),c=P(u1,v1,ya),d=P(u0,v1,ya),e=P(u0,v0,yb),f=P(u1,v0,yb),g2=P(u1,v1,yb),h=P(u0,v1,yb);
+    quad(a,b,f,e,sc);quad(b,c,g2,f,sc);quad(c,d,h,g2,sc);quad(d,a,e,h,sc);if(tc)quad(e,f,g2,h,tc);if(bc)quad(d,c,b,a,bc)};
+   /* a flat panel on the face v=vf (normal +v if dir>0) */
+   const pan=(u0,u1,vf,ya,yb,cl,dir)=>{const o=dir>0?.03:-.03;dir>0?quad(P(u1,vf+o,ya),P(u0,vf+o,ya),P(u0,vf+o,yb),P(u1,vf+o,yb),cl):quad(P(u0,vf+o,ya),P(u1,vf+o,ya),P(u1,vf+o,yb),P(u0,vf+o,yb),cl)};
+   const panU=(v0,v1,uf,ya,yb,cl,dir)=>{const o=dir>0?.03:-.03;dir>0?quad(P(uf+o,v0,ya),P(uf+o,v1,ya),P(uf+o,v1,yb),P(uf+o,v0,yb),cl):quad(P(uf+o,v1,ya),P(uf+o,v0,ya),P(uf+o,v0,yb),P(uf+o,v1,yb),cl)};
+   return{P,quad,tri,bx,pan,panU}};
+  const base=(cx,cz,ang,L,W)=>{const ca=Math.cos(ang),sa=Math.sin(ang);let y0=gy(cx,cz);for(const[u,v]of[[-L/2,-W/2],[L/2,-W/2],[L/2,W/2],[-L/2,W/2]])y0=Math.min(y0,gy(cx+u*ca-v*sa,cz+u*sa+v*ca));return[y0-.2,gy(cx,cz)]};
+  const WHT=C_(0xeceae6),LGR=C_(0xc9cbcc),MGR=C_(0x8d9196),DGR=C_(0x45494e),GLS=C_(0x2b3a48),RED=C_(0xc8242c),NAV=C_(0x1f2f5a),SKY=C_(0x8fc3d8);
+  /* windows: a dark band on every floor of every face */
+  const floors=(K,u0,u1,v0,v1,ya,yb,step,frac)=>{for(let y=ya+step*.35;y+step*frac<yb-.3;y+=step){const y2=y+step*frac;K.pan(u0+.6,u1-.6,v1,y,y2,GLS,1);K.pan(u0+.6,u1-.6,v0,y,y2,GLS,-1);K.panU(v0+.6,v1-.6,u1,y,y2,GLS,1);K.panU(v0+.6,v1-.6,u0,y,y2,GLS,-1)}};
+  for(const o of OB){const[t,cx,cz,ang,L,W,H]=o;
+   const cs=[[-L/2,-W/2],[L/2,-W/2],[L/2,W/2],[-L/2,W/2]].map(([u,v])=>[cx+u*Math.cos(ang)-v*Math.sin(ang),cz+u*Math.sin(ang)+v*Math.cos(ang)]);
+   let onRoad=dRoad(cx,cz)<1.5;for(const[x,z]of cs)if(dRoad(x,z)<1)onRoad=true;if(onRoad)continue;
+   const[y0,yb]=base(cx,cz,ang,L,W),K=kit(cx,cz,ang),{P,quad,tri,bx}=K,hl=L/2,hw=W/2;
+   if(t==='bld'){const bands=(o[7]||[]).filter(Boolean),wc=C_(bands.length?bands[Math.min(1,bands.length-1)]:0xeceae6),rc=C_(o[8]||0x8d9196),top=yb+H,acc=bands.length>2&&bands[2]!==bands[1]?C_(bands[2]):null;
+    bx(-hl,hl,-hw,hw,y0,top,wc,rc);if(acc&&H>4)bx(-hl-.05,hl+.05,-hw-.05,hw+.05,top-Math.min(1.2,H*.15),top,acc,null);
+    if(H>=3.2&&L>4&&W>4)floors(K,-hl,hl,-hw,hw,yb,top-(acc?1.2:0),3.4,.38);
+    if(L>8&&W>8)bx(-hl,hl,-hw,hw,top,top+.4,wc,rc)}
+   else if(t==='house'){const e=Math.max(2.6,Math.min(o[7]||H-2.5,H-1.2)),wc=C_(0xeadfc8),rc=C_(0xb5532f),gc=C_(0xd9cdb4),ly=yb+e,ry=yb+H,ov=.5;
+    bx(-hl,hl,-hw,hw,y0,ly,wc,null);
+    for(let y=yb+1;y+1.3<ly;y+=3)for(let u=-hl+1.5;u<hl-1.5;u+=3.2){K.pan(u,u+1.1,hw,y,y+1.3,GLS,1);K.pan(u,u+1.1,-hw,y,y+1.3,GLS,-1)}
+    if(L>=W){quad(P(-hl-ov,-hw-ov,ly-.25),P(hl+ov,-hw-ov,ly-.25),P(hl+ov,0,ry),P(-hl-ov,0,ry),rc);quad(P(hl+ov,hw+ov,ly-.25),P(-hl-ov,hw+ov,ly-.25),P(-hl-ov,0,ry),P(hl+ov,0,ry),rc);
+     tri(P(-hl,-hw,ly),P(-hl,0,ry),P(-hl,hw,ly),gc);tri(P(hl,hw,ly),P(hl,0,ry),P(hl,-hw,ly),gc)}
+    else{quad(P(hl+ov,-hw-ov,ly-.25),P(hl+ov,hw+ov,ly-.25),P(0,hw+ov,ry),P(0,-hw-ov,ry),rc);quad(P(-hl-ov,hw+ov,ly-.25),P(-hl-ov,-hw-ov,ly-.25),P(0,-hw-ov,ry),P(0,hw+ov,ry),rc);
+     tri(P(hl,-hw,ly),P(0,-hw,ry),P(-hl,-hw,ly),gc);tri(P(-hl,hw,ly),P(0,hw,ry),P(hl,hw,ly),gc)}}
+   else if(t==='stand'){const lo=o[7],hi=Math.max(o[8],lo+1),rf=o[9],cc=C_(0xc4c6c6),st=C_(0x9da3a6),seat=C_(lo>4.5?0xdfe1e2:0x3f6f8f),dk=C_(0x6d7275);
+    if(lo>4.5){/* covered grandstand: raked seating up on V legs, roof above, open underneath */
+     const rt=yb+hi,dk0=yb+2.2,dk1=Math.max(dk0+2,rt-3.2),n=Math.max(2,Math.round(W/1.4));
+     for(let k=0;k<n;k++){const v0=-hw+W*k/n,v1=-hw+W*(k+1)/n,y=dk0+(dk1-dk0)*(k+1)/n;bx(-hl,hl,v0,v1,y-.45,y,cc,seat)}
+     bx(-hl,hl,-hw,-hw+.25,dk0-.6,dk0+.9,cc,cc);bx(-hl,hl,hw-.3,hw,dk1-.4,rt,cc,null);
+     const m=Math.max(2,Math.round(L/10));for(let k=0;k<=m;k++){const u=-hl+L*k/m;bx(u-.35,u+.35,-hw*.4-.35,-hw*.4+.35,y0,dk0+(dk1-dk0)*.3,st,null);quad(P(u-.25,-hw*.4,dk0),P(u+.25,-hw*.4,dk0),P(u+.25,hw-.3,rt),P(u-.25,hw-.3,rt),st)}
+     bx(-hl-.6,hl+.6,-hw-2.5,hw+.4,rt,rt+.45,DGR,MGR,MGR)}
+    else{const steps=Math.max(2,Math.min(12,Math.round(W/1.6)));
+     for(let k=0;k<steps;k++){const v0=-hw+W*k/steps,v1=-hw+W*(k+1)/steps,hy=yb+lo+(hi-lo)*(k+1)/steps;bx(-hl,hl,v0,v1,y0,hy,cc,seat)}
+     bx(-hl,hl,hw-.4,hw,y0,yb+hi+1.1,dk,dk);
+     if(rf>hi+1.5){const ry=yb+rf;bx(-hl-.5,hl+.5,-hw-1.5,hw+.3,ry-.35,ry,WHT,WHT);const n=Math.max(2,Math.round(L/9));for(let k=0;k<=n;k++){const u=-hl+L*k/n;bx(u-.18,u+.18,hw-.3,hw,yb+hi,ry-.35,dk,null)}}}}
+   else if(t==='tent'){const e=Math.max(2.2,H*.62),pc=C_(0x9aa0a6);
+    for(const[u,v]of[[-hl,-hw],[hl,-hw],[hl,hw],[-hl,hw]])bx(u-.06,u+.06,v-.06,v+.06,y0,yb+e,pc,null);
+    if(L*W>40)bx(-hl,hl,-hw,hw,y0,yb+e-.2,WHT,null);
+    const pk=P(0,0,yb+H),c4=[P(-hl,-hw,yb+e),P(hl,-hw,yb+e),P(hl,hw,yb+e),P(-hl,hw,yb+e)];for(let k=0;k<4;k++)tri(c4[k],c4[(k+1)%4],pk,WHT)}
+   else if(t==='van'||t==='truck'){const bc=C_(o[7]||0xdddddd),wh=C_(0x15171a),h=Math.min(H,t==='van'?2.6:4);
+    if(t==='van'){bx(-hl,hl,-hw,hw,yb+.35,yb+h,bc,bc);K.panU(-hw+.15,hw-.15,hl,yb+h*.55,yb+h*.85,GLS,1)}
+    else{const cab=Math.min(2.4,L*.25);bx(-hl,hl-cab-.2,-hw,hw,yb+.9,yb+h,bc,bc);bx(hl-cab,hl,-hw,hw,yb+.6,yb+Math.min(3.2,h),WHT,WHT);K.panU(-hw+.2,hw-.2,hl,yb+2,yb+2.8,GLS,1)}
+    bx(-hl+.3,hl-.3,-hw+.1,hw-.1,yb,yb+.4,wh,null)}
+   else if(t==='board'){const b=o[7],bc=C_(o[8]||0x2a5aa0),pc=C_(0x6d7378),y1=yb+Math.max(H,b+.8);
+    bx(-hl,hl,-hw,hw,yb+b,y1,bc,pc);if(b>.3)for(const u of[-hl*.8,hl*.8])bx(u-.08,u+.08,-.06,.06,y0,yb+b,pc,null)}
+   if(H>2&&t!=='board')box.push([Math.min(...cs.map(c=>c[0]))-2,Math.max(...cs.map(c=>c[0]))+2,Math.min(...cs.map(c=>c[1]))-2,Math.max(...cs.map(c=>c[1]))+2])}
+  /* the pit building: garages facing the pit lane (+z) under a navy balcony, offices above, rooftop pavilions; then the taller paddock block
+     with its dark roof overhang and red end block, and the control tower. Positions and heights from the survey */
+  const pitRow=(x0,x1,z0,z1,upper)=>{const cx=(x0+x1)/2,cz=(z0+z1)/2,L=x1-x0,W=z1-z0,K=kit(cx,cz,0),[y0,yb]=base(cx,cz,0,L,W),hl=L/2,hw=W/2;
+   K.bx(-hl,hl,-hw,hw,y0,yb+4.5,WHT,LGR);
+   for(let u=-hl+.6;u+6<=hl;u+=6.5){K.pan(u+.7,u+5.9,hw,yb,yb+3.7,C_(0xf6f4f2),1);K.pan(u+.7,u+1.1,hw+.01,yb+.4,yb+3.4,RED,1);K.pan(u+5.5,u+5.9,hw+.01,yb+.4,yb+3.4,RED,1);K.bx(u,u+.6,hw,hw+.35,y0,yb+4.5,RED,RED)}
+   K.bx(-hl,hl,hw-.2,hw+1.4,yb+4.5,yb+5.4,NAV,NAV,NAV);K.bx(-hl,hl,hw+1.25,hw+1.4,yb+5.4,yb+6.4,SKY,SKY);
+   box.push([x0-2,x1+2,z0-2,z1+2]);if(upper)upper(K,yb,y0,hl,hw)};
+  pitRow(1388,1581,186,203,(K0,yb)=>{const K=kit(1484.5,189.5,0),hl=96.5,hw=9.5;
+   K.bx(-hl,hl,-hw,hw,yb+4.5,yb+9.6,C_(0xe4e4e1),LGR);K.pan(-hl+.5,hl-.5,hw,yb+6.6,yb+8.2,GLS,1);K.pan(-hl+.5,hl-.5,-hw,yb+6.6,yb+8.2,GLS,-1);
+   K.bx(-hl,hl,-hw-.3,hw+.3,yb+9.6,yb+10,MGR,MGR);
+   for(const u of[-70,-25,20,65]){K.bx(u-5,u+5,-3.5,3.5,yb+10,yb+12.4,LGR,null);K.pan(u-4,u+4,3.5,yb+10.6,yb+11.8,GLS,1);K.bx(u-6,u+6,-4.5,4.5,yb+12.4,yb+12.8,NAV,NAV,NAV)}});
+  pitRow(1329,1388,186,203,()=>{const K=kit(1361.5,190,0),[y0,yb]=base(1361.5,190,0,65,25),hl=32.5,hw=12.5;
+   K.bx(-hl,hl,-hw,hw,y0,yb+12.4,C_(0xbcbfc2),MGR);K.pan(-hl+.5,hl-.5,hw,yb+6.2,yb+7.8,GLS,1);K.pan(-hl+.5,hl-.5,hw,yb+9.3,yb+10.9,GLS,1);
+   K.bx(-hl-.5,hl+.5,-hw,hw+3,yb+12.4,yb+13.1,DGR,DGR,DGR);box.push([1327,1396,175,204]);
+   const R=kit(1388,186.5,0),[r0,rb]=base(1388,186.5,0,20,29);R.bx(-10,10,-14.5,14.5,r0,rb+14,RED,LGR);R.bx(-10.2,10.2,-14.7,14.7,rb+13.2,rb+14,WHT,null);floors(R,-10,10,-14.5,14.5,rb+4.6,rb+13,3.2,.35)});
+  /* the paddock block behind the start straight follows the straight's angle: an extruded outline from the survey */
+  {const poly=[[1216,178],[1224,156],[1320,176],[1326,188],[1321,202]],cx=1265,cz=180,K=kit(cx,cz,0),{pos,col,idx}=geo(Math.floor(cx/250)+','+Math.floor(cz/250));
+   let y0=1e9;for(const[x,z]of poly)y0=Math.min(y0,gy(x,z));y0-=.2;const yb=gy(cx,cz),top=yb+12,wc=C_(0xbcbfc2);
+   for(let i=0;i<poly.length;i++){const[xa,za]=poly[i],[xb,zb]=poly[(i+1)%poly.length],L=Math.hypot(xb-xa,zb-za),ux=(xb-xa)/L,uz=(zb-za)/L;
+    K.quad([xa,y0,za],[xb,y0,zb],[xb,top,zb],[xa,top,za],wc);
+    for(let y=yb+1.4;y+1.4<top-.5;y+=3.3){const nx=uz*.04,nz=-ux*.04;K.quad([xa+ux*.8+nx,y,za+uz*.8+nz],[xb-ux*.8+nx,y,zb-uz*.8+nz],[xb-ux*.8+nx,y+1.4,zb-uz*.8+nz],[xa+ux*.8+nx,y+1.4,za+uz*.8+nz],GLS)}}
+   for(let i=1;i<poly.length-1;i++)K.tri([poly[0][0],top,poly[0][1]],[poly[i][0],top,poly[i][1]],[poly[i+1][0],top,poly[i+1][1]],MGR);
+   box.push([1214,1328,154,204])}
+  /* pit apron (light concrete) and pit lane asphalt in front of the garages */
+  {const K=kit(1455,207,0),flat=(x0,x1,z0,z1,c)=>{for(let x=x0;x<x1;x+=4){const xb=Math.min(x1,x+4);K.quad([x,gy(x,z1)+.14,z1],[xb,gy(xb,z1)+.14,z1],[xb,gy(xb,z0)+.14,z0],[x,gy(x,z0)+.14,z0],c)}};
+   flat(1329,1581,203,211,C_(0xd8c6b8));flat(1329,1590,211,216.6,C_(0x4a4d52))}
+  {const K=kit(1145,164.5,0),[y0,yb]=base(1145,164.5,0,22,10),hl=11,hw=5;
+   K.bx(-hl,hl,-hw,hw,y0,yb+4.5,GLS,LGR);K.bx(-hl,hl,-hw,hw,yb+4.5,yb+22,WHT,DGR);
+   for(let y=yb+5.6;y<yb+20;y+=3.3){K.pan(-hl+.4,hl-.4,hw,y,y+1.6,GLS,1);K.pan(-hl+.4,hl-.4,-hw,y,y+1.6,GLS,-1);K.panU(-hw+.4,hw-.4,hl,y,y+1.6,GLS,1);K.panU(-hw+.4,hw-.4,-hl,y,y+1.6,GLS,-1)}
+   K.bx(-hl-.1,hl+.1,-hw-.1,hw+.1,yb+12.6,yb+13.2,RED,null);K.bx(-hl-.1,hl+.1,-hw-.1,hw+.1,yb+20.8,yb+22,RED,null);K.bx(-hl+3,hl-3,-hw+1,hw-1,yb+22,yb+24,LGR,MGR);
+   for(let k=0;k<6;k++)K.bx(-.35,.35,-.35,.35,yb+24+k*3.7,yb+24+(k+1)*3.7,k%2?WHT:RED,k===5?RED:null);box.push([1132,1158,157,172])}
   const bm=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.85,flatShading:true,side:THREE.DoubleSide});
   for(const{pos,col,idx}of TL.values()){const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setAttribute('color',new THREE.Float32BufferAttribute(col,3));gg.setIndex(idx);gg.computeVertexNormals();gg.computeBoundingSphere();
    const m=new THREE.Mesh(gg,bm);m.userData.fogCull=1;g.add(m)}}
