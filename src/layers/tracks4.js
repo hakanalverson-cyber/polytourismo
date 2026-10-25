@@ -10,7 +10,7 @@ const imola={id:15,look:0,name:'Imola',desc:'italian grand prix circuit / chican
 D.push(imola);
 P.TRACK_INFO.push({s:'TARMAC',tags:['CHICANES','SAND TRAPS','TYRE WALLS','KERBS']});
 P.TRK_TRACKS.push(D.length-1);
-P.MEDAL_REF[D.length-1]=106.1;
+P.MEDAL_REF[D.length-1]=108.2;
 MATS.sandtrap={grip:.42,top:.5,acc:.4};
 const IMX=D.length-1;
 /* the real circuit's trackside layout (imola_ref.js): per-sample offsets past the road edge for each side, or -1 */
@@ -85,7 +85,15 @@ function dressIM(T,sc){
  const PS=-1,K0=-56,K1=60,inPit=k=>k>=N+K0||k<=K1+2;
  /* opposite the pits, along the whole start straight: a clean green wall with catch fencing 8 m off the road, grandstands right behind it */
  const inStart=k=>{k=((k%N)+N)%N;return k>=N-70||k<=K1+90};
- const get=(c,side,k)=>{k=((k%N)+N)%N;if(side===-PS&&inStart(k)){if(c==='wall'||c==='fence')return 8;return -1}return irOff[c][side<0?0:1][k]},pitSide=(side,k)=>side===PS&&inPit(k);
+ /* walls, fences and rails run unbroken: gaps of up to 30 samples are bridged, sudden steps become a gentle slant (1 m per sample at most)
+    and leftover stubs under 8 samples are dropped */
+ const smooth=a=>{const o=Float32Array.from(a),n=o.length;let i=0;while(i<n&&o[i]>=0)i++;if(i===n)return o;
+  for(let q=0;q<n;q++){const k=(i+q)%n;if(o[k]>=0)continue;let e=q;while(e<n&&o[(i+e)%n]<0)e++;const L=e-q;
+   if(L<=30){const v0=o[(i+q-1+n)%n],v1=o[(i+e)%n];for(let t=0;t<L;t++)o[(i+q+t)%n]=v0+(v1-v0)*(t+1)/(L+1)}q=e}
+  for(let it=0;it<20;it++)for(let k=0;k<n;k++){const v=o[k];if(v<0)continue;for(const j of[(k+1)%n,(k-1+n)%n])if(o[j]>=0&&o[j]-1>v)o[k]=o[j]-1}
+  for(let q=0;q<n;q++){const k=(i+q)%n;if(o[k]<0)continue;let e=q;while(e<n&&o[(i+e)%n]>=0)e++;if(e-q<8)for(let t=q;t<e;t++)o[(i+t)%n]=-1;q=e}return o};
+ const irC={};for(const c in irOff)irC[c]=c==='wall'||c==='fence'||c==='rail'?irOff[c].map(smooth):irOff[c];
+ const get=(c,side,k)=>{k=((k%N)+N)%N;if(side===-PS&&inStart(k)){if(c==='wall'||c==='fence')return 8;return -1}return irC[c][side<0?0:1][k]},pitSide=(side,k)=>side===PS&&inPit(k);
  const brk=(c,side)=>k=>{const a=get(c,side,k),b=get(c,side,k-1);return a<0||b<0||Math.abs(a-b)>2.5};
  /* gravel and green run-off between their inner and outer edge, in 12 bands so they follow the ground */
  const ribbon=(cLo,cHi,side,mt,dy)=>{for(let j=0;j<12;j++){const pos=[],uv=[],idx=[];let prev=-1;
@@ -98,13 +106,13 @@ function dressIM(T,sc){
  for(const side of[-1,1]){ribbon('green_lo','green_hi',side,greenM,.1);ribbon('sand_lo','sand_hi',side,sandM,.14)}
  for(const side of[-1,1]){
   /* green concrete walls */
-  P.trackWall(T,g,at,dRoad,{side,a:0,b:N,off:k=>Math.max(2.5,get('wall',side,k)),h:1.1,col:0x0c5a22,top:0xe9ebe6/* the scene grading halves saturation: a deep green reads as Imola's green */,skip:k=>get('wall',side,k)<0||pitSide(side,k),brk:brk('wall',side)});
+  P.trackWall(T,g,at,dRoad,{side,a:0,b:N,off:k=>Math.max(2.5,get('wall',side,k)),h:1.1,col:0x0c5a22,top:0xe9ebe6/* the scene grading halves saturation: a deep green reads as Imola's green */,skip:k=>get('wall',side,k)<0||pitSide(side,k),brk:k=>get('wall',side,k-1)<0});
   /* Armco */
   const ro=new Float32Array(N);for(let k=0;k<N;k++){const v=get('rail',side,k);ro[k]=v<0||pitSide(side,k)?-1:Math.max(2.5,v)}P.armco(T,g,at,side,ro);
   /* catch fences: on top of the wall where one stands within a metre or so, otherwise on their own posts */
   const onWall=k=>{const w=get('wall',side,k),f=get('fence',side,k);return w>=0&&f>=0&&Math.abs(w-f)<1.2};
   P.catchFence(T,g,at,dRoad,{side,a:0,b:N,h:3,off:k=>onWall(k)?Math.max(2.5,get('wall',side,k))+.2:Math.max(2.5,get('fence',side,k)),y0:k=>onWall(k)?1.05:0,
-   skip:k=>get('fence',side,k)<0||pitSide(side,k),brk:k=>brk('fence',side)(k)||onWall(k)!==onWall(k-1)})}
+   skip:k=>get('fence',side,k)<0||pitSide(side,k),brk:k=>get('fence',side,k-1)<0||onWall(k)!==onWall(k-1)})}
  /* TYRE WALLS: two tyres high, black with a white and a red block now and then; every link a collider */
  {const B=[],W=[],R=[];for(const side of[-1,1])for(let k=0;k<N;k++){const o=get('tyre',side,k);if(o<1.5||pitSide(side,k))continue;/* tyre markers set into the verge are not walls */const o1=get('tyre',side,k+1),e0=Math.max(3.5,o)+.55,e1=o1>=0&&Math.abs(o-o1)<2.5?Math.max(3.5,o1)+.55:-1;
    for(let t=0;t<3;t++){if(t&&e1<0)break;const f=t/3,pa=at(k,side*(T.hw[k]+e0),0),pb=e1<0?pa:at(k+1,side*(T.hw[(k+1)%N]+e1),0),x=pa[0]+(pb[0]-pa[0])*f,y=pa[1]+(pb[1]-pa[1])*f,z=pa[2]+(pb[2]-pa[2])*f,blk=Math.floor((k*3+t)/5)%9;

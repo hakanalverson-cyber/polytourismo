@@ -99,7 +99,22 @@ P.kitPitRow=(g,T,at,a,b,s,d)=>{const N=T.N,st=Math.max(1,Math.round(6.4/T.sp)),M
  {const rib=(l0,l1,y,c)=>{const pos=[],idx=[];let n=0;for(let q=a;q<=b;q++){const k=((q%N)+N)%N,h=T.hw[k];pos.push(...at(k,s*(h+l0),y),...at(k,s*(h+l1),y));if(n)idx.push(2*n-2,2*n,2*n-1,2*n-1,2*n,2*n+1);n++}
    const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setIndex(idx);gg.computeVertexNormals();
    g.add(new THREE.Mesh(gg,new THREE.MeshStandardMaterial({color:lin(c),roughness:.95,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2})))};
-  rib(5.6,d+.4,.07,0x45484e);rib(d-5.3,d-5,.09,0xe8e8e8)}
+  rib(5.6,d+.4,.07,0x45484e);rib(d-5.3,d-5,.09,0xe8e8e8);
+  /* past the garages the lane narrows and runs in along the track edge until it joins the track, so it never just stops in the grass */
+  const TP=28,tw=(q,t)=>{const k=((q%N)+N)%N,h=T.hw[k],l0=.2+5.4*t,l1=l0+4.4+(d+.4-10)*t*t;return[k,h,l0,l1]};
+  for(const dir of[-1,1]){const pos=[],idx=[],ln=[],li=[];for(let i=0;i<=TP;i++){const q=dir<0?a-i:b+i,t=1-i/TP,[k,h,l0,l1]=tw(q,t),y=.07;
+    pos.push(...at(k,s*(h+l0),y),...at(k,s*(h+l1),y));if(i)idx.push(2*i-2,2*i,2*i-1,2*i-1,2*i,2*i+1);
+    ln.push(...at(k,s*(h+l1-.35),.09),...at(k,s*(h+l1-.2),.09));if(i)li.push(2*i-2,2*i,2*i-1,2*i-1,2*i,2*i+1)}
+   for(const[P_,I_,c]of[[pos,idx,0x45484e],[ln,li,0xe8e8e8]]){const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(P_,3));gg.setIndex(I_);gg.computeVertexNormals();
+    g.add(new THREE.Mesh(gg,new THREE.MeshStandardMaterial({color:lin(c),roughness:.95,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2})))}}
+  /* the pit wall follows the lane in and ends in a red and white crash-cushion nose */
+  if(P.trackWall)for(const dir of[-1,1]){const lim=Math.round(TP*.7),q0=dir<0?a-lim:b,q1=dir<0?a:b+lim,qn=dir<0?q0:q1,
+    tOf=q=>1-(dir<0?a-q:q-b)/TP;P.trackWall(T,g,at,()=>999,{side:s,a:q0,b:q1,off:k=>{let q=k;if(dir<0&&q>a)q-=N;if(dir>0&&q<b-N/2)q+=N;return Math.max(.6,.2+5.4*tOf(q)-.2)},h:1,col:0xf1f2ee,top:0xd8392f});
+   const kk=((qn%N)+N)%N,tn=tOf(qn),pp=at(kk,s*(T.hw[kk]+.2+5.4*tn-.2),0),nose=new THREE.Mesh(new THREE.BoxGeometry(1.1,1,2.2),new THREE.MeshStandardMaterial({color:lin(0xd8392f),roughness:.7,flatShading:true}));
+   nose.position.set(pp[0],pp[1]+.45,pp[2]);nose.rotation.y=T.psi[kk];g.add(nose);for(let j=0;j<2;j++){const w=new THREE.Mesh(new THREE.BoxGeometry(1.14,.22,.5),M(0xf1f2ee));w.position.set(0,-.1+j*.4,(j?.5:-.5));nose.add(w)}}}
+ /* garage end walls: a dark panel closing each end of the block */
+ {const ends=[a,a+Math.ceil((b-a)/st)*st];for(let e=0;e<2;e++){const kk=((ends[e]%N)+N)%N,p=at(kk,s*(T.hw[kk]+d+Dp/2),0),grp=new THREE.Group();grp.position.set(p[0],p[1]-.05,p[2]);grp.rotation.y=T.psi[kk];g.add(grp);
+   const m=new THREE.Mesh(B(Dp+.7,7.95,.5),body);m.position.set(0,3.97,e?-.1:.1);grp.add(m)}}
  /* pit wall between the pit lane and the track */
  if(P.trackWall)P.trackWall(T,g,at,()=>999,{side:s,a,b,off:5.8,h:1,col:0xf1f2ee,top:0xd8392f})};
 /* a solid wall ribbon along the track at lateral l (per sample), with a top cap; runs only where nothing else is closer to the road.
