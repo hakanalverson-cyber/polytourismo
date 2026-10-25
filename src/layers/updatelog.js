@@ -4,9 +4,9 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.12',d:'Oct 25, 2026',t:'New Road Atlanta and Imola scenery, smarter CPU, gearbox choice',items:[
-  'Road Atlanta rebuilt from photos of the real place: Georgia pine woods with oaks mixed in now fill the land all around the circuit, close behind the grass banks. Red clay run-offs and worn clay patches, white concrete walls with catch fencing along the straights, and big generic billboards up on the banks before the main corners.',
-  'Imola rebuilt from photos too: autumn parkland with orange, gold and rust trees among the green, dark cypresses and stone pines. The town on the hill with its brick bell tower and a tall modern block, a red and white race control tower with a glass top, green walls and pit wall with catch fencing, a green-white-red stripe on the kerbs, and spectators in the stands on the banks.',
-  'No street lights on the real circuits. Deeper, less washed-out grass on both.',
+  'Road Atlanta rebuilt from photos of the real place: Georgia pine woods with oaks mixed in stand deep behind the grass banks, every tree with its own space. Red clay run-offs, white concrete walls with catch fencing along the straights, and big generic billboards up on the banks before the main corners.',
+  'Imola rebuilt from photos too: autumn parkland with orange, gold and rust trees among the green, dark cypresses and stone pines. The town and its bell tower on the horizon, a red and white race control tower with a glass top, green walls and pit wall with catch fencing, a green-white-red stripe on the kerbs, and spectators in the stands on the banks.',
+  'No street lights on the real circuits. Deeper, less washed-out grass on both. Kerbs run unbroken through every corner, and sand traps and run-offs sit on the ground as drawn, so grass no longer pokes through them.',
   'CPU cars can no longer pass through tunnel walls, barriers or anything else the player hits. They now follow a proper racing line (outside, apex, outside) worked out for each track, and plan corner speeds from it: Road Atlanta CPU lap 112.5 s to 104 s, with no crashes on any track. Medal times were adjusted to match.',
   'Cars keep their grip going downhill: the suspension used to read a falling road as the car lifting off, so the tyres went light on every descent. Now it follows the ground under the car.',
   'The ground meets the edge of the track flush on every map: no more grey wall or step beside the asphalt.',

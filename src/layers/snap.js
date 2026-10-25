@@ -41,5 +41,7 @@ function snap(T,sc){const G=T.meshH?null:grids(sc),ground=T.meshH?(x,z)=>T.meshH
  T._snap={n,moved,objs:objs.length};
 }
 P.snapGround=snap;
+/* height of the ground as it is drawn (null off the grids): ground strips (run-offs, sand) sit on whichever is higher, so grass never pokes through */
+P.drawnGround=sc=>{const G=grids(sc);return G.length?(x,z)=>hAt(G,x,z):null};
 const bw=buildWorld;buildWorld=function(T){const sc=bw.apply(this,arguments);try{if(!(T.d&&T.d.free))snap(T,sc)}catch(e){console.warn('snap',e)}return sc};
 })();

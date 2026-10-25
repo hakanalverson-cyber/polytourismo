@@ -30,6 +30,17 @@ P.farForest=(T,g,o)=>{const[x0,x1,z0,z1]=T.bounds,M=o.margin||260,st=o.step||9;l
   l.forEach((p,j)=>{const w=k.wide||1;ob.position.set(p[0],p[1],p[2]);ob.scale.set(p[3]*w,p[3],p[3]*w);ob.rotation.set(0,p[4],0);ob.updateMatrix();im.setMatrixAt(j,ob.matrix);im.setColorAt(j,lin(p[5]))});
   im.instanceMatrix.needsUpdate=true;im.instanceColor.needsUpdate=true;im.castShadow=false;im.receiveShadow=true;im.userData.shd=1;g.add(im);n+=l.length});
  return n};
+/* woods past the planted tree rows: real tree models (trees_q.js) in a band from o.from to o.to metres off the road edge, set out along the
+   lap so every tree keeps its own space (qTrees spacing), with the edge of the woods wandering and a few clearings */
+P.bandForest=(T,g,o)=>{const N=T.N;let s=(o.seed||1)>>>0;const rr=()=>((s=(s*1664525+1013904223)>>>0)/4294967296);
+ const far=(x,z,R)=>{const cx=Math.floor(x/16),cz=Math.floor(z/16),C=Math.ceil(R/16)+1;let b=1e9;for(let a=-C;a<=C;a++)for(let c=-C;c<=C;c++){const l=T.grid.get((cx+a)*8192+cz+c);if(!l)continue;for(const i of l){const d=Math.hypot(x-T.x[i],z-T.z[i])-T.hw[i];if(d<b)b=d}}return b};
+ const L=o.kinds.map(()=>[]),W=o.kinds.reduce((a,k)=>a+k.w,0),st=o.step||13;
+ for(let k=0;k<N;k+=2){const c=Math.cos(T.psi[k]),sn=Math.sin(T.psi[k]);for(const side of[-1,1])for(let d=o.from;d<o.to;d+=st){if(rr()>.8)continue;
+  const l=side*(T.hw[k]+d+(rr()-.5)*st*.8),x=T.x[k]+c*l+(rr()-.5)*T.sp*2,z=T.z[k]-sn*l+(rr()-.5)*T.sp*2;
+  if(T.nz(x*1.7+17,z*1.7-3)>(o.fields==null?1.1:o.fields))continue;if(o.open&&o.open(x,z))continue;if(far(x,z,o.from+4)<o.from-2)continue;
+  let t=rr()*W,i=0;for(;i<o.kinds.length-1;i++){t-=o.kinds[i].w;if(t<=0)break}
+  L[i].push([x,T.terr(x,z),z,.85+rr()*.35,rr()*6])}}
+ let n=0;o.kinds.forEach((k,i)=>{n+=L[i].length;P.qMix(g,k.names,L[i],k.h,k.tints,k.o)});return n};
 /* a solid wall ribbon along the track at lateral l (per sample), with a top cap; runs only where nothing else is closer to the road.
    every link is a real collider */
 P.trackWall=(T,g,at,dRoad,o)=>{const N=T.N,side=o.side,pos=[],idx=[],col=[],c0=lin(o.col),c1=lin(o.top||o.col),H=o.h||1,th=o.th||.4;let run=[];
