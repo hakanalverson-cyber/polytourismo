@@ -30,12 +30,12 @@ function circuitWoods(T,sc,g,o){
  const lists=o.kinds.map(()=>[]),pick=x=>{let t=rr()*o.kinds.reduce((a,k)=>a+k.w,0);for(let i=0;i<o.kinds.length;i++){t-=o.kinds[i].w;if(t<=0)return i}return 0};
  const put=(x,z,s,r)=>{const i=o.kinds.length>1&&T.nz(x*3+3,z*3-8)>.75?(o.cluster||0):pick()/* T.nz is slow and spans +-1.75: scale it up for patches ~100 m across */;lists[i].push([x,T.terr(x,z),z,s,r])};
  /* tree lines: rows at a set distance, gently staggered; the line steps back where it would crowd another part of the track */
- const step=4.6,bush=[],wob=(k,side)=>Math.max(0,T.nz(T.x[k]*.012+side*7,T.z[k]*.012-3)*.5+.5)*14;/* the edge wanders in and out, so it reads as woods, not an avenue */
+ const step=4.6,bush=[],wob=(k,side)=>Math.max(0,Math.min(1,T.nz(T.x[k]*2.5+side*7,T.z[k]*2.5-3)*.3+.5))*(o.wob==null?14:o.wob)+(o.extra?o.extra(k,side):0);/* the edge wanders in and out, so it reads as woods, not an avenue */
  for(const side of[-1,1])for(let k=0;k<N;k++){if(inStart(k))continue;const k2=(k+1)%N,c=Math.cos(T.psi[k]),s=Math.sin(T.psi[k]),fx=T.x[k2]-T.x[k],fz=T.z[k2]-T.z[k],seg=Math.hypot(fx,fz)||1;
   for(let a=0;a<seg;a+=step){for(let r=0;r<o.rows;r++){if(rr()>(r<2?.9:.75))continue;const u=(a+(r%2)*step*.5+(rr()-.5)*3)/seg,l=side*(T.hw[k]+o.set+wob(k,side)+r*4.2+(rr()-.5)*3.2),x=T.x[k]+fx*u+c*l,z=T.z[k]+fz*u-s*l;
    if(dRoad(x,z)<o.set-2.5||!clear(x,z))continue;put(x,z,(r===0&&rr()<.3?.62:.85)+.4*(T.nz(x*.3,z*.3)*.5+.5)*rr()+.15*rr(),rr()*6)}
    /* undergrowth along the foot of the line hides the trunks */
-   if(rr()<.75){const u=(a+rr()*step)/seg,l=side*(T.hw[k]+o.set+wob(k,side)-2+rr()*2),x=T.x[k]+fx*u+c*l,z=T.z[k]+fz*u-s*l;if(dRoad(x,z)>o.set-4&&clear(x,z))bush.push([x,T.terr(x,z),z,.8+rr()*.7,rr()*6])}}}
+   for(let bq=0;bq<(o.bush?2:1);bq++)if(rr()<.75){const u=(a+rr()*step)/seg,l=side*(T.hw[k]+o.set+wob(k,side)-2+rr()*2+bq*2.5),x=T.x[k]+fx*u+c*l,z=T.z[k]+fz*u-s*l;if(dRoad(x,z)>o.set-4&&clear(x,z))bush.push([x,T.terr(x,z),z,(.8+rr()*.7)*(o.bush||1),rr()*6])}}}
  /* copses further out: round clumps, so open ground between them reads as fields, not gaps */
  const[x0,x1,z0,z1]=T.bounds;for(let t=0;t<o.copses*30&&t<4000;t++){const cx=x0+(x1-x0)*rr(),cz=z0+(z1-z0)*rr(),d=dRoad(cx,cz);if(d<o.set+30)continue;const R=10+rr()*16,n=Math.round(R*R*.09);
   for(let q=0;q<n;q++){const a=rr()*6.283,rad=Math.sqrt(rr())*R,x=cx+Math.cos(a)*rad,z=cz+Math.sin(a)*rad;if(dRoad(x,z)<o.set+20||!clear(x,z))continue;put(x,z,(.9+.3*rr())*(1+.15*(1-rad/R)),rr()*6)}if(--o.copses<=0)break}
@@ -115,14 +115,13 @@ function dressRA(T,sc){
  kerb(inL,1,-.1,1.5,curbM,2.0);kerb(inR,-1,-.1,1.5,curbM,2.0);kerb(outL,1,-.1,1.2,curbM,2.0);kerb(outR,-1,-.1,1.2,curbM,2.0);
  /* paint-your-own gravel run-off strips on the outside of corners */
  const gm=M_(0,{color:new THREE.Color(0x9c4424).convertSRGBToLinear(),roughness:1,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});/* red Georgia clay */for(const c of kc){const a=Math.max(0,c.a-2),b=c.b+2;strip([[a,b]],c.dir>0?-1:1,2.4,11,.06,gm,6)}
- /* ---- guardrail: outside of corners, far from the racing line ---- */
- {const rail=M_(0xa9b2b6,{metalness:.5,roughness:.5,side:THREE.DoubleSide}),posts=[],pm=[];
-  for(const c of corners){const side=c.dir>0?-1:1;const pos=[],idx=[];const a=c.a,b=c.b,n=b-a;for(let q=0;q<=n;q++){const k=(a+q)%N,l=side*(T.hw[k]+13);pos.push(...at(k,l,.55),...at(k,l,1.0));if(q%3===0)pm.push([...at(k,l,.5),1]);if(q<n&&P.addSeg){const p1=at(k,l,0),p2=at((a+q+1)%N,l,0);P.addSeg(T,p1[0],p1[2],p2[0],p2[2],.3)}}
-   for(let q=0;q<n;q++){const i=q*2;idx.push(i,i+1,i+2,i+1,i+3,i+2)}
-   const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setIndex(idx);gg.computeVertexNormals();g.add(new THREE.Mesh(gg,rail))}
-  if(pm.length)inst(g,new THREE.BoxGeometry(.14,1.1,.14),M_(0x77818a),pm)}
+ /* ---- straights carry white concrete walls (built further down); everywhere else Armco on both sides, swung back behind the run-offs ---- */
+ const strt=new Uint8Array(N);for(let i=0;i<N;i++){let ok=1;for(let d=-6;d<=6;d++)if(Math.abs(curv[(i+d+N)%N])>.0075)ok=0;strt[i]=ok}
+ const nearStart=k=>k<150||k>N-40,wallAt=(k,side)=>strt[k]&&!(side<0&&nearStart(k));
+ const outC=[new Uint8Array(N),new Uint8Array(N)];for(const c of kc){const si=c.dir>0?0:1;for(let q=c.a-4;q<=c.b+4;q++)outC[si][((q%N)+N)%N]=1};/* [0]: right side (-l) is the outside */
+ for(const side of[-1,1]){const oc=outC[side<0?0:1];P.armco(T,g,at,side,P.railOffsets(T,{near:5.5,back:12.5},k=>oc[k],k=>wallAt(k,side)||(side<0&&nearStart(k))))}
  /* ---- tyre walls at the slow corners ---- */
- {const L=[];for(const nm of['T7','T10a','T12','T4']){const k0=M[nm];if(k0==null)continue;const side=curv[k0]>0?-1:1;for(let q=-14;q<=14;q++){const k=(k0+q+N)%N,l=side*(T.hw[k]+16);for(let h=0;h<3;h++){const p=at(k,l,.3+h*.52);L.push([p[0],p[1],p[2],1,1,0]);if(h===0&&P.addPt)P.addPt(T,p[0],p[2],.6)}}}
+ {const L=[];for(const nm of['T7','T10a','T12','T4']){const k0=M[nm];if(k0==null)continue;const side=curv[k0]>0?-1:1;for(let q=-14;q<=14;q++){const k=(k0+q+N)%N,l=side*(T.hw[k]+11.7);for(let h=0;h<3;h++){const p=at(k,l,.3+h*.52);L.push([p[0],p[1],p[2],1,1,0]);if(h===0&&P.addPt)P.addPt(T,p[0],p[2],.6)}}}
   const im=inst(g,new THREE.CylinderGeometry(.55,.55,.5,8),M_(0x1c1e22),L)}
  /* ---- helper builders ---- */
  const seats=ctex(16,8,(x,w,h)=>{x.fillStyle='#8d949c';x.fillRect(0,0,w,h);const pal=['#d8392f','#f1f1f1','#2c6cd0','#f2c76b'];for(let i=0;i<w;i+=2){x.fillStyle=pal[(i>>1)%4];x.fillRect(i,1,2,2);x.fillRect(i,5,2,2)}}),seatM=new THREE.MeshStandardMaterial({map:seats,roughness:.9});
@@ -134,24 +133,21 @@ function dressRA(T,sc){
   const sg=new THREE.Mesh(new THREE.PlaneGeometry(wm,hm),new THREE.MeshBasicMaterial({map:signCanvas(txt,Math.max(64,Math.round(wm*40)),Math.max(32,Math.round(hm*40)),bg,fg),side:THREE.DoubleSide}));sg.position.set(0,(yy||2.4)+hm/2,.12);grp.add(sg);return grp};
  /* ---- corner boards ---- */
  const names={T1:'1',T3:'3',T4:'4',T5:'5',T6:'6',T7:'7',T10a:'10A',T10b:'10B',T11:'11',T12:'12'};
- for(const nm in names){const k0=M[nm];if(k0==null)continue;const side=curv[k0]>0?-1:1;board((k0-24+N)%N,side*(T.hw[k0]+6),names[nm],2.6,1.5,'#f2c76b','#10151b',2.2)}
- {const k0=M.E2;if(k0!=null)board((k0-18+N)%N,(curv[k0]>0?-1:1)*(T.hw[k0]+7),'THE ESSES',5.6,1.4,'#10151b','#f1f3f5',2.2)}
+ for(const nm in names){const k0=M[nm];if(k0==null)continue;const side=curv[k0]>0?-1:1;board((k0-24+N)%N,side*(T.hw[k0]+7.4),names[nm],2.6,1.5,'#f2c76b','#10151b',2.2)}
+ {const k0=M.E2;if(k0!=null)board((k0-18+N)%N,(curv[k0]>0?-1:1)*(T.hw[k0]+7.6),'THE ESSES',5.6,1.4,'#10151b','#f1f3f5',2.2)}
  /* ---- start / finish complex ---- */
  {const sg=(k,l)=>at(k,l,0);
   /* gantry */
   const kg=34,[gx,gy,gz]=at(kg,0,0),gp=new THREE.Group();gp.position.set(gx,gy,gz);gp.rotation.y=T.psi[kg]+PI;g.add(gp);const wd=T.hw[kg]+4;
-  for(const sx of[-1,1]){const col=new THREE.Mesh(new THREE.BoxGeometry(1,11,1),M_(0xd8392f));col.position.set(sx*wd,5.5,0);gp.add(col)}
+  for(const sx of[-1,1]){const col=new THREE.Mesh(new THREE.BoxGeometry(1,11,1),M_(0x30363d));col.position.set(sx*wd,5.5,0);gp.add(col)}
   const beam=new THREE.Mesh(new THREE.BoxGeometry(wd*2+1,1.2,1.2),M_(0xf1f1f1));beam.position.set(0,10.8,0);gp.add(beam);
   const ban=new THREE.Mesh(new THREE.PlaneGeometry(wd*1.9,3.6),new THREE.MeshBasicMaterial({map:ctex(512,96,(c,W,H)=>{c.fillStyle='#d8392f';c.fillRect(0,0,W,H);c.fillStyle='#f1f1f1';c.fillRect(0,H-12,W,12);c.fillStyle='#f1f1f1';c.font='bold 62px monospace';c.textAlign='center';c.textBaseline='middle';c.fillText('ROAD ATLANTA',W/2,H/2-4)}),side:THREE.DoubleSide}));ban.position.set(0,8.6,.1);gp.add(ban);
   /* pit building (infield, right) and control tower */
-  for(let q=0;q<6;q++){const[px,py,pz]=at(10+q*18,-(T.hw[10]+22),0),b=new THREE.Group();b.position.set(px,T.terr(px,pz),pz);b.rotation.y=T.psi[10+q*18];g.add(b);
-   const ga=P.kitGarage(17,9);ga.rotation.y=PI/2;b.add(ga)}
+  P.kitPitRow(g,T,at,-40,150,-1,20);
   {const[px,py,pz]=at(6,-(T.hw[6]+44),0),b=new THREE.Group();b.position.set(px,T.terr(px,pz),pz);b.rotation.y=T.psi[6];g.add(b);b.add(P.kitTower(20))}
   /* main grandstand across the straight */
   stand(34,T.hw[34]+20,70,9);stand(115,T.hw[115]+20,44,7);
-  /* flag poles + banners down both sides of the straight */
-  const fl=[],pl=[];for(let k=8;k<150;k+=10)for(const sd of[-1,1]){const p=at(k,sd*(T.hw[k]+4.5),0);pl.push([p[0],p[1]+4,p[2],1,8,0]);fl.push([p[0],p[1]+7,p[2],1,1,T.psi[k]])}
-  inst(g,new THREE.CylinderGeometry(.07,.09,1,5),M_(0xcfd3d6),pl);inst(g,new THREE.BoxGeometry(2.2,1.3,.05),new THREE.MeshBasicMaterial({color:0xd8392f}),fl.map((p,i)=>[p[0],p[1],p[2],1,1,p[5]])) }
+  }
  /* ---- T10 terrace + paddock stand + T11 footbridge ---- */
  {const k=M.T10a,side=curv[k]>0?-1:1;stand(k,side*(T.hw[k]+20),50,9);stand((M.T10b+12)%N,(curv[M.T10b]>0?-1:1)*(T.hw[M.T10b]+22),40,8)}
  {const k=M.T11,[bx,by,bz]=at(k,0,0),bp=new THREE.Group();bp.position.set(bx,by,bz);bp.rotation.y=T.psi[k];g.add(bp);const wd=T.hw[k]+7;
@@ -163,16 +159,14 @@ function dressRA(T,sc){
  for(let q=0;q<5;q++){const k=(60+q*22)%N,[px,py,pz]=at(k,-(T.hw[k]+60),0),tn=new THREE.Group();tn.position.set(px,T.terr(px,pz),pz);tn.rotation.y=T.psi[k];g.add(tn);const cb=P.kitCabin(14,8,0xe9ebe8,[0xd8392f,0x2c6cd0,0xf2c76b,0x2c6cd0,0xd8392f][q]);cb.rotation.y=PI/2;tn.add(cb)}
  /* ---- Georgia woods: loblolly pines (tall bare trunks, crowns on top) with hardwoods mixed in ---- */
  {const tm=M_(0x5a3b26),tint=(geo,mt,list,cols,f)=>{/* one mesh per colour: plain material colours survive the scene's mesh merging */const ob=new THREE.Object3D();cols.forEach((cc,ci)=>{const sub=list.filter((p,i)=>i%cols.length===ci);if(!sub.length)return;const im=new THREE.InstancedMesh(geo,cols.length>1||mt.color.getHex()===0xffffff?M_(cc):mt,sub.length);sub.forEach((p,i)=>{f(ob,p);ob.updateMatrix();im.setMatrixAt(i,ob.matrix)});g.add(im)})};
-  circuitWoods(T,sc,g,{seed:4088,set:20,rows:4,copses:14,tint:0x5d7a60,cardH:20,start:[-40,Math.round(N*.06)],cluster:1,
+  circuitWoods(T,sc,g,{seed:4088,set:11,rows:4,wob:5,bush:1.9,extra:(k,side)=>outC[side<0?0:1][k]?10:0,copses:14,tint:0x5d7a60,cardH:20,start:[-40,Math.round(N*.06)],cluster:1,
    /* loblolly pines (scenery.js: tall bare trunks, crowns in the top third) with Quaternius CC0 hardwoods mixed in */
-   kinds:[{w:.7,build:(g,L)=>P.lobTrees(g,L,24,[0xffffff,0xe8f2dc,0xdbe6cf,0xf4fbe6])},
-    {w:.3,build:(g,L)=>P.qMix(g,['oak4','oak3','umb2'],L,[12,13,12],[0xffffff,0xeef6dc,0xe2ecd2])}],
+   kinds:[{w:.55,build:(g,L)=>P.lobTrees(g,L,24,[0xffffff,0xe8f2dc,0xdbe6cf,0xf4fbe6])},
+    {w:.45,build:(g,L)=>P.qMix(g,['oak4','oak3','oak5'],L,[12,13,11],[0xffffff,0xeef6dc,0xe2ecd2])}],
    pano:()=>hillPano(77,0xcfe0ea,[{base:300,amp:46,col:0x5e7d8c,fog:.62},{base:322,amp:34,col:0x4b6e58,fog:.5,trees:22},{base:340,amp:20,col:0x355a3a,fog:.34,trees:16}])})}
-  /* white concrete walls on the outside of the straights, a catch fence on top; Armco stays at the corners */
- {const strt=new Uint8Array(N);for(let i=0;i<N;i++){let ok=1;for(let d=-6;d<=6;d++)if(Math.abs(curv[(i+d+N)%N])>.0075)ok=0;strt[i]=ok}
-  const nearStart=k=>k<150||k>N-40;
-  for(const side of[-1,1]){P.trackWall(T,g,at,dRoad,{side,a:0,b:N,off:9,h:1.1,col:0xe9ebe6,top:0xf6f7f4,skip:k=>!strt[k]||(side<0&&nearStart(k))});
-   P.catchFence(T,g,at,dRoad,{side,a:0,b:N,off:9.2,h:2.8,y0:1.05,skip:k=>!strt[k]||(side<0&&nearStart(k))||(k%240)>150})}}
+  /* white concrete walls along the straights, a catch fence on top where the crowd stands */
+ {for(const side of[-1,1]){P.trackWall(T,g,at,dRoad,{side,a:0,b:N,off:5.8,h:1.1,col:0xe9ebe6,top:0xf6f7f4,skip:k=>!wallAt(k,side)});
+   P.catchFence(T,g,at,dRoad,{side,a:0,b:N,off:6,h:2.8,y0:1.05,skip:k=>!wallAt(k,side)||(k%240)>150})}}
  /* billboards up on the grass banks, turned to the cars coming toward them (generic boards only) */
  {const AD=[['POLY GT','#f1f3f5','#1d3f8f'],['RACE FUEL','#d8392f','#f1f1f1'],['TYRES','#10151b','#f2c76b'],['MOTOR OIL','#1d3f8f','#f1f1f1'],['BRASELTON','#f1f3f5','#2a6a3a'],['GEORGIA','#f2c76b','#10151b']];let q=0;
   for(const nm of['T1','T3','T5','T6','T7','T10a','T12']){const k0=M[nm];if(k0==null)continue;const k=(k0-30+N)%N,side=curv[k0]>0?-1:1,l=side*(T.hw[k]+19),[px,,pz]=at(k,l,0);if(dRoad(px,pz)<14)continue;

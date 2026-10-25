@@ -12,13 +12,13 @@ const prism=(pts,len)=>{const s=new THREE.Shape();pts.forEach((p,i)=>i?s.lineTo(
    len along the track, rows deep; the front edge is at z=0 and it rises away from the track (toward -z) */
 P.kitStand=(len,rows,seatCols)=>{const g=new THREE.Group(),D=.9,H=.55,cols=seatCols||[0x2c6cd0,0xd8392f,0xf1f1f1];
  const pr=[[0,0]];for(let r=0;r<rows;r++){pr.push([r*D,(r+1)*H],[(r+1)*D,(r+1)*H])}pr.push([rows*D,0]);
- const terr=add(g,prism(pr.map(p=>[p[0],p[1]]),len),mat(0xb9bcbc));terr.rotation.y=Math.PI/2;/* profile x -> -z */
+ const terr=add(g,prism(pr.map(p=>[p[0],p[1]]),len),mat(0x8a8f94));terr.rotation.y=Math.PI/2;/* profile x -> -z */
  for(let r=0;r<rows;r++){const s=add(g,box(len-.6,.32,.42),mat(cols[r%cols.length]),0,(r+1)*H+.16,-(r*D+.55))}
  const top=rows*H,back=-rows*D;
- add(g,box(len,top+3.4,.25),mat(0xd9dcdc),0,(top+3.4)/2,back-.15);
- const nC=Math.max(2,Math.round(len/12));for(let q=0;q<=nC;q++){const x=-len/2+q*len/nC;add(g,box(.22,top+3.6,.22),mat(0x8d949c),x,(top+3.6)/2,back+.2)}
- const roof=add(g,box(len+1.2,.18,rows*D+2.4),mat(0xeef0f0),0,top+3.9,back+rows*D/2-.2);roof.rotation.x=-.08;
- for(const sx of[-1,1])add(g,box(.12,top+3.4,rows*D+.2),mat(0xd9dcdc),sx*len/2,(top+3.4)/2,back/2);/* end walls */
+ add(g,box(len,top+3.4,.25),mat(0x9ca2a8),0,(top+3.4)/2,back-.15);
+ const nC=Math.max(2,Math.round(len/12));for(let q=0;q<=nC;q++){const x=-len/2+q*len/nC;add(g,box(.22,top+3.6,.22),mat(0x4a525a),x,(top+3.6)/2,back+.2)}
+ const roof=add(g,box(len+1.2,.18,rows*D+2.4),mat(0x1c2026),0,top+3.9,back+rows*D/2-.2);roof.rotation.x=-.08;
+ for(const sx of[-1,1])add(g,box(.12,top+3.4,rows*D+.2),mat(0x9ca2a8),sx*len/2,(top+3.4)/2,back/2);/* end walls */
  add(g,box(len,.9,.06),mat(0x6d747a,{metalness:.3}),0,.45+.05,.25);/* front rail */
  return g};
 
@@ -51,7 +51,7 @@ P.kitCabin=(w,d,col,awn)=>{const g=new THREE.Group(),h=3.1;
 /* pit garages: a long low block, one dark roller door per bay facing the track (+z), roof slab with an overhang */
 P.kitGarage=(len,d,col)=>{const g=new THREE.Group(),h=4.2;
  add(g,box(len,h,d),mat(col||0xd7d9d4),0,h/2,0);
- const n=Math.max(1,Math.round(len/6));for(let q=0;q<n;q++)add(g,box(len/n-1.4,3,.06),mat(0x3a4048),-len/2+(q+.5)*len/n,1.5,d/2+.03);
+ const n=Math.max(1,Math.round(len/6));for(let q=0;q<n;q++)add(g,box(len/n-1.4,3,.06),mat(0x1c2026),-len/2+(q+.5)*len/n,1.5,d/2+.03);
  add(g,box(len+.8,.3,d+1.6),mat(0x2c3238),0,h+.15,.4);
  add(g,box(len,.5,.05),mat(0x2c6cd0),0,h-.45,d/2+.03);
  return g};

@@ -74,21 +74,16 @@ function dressIM(T,sc){
  const sandTex=ctex(32,32,(x,w,h)=>{x.fillStyle='#e6d29b';x.fillRect(0,0,w,h);x.fillStyle='#d4bd80';for(let j=0;j<h;j+=4)x.fillRect(0,j,w,1);x.fillStyle='#f1e3b4';for(let j=2;j<h;j+=8)x.fillRect(0,j,w,1)});
  const sandM=new THREE.MeshStandardMaterial({map:sandTex,roughness:1,side:THREE.DoubleSide});sandTex.wrapS=sandTex.wrapT=THREE.RepeatWrapping;
  sandM.polygonOffset=true;sandM.polygonOffsetFactor=-2;sandM.polygonOffsetUnits=-2;for(const c of kc){const side=c.dir>0?-1:1,a=Math.max(0,c.a-3),b=c.b+6;for(let w=2.4;w<13.4;w+=2.2)strip([[a,b]],side,w,Math.min(13.5,w+2.2),.14,sandM,8)}
- /* guardrail on the outside of corners (past the sand), concrete wall along the pit straight */
- {const rail=M_(0xa9b2b6,{metalness:.5,roughness:.5,side:THREE.DoubleSide}),pm=[];
-  for(const c of corners){const side=c.dir>0?-1:1;const pos=[],idx=[],a=c.a,b=c.b+6,n=b-a;for(let q=0;q<=n;q++){const k=(a+q)%N,l=side*(T.hw[k]+16);pos.push(...at(k,l,.55),...at(k,l,1.05));if(q%3===0)pm.push([...at(k,l,.5),1]);if(q<n&&P.addSeg){const p1=at(k,l,0),p2=at((a+q+1)%N,l,0);P.addSeg(T,p1[0],p1[2],p2[0],p2[2],.3)}}
-   for(let q=0;q<n;q++){const i=q*2;idx.push(i,i+1,i+2,i+1,i+3,i+2)}const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setIndex(idx);gg.computeVertexNormals();g.add(new THREE.Mesh(gg,rail))}
-  if(pm.length)inst(g,new THREE.BoxGeometry(.14,1.1,.14),M_(0x77818a),pm)}
+ /* straights carry green walls (further down), the pit straight its pit walls; everywhere else Armco on both sides, behind the sand at corners */
+ const K0=-10,K1=Math.round(N*.075),inPit=k=>k>=N+K0||k<=K1+2;
+ const strt=new Uint8Array(N);for(let i=0;i<N;i++){let ok=1;for(let d=-6;d<=6;d++)if(Math.abs(curv[(i+d+N)%N])>.0085)ok=0;strt[i]=ok}
+ const outC=[new Uint8Array(N),new Uint8Array(N)];for(const c of kc){const si=c.dir>0?0:1;for(let q=c.a-4;q<=c.b+8;q++)outC[si][((q%N)+N)%N]=1}
+ for(const side of[-1,1]){const oc=outC[side<0?0:1];P.armco(T,g,at,side,P.railOffsets(T,{near:5.5,back:16.6},k=>oc[k],k=>inPit(k)||strt[k]))}
  /* TYRE WALLS: the sharpest corners get a thick stacked wall just behind the sand, painted blocks of white and red */
  {const sharp=corners.slice().sort((a,b)=>b.pk-a.pk).slice(0,6),B=[],W=[],R=[];
   for(const c of sharp){const side=c.dir>0?-1:1;for(let q=c.a-4;q<=c.b+8;q++){const k=((q%N)+N)%N,blk=Math.floor(q/4)%5;for(let row=0;row<2;row++){const l=side*(T.hw[k]+14.8+row*1.05);for(let h=0;h<3;h++){const p=at(k,l,.28+h*.52);const L=(blk===0?W:blk===3?R:B);L.push([p[0],p[1],p[2],1,1,0])}}
     if(P.addSeg&&q<c.b+8){const p1=at(k,side*(T.hw[k]+15.3),0),p2=at(k+1,side*(T.hw[k+1]+15.3),0);P.addSeg(T,p1[0],p1[2],p2[0],p2[2],.9)}}}
   const cg=new THREE.CylinderGeometry(.55,.55,.5,9);inst(g,cg,M_(0x1b1d21),B);inst(g,cg,M_(0xf1f1f1),W);inst(g,cg,M_(0xd8392f),R)}
- /* pit wall + concrete barrier on the start straight (both sides, solid) */
- {const cm=M_(0x1d4a26,{side:THREE.DoubleSide}),top=M_(0xd8392f);/* Imola's walls are green */const K0=-10,K1=Math.round(N*.075);
-  for(const side of[-1,1]){const l=side*(T.hw[0]+6.2),pos=[],idx=[];for(let q=K0;q<=K1;q++){const k=((q%N)+N)%N;pos.push(...at(k,l,0),...at(k,l,1.1))}for(let q=0;q<K1-K0;q++){const i=q*2;idx.push(i,i+1,i+2,i+1,i+3,i+2)}
-   const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setIndex(idx);gg.computeVertexNormals();g.add(new THREE.Mesh(gg,cm));
-   for(let q=K0;q<K1;q+=1){if(P.addSeg){const p1=at(q,l,0),p2=at(q+1,l,0);P.addSeg(T,p1[0],p1[2],p2[0],p2[2],.35)}}}}
 
  /* helpers */
  const seats=ctex(16,8,(x,w,h)=>{x.fillStyle='#8d949c';x.fillRect(0,0,w,h);const pal=['#d8392f','#f1f1f1','#2c6cd0','#f2c76b'];for(let i=0;i<w;i+=2){x.fillStyle=pal[(i>>1)%4];x.fillRect(i,1,2,2);x.fillRect(i,5,2,2)}}),seatM=new THREE.MeshStandardMaterial({map:seats,roughness:.9});
@@ -99,7 +94,7 @@ function dressIM(T,sc){
   const pl=new THREE.Mesh(new THREE.BoxGeometry(.18,(yy||2.4)+hm/2,.18),M_(0x666d73));pl.position.set(0,(yy||2.4)/2+hm/4,0);grp.add(pl);
   const sg=new THREE.Mesh(new THREE.PlaneGeometry(wm,hm),new THREE.MeshBasicMaterial({map:signCanvas(txt,Math.max(64,Math.round(wm*40)),Math.max(32,Math.round(hm*40)),bg,fg),side:THREE.DoubleSide}));sg.position.set(0,(yy||2.4)+hm/2,.12);grp.add(sg);return grp};
  /* corner numbers + brake boards + marshal posts */
- corners.forEach((c,i)=>{const side=c.dir>0?-1:1;board((c.a-14+N)%N,side*(T.hw[c.a]+5),String(i+1),2.4,1.5,'#f2c76b','#10151b',2.1);
+ corners.forEach((c,i)=>{const side=c.dir>0?-1:1;board((c.a-14+N)%N,side*(T.hw[c.a]+7.4),String(i+1),2.4,1.5,'#f2c76b','#10151b',2.1);
   const k=c.pi,[mx,my,mz]=at(k,side*(T.hw[k]+18.5),0),mp=new THREE.Group();mp.position.set(mx,my,mz);mp.rotation.y=T.psi[k];g.add(mp);
   const hut=P.kitHut();hut.rotation.y=-side*PI/2;mp.add(hut);const fp=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,3.4,5),M_(0xcfd3d6));fp.position.set(1.1,3.7,0);mp.add(fp);const fl=new THREE.Mesh(new THREE.BoxGeometry(.05,.7,1.1),MB([0xf2c76b,0xffffff,0x2c6cd0][i%3]));fl.position.set(1.1,5.2,.55);mp.add(fl)});
  /* start/finish: gantry, painted line + grid boxes, pit row, tower, stands, footbridge, advert boards */
@@ -108,12 +103,11 @@ function dressIM(T,sc){
   for(let row=0;row<6;row++){const k=(((-(5+row*5))%N)+N)%N;for(const s of[-1,1]){const[bx,by,bz]=at(k,s*T.hw[0]*.36,.09),bx2=new THREE.Mesh(new THREE.PlaneGeometry(3.1,5.4),MB(0xf1f1f1));bx2.rotation.x=-PI/2;bx2.rotation.order='YXZ';bx2.rotation.y=T.psi[k];bx2.position.set(bx,by,bz);g.add(bx2);
      const inn=new THREE.Mesh(new THREE.PlaneGeometry(2.7,5),MB(0x3b3d43));inn.rotation.copy(bx2.rotation);inn.position.set(bx,by+.012,bz);g.add(inn)}}
   /* pit buildings on the infield side */
-  const is=infield;for(let q=0;q<6;q++){const k=(10+q*10)%N,[px,py,pz]=at(k,is*(T.hw[k]+17),0),b=new THREE.Group();b.position.set(px,T.terr(px,pz),pz);b.rotation.y=T.psi[k];g.add(b);
-   const ga=P.kitGarage(9.6,9);ga.rotation.y=-is*PI/2;b.add(ga);if(P.addPt){P.addPt(T,px,pz,5.2)}}
+  const is=infield;P.kitPitRow(g,T,at,K0,K1+2,is,17);
   {const k=3,[px,py,pz]=at(k,is*(T.hw[k]+32),0),b=new THREE.Group();b.position.set(px,T.terr(px,pz),pz);b.rotation.y=T.psi[k];g.add(b);{const tw=P.kitTower(20);/* Imola's race control: red and white bands, a glass box on top */tw.children[0].material=M_(0xd8392f);for(let i=0;i<4;i++){const r=new THREE.Mesh(new THREE.CylinderGeometry(2.45-.08*i,2.5-.08*i,1.6,8),M_(0xf1f1f1));r.position.y=3+i*4.4;tw.add(r)}tw.children[1].material=M_(0x6f93ad,{roughness:.15,metalness:.4});b.add(tw)}if(P.addPt)P.addPt(T,px,pz,4.2)}
-  stand(8,-infield*(T.hw[8]+20),60,9);stand(Math.round(N*.06),-infield*(T.hw[0]+20),40,7);
-  const fl=[],pl=[];for(let k=4;k<Math.round(N*.075);k+=7)for(const sd of[-1,1]){const p=at(k,sd*(T.hw[k]+4.5),0);pl.push([p[0],p[1]+4,p[2],1,8,0]);fl.push([p[0],p[1]+7,p[2],1,1,T.psi[k]])}
-  inst(g,new THREE.CylinderGeometry(.07,.09,1,5),M_(0xcfd3d6),pl);inst(g,new THREE.BoxGeometry(2.2,1.3,.05),MB(0xd8392f),fl)}
+  /* the main grandstand run along the pit straight, opposite the pits, behind the green wall and fence */
+  {const st=Math.max(1,Math.round(42/(T.sp||2)));for(let k=K0+4;k<K1-st;k+=st)stand(k+(st>>1),-infield*(T.hw[0]+14),40,9)}
+  }
  /* footbridge over the straight */
  {const k=Math.round(N*.045),[bx,by,bz]=at(k,0,0),bp=new THREE.Group();bp.position.set(bx,by,bz);bp.rotation.y=T.psi[k];g.add(bp);const wd=T.hw[k]+7;
   const deck=new THREE.Mesh(new THREE.BoxGeometry(wd*2,.7,4),M_(0x2c6cd0));deck.position.y=9.4;bp.add(deck);
@@ -126,7 +120,7 @@ function dressIM(T,sc){
  /* ---- Romagna parkland: plane trees and oaks in rows, poplars and cypress, umbrella pines; Emilia hills on the horizon ---- */
  const AUT={or:{'#0e1709':'#3c1604','#16270f':'#52280a'},ye:{'#0e1709':'#3a2c04','#16270f':'#5a4a12'},ru:{'#0e1709':'#2a0c04','#16270f':'#421a0a'}};
  {
-  P.circuitWoods(T,sc,g,{seed:4909,set:22,rows:2,copses:12,tint:0x6a865e,cardH:17,start:[-14,Math.round(N*.08)],cluster:0,
+  P.circuitWoods(T,sc,g,{seed:4909,set:11,rows:3,wob:5,bush:1.5,extra:(k,side)=>outC[side<0?0:1][k]?14:0,copses:12,tint:0x6a865e,cardH:17,start:[-14,Math.round(N*.08)],cluster:0,
    /* plane trees and oaks (Quaternius CC0, trees_q.js), Italian cypresses and stone pines (scenery.js) */
    /* autumn: the planes and oaks turn orange, gold and rust between the green ones; dark cypresses and stone pines stay green */
    kinds:[{w:.32,build:(g,L)=>P.qMix(g,['oak3','oak4','oak5'],L,[13,12,11],[0xffffff,0xf0f8e0,0xe4eed6])},
@@ -140,9 +134,8 @@ function dressIM(T,sc){
      for(const cx of[W*.31,W*.78]){for(let i=0;i<26;i++){const x=cx+(r()-.5)*240,w=10+r()*16,h=8+r()*10,y=hz-14-r()*10;g.fillStyle=mix(0xd9cdb5,.45);g.fillRect(x,y-h,w,h);g.fillStyle=mix(0xb0583a,.42);g.beginPath();g.moveTo(x-2,y-h);g.lineTo(x+w/2,y-h-5);g.lineTo(x+w+2,y-h);g.fill()}
       g.fillStyle=mix(0xc9b08e,.42);g.fillRect(cx-5,hz-70,10,50);g.fillStyle=mix(0xa8503a,.42);g.fillRect(cx-7,hz-74,14,6)}})})}
   /* green walls on the outside of the straights with catch fencing on top */
- {const strt=new Uint8Array(N);for(let i=0;i<N;i++){let ok=1;for(let d=-6;d<=6;d++)if(Math.abs(curv[(i+d+N)%N])>.0085)ok=0;strt[i]=ok}const K1=Math.round(N*.08);
-  for(const side of[-1,1]){P.trackWall(T,g,at,dRoad,{side,a:K1,b:N-12,off:9.5,h:1.1,col:0x2f6b3a,top:0xe9ebe6,skip:k=>!strt[k]});
-   P.catchFence(T,g,at,dRoad,{side,a:K1,b:N-12,off:9.7,h:3,y0:1.05,skip:k=>!strt[k]})}}
+ {for(const side of[-1,1]){P.trackWall(T,g,at,dRoad,{side,a:0,b:N,off:5.8,h:1.1,col:0x0c5a22,top:0xe9ebe6/* the scene grading halves saturation: a deep green reads as Imola's green */,skip:k=>side===infield?(!strt[k]||inPit(k)):!(strt[k]||inPit(k))});/* opposite the pits the wall runs the whole pit straight */
+   P.catchFence(T,g,at,dRoad,{side,a:0,b:N,off:6,h:3,y0:1.05,skip:k=>side===infield?(!strt[k]||inPit(k)):!(strt[k]||inPit(k))})}}
  /* spectators up on the hillside banks at the slow corners */
  {const sl=corners.slice().sort((a,b)=>b.pk-a.pk).slice(0,4);sl.forEach((c,i)=>{if(i===1)return;const side=c.dir>0?1:-1,k=c.pi,[px,,pz]=at(k,side*(T.hw[k]+24),0);if(dRoad(px,pz)<20)return;stand(k,side*(T.hw[k]+24),34,7)})}
  /* the parkland carries on past the planted rows: the same autumn mix, spaced out, with clearings */

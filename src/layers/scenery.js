@@ -44,8 +44,8 @@ P.bandForest=(T,g,o)=>{const N=T.N;let s=(o.seed||1)>>>0;const rr=()=>((s=(s*166
 /* loblolly pine, the Georgia Piedmont tree: a tall straight bare trunk and a loose, lumpy crown only in the top third (not a Christmas-tree
    cone). 1 unit tall, coloured per vertex: bark trunk, darker crown underside, lighter crown top */
 const TM={};const LOB=(()=>{let g=null;return()=>{if(g)return g;const parts=[],cols=[],add=(geo,fn)=>{geo=geo.index?geo.toNonIndexed():geo;const p=geo.attributes.position;for(let i=0;i<p.count;i++)cols.push(...fn(p.getY(i)));parts.push(geo)};
- const bark=lin(0x5a3a26),bk=[bark.r,bark.g,bark.b],dk=lin(0x2c4424),lt=lin(0x4f6e36);
- const t=new THREE.CylinderGeometry(.014,.03,.8,6,1);t.translate(0,.4,0);add(t,()=>bk);
+ const bark=lin(0x3e2a1e),bk=[bark.r,bark.g,bark.b],dk=lin(0x2c4424),lt=lin(0x4f6e36);
+ const t=new THREE.CylinderGeometry(.011,.024,.8,6,1);t.translate(0,.4,0);add(t,()=>bk);
  const blob=(r,x,y,z,sy)=>{const b=new THREE.IcosahedronGeometry(r,0);b.scale(1,sy,1);b.translate(x,y,z);add(b,yy=>{const u=Math.max(0,Math.min(1,(yy-(y-r*sy))/(2*r*sy)));return[dk.r+(lt.r-dk.r)*u,dk.g+(lt.g-dk.g)*u,dk.b+(lt.b-dk.b)*u]})};
  blob(.15,0,.88,0,.62);blob(.11,.12,.8,.03,.6);blob(.1,-.11,.79,-.05,.6);blob(.1,.02,.77,.12,.6);blob(.09,-.03,.72,-.11,.55);blob(.08,.08,.97,-.02,.6);
  /* a couple of short limbs below the crown */
@@ -72,12 +72,44 @@ P.lobTrees=(par,list,h,tints,kind)=>{const G=par.userData._lob||(par.userData._l
  if(!ok.length)return null;const im=new THREE.InstancedMesh(tgeo(kind||'lob'),new THREE.MeshStandardMaterial({vertexColors:true,roughness:.95,flatShading:true}),ok.length),ob=new THREE.Object3D();
  ok.forEach((p,i)=>{const s=h*p[3];ob.position.set(p[0],p[1]-.3,p[2]);ob.scale.set(s*(.9+.2*((i*7)%5)/5),s,s);ob.rotation.set(0,p[4]||0,0);ob.updateMatrix();im.setMatrixAt(i,ob.matrix);if(tints)im.setColorAt(i,new THREE.Color(tints[i%tints.length]))});
  im.instanceMatrix.needsUpdate=true;par.add(im);return im};
+/* Armco, as on the Nordschleife: a double-wave rail on posts, every link a real collider. off[k] = metres past the road edge, or -1 for
+   no rail at that sample (a wall, the pits). Offsets are eased between neighbours so the rail swings out behind a run-off smoothly */
+let railTex=null;
+P.armco=(T,g,at,side,off)=>{const N=T.N;railTex=railTex||ctex(4,16,(x,w,h)=>{x.fillStyle='#b9c1c4';x.fillRect(0,0,w,h);x.fillStyle='#7c8689';x.fillRect(0,3,w,2);x.fillRect(0,11,w,2);x.fillStyle='#dfe5e7';x.fillRect(0,1,w,1);x.fillRect(0,9,w,1)});
+ const rail=new THREE.MeshStandardMaterial({map:railTex,roughness:.45,metalness:.4,side:THREE.DoubleSide}),pos=[],uv=[],idx=[],posts=[];
+ for(let i=0;i<=N;i++){const k=i%N,o=Math.max(0,off[k]),l=side*(T.hw[k]+o),p0=at(k,l,.38),p1=at(k,l,1.0);pos.push(...p0,...p1);uv.push(i*T.sp/4,0,i*T.sp/4,1)}
+ for(let i=0;i<N;i++){const k=i%N,k1=(i+1)%N;if(off[k]<0||off[k1]<0)continue;const a=i*2;idx.push(a,a+1,a+2,a+1,a+3,a+2);
+  if(i%2===0)posts.push([pos[a*3],pos[a*3+1]-.1+.55,pos[a*3+2],1,1,T.psi[k]]);
+  if(P.addSeg){const q0=at(k,side*(T.hw[k]+off[k]),0),q1=at(k1,side*(T.hw[k1]+off[k1]),0);P.addSeg(T,q0[0],q0[2],q1[0],q1[2],.3)}}
+ if(!idx.length)return;const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));gg.setIndex(idx);gg.computeVertexNormals();g.add(new THREE.Mesh(gg,rail));
+ inst(g,new THREE.BoxGeometry(.16,1.1,.16),new THREE.MeshStandardMaterial({color:0x6f797d,roughness:.6,metalness:.3}),posts)};
+/* per-sample rail offsets: near by default, pushed back where run-offs need room, -1 where something else stands; then eased */
+P.railOffsets=(T,near,back,skip)=>{const N=T.N,o=new Float32Array(N);for(let k=0;k<N;k++)o[k]=skip(k)?-1:back(k)?near.back:near.near;
+ const sm=new Float32Array(N);for(let k=0;k<N;k++){if(o[k]<0){sm[k]=-1;continue}let m=o[k];for(let d=-6;d<=6;d++){const v=o[(k+d+N)%N];if(v>m)m=v-(v-near.near)*Math.abs(d)/7}sm[k]=m}return sm};
+/* a continuous pit building along the track from sample a to b, on side s, its front d metres off the road edge: garage bays with roller
+   doors in team colours, a glazed hospitality floor above, a roof slab overhanging the pit lane, and a slim white pit wall */
+P.kitPitRow=(g,T,at,a,b,s,d)=>{const N=T.N,st=Math.max(1,Math.round(6.4/T.sp)),M=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:lin(c),roughness:.8,flatShading:true},o||{})),B=(w,h,dd)=>new THREE.BoxGeometry(w,h,dd);
+ const body=M(0xe4e6e2),dark=M(0x30363d),glass=M(0x7d9db3,{roughness:.2,metalness:.35}),roof=M(0x3a4048),teams=[0xc8302a,0x1d4f9a,0xf0f0f0,0x2a7a3a,0xf2b62e,0x18191c,0xe0602a,0x6a2a8a].map(c=>M(c));
+ const Dp=11;let q=0;for(let k=a;k<b;k+=st,q++){const kk=((k%N)+N)%N,len=Math.hypot(T.x[(kk+st)%N]-T.x[kk],T.z[(kk+st)%N]-T.z[kk])+.15,p=at(kk,s*(T.hw[kk]+d+Dp/2),0),grp=new THREE.Group();grp.position.set(p[0],p[1]-.05,p[2]);grp.rotation.y=T.psi[kk]+Math.atan2(0,1);g.add(grp);
+  const f=-s*Dp/2,add=(geo,m,x,y,z)=>{const o=new THREE.Mesh(geo,m);o.position.set(x,y,z);grp.add(o);return o};
+  add(B(Dp,4.4,len),body,0,2.2,len/2);add(B(.12,3.3,len-1.4),dark,f-s*.02,1.65,len/2);add(B(.14,.45,len-1.4),teams[q%teams.length],f-s*.03,3.6,len/2);
+  add(B(Dp-1,3,len),body,s*.5,5.9,len/2);add(B(.1,2.2,len-.3),glass,-s*4.56,5.9,len/2);
+  add(B(Dp+2.5,.35,len),roof,-s*.9,7.6,len/2);add(B(.1,.6,len),dark,f-s*2.2,7.3,len/2)}
+ /* the pit lane itself: tarmac from the pit wall to the garage doors, with the white working-lane line */
+ {const rib=(l0,l1,y,c)=>{const pos=[],idx=[];let n=0;for(let q=a;q<=b;q++){const k=((q%N)+N)%N,h=T.hw[k];pos.push(...at(k,s*(h+l0),y),...at(k,s*(h+l1),y));if(n)idx.push(2*n-2,2*n,2*n-1,2*n-1,2*n,2*n+1);n++}
+   const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setIndex(idx);gg.computeVertexNormals();
+   g.add(new THREE.Mesh(gg,new THREE.MeshStandardMaterial({color:lin(c),roughness:.95,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2})))};
+  rib(5.6,d+.4,.07,0x45484e);rib(d-5.3,d-5,.09,0xe8e8e8)}
+ /* pit wall between the pit lane and the track */
+ if(P.trackWall)P.trackWall(T,g,at,()=>999,{side:s,a,b,off:5.8,h:1,col:0xf1f2ee,top:0xd8392f})};
 /* a solid wall ribbon along the track at lateral l (per sample), with a top cap; runs only where nothing else is closer to the road.
    every link is a real collider */
 P.trackWall=(T,g,at,dRoad,o)=>{const N=T.N,side=o.side,pos=[],idx=[],col=[],c0=lin(o.col),c1=lin(o.top||o.col),H=o.h||1,th=o.th||.4;let run=[];
  const flush=()=>{if(run.length<2){run=[];return}for(let q=0;q<run.length;q++){const p=run[q],v=pos.length/3;
-   pos.push(p.x,p.y,p.z,p.x,p.y+H,p.z,p.x+p.nx*th,p.y+H,p.z+p.nz*th,p.x+p.nx*th,p.y,p.z+p.nz*th);for(let j=0;j<4;j++){const cc=j===1||j===2?c1:c0;col.push(cc.r,cc.g,cc.b)}
-   if(q){const a=v-4;idx.push(a,v,a+1,v,v+1,a+1, a+1,v+1,a+2,v+1,v+2,a+2, a+2,v+2,a+3,v+2,v+3,a+3);if(P.addSeg)P.addSeg(T,run[q-1].x,run[q-1].z,p.x,p.z,.3)}}run=[]};
+   /* each face has its own vertices, so the face colour is flat (shared corners blended the wall colour into the cap) */
+   const ft=p.y+H-.12;pos.push(p.x,p.y,p.z,p.x,ft,p.z, p.x,ft,p.z,p.x,p.y+H,p.z,p.x+p.nx*th,p.y+H,p.z+p.nz*th, p.x+p.nx*th,p.y+H,p.z+p.nz*th,p.x+p.nx*th,p.y,p.z+p.nz*th);
+   for(const cc of[c0,c0,c1,c1,c1,c0,c0])col.push(cc.r,cc.g,cc.b);
+   if(q){const a=v-7,f=(i,j)=>idx.push(a+i,v+i,a+j,v+i,v+j,a+j);f(0,1);f(2,3);f(3,4);f(5,6);if(P.addSeg)P.addSeg(T,run[q-1].x,run[q-1].z,p.x,p.z,.3)}}run=[]};
  for(let q=o.a;q<=o.b;q++){const k=((q%N)+N)%N,l=side*(T.hw[k]+(typeof o.off==='function'?o.off(k):o.off)),p=at(k,l,0),c=Math.cos(T.psi[k]),s=Math.sin(T.psi[k]);
   if(o.skip&&o.skip(k)||dRoad(p[0],p[2])<Math.abs(l)-T.hw[k]-1.5){flush();continue}run.push({x:p[0],y:p[1]-.15,z:p[2],nx:c*side,nz:-s*side})}
  flush();if(!pos.length)return null;const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setAttribute('color',new THREE.Float32BufferAttribute(col,3));gg.setIndex(idx);gg.computeVertexNormals();

@@ -20,7 +20,10 @@ src=src.replace("color:d.id==3?0x7af0ff:0xfff0c8","color:d.id==3?0xffe2a8:0xfff0
 # suspension damper: measure the body's vertical speed relative to the ground under it (c._gv, set in grip.js), not absolute. With the
 # absolute speed a car descending a hill had its damper pushing it up, so on downhills the tyres barely touched and grip vanished.
 src=rep(src,"vi=c.vy-c.wpt*WL[i][1]+c.wrl*WL[i][0]","vi=c.vy-(c._gv||0)-c.wpt*WL[i][1]+c.wrl*WL[i][0]")
-src=rep(src,"x.fillStyle='#e8e8e8';x.fillRect(w/2-1,0,2,h/2)}","if(!(d.ra||d.imola)){x.fillStyle='#e8e8e8';x.fillRect(w/2-1,0,2,h/2)}}")
+src=rep(src,"x.fillStyle='#e8e8e8';x.fillRect(w/2-1,0,2,h/2)}","if(!(d.ra||d.imola)){x.fillStyle='#e8e8e8';x.fillRect(w/2-1,0,2,h/2)}else{/* real circuits: worn tarmac like the Nordschleife */const q=rngf(5);for(let i=0;i<120;i++){x.fillStyle=q()<.5?'rgba(0,0,0,.05)':'rgba(255,255,255,.035)';x.fillRect(q()*w|0,q()*h|0,1,1)}x.fillStyle='#ffffffc0';x.fillRect(1,0,1,h);x.fillRect(w-2,0,1,h)}}")
+# real circuits: no stock marker posts or stock sign gantries (their own dressing replaces them)
+src=rep(src,"const posts=[],caps=[];for(let i=0;i<T.N;i+=8){","const posts=[],caps=[];for(let i=0;i<T.N;i+=(d.ra||d.imola)?1e9:8){")
+src=rep(src,"for(let k=60;k<T.N;k+=140){if(T.gap[k])continue;const g=new THREE.Group();","for(let k=60;k<T.N;k+=140){if(T.gap[k]||d.ra||d.imola)continue;const g=new THREE.Group();")
 src=rep(src,"const ct=ctex(8,8,(x,w,h)=>{x.fillStyle='#e8e8e8';x.fillRect(0,0,w,h);x.fillStyle='#6d7375';x.fillRect(0,0,w,h/2)})","const ct=ctex(8,8,(x,w,h)=>{if(d.ra||d.imola){x.fillStyle=d.road;x.fillRect(0,0,w,h);return}x.fillStyle='#e8e8e8';x.fillRect(0,0,w,h);x.fillStyle='#6d7375';x.fillRect(0,0,w,h/2)})")
 # Grip: the drift mode only engages while the handbrake key is held (it used to switch on with every quick steering tap above 76 km/h)
 src=rep(src,"""if(!c.ptDrift&&o.drifts&&live&&ground&&road&&
