@@ -3,7 +3,7 @@
 'use strict';
 const P=window.PT8,IM=window.PT8_IMOLA;
 if(!IM||!P.TRK_TRACKS)return;
-const PI=Math.PI,IMK=1,IMY=1;/* data is already at real size (4,909 m lap, 1 unit = 1 m) */
+const PI=Math.PI,IMK=1,IMY=1,lin=h=>new THREE.Color(h).convertSRGBToLinear();/* data is already at real size (4,909 m lap, 1 unit = 1 m) */
 const imola={id:15,look:0,name:'Imola',desc:'italian grand prix circuit / chicanes / sand traps / tyre walls',hw:7.4,bank:5,off:'grass',idw:.85,offs:0,amp:2.6,up:4,shoulder:17,
  sky:[0x3f86d2,0xcfe4f4],fog:0xcfe0ea,sun:0xfff0d0,hemi:[0xd4e8f8,0x4f7a3c],road:'#3b3d43',tod0:'day',imola:1,
  pts:IM.pts.map(q=>[q[0]*IMK,q[1]*IMK,q[2]*IMY,q[3]]),walls:[],ice:[],boost:[],jumps:[]};
@@ -83,7 +83,7 @@ function dressIM(T,sc){
     catch fences and tyre walls stand where they stand at the real track. Nothing closer than 2.5 m to the road edge ---- */
  /* the pits are on the right of the start straight at the real circuit (side -1), garages from 56 samples before the line to 60 after */
  const PS=-1,K0=-56,K1=60,inPit=k=>k>=N+K0||k<=K1+2;
- /* opposite the pits, along the whole start straight: a clean green wall with catch fencing 8 m off the road, grandstands right behind it */
+ /* opposite the pits, along the whole start straight: the real wall and fence, with one continuous run of grandstands right behind them */
  const inStart=k=>{k=((k%N)+N)%N;return k>=N-70||k<=K1+90};
  /* walls, fences and rails run unbroken: gaps of up to 30 samples are bridged, sudden steps become a gentle slant (1 m per sample at most)
     and leftover stubs under 8 samples are dropped */
@@ -93,7 +93,7 @@ function dressIM(T,sc){
   for(let it=0;it<20;it++)for(let k=0;k<n;k++){const v=o[k];if(v<0)continue;for(const j of[(k+1)%n,(k-1+n)%n])if(o[j]>=0&&o[j]-1>v)o[k]=o[j]-1}
   for(let q=0;q<n;q++){const k=(i+q)%n;if(o[k]<0)continue;let e=q;while(e<n&&o[(i+e)%n]>=0)e++;if(e-q<8)for(let t=q;t<e;t++)o[(i+t)%n]=-1;q=e}return o};
  const irC={};for(const c in irOff)irC[c]=c==='wall'||c==='fence'||c==='rail'?irOff[c].map(smooth):irOff[c];
- const get=(c,side,k)=>{k=((k%N)+N)%N;if(side===-PS&&inStart(k)){if(c==='wall'||c==='fence')return 8;return -1}return irC[c][side<0?0:1][k]},pitSide=(side,k)=>side===PS&&inPit(k);
+ const get=(c,side,k)=>{k=((k%N)+N)%N;return irC[c][side<0?0:1][k]},pitSide=(side,k)=>side===PS&&inPit(k);
  const brk=(c,side)=>k=>{const a=get(c,side,k),b=get(c,side,k-1);return a<0||b<0||Math.abs(a-b)>2.5};
  /* gravel and green run-off between their inner and outer edge, in 12 bands so they follow the ground */
  const ribbon=(cLo,cHi,side,mt,dy)=>{for(let j=0;j<12;j++){const pos=[],uv=[],idx=[];let prev=-1;
@@ -114,7 +114,10 @@ function dressIM(T,sc){
   P.catchFence(T,g,at,dRoad,{side,a:0,b:N,h:3,off:k=>onWall(k)?Math.max(2.5,get('wall',side,k))+.2:Math.max(2.5,get('fence',side,k)),y0:k=>onWall(k)?1.05:0,
    skip:k=>get('fence',side,k)<0||pitSide(side,k),brk:k=>get('fence',side,k-1)<0||onWall(k)!==onWall(k-1)})}
  /* TYRE WALLS: two tyres high, black with a white and a red block now and then; every link a collider */
- {const B=[],W=[],R=[];for(const side of[-1,1])for(let k=0;k<N;k++){const o=get('tyre',side,k);if(o<1.5||pitSide(side,k))continue;/* tyre markers set into the verge are not walls */const o1=get('tyre',side,k+1),e0=Math.max(3.5,o)+.55,e1=o1>=0&&Math.abs(o-o1)<2.5?Math.max(3.5,o1)+.55:-1;
+ /* they always stand against the face of a wall or Armco run: no barrier just behind them, no tyres */
+ {const bar=(side,k,o)=>{let b=-1;for(const c of['wall','rail']){let v=get(c,side,k);if(v<0||pitSide(side,k))continue;v=Math.max(2.5,v);if(v>=o-1.5&&v-o<=5&&(b<0||v<b))b=v}return b},
+   tw=(side,k)=>{const o=get('tyre',side,k);if(o<1.5||pitSide(side,k))return -1;const b=bar(side,k,o);return b<0?-1:b-.6};
+  const B=[],W=[],R=[];for(const side of[-1,1])for(let k=0;k<N;k++){const e0=tw(side,k);if(e0<0)continue;const t1=tw(side,k+1),e1=t1>=0&&Math.abs(e0-t1)<2.5?t1:-1;
    for(let t=0;t<3;t++){if(t&&e1<0)break;const f=t/3,pa=at(k,side*(T.hw[k]+e0),0),pb=e1<0?pa:at(k+1,side*(T.hw[(k+1)%N]+e1),0),x=pa[0]+(pb[0]-pa[0])*f,y=pa[1]+(pb[1]-pa[1])*f,z=pa[2]+(pb[2]-pa[2])*f,blk=Math.floor((k*3+t)/5)%9;
     for(let h=0;h<2;h++)(blk===0?R:B).push([x,y+.25+h*.5,z,1,1,0])}
    if(e1>=0&&P.addSeg){const p1=at(k,side*(T.hw[k]+e0),0),p2=at(k+1,side*(T.hw[(k+1)%N]+e1),0);P.addSeg(T,p1[0],p1[2],p2[0],p2[2],.8)}}
@@ -165,7 +168,7 @@ function dressIM(T,sc){
     const pl=new THREE.Mesh(new THREE.BoxGeometry(D+.5,8,sl),plM);pl.position.set(side*(D/2),-4.02,0);grp.add(pl)}}}
  /* the main grandstands: one unbroken run along the start straight opposite the pits, right behind the wall and fence */
  {const plM=M_(0x8a8f94),side=-PS,rows=10,D=rows*.9,st=Math.max(1,Math.round(42/T.sp));
-  for(let k=-64;k<K1+84;k+=st){const kk=((k%N)+N)%N,[px,,pz]=at(kk,side*(T.hw[kk]+11),0),grp=new THREE.Group();grp.position.set(px,T.terr(px,pz),pz);grp.rotation.y=T.psi[kk];g.add(grp);
+  for(let k=-64;k<K1+84;k+=st){const kk=((k%N)+N)%N;let need=6;for(let d=-2;d<=st+2;d++){const v=behind(side,kk+d);if(v>=0)need=Math.max(need,Math.max(2.5,v)+3)}if(need>34)continue;const[px,,pz]=at(kk,side*(T.hw[kk]+need),0),grp=new THREE.Group();grp.position.set(px,T.terr(px,pz),pz);grp.rotation.y=T.psi[kk];g.add(grp);
    const sl=Math.hypot(T.x[(kk+st)%N]-T.x[kk],T.z[(kk+st)%N]-T.z[kk])-.6;const s2=P.kitStand(sl,rows,[0x2f6b3a,0xf1f1f1,0xd8392f]);s2.rotation.y=-side*PI/2;s2.position.z=sl/2;grp.add(s2);if(P.kitCrowd)P.kitCrowd(s2,sl,rows,.85);
    const pl=new THREE.Mesh(new THREE.BoxGeometry(D+.5,8,sl),plM);pl.position.set(side*(D/2),-4.02,sl/2);grp.add(pl)}}
  /* the stock world's loose random cone trees go; trees keep 3 m clear of anything built (stands, pits, bridges) */
@@ -175,15 +178,53 @@ function dressIM(T,sc){
  const built=(x,z)=>{for(const b of box)if(x>b[0]&&x<b[1]&&z>b[2]&&z<b[3])return true;return false};
  /* ---- Romagna parkland, tree by tree where the real ones stand: broadleaf (mostly green, some turning), Italian cypresses, stone pines, pines ---- */
  const AUT={or:{'#0e1709':'#3c1604','#16270f':'#52280a'},ye:{'#0e1709':'#3a2c04','#16270f':'#5a4a12'},ru:{'#0e1709':'#2a0c04','#16270f':'#421a0a'}};
- {const tp=new Int16Array(irB(IR.tp).buffer),tk=irB(IR.tk),n=tk.length/3,G=[[],[],[],[]],CY=[],ST=[],PN=[];
-  for(let i=0;i<n;i++){const x=tp[i*3]/4,z=tp[i*3+1]/4,kd=tk[i*3],h=tk[i*3+1]/5;if(dRoad(x,z)<5||built(x,z))continue;
-   const r=((i*2654435761)>>>0)/4294967296,y=T.terr(x,z),rot=r*6.28;
-   if(kd===1)CY.push([x,y,z,Math.max(.6,Math.min(1.4,h/17)),rot]);else if(kd===2)ST.push([x,y,z,Math.max(.6,Math.min(1.05,h/15)),rot]);else if(kd===3)CY.push([x,y,z,Math.max(.6,Math.min(1.3,h/17)),rot]);
-   else G[r<.8?0:r<.88?1:r<.95?2:3].push([x,y,z,Math.max(.55,Math.min(1.6,h/12)),rot])}
+ /* where a point is against the lap: nearest sample, signed lateral offset and distance past the road edge (any distance) */
+ const near=(x,z)=>{let k=0,bd=1e18;for(let i=0;i<N;i+=2){const d=(T.x[i]-x)**2+(T.z[i]-z)**2;if(d<bd){bd=d;k=i}}for(let i=k-2;i<=k+2;i++){const j=(i+N)%N,d=(T.x[j]-x)**2+(T.z[j]-z)**2;if(d<bd){bd=d;k=j}}
+  const l=(x-T.x[k])*Math.cos(T.psi[k])-(z-T.z[k])*Math.sin(T.psi[k]);return[k,l,Math.sqrt(bd)-T.hw[k]]};
+ /* everything the track owns on one side at sample k: barriers, gravel and green run-off (metres past the road edge) */
+ const zone=(side,k)=>{let m=0;for(let d=-3;d<=3;d++)for(const c of['wall','rail','tyre','fence','sand_hi','green_hi']){const v=get(c,side,k+d);if(v>m)m=v}return m};
+ {const tp=new Int16Array(irB(IR.tp).buffer),tk=irB(IR.tk),n=tk.length/3,G=[[],[],[],[]],CY=[],ST=[],FB=[],FC=[],FU=[];
+  const FAR=[0x2f5a26,0x3a6a2c,0x2a4f22,0x46722f,0x5a6a26];
+  for(let i=0;i<n;i++){const x=tp[i*3]/4,z=tp[i*3+1]/4,kd=tk[i*3],h=tk[i*3+1]/5;if(built(x,z))continue;
+   const r=((i*2654435761)>>>0)/4294967296,y=T.terr(x,z),rot=r*6.28,[k,l,ex]=near(x,z),side=l<0?-1:1;
+   /* the woods further out: a few triangles a tree, so the land is wooded right out to where the real woods end */
+   if(ex>140){const hh=Math.max(6,Math.min(26,h));(kd===1||kd===3?FC:kd===2?FU:FB).push([x,y-.4,z,kd===2?hh*.9:hh,rot,FAR[Math.floor(r*997)%FAR.length]]);continue}
+   const sc=kd===1||kd===3?Math.max(.6,Math.min(1.4,h/17)):kd===2?Math.max(.6,Math.min(1.05,h/15)):Math.max(.95,Math.min(1.9,h/10)),
+    cr=kd===1||kd===3?sc*17*.1:kd===2?sc*15*.38:sc*12*.36;
+   /* no crown reaches over the road, the run-off or the barriers */
+   if(ex<zone(side,k)+cr+1.5||dRoad(x,z)<cr+2.5)continue;
+   if(kd===1||kd===3)CY.push([x,y,z,sc,rot]);else if(kd===2)ST.push([x,y,z,sc,rot]);else G[r<.8?0:r<.88?1:r<.95?2:3].push([x,y,z,sc,rot])}
   P.qMix(g,['oak3','oak4','oak5'],G[0],[12,12,12],[0xffffff,0xf0f8e0,0xe4eed6],{gap:.7});
   P.qMix(g,['oak3','oak4'],G[1],[12,12],[0xffffff],{pal:AUT.or,gap:.7});P.qMix(g,['oak4','oak5'],G[2],[12,12],[0xffffff],{pal:AUT.ye,gap:.7});P.qMix(g,['oak5'],G[3],[12],[0xffffff],{pal:AUT.ru,gap:.7});
   P.lobTrees(g,CY,17,[0xffffff,0xe6eee0],'cypress');P.lobTrees(g,ST,15,[0xffffff,0xeef6e0],'stone');
+  if(P.farInst){P.farInst(g,'blob',FB);P.farInst(g,'cypress',FC);P.farInst(g,'umb',FU)}
   T._farTrees=n}
+ /* buildings around the circuit where the real ones stand (houses, sheds, the paddock blocks): plain rendered walls, terracotta or flat roofs */
+ {const winM=M_(0x3c4a56),wallC=[0xe8dcc4,0xd9c6a4,0xefe6d6,0xcdb999,0xe2d2b6],roofC=0xa24a2c,flat=M_(0x6e7378),W=wallC.map(c=>M_(c)),Rf=M_(roofC);
+  for(const[i,b]of(IR.bl||[]).entries()){const[cx,cz,,len,dep,h,ang]=b,[k,,ex]=near(cx,cz);if(ex<Math.max(dep,len)/2+zone(1,k)*0+12||built(cx,cz))continue;
+   const L=Math.max(5,len),Dd=Math.max(4,dep),H=Math.max(3.5,Math.min(18,h-(L>40?0:2))),gy=T.terr(cx,cz),grp=new THREE.Group();grp.position.set(cx,gy-.3,cz);grp.rotation.y=-ang;g.add(grp);
+   const body=new THREE.Mesh(new THREE.BoxGeometry(L,H,Dd),W[i%W.length]);body.position.y=H/2;grp.add(body);
+   /* a dark band of windows round each floor, so no building is a blank box */
+   for(let f=0;f<Math.floor(H/3.4);f++){const wb=new THREE.Mesh(new THREE.BoxGeometry(L-1.2,1.1,Dd+.08),winM);wb.position.y=f*3.4+1.9;grp.add(wb);const wc=new THREE.Mesh(new THREE.BoxGeometry(L+.08,1.1,Dd-1.2),winM);wc.position.y=f*3.4+1.9;grp.add(wc)}
+   if(L>40||Dd>30){const r=new THREE.Mesh(new THREE.BoxGeometry(L+.4,.5,Dd+.4),flat);r.position.y=H+.25;grp.add(r)}
+   else{const rg=new THREE.CylinderGeometry(0,1,1,4,1);rg.rotateY(Math.PI/4);const r=new THREE.Mesh(rg,Rf);r.scale.set(L*.75,Math.min(L,Dd)*.32,Dd*.75);r.position.y=H+Math.min(L,Dd)*.16;grp.add(r)}}}
+ /* the land beyond: the scene fog swallows everything past about 600 m, so the open fields out to it get woods (a jittered grid of
+    low-poly crowns from just behind the barriers and run-off out to 480 m off the road, with a few clearings), and the town of Imola sits on the north side. From the track you
+    see woods and roofs fading into the haze, never bare grass running to the sky */
+ const ty=(x,z)=>{const y=T.terr(x,z);return isFinite(y)?y:0};
+ {const[bx0,bx1,bz0,bz1]=T.bounds,M=330,st=12,FB=[],FP=[],FAR=[0x24481e,0x2d5524,0x203f1a,0x37602a,0x3f5a22,0x55481e];let s=7;const rr=()=>((s=(s*1664525+1013904223)>>>0)/4294967296);
+  for(let x=bx0-M;x<bx1+M;x+=st)for(let z=bz0-M;z<bz1+M;z+=st){const px=x+(rr()-.5)*st*.9,pz=z+(rr()-.5)*st*.9,[k,l,ex]=near(px,pz);if(ex<32||ex>480)continue;
+   if(ex<zone(l<0?-1:1,k)+14||built(px,pz))continue;if(Math.sin(px*.011+1.3)*Math.sin(pz*.013-.7)+Math.sin((px+pz)*.006)*.6>.95)continue;/* clearings */
+   const h=13+rr()*12,c=FAR[Math.floor(rr()*FAR.length)];(rr()<.12?FP:FB).push([px,ty(px,pz)-.4,pz,h*(rr()<.12?1.25:1),rr()*6,c])}
+  if(P.farInst){P.farInst(g,'blob',FB);P.farInst(g,'pine',FP)}T._woods=FB.length+FP.length}
+ {const W=[0xe8dcc4,0xd9c6a4,0xefe6d6,0xcdb999].map(c=>M_(c)),Rf=M_(0xa24a2c);let s=91;const rr=()=>((s=(s*1664525+1013904223)>>>0)/4294967296);
+  /* the town: on the far side of the start straight from the pits, 250 to 420 m out */
+  const k0=0,c=Math.cos(T.psi[k0]),sn=Math.sin(T.psi[k0]),ox=c*-PS,oz=-sn*-PS,fx=Math.sin(T.psi[k0]),fz=Math.cos(T.psi[k0]);let n=0;
+  for(let j=0;j<220&&n<70;j++){const d=250+rr()*170,t=(rr()-.5)*900,x=T.x[k0]+ox*d+fx*t,z=T.z[k0]+oz*d+fz*t,[,,ex]=near(x,z);if(ex<200||built(x,z))continue;n++;
+   const y=ty(x,z),w=9+rr()*12,dd=8+rr()*10,h=7+rr()*14,grp=new THREE.Group();grp.position.set(x,y-.3,z);grp.rotation.y=Math.atan2(fx,fz)+(rr()<.5?0:PI/2);g.add(grp);
+   const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,dd),W[j%4]);b.position.y=h/2;grp.add(b);
+   const rg=new THREE.CylinderGeometry(0,1,1,4,1);rg.rotateY(PI/4);const r=new THREE.Mesh(rg,Rf);r.scale.set(w*.75,Math.min(w,dd)*.3,dd*.75);r.position.y=h+Math.min(w,dd)*.15;grp.add(r)
+   if(n===30){const tw=new THREE.Mesh(new THREE.BoxGeometry(6,38,6),W[1]);tw.position.set(x+14,y+19,z);g.add(tw);const cap=new THREE.Mesh(new THREE.ConeGeometry(4.6,7,4),Rf);cap.position.set(x+14,y+41.5,z);cap.rotation.y=PI/4;g.add(cap)}}}
  /* Emilia hills and the town on the horizon */
  {const pano=()=>P.hillPano(49,0xcfe0ea,[{base:296,amp:60,col:0x6a8496,fog:.62},{base:318,amp:42,col:0x5f7f52,fog:.5,trees:14,fields:40},{base:338,amp:22,col:0x4a7340,fog:.34,trees:12}],(g,W,H,hz,mix,r)=>{
      /* the town on the hill: terracotta roofs and a bell tower */
