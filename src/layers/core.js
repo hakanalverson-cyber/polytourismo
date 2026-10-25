@@ -98,9 +98,25 @@ function shiftGear(c,d,auto){const cs_=c.cs||BYID.merc,G_=GT(cs_),n=clamp((c.gea
  c.gear=n;c.shiftT=.14;c.gearFlash=.9;if(c.human){PT8.sfx(d>0?'up':'dn');if(c.perfect)PT8.sfx('move')}return true}
 function autoGear(c,dt,mt,fac,auto){const cs=c.cs,G_=GT(cs),NG=G_.length,g=c.gear|0,ce=q=>(PT8.effTop?PT8.effTop(cs,q)*1.03:cs.top*G_[q].top)*(mt.top||1);let want=NG-1;for(let q=0;q<NG;q++)if(c.sp<=ce(q)*fac){want=q;break}
  if(want<g&&!(c.sp<ce(g)*.55))want=g;if(want!==g){c.gearHold=(c.gearHold||0)-dt;if(c.gearHold<=0){shiftGear(c,want>g?1:-1,auto);c.gearHold=auto?.5:.35}}else c.gearHold=.2}
+/* the player's automatic box: shifts by where the engine sits in its power band (60-95% of a gear's reach) and by what the driver is doing.
+   Holds the gear while airborne or sliding hard, upshifts near the top of the band on throttle (never into a gear that would lug), shifts
+   down early under braking so the exit pulls, and kicks down on full throttle when the revs have fallen out of the band. */
+function autoGearH(c,dt,mt){const cs=c.cs,G_=GT(cs),NG=G_.length,g=c.gear|0,ce=q=>(PT8.effTop?PT8.effTop(cs,q)*1.03:cs.top*G_[q].top)*(mt.top||1),r=q=>c.sp/Math.max(1,ce(q));
+ c.gearHold=Math.max(0,(c.gearHold||0)-dt);if(c.gearHold>0)return;const inp=c.in||{},th=inp.th||0,br=inp.br||0;
+ const air=c.m&&c.m.wheels&&c.m.wheels.filter(w=>w.g).length<2;if(air)return;
+ const fw=c.vx*Math.sin(c.yaw)+c.vz*Math.cos(c.yaw),slide=Math.abs(-c.vx*Math.cos(c.yaw)+c.vz*Math.sin(c.yaw));
+ let d=0;const rg=r(g);
+ if(g<NG-1&&(rg>.985||(rg>.93&&th>0&&!br))&&r(g+1)>.5&&slide<6)d=1;
+ else if(g>0){const rl=r(g-1);
+  if(br>0&&rg<.66&&rl<.9)d=-1;/* braking for a corner: be in the right gear before the exit */
+  else if(th>.5&&rg<.5&&rl<.86)d=-1;/* kick-down: the revs fell out of the band */
+  else if(rg<.4&&rl<.9)d=-1;/* coasting down */
+  if(fw<2&&g>0)d=-1}
+ if(d&&shiftGear(c,d,true))c.gearHold=d>0?.32:.22}
+PT8.autoGearH=autoGearH;
 function gearLogic(c,live,dt){const p=c.k,tp=taps[p],now=performance.now();
  if(c.seenU===undefined){c.seenU=tp.u;c.seenD=tp.d;c.lastU=0;c.lastD=0}
- if(PT8.isAuto(c)){c.seenU=tp.u;c.seenD=tp.d;if(live)autoGear(c,dt||.016,c.mt||MATS.road,.93,true);return}
+ if(PT8.isAuto(c)){c.seenU=tp.u;c.seenD=tp.d;if(live)autoGearH(c,dt||.016,c.mt||MATS.road);return}
  if(tp.u!==c.seenU){c.seenU=tp.u;if(live&&c.lastU&&now-c.lastU<340){shiftGear(c,1);c.lastU=0}else c.lastU=now}
  if(tp.qu){tp.qu=0;if(live)shiftGear(c,1)}if(tp.qd){tp.qd=0;if(live)shiftGear(c,-1)}
  if(tp.d!==c.seenD){c.seenD=tp.d;if(live&&c.lastD&&now-c.lastD<340){shiftGear(c,-1);c.lastD=0}else c.lastD=now}
@@ -134,13 +150,13 @@ function aiInput(c,dt){const Rc=RACE,T=Rc.T,N=T.N,a=c.ai||(c.ai={skill:.9,lat:0,
  if(c.stuck>1.5){th=0;br=1;st=-st}
  if(live&&c.m.wheels.every(w=>!w.g)){st*=.15;th=0;br=0}
  return{th,br,st,hb:0}}
-PT8.aiInput=aiInput;PT8.kappa=kappa;
+PT8.aiInput=aiInput;PT8.kappa=kappa;PT8.autoGear=autoGear;PT8.steerLimit=steerLimit;
 
 /* ---------------- physics wrapper ---------------- */
 const innerStepCar=stepCar;
 stepCar=(c,dt)=>{const Rc=RACE,T=Rc.T,st=c.cs||(c.cs=BYID.merc);
  const live=Rc.state==='race'&&!c.fin&&c.respT<=0&&!(c.exp>0);
- if(c.cool||!c.human||c.forceAI){c.in=aiInput(c,dt);if(PT8.aiPost)PT8.aiPost(c,dt)}
+ if(c.cool||!c.human||c.forceAI){c.in=(PT8.aiInput||aiInput)(c,dt);if(PT8.aiPost)PT8.aiPost(c,dt)}
  else if(c.human)gearLogic(c,live,dt);
  if(c.shiftT>0){c.shiftT-=dt;c.in.th=0}
  if(PT8.inPost)PT8.inPost(c,dt);

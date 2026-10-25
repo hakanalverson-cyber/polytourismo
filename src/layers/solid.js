@@ -29,9 +29,10 @@ let cd=0;
 function touch(g,x,z){const cx=Math.floor(x/8),cz=Math.floor(z/8);for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const l=g.get((cx+a)+','+(cz+b));if(!l)continue;
  for(const s of l){let qx,qz,r;if(s.length===5){const dx=s[2]-s[0],dz=s[3]-s[1],ll=dx*dx+dz*dz||1,t=Math.max(0,Math.min(1,((x-s[0])*dx+(z-s[1])*dz)/ll));qx=s[0]+dx*t;qz=s[1]+dz*t;r=s[4]}else{qx=s[0];qz=s[1];r=s[2]}
   if(Math.hypot(x-qx,z-qz)<r+.88)return true}}return false}
-function hit(Rc,c,v,nx,nz){if(P.hitFx)P.hitFx(Rc,c,v,c.x-nx*.9,c.y+.35,c.z-nz*.9,nx,nz);if(cd>0)return;cd=.3;Rc.shake=Math.max(Rc.shake||0,Math.min(1,v/16));if(P.sfx)P.sfx('crash');if(P.dmgOn&&P.dmgOn(Rc)&&P.hurt&&!((c.cdT||0)>0)){c.cdT=.7;P.hurt(Rc,c,v,nx,nz)}}
+function hit(Rc,c,v,nx,nz){if(P.hitFx)P.hitFx(Rc,c,v,c.x-nx*.9,c.y+.35,c.z-nz*.9,nx,nz);if(!c.human)return;if(cd>0)return;cd=.3;Rc.shake=Math.max(Rc.shake||0,Math.min(1,v/16));if(P.sfx)P.sfx('crash');if(P.dmgOn&&P.dmgOn(Rc)&&P.hurt&&!((c.cdT||0)>0)){c.cdT=.7;P.hurt(Rc,c,v,nx,nz)}}
 function bStep(Rc,dt){const T=Rc.T;if(!T||Rc.state!=='race')return;cd-=dt;const g=T._bg||grid(T);if(!g.size)return;
- for(const c of Rc.cars){if(!c.human||c.fin||c.respT>0||c.exp>0)continue;
+ /* every car, CPU included: nothing the player bumps into can be driven through by the CPU */
+ for(const c of Rc.cars){if(c.fin||c.respT>0||c.exp>0)continue;
   /* swept test: walk the path since last frame in half-car steps so a fast car cannot step across a thin wall */
   {const ox=c._px,oz=c._pz;if(ox!=null&&!P.noSweep){const dd=Math.hypot(c.x-ox,c.z-oz);if(dd>.5&&dd<14){const n=Math.ceil(dd/.5);for(let k=1;k<n;k++){const sx=ox+(c.x-ox)*k/n,sz=oz+(c.z-oz)*k/n;if(touch(g,sx,sz)){c.x=sx;c.z=sz;break}}}}}
   const cx=Math.floor(c.x/8),cz=Math.floor(c.z/8),gy=T.terr?T.terr(c.x,c.z):c.y;if(c.y-gy>3.2){c._px=c.x;c._pz=c.z;continue}
@@ -59,7 +60,7 @@ function slide(c,nx,nz,dt){const tx=-nz,tz=nx,vt=c.vx*tx+c.vz*tz,sp=Math.hypot(c
  c.yaw+=d*Math.min(1,dt*9)}
 /* kerb/tunnel wall, true-position version: base clamp uses last frame's lateral and stops once road=0, so a fast car could cross the 0.9m margin in one frame and leave */
 function kerb(Rc,dt){const T=Rc.T;if(!T||Rc.state!=='race'||!T.wall)return;const N=T.N;
- for(const c of Rc.cars){if(!c.human||c.fin||c.respT>0||c.exp>0){c._wl=null;continue}
+ for(const c of Rc.cars){if(c.fin||c.respT>0||c.exp>0){c._wl=null;continue}
   const i0=c.idx|0;let best=null;
   for(let k=-12;k<=45;k++){const i=(i0+k+N)%N,j=(i+1)%N;if(T.gap[i]||T.gap[j])continue;
    const dx=T.x[j]-T.x[i],dz=T.z[j]-T.z[i],l2=dx*dx+dz*dz||1,f=Math.max(0,Math.min(1,((c.x-T.x[i])*dx+(c.z-T.z[i])*dz)/l2));

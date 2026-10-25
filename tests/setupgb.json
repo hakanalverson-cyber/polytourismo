@@ -1,0 +1,5 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",2500],
+["js","(()=>{const U=PT8.ui;U.ST.mode='rally';U.ST.rstep=1;show('s8setup');U.renderSetup();return 1})()"],["wait",1500],["shot","r1"],
+["js","(()=>{const U=PT8.ui;U.ST.rstep=2;U.renderSetup();return document.querySelectorAll('#s8setup .txs').length+' '+getComputedStyle(document.getElementById('suDrv')).display})()"],["wait",1500],["shot","r2"],
+["js","(()=>{const U=PT8.ui;U.ST.mode='track';U.ST.rstep=1;U.renderSetup();return 1})()"],["wait",1500],["shot","t1"],
+["js","(()=>{const U=PT8.ui;U.ST.rstep=2;U.renderSetup();return document.querySelectorAll('#s8setup .txs').length+' '+getComputedStyle(document.getElementById('suDrv')).display})()"],["wait",1500],["shot","t2"]]
