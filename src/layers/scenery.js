@@ -40,7 +40,38 @@ P.bandForest=(T,g,o)=>{const N=T.N;let s=(o.seed||1)>>>0;const rr=()=>((s=(s*166
   if(T.nz(x*1.7+17,z*1.7-3)>(o.fields==null?1.1:o.fields))continue;if(o.open&&o.open(x,z))continue;if(far(x,z,o.from+4)<o.from-2)continue;
   let t=rr()*W,i=0;for(;i<o.kinds.length-1;i++){t-=o.kinds[i].w;if(t<=0)break}
   L[i].push([x,T.terr(x,z),z,.85+rr()*.35,rr()*6])}}
- let n=0;o.kinds.forEach((k,i)=>{n+=L[i].length;P.qMix(g,k.names,L[i],k.h,k.tints,k.o)});return n};
+ let n=0;o.kinds.forEach((k,i)=>{n+=L[i].length;if(k.lob)P.lobTrees(g,L[i],k.h,k.tints,k.lob===true?'lob':k.lob);else P.qMix(g,k.names,L[i],k.h,k.tints,k.o)});return n};
+/* loblolly pine, the Georgia Piedmont tree: a tall straight bare trunk and a loose, lumpy crown only in the top third (not a Christmas-tree
+   cone). 1 unit tall, coloured per vertex: bark trunk, darker crown underside, lighter crown top */
+const TM={};const LOB=(()=>{let g=null;return()=>{if(g)return g;const parts=[],cols=[],add=(geo,fn)=>{geo=geo.index?geo.toNonIndexed():geo;const p=geo.attributes.position;for(let i=0;i<p.count;i++)cols.push(...fn(p.getY(i)));parts.push(geo)};
+ const bark=lin(0x5a3a26),bk=[bark.r,bark.g,bark.b],dk=lin(0x2c4424),lt=lin(0x4f6e36);
+ const t=new THREE.CylinderGeometry(.014,.03,.8,6,1);t.translate(0,.4,0);add(t,()=>bk);
+ const blob=(r,x,y,z,sy)=>{const b=new THREE.IcosahedronGeometry(r,0);b.scale(1,sy,1);b.translate(x,y,z);add(b,yy=>{const u=Math.max(0,Math.min(1,(yy-(y-r*sy))/(2*r*sy)));return[dk.r+(lt.r-dk.r)*u,dk.g+(lt.g-dk.g)*u,dk.b+(lt.b-dk.b)*u]})};
+ blob(.15,0,.88,0,.62);blob(.11,.12,.8,.03,.6);blob(.1,-.11,.79,-.05,.6);blob(.1,.02,.77,.12,.6);blob(.09,-.03,.72,-.11,.55);blob(.08,.08,.97,-.02,.6);
+ /* a couple of short limbs below the crown */
+ for(const[a,y]of[[.6,.66],[2.7,.62],[4.4,.7]]){const l=new THREE.CylinderGeometry(.006,.009,.12,4,1);l.rotateZ(1.1);l.rotateY(a);l.translate(Math.cos(a)*.05,y,-Math.sin(a)*.05);add(l,()=>bk)}
+ g=merge(parts);g.setAttribute('color',new THREE.Float32BufferAttribute(cols,3));return g}})();
+/* Italian stone pine (pino domestico): bare trunk leaning a little, forking high, under one wide flat umbrella of dark green */
+TM.stone=()=>{const parts=[],cols=[],add=(geo,c)=>{geo=geo.index?geo.toNonIndexed():geo;for(let i=0;i<geo.attributes.position.count;i++)cols.push(...c(geo.attributes.position.getY(i)));parts.push(geo)};
+ const bk=lin(0x6b4a34),dk=lin(0x24391f),lt=lin(0x46622f),B=()=>[bk.r,bk.g,bk.b];
+ const t=new THREE.CylinderGeometry(.022,.04,.62,6,1);t.translate(0,.31,0);t.rotateZ(.06);add(t,B);
+ for(const a of[.8,3.6]){const f=new THREE.CylinderGeometry(.012,.02,.22,5,1);f.rotateZ(.55);f.rotateY(a);f.translate(Math.cos(a)*.06,.7,-Math.sin(a)*.06);add(f,B)}
+ const blob=(r,x,y,z,sy)=>{const b=new THREE.IcosahedronGeometry(r,1);b.scale(1,sy,1);b.translate(x,y,z);add(b,yy=>{const u=Math.max(0,Math.min(1,(yy-(y-r*sy))/(2*r*sy)));return[dk.r+(lt.r-dk.r)*u,dk.g+(lt.g-dk.g)*u,dk.b+(lt.b-dk.b)*u]})};
+ blob(.32,.02,.86,0,.28);blob(.2,.2,.83,.08,.3);blob(.19,-.19,.84,-.06,.3);blob(.16,.03,.84,-.22,.3);blob(.15,-.04,.85,.22,.3);
+ const g=merge(parts);g.setAttribute('color',new THREE.Float32BufferAttribute(cols,3));return g};
+/* Italian cypress: a tall dark spindle, widest a third of the way up, pointed top; a short trunk at the foot */
+TM.cypress=()=>{const cols=[],dk=lin(0x1e3220),lt=lin(0x34502f),bk=lin(0x5a3e2a);const pr=[];for(let i=0;i<=10;i++){const y=.04+i*.096,u=i/10;pr.push(new THREE.Vector2(Math.max(.004,.11*Math.sin(Math.PI*Math.pow(u,.8))*(1-.25*u)),y))}
+ const sp=new THREE.LatheGeometry(pr,7).toNonIndexed();const t=new THREE.CylinderGeometry(.015,.02,.08,5,1).toNonIndexed();t.translate(0,.04,0);
+ const P1=sp.attributes.position;for(let i=0;i<P1.count;i++){const u=P1.getY(i),w=.5+.5*Math.sin(i*1.7);cols.push(dk.r+(lt.r-dk.r)*u*w,dk.g+(lt.g-dk.g)*u*w,dk.b+(lt.b-dk.b)*u*w)}
+ for(let i=0;i<t.attributes.position.count;i++)cols.push(bk.r,bk.g,bk.b);const g=merge([sp,t]);g.setAttribute('color',new THREE.Float32BufferAttribute(cols,3));return g};
+TM.lob=()=>LOB();const TG={};const tgeo=k=>TG[k]||(TG[k]=TM[k]());
+P.lobTrees=(par,list,h,tints,kind)=>{const G=par.userData._lob||(par.userData._lob=new Map()),C=8,ok=[];
+ for(const p of list){const r=h*p[3]*(kind==='stone'?.3:kind==='cypress'?.07:.12),cx=Math.floor(p[0]/C),cz=Math.floor(p[2]/C);let free=true;
+  for(let a=-1;a<=1&&free;a++)for(let b=-1;b<=1&&free;b++){const l=G.get((cx+a)*65536+cz+b);if(l)for(const q of l)if(Math.hypot(q[0]-p[0],q[1]-p[2])<(q[2]+r)*.9){free=false;break}}
+  if(!free)continue;const k=cx*65536+cz;(G.get(k)||G.set(k,[]).get(k)).push([p[0],p[2],r]);ok.push(p)}
+ if(!ok.length)return null;const im=new THREE.InstancedMesh(tgeo(kind||'lob'),new THREE.MeshStandardMaterial({vertexColors:true,roughness:.95,flatShading:true}),ok.length),ob=new THREE.Object3D();
+ ok.forEach((p,i)=>{const s=h*p[3];ob.position.set(p[0],p[1]-.3,p[2]);ob.scale.set(s*(.9+.2*((i*7)%5)/5),s,s);ob.rotation.set(0,p[4]||0,0);ob.updateMatrix();im.setMatrixAt(i,ob.matrix);if(tints)im.setColorAt(i,new THREE.Color(tints[i%tints.length]))});
+ im.instanceMatrix.needsUpdate=true;par.add(im);return im};
 /* a solid wall ribbon along the track at lateral l (per sample), with a top cap; runs only where nothing else is closer to the road.
    every link is a real collider */
 P.trackWall=(T,g,at,dRoad,o)=>{const N=T.N,side=o.side,pos=[],idx=[],col=[],c0=lin(o.col),c1=lin(o.top||o.col),H=o.h||1,th=o.th||.4;let run=[];

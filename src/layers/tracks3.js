@@ -164,8 +164,8 @@ function dressRA(T,sc){
  /* ---- Georgia woods: loblolly pines (tall bare trunks, crowns on top) with hardwoods mixed in ---- */
  {const tm=M_(0x5a3b26),tint=(geo,mt,list,cols,f)=>{/* one mesh per colour: plain material colours survive the scene's mesh merging */const ob=new THREE.Object3D();cols.forEach((cc,ci)=>{const sub=list.filter((p,i)=>i%cols.length===ci);if(!sub.length)return;const im=new THREE.InstancedMesh(geo,cols.length>1||mt.color.getHex()===0xffffff?M_(cc):mt,sub.length);sub.forEach((p,i)=>{f(ob,p);ob.updateMatrix();im.setMatrixAt(i,ob.matrix)});g.add(im)})};
   circuitWoods(T,sc,g,{seed:4088,set:20,rows:4,copses:14,tint:0x5d7a60,cardH:20,start:[-40,Math.round(N*.06)],cluster:1,
-   /* loblolly pines (tall, crowns high up) with hardwoods mixed in: Quaternius CC0 models from trees_q.js */
-   kinds:[{w:.7,build:(g,L)=>P.qMix(g,['pine2','pine3','pine4'],L,[19,17,18],[0xffffff,0xe8f2dc,0xdbe6cf,0xf4fbe6])},
+   /* loblolly pines (scenery.js: tall bare trunks, crowns in the top third) with Quaternius CC0 hardwoods mixed in */
+   kinds:[{w:.7,build:(g,L)=>P.lobTrees(g,L,24,[0xffffff,0xe8f2dc,0xdbe6cf,0xf4fbe6])},
     {w:.3,build:(g,L)=>P.qMix(g,['oak4','oak3','umb2'],L,[12,13,12],[0xffffff,0xeef6dc,0xe2ecd2])}],
    pano:()=>hillPano(77,0xcfe0ea,[{base:300,amp:46,col:0x5e7d8c,fog:.62},{base:322,amp:34,col:0x4b6e58,fog:.5,trees:22},{base:340,amp:20,col:0x355a3a,fog:.34,trees:16}])})}
   /* white concrete walls on the outside of the straights, a catch fence on top; Armco stays at the corners */
@@ -181,7 +181,7 @@ function dressRA(T,sc){
  {const sx=[],sz=[];for(let k=-40;k<150;k+=6){const kk=(k+N)%N;sx.push(T.x[kk]);sz.push(T.z[kk])}
   const open=(x,z)=>{for(let i=0;i<sx.length;i++)if((x-sx[i])**2+(z-sz[i])**2<110*110)return true;return false};
   T._farTrees=P.bandForest(T,g,{seed:88,from:46,to:150,step:13,open,
-   kinds:[{w:.68,names:['pine2','pine3','pine4'],h:[19,17,18],tints:[0xffffff,0xe8f2dc,0xdbe6cf]},{w:.32,names:['oak4','oak3'],h:[12,13],tints:[0xffffff,0xeef6dc]}]})}
+   kinds:[{w:.68,lob:true,h:24,tints:[0xffffff,0xe8f2dc,0xdbe6cf]},{w:.32,names:['oak4','oak3'],h:[12,13],tints:[0xffffff,0xeef6dc]}]})}
  /* the stock world's pale blob bushes do not belong here */
  {const rm=[];sc.traverse(o=>{if(o.isInstancedMesh&&o.geometry&&/Octahedron|Icosahedron|Dodecahedron/.test(o.geometry.type))rm.push(o)});rm.forEach(o=>o.parent&&o.parent.remove(o))}
  styleScene(g);sc.add(g);

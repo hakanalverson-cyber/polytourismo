@@ -14,6 +14,9 @@ P.gravelSlip=c=>{const o=(c&&c.off)||0;return o>=.8?1.1:o>=.45?1.25:1.5};
 /* downhill: the suspension damper (patched in build.py) works on the body's vertical speed relative to the ground below it. c._gv is how fast
    the ground under the car rises or falls along its path this step (m/s); without it a car going down a hill had its dampers holding it
    up off the road, so fewer than two tyres touched more than half the time and grip vanished. */
-const sc0=stepCar;stepCar=function(c,dt){try{const T=RACE&&RACE.T;c._gv=0;if(T&&T.surf&&!(c.respT>0)){const h=.06,a=T.surf(c.x,c.z,c.y).h,b=T.surf(c.x+c.vx*h,c.z+c.vz*h,c.y).h,g=(b-a)/h;c._gv=isFinite(g)?Math.max(-20,Math.min(20,g)):0}}catch(e){c._gv=0}
+/* the slope is taken over 3 m (1.5 m either side, along the direction of travel) and eased: measured over a few centimetres, a kerb lip or
+   the step from road to grass read as a wall of ground rising at 20 m/s, the damper shoved the car up, and it jumped */
+const sc0=stepCar;stepCar=function(c,dt){try{const T=RACE&&RACE.T;let g=0;if(T&&T.surf&&!(c.respT>0)){const sp=Math.hypot(c.vx,c.vz);if(sp>.5){const ux=c.vx/sp,uz=c.vz/sp,d=1.5,a=T.surf(c.x-ux*d,c.z-uz*d,c.y).h,b=T.surf(c.x+ux*d,c.z+uz*d,c.y).h,sl=(b-a)/(2*d);if(isFinite(sl))g=Math.max(-.45,Math.min(.45,sl))*sp}}
+ g=Math.max(-12,Math.min(12,g));c._gv=c._gv==null||c.respT>0?g:c._gv+(g-c._gv)*Math.min(1,dt*12)}catch(e){c._gv=0}
  return sc0.apply(this,arguments)};
 })();

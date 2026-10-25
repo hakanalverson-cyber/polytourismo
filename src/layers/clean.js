@@ -201,7 +201,7 @@ function tunnel(sc,T){
 }
 
 /* ---------- rural lots for every non-city map: farm plots, ranch yards, orchards and ponds built from the pack, rooted on level ground, clear of the road and barn ---------- */
-const LOTS={'Quarry Circuit':[12,'fpwo'],'Canyon Viaduct':[5,'wh'],'Alpine Pass':[6,'wh'],'Coastal Run':[9,'fpwo'],'Pinewood Stage':[9,'fwoh'],'Redrock Stage':[5,'wh'],'Highmoor Stage':[9,'fwoh'],'Terrace Run':[12,'fpo'],'Autumn Ridge':[9,'fwoh'],'Mangrove Ford':[6,'pwo'],'Frostline Stage':[5,'wh'],'Road Atlanta':[9,'fwo']};
+const LOTS={'Quarry Circuit':[12,'fpwo'],'Canyon Viaduct':[5,'wh'],'Alpine Pass':[6,'wh'],'Coastal Run':[9,'fpwo'],'Pinewood Stage':[9,'fwoh'],'Redrock Stage':[5,'wh'],'Highmoor Stage':[9,'fwoh'],'Terrace Run':[12,'fpo'],'Autumn Ridge':[9,'fwoh'],'Mangrove Ford':[6,'pwo'],'Frostline Stage':[5,'wh']};/* the real circuits have no farm yards in their woods */
 function lotsAll(sc,T){
  const cfg=LOTS[T.d&&T.d.name];if(!cfg||T.d.city||!P.BLD)return;const B=P.BLD,N=T.N;
  const rx=[],rz=[],rh=[],rf=[];for(let i=0;i<N;i+=2){rx.push(T.x[i]);rz.push(T.z[i]);rh.push(T.hw[i]);rf.push((T.gap&&T.gap[i])||(T.br&&T.br[i])||(T.tn&&T.tn[i])||(T.wall&&T.wall[i])?1:0)}

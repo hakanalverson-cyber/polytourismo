@@ -44,7 +44,7 @@ add('Redrock Stage',[['bushB',70,5,150],['cactus',24,6,200]]);
 add('Highmoor Stage',[['treeC',48,10,150],['bushA',144,4,150],['bushB',112,4,150],['hay2',6,10,80],['boulderG',16,12,220]]);
 add('Coastal Run',[['treeA',64,8,150],['treeD',64,8,150],['bushA',112,5,150],['bushB',80,5,150]]);
 add('Frostline Stage',[['treeC',80,8,150]]);
-PLAN['Imola']=PLAN['Imola']||{edge:[],field:[['bushA',60,8,120],['bushB',60,8,120],['hay',4,16,120]]};PLAN['Road Atlanta']=PLAN['Road Atlanta']||{edge:[],field:[['treeA',64,14,150],['treeB',48,14,150],['treeD',64,14,150],['bushA',96,8,150],['bushB',96,8,150],['hay',4,16,120]]};
+PLAN['Imola']={edge:[],field:[]};PLAN['Road Atlanta']={edge:[],field:[]};/* their scenery is built in tracks3/tracks4 */
 /* "random grey boxes": the container offices go */
 for(const k in PLAN){const p=PLAN[k];if(p.field)p.field=p.field.filter(f=>f[0]!=='officeC')}
 

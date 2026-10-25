@@ -127,14 +127,14 @@ function dressIM(T,sc){
  const AUT={or:{'#0e1709':'#3c1604','#16270f':'#52280a'},ye:{'#0e1709':'#3a2c04','#16270f':'#5a4a12'},ru:{'#0e1709':'#2a0c04','#16270f':'#421a0a'}};
  {
   P.circuitWoods(T,sc,g,{seed:4909,set:22,rows:2,copses:12,tint:0x6a865e,cardH:17,start:[-14,Math.round(N*.08)],cluster:0,
-   /* plane trees and oaks, cypress (a narrowed Quaternius conifer), umbrella pines: CC0 models from trees_q.js */
+   /* plane trees and oaks (Quaternius CC0, trees_q.js), Italian cypresses and stone pines (scenery.js) */
    /* autumn: the planes and oaks turn orange, gold and rust between the green ones; dark cypresses and stone pines stay green */
    kinds:[{w:.32,build:(g,L)=>P.qMix(g,['oak3','oak4','oak5'],L,[13,12,11],[0xffffff,0xf0f8e0,0xe4eed6])},
     {w:.1,build:(g,L)=>P.qMix(g,['oak3','oak4','oak5'],L,[13,12,11],[0xffffff,0xfff2e0],{pal:AUT.or})},
     {w:.08,build:(g,L)=>P.qMix(g,['oak4','oak3','oak5'],L,[12,13,11],[0xffffff,0xfff6e6],{pal:AUT.ye})},
     {w:.05,build:(g,L)=>P.qMix(g,['oak5','oak3'],L,[11,12],[0xffffff],{pal:AUT.ru})},
-    {w:.25,build:(g,L)=>P.qMix(g,['pine4','pine2'],L,[13,14],[0xd8e2d0,0xc8d4c2],{sx:.42})},
-    {w:.18,build:(g,L)=>P.qMix(g,['umb1','umb2'],L,[12,13],[0xffffff,0xeef6e0])}],
+    {w:.25,build:(g,L)=>P.lobTrees(g,L,17,[0xffffff,0xe6eee0],'cypress')},
+    {w:.18,build:(g,L)=>P.lobTrees(g,L,15,[0xffffff,0xeef6e0],'stone')}],
    pano:()=>P.hillPano(49,0xcfe0ea,[{base:296,amp:60,col:0x6a8496,fog:.62},{base:318,amp:42,col:0x5f7f52,fog:.5,trees:14,fields:40},{base:338,amp:22,col:0x4a7340,fog:.34,trees:12}],(g,W,H,hz,mix,r)=>{
      /* the town on the hill: terracotta roofs and a bell tower */
      for(const cx of[W*.31,W*.78]){for(let i=0;i<26;i++){const x=cx+(r()-.5)*240,w=10+r()*16,h=8+r()*10,y=hz-14-r()*10;g.fillStyle=mix(0xd9cdb5,.45);g.fillRect(x,y-h,w,h);g.fillStyle=mix(0xb0583a,.42);g.beginPath();g.moveTo(x-2,y-h);g.lineTo(x+w/2,y-h-5);g.lineTo(x+w+2,y-h);g.fill()}
@@ -151,7 +151,7 @@ function dressIM(T,sc){
   T._farTrees=P.bandForest(T,g,{seed:99,from:42,to:140,step:15,open,fields:.95,
    kinds:[{w:.5,names:['oak3','oak4','oak5'],h:[13,12,11],tints:[0xffffff,0xf0f8e0]},{w:.12,names:['oak3','oak4'],h:[13,12],tints:[0xffffff],o:{pal:AUT.or}},
     {w:.1,names:['oak4','oak5'],h:[12,11],tints:[0xffffff],o:{pal:AUT.ye}},{w:.06,names:['oak5'],h:[11],tints:[0xffffff],o:{pal:AUT.ru}},
-    {w:.12,names:['pine4','pine2'],h:[13,14],tints:[0xd8e2d0,0xc8d4c2],o:{sx:.42}},{w:.1,names:['umb1','umb2'],h:[12,13],tints:[0xffffff,0xeef6e0]}]})}
+    {w:.12,lob:'cypress',h:17,tints:[0xffffff,0xe6eee0]},{w:.1,lob:'stone',h:15,tints:[0xffffff,0xeef6e0]}]})}
  {const rm=[];sc.traverse(o=>{if(o.isInstancedMesh&&o.geometry&&/Octahedron|Icosahedron|Dodecahedron/.test(o.geometry.type))rm.push(o)});rm.forEach(o=>o.parent&&o.parent.remove(o))}
  styleScene(g);sc.add(g);
 }
