@@ -30,7 +30,7 @@ const ssI=sampleTrack;sampleTrack=d=>{const T=ssI(d);if(!d.imola)return T;
  if(!real)for(const c of kc){const side=c.dir>0?-1:1;for(let q=c.a-3;q<=c.b+6;q++)T.trapS[((q%N)+N)%N]=side}
  const s0=T.surf;T.surf=(x,z,y)=>{const r=s0(x,z,y);if(r.road)return r;const cx=Math.floor(x/16),cz=Math.floor(z/16);let bd=1e9,bi=-1,bl=0;
   for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const ids=T.grid.get((cx+a)*8192+cz+b);if(!ids)continue;for(const i of ids){const j=(i+1)%N;if(T.gap[i]||T.gap[j])continue;const dx=T.x[j]-T.x[i],dz=T.z[j]-T.z[i],l2=dx*dx+dz*dz||1,f=Math.max(0,Math.min(1,((x-T.x[i])*dx+(z-T.z[i])*dz)/l2)),px=T.x[i]+dx*f,pz=T.z[i]+dz*f,dd=Math.hypot(x-px,z-pz);if(dd<bd){bd=dd;bi=i;bl=(x-px)*Math.cos(T.psi[i])-(z-pz)*Math.sin(T.psi[i])}}}
-  if(bi>=0&&real){const si=bl<0?0:1,SE=T._sand&&T._sand[si],lo=SE?SE[0][bi]:irOff.sand_lo[si][bi],hi=SE?SE[1][bi]:irOff.sand_hi[si][bi],ex=Math.abs(bl)-T.hw[bi];if(lo>=0&&hi>lo&&ex>Math.max(2.4,lo)&&ex<hi)r.trap=1}
+  if(bi>=0&&real){const si=bl<0?0:1,SE=T._sand&&T._sand[si],lo=SE?SE[0][bi]:irOff.sand_lo[si][bi],hi=SE?SE[1][bi]:irOff.sand_hi[si][bi],ex=Math.abs(bl)-T.hw[bi];if(lo>=0&&hi>lo&&ex>Math.max(SE?.3:2.4,lo)&&ex<hi)r.trap=1}
   else if(bi>=0&&T.trapS[bi]&&Math.sign(bl)===T.trapS[bi]){const ex=Math.abs(bl)-T.hw[bi];if(ex>2.3&&ex<13.6)r.trap=1}
   return r};
  return T};
@@ -75,6 +75,8 @@ function dressIM(T,sc){
  /* Imola's kerbs carry a green, white and red stripe along their outer edge, with a black band between */
  {const tri=ctex(4,1,(x)=>{x.fillStyle='#111317';x.fillRect(0,0,1,1);x.fillStyle='#1f8a3c';x.fillRect(1,0,1,1);x.fillStyle='#f4f4f4';x.fillRect(2,0,1,1);x.fillStyle='#d8261e';x.fillRect(3,0,1,1)}),triM=new THREE.MeshStandardMaterial({map:tri,roughness:.8,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
   kerb(inL,1,1.5,2.4,triM,4);kerb(inR,-1,1.5,2.4,triM,4)}
+ /* how far the kerb reaches past the road edge at each sample, per side (0 = no kerb): gravel starts right there */
+ const kerbW=[new Float32Array(N),new Float32Array(N)];for(const[R,si,w]of[[inL,1,2.4],[inR,0,2.4],[outL,1,1.2],[outR,0,1.2]])for(const[a,b]of R){const n=((b-a)%N+N)%N;for(let q=0;q<=n;q++){const k=(a+q)%N;kerbW[si][k]=Math.max(kerbW[si][k],w)}}
  /* SAND TRAPS on the outside of every corner (really slow: cars bog down in them) with a rake-line pattern */
  const sandTex=ctex(32,32,(x,w,h)=>{x.fillStyle='#e6d29b';x.fillRect(0,0,w,h);x.fillStyle='#d4bd80';for(let j=0;j<h;j+=4)x.fillRect(0,j,w,1);x.fillStyle='#f1e3b4';for(let j=2;j<h;j+=8)x.fillRect(0,j,w,1)});
  const sandM=new THREE.MeshStandardMaterial({map:sandTex,roughness:1,side:THREE.DoubleSide});sandTex.wrapS=sandTex.wrapT=THREE.RepeatWrapping;
@@ -103,6 +105,8 @@ function dressIM(T,sc){
    for(let t=0;t<e;t++){const f=(t+1)/(e+1),q=(k+t)%n;lo[q]=lo[a0]+(lo[b0]-lo[a0])*f;hi[q]=hi[a0]+(hi[b0]-hi[a0])*f}}
   for(let it=0;it<4;it++)for(const A of[lo,hi]){const c=Float32Array.from(A);for(let k=0;k<n;k++){if(c[k]<0)continue;const p=c[(k-1+n)%n],q=c[(k+1)%n];if(p>=0&&q>=0)A[k]=(p+2*c[k]+q)/4}}
   for(let k=0;k<n;k++){if(!ok(k)||ok(k-1))continue;let e=0;while(e<n&&ok(k+e))e++;if(e<6)for(let t=0;t<e;t++)lo[(k+t)%n]=hi[(k+t)%n]=-1}
+  /* a gravel trap starts right at the road edge (or the outside of the kerb): no strip of grass between the track and the gravel */
+  if(cLo==='sand_lo')for(let k=0;k<n;k++)if(lo[k]>=0)lo[k]=kerbW[side<0?0:1][k]>0?kerbW[side<0?0:1][k]:.05;
   /* green run-off never lies over the gravel: where they overlap the green keeps only the part outside the trap */
   if(cLo==='green_lo'){const[sl,sh]=roEdge('sand_lo','sand_hi',side);for(let k=0;k<n;k++){if(lo[k]<0||sh[k]<0)continue;const a=Math.max(lo[k],sl[k]),b=Math.min(hi[k],sh[k]);if(b<=a)continue;
     const inner=sl[k]-lo[k],outer=hi[k]-sh[k];if(inner<1&&outer<1){lo[k]=hi[k]=-1}else if(inner>=outer)hi[k]=sl[k]-.2;else lo[k]=sh[k]+.2}}
@@ -110,8 +114,8 @@ function dressIM(T,sc){
  /* gravel and green run-off between their inner and outer edge, in 12 bands so they follow the ground */
  const ribbon=(cLo,cHi,side,mt,dy)=>{for(let j=0;j<12;j++){const pos=[],uv=[],idx=[];let prev=-1;
    const[LO,HI]=roEdge(cLo,cHi,side);for(let q=0;q<=N;q++){const k=q%N,lo0=LO[k],hi=HI[k];if(lo0<0||hi<0){prev=-1;continue}
-    const lo=Math.max(2.4,lo0);if(hi<lo+.3){prev=-1;continue}const w0=lo+(hi-lo)*j/12,w1=lo+(hi-lo)*(j+1)/12,v=pos.length/3;
-    pos.push(...at(k,side*(T.hw[k]+w0),dy),...at(k,side*(T.hw[k]+w1),dy));uv.push(w0/4,q*T.sp/8,w1/4,q*T.sp/8);
+    const lo=cLo==='sand_lo'?lo0:Math.max(2.4,lo0);if(hi<lo+.3){prev=-1;continue}const w0=lo+(hi-lo)*j/12,w1=lo+(hi-lo)*(j+1)/12,v=pos.length/3,dv=w=>w<1.25?Math.min(dy,.05):dy/* on the road shoulder it lies flat on the asphalt */;
+    pos.push(...at(k,side*(T.hw[k]+w0),dv(w0)),...at(k,side*(T.hw[k]+w1),dv(w1)));uv.push(w0/4,q*T.sp/8,w1/4,q*T.sp/8);
     if(prev>=0)idx.push(v-2,v-1,v,v-1,v+1,v);prev=k}
    if(!idx.length)continue;const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));gg.setIndex(idx);gg.computeVertexNormals();g.add(new THREE.Mesh(gg,mt))}};
  const greenM=new THREE.MeshStandardMaterial({color:new THREE.Color(0x2c6a2e).convertSRGBToLinear(),roughness:.9,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
