@@ -1,0 +1,1 @@
+[["wait", 2000], ["js", "(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"], ["js", "(()=>{PT8.launch({rally:true,circuit:true,mode:'mp',track:15,laps:1,humans:[{id:'merc',alt:0}],ai:[]});const T=RACE.T,r=a=>Array.from(a).map(v=>+v.toFixed(2));return JSON.stringify({N:T.N,x:r(T.x),z:r(T.z),y:r(T.y),hw:r(T.hw),psi:r(T.psi)})})()"]]

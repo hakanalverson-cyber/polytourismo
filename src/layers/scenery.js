@@ -78,7 +78,7 @@ let railTex=null;
 P.armco=(T,g,at,side,off)=>{const N=T.N;railTex=railTex||ctex(4,16,(x,w,h)=>{x.fillStyle='#b9c1c4';x.fillRect(0,0,w,h);x.fillStyle='#7c8689';x.fillRect(0,3,w,2);x.fillRect(0,11,w,2);x.fillStyle='#dfe5e7';x.fillRect(0,1,w,1);x.fillRect(0,9,w,1)});
  const rail=new THREE.MeshStandardMaterial({map:railTex,roughness:.45,metalness:.4,side:THREE.DoubleSide}),pos=[],uv=[],idx=[],posts=[];
  for(let i=0;i<=N;i++){const k=i%N,o=Math.max(0,off[k]),l=side*(T.hw[k]+o),p0=at(k,l,.38),p1=at(k,l,1.0);pos.push(...p0,...p1);uv.push(i*T.sp/4,0,i*T.sp/4,1)}
- for(let i=0;i<N;i++){const k=i%N,k1=(i+1)%N;if(off[k]<0||off[k1]<0)continue;const a=i*2;idx.push(a,a+1,a+2,a+1,a+3,a+2);
+ for(let i=0;i<N;i++){const k=i%N,k1=(i+1)%N;if(off[k]<0||off[k1]<0||Math.abs(off[k]-off[k1])>2.5)continue;const a=i*2;idx.push(a,a+1,a+2,a+1,a+3,a+2);
   if(i%2===0)posts.push([pos[a*3],pos[a*3+1]-.1+.55,pos[a*3+2],1,1,T.psi[k]]);
   if(P.addSeg){const q0=at(k,side*(T.hw[k]+off[k]),0),q1=at(k1,side*(T.hw[k1]+off[k1]),0);P.addSeg(T,q0[0],q0[2],q1[0],q1[2],.3)}}
  if(!idx.length)return;const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));gg.setIndex(idx);gg.computeVertexNormals();g.add(new THREE.Mesh(gg,rail));
@@ -111,14 +111,14 @@ P.trackWall=(T,g,at,dRoad,o)=>{const N=T.N,side=o.side,pos=[],idx=[],col=[],c0=l
    for(const cc of[c0,c0,c1,c1,c1,c0,c0])col.push(cc.r,cc.g,cc.b);
    if(q){const a=v-7,f=(i,j)=>idx.push(a+i,v+i,a+j,v+i,v+j,a+j);f(0,1);f(2,3);f(3,4);f(5,6);if(P.addSeg)P.addSeg(T,run[q-1].x,run[q-1].z,p.x,p.z,.3)}}run=[]};
  for(let q=o.a;q<=o.b;q++){const k=((q%N)+N)%N,l=side*(T.hw[k]+(typeof o.off==='function'?o.off(k):o.off)),p=at(k,l,0),c=Math.cos(T.psi[k]),s=Math.sin(T.psi[k]);
-  if(o.skip&&o.skip(k)||dRoad(p[0],p[2])<Math.abs(l)-T.hw[k]-1.5){flush();continue}run.push({x:p[0],y:p[1]-.15,z:p[2],nx:c*side,nz:-s*side})}
+  if(o.skip&&o.skip(k)||dRoad(p[0],p[2])<Math.abs(l)-T.hw[k]-1.5){flush();continue}if(o.brk&&o.brk(k))flush();run.push({x:p[0],y:p[1]-.15,z:p[2],nx:c*side,nz:-s*side})}
  flush();if(!pos.length)return null;const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setAttribute('color',new THREE.Float32BufferAttribute(col,3));gg.setIndex(idx);gg.computeVertexNormals();
  const m=new THREE.Mesh(gg,new THREE.MeshStandardMaterial({vertexColors:true,roughness:.9,flatShading:true,side:THREE.DoubleSide}));g.add(m);return m};
 /* catch fence: posts and a see-through chain-link sheet on top of a wall line */
 let fenceTex=null;
 P.catchFence=(T,g,at,dRoad,o)=>{fenceTex=fenceTex||ctex(16,16,(x,w,h)=>{x.clearRect(0,0,w,h);x.strokeStyle='rgba(205,210,214,1)';x.lineWidth=1;for(let i=-16;i<32;i+=4){x.beginPath();x.moveTo(i,0);x.lineTo(i+16,16);x.stroke();x.beginPath();x.moveTo(i+16,0);x.lineTo(i,16);x.stroke()}});
- const N=T.N,side=o.side,H=o.h||3.2,y0=o.y0||1,pos=[],uv=[],idx=[],posts=[];let u=0,last=null,run=0;
- for(let q=o.a;q<=o.b;q++){const k=((q%N)+N)%N,l=side*(T.hw[k]+o.off),p=at(k,l,0);if(o.skip&&o.skip(k)||dRoad(p[0],p[2])<Math.abs(l)-T.hw[k]-1.5){last=null;continue}
+ const N=T.N,side=o.side,H=o.h||3.2,y0c=typeof o.y0==='function'?0:(o.y0||1),pos=[],uv=[],idx=[],posts=[];let u=0,last=null,run=0;
+ for(let q=o.a;q<=o.b;q++){const k=((q%N)+N)%N,l=side*(T.hw[k]+(typeof o.off==='function'?o.off(k):o.off)),p=at(k,l,0);if(o.skip&&o.skip(k)||dRoad(p[0],p[2])<Math.abs(l)-T.hw[k]-1.5){last=null;continue}if(o.brk&&o.brk(k))last=null;const y0=typeof o.y0==='function'?o.y0(k):y0c;
   const v=pos.length/3;if(last)u+=Math.hypot(p[0]-last[0],p[2]-last[2])/1.6;pos.push(p[0],p[1]+y0,p[2],p[0],p[1]+y0+H,p[2]);uv.push(u,0,u,H/1.6);if(last)idx.push(v-2,v,v-1,v,v+1,v-1);last=p;if(run++%2===0)posts.push([p[0],p[1]+y0+H/2-.5,p[2],1,1,0])}
  if(!pos.length)return;const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));gg.setIndex(idx);
  const fm=new THREE.MeshBasicMaterial({map:fenceTex,transparent:true,opacity:.55,alphaTest:.2,side:THREE.DoubleSide,depthWrite:false,color:0x9aa3aa});fenceTex.magFilter=THREE.LinearFilter;g.add(new THREE.Mesh(gg,fm));
