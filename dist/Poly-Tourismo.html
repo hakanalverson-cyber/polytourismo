@@ -9573,7 +9573,7 @@ const GEO={};
 /* colours here are given as they should look on screen (sRGB); vertex and instance colours are linear, so convert */
 const lin=h=>new THREE.Color(h).convertSRGBToLinear();
 const farPine=()=>GEO.p||(GEO.p=(()=>{const a=new THREE.ConeGeometry(.3,.55,6,1).toNonIndexed();a.translate(0,.5,0);const b=new THREE.ConeGeometry(.22,.42,6,1).toNonIndexed();b.translate(0,.8,0);const t=new THREE.CylinderGeometry(.035,.045,.3,4,1).toNonIndexed();t.translate(0,.15,0);return merge([t,a,b])})());
-const farBlob=()=>GEO.b||(GEO.b=(()=>{const a=new THREE.IcosahedronGeometry(.36,0).toNonIndexed();a.scale(1,.85,1);a.translate(0,.62,0);const b=new THREE.IcosahedronGeometry(.24,0).toNonIndexed();b.translate(.16,.78,.08);const t=new THREE.CylinderGeometry(.04,.055,.4,4,1).toNonIndexed();t.translate(0,.2,0);return merge([t,a,b])})());
+const farBlob=()=>GEO.b||(GEO.b=(()=>{const a=new THREE.IcosahedronGeometry(.36,0);a.scale(1,.85,1);a.translate(0,.62,0);const b=new THREE.IcosahedronGeometry(.24,0);b.translate(.16,.78,.08);const t=new THREE.CylinderGeometry(.04,.055,.4,4,1).toNonIndexed();t.translate(0,.2,0);return merge([t,a,b])})());
 const farCypress=()=>GEO.c||(GEO.c=(()=>{const a=new THREE.ConeGeometry(.14,.92,6,1).toNonIndexed();a.translate(0,.54,0);const t=new THREE.CylinderGeometry(.03,.03,.1,4,1).toNonIndexed();t.translate(0,.05,0);return merge([t,a])})());
 const farUmb=()=>GEO.u||(GEO.u=(()=>{const a=new THREE.CylinderGeometry(.42,.3,.16,7,1).toNonIndexed();a.translate(0,.88,0);const t=new THREE.CylinderGeometry(.035,.05,.82,4,1).toNonIndexed();t.translate(0,.41,0);return merge([t,a])})());
 const FG={pine:farPine,blob:farBlob,cypress:farCypress,umb:farUmb};

@@ -1,0 +1,1 @@
+[["wait", 2000], ["js", "(()=>{PT8.launch({rally:true,circuit:true,mode:'mp',track:14,laps:1,humans:[{id:'merc',alt:0}],ai:[]});PT8.launch({rally:true,circuit:true,mode:'mp',track:15,laps:1,humans:[{id:'merc',alt:0}],ai:[]});return 1})()"], ["wait", 3000]]
