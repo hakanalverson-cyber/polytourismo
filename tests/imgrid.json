@@ -1,0 +1,1 @@
+[["wait", 2000], ["js", "(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"], ["js", "(()=>{PT8.launch({rally:true,circuit:true,mode:'mp',track:15,laps:1,humans:[{id:'merc',alt:0}],ai:[]});return 1})()"], ["wait", 9000], ["shot", "grid"], ["wait", 4000], ["shot", "grid2"]]

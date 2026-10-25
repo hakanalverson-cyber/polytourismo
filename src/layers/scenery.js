@@ -94,7 +94,7 @@ P.kitPitRow=(g,T,at,a,b,s,d)=>{const N=T.N,st=Math.max(1,Math.round(6.4/T.sp)),M
   const f=-s*Dp/2,add=(geo,m,x,y,z)=>{const o=new THREE.Mesh(geo,m);o.position.set(x,y,z);grp.add(o);return o};
   add(B(Dp,4.4,len),body,0,2.2,len/2);add(B(.12,3.3,len-1.4),dark,f-s*.02,1.65,len/2);add(B(.14,.45,len-1.4),teams[q%teams.length],f-s*.03,3.6,len/2);
   add(B(Dp-1,3,len),body,s*.5,5.9,len/2);add(B(.1,2.2,len-.3),glass,-s*4.56,5.9,len/2);
-  add(B(Dp+2.5,.35,len),roof,-s*.9,7.6,len/2);add(B(.1,.6,len),dark,f-s*2.2,7.3,len/2)}
+  add(B(Dp+.6,.35,len),roof,0,7.6,len/2);add(B(.1,.6,len),dark,f-s*.32,7.3,len/2)}
  /* the pit lane itself: tarmac from the pit wall to the garage doors, with the white working-lane line */
  {const rib=(l0,l1,y,c)=>{const pos=[],idx=[];let n=0;for(let q=a;q<=b;q++){const k=((q%N)+N)%N,h=T.hw[k];pos.push(...at(k,s*(h+l0),y),...at(k,s*(h+l1),y));if(n)idx.push(2*n-2,2*n,2*n-1,2*n-1,2*n,2*n+1);n++}
    const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setIndex(idx);gg.computeVertexNormals();

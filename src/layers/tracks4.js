@@ -83,7 +83,9 @@ function dressIM(T,sc){
     catch fences and tyre walls stand where they stand at the real track. Nothing closer than 2.5 m to the road edge ---- */
  /* the pits are on the right of the start straight at the real circuit (side -1), garages from 56 samples before the line to 60 after */
  const PS=-1,K0=-56,K1=60,inPit=k=>k>=N+K0||k<=K1+2;
- const get=(c,side,k)=>irOff[c][side<0?0:1][((k%N)+N)%N],pitSide=(side,k)=>side===PS&&inPit(k);
+ /* opposite the pits, along the whole start straight: a clean green wall with catch fencing 8 m off the road, grandstands right behind it */
+ const inStart=k=>{k=((k%N)+N)%N;return k>=N-70||k<=K1+90};
+ const get=(c,side,k)=>{k=((k%N)+N)%N;if(side===-PS&&inStart(k)){if(c==='wall'||c==='fence')return 8;return -1}return irOff[c][side<0?0:1][k]},pitSide=(side,k)=>side===PS&&inPit(k);
  const brk=(c,side)=>k=>{const a=get(c,side,k),b=get(c,side,k-1);return a<0||b<0||Math.abs(a-b)>2.5};
  /* gravel and green run-off between their inner and outer edge, in 12 bands so they follow the ground */
  const ribbon=(cLo,cHi,side,mt,dy)=>{for(let j=0;j<12;j++){const pos=[],uv=[],idx=[];let prev=-1;
@@ -104,11 +106,11 @@ function dressIM(T,sc){
   P.catchFence(T,g,at,dRoad,{side,a:0,b:N,h:3,off:k=>onWall(k)?Math.max(2.5,get('wall',side,k))+.2:Math.max(2.5,get('fence',side,k)),y0:k=>onWall(k)?1.05:0,
    skip:k=>get('fence',side,k)<0||pitSide(side,k),brk:k=>brk('fence',side)(k)||onWall(k)!==onWall(k-1)})}
  /* TYRE WALLS: two tyres high, black with a white and a red block now and then; every link a collider */
- {const B=[],W=[],R=[];for(const side of[-1,1])for(let k=0;k<N;k++){const o=get('tyre',side,k);if(o<1.5||pitSide(side,k))continue;/* tyre markers set into the verge are not walls */const o1=get('tyre',side,k+1),e0=Math.max(2.5,o)+.55,e1=o1>=0&&Math.abs(o-o1)<2.5?Math.max(2.5,o1)+.55:-1;
+ {const B=[],W=[],R=[];for(const side of[-1,1])for(let k=0;k<N;k++){const o=get('tyre',side,k);if(o<1.5||pitSide(side,k))continue;/* tyre markers set into the verge are not walls */const o1=get('tyre',side,k+1),e0=Math.max(3.5,o)+.55,e1=o1>=0&&Math.abs(o-o1)<2.5?Math.max(3.5,o1)+.55:-1;
    for(let t=0;t<3;t++){if(t&&e1<0)break;const f=t/3,pa=at(k,side*(T.hw[k]+e0),0),pb=e1<0?pa:at(k+1,side*(T.hw[(k+1)%N]+e1),0),x=pa[0]+(pb[0]-pa[0])*f,y=pa[1]+(pb[1]-pa[1])*f,z=pa[2]+(pb[2]-pa[2])*f,blk=Math.floor((k*3+t)/5)%9;
     for(let h=0;h<2;h++)(blk===0?R:B).push([x,y+.25+h*.5,z,1,1,0])}
    if(e1>=0&&P.addSeg){const p1=at(k,side*(T.hw[k]+e0),0),p2=at(k+1,side*(T.hw[(k+1)%N]+e1),0);P.addSeg(T,p1[0],p1[2],p2[0],p2[2],.8)}}
-  const cg=new THREE.CylinderGeometry(.55,.55,.5,8);inst(g,cg,M_(0x0c0d10),B);if(R.length)inst(g,cg,M_(0xd8392f),R)}
+  const cg=new THREE.CylinderGeometry(.55,.55,.5,8);inst(g,cg,M_(0x0c0d10),B);if(R.length)inst(g,cg,M_(0x6e0c08),R)}
  const behind=(side,k)=>{let m=-1;for(const c of['wall','rail','tyre','fence']){const v=get(c,side,k);if(v>m)m=v}return m};
 
  /* helpers */
@@ -140,11 +142,24 @@ function dressIM(T,sc){
   for(const sx of[-1,1]){const col=new THREE.Mesh(new THREE.BoxGeometry(1.6,9.6,2.4),M_(0xe6e8ea));col.position.set(sx*wd,4.8,0);bp.add(col)}
   const ban=new THREE.Mesh(new THREE.PlaneGeometry(wd*1.5,1.6),new THREE.MeshBasicMaterial({map:signCanvas('IMOLA',512,64,'#2c6cd0','#f1f1f1',34),side:THREE.DoubleSide}));ban.position.set(0,10.4,2.05);bp.add(ban);const b2=ban.clone();b2.position.z=-2.05;bp.add(b2)}}
  /* tyre stacks as cones marking the pit exit, small detail */
- /* grandstands where the real ones stand, turned to face the track */
- for(const sd of IR.st){const[cx,cz,,len,dep,,ang]=sd;let k=0,bd=1e18;for(let i=0;i<N;i++){const d=(T.x[i]-cx)**2+(T.z[i]-cz)**2;if(d<bd){bd=d;k=i}}
-  let th=-ang,fx=-Math.sin(ang),fz=Math.cos(ang);if(fx*(T.x[k]-cx)+fz*(T.z[k]-cz)<0){th+=PI;fx=-fx;fz=-fz}/* local +z (the stand's front) toward the road */
-  const rows=Math.max(4,Math.min(14,Math.round(dep*.55/.9))),D=rows*.9,px=cx+fx*D/2,pz=cz+fz*D/2;if(dRoad(px,pz)<3)continue;{const l=(cx-T.x[k])*Math.cos(T.psi[k])-(cz-T.z[k])*Math.sin(T.psi[k]);if(Math.sign(l)===PS&&inPit(k))continue}
-  const grp=new THREE.Group();grp.position.set(px,T.terr(px,pz),pz);grp.rotation.y=th;g.add(grp);const st=P.kitStand(Math.min(len,190),rows,[0x2f6b3a,0xf1f1f1,0xd8392f]);grp.add(st);if(P.kitCrowd)P.kitCrowd(st,Math.min(len,190),rows,.85)}
+ /* grandstands where the real ones stand: long stands are cut into 40 m sections, each one squared to the road beside it and set back
+    behind the barriers (never closer than 4 m past the wall, fence or tyres), standing on a concrete plinth so nothing hangs in the air */
+ {const plM=M_(0x8a8f94);
+  for(const sd of IR.st){const[cx,cz,,len,dep,,ang]=sd,ax=Math.cos(ang),az=Math.sin(ang),ns=Math.max(1,Math.round(len/42)),sl=Math.min(40,len/ns-2);
+   const rows=Math.max(4,Math.min(12,Math.round(dep*.55/.9))),D=rows*.9;
+   for(let j=0;j<ns;j++){const t=-len/2+(j+.5)*len/ns,x=cx+ax*t,z=cz+az*t;let k=0,bd=1e18;for(let i=0;i<N;i++){const d=(T.x[i]-x)**2+(T.z[i]-z)**2;if(d<bd){bd=d;k=i}}
+    const l=(x-T.x[k])*Math.cos(T.psi[k])-(z-T.z[k])*Math.sin(T.psi[k]),side=Math.sign(l)||1;if(side===PS&&inPit(k))continue;if(side===-PS&&inStart(k))continue;/* the start straight gets its own continuous run below */
+    let need=6;for(let d=-8;d<=8;d++){const v=behind(side,k+d);if(v>=0)need=Math.max(need,Math.max(2.5,v)+4)}
+    const off=side===-PS&&inStart(k)?need+1:Math.max(need,Math.abs(l)-T.hw[k]-D/2);if(off>90)continue;
+    const[px,,pz]=at(k,side*(T.hw[k]+off),0);if(dRoad(px,pz)<need-1)continue;
+    const grp=new THREE.Group(),gy=T.terr(px,pz);grp.position.set(px,gy,pz);grp.rotation.y=T.psi[k];g.add(grp);
+    const st=P.kitStand(sl,rows,[0x2f6b3a,0xf1f1f1,0xd8392f]);st.rotation.y=-side*PI/2;grp.add(st);if(P.kitCrowd)P.kitCrowd(st,sl,rows,.85);
+    const pl=new THREE.Mesh(new THREE.BoxGeometry(D+.5,8,sl),plM);pl.position.set(side*(D/2),-4.02,0);grp.add(pl)}}}
+ /* the main grandstands: one unbroken run along the start straight opposite the pits, right behind the wall and fence */
+ {const plM=M_(0x8a8f94),side=-PS,rows=10,D=rows*.9,st=Math.max(1,Math.round(42/T.sp));
+  for(let k=-64;k<K1+84;k+=st){const kk=((k%N)+N)%N,[px,,pz]=at(kk,side*(T.hw[kk]+11),0),grp=new THREE.Group();grp.position.set(px,T.terr(px,pz),pz);grp.rotation.y=T.psi[kk];g.add(grp);
+   const sl=Math.hypot(T.x[(kk+st)%N]-T.x[kk],T.z[(kk+st)%N]-T.z[kk])-.6;const s2=P.kitStand(sl,rows,[0x2f6b3a,0xf1f1f1,0xd8392f]);s2.rotation.y=-side*PI/2;s2.position.z=sl/2;grp.add(s2);if(P.kitCrowd)P.kitCrowd(s2,sl,rows,.85);
+   const pl=new THREE.Mesh(new THREE.BoxGeometry(D+.5,8,sl),plM);pl.position.set(side*(D/2),-4.02,sl/2);grp.add(pl)}}
  /* the stock world's loose random cone trees go; trees keep 3 m clear of anything built (stands, pits, bridges) */
  {const cnt=new Set(),rm=[];sc.traverse(m=>{const q=m.geometry&&m.geometry.parameters;if(m.isInstancedMesh&&m.geometry.type==='ConeGeometry'&&q.radius>2&&q.radius<2.5&&q.height>6&&q.height<7){rm.push(m);cnt.add(m.count)}});
   sc.traverse(m=>{if(m.isInstancedMesh&&m.geometry.type==='CylinderGeometry'&&cnt.has(m.count)&&m.parent===sc)rm.push(m)});rm.forEach(m=>m.parent&&m.parent.remove(m))}
