@@ -30,7 +30,7 @@ const ssI=sampleTrack;sampleTrack=d=>{const T=ssI(d);if(!d.imola)return T;
  if(!real)for(const c of kc){const side=c.dir>0?-1:1;for(let q=c.a-3;q<=c.b+6;q++)T.trapS[((q%N)+N)%N]=side}
  const s0=T.surf;T.surf=(x,z,y)=>{const r=s0(x,z,y);if(r.road)return r;const cx=Math.floor(x/16),cz=Math.floor(z/16);let bd=1e9,bi=-1,bl=0;
   for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const ids=T.grid.get((cx+a)*8192+cz+b);if(!ids)continue;for(const i of ids){const j=(i+1)%N;if(T.gap[i]||T.gap[j])continue;const dx=T.x[j]-T.x[i],dz=T.z[j]-T.z[i],l2=dx*dx+dz*dz||1,f=Math.max(0,Math.min(1,((x-T.x[i])*dx+(z-T.z[i])*dz)/l2)),px=T.x[i]+dx*f,pz=T.z[i]+dz*f,dd=Math.hypot(x-px,z-pz);if(dd<bd){bd=dd;bi=i;bl=(x-px)*Math.cos(T.psi[i])-(z-pz)*Math.sin(T.psi[i])}}}
-  if(bi>=0&&real){const si=bl<0?0:1,lo=irOff.sand_lo[si][bi],hi=irOff.sand_hi[si][bi],ex=Math.abs(bl)-T.hw[bi];if(lo>=0&&hi>lo&&ex>Math.max(2.4,lo)&&ex<hi)r.trap=1}
+  if(bi>=0&&real){const si=bl<0?0:1,SE=T._sand&&T._sand[si],lo=SE?SE[0][bi]:irOff.sand_lo[si][bi],hi=SE?SE[1][bi]:irOff.sand_hi[si][bi],ex=Math.abs(bl)-T.hw[bi];if(lo>=0&&hi>lo&&ex>Math.max(2.4,lo)&&ex<hi)r.trap=1}
   else if(bi>=0&&T.trapS[bi]&&Math.sign(bl)===T.trapS[bi]){const ex=Math.abs(bl)-T.hw[bi];if(ex>2.3&&ex<13.6)r.trap=1}
   return r};
  return T};
@@ -78,7 +78,7 @@ function dressIM(T,sc){
  /* SAND TRAPS on the outside of every corner (really slow: cars bog down in them) with a rake-line pattern */
  const sandTex=ctex(32,32,(x,w,h)=>{x.fillStyle='#e6d29b';x.fillRect(0,0,w,h);x.fillStyle='#d4bd80';for(let j=0;j<h;j+=4)x.fillRect(0,j,w,1);x.fillStyle='#f1e3b4';for(let j=2;j<h;j+=8)x.fillRect(0,j,w,1)});
  const sandM=new THREE.MeshStandardMaterial({map:sandTex,roughness:1,side:THREE.DoubleSide});sandTex.wrapS=sandTex.wrapT=THREE.RepeatWrapping;
- sandM.polygonOffset=true;sandM.polygonOffsetFactor=-2;sandM.polygonOffsetUnits=-2;
+ sandM.polygonOffset=true;sandM.polygonOffsetFactor=-4;sandM.polygonOffsetUnits=-8;
  /* ---- the real circuit's trackside, measured from a survey of Imola (imola_ref.js): gravel, green run-offs, green walls, Armco,
     catch fences and tyre walls stand where they stand at the real track. Nothing closer than 2.5 m to the road edge ---- */
  /* the pits are on the right of the start straight at the real circuit (side -1), garages from 56 samples before the line to 60 after */
@@ -95,15 +95,27 @@ function dressIM(T,sc){
  const irC={};for(const c in irOff)irC[c]=c==='wall'||c==='fence'||c==='rail'?irOff[c].map(smooth):irOff[c];
  const get=(c,side,k)=>{k=((k%N)+N)%N;return irC[c][side<0?0:1][k]},pitSide=(side,k)=>side===PS&&inPit(k);
  const brk=(c,side)=>k=>{const a=get(c,side,k),b=get(c,side,k-1);return a<0||b<0||Math.abs(a-b)>2.5};
+ /* gravel and green run-off edges, cleaned up: gaps of up to 12 samples are bridged, both edges are smoothed so the outline flows instead
+    of jumping, and scraps under 6 samples are dropped. A trap never stops or restarts at random */
+ const roC={};const roEdge=(cLo,cHi,side)=>{const key=cLo+side;if(roC[key])return roC[key];const si=side<0?0:1,lo=Float32Array.from(irC[cLo][si]),hi=Float32Array.from(irC[cHi][si]),n=N;
+  for(let k=0;k<n;k++){if(pitSide(side,k)||lo[k]<0||hi[k]<0||hi[k]<Math.max(2.4,lo[k])+.5||cLo==='green_lo'&&lo[k]>6/* painted run-off starts at the kerb; loose patches out in the grass go */){lo[k]=hi[k]=-1}}
+  const ok=k=>hi[(k+n)%n]>=0;for(let k=0;k<n;k++){if(ok(k)||!ok(k-1))continue;let e=1;while(e<=12&&!ok(k+e))e++;if(e>12)continue;const a0=(k-1+n)%n,b0=(k+e)%n;
+   for(let t=0;t<e;t++){const f=(t+1)/(e+1),q=(k+t)%n;lo[q]=lo[a0]+(lo[b0]-lo[a0])*f;hi[q]=hi[a0]+(hi[b0]-hi[a0])*f}}
+  for(let it=0;it<4;it++)for(const A of[lo,hi]){const c=Float32Array.from(A);for(let k=0;k<n;k++){if(c[k]<0)continue;const p=c[(k-1+n)%n],q=c[(k+1)%n];if(p>=0&&q>=0)A[k]=(p+2*c[k]+q)/4}}
+  for(let k=0;k<n;k++){if(!ok(k)||ok(k-1))continue;let e=0;while(e<n&&ok(k+e))e++;if(e<6)for(let t=0;t<e;t++)lo[(k+t)%n]=hi[(k+t)%n]=-1}
+  /* green run-off never lies over the gravel: where they overlap the green keeps only the part outside the trap */
+  if(cLo==='green_lo'){const[sl,sh]=roEdge('sand_lo','sand_hi',side);for(let k=0;k<n;k++){if(lo[k]<0||sh[k]<0)continue;const a=Math.max(lo[k],sl[k]),b=Math.min(hi[k],sh[k]);if(b<=a)continue;
+    const inner=sl[k]-lo[k],outer=hi[k]-sh[k];if(inner<1&&outer<1){lo[k]=hi[k]=-1}else if(inner>=outer)hi[k]=sl[k]-.2;else lo[k]=sh[k]+.2}}
+  return roC[key]=[lo,hi]};
  /* gravel and green run-off between their inner and outer edge, in 12 bands so they follow the ground */
  const ribbon=(cLo,cHi,side,mt,dy)=>{for(let j=0;j<12;j++){const pos=[],uv=[],idx=[];let prev=-1;
-   for(let q=0;q<=N;q++){const k=q%N,lo0=get(cLo,side,k),hi=get(cHi,side,k);if(lo0<0||hi<0||pitSide(side,k)){prev=-1;continue}
-    const lo=Math.max(2.4,lo0);if(hi<lo+.5){prev=-1;continue}const w0=lo+(hi-lo)*j/12,w1=lo+(hi-lo)*(j+1)/12,v=pos.length/3;
+   const[LO,HI]=roEdge(cLo,cHi,side);for(let q=0;q<=N;q++){const k=q%N,lo0=LO[k],hi=HI[k];if(lo0<0||hi<0){prev=-1;continue}
+    const lo=Math.max(2.4,lo0);if(hi<lo+.3){prev=-1;continue}const w0=lo+(hi-lo)*j/12,w1=lo+(hi-lo)*(j+1)/12,v=pos.length/3;
     pos.push(...at(k,side*(T.hw[k]+w0),dy),...at(k,side*(T.hw[k]+w1),dy));uv.push(w0/4,q*T.sp/8,w1/4,q*T.sp/8);
-    if(prev>=0&&Math.abs(hi-get(cHi,side,prev))<4&&Math.abs(lo0-get(cLo,side,prev))<4)idx.push(v-2,v-1,v,v-1,v+1,v);prev=k}
+    if(prev>=0)idx.push(v-2,v-1,v,v-1,v+1,v);prev=k}
    if(!idx.length)continue;const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));gg.setIndex(idx);gg.computeVertexNormals();g.add(new THREE.Mesh(gg,mt))}};
- const greenM=new THREE.MeshStandardMaterial({color:new THREE.Color(0x0e6a48).convertSRGBToLinear(),roughness:.9,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
- for(const side of[-1,1]){ribbon('green_lo','green_hi',side,greenM,.1);ribbon('sand_lo','sand_hi',side,sandM,.14)}
+ const greenM=new THREE.MeshStandardMaterial({color:new THREE.Color(0x2c6a2e).convertSRGBToLinear(),roughness:.9,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
+ for(const side of[-1,1]){ribbon('green_lo','green_hi',side,greenM,.18);ribbon('sand_lo','sand_hi',side,sandM,.25)}T._sand=[roEdge('sand_lo','sand_hi',-1),roEdge('sand_lo','sand_hi',1)];
  for(const side of[-1,1]){
   /* green concrete walls */
   P.trackWall(T,g,at,dRoad,{side,a:0,b:N,off:k=>Math.max(2.5,get('wall',side,k)),h:1.1,col:0x0c5a22,top:0xe9ebe6/* the scene grading halves saturation: a deep green reads as Imola's green */,skip:k=>get('wall',side,k)<0||pitSide(side,k),brk:k=>get('wall',side,k-1)<0});
@@ -137,11 +149,8 @@ function dressIM(T,sc){
   if(0)board(0,0,String(i+1),2.4,1.5,'#f2c76b','#10151b',2.1);
   const k=c.pi,mo=behind(side,k),[mx,my,mz]=at(k,side*(T.hw[k]+(mo>=0?Math.max(2.5,mo)+3.5:18.5)),0),mp=new THREE.Group();mp.position.set(mx,my,mz);mp.rotation.y=T.psi[k];g.add(mp);
   const hut=P.kitHut();hut.rotation.y=-side*PI/2;mp.add(hut);const fp=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,3.4,5),M_(0xcfd3d6));fp.position.set(1.1,3.7,0);mp.add(fp);const fl=new THREE.Mesh(new THREE.BoxGeometry(.05,.7,1.1),MB([0xf2c76b,0xffffff,0x2c6cd0][i%3]));fl.position.set(1.1,5.2,.55);mp.add(fl)});
- /* start/finish: gantry, painted line + grid boxes, pit row, tower, stands, footbridge, advert boards */
- {  /* grid boxes behind the line */
-  /* exactly where gridSlot() puts the cars: row = slot>>1 at -(5+row*5) samples, lateral +-0.36 x hw[0] */
-  for(let row=0;row<6;row++){const k=(((-(5+row*5))%N)+N)%N;for(const s of[-1,1]){const[bx,by,bz]=at(k,s*T.hw[0]*.36,.09),bx2=new THREE.Mesh(new THREE.PlaneGeometry(3.1,5.4),MB(0xf1f1f1));bx2.rotation.x=-PI/2;bx2.rotation.order='YXZ';bx2.rotation.y=T.psi[k];bx2.position.set(bx,by,bz);g.add(bx2);
-     const inn=new THREE.Mesh(new THREE.PlaneGeometry(2.7,5),MB(0x3b3d43));inn.rotation.copy(bx2.rotation);inn.position.set(bx,by+.012,bz);g.add(inn)}}
+ /* start/finish: gantry, painted line, pit row, tower, stands, footbridge, advert boards */
+ {
   /* pit buildings on the infield side */
   const is=PS;P.kitPitRow(g,T,at,K0,K1+2,is,16);
   {const k=3,[px,py,pz]=at(k,is*(T.hw[k]+34),0),b=new THREE.Group();b.position.set(px,T.terr(px,pz),pz);b.rotation.y=T.psi[k];g.add(b);{const tw=P.kitTower(20);/* Imola's race control: red and white bands, a glass box on top */tw.children[0].material=M_(0xd8392f);for(let i=0;i<4;i++){const r=new THREE.Mesh(new THREE.CylinderGeometry(2.45-.08*i,2.5-.08*i,1.6,8),M_(0xf1f1f1));r.position.y=3+i*4.4;tw.add(r)}tw.children[1].material=M_(0x6f93ad,{roughness:.15,metalness:.4});b.add(tw)}if(P.addPt)P.addPt(T,px,pz,4.2)}
