@@ -21,6 +21,8 @@ src=src.replace("color:d.id==3?0x7af0ff:0xfff0c8","color:d.id==3?0xffe2a8:0xfff0
 # absolute speed a car descending a hill had its damper pushing it up, so on downhills the tyres barely touched and grip vanished.
 src=rep(src,"vi=c.vy-c.wpt*WL[i][1]+c.wrl*WL[i][0]","vi=c.vy-(c._gv||0)-c.wpt*WL[i][1]+c.wrl*WL[i][0]")
 src=rep(src,"x.fillStyle='#e8e8e8';x.fillRect(w/2-1,0,2,h/2)}","if(!(d.ra||d.imola)){x.fillStyle='#e8e8e8';x.fillRect(w/2-1,0,2,h/2)}else{/* real circuits: worn tarmac like the Nordschleife */const q=rngf(5);for(let i=0;i<120;i++){x.fillStyle=q()<.5?'rgba(0,0,0,.05)':'rgba(255,255,255,.035)';x.fillRect(q()*w|0,q()*h|0,1,1)}x.fillStyle='#ffffffc0';x.fillRect(1,0,1,h);x.fillRect(w-2,0,1,h)}}")
+# Imola: no asphalt edge strip outside the white line (grass meets the line as at the real track; kerbs only at corners)
+src=rep(src,"sc.add(ribbon(T,k=>T.hw[k],k=>T.hw[k]+1.1,1,.06,cm,2.2));sc.add(ribbon(T,k=>-T.hw[k]-1.1,k=>-T.hw[k],1,.06,cm,2.2));","if(!d.imola){sc.add(ribbon(T,k=>T.hw[k],k=>T.hw[k]+1.1,1,.06,cm,2.2));sc.add(ribbon(T,k=>-T.hw[k]-1.1,k=>-T.hw[k],1,.06,cm,2.2))}")
 # real circuits: no stock marker posts or stock sign gantries (their own dressing replaces them)
 src=rep(src,"const posts=[],caps=[];for(let i=0;i<T.N;i+=8){","const posts=[],caps=[];for(let i=0;i<T.N;i+=(d.ra||d.imola)?1e9:8){")
 src=rep(src,"for(let k=60;k<T.N;k+=140){if(T.gap[k])continue;const g=new THREE.Group();","for(let k=60;k<T.N;k+=140){if(T.gap[k]||d.ra||d.imola)continue;const g=new THREE.Group();")

@@ -106,7 +106,10 @@ function dressIM(T,sc){
   for(let it=0;it<4;it++)for(const A of[lo,hi]){const c=Float32Array.from(A);for(let k=0;k<n;k++){if(c[k]<0)continue;const p=c[(k-1+n)%n],q=c[(k+1)%n];if(p>=0&&q>=0)A[k]=(p+2*c[k]+q)/4}}
   for(let k=0;k<n;k++){if(!ok(k)||ok(k-1))continue;let e=0;while(e<n&&ok(k+e))e++;if(e<6)for(let t=0;t<e;t++)lo[(k+t)%n]=hi[(k+t)%n]=-1}
   /* a gravel trap starts right at the road edge (or the outside of the kerb): no strip of grass between the track and the gravel */
-  if(cLo==='sand_lo')for(let k=0;k<n;k++)if(lo[k]>=0)lo[k]=kerbW[side<0?0:1][k]>0?kerbW[side<0?0:1][k]:.05;
+  if(cLo==='sand_lo'){const inC=new Uint8Array(n);for(const c of kc)if((c.dir>0?-1:1)===side)for(let q=c.a-10;q<=c.b+30;q++)inC[((q%n)+n)%n]=1;/* the outside of the corner only */
+   /* gravel only at the corners (from just before turn-in to past the exit, where cars run wide), as in the survey model: none along the straights */
+   for(let k=0;k<n;k++)if(lo[k]>=0){if(!inC[k]){lo[k]=hi[k]=-1;continue}if(lo[k]<=6)lo[k]=kerbW[side<0?0:1][k]>0?kerbW[side<0?0:1][k]:0/* a trap that starts near the road starts at it; one set well back keeps its run-off in front */}
+   for(let k=0;k<n;k++){if(hi[k]<0||hi[(k-1+n)%n]>=0)continue;let e=0;while(e<n&&hi[(k+e)%n]>=0)e++;if(e<6)for(let t=0;t<e;t++)lo[(k+t)%n]=hi[(k+t)%n]=-1}}
   /* green run-off never lies over the gravel: where they overlap the green keeps only the part outside the trap */
   if(cLo==='green_lo'){const[sl,sh]=roEdge('sand_lo','sand_hi',side);for(let k=0;k<n;k++){if(lo[k]<0||sh[k]<0)continue;const a=Math.max(lo[k],sl[k]),b=Math.min(hi[k],sh[k]);if(b<=a)continue;
     const inner=sl[k]-lo[k],outer=hi[k]-sh[k];if(inner<1&&outer<1){lo[k]=hi[k]=-1}else if(inner>=outer)hi[k]=sl[k]-.2;else lo[k]=sh[k]+.2}}
