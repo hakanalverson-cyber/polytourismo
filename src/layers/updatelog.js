@@ -3,6 +3,18 @@
 'use strict';
 const P=window.PT8;
 P.LOG=[
+ {v:'0.12',d:'Oct 25, 2026',t:'New Road Atlanta and Imola scenery, smarter CPU, gearbox choice',items:[
+  'Road Atlanta rebuilt from photos of the real place: Georgia pine woods with oaks mixed in now fill the land all around the circuit, close behind the grass banks. Red clay run-offs and worn clay patches, white concrete walls with catch fencing along the straights, and big generic billboards up on the banks before the main corners.',
+  'Imola rebuilt from photos too: autumn parkland with orange, gold and rust trees among the green, dark cypresses and stone pines. The town on the hill with its brick bell tower and a tall modern block, a red and white race control tower with a glass top, green walls and pit wall with catch fencing, a green-white-red stripe on the kerbs, and spectators in the stands on the banks.',
+  'No street lights on the real circuits. Deeper, less washed-out grass on both.',
+  'CPU cars can no longer pass through tunnel walls, barriers or anything else the player hits. They now follow a proper racing line (outside, apex, outside) worked out for each track, and plan corner speeds from it: Road Atlanta CPU lap 112.5 s to 104 s, with no crashes on any track. Medal times were adjusted to match.',
+  'Cars keep their grip going downhill: the suspension used to read a falling road as the car lifting off, so the tyres went light on every descent. Now it follows the ground under the car.',
+  'The ground meets the edge of the track flush on every map: no more grey wall or step beside the asphalt.',
+  'Choose Manual or Automatic as the first step when you enter Rally or Track. The automatic gearbox shifts in the power band, holds a gear briefly after each shift, never shifts in mid-air, and kicks down when you floor it.',
+  'Gravel is looser for cars that are weak on it: 50% less grip for weak cars, 25% for neutral ones and 10% for strong ones. The car card shows the real figure.',
+  'Multiplayer with damage on: every player gets their own damage readout beside their HUD.',
+  'Brand Central: buying a car plays the full showcase sequence again.',
+  'Menus: the car strip scrollbar no longer pushes the cards up, and the yellow accents on tabs, maker cards and highlights are now white.']},
  {v:'0.11',d:'Oct 25, 2026',t:'Smoother ride, cleaner scenery, faster',items:[
   'No more jitter on hills: the drawn body no longer bobs as the road climbs and falls. The ride-height drop is measured once per car instead of every frame, the anti-clipping lift is capped and eased, and the real elevation data is smoothed.',
   'Nordschleife: the pale green walls behind the trees are gone. About 380 m from the road the ground used to jump up to the lap\'s average height, a 150 m cliff beside the low valleys. It now eases out gently, and the wooded slopes beyond the tree line carry distant forest.',

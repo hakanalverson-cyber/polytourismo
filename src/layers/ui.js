@@ -332,7 +332,7 @@ function careerPick(ev){const sv=P.SV(),el=P.eligibleCars(ev.cap);let s=sv.sel[0
  if(el.length){const rally=ev.type==='rally';el.sort((a,b)=>CLS.indexOf(b.cls)-CLS.indexOf(a.cls)||(rally?b.off-a.off:b.top-a.top));const c=el[0];return{id:c.id,alt:P.owns(c.id,0)?0:1}}
  const l=P.loanerFor(ev.cap,ev.type==='rally');return{id:l.id,alt:0,loan:true}}
 function openCareer(){ST.ret='s8cards';renderCareer();show('s8career')}
-const fxChip=(car,grv)=>{const f=P.surfFx(car,grv);return`<span class="fx ${f.g>=0?'up':'dn'}">${grv?'Gravel':'Tarmac'} ${f.g>=0?'+':''}${f.g}% grip</span>`+(f.t?`<span class="fx dn">${f.t}% speed</span>`:'')};
+const fxChip=(car,grv)=>{const f=Object.assign({},P.surfFx(car,grv));if(grv&&P.gravelSlip)f.g=Math.round(((1+f.g/100)/P.gravelSlip(car)-1)*100);return`<span class="fx ${f.g>=0?'up':'dn'}">${grv?'Gravel':'Tarmac'} ${f.g>=0?'+':''}${f.g}% grip</span>`+(f.t?`<span class="fx dn">${f.t}% speed</span>`:'')};
 function fxBoth(car){const r=P.surfRank(car);return`<div class="fxrow"><span class="fx ${r.tar==='good'?'up':r.tar==='poor'?'dn':''}">Tarmac &middot; ${r.tar==='good'?'strong':r.tar==='ok'?'fair':'weak'}</span><span class="fx ${r.grv==='good'?'up':r.grv==='poor'?'dn':''}">Gravel &middot; ${r.grv==='good'?'strong':r.grv==='ok'?'fair':'weak'}</span></div>`}
 function renderCareer(){const cr=P.careerRank(),rk=ST.crank==null?cr:Math.min(ST.crank,cr),R_=P.RANKS[rk];
  $('cTitle').textContent=R_.n;$('cSub').textContent='Rank '+(rk+1)+' / '+P.RANKS.length;
@@ -428,14 +428,17 @@ function stepReveal(dt){const r=S.rev;if(!r)return;r.t+=dt;const u=Math.min(1,r.
  if(u>=1){w.position.z=0;w.rotation.x=0;S.rev=null;if(r.full){const sh=$('s8show');setTimeout(()=>{if(nm)nm.style.opacity=0;if(sh){sh.style.opacity='';sh.style.pointerEvents=''}},3400)}}}
 
 /* purchase: fade to black -> black showcase (photos + stats) -> "Add to garage" -> fade back to the showroom */
-function buyShowcase(car){let o=$('shBuy');if(!o){o=document.createElement('div');o.id='shBuy';o.style.cssText='position:fixed;inset:0;z-index:80;background:#000;opacity:0;pointer-events:none;transition:opacity .55s ease;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2.4vh;color:#fff;font-family:system-ui,sans-serif;padding:3vh 4vw;text-align:center';document.body.appendChild(o)}
- const f=statBars(car,null),idx=S&&S.idx!=null?S.idx:P.CARS.indexOf(car);
+function buyShowcase(car){let o=$('shBuy');if(!o){o=document.createElement('div');o.id='shBuy';o.style.cssText='position:fixed;inset:0;z-index:8500;background:#000;opacity:0;pointer-events:none;transition:opacity .55s ease;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2.4vh;color:#fff;font-family:system-ui,sans-serif;padding:3vh 4vw;text-align:center';document.body.appendChild(o)}
+ const f=statBars(car,null),idx=P.modelOf?P.modelOf(car.id,SR.alt):S&&S.idx!=null?S.idx:P.CARS.indexOf(car);
  const best=f.bars.slice(0,4).reduce((a,b)=>b[1]>a[1]?b:a);const good={'Top speed':'FLAT OUT ON THE STRAIGHTS','Accel':'EXPLOSIVE OFF THE LINE','Handling':'GLUED THROUGH THE CORNERS','Braking':'LATE ON THE BRAKES'}[best[0]];
  o.innerHTML='<div style="font:700 clamp(10px,1.2vw,15px)/1 system-ui;letter-spacing:.45em;color:#f2c76b">NEW CAR &middot; '+(car.cls?'CLASS '+car.cls:'')+'</div>'
   +'<div style="font:italic 800 clamp(28px,5vw,70px)/1 system-ui;text-transform:uppercase;letter-spacing:.01em">'+car.name+'</div>'
   +'<div style="font:700 clamp(10px,1.1vw,14px)/1 system-ui;letter-spacing:.3em;color:#9fb2bb">'+(car.type||'')+' &nbsp;/&nbsp; '+good+'</div>'
   +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:2vw;width:min(900px,90vw)">'+f.bars.slice(0,4).map(b=>'<div><div style="font:700 11px/1 system-ui;letter-spacing:.25em;color:#7d909a;margin-bottom:8px">'+b[0].toUpperCase()+'</div><div style="font:italic 800 clamp(20px,2.6vw,36px)/1 system-ui">'+b[2]+'</div><div style="height:4px;background:#1b2329;margin-top:8px"><div style="height:100%;width:'+Math.round(b[1]*100)+'%;background:#f2c76b"></div></div></div>').join('')+'</div>'
+  +'<div id="shBuyPh" style="display:flex;gap:1.6vw;justify-content:center;width:min(1100px,92vw)"></div>'
   +'<button id="shBuyGo" style="margin-top:1.5vh;padding:14px 46px;font:italic 800 16px system-ui;letter-spacing:.3em;text-transform:uppercase;background:#e8edf0;color:#0a0f12;border:0;cursor:pointer;opacity:0;transition:opacity .6s ease">Add to garage</button>';
+ /* the three photos come from the same photo set as the showroom panel (they were referenced but never defined, so the whole sequence threw and never showed) */
+ const box=o.querySelector('#shBuyPh');let ph=null;try{ph=window.PT7&&(window.PT7.photos[idx]||window.PT7.makePhotos(idx))}catch(e){ph=null}
  for(let i=0;i<3;i++){const cv=document.createElement('canvas');cv.width=420;cv.height=262;cv.style.cssText='width:30%;max-width:340px;height:auto;border:1px solid #ffffff22;opacity:0;transform:translateY(16px);transition:opacity .7s ease,transform .7s ease';const g=cv.getContext('2d');g.fillStyle='#0b0f13';g.fillRect(0,0,420,262);if(ph&&ph[i]){try{g.drawImage(ph[i],0,0,420,262)}catch(e){}}box.appendChild(cv);setTimeout(()=>{cv.style.opacity=1;cv.style.transform='none'},900+i*350)}
  const sh=$('s8show');o.style.pointerEvents='auto';void o.offsetWidth;o.style.opacity=1;
  setTimeout(()=>{const b=o.querySelector('#shBuyGo');if(b)b.style.opacity=1},2300);

@@ -28,7 +28,7 @@ function circuitWoods(T,sc,g,o){
  const clear=(x,z)=>{for(const b of box)if(x>b[0]&&x<b[1]&&z>b[2]&&z<b[3])return false;return true};
  const inStart=k=>{const[a,b]=o.start;return k>=((a%N)+N)%N||k<=b};
  const lists=o.kinds.map(()=>[]),pick=x=>{let t=rr()*o.kinds.reduce((a,k)=>a+k.w,0);for(let i=0;i<o.kinds.length;i++){t-=o.kinds[i].w;if(t<=0)return i}return 0};
- const put=(x,z,s,r)=>{const i=o.kinds.length>1&&T.nz(x*.03+3,z*.03-8)>.45?(o.cluster||0):pick();lists[i].push([x,T.terr(x,z),z,s,r])};
+ const put=(x,z,s,r)=>{const i=o.kinds.length>1&&T.nz(x*3+3,z*3-8)>.75?(o.cluster||0):pick()/* T.nz is slow and spans +-1.75: scale it up for patches ~100 m across */;lists[i].push([x,T.terr(x,z),z,s,r])};
  /* tree lines: rows at a set distance, gently staggered; the line steps back where it would crowd another part of the track */
  const step=4.6,bush=[],wob=(k,side)=>Math.max(0,T.nz(T.x[k]*.012+side*7,T.z[k]*.012-3)*.5+.5)*14;/* the edge wanders in and out, so it reads as woods, not an avenue */
  for(const side of[-1,1])for(let k=0;k<N;k++){if(inStart(k))continue;const k2=(k+1)%N,c=Math.cos(T.psi[k]),s=Math.sin(T.psi[k]),fx=T.x[k2]-T.x[k],fz=T.z[k2]-T.z[k],seg=Math.hypot(fx,fz)||1;
@@ -85,10 +85,12 @@ function dressRA(T,sc){
  let ter=null,most=0;sc.traverse(o=>{if(o.isMesh&&o.geometry&&o.geometry.attributes.color&&o.geometry.attributes.position.count>most){most=o.geometry.attributes.position.count;ter=o}});
  if(ter){const pa=ter.geometry.attributes.position,ca=ter.geometry.attributes.color;
   for(let v=0;v<pa.count;v++){const x=pa.getX(v),z=pa.getZ(v),n=T.nz(x*2.1,z*2.1)*.5+.5,n2=T.nz(x*.55+90,z*.55-40)*.5+.5,n3=T.nz(x*1.3-30,z*1.3+10)*.5+.5,d=dRoad(x,z);
-   let c=[.12+.08*n,.42+.13*n,.06+.04*n];
-   if(n2>.68){const t=Math.min(1,(n2-.68)*7);c=[lerp(c[0],.4+.07*n3,t),lerp(c[1],.17+.04*n3,t),lerp(c[2],.08,t)]}
-   if(d<26){const t=1-Math.min(1,Math.max(0,(d-9)/17));c=[lerp(c[0],.22+.07*n,t*.8),lerp(c[1],.5+.06*n,t*.8),lerp(c[2],.1,t*.8)]}
-   if(d<9.5){c=[.2+.06*n,.46+.06*n,.1]}
+   /* deep Georgia green (linear values), darker under the woods, bare red clay where the banks are worn, mown verges by the road */
+   let c=[.045+.03*n,.15+.07*n,.022+.015*n];
+   if(d>34){const t=Math.min(1,(d-34)/14);c=[lerp(c[0],.035+.02*n,t),lerp(c[1],.08+.03*n,t),lerp(c[2],.02,t)]}
+   if(n2>.76||(d>14&&d<40&&n3>.8)){const t=Math.min(1,Math.max((n2-.76)*8,(n3-.8)*10));c=[lerp(c[0],.42+.1*n3,t),lerp(c[1],.1+.03*n3,t),lerp(c[2],.03,t)]}
+   if(d<26){const t=1-Math.min(1,Math.max(0,(d-9)/17));c=[lerp(c[0],.07+.03*n,t*.85),lerp(c[1],.21+.05*n,t*.85),lerp(c[2],.035,t*.85)]}
+   if(d<9.5){const st=((Math.floor(x/8)+Math.floor(z/8))&1)?.012:-.008;c=[.07+.02*n+st,.22+.04*n+st*2,.035]}
    ca.setXYZ(v,c[0],c[1],c[2])}
   ca.needsUpdate=true}
  /* ---- materials ---- */
@@ -111,7 +113,7 @@ function dressRA(T,sc){
   if(!pos.length)return;const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));gg.setIndex(idx);gg.computeVertexNormals();const m=new THREE.Mesh(gg,mt);m.renderOrder=1;g.add(m);return m};
  kerb(inL,1,-.1,1.5,curbM,2.0);kerb(inR,-1,-.1,1.5,curbM,2.0);kerb(outL,1,-.1,1.2,curbM,2.0);kerb(outR,-1,-.1,1.2,curbM,2.0);
  /* paint-your-own gravel run-off strips on the outside of corners */
- const gm=M_(0x9a8460,{roughness:1});for(const c of corners){const a=Math.max(0,c.a-2),b=c.b+2;strip([[a,b]],c.dir>0?-1:1,2.4,11,.03,gm,6)}
+ const gm=M_(0x9c4424,{roughness:1});/* red Georgia clay */for(const c of corners){const a=Math.max(0,c.a-2),b=c.b+2;strip([[a,b]],c.dir>0?-1:1,2.4,11,.03,gm,6)}
  /* ---- guardrail: outside of corners, far from the racing line ---- */
  {const rail=M_(0xa9b2b6,{metalness:.5,roughness:.5,side:THREE.DoubleSide}),posts=[],pm=[];
   for(const c of corners){const side=c.dir>0?-1:1;const pos=[],idx=[];const a=c.a,b=c.b,n=b-a;for(let q=0;q<=n;q++){const k=(a+q)%N,l=side*(T.hw[k]+13);pos.push(...at(k,l,.55),...at(k,l,1.0));if(q%3===0)pm.push([...at(k,l,.5),1]);if(q<n&&P.addSeg){const p1=at(k,l,0),p2=at((a+q+1)%N,l,0);P.addSeg(T,p1[0],p1[2],p2[0],p2[2],.3)}}
@@ -124,7 +126,7 @@ function dressRA(T,sc){
  /* ---- helper builders ---- */
  const seats=ctex(16,8,(x,w,h)=>{x.fillStyle='#8d949c';x.fillRect(0,0,w,h);const pal=['#d8392f','#f1f1f1','#2c6cd0','#f2c76b'];for(let i=0;i<w;i+=2){x.fillStyle=pal[(i>>1)%4];x.fillRect(i,1,2,2);x.fillRect(i,5,2,2)}}),seatM=new THREE.MeshStandardMaterial({map:seats,roughness:.9});
  const stand=(k,l,len,rows)=>{const sg=l>0?1:-1,[px,py,pz]=at(k,l,0),grp=new THREE.Group(),gy=T.terr(px,pz);grp.position.set(px,gy,pz);grp.rotation.y=T.psi[k];g.add(grp);
-  const st=P.kitStand(len,Math.min(rows,9));st.rotation.y=-sg*PI/2;grp.add(st);return grp};
+  const st=P.kitStand(len,Math.min(rows,9));st.rotation.y=-sg*PI/2;grp.add(st);if(P.kitCrowd)P.kitCrowd(st,len,Math.min(rows,9),.85);return grp};
  const signCanvas=(txt,w,h,bg,fg,fs)=>ctex(w,h,(c,W,H)=>{c.fillStyle=bg;c.fillRect(0,0,W,H);c.strokeStyle=fg;c.lineWidth=3;c.strokeRect(3,3,W-6,H-6);c.fillStyle=fg;c.font='bold '+(fs||Math.floor(H*.5))+'px monospace';c.textAlign='center';c.textBaseline='middle';c.fillText(txt,W/2,H/2+2)});
  const board=(k,l,txt,wm,hm,bg,fg,yy)=>{const[px,py,pz]=at(k,l,0),grp=new THREE.Group();grp.position.set(px,py,pz);grp.rotation.y=T.psi[k]+PI;g.add(grp);
   const pl=new THREE.Mesh(new THREE.BoxGeometry(.18,(yy||2.4)+hm/2,.18),M_(0x666d73));pl.position.set(0,(yy||2.4)/2+hm/4,0);grp.add(pl);
@@ -160,11 +162,25 @@ function dressRA(T,sc){
  for(let q=0;q<5;q++){const k=(60+q*22)%N,[px,py,pz]=at(k,-(T.hw[k]+60),0),tn=new THREE.Group();tn.position.set(px,T.terr(px,pz),pz);tn.rotation.y=T.psi[k];g.add(tn);const cb=P.kitCabin(14,8,0xe9ebe8,[0xd8392f,0x2c6cd0,0xf2c76b,0x2c6cd0,0xd8392f][q]);cb.rotation.y=PI/2;tn.add(cb)}
  /* ---- Georgia woods: loblolly pines (tall bare trunks, crowns on top) with hardwoods mixed in ---- */
  {const tm=M_(0x5a3b26),tint=(geo,mt,list,cols,f)=>{/* one mesh per colour: plain material colours survive the scene's mesh merging */const ob=new THREE.Object3D();cols.forEach((cc,ci)=>{const sub=list.filter((p,i)=>i%cols.length===ci);if(!sub.length)return;const im=new THREE.InstancedMesh(geo,cols.length>1||mt.color.getHex()===0xffffff?M_(cc):mt,sub.length);sub.forEach((p,i)=>{f(ob,p);ob.updateMatrix();im.setMatrixAt(i,ob.matrix)});g.add(im)})};
-  circuitWoods(T,sc,g,{seed:4088,set:24,rows:3,copses:14,tint:0x5d7a60,cardH:20,start:[-40,Math.round(N*.06)],cluster:1,
+  circuitWoods(T,sc,g,{seed:4088,set:20,rows:4,copses:14,tint:0x5d7a60,cardH:20,start:[-40,Math.round(N*.06)],cluster:1,
    /* loblolly pines (tall, crowns high up) with hardwoods mixed in: Quaternius CC0 models from trees_q.js */
    kinds:[{w:.7,build:(g,L)=>P.qMix(g,['pine2','pine3','pine4'],L,[19,17,18],[0xffffff,0xe8f2dc,0xdbe6cf,0xf4fbe6])},
     {w:.3,build:(g,L)=>P.qMix(g,['oak4','oak3','umb2'],L,[12,13,12],[0xffffff,0xeef6dc,0xe2ecd2])}],
    pano:()=>hillPano(77,0xcfe0ea,[{base:300,amp:46,col:0x5e7d8c,fog:.62},{base:322,amp:34,col:0x4b6e58,fog:.5,trees:22},{base:340,amp:20,col:0x355a3a,fog:.34,trees:16}])})}
+  /* white concrete walls on the outside of the straights, a catch fence on top; Armco stays at the corners */
+ {const strt=new Uint8Array(N);for(let i=0;i<N;i++){let ok=1;for(let d=-6;d<=6;d++)if(Math.abs(curv[(i+d+N)%N])>.0075)ok=0;strt[i]=ok}
+  const nearStart=k=>k<150||k>N-40;
+  for(const side of[-1,1]){P.trackWall(T,g,at,dRoad,{side,a:0,b:N,off:9,h:1.1,col:0xe9ebe6,top:0xf6f7f4,skip:k=>!strt[k]||(side<0&&nearStart(k))});
+   P.catchFence(T,g,at,dRoad,{side,a:0,b:N,off:9.2,h:2.8,y0:1.05,skip:k=>!strt[k]||(side<0&&nearStart(k))||(k%240)>150})}}
+ /* billboards up on the grass banks, turned to the cars coming toward them (generic boards only) */
+ {const AD=[['POLY GT','#f1f3f5','#1d3f8f'],['RACE FUEL','#d8392f','#f1f1f1'],['TYRES','#10151b','#f2c76b'],['MOTOR OIL','#1d3f8f','#f1f1f1'],['BRASELTON','#f1f3f5','#2a6a3a'],['GEORGIA','#f2c76b','#10151b']];let q=0;
+  for(const nm of['T1','T3','T5','T6','T7','T10a','T12']){const k0=M[nm];if(k0==null)continue;const k=(k0-30+N)%N,side=curv[k0]>0?-1:1,l=side*(T.hw[k]+19),[px,,pz]=at(k,l,0);if(dRoad(px,pz)<14)continue;
+   const a=AD[q++%AD.length];P.bankBoard(g,px,terrainBed(T,px,pz)-.1,pz,T.psi[k]+PI-side*.35,a[0],a[1],a[2],10,2.8)}}
+ /* the woods fill the whole country around the circuit: loblolly pines with oaks and maples, thinning only at the paddock */
+ if(ter){const B=T.bounds,bb={min:{x:B[0],z:B[2]},max:{x:B[1],z:B[3]}},sx=[],sz=[];for(let k=-40;k<150;k+=6){const kk=(k+N)%N;sx.push(T.x[kk]);sz.push(T.z[kk])}
+  const open=(x,z)=>{for(let i=0;i<sx.length;i++)if((x-sx[i])**2+(z-sz[i])**2<110*110)return true;return false};
+  T._farTrees=P.farForest(T,g,{seed:88,dRoad,from:44,step:9.5,box:[bb.min.x+4,bb.max.x-4,bb.min.z+4,bb.max.z-4],open,fields:1.05,patch:0,
+   kinds:[{g:'pine',w:.62,h:[17,25],cols:[0x2e4a2a,0x34532e,0x2a4428,0x3b5a33]},{g:'blob',w:.38,h:[12,17],wide:1.15,cols:[0x3d5e2c,0x46682f,0x355428,0x50703a]}]})}
  styleScene(g);sc.add(g);
 }
 /* the Quarry world's tunnel does not belong on Road Atlanta (the look is borrowed, the tunnel slot is not) */

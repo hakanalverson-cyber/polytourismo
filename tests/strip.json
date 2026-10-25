@@ -1,0 +1,4 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",3000],["shot","menu"],
+["js","(()=>{const sv=PT8.SV();for(const c of PT8.CARS)if(/nissan/i.test(c.name))sv.owned[c.id]=1;const b=[...document.querySelectorAll('button')].find(b=>/brand central/i.test(b.textContent));b.click();return 1})()"],["wait",3500],
+["js","(()=>{const m=[...document.querySelectorAll('.mk')].find(e=>/nissan/i.test(e.textContent));if(!m)return 'nomk';m.click();return 1})()"],["wait",3500],["shot","strip"],
+["js","(()=>{const s=document.getElementById('shStrip');const c=s.querySelector('.gc');return JSON.stringify({sh:s.clientHeight,oh:s.offsetHeight,sw:s.scrollWidth,cw:s.clientWidth,card:c&&c.offsetHeight})})()"]]

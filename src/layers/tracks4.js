@@ -42,9 +42,11 @@ function dressIM(T,sc){
  let ter=null,most=0;sc.traverse(o=>{if(o.isMesh&&o.geometry&&o.geometry.attributes.color&&o.geometry.attributes.position.count>most){most=o.geometry.attributes.position.count;ter=o}});
  if(ter){const pa=ter.geometry.attributes.position,ca=ter.geometry.attributes.color;
   for(let v=0;v<pa.count;v++){const x=pa.getX(v),z=pa.getZ(v),n=T.nz(x*2.1,z*2.1)*.5+.5,n2=T.nz(x*.55+90,z*.55-40)*.5+.5,d=dRoad(x,z);
-   let c=[.16+.08*n,.5+.12*n,.1+.04*n];if(n2>.7){const t=Math.min(1,(n2-.7)*6);c=[lerp(c[0],.45,t),lerp(c[1],.4,t),lerp(c[2],.18,t)]}
-   if(d<30){const st=((Math.floor(x/9)+Math.floor(z/9))&1)?.05:-.03;const t=1-Math.min(1,Math.max(0,(d-10)/20));c=[lerp(c[0],.26+st,t*.85),lerp(c[1],.6+st,t*.85),lerp(c[2],.14,t*.85)]}
-   if(d<10){const st=((Math.floor(x/7)+Math.floor(z/7))&1)?.04:-.02;c=[.24+st,.58+st,.12]}
+   /* Romagna parkland green (linear values): deep under the trees, a little leaf litter, mown stripes by the road */
+   let c=[.05+.03*n,.16+.07*n,.025+.015*n];if(d>32){const t=Math.min(1,(d-32)/14);c=[lerp(c[0],.05+.03*n,t),lerp(c[1],.1+.03*n,t),lerp(c[2],.025,t)]}
+   if(n2>.7){const t=Math.min(1,(n2-.7)*6);c=[lerp(c[0],.2,t),lerp(c[1],.12,t),lerp(c[2],.03,t)]}
+   if(d<30){const st=((Math.floor(x/9)+Math.floor(z/9))&1)?.018:-.01;const t=1-Math.min(1,Math.max(0,(d-10)/20));c=[lerp(c[0],.075+st,t*.85),lerp(c[1],.23+st*2,t*.85),lerp(c[2],.035,t*.85)]}
+   if(d<10){const st=((Math.floor(x/7)+Math.floor(z/7))&1)?.016:-.008;c=[.075+st,.235+st*2,.035]}
    ca.setXYZ(v,c[0],c[1],c[2])}
   ca.needsUpdate=true}
  const M_=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.85,metalness:0,flatShading:true},o||{}));
@@ -63,6 +65,9 @@ function dressIM(T,sc){
    for(let q=0;q<n;q++){const i=base+q*2;idx.push(i,i+1,i+2,i+1,i+3,i+2)}base+=(n+1)*2}
   if(!pos.length)return;const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));gg.setIndex(idx);gg.computeVertexNormals();const m=new THREE.Mesh(gg,mt);m.renderOrder=1;g.add(m);return m};
  kerb(inL,1,-.1,1.5,curbM,2.0);kerb(inR,-1,-.1,1.5,curbM,2.0);kerb(outL,1,-.1,1.2,curbM,2.0);kerb(outR,-1,-.1,1.2,curbM,2.0);
+ /* Imola's kerbs carry a green, white and red stripe along their outer edge, with a black band between */
+ {const tri=ctex(4,1,(x)=>{x.fillStyle='#111317';x.fillRect(0,0,1,1);x.fillStyle='#1f8a3c';x.fillRect(1,0,1,1);x.fillStyle='#f4f4f4';x.fillRect(2,0,1,1);x.fillStyle='#d8261e';x.fillRect(3,0,1,1)}),triM=new THREE.MeshStandardMaterial({map:tri,roughness:.8,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+  kerb(inL,1,1.5,2.4,triM,4);kerb(inR,-1,1.5,2.4,triM,4)}
  /* SAND TRAPS on the outside of every corner (really slow: cars bog down in them) with a rake-line pattern */
  const sandTex=ctex(32,32,(x,w,h)=>{x.fillStyle='#e6d29b';x.fillRect(0,0,w,h);x.fillStyle='#d4bd80';for(let j=0;j<h;j+=4)x.fillRect(0,j,w,1);x.fillStyle='#f1e3b4';for(let j=2;j<h;j+=8)x.fillRect(0,j,w,1)});
  const sandM=new THREE.MeshStandardMaterial({map:sandTex,roughness:1,side:THREE.DoubleSide});sandTex.wrapS=sandTex.wrapT=THREE.RepeatWrapping;
@@ -78,7 +83,7 @@ function dressIM(T,sc){
     if(P.addSeg&&q<c.b+8){const p1=at(k,side*(T.hw[k]+15.3),0),p2=at(k+1,side*(T.hw[k+1]+15.3),0);P.addSeg(T,p1[0],p1[2],p2[0],p2[2],.9)}}}
   const cg=new THREE.CylinderGeometry(.55,.55,.5,9);inst(g,cg,M_(0x1b1d21),B);inst(g,cg,M_(0xf1f1f1),W);inst(g,cg,M_(0xd8392f),R)}
  /* pit wall + concrete barrier on the start straight (both sides, solid) */
- {const cm=M_(0xc9ccc9,{side:THREE.DoubleSide}),top=M_(0xd8392f);const K0=-10,K1=Math.round(N*.075);
+ {const cm=M_(0x1d4a26,{side:THREE.DoubleSide}),top=M_(0xd8392f);/* Imola's walls are green */const K0=-10,K1=Math.round(N*.075);
   for(const side of[-1,1]){const l=side*(T.hw[0]+6.2),pos=[],idx=[];for(let q=K0;q<=K1;q++){const k=((q%N)+N)%N;pos.push(...at(k,l,0),...at(k,l,1.1))}for(let q=0;q<K1-K0;q++){const i=q*2;idx.push(i,i+1,i+2,i+1,i+3,i+2)}
    const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setIndex(idx);gg.computeVertexNormals();g.add(new THREE.Mesh(gg,cm));
    for(let q=K0;q<K1;q+=1){if(P.addSeg){const p1=at(q,l,0),p2=at(q+1,l,0);P.addSeg(T,p1[0],p1[2],p2[0],p2[2],.35)}}}}
@@ -86,7 +91,7 @@ function dressIM(T,sc){
  /* helpers */
  const seats=ctex(16,8,(x,w,h)=>{x.fillStyle='#8d949c';x.fillRect(0,0,w,h);const pal=['#d8392f','#f1f1f1','#2c6cd0','#f2c76b'];for(let i=0;i<w;i+=2){x.fillStyle=pal[(i>>1)%4];x.fillRect(i,1,2,2);x.fillRect(i,5,2,2)}}),seatM=new THREE.MeshStandardMaterial({map:seats,roughness:.9});
  const stand=(k,l,len,rows)=>{const sg=l>0?1:-1,[px,py,pz]=at(k,l,0),grp=new THREE.Group(),gy=T.terr(px,pz);grp.position.set(px,gy,pz);grp.rotation.y=T.psi[k];g.add(grp);
-  const st=P.kitStand(len,Math.min(rows,9));st.rotation.y=-sg*PI/2;grp.add(st);return grp};
+  const st=P.kitStand(len,Math.min(rows,9),[0x2f6b3a,0xf1f1f1,0xd8392f]);st.rotation.y=-sg*PI/2;grp.add(st);if(P.kitCrowd)P.kitCrowd(st,len,Math.min(rows,9),.85);return grp};
  const signCanvas=(txt,w,h,bg,fg,fs)=>ctex(w,h,(c,W,H)=>{c.fillStyle=bg;c.fillRect(0,0,W,H);c.strokeStyle=fg;c.lineWidth=3;c.strokeRect(3,3,W-6,H-6);c.fillStyle=fg;c.font='bold '+(fs||Math.floor(H*.5))+'px monospace';c.textAlign='center';c.textBaseline='middle';c.fillText(txt,W/2,H/2+2)});
  const board=(k,l,txt,wm,hm,bg,fg,yy)=>{const[px,py,pz]=at(k,l,0),grp=new THREE.Group();grp.position.set(px,py,pz);grp.rotation.y=T.psi[k]+PI;g.add(grp);
   const pl=new THREE.Mesh(new THREE.BoxGeometry(.18,(yy||2.4)+hm/2,.18),M_(0x666d73));pl.position.set(0,(yy||2.4)/2+hm/4,0);grp.add(pl);
@@ -103,7 +108,7 @@ function dressIM(T,sc){
   /* pit buildings on the infield side */
   const is=infield;for(let q=0;q<6;q++){const k=(10+q*10)%N,[px,py,pz]=at(k,is*(T.hw[k]+17),0),b=new THREE.Group();b.position.set(px,T.terr(px,pz),pz);b.rotation.y=T.psi[k];g.add(b);
    const ga=P.kitGarage(9.6,9);ga.rotation.y=-is*PI/2;b.add(ga);if(P.addPt){P.addPt(T,px,pz,5.2)}}
-  {const k=3,[px,py,pz]=at(k,is*(T.hw[k]+32),0),b=new THREE.Group();b.position.set(px,T.terr(px,pz),pz);b.rotation.y=T.psi[k];g.add(b);b.add(P.kitTower(20));if(P.addPt)P.addPt(T,px,pz,4.2)}
+  {const k=3,[px,py,pz]=at(k,is*(T.hw[k]+32),0),b=new THREE.Group();b.position.set(px,T.terr(px,pz),pz);b.rotation.y=T.psi[k];g.add(b);{const tw=P.kitTower(20);/* Imola's race control: red and white bands, a glass box on top */tw.children[0].material=M_(0xd8392f);for(let i=0;i<4;i++){const r=new THREE.Mesh(new THREE.CylinderGeometry(2.45-.08*i,2.5-.08*i,1.6,8),M_(0xf1f1f1));r.position.y=3+i*4.4;tw.add(r)}tw.children[1].material=M_(0x6f93ad,{roughness:.15,metalness:.4});b.add(tw)}if(P.addPt)P.addPt(T,px,pz,4.2)}
   stand(8,-infield*(T.hw[8]+20),60,9);stand(Math.round(N*.06),-infield*(T.hw[0]+20),40,7);
   const fl=[],pl=[];for(let k=4;k<Math.round(N*.075);k+=7)for(const sd of[-1,1]){const p=at(k,sd*(T.hw[k]+4.5),0);pl.push([p[0],p[1]+4,p[2],1,8,0]);fl.push([p[0],p[1]+7,p[2],1,1,T.psi[k]])}
   inst(g,new THREE.CylinderGeometry(.07,.09,1,5),M_(0xcfd3d6),pl);inst(g,new THREE.BoxGeometry(2.2,1.3,.05),MB(0xd8392f),fl)}
@@ -113,20 +118,40 @@ function dressIM(T,sc){
   for(const sx of[-1,1]){const col=new THREE.Mesh(new THREE.BoxGeometry(1.6,9.6,2.4),M_(0xe6e8ea));col.position.set(sx*wd,4.8,0);bp.add(col)}
   const ban=new THREE.Mesh(new THREE.PlaneGeometry(wd*1.5,1.6),new THREE.MeshBasicMaterial({map:signCanvas('IMOLA',512,64,'#2c6cd0','#f1f1f1',34),side:THREE.DoubleSide}));ban.position.set(0,10.4,2.05);bp.add(ban);const b2=ban.clone();b2.position.z=-2.05;bp.add(b2)}
  /* advert boards along the straights' outside edge */
- {const txt=['POLY GT','TURBO','APEX','RACE ON'],bg=['#d8392f','#2c6cd0','#f2c76b','#10151b'],fg=['#f1f1f1','#f1f1f1','#10151b','#f2c76b'];let q=0;
+ {const txt=['POLY GT','TURBO','APEX','RACE ON'],bg=['#1f6b3a','#f1f3f5','#1f6b3a','#f1f3f5'],fg=['#f1f1f1','#1f6b3a','#f1f1f1','#d8392f'];let q=0;
   for(let k=Math.round(N*.1);k<N-6;k+=14){let st=true;for(let d=-3;d<=3;d++)if(Math.abs(curv[(k+d+N)%N])>.006)st=false;if(!st)continue;const side=-infield;board(k,side*(T.hw[k]+11),txt[q%4],5.2,1.7,bg[q%4],fg[q%4],1.1);q++}}
  /* tyre stacks as cones marking the pit exit, small detail */
  /* ---- Romagna parkland: plane trees and oaks in rows, poplars and cypress, umbrella pines; Emilia hills on the horizon ---- */
- {const tm=M_(0x5a3b26),tint=(geo,mt,list,cols,f)=>{/* one mesh per colour: plain material colours survive the scene's mesh merging */const ob=new THREE.Object3D();cols.forEach((cc,ci)=>{const sub=list.filter((p,i)=>i%cols.length===ci);if(!sub.length)return;const im=new THREE.InstancedMesh(geo,cols.length>1||mt.color.getHex()===0xffffff?M_(cc):mt,sub.length);sub.forEach((p,i)=>{f(ob,p);ob.updateMatrix();im.setMatrixAt(i,ob.matrix)});g.add(im)})};
+ {const AUT={or:{'#0e1709':'#3c1604','#16270f':'#52280a'},ye:{'#0e1709':'#3a2c04','#16270f':'#5a4a12'},ru:{'#0e1709':'#2a0c04','#16270f':'#421a0a'}};
   P.circuitWoods(T,sc,g,{seed:4909,set:22,rows:2,copses:12,tint:0x6a865e,cardH:17,start:[-14,Math.round(N*.08)],cluster:0,
    /* plane trees and oaks, cypress (a narrowed Quaternius conifer), umbrella pines: CC0 models from trees_q.js */
-   kinds:[{w:.55,build:(g,L)=>P.qMix(g,['oak3','oak4','oak5'],L,[13,12,11],[0xffffff,0xf0f8e0,0xe4eed6])},
-    {w:.25,build:(g,L)=>P.qMix(g,['pine4','pine2'],L,[13,14],[0xd8e2d0,0xc8d4c2],{sx:.42})},
-    {w:.2,build:(g,L)=>P.qMix(g,['umb1','umb2'],L,[12,13],[0xffffff,0xeef6e0])}],
+   /* autumn: the planes and oaks turn orange, gold and rust between the green ones; dark cypresses and stone pines stay green */
+   kinds:[{w:.32,build:(g,L)=>P.qMix(g,['oak3','oak4','oak5'],L,[13,12,11],[0xffffff,0xf0f8e0,0xe4eed6],{gap:.55})},
+    {w:.1,build:(g,L)=>P.qMix(g,['oak3','oak4','oak5'],L,[13,12,11],[0xffffff,0xfff2e0],{pal:AUT.or,gap:.55})},
+    {w:.08,build:(g,L)=>P.qMix(g,['oak4','oak3','oak5'],L,[12,13,11],[0xffffff,0xfff6e6],{pal:AUT.ye,gap:.55})},
+    {w:.05,build:(g,L)=>P.qMix(g,['oak5','oak3'],L,[11,12],[0xffffff],{pal:AUT.ru,gap:.55})},
+    {w:.25,build:(g,L)=>P.qMix(g,['pine4','pine2'],L,[13,14],[0xd8e2d0,0xc8d4c2],{sx:.42,gap:.55})},
+    {w:.18,build:(g,L)=>P.qMix(g,['umb1','umb2'],L,[12,13],[0xffffff,0xeef6e0],{gap:.55})}],
    pano:()=>P.hillPano(49,0xcfe0ea,[{base:296,amp:60,col:0x6a8496,fog:.62},{base:318,amp:42,col:0x5f7f52,fog:.5,trees:14,fields:40},{base:338,amp:22,col:0x4a7340,fog:.34,trees:12}],(g,W,H,hz,mix,r)=>{
      /* the town on the hill: terracotta roofs and a bell tower */
      for(const cx of[W*.31,W*.78]){for(let i=0;i<26;i++){const x=cx+(r()-.5)*240,w=10+r()*16,h=8+r()*10,y=hz-14-r()*10;g.fillStyle=mix(0xd9cdb5,.45);g.fillRect(x,y-h,w,h);g.fillStyle=mix(0xb0583a,.42);g.beginPath();g.moveTo(x-2,y-h);g.lineTo(x+w/2,y-h-5);g.lineTo(x+w+2,y-h);g.fill()}
       g.fillStyle=mix(0xc9b08e,.42);g.fillRect(cx-5,hz-70,10,50);g.fillStyle=mix(0xa8503a,.42);g.fillRect(cx-7,hz-74,14,6)}})})}
+  /* green walls on the outside of the straights with catch fencing on top */
+ {const strt=new Uint8Array(N);for(let i=0;i<N;i++){let ok=1;for(let d=-6;d<=6;d++)if(Math.abs(curv[(i+d+N)%N])>.0085)ok=0;strt[i]=ok}const K1=Math.round(N*.08);
+  for(const side of[-1,1]){P.trackWall(T,g,at,dRoad,{side,a:K1,b:N-12,off:9.5,h:1.1,col:0x2f6b3a,top:0xe9ebe6,skip:k=>!strt[k]});
+   P.catchFence(T,g,at,dRoad,{side,a:K1,b:N-12,off:9.7,h:3,y0:1.05,skip:k=>!strt[k]})}}
+ /* spectators up on the hillside banks at the slow corners */
+ {const sl=corners.slice().sort((a,b)=>b.pk-a.pk).slice(0,4);sl.forEach((c,i)=>{if(i===1)return;const side=c.dir>0?1:-1,k=c.pi,[px,,pz]=at(k,side*(T.hw[k]+24),0);if(dRoad(px,pz)<20)return;stand(k,side*(T.hw[k]+24),34,7)})}
+ /* the woods fill the land around the park, in autumn colours, with the town and its bell tower on the hill to one side */
+ if(ter){const B=T.bounds,box=[B[0]+4,B[1]-4,B[2]+4,B[3]-4],sx=[],sz=[];for(let k=-14;k<Math.round(N*.08);k+=5){const kk=(k+N)%N;sx.push(T.x[kk]);sz.push(T.z[kk])}
+  /* town: off the outside of the lap, as far out as the ground goes */
+  let tx=0,tz=0;{const k=Math.round(N*.32),c=Math.cos(T.psi[k]),sn=Math.sin(T.psi[k]),l=-infield*(T.hw[k]+230);tx=Math.min(box[1]-90,Math.max(box[0]+90,T.x[k]+c*l));tz=Math.min(box[3]-90,Math.max(box[2]+90,T.z[k]-sn*l))}
+  const townOk=dRoad(tx,tz)>=999;if(townOk)P.hillTown(g,T,tx,tz,110,31);
+  const open=(x,z)=>{for(let i=0;i<sx.length;i++)if((x-sx[i])**2+(z-sz[i])**2<90*90)return true;return townOk&&(x-tx)**2+(z-tz)**2<115*115};
+  const GR=[0x3d5e2c,0x46682f,0x355428],OR=[0x9a5426,0xa8642e,0x8e4a22],YE=[0xa08a3a,0xae9842,0x8e7a30],RU=[0x7a3a1e,0x844626];
+  T._farTrees=P.farForest(T,g,{seed:99,dRoad,from:40,step:10,box,open,fields:.9,
+   kinds:[{g:'blob',w:.45,h:[11,16],wide:1.2,cols:GR},{g:'blob',w:.11,h:[11,15],wide:1.2,cols:OR},{g:'blob',w:.09,h:[11,15],wide:1.2,cols:YE},{g:'blob',w:.05,h:[10,14],wide:1.2,cols:RU},
+    {g:'cypress',w:.17,h:[13,19],cols:[0x223a24,0x284228]},{g:'umb',w:.15,h:[12,16],wide:1.1,cols:[0x2f4c2a,0x37552f]}]})}
  styleScene(g);sc.add(g);
 }
 const bwI=buildWorld;buildWorld=T=>{const sc=bwI(T);if(T.d&&T.d.imola){try{dressIM(T,sc)}catch(e){console.error('imola dress',e)}}return sc};

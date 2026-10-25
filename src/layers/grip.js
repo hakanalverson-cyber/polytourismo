@@ -7,6 +7,10 @@ window.PT8_HB=c=>!!(c._hb||(c.in&&c.in.hb)||(c.human&&typeof KM!=='undefined'&&K
    control overshoots on fast downhill bends). */
 const m0=P.mul;P.mul=c=>{const m=m0?m0(c):{acc:1,top:1,grip:1,brk:1};const T=RACE&&RACE.T;
  if(T&&c.human&&!c.forceAI&&!c.cool&&!T.d.gravel&&c.onRoad&&!(T.ice&&T.ice[c.idx]))m.grip*=(window.PT8_GRIPK||1.4);return m};
+/* gravel is looser, by how well the car is built for it (its off-road rating): weak cars slide 50% more, neutral ones 25% more, cars built
+   for gravel 10% more. "More slippery" = sideways grip divided by 1.5 / 1.25 / 1.1. Applies to every car on a gravel road. */
+P.gravelSlip=c=>{const o=(c&&c.off)||0;return o>=.8?1.1:o>=.45?1.25:1.5};
+{const m1=P.mul;P.mul=c=>{const m=m1(c);const T=RACE&&RACE.T;if(T&&T.d&&T.d.gravel&&c.onRoad&&c.cs)m.grip/=P.gravelSlip(c.cs);return m}}
 /* downhill: the suspension damper (patched in build.py) works on the body's vertical speed relative to the ground below it. c._gv is how fast
    the ground under the car rises or falls along its path this step (m/s); without it a car going down a hill had its dampers holding it
    up off the road, so fewer than two tyres touched more than half the time and grip vanished. */

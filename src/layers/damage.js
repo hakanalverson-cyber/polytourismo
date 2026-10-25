@@ -7,8 +7,15 @@ P.dmgOn=Rc=>{const c=Rc&&Rc.cfg;return !!c&&(c.dmg!==undefined?!!c.dmg:!!c.rally
 const m0=P.mul;P.mul=c=>{const m=m0(c);const Rc=RACE;if(c.human&&c.dmg>0&&!(Rc&&Rc.cfg&&Rc.cfg.rally)){const dm=c.dmg;m.acc*=1-.5*Math.pow(dm,1.2);m.top*=1-.32*dm;m.grip*=1-.14*dm;m.brk*=1-.3*dm}return m};
 const st0=step;step=function(dt){st0.apply(this,arguments);try{const Rc=RACE;if(!Rc||!Rc.cfg||Rc.cfg.rally)return;const on=P.dmgOn(Rc);let first=null;
  for(const c of Rc.cars){if(!c.human)continue;if(c.cdT>0)c.cdT-=dt;if(on&&P.smokeFx)P.smokeFx(c,Rc,dt);if(!first)first=c}
- if(on&&first&&Rc.state==='race'&&P.statUpdate)P.statUpdate(Rc,first)}catch(e){if(!P._dErr){P._dErr=1;console.warn('damage',e)}}};
-const sh0=show;show=function(id){if(id!=='game'&&id!=='pause'){const e=document.getElementById('rlStat');if(e)e.style.display='none'}return sh0.apply(this,arguments)};
+ const hs=Rc.cars.filter(c=>c.human);if(on&&hs.length>1&&Rc.state==='race')multiStat(Rc);else{hideMulti();if(on&&first&&Rc.state==='race'&&P.statUpdate)P.statUpdate(Rc,first)}}catch(e){if(!P._dErr){P._dErr=1;console.warn('damage',e)}}};
+/* split screen: every player gets their own damage plate, beside their own lap clock */
+{const st=document.createElement('style');st.textContent='.ptDmgP{position:fixed;z-index:20;display:none;flex-direction:column;gap:6px;pointer-events:none}.ptDmgP .h8top{position:static;transform:scale(var(--s,1));transform-origin:top left;width:var(--pw,auto);height:var(--ph,auto);box-sizing:border-box}.ptDmgP .h8plate{flex:1;min-width:0}';document.head.appendChild(st)}
+const MS=[];function hideMulti(){for(const e of MS)if(e)e.style.display='none'}
+function multiStat(Rc){Rc.cars.forEach((c,i)=>{if(!c.human)return;let e=MS[i];if(!e){e=MS[i]=document.createElement('div');e.className='ptDmgP';document.body.appendChild(e)}
+  const dv=Math.round((c.dmg||0)*100),col=dv>=50?'#ef6a5a':dv>=20?'#f2c76b':'';const k=String(dv);if(e._k!==k){e._k=k;e.innerHTML=`<div class="h8top"><div class="h8plate"><div class="lap">${Rc.cars.filter(q=>q.human).length>1?'P'+((c.k|0)+1)+' ':''}DAMAGE</div><div class="raceTime" style="${col?'color:'+col:''}">${dv}%</div><div class="bl"></div></div></div>`}
+  const ht=document.querySelector('#h'+i+' .h8top');if(!ht||!ht.offsetWidth){e.style.display='none';return}const rc=ht.getBoundingClientRect();e.style.left=(rc.right+8)+'px';e.style.top=rc.top+'px';e.style.setProperty('--pw',ht.offsetWidth+'px');e.style.setProperty('--ph',ht.offsetHeight+'px');const pv=ht.parentNode.style.getPropertyValue('--s');if(pv)e.style.setProperty('--s',pv);e.style.display='flex'});
+ const st=document.getElementById('rlStat');if(st)st.style.display='none'}
+const sh0=show;show=function(id){if(id!=='game'&&id!=='pause'){const e=document.getElementById('rlStat');if(e)e.style.display='none';hideMulti()}return sh0.apply(this,arguments)};
 /* ---- impact sparks + flying debris ---- */
 const rr=(a,b)=>a+Math.random()*(b-a),dbG=new THREE.BoxGeometry(1,1,1),dbM={};
 const dbMat=col=>dbM[col]||(dbM[col]=new THREE.MeshStandardMaterial({color:col,roughness:.7}));
