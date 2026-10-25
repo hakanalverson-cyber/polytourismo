@@ -10,12 +10,15 @@ const imola={id:15,look:0,name:'Imola',desc:'italian grand prix circuit / chican
 D.push(imola);
 P.TRACK_INFO.push({s:'TARMAC',tags:['CHICANES','SAND TRAPS','TYRE WALLS','KERBS']});
 P.TRK_TRACKS.push(D.length-1);
-P.MEDAL_REF[D.length-1]=108.2;
+P.MEDAL_REF[D.length-1]=110.8;
 MATS.sandtrap={grip:.42,top:.5,acc:.4};
 const IMX=D.length-1;
 /* the real circuit's trackside layout (imola_ref.js): per-sample offsets past the road edge for each side, or -1 */
 const IR=window.PT8_IMREF,irB=s=>{const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u};
-const irOff=(()=>{if(!IR)return null;const o={};for(const c in IR.off)o[c]=IR.off[c].map(s=>{const u=irB(s),f=new Float32Array(u.length);for(let i=0;i<u.length;i++)f[i]=u[i]===255?-1:u[i]/4;return f});return o})();
+const i16=s=>{const u=irB(s);return new Int16Array(u.buffer,0,u.length>>1)};
+/* ground layers (gravel, green paint, asphalt run-off): rows 1 m apart, each a list of [x0,x1] runs */
+const GRUN=(()=>{const o={};if(!IR||!IR.gr)return o;for(const k in IR.gr){const a=i16(IR.gr[k]),m=new Map();for(let i=0;i<a.length;i+=3){const r=a[i];(m.get(r)||m.set(r,[]).get(r)).push([a[i+1]/4,a[i+2]/4])}o[k]=m}return o})();
+const inLay=(nm,x,z)=>{const m=GRUN[nm];if(!m)return false;const A=m.get(Math.round(z+200-.25));if(!A)return false;for(const[a,b]of A)if(x>=a&&x<=b)return true;return false};
 
 /* ---------- track data: corners, sand traps, trap-aware surface ---------- */
 const wrp=a=>{while(a>PI)a-=2*PI;while(a<-PI)a+=2*PI;return a};
@@ -26,11 +29,11 @@ const ssI=sampleTrack;sampleTrack=d=>{const T=ssI(d);if(!d.imola)return T;
  if(T.tunnels&&T.tunnels.length){for(const[a,b]of T.tunnels)for(let i=a;i<=b;i++){const k=i%T.N;T.tn[k]=0;T.wall[k]=0;T.wh[k]=1.3}T.tunnels=[]}
  const C=cornersOf(T);T._im=C;const N=T.N;T.trapS=new Int8Array(N);
  const kc=[];for(const c of C.corners){const p=kc[kc.length-1];if(p&&p.dir===c.dir&&c.a-p.b<16)p.b=c.b;else kc.push({a:c.a,b:c.b,dir:c.dir})}
- const real=irOff&&IR.N===N;T._irOk=real;
+ const real=!!GRUN.sand;T._irOk=real;
  if(!real)for(const c of kc){const side=c.dir>0?-1:1;for(let q=c.a-3;q<=c.b+6;q++)T.trapS[((q%N)+N)%N]=side}
  const s0=T.surf;T.surf=(x,z,y)=>{const r=s0(x,z,y);if(r.road)return r;const cx=Math.floor(x/16),cz=Math.floor(z/16);let bd=1e9,bi=-1,bl=0;
   for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const ids=T.grid.get((cx+a)*8192+cz+b);if(!ids)continue;for(const i of ids){const j=(i+1)%N;if(T.gap[i]||T.gap[j])continue;const dx=T.x[j]-T.x[i],dz=T.z[j]-T.z[i],l2=dx*dx+dz*dz||1,f=Math.max(0,Math.min(1,((x-T.x[i])*dx+(z-T.z[i])*dz)/l2)),px=T.x[i]+dx*f,pz=T.z[i]+dz*f,dd=Math.hypot(x-px,z-pz);if(dd<bd){bd=dd;bi=i;bl=(x-px)*Math.cos(T.psi[i])-(z-pz)*Math.sin(T.psi[i])}}}
-  if(bi>=0&&real){const si=bl<0?0:1,SE=T._sand&&T._sand[si],lo=SE?SE[0][bi]:irOff.sand_lo[si][bi],hi=SE?SE[1][bi]:irOff.sand_hi[si][bi],ex=Math.abs(bl)-T.hw[bi];if(lo>=0&&hi>lo&&ex>Math.max(SE?.3:2.4,lo)&&ex<hi)r.trap=1}
+  if(real){if(inLay('sand',x,z))r.trap=1;else if(inLay('asph',x,z)||inLay('green',x,z))r.near=1/* paved run-off grips like the road */}
   else if(bi>=0&&T.trapS[bi]&&Math.sign(bl)===T.trapS[bi]){const ex=Math.abs(bl)-T.hw[bi];if(ex>2.3&&ex<13.6)r.trap=1}
   return r};
  return T};
@@ -61,186 +64,127 @@ function dressIM(T,sc){
   strip1=(ranges,side,w0,w1,dy,mt,vs)=>{const pos=[],uv=[],idx=[];let base=0;for(const r of ranges){const[a,b]=r;const n=((b-a)%N+N)%N;for(let q=0;q<=n;q++){const k=(a+q)%N,p0=at(k,side*(T.hw[k]+w0),dy),p1=at(k,side*(T.hw[k]+w1),dy);pos.push(...p0,...p1);uv.push(0,q*T.sp/vs,1,q*T.sp/vs)}
    for(let q=0;q<n;q++){const i=base+q*2;idx.push(i,i+1,i+2,i+1,i+3,i+2)}base+=(n+1)*2}
   if(!pos.length)return;const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));gg.setIndex(idx);gg.computeVertexNormals();const m=new THREE.Mesh(gg,mt);g.add(m);return m};
- /* kerbs: red/white on the inside of every corner, a short outside kerb on exit */
- const curbTex=ctex(2,8,(x,w,h)=>{for(let j=0;j<8;j++){x.fillStyle=j<4?'#e01a14':'#f4f4f4';x.fillRect(0,j,w,1)}}),curbM=new THREE.MeshStandardMaterial({map:curbTex,roughness:.8,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
- const inR=[],outR=[],inL=[],outL=[];
- const kc=[];for(const c of corners){const p=kc[kc.length-1];if(p&&p.dir===c.dir&&c.a-p.b<16)p.b=c.b;else kc.push({a:c.a,b:c.b,dir:c.dir})}/* one kerb per corner: brief dips in curvature no longer break it in two */
- for(const c of kc){const a=Math.max(0,c.a-3),b=c.b+3;(c.dir>0?inL:inR).push([a,b]);(c.dir>0?outR:outL).push([a+4,c.b-2])}
- /* kerbs ride on the road plane across their whole width (never on the ground beside it), a hair above the asphalt */
- const kerb=(ranges,side,w0,w1,mt,vs)=>{const pos=[],uv=[],idx=[];let base=0;for(const[a,b]of ranges){const n=((b-a)%N+N)%N;for(let q=0;q<=n;q++){const k=(a+q)%N,c=Math.cos(T.psi[k]),s=Math.sin(T.psi[k]);
-    for(const w of[w0,w1]){const l=side*(T.hw[k]+w);pos.push(T.x[k]+c*l,T.y[k]-l*T.bank[k]+.1,T.z[k]-s*l)}uv.push(0,q*T.sp/vs,1,q*T.sp/vs)}
-   for(let q=0;q<n;q++){const i=base+q*2;idx.push(i,i+1,i+2,i+1,i+3,i+2)}base+=(n+1)*2}
-  if(!pos.length)return;const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));gg.setIndex(idx);gg.computeVertexNormals();const m=new THREE.Mesh(gg,mt);m.renderOrder=1;g.add(m);return m};
- kerb(inL,1,-.1,1.5,curbM,2.0);kerb(inR,-1,-.1,1.5,curbM,2.0);kerb(outL,1,-.1,1.2,curbM,2.0);kerb(outR,-1,-.1,1.2,curbM,2.0);
- /* Imola's kerbs carry a green, white and red stripe along their outer edge, with a black band between */
- {const tri=ctex(4,1,(x)=>{x.fillStyle='#111317';x.fillRect(0,0,1,1);x.fillStyle='#1f8a3c';x.fillRect(1,0,1,1);x.fillStyle='#f4f4f4';x.fillRect(2,0,1,1);x.fillStyle='#d8261e';x.fillRect(3,0,1,1)}),triM=new THREE.MeshStandardMaterial({map:tri,roughness:.8,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
-  kerb(inL,1,1.5,2.4,triM,4);kerb(inR,-1,1.5,2.4,triM,4)}
- /* how far the kerb reaches past the road edge at each sample, per side (0 = no kerb): gravel starts right there */
- const kerbW=[new Float32Array(N),new Float32Array(N)];for(const[R,si,w]of[[inL,1,2.4],[inR,0,2.4],[outL,1,1.2],[outR,0,1.2]])for(const[a,b]of R){const n=((b-a)%N+N)%N;for(let q=0;q<=n;q++){const k=(a+q)%N;kerbW[si][k]=Math.max(kerbW[si][k],w)}}
- /* SAND TRAPS on the outside of every corner (really slow: cars bog down in them) with a rake-line pattern */
+ const IRk=IR&&IR.kerb&&IR.N===N?IR.kerb.map(irB):null;
+ /* ======== everything beside the road is the real circuit as surveyed (imola_ref.js), redrawn in low poly: kerbs, gravel, green paint
+    and asphalt run-offs follow the survey's own outlines; walls, Armco, catch fences and tyre walls follow its own lines; every building,
+    grandstand, tent, vehicle and prop is a stack of flat-shaded blocks with the real footprint and height; trees stand where the real ones do ======== */
+ const PS=-1;/* the pits are on the right of the start straight (side -1) */
+ /* kerbs where the survey has them, as wide as it has them */
+ const curbTex=ctex(2,8,(x,w,h)=>{for(let j=0;j<8;j++){x.fillStyle=j<4?'#e01a14':'#f4f4f4';x.fillRect(0,j,w,1)}}),curbM=new THREE.MeshStandardMaterial({map:curbTex,roughness:.8,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3});
+ curbTex.wrapS=curbTex.wrapT=THREE.RepeatWrapping;curbTex.magFilter=THREE.NearestFilter;
+ if(IRk){for(const side of[-1,1]){const K=IRk[side<0?0:1],pos=[],uv=[],idx=[];let prev=false,q=0;
+   for(let i=0;i<=N;i++){const k=i%N,a=K[k],b=K[N+k];if(a===255){prev=false;continue}const w0=(a-20)/10,w1=Math.max(w0+.4,(b-20)/10),c=Math.cos(T.psi[k]),s=Math.sin(T.psi[k]),v=pos.length/3;
+    for(const w of[w0,w1]){const l=side*(T.hw[k]+w);pos.push(T.x[k]+c*l,T.y[k]-l*T.bank[k]+.1,T.z[k]-s*l)}uv.push(0,i*T.sp/2,1,i*T.sp/2);if(prev)idx.push(v-2,v-1,v,v-1,v+1,v);prev=true}
+   if(idx.length){const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));gg.setIndex(idx);gg.computeVertexNormals();const m=new THREE.Mesh(gg,curbM);m.renderOrder=1;g.add(m)}}}
+ /* nearest sample, signed lateral offset, distance past the road edge */
+ const near=(x,z)=>{let k=0,bd=1e18;for(let i=0;i<N;i+=3){const d=(T.x[i]-x)**2+(T.z[i]-z)**2;if(d<bd){bd=d;k=i}}for(let i=k-3;i<=k+3;i++){const j=(i+N)%N,d=(T.x[j]-x)**2+(T.z[j]-z)**2;if(d<bd){bd=d;k=j}}
+  const l=(x-T.x[k])*Math.cos(T.psi[k])-(z-T.z[k])*Math.sin(T.psi[k]);return[k,l,Math.sqrt(bd)-T.hw[k]]};
+ /* ground height for anything laid on the ground: the road plane at the road's edge, the terrain bed further out */
+ const gy=(x,z)=>{const d=dRoad(x,z);if(d<1.2){const[k,l]=near(x,z);return T.y[k]-l*T.bank[k]}let y=terrainBed(T,x,z);if(DG){const h=DG(x,z);if(h!=null&&h>y)y=h}return y};
+ /* GRAVEL, GREEN PAINT, ASPHALT RUN-OFF: the survey's outlines as rows 1 m apart; consecutive rows are joined edge to edge so the outline
+    runs smooth, and each piece is cut every 4 m so it lies on the ground */
  const sandTex=ctex(32,32,(x,w,h)=>{x.fillStyle='#e6d29b';x.fillRect(0,0,w,h);x.fillStyle='#d4bd80';for(let j=0;j<h;j+=4)x.fillRect(0,j,w,1);x.fillStyle='#f1e3b4';for(let j=2;j<h;j+=8)x.fillRect(0,j,w,1)});
- const sandM=new THREE.MeshStandardMaterial({map:sandTex,roughness:1,side:THREE.DoubleSide});sandTex.wrapS=sandTex.wrapT=THREE.RepeatWrapping;
- sandM.polygonOffset=true;sandM.polygonOffsetFactor=-4;sandM.polygonOffsetUnits=-8;
- /* ---- the real circuit's trackside, measured from a survey of Imola (imola_ref.js): gravel, green run-offs, green walls, Armco,
-    catch fences and tyre walls stand where they stand at the real track. Nothing closer than 2.5 m to the road edge ---- */
- /* the pits are on the right of the start straight at the real circuit (side -1), garages from 56 samples before the line to 60 after */
- const PS=-1,K0=-56,K1=60,inPit=k=>k>=N+K0||k<=K1+2;
- /* opposite the pits, along the whole start straight: the real wall and fence, with one continuous run of grandstands right behind them */
- const inStart=k=>{k=((k%N)+N)%N;return k>=N-70||k<=K1+90};
- /* walls, fences and rails run unbroken: gaps of up to 30 samples are bridged, sudden steps become a gentle slant (1 m per sample at most)
-    and leftover stubs under 8 samples are dropped */
- const smooth=a=>{const o=Float32Array.from(a),n=o.length;let i=0;while(i<n&&o[i]>=0)i++;if(i===n)return o;
-  for(let q=0;q<n;q++){const k=(i+q)%n;if(o[k]>=0)continue;let e=q;while(e<n&&o[(i+e)%n]<0)e++;const L=e-q;
-   if(L<=30){const v0=o[(i+q-1+n)%n],v1=o[(i+e)%n];for(let t=0;t<L;t++)o[(i+q+t)%n]=v0+(v1-v0)*(t+1)/(L+1)}q=e}
-  for(let it=0;it<20;it++)for(let k=0;k<n;k++){const v=o[k];if(v<0)continue;for(const j of[(k+1)%n,(k-1+n)%n])if(o[j]>=0&&o[j]-1>v)o[k]=o[j]-1}
-  for(let q=0;q<n;q++){const k=(i+q)%n;if(o[k]<0)continue;let e=q;while(e<n&&o[(i+e)%n]>=0)e++;if(e-q<8)for(let t=q;t<e;t++)o[(i+t)%n]=-1;q=e}return o};
- const irC={};for(const c in irOff)irC[c]=c==='wall'||c==='fence'||c==='rail'?irOff[c].map(smooth):irOff[c];
- const get=(c,side,k)=>{k=((k%N)+N)%N;return irC[c][side<0?0:1][k]},pitSide=(side,k)=>side===PS&&inPit(k);
- const brk=(c,side)=>k=>{const a=get(c,side,k),b=get(c,side,k-1);return a<0||b<0||Math.abs(a-b)>2.5};
- /* gravel and green run-off edges, cleaned up: gaps of up to 12 samples are bridged, both edges are smoothed so the outline flows instead
-    of jumping, and scraps under 6 samples are dropped. A trap never stops or restarts at random */
- const roC={};const roEdge=(cLo,cHi,side)=>{const key=cLo+side;if(roC[key])return roC[key];const si=side<0?0:1,lo=Float32Array.from(irC[cLo][si]),hi=Float32Array.from(irC[cHi][si]),n=N;
-  for(let k=0;k<n;k++){if(pitSide(side,k)||lo[k]<0||hi[k]<0||hi[k]<Math.max(2.4,lo[k])+.5||cLo==='green_lo'&&lo[k]>6/* painted run-off starts at the kerb; loose patches out in the grass go */){lo[k]=hi[k]=-1}}
-  const ok=k=>hi[(k+n)%n]>=0;for(let k=0;k<n;k++){if(ok(k)||!ok(k-1))continue;let e=1;while(e<=12&&!ok(k+e))e++;if(e>12)continue;const a0=(k-1+n)%n,b0=(k+e)%n;
-   for(let t=0;t<e;t++){const f=(t+1)/(e+1),q=(k+t)%n;lo[q]=lo[a0]+(lo[b0]-lo[a0])*f;hi[q]=hi[a0]+(hi[b0]-hi[a0])*f}}
-  for(let it=0;it<4;it++)for(const A of[lo,hi]){const c=Float32Array.from(A);for(let k=0;k<n;k++){if(c[k]<0)continue;const p=c[(k-1+n)%n],q=c[(k+1)%n];if(p>=0&&q>=0)A[k]=(p+2*c[k]+q)/4}}
-  for(let k=0;k<n;k++){if(!ok(k)||ok(k-1))continue;let e=0;while(e<n&&ok(k+e))e++;if(e<6)for(let t=0;t<e;t++)lo[(k+t)%n]=hi[(k+t)%n]=-1}
-  /* a gravel trap starts right at the road edge (or the outside of the kerb): no strip of grass between the track and the gravel */
-  if(cLo==='sand_lo'){const inC=new Uint8Array(n);for(const c of kc)if((c.dir>0?-1:1)===side)for(let q=c.a-10;q<=c.b+30;q++)inC[((q%n)+n)%n]=1;/* the outside of the corner only */
-   /* gravel only at the corners (from just before turn-in to past the exit, where cars run wide), as in the survey model: none along the straights */
-   for(let k=0;k<n;k++)if(lo[k]>=0){if(!inC[k]){lo[k]=hi[k]=-1;continue}if(lo[k]<=6)lo[k]=kerbW[side<0?0:1][k]>0?kerbW[side<0?0:1][k]:0/* a trap that starts near the road starts at it; one set well back keeps its run-off in front */}
-   for(let k=0;k<n;k++){if(hi[k]<0||hi[(k-1+n)%n]>=0)continue;let e=0;while(e<n&&hi[(k+e)%n]>=0)e++;if(e<6)for(let t=0;t<e;t++)lo[(k+t)%n]=hi[(k+t)%n]=-1}}
-  /* green run-off never lies over the gravel: where they overlap the green keeps only the part outside the trap */
-  if(cLo==='green_lo'){const[sl,sh]=roEdge('sand_lo','sand_hi',side);for(let k=0;k<n;k++){if(lo[k]<0||sh[k]<0)continue;const a=Math.max(lo[k],sl[k]),b=Math.min(hi[k],sh[k]);if(b<=a)continue;
-    const inner=sl[k]-lo[k],outer=hi[k]-sh[k];if(inner<1&&outer<1){lo[k]=hi[k]=-1}else if(inner>=outer)hi[k]=sl[k]-.2;else lo[k]=sh[k]+.2}}
-  return roC[key]=[lo,hi]};
- /* gravel and green run-off between their inner and outer edge, in 12 bands so they follow the ground */
- const ribbon=(cLo,cHi,side,mt,dy)=>{for(let j=0;j<12;j++){const pos=[],uv=[],idx=[];let prev=-1;
-   const[LO,HI]=roEdge(cLo,cHi,side);for(let q=0;q<=N;q++){const k=q%N,lo0=LO[k],hi=HI[k];if(lo0<0||hi<0){prev=-1;continue}
-    const lo=cLo==='sand_lo'?lo0:Math.max(2.4,lo0);if(hi<lo+.3){prev=-1;continue}const w0=lo+(hi-lo)*j/12,w1=lo+(hi-lo)*(j+1)/12,v=pos.length/3,dv=w=>w<1.25?Math.min(dy,.05):dy/* on the road shoulder it lies flat on the asphalt */;
-    pos.push(...at(k,side*(T.hw[k]+w0),dv(w0)),...at(k,side*(T.hw[k]+w1),dv(w1)));uv.push(w0/4,q*T.sp/8,w1/4,q*T.sp/8);
-    if(prev>=0)idx.push(v-2,v-1,v,v-1,v+1,v);prev=k}
-   if(!idx.length)continue;const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));gg.setIndex(idx);gg.computeVertexNormals();g.add(new THREE.Mesh(gg,mt))}};
- const greenM=new THREE.MeshStandardMaterial({color:new THREE.Color(0x2c6a2e).convertSRGBToLinear(),roughness:.9,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
- for(const side of[-1,1]){ribbon('green_lo','green_hi',side,greenM,.18);ribbon('sand_lo','sand_hi',side,sandM,.25)}T._sand=[roEdge('sand_lo','sand_hi',-1),roEdge('sand_lo','sand_hi',1)];
- for(const side of[-1,1]){
-  /* green concrete walls */
-  P.trackWall(T,g,at,dRoad,{side,a:0,b:N,off:k=>Math.max(2.5,get('wall',side,k)),h:1.1,col:0x0c5a22,top:0xe9ebe6/* the scene grading halves saturation: a deep green reads as Imola's green */,skip:k=>get('wall',side,k)<0||pitSide(side,k),brk:k=>get('wall',side,k-1)<0});
-  /* Armco */
-  const ro=new Float32Array(N);for(let k=0;k<N;k++){const v=get('rail',side,k);ro[k]=v<0||pitSide(side,k)?-1:Math.max(2.5,v)}P.armco(T,g,at,side,ro);
-  /* catch fences: on top of the wall where one stands within a metre or so, otherwise on their own posts */
-  const onWall=k=>{const w=get('wall',side,k),f=get('fence',side,k);return w>=0&&f>=0&&Math.abs(w-f)<1.2};
-  P.catchFence(T,g,at,dRoad,{side,a:0,b:N,h:3,off:k=>onWall(k)?Math.max(2.5,get('wall',side,k))+.2:Math.max(2.5,get('fence',side,k)),y0:k=>onWall(k)?1.05:0,
-   skip:k=>get('fence',side,k)<0||pitSide(side,k),brk:k=>get('fence',side,k-1)<0||onWall(k)!==onWall(k-1)})}
- /* TYRE WALLS: two tyres high, black with a white and a red block now and then; every link a collider */
- /* they always stand against the face of a wall or Armco run: no barrier just behind them, no tyres */
- {const bar=(side,k,o)=>{let b=-1;for(const c of['wall','rail']){let v=get(c,side,k);if(v<0||pitSide(side,k))continue;v=Math.max(2.5,v);if(v>=o-1.5&&v-o<=5&&(b<0||v<b))b=v}return b},
-   tw=(side,k)=>{const o=get('tyre',side,k);if(o<1.5||pitSide(side,k))return -1;const b=bar(side,k,o);return b<0?-1:b-.6};
-  const B=[],W=[],R=[];for(const side of[-1,1])for(let k=0;k<N;k++){const e0=tw(side,k);if(e0<0)continue;const t1=tw(side,k+1),e1=t1>=0&&Math.abs(e0-t1)<2.5?t1:-1;
-   for(let t=0;t<3;t++){if(t&&e1<0)break;const f=t/3,pa=at(k,side*(T.hw[k]+e0),0),pb=e1<0?pa:at(k+1,side*(T.hw[(k+1)%N]+e1),0),x=pa[0]+(pb[0]-pa[0])*f,y=pa[1]+(pb[1]-pa[1])*f,z=pa[2]+(pb[2]-pa[2])*f,blk=Math.floor((k*3+t)/5)%9;
-    for(let h=0;h<2;h++)(blk===0?R:B).push([x,y+.25+h*.5,z,1,1,0])}
-   if(e1>=0&&P.addSeg){const p1=at(k,side*(T.hw[k]+e0),0),p2=at(k+1,side*(T.hw[(k+1)%N]+e1),0);P.addSeg(T,p1[0],p1[2],p2[0],p2[2],.8)}}
-  const cg=new THREE.CylinderGeometry(.55,.55,.5,8);inst(g,cg,M_(0x0c0d10),B);if(R.length)inst(g,cg,M_(0x6e0c08),R)}
- const behind=(side,k)=>{let m=-1;for(const c of['wall','rail','tyre','fence']){const v=get(c,side,k);if(v>m)m=v}return m};
-
- /* helpers */
- const seats=ctex(16,8,(x,w,h)=>{x.fillStyle='#8d949c';x.fillRect(0,0,w,h);const pal=['#d8392f','#f1f1f1','#2c6cd0','#f2c76b'];for(let i=0;i<w;i+=2){x.fillStyle=pal[(i>>1)%4];x.fillRect(i,1,2,2);x.fillRect(i,5,2,2)}}),seatM=new THREE.MeshStandardMaterial({map:seats,roughness:.9});
- const stand=(k,l,len,rows)=>{const sg=l>0?1:-1,[px,py,pz]=at(k,l,0),grp=new THREE.Group(),gy=T.terr(px,pz);grp.position.set(px,gy,pz);grp.rotation.y=T.psi[k];g.add(grp);
-  const st=P.kitStand(len,Math.min(rows,9),[0x2f6b3a,0xf1f1f1,0xd8392f]);st.rotation.y=-sg*PI/2;grp.add(st);if(P.kitCrowd)P.kitCrowd(st,len,Math.min(rows,9),.85);return grp};
- const signCanvas=(txt,w,h,bg,fg,fs)=>ctex(w,h,(c,W,H)=>{c.fillStyle=bg;c.fillRect(0,0,W,H);c.strokeStyle=fg;c.lineWidth=3;c.strokeRect(3,3,W-6,H-6);c.fillStyle=fg;c.font='bold '+(fs||Math.floor(H*.5))+'px monospace';c.textAlign='center';c.textBaseline='middle';c.fillText(txt,W/2,H/2+2)});
- const board=(k,l,txt,wm,hm,bg,fg,yy)=>{const[px,py,pz]=at(k,l,0),grp=new THREE.Group();grp.position.set(px,py,pz);grp.rotation.y=T.psi[k]+PI;g.add(grp);
-  const pl=new THREE.Mesh(new THREE.BoxGeometry(.18,(yy||2.4)+hm/2,.18),M_(0x666d73));pl.position.set(0,(yy||2.4)/2+hm/4,0);grp.add(pl);
-  const sg=new THREE.Mesh(new THREE.PlaneGeometry(wm,hm),new THREE.MeshBasicMaterial({map:signCanvas(txt,Math.max(64,Math.round(wm*40)),Math.max(32,Math.round(hm*40)),bg,fg),side:THREE.DoubleSide}));sg.position.set(0,(yy||2.4)+hm/2,.12);grp.add(sg);return grp};
- /* corner numbers + brake boards + marshal posts */
- corners.forEach((c,i)=>{const side=c.dir>0?-1:1;{const kb=(c.a-14+N)%N,w=behind(side,kb);board(kb,side*(T.hw[c.a]+(w>=0&&w<8.5?Math.max(2.5,w)+.9:7.4)),String(i+1),2.4,1.5,'#f2c76b','#10151b',2.1)}
-  if(0)board(0,0,String(i+1),2.4,1.5,'#f2c76b','#10151b',2.1);
-  const k=c.pi,mo=behind(side,k),[mx,my,mz]=at(k,side*(T.hw[k]+(mo>=0?Math.max(2.5,mo)+3.5:18.5)),0),mp=new THREE.Group();mp.position.set(mx,my,mz);mp.rotation.y=T.psi[k];g.add(mp);
-  const hut=P.kitHut();hut.rotation.y=-side*PI/2;mp.add(hut);const fp=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,3.4,5),M_(0xcfd3d6));fp.position.set(1.1,3.7,0);mp.add(fp);const fl=new THREE.Mesh(new THREE.BoxGeometry(.05,.7,1.1),MB([0xf2c76b,0xffffff,0x2c6cd0][i%3]));fl.position.set(1.1,5.2,.55);mp.add(fl)});
- /* start/finish: gantry, painted line, pit row, tower, stands, footbridge, advert boards */
- {
-  /* pit buildings on the infield side */
-  const is=PS;P.kitPitRow(g,T,at,K0,K1+2,is,16);
-  {const k=3,[px,py,pz]=at(k,is*(T.hw[k]+34),0),b=new THREE.Group();b.position.set(px,T.terr(px,pz),pz);b.rotation.y=T.psi[k];g.add(b);{const tw=P.kitTower(20);/* Imola's race control: red and white bands, a glass box on top */tw.children[0].material=M_(0xd8392f);for(let i=0;i<4;i++){const r=new THREE.Mesh(new THREE.CylinderGeometry(2.45-.08*i,2.5-.08*i,1.6,8),M_(0xf1f1f1));r.position.y=3+i*4.4;tw.add(r)}tw.children[1].material=M_(0x6f93ad,{roughness:.15,metalness:.4});b.add(tw)}if(P.addPt)P.addPt(T,px,pz,4.2)}
-  }
- /* footbridges where the real circuit has them (only those that span the track) */
- for(const br of IR.br){let k=0,bd=1e18;for(let i=0;i<N;i++){const d=(T.x[i]-br[0])**2+(T.z[i]-br[1])**2;if(d<bd){bd=d;k=i}}if(bd>25*25)continue;
- {const [bx,by,bz]=at(k,0,0),bp=new THREE.Group();bp.position.set(bx,by,bz);bp.rotation.y=T.psi[k];g.add(bp);const wd=T.hw[k]+7;
+ sandTex.wrapS=sandTex.wrapT=THREE.RepeatWrapping;
+ const LAY={sand:[new THREE.MeshStandardMaterial({map:sandTex,roughness:1,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-8}),.22],
+  green:[new THREE.MeshStandardMaterial({color:lin(0x2f8a52),roughness:.9,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-6}),.16],
+  asph:[new THREE.MeshStandardMaterial({color:lin(0x45484e),roughness:.95,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4}),.12]};
+ for(const nm in LAY){const R=GRUN[nm];if(!R)continue;const[mt,dy]=LAY[nm],pos=[],uv=[],idx=[];
+  const quad=(z0,a0,a1,z1,b0,b1)=>{const n=Math.max(1,Math.ceil(Math.max(a1-a0,b1-b0)/4)),v=pos.length/3;
+   for(let i=0;i<=n;i++){const t=i/n,xa=a0+(a1-a0)*t,xb=b0+(b1-b0)*t;pos.push(xa,gy(xa,z0)+dy,z0,xb,gy(xb,z1)+dy,z1);uv.push(xa/4,z0/4,xb/4,z1/4)}
+   for(let i=0;i<n;i++){const a=v+i*2;idx.push(a,a+1,a+2,a+1,a+3,a+2)}};
+  const rows=[...R.keys()].sort((a,b)=>a-b);
+  for(const r of rows){const A=R.get(r),B=R.get(r+1)||[],z0=-200+r+.25,z1=z0+1;
+   for(const[a0,a1]of A){let joined=false;for(const[b0,b1]of B)if(a0<b1&&b0<a1){quad(z0,a0,a1,z1,b0,b1);joined=true}
+    if(!joined)quad(z0,a0,a1,z0+.5,a0+(a1-a0)*.25,a1-(a1-a0)*.25)}
+   /* a row with no row below it still gets a short lip so the outline closes */
+   if(!R.has(r-1))for(const[a0,a1]of A)quad(z0-.5,a0+(a1-a0)*.25,a1-(a1-a0)*.25,z0,a0,a1)}
+  if(!idx.length)continue;const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));gg.setIndex(idx);gg.computeVertexNormals();g.add(new THREE.Mesh(gg,mt))}
+ /* BARRIERS along the survey's own lines */
+ const LN={};if(IR&&IR.ln)for(const c in IR.ln){const meta=i16(IR.ln[c][0]),pts=i16(IR.ln[c][1]),out=[];let o=0;for(let i=0;i<meta.length;i+=3){const n=meta[i],p=[];for(let j=0;j<n;j++){p.push([pts[(o+j)*2]/4,pts[(o+j)*2+1]/4])}o+=n;out.push({p,h:meta[i+1]/10,b:meta[i+2]/10})}LN[c]=out}
+ const nearTrack=(x,z)=>dRoad(x,z)<45;
+ /* walls: green with a white top beside the track, plain concrete further away; every link by the track is a collider */
+ {const pos=[],col=[],idx=[],gC=lin(0x0c5a22),wC=lin(0xe9ebe6),cC=lin(0xb9bcb8);
+  for(const L of LN.wall||[]){const H=Math.max(.8,Math.min(4,L.h)),th=.4,p=L.p;if(p.length<2)continue;
+   for(let i=0;i<p.length-1;i++){const[x0,z0]=p[i],[x1,z1]=p[i+1],dx=x1-x0,dz=z1-z0,ln=Math.hypot(dx,dz);if(ln<.05)continue;const nx=-dz/ln*th/2,nz=dx/ln*th/2,y0=gy(x0,z0)-.2,y1=gy(x1,z1)-.2,tr=nearTrack((x0+x1)/2,(z0+z1)/2),c0=tr&&H<1.8?gC:cC,v=pos.length/3;
+    /* a box per link: two long faces and the cap */
+    const P=[[x0-nx,y0,z0-nz],[x1-nx,y1,z1-nz],[x1-nx,y1+H,z1-nz],[x0-nx,y0+H,z0-nz],[x0+nx,y0,z0+nz],[x1+nx,y1,z1+nz],[x1+nx,y1+H,z1+nz],[x0+nx,y0+H,z0+nz]];
+    for(const f of[[0,1,2,3],[5,4,7,6],[3,2,6,7],[4,0,3,7],[1,5,6,2]]){const b=pos.length/3,cc=f[0]===3?(tr&&H<1.8?wC:cC):c0;for(const q of f){pos.push(...P[q]);col.push(cc.r,cc.g,cc.b)}idx.push(b,b+1,b+2,b,b+2,b+3)}
+    if(tr&&P.addSeg)P.addSeg(T,x0,z0,x1,z1,.3)}}
+  if(pos.length){const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setAttribute('color',new THREE.Float32BufferAttribute(col,3));gg.setIndex(idx);gg.computeVertexNormals();g.add(new THREE.Mesh(gg,new THREE.MeshStandardMaterial({vertexColors:true,roughness:.9,flatShading:true,side:THREE.DoubleSide})))}}
+ /* Armco: a galvanised band on posts */
+ {const pos=[],idx=[],posts=[],rail=new THREE.MeshStandardMaterial({color:lin(0xb9c1c4),roughness:.45,metalness:.4,side:THREE.DoubleSide,flatShading:true});
+  for(const L of LN.rail||[]){const p=L.p;let run=0;for(let i=0;i<p.length;i++){const[x,z]=p[i],y=gy(x,z),v=pos.length/3;pos.push(x,y+.4,z,x,y+.95,z);if(i){idx.push(v-2,v,v-1,v-1,v,v+1);const[xa,za]=p[i-1];run+=Math.hypot(x-xa,z-za);if(nearTrack(x,z)&&P.addSeg)P.addSeg(T,xa,za,x,z,.3)}
+    if(i%1===0)posts.push([x,y+.45,z,1,1,0])}}
+  if(pos.length){const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setIndex(idx);gg.computeVertexNormals();g.add(new THREE.Mesh(gg,rail));inst(g,new THREE.BoxGeometry(.12,.9,.12),M_(0x7d868d),posts)}}
+ /* catch fences: see-through mesh panels with posts, from the survey's base to its top (on top of a wall where it stands on one) */
+ {const tex=ctex(16,16,(x,w,h)=>{x.clearRect(0,0,w,h);x.strokeStyle='rgba(205,210,214,1)';x.lineWidth=1;for(let i=-16;i<32;i+=4){x.beginPath();x.moveTo(i,0);x.lineTo(i+16,16);x.stroke();x.beginPath();x.moveTo(i+16,0);x.lineTo(i,16);x.stroke()}});tex.magFilter=THREE.LinearFilter;
+  const pos=[],uv=[],idx=[],posts=[];
+  for(const L of LN.fence||[]){const b=Math.max(0,Math.min(2,L.b)),H=Math.max(2,Math.min(5,L.h-b)),p=L.p;let u=0;
+   for(let i=0;i<p.length;i++){const[x,z]=p[i],y=gy(x,z)+b,v=pos.length/3;if(i)u+=Math.hypot(x-p[i-1][0],z-p[i-1][1])/1.6;pos.push(x,y,z,x,y+H,z);uv.push(u,0,u,H/1.6);if(i)idx.push(v-2,v,v-1,v,v+1,v-1);posts.push([x,y+H/2-.5,z,1,1,0])}}
+  if(pos.length){const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));gg.setIndex(idx);
+   g.add(new THREE.Mesh(gg,new THREE.MeshBasicMaterial({map:tex,transparent:true,opacity:.55,alphaTest:.2,side:THREE.DoubleSide,depthWrite:false,color:0x9aa3aa})));
+   inst(g,new THREE.CylinderGeometry(.06,.06,4,5),new THREE.MeshStandardMaterial({color:0x7d868d,metalness:.4,roughness:.5}),posts)}}
+ /* tyre walls: stacks of tyres every 1.1 m along the line, black with a red block now and then; colliders by the track */
+ {const B=[],R=[];for(const L of LN.tyre||[]){const p=L.p,rows=Math.max(1,Math.min(4,Math.round(L.h/.5)));let cnt=0;
+   for(let i=0;i<p.length-1;i++){const[x0,z0]=p[i],[x1,z1]=p[i+1],ln=Math.hypot(x1-x0,z1-z0),n=Math.max(1,Math.round(ln/1.1));
+    for(let t=0;t<n;t++){const f=t/n,x=x0+(x1-x0)*f,z=z0+(z1-z0)*f,y=gy(x,z),blk=Math.floor(cnt++/5)%9;for(let h=0;h<rows;h++)(blk===0?R:B).push([x,y+.25+h*.5,z,1,1,0])}
+    if(nearTrack(x0,z0)&&P.addSeg)P.addSeg(T,x0,z0,x1,z1,.6)}}
+  const cg=new THREE.CylinderGeometry(.55,.55,.5,8);if(B.length)inst(g,cg,M_(0x0c0d10),B);if(R.length)inst(g,cg,M_(0x6e0c08),R)}
+ /* BLOCKS: every building, stand, tent, vehicle and prop of the survey, as flat-shaded boxes with its footprint and height. Never on the road */
+ const box=[];
+ {const bx=IR&&IR.bx?i16(IR.bx):new Int16Array(0),n=bx.length/10,PL=(IR&&IR.pal||[]).map(c=>lin(c));
+  const TL=new Map();/* 250 m tiles, so each can be culled on its own */
+  for(let i=0;i<n;i++){const o=i*10,cx=bx[o]/4,cz=bx[o+1]/4,L=bx[o+2]/4,W=bx[o+3]/4,yb=bx[o+4]/10,yt=bx[o+5]/10,ang=bx[o+6]/1000;
+   const ca=Math.cos(ang),sa=Math.sin(ang),cs=[[-L/2,-W/2],[L/2,-W/2],[L/2,W/2],[-L/2,W/2]].map(([u,v])=>[cx+u*ca-v*sa,cz+u*sa+v*ca]);
+   if(yb<4.5){let onRoad=dRoad(cx,cz)<.6;for(const[x,z]of cs)if(dRoad(x,z)<.6)onRoad=true;if(onRoad)continue}
+   const gc=gy(cx,cz);let y0=gc+yb;if(yb<=0){for(const[x,z]of cs)y0=Math.min(y0,gy(x,z));y0-=.15}const y1=gc+yt;
+   const tc=PL[bx[o+7]]||lin(0x9aa0a6),sc=PL[bx[o+8]]||tc;
+   const P=[...cs.map(([x,z])=>[x,y0,z]),...cs.map(([x,z])=>[x,y1,z])],tk=Math.floor(cx/250)+','+Math.floor(cz/250);if(!TL.has(tk))TL.set(tk,{pos:[],col:[],idx:[]});const{pos,col,idx}=TL.get(tk);
+   for(const f of[[4,5,6,7],[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7],...(yb>0?[[3,2,1,0]]:[])]){const b=pos.length/3,cc=f[0]===4?tc:sc;for(const q of f){pos.push(...P[q]);col.push(cc.r,cc.g,cc.b)}idx.push(b,b+2,b+1,b,b+3,b+2)}
+   if(yb<=0&&yt>2)box.push([Math.min(...cs.map(c=>c[0]))-2,Math.max(...cs.map(c=>c[0]))+2,Math.min(...cs.map(c=>c[1]))-2,Math.max(...cs.map(c=>c[1]))+2])}
+  const bm=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.85,flatShading:true,side:THREE.DoubleSide});
+  for(const{pos,col,idx}of TL.values()){const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setAttribute('color',new THREE.Float32BufferAttribute(col,3));gg.setIndex(idx);gg.computeVertexNormals();gg.computeBoundingSphere();
+   const m=new THREE.Mesh(gg,bm);m.userData.fogCull=1;g.add(m)}}
+ /* footbridges over the track where the survey has them */
+ const MBc=c=>new THREE.MeshBasicMaterial({color:c});
+ for(const br of(IR&&IR.br)||[]){let k=0,bd=1e18;for(let i=0;i<N;i++){const d=(T.x[i]-br[0])**2+(T.z[i]-br[1])**2;if(d<bd){bd=d;k=i}}if(bd>25*25)continue;
+  const[bx_,by,bz]=at(k,0,0),bp=new THREE.Group();bp.position.set(bx_,by,bz);bp.rotation.y=T.psi[k];g.add(bp);const wd=T.hw[k]+7;
   const deck=new THREE.Mesh(new THREE.BoxGeometry(wd*2,.7,4),M_(0x2c6cd0));deck.position.y=9.4;bp.add(deck);
-  for(const sx of[-1,1]){const col=new THREE.Mesh(new THREE.BoxGeometry(1.6,9.6,2.4),M_(0xe6e8ea));col.position.set(sx*wd,4.8,0);bp.add(col)}
-  const ban=new THREE.Mesh(new THREE.PlaneGeometry(wd*1.5,1.6),new THREE.MeshBasicMaterial({map:signCanvas('IMOLA',512,64,'#2c6cd0','#f1f1f1',34),side:THREE.DoubleSide}));ban.position.set(0,10.4,2.05);bp.add(ban);const b2=ban.clone();b2.position.z=-2.05;bp.add(b2)}}
- /* tyre stacks as cones marking the pit exit, small detail */
- /* grandstands where the real ones stand: long stands are cut into 40 m sections, each one squared to the road beside it and set back
-    behind the barriers (never closer than 4 m past the wall, fence or tyres), standing on a concrete plinth so nothing hangs in the air */
- {const plM=M_(0x8a8f94);
-  for(const sd of IR.st){const[cx,cz,,len,dep,,ang]=sd,ax=Math.cos(ang),az=Math.sin(ang),ns=Math.max(1,Math.round(len/42)),sl=Math.min(40,len/ns-2);
-   const rows=Math.max(4,Math.min(12,Math.round(dep*.55/.9))),D=rows*.9;
-   for(let j=0;j<ns;j++){const t=-len/2+(j+.5)*len/ns,x=cx+ax*t,z=cz+az*t;let k=0,bd=1e18;for(let i=0;i<N;i++){const d=(T.x[i]-x)**2+(T.z[i]-z)**2;if(d<bd){bd=d;k=i}}
-    const l=(x-T.x[k])*Math.cos(T.psi[k])-(z-T.z[k])*Math.sin(T.psi[k]),side=Math.sign(l)||1;if(side===PS&&inPit(k))continue;if(side===-PS&&inStart(k))continue;/* the start straight gets its own continuous run below */
-    let need=6;for(let d=-8;d<=8;d++){const v=behind(side,k+d);if(v>=0)need=Math.max(need,Math.max(2.5,v)+4)}
-    const off=side===-PS&&inStart(k)?need+1:Math.max(need,Math.abs(l)-T.hw[k]-D/2);if(off>90)continue;
-    const[px,,pz]=at(k,side*(T.hw[k]+off),0);if(dRoad(px,pz)<need-1)continue;
-    const grp=new THREE.Group(),gy=T.terr(px,pz);grp.position.set(px,gy,pz);grp.rotation.y=T.psi[k];g.add(grp);
-    const st=P.kitStand(sl,rows,[0x2f6b3a,0xf1f1f1,0xd8392f]);st.rotation.y=-side*PI/2;grp.add(st);if(P.kitCrowd)P.kitCrowd(st,sl,rows,.85);
-    const pl=new THREE.Mesh(new THREE.BoxGeometry(D+.5,8,sl),plM);pl.position.set(side*(D/2),-4.02,0);grp.add(pl)}}}
- /* the main grandstands: one unbroken run along the start straight opposite the pits, right behind the wall and fence */
- {const plM=M_(0x8a8f94),side=-PS,rows=10,D=rows*.9,st=Math.max(1,Math.round(42/T.sp));
-  for(let k=-64;k<K1+84;k+=st){const kk=((k%N)+N)%N;let need=6;for(let d=-2;d<=st+2;d++){const v=behind(side,kk+d);if(v>=0)need=Math.max(need,Math.max(2.5,v)+3)}if(need>34)continue;const[px,,pz]=at(kk,side*(T.hw[kk]+need),0),grp=new THREE.Group();grp.position.set(px,T.terr(px,pz),pz);grp.rotation.y=T.psi[kk];g.add(grp);
-   const sl=Math.hypot(T.x[(kk+st)%N]-T.x[kk],T.z[(kk+st)%N]-T.z[kk])-.6;const s2=P.kitStand(sl,rows,[0x2f6b3a,0xf1f1f1,0xd8392f]);s2.rotation.y=-side*PI/2;s2.position.z=sl/2;grp.add(s2);if(P.kitCrowd)P.kitCrowd(s2,sl,rows,.85);
-   const pl=new THREE.Mesh(new THREE.BoxGeometry(D+.5,8,sl),plM);pl.position.set(side*(D/2),-4.02,sl/2);grp.add(pl)}}
- /* the stock world's loose random cone trees go; trees keep 3 m clear of anything built (stands, pits, bridges) */
+  for(const sx of[-1,1]){const cl=new THREE.Mesh(new THREE.BoxGeometry(1.6,9.6,2.4),M_(0xe6e8ea));cl.position.set(sx*wd,4.8,0);bp.add(cl)}}
+ /* the stock world's loose random cone trees go */
  {const cnt=new Set(),rm=[];sc.traverse(m=>{const q=m.geometry&&m.geometry.parameters;if(m.isInstancedMesh&&m.geometry.type==='ConeGeometry'&&q.radius>2&&q.radius<2.5&&q.height>6&&q.height<7){rm.push(m);cnt.add(m.count)}});
   sc.traverse(m=>{if(m.isInstancedMesh&&m.geometry.type==='CylinderGeometry'&&cnt.has(m.count)&&m.parent===sc)rm.push(m)});rm.forEach(m=>m.parent&&m.parent.remove(m))}
- const box=[];{const bb=new THREE.Box3();g.updateMatrixWorld(true);g.traverse(m=>{if(!m.isMesh||m.isInstancedMesh)return;bb.setFromObject(m);const sx=bb.max.x-bb.min.x,sz=bb.max.z-bb.min.z,sy=bb.max.y-bb.min.y;if(sy<1.5||sx>220||sz>220||!isFinite(sx))return;box.push([bb.min.x-3,bb.max.x+3,bb.min.z-3,bb.max.z+3])})}
- const built=(x,z)=>{for(const b of box)if(x>b[0]&&x<b[1]&&z>b[2]&&z<b[3])return true;return false};
- /* ---- Romagna parkland, tree by tree where the real ones stand: broadleaf (mostly green, some turning), Italian cypresses, stone pines, pines ---- */
+ /* what trees must keep clear of: a 2 m grid marking the barriers, the gravel/paint/run-off and every block */
+ const OC=new Map(),ok_=(x,z)=>(Math.floor(x/2)+4096)*65536+(Math.floor(z/2)+4096),mark=(x,z)=>OC.set(ok_(x,z),1);
+ for(const c in LN)for(const L of LN[c])for(let i=0;i<L.p.length-1;i++){const[x0,z0]=L.p[i],[x1,z1]=L.p[i+1],n=Math.ceil(Math.hypot(x1-x0,z1-z0)/1.5);for(let t=0;t<=n;t++)mark(x0+(x1-x0)*t/n,z0+(z1-z0)*t/n)}
+ for(const nm in GRUN)for(const[r,A]of GRUN[nm])for(const[a0,a1]of A)for(let x=a0;x<=a1;x+=1.5)mark(x,-200+r+.5);
+ for(const b of box)for(let x=b[0];x<=b[1];x+=1.5)for(let z=b[2];z<=b[3];z+=1.5)mark(x,z);
+ const clear=(x,z,r)=>{const n=Math.ceil(r/2)+1;for(let a=-n;a<=n;a++)for(let b=-n;b<=n;b++){if(OC.has(ok_(x+a*2,z+b*2))&&Math.hypot(a*2,b*2)<r+1.5)return false}return true};
+ const built=(x,z)=>OC.has(ok_(x,z));
  const AUT={or:{'#0e1709':'#3c1604','#16270f':'#52280a'},ye:{'#0e1709':'#3a2c04','#16270f':'#5a4a12'},ru:{'#0e1709':'#2a0c04','#16270f':'#421a0a'}};
- /* where a point is against the lap: nearest sample, signed lateral offset and distance past the road edge (any distance) */
- const near=(x,z)=>{let k=0,bd=1e18;for(let i=0;i<N;i+=2){const d=(T.x[i]-x)**2+(T.z[i]-z)**2;if(d<bd){bd=d;k=i}}for(let i=k-2;i<=k+2;i++){const j=(i+N)%N,d=(T.x[j]-x)**2+(T.z[j]-z)**2;if(d<bd){bd=d;k=j}}
-  const l=(x-T.x[k])*Math.cos(T.psi[k])-(z-T.z[k])*Math.sin(T.psi[k]);return[k,l,Math.sqrt(bd)-T.hw[k]]};
- /* everything the track owns on one side at sample k: barriers, gravel and green run-off (metres past the road edge) */
- const zone=(side,k)=>{let m=0;for(let d=-3;d<=3;d++)for(const c of['wall','rail','tyre','fence','sand_hi','green_hi']){const v=get(c,side,k+d);if(v>m)m=v}return m};
+ /* ---- every tree where the real one stands: broadleaf (mostly green, some turning), Italian cypresses, stone pines ---- */
  {const tp=new Int16Array(irB(IR.tp).buffer),tk=irB(IR.tk),n=tk.length/3,G=[[],[],[],[]],CY=[],ST=[],FB=[],FC=[],FU=[];
   const FAR=[0x2f5a26,0x3a6a2c,0x2a4f22,0x46722f,0x5a6a26];
-  for(let i=0;i<n;i++){const x=tp[i*3]/4,z=tp[i*3+1]/4,kd=tk[i*3],h=tk[i*3+1]/5;if(built(x,z))continue;
-   const r=((i*2654435761)>>>0)/4294967296,y=T.terr(x,z),rot=r*6.28,[k,l,ex]=near(x,z),side=l<0?-1:1;
-   /* the woods further out: a few triangles a tree, so the land is wooded right out to where the real woods end */
-   if(ex>140){const hh=Math.max(6,Math.min(26,h));(kd===1||kd===3?FC:kd===2?FU:FB).push([x,y-.4,z,kd===2?hh*.9:hh,rot,FAR[Math.floor(r*997)%FAR.length]]);continue}
-   const sc=kd===1||kd===3?Math.max(.6,Math.min(1.4,h/17)):kd===2?Math.max(.6,Math.min(1.05,h/15)):Math.max(.95,Math.min(1.9,h/10)),
-    cr=kd===1||kd===3?sc*17*.1:kd===2?sc*15*.38:sc*12*.36;
-   /* no crown reaches over the road, the run-off or the barriers */
-   if(ex<zone(side,k)+cr+1.5||dRoad(x,z)<cr+2.5)continue;
-   if(kd===1||kd===3)CY.push([x,y,z,sc,rot]);else if(kd===2)ST.push([x,y,z,sc,rot]);else G[r<.8?0:r<.88?1:r<.95?2:3].push([x,y,z,sc,rot])}
+  for(let i=0;i<n;i++){const x=tp[i*3]/4,z=tp[i*3+1]/4,kd=tk[i*3],h=tk[i*3+1]/5;
+   const r=((i*2654435761)>>>0)/4294967296,y=T.terr(x,z),rot=r*6.28,[,,ex]=near(x,z);
+   if(ex>140){if(built(x,z))continue;const hh=Math.max(6,Math.min(26,h));(kd===1||kd===3?FC:kd===2?FU:FB).push([x,y-.4,z,kd===2?hh*.9:hh,rot,FAR[Math.floor(r*997)%FAR.length]]);continue}
+   const s_=kd===1||kd===3?Math.max(.6,Math.min(1.4,h/17)):kd===2?Math.max(.6,Math.min(1.05,h/15)):Math.max(.95,Math.min(1.9,h/10)),
+    cr=kd===1||kd===3?s_*17*.1:kd===2?s_*15*.38:s_*12*.36;
+   /* no crown over the road, the gravel, the run-off, a barrier or a building */
+   if(dRoad(x,z)<cr+2.5||!clear(x,z,cr))continue;
+   if(kd===1||kd===3)CY.push([x,y,z,s_,rot]);else if(kd===2)ST.push([x,y,z,s_,rot]);else G[r<.8?0:r<.88?1:r<.95?2:3].push([x,y,z,s_,rot])}
   P.qMix(g,['oak3','oak4','oak5'],G[0],[12,12,12],[0xffffff,0xf0f8e0,0xe4eed6],{gap:.7});
   P.qMix(g,['oak3','oak4'],G[1],[12,12],[0xffffff],{pal:AUT.or,gap:.7});P.qMix(g,['oak4','oak5'],G[2],[12,12],[0xffffff],{pal:AUT.ye,gap:.7});P.qMix(g,['oak5'],G[3],[12],[0xffffff],{pal:AUT.ru,gap:.7});
   P.lobTrees(g,CY,17,[0xffffff,0xe6eee0],'cypress');P.lobTrees(g,ST,15,[0xffffff,0xeef6e0],'stone');
   if(P.farInst){P.farInst(g,'blob',FB);P.farInst(g,'cypress',FC);P.farInst(g,'umb',FU)}
   T._farTrees=n}
- /* buildings around the circuit where the real ones stand (houses, sheds, the paddock blocks): plain rendered walls, terracotta or flat roofs */
- {const winM=M_(0x3c4a56),wallC=[0xe8dcc4,0xd9c6a4,0xefe6d6,0xcdb999,0xe2d2b6],roofC=0xa24a2c,flat=M_(0x6e7378),W=wallC.map(c=>M_(c)),Rf=M_(roofC);
-  for(const[i,b]of(IR.bl||[]).entries()){const[cx,cz,,len,dep,h,ang]=b,[k,,ex]=near(cx,cz);if(ex<Math.max(dep,len)/2+zone(1,k)*0+12||built(cx,cz))continue;
-   const L=Math.max(5,len),Dd=Math.max(4,dep),H=Math.max(3.5,Math.min(18,h-(L>40?0:2))),gy=T.terr(cx,cz),grp=new THREE.Group();grp.position.set(cx,gy-.3,cz);grp.rotation.y=-ang;g.add(grp);
-   const body=new THREE.Mesh(new THREE.BoxGeometry(L,H,Dd),W[i%W.length]);body.position.y=H/2;grp.add(body);
-   /* a dark band of windows round each floor, so no building is a blank box */
-   for(let f=0;f<Math.floor(H/3.4);f++){const wb=new THREE.Mesh(new THREE.BoxGeometry(L-1.2,1.1,Dd+.08),winM);wb.position.y=f*3.4+1.9;grp.add(wb);const wc=new THREE.Mesh(new THREE.BoxGeometry(L+.08,1.1,Dd-1.2),winM);wc.position.y=f*3.4+1.9;grp.add(wc)}
-   if(L>40||Dd>30){const r=new THREE.Mesh(new THREE.BoxGeometry(L+.4,.5,Dd+.4),flat);r.position.y=H+.25;grp.add(r)}
-   else{const rg=new THREE.CylinderGeometry(0,1,1,4,1);rg.rotateY(Math.PI/4);const r=new THREE.Mesh(rg,Rf);r.scale.set(L*.75,Math.min(L,Dd)*.32,Dd*.75);r.position.y=H+Math.min(L,Dd)*.16;grp.add(r)}}}
- /* the land beyond: the scene fog swallows everything past about 600 m, so the open fields out to it get woods (a jittered grid of
-    low-poly crowns from just behind the barriers and run-off out to 480 m off the road, with a few clearings), and the town of Imola sits on the north side. From the track you
-    see woods and roofs fading into the haze, never bare grass running to the sky */
+ /* past the surveyed land: low-poly woods out into the haze, so the horizon is trees, never bare fields */
  const ty=(x,z)=>{const y=T.terr(x,z);return isFinite(y)?y:0};
  {const[bx0,bx1,bz0,bz1]=T.bounds,M=330,st=12,FB=[],FP=[],FAR=[0x24481e,0x2d5524,0x203f1a,0x37602a,0x3f5a22,0x55481e];let s=7;const rr=()=>((s=(s*1664525+1013904223)>>>0)/4294967296);
-  for(let x=bx0-M;x<bx1+M;x+=st)for(let z=bz0-M;z<bz1+M;z+=st){const px=x+(rr()-.5)*st*.9,pz=z+(rr()-.5)*st*.9,[k,l,ex]=near(px,pz);if(ex<32||ex>480)continue;
-   if(ex<zone(l<0?-1:1,k)+14||built(px,pz))continue;if(Math.sin(px*.011+1.3)*Math.sin(pz*.013-.7)+Math.sin((px+pz)*.006)*.6>.95)continue;/* clearings */
+  for(let x=bx0-M;x<bx1+M;x+=st)for(let z=bz0-M;z<bz1+M;z+=st){const px=x+(rr()-.5)*st*.9,pz=z+(rr()-.5)*st*.9,[,,ex]=near(px,pz);if(ex<260||ex>520)continue;
+   if(built(px,pz))continue;if(Math.sin(px*.011+1.3)*Math.sin(pz*.013-.7)+Math.sin((px+pz)*.006)*.6>.95)continue;
    const h=13+rr()*12,c=FAR[Math.floor(rr()*FAR.length)];(rr()<.12?FP:FB).push([px,ty(px,pz)-.4,pz,h*(rr()<.12?1.25:1),rr()*6,c])}
   if(P.farInst){P.farInst(g,'blob',FB);P.farInst(g,'pine',FP)}T._woods=FB.length+FP.length}
- {const W=[0xe8dcc4,0xd9c6a4,0xefe6d6,0xcdb999].map(c=>M_(c)),Rf=M_(0xa24a2c);let s=91;const rr=()=>((s=(s*1664525+1013904223)>>>0)/4294967296);
-  /* the town: on the far side of the start straight from the pits, 250 to 420 m out */
-  const k0=0,c=Math.cos(T.psi[k0]),sn=Math.sin(T.psi[k0]),ox=c*-PS,oz=-sn*-PS,fx=Math.sin(T.psi[k0]),fz=Math.cos(T.psi[k0]);let n=0;
-  for(let j=0;j<220&&n<70;j++){const d=250+rr()*170,t=(rr()-.5)*900,x=T.x[k0]+ox*d+fx*t,z=T.z[k0]+oz*d+fz*t,[,,ex]=near(x,z);if(ex<200||built(x,z))continue;n++;
-   const y=ty(x,z),w=9+rr()*12,dd=8+rr()*10,h=7+rr()*14,grp=new THREE.Group();grp.position.set(x,y-.3,z);grp.rotation.y=Math.atan2(fx,fz)+(rr()<.5?0:PI/2);g.add(grp);
-   const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,dd),W[j%4]);b.position.y=h/2;grp.add(b);
-   const rg=new THREE.CylinderGeometry(0,1,1,4,1);rg.rotateY(PI/4);const r=new THREE.Mesh(rg,Rf);r.scale.set(w*.75,Math.min(w,dd)*.3,dd*.75);r.position.y=h+Math.min(w,dd)*.15;grp.add(r)
-   if(n===30){const tw=new THREE.Mesh(new THREE.BoxGeometry(6,38,6),W[1]);tw.position.set(x+14,y+19,z);g.add(tw);const cap=new THREE.Mesh(new THREE.ConeGeometry(4.6,7,4),Rf);cap.position.set(x+14,y+41.5,z);cap.rotation.y=PI/4;g.add(cap)}}}
  /* Emilia hills and the town on the horizon */
  {const pano=()=>P.hillPano(49,0xcfe0ea,[{base:296,amp:60,col:0x6a8496,fog:.62},{base:318,amp:42,col:0x5f7f52,fog:.5,trees:14,fields:40},{base:338,amp:22,col:0x4a7340,fog:.34,trees:12}],(g,W,H,hz,mix,r)=>{
      /* the town on the hill: terracotta roofs and a bell tower */

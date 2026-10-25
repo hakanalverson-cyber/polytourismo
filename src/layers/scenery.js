@@ -14,9 +14,12 @@ const farCypress=()=>GEO.c||(GEO.c=(()=>{const a=new THREE.ConeGeometry(.14,.92,
 const farUmb=()=>GEO.u||(GEO.u=(()=>{const a=new THREE.CylinderGeometry(.42,.3,.16,7,1).toNonIndexed();a.translate(0,.88,0);const t=new THREE.CylinderGeometry(.035,.05,.82,4,1).toNonIndexed();t.translate(0,.41,0);return merge([t,a])})());
 const FG={pine:farPine,blob:farBlob,cypress:farCypress,umb:farUmb};
 /* plant far trees from a list of [x,y,z,height,rotY,hex]: kind is pine, blob, cypress or umb */
-P.farInst=(g,kind,list)=>{if(!list.length)return null;const im=new THREE.InstancedMesh(FG[kind](),new THREE.MeshStandardMaterial({color:0xffffff,roughness:1,flatShading:true}),list.length),ob=new THREE.Object3D();
- list.forEach((p,j)=>{ob.position.set(p[0],p[1],p[2]);ob.scale.set(p[3]*(kind==='blob'?1.15:1),p[3],p[3]*(kind==='blob'?1.15:1));ob.rotation.set(0,p[4],0);ob.updateMatrix();im.setMatrixAt(j,ob.matrix);im.setColorAt(j,lin(p[5]))});
- im.instanceMatrix.needsUpdate=true;im.instanceColor.needsUpdate=true;im.castShadow=false;im.receiveShadow=true;im.userData.shd=1;g.add(im);return im};
+/* the trunk (the first 48 vertices of every far-tree model) is its own brown instanced mesh, so the leaf tint never turns the wood green */
+const farSplit={};const farParts=kind=>farSplit[kind]||(farSplit[kind]=(()=>{const gm=FG[kind](),p=gm.attributes.position.array,mk=a=>{const q=new THREE.BufferGeometry();q.setAttribute('position',new THREE.BufferAttribute(a,3));q.computeVertexNormals();return q};return[mk(p.slice(0,144)),mk(p.slice(144))]})());
+P.farInst=(g,kind,list)=>{if(!list.length)return null;const[tg,cg]=farParts(kind),tm=new THREE.InstancedMesh(tg,new THREE.MeshStandardMaterial({color:lin(0x4a3122),roughness:1,flatShading:true}),list.length);
+ const im=new THREE.InstancedMesh(cg,new THREE.MeshStandardMaterial({color:0xffffff,roughness:1,flatShading:true}),list.length),ob=new THREE.Object3D();
+ list.forEach((p,j)=>{ob.position.set(p[0],p[1],p[2]);ob.scale.set(p[3]*(kind==='blob'?1.15:1),p[3],p[3]*(kind==='blob'?1.15:1));ob.rotation.set(0,p[4],0);ob.updateMatrix();im.setMatrixAt(j,ob.matrix);tm.setMatrixAt(j,ob.matrix);im.setColorAt(j,lin(p[5]))});
+ im.instanceMatrix.needsUpdate=true;tm.instanceMatrix.needsUpdate=true;im.instanceColor.needsUpdate=true;im.castShadow=false;im.receiveShadow=true;im.userData.shd=1;tm.userData.shd=1;g.add(im);g.add(tm);return im};
 /* fill the land with woods: a jittered grid over the area around the track. o: {dRoad, from (m off the road edge where the fill starts),
    step, margin, kinds:[{g:'pine'|'blob'|..., w, h:[min,max], cols:[...]}], open(x,z) -> true keeps a spot clear, box (ground extent)} */
 P.farForest=(T,g,o)=>{const[x0,x1,z0,z1]=T.bounds,M=o.margin||260,st=o.step||9;let s=(o.seed||1)>>>0;const rr=()=>((s=(s*1664525+1013904223)>>>0)/4294967296);
