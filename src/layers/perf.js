@@ -74,10 +74,46 @@ P.chunkBig=chunkBig;
 P.chunkScene=chunkScene;
 {const bw=buildWorld;buildWorld=function(T){const sc=bw.apply(this,arguments);try{chunkBig(sc);chunkScene(sc)}catch(e){console.warn('chunk',e)}return sc}}
 
+/* ---- static merge: base-game props (posts, boxes, sheds, cones...) were ~300 separate meshes straight under the scene, each its own draw call
+   twice over (camera + shadow map). On the first render of a race scene they are baked into one mesh per material per 160 m cell. Originals stay
+   in the scene, hidden; if game code ever moves one or changes its visibility it is taken back out and its cell is rebuilt, so nothing that
+   animates can freeze. ---- */
+function mergeStatic(sc){if(sc.userData.ptMerged)return;sc.userData.ptMerged=1;if(P.noMerge)return;
+ const proto=THREE.Object3D.prototype.onBeforeRender,cells=new Map(),A=['position','normal','uv','color'];sc.updateMatrixWorld(true);
+ const skipRoot=new Set();if(typeof RACE!=='undefined'&&RACE&&RACE.cars)for(const c of RACE.cars)if(c.m&&c.m.g)skipRoot.add(c.m.g);
+ /* same-looking materials share a cell, so a hundred identical grey posts with their own material objects still become one draw */
+ const msig=m=>[m.type,m.color&&m.color.getHex(),m.emissive&&m.emissive.getHex(),m.emissiveIntensity,m.roughness,m.metalness,m.flatShading,m.side,m.map&&m.map.uuid,m.vertexColors,m.fog,m.opacity,m.alphaTest,m.depthWrite,m.polygonOffset,m.wireframe,m.userData&&m.userData.graded].join('/');
+ const cand=[];(function walk(p){for(const o of p.children){if(!o.visible||skipRoot.has(o)||o.userData.noMerge||o.isInstancedMesh||o.isLight||o.isPoints||o.isLine||o.isSprite)continue;if(o.isMesh){if(!o.children.length)cand.push(o);continue}if(o.type==='Group'||o.type==='Object3D')walk(o)}})(sc);
+ for(const o of cand){if(o.isSkinnedMesh||o.renderOrder||!o.frustumCulled||o.onBeforeRender!==proto||o.layers.mask!==1)continue;
+  const m=o.material,g=o.geometry;if(!m||Array.isArray(m)||m.transparent||!m.visible||m.isShaderMaterial||!g||!g.attributes.position||g.morphAttributes&&Object.keys(g.morphAttributes).length)continue;
+  if(g.attributes.position.count>20000||o.userData.noMerge||o.userData.lampLight)continue;
+  if(!g.attributes.normal)g.computeVertexNormals();const sig=A.filter(n=>g.attributes[n]).map(n=>n+g.attributes[n].itemSize).join();
+  if(!g.boundingSphere)g.computeBoundingSphere();const c=g.boundingSphere.center.clone().applyMatrix4(o.matrixWorld),k=msig(m)+sig+(o.castShadow?1:0)+(o.receiveShadow?1:0)+'|'+Math.floor(c.x/160)+','+Math.floor(c.z/160);
+  let L=cells.get(k);if(!L)cells.set(k,L={mem:[],mesh:null,m,cast:o.castShadow,recv:o.receiveShadow});L.mem.push(o)}
+ if(!cells.size){sc.userData.ptMergeTick=()=>{};return}
+ const nm=new THREE.Matrix3(),v=new THREE.Vector3();
+ const build=L=>{const mem=L.mem.filter(o=>!o._mgOut);if(L.mesh){sc.remove(L.mesh);L.mesh.geometry.dispose();L.mesh=null}if(mem.length<2){mem.forEach(eject);return}
+  const g0=mem[0].geometry,names=A.filter(n=>g0.attributes[n]);let nv=0,ni=0;for(const o of mem){const g=o.geometry;nv+=g.attributes.position.count;ni+=g.index?g.index.count:g.attributes.position.count}
+  const out={};for(const n of names)out[n]=new Float32Array(nv*g0.attributes[n].itemSize);const idx=new(nv>65535?Uint32Array:Uint16Array)(ni);let vo=0,io=0;
+  for(const o of mem){o.updateMatrixWorld();const g=o.geometry,e=o.matrixWorld,cnt=g.attributes.position.count;nm.getNormalMatrix(e);
+   for(const n of names){const at=g.attributes[n],sz=at.itemSize,dst=out[n];for(let i=0;i<cnt;i++){if(n==='position'){v.fromBufferAttribute(at,i).applyMatrix4(e);dst[(vo+i)*3]=v.x;dst[(vo+i)*3+1]=v.y;dst[(vo+i)*3+2]=v.z}
+     else if(n==='normal'){v.fromBufferAttribute(at,i).applyMatrix3(nm).normalize();dst[(vo+i)*3]=v.x;dst[(vo+i)*3+1]=v.y;dst[(vo+i)*3+2]=v.z}else for(let q=0;q<sz;q++)dst[(vo+i)*sz+q]=at.array[i*sz+q]}}
+   if(g.index)for(let i=0;i<g.index.count;i++)idx[io++]=g.index.array[i]+vo;else for(let i=0;i<cnt;i++)idx[io++]=vo+i;vo+=cnt}
+  const ng=new THREE.BufferGeometry();for(const n of names)ng.setAttribute(n,new THREE.BufferAttribute(out[n],g0.attributes[n].itemSize));ng.setIndex(new THREE.BufferAttribute(idx,1));ng.computeBoundingSphere();
+  const mm=new THREE.Mesh(ng,L.m);mm.castShadow=L.cast;mm.receiveShadow=L.recv;mm.userData.fogCull=1;mm.userData.ptMergedMesh=1;mm.matrixAutoUpdate=false;sc.add(mm);L.mesh=mm};
+ const dirty=new Set();
+ function eject(o){if(o._mgOut)return;o._mgOut=true;delete o.visible;o.visible=o._vis;if(o._mgL)dirty.add(o._mgL)}
+ for(const L of cells.values()){if(L.mem.length<2)continue;for(const o of L.mem){o._mgL=L;o._vis=true;o._w=o.matrixWorld.clone();o._anc=[];for(let a=o.parent;a&&a!==sc;a=a.parent)o._anc.push(a);
+   Object.defineProperty(o,'visible',{configurable:true,get(){return false},set(x){if(x!==this._vis){this._vis=x;eject(this)}}})}build(L)}
+ const live=[...cells.values()].filter(L=>L.mesh);let tick=0;
+ sc.userData.ptMergeTick=()=>{if(++tick%10===0)for(const L of live)for(const o of L.mem)if(!o._mgOut&&(!o.matrixWorld.equals(o._w)||o._anc.some(a=>!a.visible)))eject(o);
+  if(dirty.size){for(const L of dirty)build(L);dirty.clear()}};
+ sc.userData.ptMergeInfo={cells:live.length,members:live.reduce((a,L)=>a+L.mem.length,0)}}
+P.mergeStatic=mergeStatic;
 /* tiles / prop cells that lie wholly beyond the fog are pure fog colour: skip them (per camera) */
 const _c=new THREE.Vector3(),_cp=new THREE.Vector3();
 {const r0=R.render.bind(R),cache=new WeakMap();
- R.render=function(scene,cam){if(scene&&scene.isScene&&scene.fog&&cam&&cam.isCamera){if(P.skyTrack)P.skyTrack(scene,cam);let L=cache.get(scene);if(!L||L.n!==scene.children.length){L=[];scene.traverse(o=>{if(o.userData&&o.userData.fogCull&&o.geometry)L.push(o)});L.n=scene.children.length;cache.set(scene,L)}
+ R.render=function(scene,cam){if(scene&&scene.isScene&&scene.fog&&cam&&cam.isCamera){if(typeof RACE!=='undefined'&&RACE&&RACE.scene===scene){try{/* after ~30 frames: some layers add their props after the first render */if((scene.userData.ptMF=(scene.userData.ptMF||0)+1)>30){mergeStatic(scene);scene.userData.ptMergeTick()}}catch(e){console.warn('merge',e);scene.userData.ptMergeTick=()=>{}}}if(P.skyTrack)P.skyTrack(scene,cam);let L=cache.get(scene);if(!L||L.n!==scene.children.length){L=[];scene.traverse(o=>{if(o.userData&&o.userData.fogCull&&o.geometry)L.push(o)});L.n=scene.children.length;cache.set(scene,L)}
    const far=scene.fog.far*1.03;cam.getWorldPosition(_cp);
    for(const o of L){const bs=o.geometry.boundingSphere;if(!bs)continue;_c.copy(bs.center);if(o.parent&&o.parent.matrixWorld)_c.applyMatrix4(o.matrixWorld);const sc_=Math.max(o.scale.x,o.scale.y,o.scale.z);const dn=Math.max(0,_c.distanceTo(_cp)-bs.radius*sc_);let vis=dn<far;if(vis&&o.userData.lodHi!==undefined)vis=dn>=o.userData.lodLo&&dn<o.userData.lodHi;o.visible=vis}}
   return r0(scene,cam)}}

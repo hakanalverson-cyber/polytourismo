@@ -3,7 +3,7 @@
 'use strict';
 const P=window.PT8,RG=window.PT8_RING;
 if(!RG||!P.TRK_TRACKS)return;
-const ring={id:16,look:0,name:'Nordschleife',desc:'nurburgring / 20.8 km / karussell / flugplatz / the green hell',hw:5.2,bank:10,off:'grass',idw:.85,offs:0,amp:5,up:9,shoulder:14,
+const ring={id:16,look:0,name:'Nordschleife',desc:'nurburgring / 20.8 km / karussell / flugplatz / the green hell',hw:5.2,bank:4,off:'grass',idw:.85,offs:0,amp:5,up:9,shoulder:14,
  sky:[0x5b8bc2,0xd3e0ea],fog:0xc8d6de,sun:0xfff0d8,hemi:[0xcfe0c4,0x2c4422],road:'#3a3c41',tod0:'day',ring:1,
  pts:RG.pts.map(q=>[q[0],q[1],q[2],q[3]]),walls:[],ice:[],boost:[],jumps:[]};
 D.push(ring);
@@ -26,9 +26,17 @@ function fastTerrain(T){const d=T.d,N=T.N,CG=128,cg=new Map(),nz=T.nz;
  for(let i=0;i<N;i+=4){const k=Math.floor(T.x[i]/CG)*8192+Math.floor(T.z[i]/CG);let a=cg.get(k);if(!a)cg.set(k,a=[]);a.push(T.x[i],T.z[i],T.y[i])}
  let ym=0;for(let i=0;i<N;i++)ym+=T.y[i];ym/=N;
  const R2=380*380,bumps=T.bumps||(T.bumps=[]);
- const land=(x,z)=>{const cx=Math.floor(x/CG),cz=Math.floor(z/CG);let sw=1e-9,sy=1e-9*ym,md=1e12;
+ /* far field: past ~380 m from the road the local blend runs out. It used to fall straight back to the lap's mean height, which stood up
+    as a 150 m wall of ground beside the low valleys (Breidscheid, Wehrseifen). Instead the land eases toward a wide, smooth average of the
+    track heights within ~1.5 km, precomputed on a 64 m grid */
+ const FG=64;let fx0=1e9,fz0=1e9,fx1=-1e9,fz1=-1e9;for(let i=0;i<N;i++){fx0=Math.min(fx0,T.x[i]);fx1=Math.max(fx1,T.x[i]);fz0=Math.min(fz0,T.z[i]);fz1=Math.max(fz1,T.z[i])}
+ fx0-=1600;fz0-=1600;const FW=Math.ceil((fx1+1600-fx0)/FG)+1,FH=Math.ceil((fz1+1600-fz0)/FG)+1,FF=new Float32Array(FW*FH),RF=1500*1500;
+ {const S=[];for(let i=0;i<N;i+=8)S.push(T.x[i],T.z[i],T.y[i]);for(let b=0;b<FH;b++)for(let a=0;a<FW;a++){const x=fx0+a*FG,z=fz0+b*FG;let w=1e-9,y=1e-9*ym;for(let q=0;q<S.length;q+=3){const d2=(x-S[q])**2+(z-S[q+1])**2;if(d2<RF){const u=1-d2/RF,ww=u*u*u/(d2+160000);w+=ww;y+=ww*S[q+2]}}FF[b*FW+a]=y/w}}
+ const farH=(x,z)=>{const fx=clamp((x-fx0)/FG,0,FW-1.001),fz=clamp((z-fz0)/FG,0,FH-1.001),a=Math.floor(fx),b=Math.floor(fz),u=fx-a,v=fz-b,k=b*FW+a;return lerp(lerp(FF[k],FF[k+1],u),lerp(FF[k+FW],FF[k+FW+1],u),v)};
+ T.farH=farH;
+ const land=(x,z)=>{const cx=Math.floor(x/CG),cz=Math.floor(z/CG);let sw=0,sy=0,md=1e12;
   for(let a=-3;a<=3;a++)for(let b=-3;b<=3;b++){const L=cg.get((cx+a)*8192+cz+b);if(!L)continue;for(let q=0;q<L.length;q+=3){const dx=x-L[q],dz=z-L[q+1],d2=dx*dx+dz*dz;if(d2<md)md=d2;if(d2<R2){const u=1-d2/R2,w=u*u*u/(d2+900);sw+=w;sy+=w*L[q+2]}}}
-  const mdd=Math.sqrt(md);let h=sy/sw+nz(x,z)*d.amp*sm(25,90,mdd)+d.up*sm(30,170,mdd)*(.6+.4*nz(x*1.7,z*1.7))+(nz(x*.21+31,z*.21-17)*.5+.5)*22*sm(60,320,mdd);
+  const mdd=Math.sqrt(md),fh=farH(x,z);let h=(sw>0?lerp(sy/sw,fh,sm(170,375,mdd)):fh)+nz(x,z)*d.amp*sm(25,90,mdd)+d.up*sm(30,170,mdd)*(.6+.4*nz(x*1.7,z*1.7))+(nz(x*.21+31,z*.21-17)*.5+.5)*22*sm(60,320,mdd);
   for(const b of bumps){const e=((x-b.x)**2+(z-b.z)**2)/(b.r*b.r);if(e<4)h+=b.h*Math.exp(-e*1.6)}
   return h};
  const gk=(a,b)=>a*8192+b;
@@ -75,14 +83,17 @@ function tileSystem(T,sc){
  T.meshH=(x,z)=>{const X=Math.floor(x/TS),Z=Math.floor(z/TS),t=need.get(X*8192+Z);if(!t)return null;const cs=t.d<120?4:t.d<280?8:16,n=TS/cs,lx=(x-X*TS)/cs,lz=(z-Z*TS)/cs,i=Math.min(n-1,Math.floor(lx)),j=Math.min(n-1,Math.floor(lz)),fi=lx-i,fj=lz-j,H=(a,b)=>terrainBed(T,X*TS+a*cs,Z*TS+b*cs);
   const ha1=H(i+1,j),hb=H(i,j+1);if(fi+fj<=1){const ha=H(i,j);return ha+fi*(ha1-ha)+fj*(hb-ha)}const hb1=H(i+1,j+1);return hb1+(1-fi)*(hb-hb1)+(1-fj)*(ha1-hb1)};
  const mt=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true,side:THREE.DoubleSide});styleMaterial(mt);
+ /* distant tiles are shaded smooth: big flat facets on the far hillsides read as pale geometric slabs, not as wooded slopes */
+ const mtS=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:false,side:THREE.DoubleSide});styleMaterial(mtS);
  const live=new Map();let job=null,want=[],lx=1e9,lz=1e9;
  const forest=T.forest;
- function begin(t){const cs=t.d<120?4:t.d<280?8:16,n=TS/cs;return{t,cs,n,row:0,h:new Float32Array((n+1)*(n+1)),c:new Float32Array((n+1)*(n+1)*3)}}
+ function begin(t){const cs=t.d<120?4:t.d<280?8:16,n=TS/cs;return{t,cs,n,row:0,h:new Float32Array((n+1)*(n+1)),c:new Float32Array((n+1)*(n+1)*3),f:new Uint8Array((n+1)*(n+1))}}
  function stepRow(j){const{t,cs,n}=j,r=j.row,z=t.Z*TS+r*cs;
   for(let i=0;i<=n;i++){const x=t.X*TS+i*cs,h=terrainBed(T,x,z),rd=_rd,ri=_ri,rs=_rs,k=r*(n+1)+i;j.h[k]=h;
    const v=T.nz(x*2.1,z*2.1)*.5+.5,v2=T.nz(x*.6+40,z*.6-17)*.5+.5,ew=ri>=0?(rs>0?T.edgeL[ri]:T.edgeR[ri])-T.hw[ri]:60,fo=forest(x,z,99)*sm(ew-1,ew+2.5,rd);
    let c=[.13+.05*v,.36+.09*v,.08+.03*v];
    if(v2>.66){const q=Math.min(1,(v2-.66)*6);c=[lerp(c[0],.36,q),lerp(c[1],.5,q),lerp(c[2],.18,q)]}
+   if(fo>.5&&rd>ew+44)j.f[k]=1;
    if(fo>0){const q=fo*.85;c=[lerp(c[0],.08+.04*v,q),lerp(c[1],.22+.05*v,q),lerp(c[2],.07,q)]}
    if(rd<ew+1){const q=1-sm(ew-1.5,ew+1,rd),st=((Math.floor(x/7)+Math.floor(z/7))&1)?.03:-.02;c=[lerp(c[0],.19+st,q),lerp(c[1],.47+st,q),lerp(c[2],.1,q)]}
    if(rd<ew&&ew>14){const q=Math.min(1,(ew-14)/20)*(1-sm(10,ew,rd))*(.75+.25*v2);if(q>0)c=[lerp(c[0],.24+.04*v,q),lerp(c[1],.43+.04*v,q),lerp(c[2],.12,q)]}
@@ -99,10 +110,22 @@ function tileSystem(T,sc){
   for(const E of edges){const s0=v;for(const k of E){pos[v*3]=pos[k*3];pos[v*3+1]=pos[k*3+1]-7;pos[v*3+2]=pos[k*3+2];col[v*3]=col[k*3]*.8;col[v*3+1]=col[k*3+1]*.8;col[v*3+2]=col[k*3+2]*.8;v++}
    for(let q=0;q<E.length-1;q++)idx.push(E[q],E[q+1],s0+q,E[q+1],s0+q+1,s0+q)}
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('color',new THREE.BufferAttribute(col,3));g.setIndex(idx);g.computeVertexNormals();g.computeBoundingSphere();
-  const m=new THREE.Mesh(g,mt);m.receiveShadow=true;m.userData.noChunk=1;m.matrixAutoUpdate=false;m.updateMatrix();grp.add(m);return m}
+  const m=new THREE.Mesh(g,cs>4?mtS:mt);m.receiveShadow=true;m.userData.noChunk=1;m.matrixAutoUpdate=false;m.updateMatrix();grp.add(m);
+  /* the wooded hillsides past the planted tree line: simple low spruces, one every ~12 m, so a far valley wall reads as forest instead of a bare green slab */
+  {const st=Math.max(1,Math.round(12/cs)),L=[];let s0=(t.X*73856093^t.Z*19349663)>>>0;const rn=()=>((s0=(s0*1664525+1013904223)>>>0)/4294967296);
+   for(let r=0;r<=n;r+=st)for(let i=0;i<=n;i+=st){const k=r*W+i;if(!j.f[k])continue;const jx=(rn()-.5)*cs*st*.8,jz=(rn()-.5)*cs*st*.8;L.push(pos[k*3]+jx,j.h[k]-1.2,pos[k*3+2]+jz,14+rn()*8,rn()*6)}
+   if(L.length){const q=L.length/5,im=new THREE.InstancedMesh(farGeo(g.boundingSphere),farMat,q),o=new THREE.Object3D(),cl=new THREE.Color();
+    for(let e=0;e<q;e++){o.position.set(L[e*5],L[e*5+1],L[e*5+2]);const h=L[e*5+3];o.scale.set(h*.9,h,h*.9);o.rotation.set(0,L[e*5+4],0);o.updateMatrix();im.setMatrixAt(e,o.matrix);cl.setHex(FARC[e%FARC.length]);im.setColorAt(e,cl)}
+    im.matrixAutoUpdate=false;im.userData.noChunk=1;im.userData.noSnap=1;im.userData.shd=1;m.add(im);T._farTrees=(T._farTrees||0)+q}}
+  return m}
+ const FARC=[0x2c4a2e,0x335433,0x29432c,0x3a5a36],farMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:1,flatShading:true});styleMaterial(farMat);
+ const farBase=(()=>{const a=new THREE.ConeGeometry(.36,.62,6,1).toNonIndexed();a.translate(0,.45,0);const b=new THREE.ConeGeometry(.25,.5,6,1).toNonIndexed();b.translate(0,.78,0);
+  const pa=a.attributes.position.array,pb=b.attributes.position.array,p=new Float32Array(pa.length+pb.length);p.set(pa);p.set(pb,pa.length);const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(p,3));g.computeVertexNormals();return g})();
+ /* each tile's trees get their own bounds (the tile's, raised by the tree height) so they are culled with the tile, while sharing one vertex buffer */
+ function farGeo(bs){const g=new THREE.BufferGeometry();g.setAttribute('position',farBase.attributes.position);g.setAttribute('normal',farBase.attributes.normal);g.boundingSphere=new THREE.Sphere(bs.center.clone(),bs.radius+24);return g}
  const far=()=>((sc.fog&&sc.fog.far)||520)+150;
  function plan(px,pz){lx=px;lz=pz;const R=far(),R2=(R+90)*(R+90);want=[];
-  for(const[k,t]of need){const dx=(t.X+.5)*TS-px,dz=(t.Z+.5)*TS-pz,d2=dx*dx+dz*dz;if(d2<R2)want.push([d2,k,t]);else{const m=live.get(k);if(m&&d2>(R+380)*(R+380)){grp.remove(m);m.geometry.dispose();live.delete(k)}}}
+  for(const[k,t]of need){const dx=(t.X+.5)*TS-px,dz=(t.Z+.5)*TS-pz,d2=dx*dx+dz*dz;if(d2<R2)want.push([d2,k,t]);else{const m=live.get(k);if(m&&d2>(R+380)*(R+380)){grp.remove(m);m.geometry.dispose();for(const ch of m.children)if(ch.dispose)ch.dispose();live.delete(k)}}}
   want.sort((a,b)=>a[0]-b[0])}
  const sys={grp,live,need,
   update(px,pz,budget){if(Math.hypot(px-lx,pz-lz)>24)plan(px,pz);const t0=performance.now();
@@ -188,10 +211,13 @@ function buildRing(T){const d=T.d,N=T.N,sc=new THREE.Scene(),C=T._rc||cornersOf(
  /* ---- the Karussell: the famous banked concrete bowl on the inside ---- */
  {const km=RG.marks.KARUSSELL;if(km!=null){const p=RG.pts[km],k0=nearIdx(T,p[0],p[1]);const c=corners.find(c=>k0>=c.a-30&&k0<=c.b+30);if(c){const side=c.dir>0?1:-1;
    const ct=ctex(16,16,(x,w,h)=>{x.fillStyle='#a7a7a0';x.fillRect(0,0,w,h);x.fillStyle='#8c8c86';x.fillRect(0,0,w,1);x.fillRect(0,0,1,h);x.fillStyle='rgba(0,0,0,.06)';x.fillRect(3,5,4,2);x.fillRect(9,11,3,2)});
-   const cm=new THREE.MeshStandardMaterial({map:ct,roughness:.95,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
-   const pos=[],uv=[],idx=[],a=c.a-4,n=c.b-c.a+8;for(let q=0;q<=n;q++){const k=((a+q)%N+N)%N;for(let j=0;j<=4;j++){const l=side*lerp(-T.hw[k]*.15,T.hw[k],j/4),x=T.x[k]+Math.cos(T.psi[k])*l,z=T.z[k]-Math.sin(T.psi[k])*l;pos.push(x,T.y[k]-l*T.bank[k]+.065,z);uv.push(j/4*2,q*T.sp/3)}}
-   for(let q=0;q<n;q++)for(let j=0;j<4;j++){const i=q*5+j;idx.push(i,i+5,i+1,i+1,i+5,i+6)}
-   const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));gg.setIndex(idx);gg.computeVertexNormals();g.add(new THREE.Mesh(gg,cm));T.karussell=c}}}
+   const cm=new THREE.MeshStandardMaterial({map:ct,roughness:.95,side:THREE.DoubleSide,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+   /* the concrete fades in and out along the lap and toward the inner edge, so the asphalt blends into it instead of meeting it on a straight line */
+   cm.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute float fa;varying float vFa;').replace('#include <begin_vertex>','#include <begin_vertex>\nvFa=fa;');
+    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying float vFa;').replace('#include <map_fragment>','#include <map_fragment>\ndiffuseColor.a*=vFa;')};
+   const J=8,F=14,pos=[],uv=[],fa=[],idx=[],a=c.a-4-F,n=c.b-c.a+8+2*F;for(let q=0;q<=n;q++){const k=((a+q)%N+N)%N,e=sm(0,1,Math.min(q,n-q)/F);for(let j=0;j<=J;j++){const u=j/J,l=side*lerp(-T.hw[k]*.15,T.hw[k],u),x=T.x[k]+Math.cos(T.psi[k])*l,z=T.z[k]-Math.sin(T.psi[k])*l;pos.push(x,T.y[k]-l*T.bank[k]+.065,z);uv.push(u*2,q*T.sp/3);fa.push(e*sm(0,.4,u))}}
+   for(let q=0;q<n;q++)for(let j=0;j<J;j++){const i=q*(J+1)+j;idx.push(i,i+J+1,i+1,i+1,i+J+1,i+J+2)}
+   const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));gg.setAttribute('fa',new THREE.Float32BufferAttribute(fa,1));gg.setIndex(idx);gg.computeVertexNormals();g.add(new THREE.Mesh(gg,cm));T.karussell=c}}}
  /* ---- gravel traps ---- */
  /* (sand is painted into the terrain tiles in tileSystem, so it can never float) */
  /* ---- Armco on both sides of the whole lap (double rail on posts), every rail a real collider ---- */
@@ -288,7 +314,7 @@ function buildRing(T){const d=T.d,N=T.N,sc=new THREE.Scene(),C=T._rc||cornersOf(
   const sg=new THREE.Mesh(new THREE.PlaneGeometry(wm,hm),new THREE.MeshBasicMaterial({map:signTex(txt,Math.max(128,Math.round(wm*96)),Math.max(64,Math.round(hm*96)),bg,fg)}));sg.position.set(0,(yy||2.4)+hm/2,.12);grp.add(sg);const sb=sg.clone();sb.position.z=-.12;sb.rotation.y=PI;grp.add(sb);/* two single-sided faces so the text never reads mirrored */return grp};
  const MK={};for(const nm in RG.marks){const p=RG.pts[RG.marks[nm]];MK[nm]=nearIdx(T,p[0],p[1])}
  const NICE={'FUCHSROHRE':'FUCHSRÖHRE','QUIDDELBACHER HOHE':'QUIDDELBACHER HÖHE','EX-MUHLE':'EX-MÜHLE','HEDWIGSHOHE':'HEDWIGSHÖHE','BRUNNCHEN':'BRÜNNCHEN','DOTTINGER HOHE':'DÖTTINGER HÖHE'};
- for(const nm in MK){if(nm==='START / FINISH')continue;const k=MK[nm],kk=((k-16)%N+N)%N,sd=-1;const txt=NICE[nm]||nm;board(kk,sd*(T.hw[kk]+T.railR[kk]+1.4),txt,Math.max(4,txt.length*.42),1.2,'#10151b','#f1f3f5',1.6)}
+ /* corner-name boards removed: at their width they cut through the Armco */
  for(let km=1;km<21;km++){const k=Math.round(km*1000/T.sp)%N;board(k,(T.hw[k]+T.railL[k]+1.2),String(km),1.1,1.1,'#f1f3f5','#10151b',1.2)}
  /* ---- bridges over the track (Breidscheid road bridge, Antoniusbuche, and a footbridge near the start) ---- */
  const bridge=(k,txt,col,foot)=>{k=((k%N)+N)%N;const[bx,by,bz]=at(k,0,0),bp=new THREE.Group();bp.position.set(bx,by,bz);bp.rotation.y=T.psi[k];g.add(bp);const wd=T.hw[k]+Math.max(T.railL[k],T.railR[k])+4,H=foot?6.6:7.4;

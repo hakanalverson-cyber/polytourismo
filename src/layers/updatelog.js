@@ -3,6 +3,12 @@
 'use strict';
 const P=window.PT8;
 P.LOG=[
+ {v:'0.11',d:'Oct 25, 2026',t:'Smoother ride, cleaner scenery, faster',items:[
+  'No more jitter on hills: the drawn body no longer bobs as the road climbs and falls. The ride-height drop is measured once per car instead of every frame, the anti-clipping lift is capped and eased, and the real elevation data is smoothed.',
+  'Nordschleife: the pale green walls behind the trees are gone. About 380 m from the road the ground used to jump up to the lap\'s average height, a 150 m cliff beside the low valleys. It now eases out gently, and the wooded slopes beyond the tree line carry distant forest.',
+  'Nordschleife: the Karussell concrete fades in and out instead of starting on a hard straight line, and the corner-name boards that cut through the Armco are gone.',
+  'The pause menu now hides every other piece of UI: dash, stage panel, now-playing card, prompts and the FPS counter.',
+  'Performance on every track: sun shadows use cheaper filtering, the ground is no longer re-drawn into the shadow map, and hundreds of separate trackside props are merged into a few draws (Quick Play: 339 to 186 draw calls per frame). Higher graphics settings should hold their frame rate much better.']},
  {v:'0.10',d:'Oct 24, 2026',t:'Grip, ride height, trees and props',items:[
   'Grip fixed on every track: the car no longer slides when you tap the steering. The drift mode used to switch itself on with every quick steering tap above 47 mph, cutting sideways grip to a quarter; now it only engages while you hold the handbrake. Tarmac grip is also firmer for the player, so the car goes where it is pointed. Gravel, grass and ice keep their loose feel.',
   'Cars sit on the road: every car was riding 6 to 10 cm above the surface. The body now settles so the tyres touch the ground under them, on every track.',
