@@ -901,7 +901,7 @@ b,strong,h1,h2,h3,button,.btn,.gtab,.gti b,.hdr h2,#gtBar .gtl,.gtp,.crbox b,.qc
 #s8show.gtb.mkc .lst{display:none!important}
 .mkg{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
 .mk{cursor:pointer;display:flex;flex-direction:column;gap:6px;padding:20px 20px 16px;background:#0d1217;border:1px solid #ffffff14;border-left:3px solid transparent;min-height:104px;transition:background .15s,border-color .15s}
-.mk:hover{background:#18232d;border-left-color:var(--ac,#f1f3f5)}
+.mk:hover{background:#ffffff14;border-left-color:var(--ac,#f1f3f5)}
 .mk b{font-size:19px;letter-spacing:.08em!important;color:#fff;font-weight:650!important}.mk span{font-size:11px;color:#9fb0ba;text-transform:uppercase;letter-spacing:.14em!important}.mk small{margin-top:auto;font-size:10px;color:#6f808b;letter-spacing:.1em!important;text-transform:uppercase}
 #s8show.gtb.mkc #shPrev{left:3.4vw}
 #s8show.gtb.mkc #shNav{top:36vh}

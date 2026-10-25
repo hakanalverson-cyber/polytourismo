@@ -14,7 +14,7 @@ P.LOG=[
   'Gravel is looser for cars that are weak on it: 50% less grip for weak cars, 25% for neutral ones and 10% for strong ones. The car card shows the real figure.',
   'Multiplayer with damage on: every player gets their own damage readout beside their HUD.',
   'Brand Central: buying a car plays the full showcase sequence again.',
-  'Menus: the car strip scrollbar no longer pushes the cards up, and the yellow accents on tabs, maker cards and highlights are now white.']},
+  'Menus: the car strip scrollbar no longer pushes the cards up, and the yellow accents on tabs, maker cards and highlights are now white. Hovering a brand in Brand Central uses the same light grey as the mode tabs instead of blue.']},
  {v:'0.11',d:'Oct 25, 2026',t:'Smoother ride, cleaner scenery, faster',items:[
   'No more jitter on hills: the drawn body no longer bobs as the road climbs and falls. The ride-height drop is measured once per car instead of every frame, the anti-clipping lift is capped and eased, and the real elevation data is smoothed.',
   'Nordschleife: the pale green walls behind the trees are gone. About 380 m from the road the ground used to jump up to the lap\'s average height, a 150 m cliff beside the low valleys. It now eases out gently, and the wooded slopes beyond the tree line carry distant forest.',
