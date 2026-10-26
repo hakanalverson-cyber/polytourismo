@@ -1,0 +1,2 @@
+[["wait",2000],
+["js","(()=>{PT8.launch({rally:true,circuit:true,mode:'mp',track:15,laps:1,humans:[{id:'merc',alt:0}],ai:[]});const o=[];RACE.scene.traverse(m=>{if(m.isMesh||m.isInstancedMesh||m.isPoints||m.isSprite){const g=m.geometry;g.boundingSphere||g.computeBoundingSphere();o.push([m.type,g.type,Math.round(g.boundingSphere.radius),m.visible,m.name,m.material&&m.material.type,(m.material&&m.material.fog)])}});o.sort((a,b)=>b[2]-a[2]);return JSON.stringify({bg:RACE.scene.background&&RACE.scene.background.isColor,top:o.slice(0,25)})})()"]]

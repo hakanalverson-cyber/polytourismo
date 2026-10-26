@@ -1,0 +1,10 @@
+[["wait",2000],
+["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",2500],
+["js","(()=>{PT8.launch({rally:true,circuit:true,mode:'mp',track:15,laps:1,humans:[{id:'merc',alt:0}],ai:[]});const c=RACE.cars[0];window._c=c;const T=RACE.T;return JSON.stringify({N:T.N,L:Math.round(T.L),y0:T.y[0],cy:c.y,surf:T.surf(c.x,c.z,c.y),imc:!!window.PT8_IMC,kids:RACE.scene.children.length})})()"],
+["wait",1500],["shot","grid"],
+["js","(()=>{const c=_c;c.forceAI=1;c.ai={skill:1,lat:0,name:'T'};window.ADV=n=>{for(let i=0;i<n;i++){step(1/60);if(RACE.state==='count')RACE.state='race'}const w=c.m.wheels.filter(w=>w.g).length;return c.idx+' sp='+Math.round(c.sp*3.6)+' wheels='+w+' y-surf='+(c.y-RACE.T.surf(c.x,c.z,c.y).h).toFixed(2)};return ADV(60*8)})()"],["wait",900],["shot","a1"],
+["js","ADV(60*12)"],["wait",900],["shot","a2"],
+["js","ADV(60*12)"],["wait",900],["shot","a3"],
+["js","ADV(60*12)"],["wait",900],["shot","a4"],
+["js","ADV(60*12)"],["wait",900],["shot","a5"],
+["js","ADV(60*12)"],["wait",900],["shot","a6"]]
