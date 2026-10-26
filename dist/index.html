@@ -10684,7 +10684,7 @@ const baseOf=pack=>D.findIndex(d=>pack.replaces==='imola'?d.imola:pack.replaces=
 P.trackPacks={};
 /* the files' gold times were measured with cars 30% quicker and no grip limit; now (25% quicker, 1.6 g grip) a CPU time-trial lap takes
    this much longer: 95.5 -> 107.6 s at Road Atlanta, 98.4 -> 114.7 s at Imola */
-const MEDK={ra:1.071,imola:1.085},ALAT=23;/* tyre grip (16, then +20% and +20% more turning by request) limit on these tracks, m/s² (see the steering cap below) */
+const MEDK={ra:.991,imola:1.007},ALAT=23;/* tyre grip (16, then +20% and +20% more turning by request) limit on these tracks, m/s² (see the steering cap below) */
 /* newest file wins (pack.rev = build time): an older copy saved in this browser never replaces a newer built-in one */
 P.addTrackPack=pack=>{const i=baseOf(pack);if(i<0)throw new Error('This track file is for a track this game does not have ('+pack.replaces+')');const d=D[i];
  /* the small download has no track built in, so it also knows the newest file's build time: an old copy saved in the browser (Road Atlanta's first
@@ -10743,9 +10743,11 @@ const uv=updateVisual;updateVisual=function(c,T,t){const m=c&&c.m,k=K();if(m&&m.
  if(m&&m.g&&k!==1&&m.g.visible!==false){m.g.scale.setScalar(k);m.g.position.y+=(k-1)*.95;if(m.sh){m.sh.scale.x*=k;m.sh.scale.y*=k}}return r};
 /* chase camera: pulled back less than the car grew (the car fills more of the screen and the camera sits nearer the road, so the ground
    streams past faster), plus a wider view and a light buzz at speed: the big tracks otherwise feel slow with big cars */
-const so=soloCam;soloCam=function(c,dt,out){so.apply(this,arguments);const k=K();if(k===1||c.fin)return;const f=1+(k-1)*.5,y=c.camY==null?c.y:c.camY;
+/* the camera reads a smoothed speed: c.sp twitches by up to 0.8 m/s per frame on the hills and the camera's height, distance and view
+   width all follow speed, which made the picture jitter while the car itself moved smoothly */
+const so=soloCam;soloCam=function(c,dt,out){const sp0=c.sp||0;c._csp=c._csp==null?sp0:c._csp+(sp0-c._csp)*Math.min(1,(dt||.016)*3);c.sp=c._csp;try{so.apply(this,arguments)}finally{c.sp=sp0}const k=K();if(k===1||c.fin)return;const f=1+(k-1)*.5,y=c.camY==null?c.y:c.camY;
  out.p.set(c.x+(out.p.x-c.x)*f,y+(out.p.y-y)*f,c.z+(out.p.z-c.z)*f);out.l.set(c.x+(out.l.x-c.x)*f,y+(out.l.y-y)*f,c.z+(out.l.z-c.z)*f);
- const v=Math.max(0,Math.min(1,((c.sp||0)-20)/50)),hood=(c.tnB||0)>.5||c.camMode;out.f+=v*(hood?3:6);speedFx(c,Math.max(0,((c.sp||0)-42)/30))};
+ const v=Math.max(0,Math.min(1,((c._csp||0)-20)/50)),hood=(c.tnB||0)>.5||c.camMode;out.f+=v*(hood?3:6)};/* speed streaks removed by request */
 /* speed streaks at the screen edges, faint from about 55 km/h, strongest from 215 km/h up (model tracks only) */
 let sfx=null,sfxV=0;const speedFx=(c,v)=>{if(!c.human)return;if(!sfx){sfx=document.createElement('div');sfx.id='ptSpeedFx';
   sfx.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:4;opacity:0;mix-blend-mode:screen;background:repeating-conic-gradient(from 0deg at 50% 46%,rgba(255,255,255,.0) 0deg,rgba(255,255,255,.0) 2.2deg,rgba(255,255,255,.55) 2.5deg,rgba(255,255,255,0) 2.8deg,rgba(255,255,255,0) 5.3deg);-webkit-mask:radial-gradient(ellipse 62% 58% at 50% 46%,transparent 55%,#000 100%);mask:radial-gradient(ellipse 62% 58% at 50% 46%,transparent 55%,#000 100%)';
@@ -10754,7 +10756,7 @@ let sfx=null,sfxV=0;const speedFx=(c,v)=>{if(!c.human)return;if(!sfx){sfx=docume
 {const hide=()=>{if(sfx)sfx.style.opacity=0;sfxV=0};const cr=P.cleanupRace;if(cr)P.cleanupRace=function(){hide();return cr.apply(this,arguments)};setInterval(()=>{if(sfx&&(typeof scr==='undefined'||scr!=='game'||K()===1))hide()},400)}
 /* these circuits are full size and the cars drawn big, so at true speeds they crawl past the scenery: cars here are 25% quicker in every
    respect (top speed, acceleration, braking and grip together, so the handling balance stays the same) */
-const SPD=1.25;{const m0=P.mul;P.mul=c=>{const m=m0?m0(c):{acc:1,top:1,grip:1,brk:1};if(K()>1){m.top*=SPD;m.acc*=.6;/* the big model tracks made 0-60 mph take 2.5 s in a Mercedes; this gives about 5 s */m.brk*=SPD;m.grip*=SPD;/* the tyre bite grip.js gives human drivers, for the CPU too here (it was a big part of why they were so slow) */if(!(c.human&&!c.forceAI)&&c.onRoad&&!c.cool)m.grip*=(window.PT8_GRIPK||1.4)}return m}}
+const SPD=1.25,TOPK=1.5,ACCK=.72;{const m0=P.mul;P.mul=c=>{const m=m0?m0(c):{acc:1,top:1,grip:1,brk:1};if(K()>1){m.top*=TOPK;m.acc*=ACCK;/* top speed 50% up and full pickup: these long tracks felt slow (x1.1 pickup gave 0-60 mph in 2.5 s, x.6 felt sluggish) */m.brk*=SPD;m.grip*=SPD;/* the tyre bite grip.js gives human drivers, for the CPU too here (it was a big part of why they were so slow) */if(!(c.human&&!c.forceAI)&&c.onRoad&&!c.cool)m.grip*=(window.PT8_GRIPK||1.4)}return m}}
 /* cornering grip. The arcade model turns as tight as the steering asks at any speed (well over 3 g at 100 mph), so a 40 mph corner went
    at 100. On these tracks the tyres hold about ALAT (1.6 g, scaled by the car's grip and the surface):
    every car (yours and the CPU's): the nose still turns in as sharply as you steer (up to 1.7x what the tyres hold), but the direction you travel can only
@@ -11009,17 +11011,17 @@ function urlOf(k){if(urls[k])return urls[k];const e=document.getElementById(TR[k
 let deck=[],menuKey=null,pop=null,popT=0,shown='',blockedUntilGesture=false;const AU={};
 const has=k=>!!document.getElementById(TR[k][1]);
 function shuffle(last){deck=MENU.filter(has);for(let i=deck.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[deck[i],deck[j]]=[deck[j],deck[i]]}if(deck[0]===last&&deck.length>1)deck.push(deck.shift())}
-function popup(k){try{const txt=TR[k][0];
+function popup(k){try{if(scr!=='menu')return;/* only on the main menu (the music itself keeps playing everywhere) */const txt=TR[k][0];
  /* now playing: a small sharp-cornered card in the bottom-right corner, above the screen buttons; slides in, fades out */
  if(!pop){pop=document.createElement('div');pop.id='ptNowPlaying';pop.style.cssText='position:fixed;right:28px;bottom:48px;z-index:99999;pointer-events:none;font-family:var(--gt,inherit);color:#eef1f3;background:rgba(9,12,16,.86);border-left:2px solid #f1f3f5;padding:9px 16px 10px 14px;min-width:170px;max-width:320px;box-shadow:0 6px 24px rgba(0,0,0,.35);opacity:0;transform:translateX(16px);transition:opacity .45s ease,transform .45s ease';document.body.appendChild(pop)}
- {/* sit just above whatever button is in the bottom-right corner (Next, Buy...), else just above the footer */let bot=48;for(const b of document.querySelectorAll('button,.btn')){const r=b.getBoundingClientRect();if(r.width&&r.height&&r.right>innerWidth-340&&r.bottom>innerHeight-130&&getComputedStyle(b).visibility!=='hidden')bot=Math.max(bot,innerHeight-r.top+12)}pop.style.bottom=bot+'px'}
+ {/* the same gap (28 px) to the right edge and to the footer bar below it */const f=document.querySelector('#menu .mfoot'),fr=f&&f.getBoundingClientRect();pop.style.right='28px';pop.style.bottom=((fr&&fr.height?innerHeight-fr.top:0)+28)+'px'}
  clearTimeout(popT);pop.innerHTML='<div style="font-size:9px;letter-spacing:.3em;color:#8d97a3;margin-bottom:5px">NOW PLAYING</div><div style="font-size:13px;font-weight:700;letter-spacing:.08em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+txt.toUpperCase()+'</div>';
  requestAnimationFrame(()=>{pop.style.opacity=1;pop.style.transform='none'});popT=setTimeout(()=>{pop.style.opacity=0;pop.style.transform='translateX(16px)'},5000)}catch(e){}}
 /* one Audio element per track; paused (never dropped) when the screen changes, so a song always plays out to its end */
 function el(k,loop){let a=AU[k];if(a)return a;const u=urlOf(k);if(!u)return null;a=AU[k]=new Audio(u);a.loop=!!loop;a.preload='auto';a._v=0;a._k=k;a._ann=false;a._t=0;
  if(!loop)a.addEventListener('ended',()=>{delete AU[k];if(menuKey===k)menuKey=null});return a}
 function wanted(){if(scr==='game')return(typeof RACE!=='undefined'&&RACE&&RACE.mode==='free')?'menu':null;if(scr==='s8show'){const kd=P.SR&&P.SR.kind;return kd==='brand'?'menu':(P.SR&&(P.SR.rally||P.SR.trk))?'menu':(has('body')?'body':'menu')}return'menu'}
-function tick(){const on=P.aud&&P.aud.on()&&!document.hidden,w=on?wanted():null,t=O().master;let key=null;
+function tick(){if(pop&&scr!=='menu'&&pop.style.opacity!=='0'){clearTimeout(popT);pop.style.opacity=0;pop.style.transform='translateX(16px)'}const on=P.aud&&P.aud.on()&&!document.hidden,w=on?wanted():null,t=O().master;let key=null;
  if(w==='menu'){if(!menuKey){if(!deck.length)shuffle(null);menuKey=deck.shift()}key=menuKey}else if(w==='body'||w==='cafe')key=w;
  for(const k in AU){const a=AU[k];if(k!==key){a._v+=(0-a._v)*.22;a.volume=Math.max(0,Math.min(1,a._v));if(a._v<.01&&!a.paused)a.pause()}}
  if(!key)return;const a=el(key,key==='body'||key==='cafe');if(!a)return;
@@ -11110,6 +11112,10 @@ window.__optAction=k=>{if(k==='@tutorial')P.startTutorial()};
 const P=window.PT8;
 P.LOG=[
  {v:'0.12',d:'Oct 25, 2026',t:'New Road Atlanta and Imola scenery, smarter CPU, gearbox choice',items:[
+  'Imola and Road Atlanta are fast again: top speed 50% higher there and strong pickup (a Mercedes does 0-60 mph in about 3 s, 0-100 in about 5.5 s). Gold times re-measured.',
+  'Hill jitter fixed: the car was moving smoothly, but the chase camera set its height, distance and view width from a speed reading that twitched on hills. The camera now uses a smoothed speed.',
+  'Speed lines removed (the streaks at the screen edges and the slipstream wind lines; the slipstream rings stay).',
+  'The Now Playing card only shows on the main menu (the music keeps playing everywhere) and sits the same distance from the right edge and the footer.',
   'Acceleration on Imola and Road Atlanta is back to real-world pace (a Mercedes did 0-60 mph in 2.5 s there; now about 4 s, 0-100 mph about 9 s). Turning is another 20% tighter in every gear. Gold times re-measured.',
   'CPU cars always match the class you pick (cars the CPU cannot drive were swapped for a B-class Mercedes).',
   'The small download turns away an old saved Road Atlanta file (the first one drove through the coned loops and had no grid boxes, so the start fixes did not apply there) and asks for the new one.',
@@ -11321,7 +11327,7 @@ function draftFx(Rc,dt){for(const c of Rc.cars){if(c.out)continue;const dr=c.dra
  /* sonic-boom rings: born at the nose, carried along at ~60% of car speed so they peel away behind, expanding with ease-out */
  if(on&&d.rt<=0){d.rt=.34;const r=d.rings.find(q=>q.life>=RL);if(r){r.life=0;r.m.position.set(c.x+fx*2.7,c.y+.7,c.z+fz*2.7);r.m.rotation.set(0,c.yaw,0);r.vx=c.vx*.6;r.vz=c.vz*.6;r.k=k;r.m.visible=true}}
  /* wind lines: spawn along the flanks, drift backwards relative to the car, stretch in then shrink out */
- if(on&&d.lt<=0){d.lt=.1/(.3+dr);const l=d.lines.find(q=>q.life>=LL);if(l){l.life=0;const side=Math.random()<.5?-1:1,lat=side*(1.0+Math.random()*.9),h=.2+Math.random()*1.0,fw=.6+Math.random()*2.2;
+ if(P.draftLines&&on&&d.lt<=0){d.lt=.1/(.3+dr);/* off by default: speed lines removed by request, the rings stay */const l=d.lines.find(q=>q.life>=LL);if(l){l.life=0;const side=Math.random()<.5?-1:1,lat=side*(1.0+Math.random()*.9),h=.2+Math.random()*1.0,fw=.6+Math.random()*2.2;
    l.m.position.set(c.x+fx*fw+rx*lat,c.y+h,c.z+fz*fw+rz*lat);l.m.rotation.set(0,c.yaw,0);l.vx=c.vx*.35;l.vz=c.vz*.35;l.len=2.2+c.sp*.07;l.k=k;l.m.visible=true}}
  for(const r of d.rings){if(r.life<RL){r.life+=dt;const t=Math.min(1,r.life/RL);r.m.position.x+=r.vx*dt;r.m.position.z+=r.vz*dt;
    r.m.scale.setScalar(.8+easeOut(t)*2.6);const fade=t<.15?t/.15:Math.pow(1-(t-.15)/.85,1.6);r.m.material.opacity=.17*fade*(r.k||1);if(r.life>=RL){r.m.visible=false;r.m.material.opacity=0}}}

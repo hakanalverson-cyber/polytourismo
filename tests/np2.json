@@ -1,0 +1,2 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",3000],
+["js","(()=>{const r=[];for(const e of document.querySelectorAll('#menu *')){const b=e.getBoundingClientRect();if(b.width>innerWidth*.8&&b.bottom>=innerHeight-2&&b.height<120)r.push(e.tagName+'#'+e.id+'.'+e.className+' top='+b.top+' h='+b.height)}const p=document.getElementById('ptNowPlaying');return r.join(' | ')+' POP '+(p&&JSON.stringify(p.getBoundingClientRect()))})()"],["shot","m"]]

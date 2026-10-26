@@ -55,7 +55,7 @@ function draftFx(Rc,dt){for(const c of Rc.cars){if(c.out)continue;const dr=c.dra
  /* sonic-boom rings: born at the nose, carried along at ~60% of car speed so they peel away behind, expanding with ease-out */
  if(on&&d.rt<=0){d.rt=.34;const r=d.rings.find(q=>q.life>=RL);if(r){r.life=0;r.m.position.set(c.x+fx*2.7,c.y+.7,c.z+fz*2.7);r.m.rotation.set(0,c.yaw,0);r.vx=c.vx*.6;r.vz=c.vz*.6;r.k=k;r.m.visible=true}}
  /* wind lines: spawn along the flanks, drift backwards relative to the car, stretch in then shrink out */
- if(on&&d.lt<=0){d.lt=.1/(.3+dr);const l=d.lines.find(q=>q.life>=LL);if(l){l.life=0;const side=Math.random()<.5?-1:1,lat=side*(1.0+Math.random()*.9),h=.2+Math.random()*1.0,fw=.6+Math.random()*2.2;
+ if(P.draftLines&&on&&d.lt<=0){d.lt=.1/(.3+dr);/* off by default: speed lines removed by request, the rings stay */const l=d.lines.find(q=>q.life>=LL);if(l){l.life=0;const side=Math.random()<.5?-1:1,lat=side*(1.0+Math.random()*.9),h=.2+Math.random()*1.0,fw=.6+Math.random()*2.2;
    l.m.position.set(c.x+fx*fw+rx*lat,c.y+h,c.z+fz*fw+rz*lat);l.m.rotation.set(0,c.yaw,0);l.vx=c.vx*.35;l.vz=c.vz*.35;l.len=2.2+c.sp*.07;l.k=k;l.m.visible=true}}
  for(const r of d.rings){if(r.life<RL){r.life+=dt;const t=Math.min(1,r.life/RL);r.m.position.x+=r.vx*dt;r.m.position.z+=r.vz*dt;
    r.m.scale.setScalar(.8+easeOut(t)*2.6);const fade=t<.15?t/.15:Math.pow(1-(t-.15)/.85,1.6);r.m.material.opacity=.17*fade*(r.k||1);if(r.life>=RL){r.m.visible=false;r.m.material.opacity=0}}}

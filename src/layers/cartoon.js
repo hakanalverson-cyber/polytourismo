@@ -17,7 +17,7 @@ const baseOf=pack=>D.findIndex(d=>pack.replaces==='imola'?d.imola:pack.replaces=
 P.trackPacks={};
 /* the files' gold times were measured with cars 30% quicker and no grip limit; now (25% quicker, 1.6 g grip) a CPU time-trial lap takes
    this much longer: 95.5 -> 107.6 s at Road Atlanta, 98.4 -> 114.7 s at Imola */
-const MEDK={ra:1.071,imola:1.085},ALAT=23;/* tyre grip (16, then +20% and +20% more turning by request) limit on these tracks, m/s² (see the steering cap below) */
+const MEDK={ra:.991,imola:1.007},ALAT=23;/* tyre grip (16, then +20% and +20% more turning by request) limit on these tracks, m/s² (see the steering cap below) */
 /* newest file wins (pack.rev = build time): an older copy saved in this browser never replaces a newer built-in one */
 P.addTrackPack=pack=>{const i=baseOf(pack);if(i<0)throw new Error('This track file is for a track this game does not have ('+pack.replaces+')');const d=D[i];
  /* the small download has no track built in, so it also knows the newest file's build time: an old copy saved in the browser (Road Atlanta's first
@@ -76,9 +76,11 @@ const uv=updateVisual;updateVisual=function(c,T,t){const m=c&&c.m,k=K();if(m&&m.
  if(m&&m.g&&k!==1&&m.g.visible!==false){m.g.scale.setScalar(k);m.g.position.y+=(k-1)*.95;if(m.sh){m.sh.scale.x*=k;m.sh.scale.y*=k}}return r};
 /* chase camera: pulled back less than the car grew (the car fills more of the screen and the camera sits nearer the road, so the ground
    streams past faster), plus a wider view and a light buzz at speed: the big tracks otherwise feel slow with big cars */
-const so=soloCam;soloCam=function(c,dt,out){so.apply(this,arguments);const k=K();if(k===1||c.fin)return;const f=1+(k-1)*.5,y=c.camY==null?c.y:c.camY;
+/* the camera reads a smoothed speed: c.sp twitches by up to 0.8 m/s per frame on the hills and the camera's height, distance and view
+   width all follow speed, which made the picture jitter while the car itself moved smoothly */
+const so=soloCam;soloCam=function(c,dt,out){const sp0=c.sp||0;c._csp=c._csp==null?sp0:c._csp+(sp0-c._csp)*Math.min(1,(dt||.016)*3);c.sp=c._csp;try{so.apply(this,arguments)}finally{c.sp=sp0}const k=K();if(k===1||c.fin)return;const f=1+(k-1)*.5,y=c.camY==null?c.y:c.camY;
  out.p.set(c.x+(out.p.x-c.x)*f,y+(out.p.y-y)*f,c.z+(out.p.z-c.z)*f);out.l.set(c.x+(out.l.x-c.x)*f,y+(out.l.y-y)*f,c.z+(out.l.z-c.z)*f);
- const v=Math.max(0,Math.min(1,((c.sp||0)-20)/50)),hood=(c.tnB||0)>.5||c.camMode;out.f+=v*(hood?3:6);speedFx(c,Math.max(0,((c.sp||0)-42)/30))};
+ const v=Math.max(0,Math.min(1,((c._csp||0)-20)/50)),hood=(c.tnB||0)>.5||c.camMode;out.f+=v*(hood?3:6)};/* speed streaks removed by request */
 /* speed streaks at the screen edges, faint from about 55 km/h, strongest from 215 km/h up (model tracks only) */
 let sfx=null,sfxV=0;const speedFx=(c,v)=>{if(!c.human)return;if(!sfx){sfx=document.createElement('div');sfx.id='ptSpeedFx';
   sfx.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:4;opacity:0;mix-blend-mode:screen;background:repeating-conic-gradient(from 0deg at 50% 46%,rgba(255,255,255,.0) 0deg,rgba(255,255,255,.0) 2.2deg,rgba(255,255,255,.55) 2.5deg,rgba(255,255,255,0) 2.8deg,rgba(255,255,255,0) 5.3deg);-webkit-mask:radial-gradient(ellipse 62% 58% at 50% 46%,transparent 55%,#000 100%);mask:radial-gradient(ellipse 62% 58% at 50% 46%,transparent 55%,#000 100%)';
@@ -87,7 +89,7 @@ let sfx=null,sfxV=0;const speedFx=(c,v)=>{if(!c.human)return;if(!sfx){sfx=docume
 {const hide=()=>{if(sfx)sfx.style.opacity=0;sfxV=0};const cr=P.cleanupRace;if(cr)P.cleanupRace=function(){hide();return cr.apply(this,arguments)};setInterval(()=>{if(sfx&&(typeof scr==='undefined'||scr!=='game'||K()===1))hide()},400)}
 /* these circuits are full size and the cars drawn big, so at true speeds they crawl past the scenery: cars here are 25% quicker in every
    respect (top speed, acceleration, braking and grip together, so the handling balance stays the same) */
-const SPD=1.25;{const m0=P.mul;P.mul=c=>{const m=m0?m0(c):{acc:1,top:1,grip:1,brk:1};if(K()>1){m.top*=SPD;m.acc*=.6;/* the big model tracks made 0-60 mph take 2.5 s in a Mercedes; this gives about 5 s */m.brk*=SPD;m.grip*=SPD;/* the tyre bite grip.js gives human drivers, for the CPU too here (it was a big part of why they were so slow) */if(!(c.human&&!c.forceAI)&&c.onRoad&&!c.cool)m.grip*=(window.PT8_GRIPK||1.4)}return m}}
+const SPD=1.25,TOPK=1.5,ACCK=.72;{const m0=P.mul;P.mul=c=>{const m=m0?m0(c):{acc:1,top:1,grip:1,brk:1};if(K()>1){m.top*=TOPK;m.acc*=ACCK;/* top speed 50% up and full pickup: these long tracks felt slow (x1.1 pickup gave 0-60 mph in 2.5 s, x.6 felt sluggish) */m.brk*=SPD;m.grip*=SPD;/* the tyre bite grip.js gives human drivers, for the CPU too here (it was a big part of why they were so slow) */if(!(c.human&&!c.forceAI)&&c.onRoad&&!c.cool)m.grip*=(window.PT8_GRIPK||1.4)}return m}}
 /* cornering grip. The arcade model turns as tight as the steering asks at any speed (well over 3 g at 100 mph), so a 40 mph corner went
    at 100. On these tracks the tyres hold about ALAT (1.6 g, scaled by the car's grip and the surface):
    every car (yours and the CPU's): the nose still turns in as sharply as you steer (up to 1.7x what the tyres hold), but the direction you travel can only

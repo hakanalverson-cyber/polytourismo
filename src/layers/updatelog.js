@@ -4,6 +4,10 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.12',d:'Oct 25, 2026',t:'New Road Atlanta and Imola scenery, smarter CPU, gearbox choice',items:[
+  'Imola and Road Atlanta are fast again: top speed 50% higher there and strong pickup (a Mercedes does 0-60 mph in about 3 s, 0-100 in about 5.5 s). Gold times re-measured.',
+  'Hill jitter fixed: the car was moving smoothly, but the chase camera set its height, distance and view width from a speed reading that twitched on hills. The camera now uses a smoothed speed.',
+  'Speed lines removed (the streaks at the screen edges and the slipstream wind lines; the slipstream rings stay).',
+  'The Now Playing card only shows on the main menu (the music keeps playing everywhere) and sits the same distance from the right edge and the footer.',
   'Acceleration on Imola and Road Atlanta is back to real-world pace (a Mercedes did 0-60 mph in 2.5 s there; now about 4 s, 0-100 mph about 9 s). Turning is another 20% tighter in every gear. Gold times re-measured.',
   'CPU cars always match the class you pick (cars the CPU cannot drive were swapped for a B-class Mercedes).',
   'The small download turns away an old saved Road Atlanta file (the first one drove through the coned loops and had no grid boxes, so the start fixes did not apply there) and asks for the new one.',
