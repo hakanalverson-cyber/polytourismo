@@ -86,6 +86,8 @@ src=rep(src," gl_FragColor.rgb=clamp((gl_FragColor.rgb-0.5)*1.045+0.5,0.0,1.0);\
 # car sits ON the road: physics rest height is road+1.02 but the model bottom was drawn at -0.72 (0.3 m of float)
 src=rep(src,"v.position.y=-.72+m.visualHeight/2;const close","v.position.y=-.95+m.visualHeight/2;const close")
 src=rep(src,"m.g.localToWorld(new V(x,-.72,z))","m.g.localToWorld(new V(x,-.95,z))")
+# segment joints: on the outside of a bend the point projects just past both neighbouring segments (f<0 on one, f>1 on the other) so the lookup missed the road and returned the terrain height (~1 m high); the floor clamp then killed vy and launched the car off downhills. Accept a small overhang and clamp f.
+src=rep(src,"f=((x-T.x[i])*dx+(z-T.z[i])*dz)/len2;if(f<0||f>1)continue;","f0=((x-T.x[i])*dx+(z-T.z[i])*dz)/len2;if(f0<-.15||f0>1.15)continue;const f=f0<0?0:f0>1?1:f0;")
 # road height: in tight / climbing corners neighbouring segments overlap on the inside; picking the highest one made the car pop upward. Take the segment you are actually over (smallest lateral offset) within the same road level.
 src=rep(src,"if(h<=y+1.2&&h>best){best=h;bi=i;bl=lat;}\n }}\n return bi>=0?{h:best,road:1,i:bi,lat:bl}",
  "if(h<=y+1.2){if(h>best)best=h;if(cn<64){cH[cn]=h;cI[cn]=i;cL[cn]=lat;cn++}}\n }}\n if(cn){let ba=1e9;for(let q=0;q<cn;q++)if(cH[q]>best-1.5&&Math.abs(cL[q])<ba){ba=Math.abs(cL[q]);bi=cI[q];bl=cL[q];h2=cH[q]}best=h2}\n return bi>=0?{h:best,road:1,i:bi,lat:bl}")
