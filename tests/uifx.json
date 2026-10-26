@@ -1,0 +1,3 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",2500],
+["js","(()=>{const o=PT8.audioOut();PT8.sfx('select');return JSON.stringify({o:!!o,has:!!window.UIFX_B64,keys:Object.keys(window.UIFX_B64||{})})})()"],["wait",1500],
+["js","(()=>{PT8.sfx('select');PT8.sfx('back');document.querySelector('#s8cards .card').dispatchEvent(new MouseEvent('mouseover',{bubbles:true}));return 'duck '+(PT8.duckUntil>performance.now())})()"],["shot","m"]]

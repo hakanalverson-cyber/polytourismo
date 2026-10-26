@@ -7602,6 +7602,7 @@ const SFX={
  type:()=>tone(1800,1700,.015,'square',.08)
 };
 P.sfx=(n,a)=>{const f=SFX[n];if(f)f(a)};window.sfx=P.sfx;
+P.audioOut=()=>{if(!on())return null;const a=ctx();return{a,g:MG,v:vol()}};P.SFX=SFX;
 
 /* ---------- engine: two oscillators through a lowpass, smoothed; separate squeal ---------- */
 const eng=[];
@@ -11035,7 +11036,7 @@ function tick(){if(pop&&scr!=='menu'&&pop.style.opacity!=='0'){clearTimeout(popT
  if(w==='menu'){if(!menuKey){if(!deck.length)shuffle(null);menuKey=deck.shift()}key=menuKey}else if(w==='body'||w==='cafe')key=w;
  for(const k in AU){const a=AU[k];if(k!==key){a._v+=(0-a._v)*.22;a.volume=Math.max(0,Math.min(1,a._v));if(a._v<.01&&!a.paused)a.pause()}}
  if(!key)return;const a=el(key,key==='body'||key==='cafe');if(!a)return;
- a._v+=(Math.min(1,t)*(scr==='game'?.4:1)-a._v)*.12;a.volume=Math.max(0,Math.min(1,a._v));
+ a._v+=(Math.min(1,t)*(scr==='game'?.4:1)*(performance.now()<(P.duckUntil||0)?.45:1)-a._v)*(performance.now()<(P.duckUntil||0)?.5:.12);/* dips under the menu sound effects */a.volume=Math.max(0,Math.min(1,a._v));
  if(a.paused&&!blockedUntilGesture&&!a._pend){a._pend=1;a.play().then(()=>{a._pend=0;hint(false);if(!a._ann){a._ann=true;popup(key)}}).catch(()=>{a._pend=0;blockedUntilGesture=true;hint(true)})}}
 setInterval(tick,200);
 /* browsers refuse sound until the first click or key press, so start inside that very event and show a small hint until then */
@@ -11122,6 +11123,7 @@ window.__optAction=k=>{if(k==='@tutorial')P.startTutorial()};
 const P=window.PT8;
 P.LOG=[
  {v:'0.12',d:'Oct 25, 2026',t:'New Road Atlanta and Imola scenery, smarter CPU, gearbox choice',items:[
+  'New menu sounds from Hakan\'s sample set: a chime to select, a short blip for options, a softer tone for back, a whoosh between screens, a tick when the pointer moves onto an item and a rising sweep when a race starts. The menu music dips for a moment under each one so they stand out.',
   'Sense of speed on Imola and Road Atlanta: the bought tracks are built bigger than life and the cars drawn 1.8x to match, so the road went by at about half the speed the dial showed. Cars there now cover 1.4x the ground for the same dial speed, with strong pull from 100 to 200 mph (less air drag). Laps are about 65 s; gold times re-measured.',
   'Hill jitter fixed for real: two smoothing filters on the drawn car lagged behind on climbs and dips and snapped back (worse at low frame rates). They are gone; the car body is drawn exactly where the smooth physics puts it.',
   'Hood camera on the model tracks sits at the big car\'s eye height and tilts with a smoothed pitch, so crests and dips no longer jolt it.',
@@ -14075,6 +14077,31 @@ let k=Math.floor(Math.random()*url.length),f=0,vis=false,t=0;
 const next=()=>{const a=L[f],b=L[f^1];k=(k+1)%url.length;b.style.backgroundImage=url[k];b.classList.toggle('b',k%2===1);b.classList.remove('on');void b.offsetWidth;b.classList.add('on');a.classList.remove('on');f^=1};
 /* only animate while the maker list is on screen */
 setInterval(()=>{const v=sh.classList.contains('on')&&sh.classList.contains('gtb')&&sh.classList.contains('mkl');if(v&&!vis){t=0;next()}else if(v&&++t>=7){t=0;next()}vis=v},1000);
+})();
+
+/* ===== Poly GT layer: menu sound effects from the sample set Hakan picked (UIFX*.wav, full build only; the synth sounds stay as fallback) ===== */
+(function uifx(){
+'use strict';
+const P=window.PT8,B=window.UIFX_B64;if(!B||!P.audioOut||!P.SFX)return;
+/* how loud each one plays: they go straight to the speakers (not through the game's compressor) and dip the menu music for a moment,
+   so they cut through the songs */
+const GAIN={select:1.6,click:1.4,back:1.4,whoosh:1.1,move:.9,start:1.7};
+const buf={};let loading=null;
+const load=a=>loading||(loading=Promise.all(Object.keys(B).map(k=>{const s=atob(B[k]),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);
+ return new Promise(ok=>a.decodeAudioData(u.buffer,b=>{buf[k]=b;ok()},()=>ok()))})));
+const play=(k,v)=>{const o=P.audioOut();if(!o)return false;load(o.a);const b=buf[k];if(!b)return false;
+ try{const s=o.a.createBufferSource(),g=o.a.createGain();s.buffer=b;g.gain.value=Math.min(1,(GAIN[k]||1)*(v==null?1:v)*o.v);s.connect(g);g.connect(o.a.destination);s.start();P.duckUntil=performance.now()+b.duration*1000+(k==='move'?60:250)}catch(e){return false}return true};
+const inMenu=()=>typeof scr==='undefined'||(scr!=='game'&&scr!=='pause');
+/* the samples replace the synth for menu sounds; in a race (gear shifts use 'move') the synth stays */
+for(const k of ['select','click','back','whoosh','move']){const f=P.SFX[k];P.SFX[k]=a=>{if(inMenu()&&play(k))return;if(f)f(a)}}
+/* a rising sweep when a race is launched from the menus */
+{const l0=P.launch;if(l0)P.launch=function(){if(inMenu())play('start');return l0.apply(this,arguments)}}
+/* a soft tick when the pointer moves onto another menu item */
+let last=null,lt=0;
+document.addEventListener('mouseover',e=>{if(!inMenu())return;const t=e.target&&e.target.closest&&e.target.closest('.card,.qc,.mk,.trk,.ci,.gc,.btn,button,[data-m]');
+ if(!t||t===last)return;last=t;const n=performance.now();if(n-lt<45)return;lt=n;play('move')},true);
+/* decode as soon as the audio is unlocked by the first press */
+const warm=()=>{const o=P.audioOut();if(o)load(o.a)};addEventListener('pointerdown',warm,{once:true,capture:true});addEventListener('keydown',warm,{once:true,capture:true});
 })();
 
 </script><script>(function(){function done(){var b=document.getElementById("ptBoot"),c=document.getElementById("ptBootCss");if(!b)return;b.style.opacity=0;setTimeout(function(){if(c)c.remove();b.remove()},260)}function go(){requestAnimationFrame(function(){requestAnimationFrame(function(){setTimeout(done,350)})})}if(document.readyState==="complete")go();else addEventListener("load",go);setTimeout(done,8000)})();</script></body></html>

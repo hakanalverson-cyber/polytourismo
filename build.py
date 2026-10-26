@@ -225,7 +225,7 @@ src=rep(src,"let bi=c.idx,bd=1e9;for(let k=-6;k<=30;k++){","let bi=c.idx,bd=1e9;
 src=rep(src,"c.wrong=hd<-3&&live?c.wrong+dt:0;","c.wrong=!T.free&&hd<-3&&live?c.wrong+dt:0;")
 src=rep(src,"if(live&&(c.y<T.y[c.idx]-12||Math.abs(c.roll)>.68","if(live&&((!T.free&&c.y<T.y[c.idx]-12)||Math.abs(c.roll)>.68")
 src=rep(src," if(!live)return;\n const sf=T.surf(c.x,c.z,c.y);"," if(!live||T.free)return;\n const sf=T.surf(c.x,c.z,c.y);")
-parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','frmodels','frdress','frtown','frworld','freeroam','cars10','audio','modes','tracks','hpack','tracks2','extra','race2','elim','tod','bridge','props','bld','stages','trees_q','propkit','scenery','ra_data','tracks3','imola_data','tracks4','ring_data','ring_forest','tracks5','cartoon','logos','weather','ambience','menuaudio','tutorial','updatelog','hud2','shade','ui','cinema','rally','trackmode','realspeed','barn','animals','franimals','frlife','clean','solid','damage','grip','airline','ride','snap','perf','econ','frhud','title','brandbg']  if os.path.exists(f'{SRC}/layers/{n}.js')]
+parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','frmodels','frdress','frtown','frworld','freeroam','cars10','audio','modes','tracks','hpack','tracks2','extra','race2','elim','tod','bridge','props','bld','stages','trees_q','propkit','scenery','ra_data','tracks3','imola_data','tracks4','ring_data','ring_forest','tracks5','cartoon','logos','weather','ambience','menuaudio','tutorial','updatelog','hud2','shade','ui','cinema','rally','trackmode','realspeed','barn','animals','franimals','frlife','clean','solid','damage','grip','airline','ride','snap','perf','econ','frhud','title','brandbg','uifx']  if os.path.exists(f'{SRC}/layers/{n}.js')]
 # track files (bought cartoon models of Imola / Road Atlanta, made by tools/cartoon_track, kept out of the public repo in project files).
 # PACKS=1 builds them in (Artifact, full build); otherwise players load them with "+ Add track file" so the lite file stays small.
 if os.environ.get('PACKS'):
@@ -247,6 +247,11 @@ for _f in sorted(_g.glob('/mnt/project-files/poly-gt/tracks/*.ptrack')):
   with _gz.open(_f,'rt') as _h:_hd=_h.read(400)
   _m=_re.search(r'"rev":\s*(\d+)',_hd);_r=_re.search(r'"replaces":\s*"(\w+)"',_hd)
   if _m and _r:_rev[_r.group(1)]=int(_m.group(1))
+# UI sound effects Hakan supplied (kept in project files, not in the public repo): built into PACKS builds only
+UIFX=''
+if os.environ.get('PACKS'):
+  _u={k:'/mnt/project-files/poly-gt/uifx/UIFX%d.wav'%n for k,n in (('select',2),('click',3),('whoosh',4),('back',5),('move',6),('start',7))}
+  if all(os.path.exists(f) for f in _u.values()):UIFX='<script>window.UIFX_B64='+_js.dumps({k:base64.b64encode(open(f,'rb').read()).decode() for k,f in _u.items()})+';</script>'
 PREV='<script>window.PT8_PACKREV='+_js.dumps(_rev)+';</script>'
 BBG='<script>const BBG_B64=['+','.join('"'+b64('brandbg/b%d.jpg'%i)+'"' for i in range(6))+'];</script>'
 HPACK='<script>const HPACK_B64="'+b64('harbor_pack.glb.gz')+'";</script>'
@@ -277,7 +282,7 @@ src=src.replace('<title>Poly Tourismo v7</title>','<title>Poly Tourismo</title>'
 src=src.replace('<body>','<body><div id="ptBoot">POLY TOURISMO<i></i><small>LOADING</small></div>',1)
 BOOT_JS='<script>(function(){function done(){var b=document.getElementById("ptBoot"),c=document.getElementById("ptBootCss");if(!b)return;b.style.opacity=0;setTimeout(function(){if(c)c.remove();b.remove()},260)}function go(){requestAnimationFrame(function(){requestAnimationFrame(function(){setTimeout(done,350)})})}if(document.readyState==="complete")go();else addEventListener("load",go);setTimeout(done,8000)})();</script>'
 GLTF='<script>'+open(W+'/assets/GLTFLoader.r128.js').read()+'</script>'
-add=GLTF+ANIM+BLD+FRM+CARS10+HPACK+BBG+PREV+MUS+'<style id="v8css">'+css+'</style><script>\n'+'\n'.join(parts)+'\n</script>'
+add=GLTF+ANIM+BLD+FRM+CARS10+HPACK+BBG+PREV+UIFX+MUS+'<style id="v8css">'+css+'</style><script>\n'+'\n'.join(parts)+'\n</script>'
 i=src.rindex('</body>') if '</body>' in src else len(src)
 src=src[:i]+add+BOOT_JS+src[i:]
 

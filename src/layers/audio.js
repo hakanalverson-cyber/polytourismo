@@ -48,6 +48,7 @@ const SFX={
  type:()=>tone(1800,1700,.015,'square',.08)
 };
 P.sfx=(n,a)=>{const f=SFX[n];if(f)f(a)};window.sfx=P.sfx;
+P.audioOut=()=>{if(!on())return null;const a=ctx();return{a,g:MG,v:vol()}};P.SFX=SFX;
 
 /* ---------- engine: two oscillators through a lowpass, smoothed; separate squeal ---------- */
 const eng=[];

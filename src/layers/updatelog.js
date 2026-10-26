@@ -4,6 +4,7 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.12',d:'Oct 25, 2026',t:'New Road Atlanta and Imola scenery, smarter CPU, gearbox choice',items:[
+  'New menu sounds from Hakan\'s sample set: a chime to select, a short blip for options, a softer tone for back, a whoosh between screens, a tick when the pointer moves onto an item and a rising sweep when a race starts. The menu music dips for a moment under each one so they stand out.',
   'Sense of speed on Imola and Road Atlanta: the bought tracks are built bigger than life and the cars drawn 1.8x to match, so the road went by at about half the speed the dial showed. Cars there now cover 1.4x the ground for the same dial speed, with strong pull from 100 to 200 mph (less air drag). Laps are about 65 s; gold times re-measured.',
   'Hill jitter fixed for real: two smoothing filters on the drawn car lagged behind on climbs and dips and snapped back (worse at low frame rates). They are gone; the car body is drawn exactly where the smooth physics puts it.',
   'Hood camera on the model tracks sits at the big car\'s eye height and tilts with a smoothed pitch, so crests and dips no longer jolt it.',
