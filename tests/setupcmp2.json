@@ -1,0 +1,9 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",2500],
+["js","(()=>{document.querySelector('#s8cards .card[data-m=quick]').click();return 1})()"],["wait",1500],
+["js","(()=>{document.querySelectorAll('#s8quick .qc')[4].click();return 1})()"],["wait",2500],["shot","vs"],
+["js","(()=>{const e=document.querySelector('#s8setup .cols>.pnl:last-child');e.scrollTop=e.scrollHeight;return 1})()"],["wait",800],["shot","vs2"],
+["js","(()=>{show('s8cards');return 1})()"],["wait",1200],
+["js","(()=>{document.querySelector('#s8cards .card[data-m=track]').click();return 1})()"],["wait",2000],
+["js","(()=>{const p=[...document.querySelectorAll('#cPl button')].find(x=>x.dataset.v==='2');if(p)p.click();return 1})()"],["wait",1500],
+["js","(()=>{const e=document.querySelector('#s8setup .cols>.pnl:last-child');e.scrollTop=0;return 1})()"],["wait",800],["shot","trk"],
+["js","(()=>{const e=document.querySelector('#s8setup .cols>.pnl:last-child');e.scrollTop=e.scrollHeight;return 1})()"],["wait",800],["shot","trk2"]]

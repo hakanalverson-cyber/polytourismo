@@ -14,6 +14,7 @@ P.LOG=[
   'Car-to-car contact uses boxes the size of the drawn cars (the big cars on the model tracks used a 5.8 m circle), with a softer bounce, so one knock is one hit.',
   'Race messages (yellow) are in the pixel font. Player name tags are retro pixel plates and are hidden on your own screen.',
   'Results show the winning car. Pause is on Tab (Escape no longer flashes the pause menu when held).',
+  'The Track race setup page is laid out exactly like Quick Play (same plain option rows, same width; no boxed panel).',
   'Track races pick cars on the setup page like Quick Play (name, gearbox, Garage button per driver); options line up in one column. The Track and Rally garages have an OWNED section: your own garage cars, usable there too.',
   'Cars on Imola and Road Atlanta are 30% quicker in every respect (top speed, acceleration, braking and grip), so the big full-size tracks feel fast. Camera shake removed; speed streaks much fainter. Track mode opens on the Race format.',
   'A track file saved in the browser can no longer replace a newer built-in one (an old saved Road Atlanta was bringing the coned route back); stale saved copies are deleted.',

@@ -271,16 +271,15 @@ const effTod=()=>ST.todUser||D[ST.track].tod0||'day';
 const seg=(items,cur)=>items.map(([v,l])=>`<button class="btn sm ${v===cur?'sel':''}" data-v="${v}"><span>${l}</span></button>`).join('');
 /* Track mode has two formats: time trial (drivers take turns, the original) and race (everyone at once, split screen, CPU drivers) */
 const trkRace=()=>ST.trkType!=='tt';/* Race is the default */
-const fmtRow=()=>`<div class="row8"><b>Format</b><span class="seg eqw" id="cFmt">${seg([['race','Race (CPU / split screen)'],['tt','Time trial (take turns)']],trkRace()?'race':'tt')}</span></div>`;
-function trackRaceCfg(){const Tn=tr(ST.track),dist=Tn.L*(ST.rlaps||1),wxn=(P.WX[ST.wx||'clear']||{n:'CLEAR'}).n;if(ST.players+(ST.cpus||0)>8)ST.cpus=8-ST.players;
- return `<div class="rcfg"><h4>Circuit configuration</h4>${fmtRow()}<div class="row8"><b>Race laps</b><span class="seg" id="cRL">${seg([[1,'1'],[2,'2'],[3,'3'],[5,'5']],ST.rlaps)}</span></div>`
+const fmtRow=()=>`<div class="row8"><b>Format</b><span class="seg eqw" id="cFmt">${seg([['race','Race'],['tt','Time trial']],trkRace()?'race':'tt')}</span></div>`;
+/* Track race: the same plain rows as Quick Play (no boxed panel), plus Format and Start */
+function trackRaceCfg(){if(ST.players+(ST.cpus||0)>8)ST.cpus=8-ST.players;
+ return fmtRow()+`<div class="row8"><b>Laps</b><span class="seg" id="cRL">${seg([[1,'1'],[2,'2'],[3,'3'],[5,'5']],ST.rlaps)}</span></div>`
  +`<div class="row8"><b>Drivers</b><span class="seg" id="cPl">${seg([[1,'1'],[2,'2'],[3,'3'],[4,'4']],ST.players)}</span></div>`
  +`<div class="row8"><b>CPU</b><span class="seg" id="cCpu">${seg([[0,'0'],[1,'1'],[2,'2'],[3,'3'],[5,'5'],[7,'7']].filter(a=>a[0]+ST.players<=8),ST.cpus||0)}</span></div>`
  +`<div class="row8"><b>Level</b><span class="seg" id="cDif">${seg([[0,'Easy'],[1,'Normal'],[2,'Hard']],ST.diff)}</span></div>`
  +`<div class="row8"><b>CPU class</b><span class="seg" id="cCc">${seg([['auto','Auto'],['C','C'],['B','B'],['A','A'],['S','S']],ST.cc||'auto')}</span></div>`
- +`<div class="row8"><b>Start</b><span class="seg" id="cStart">${seg([['standing','Standing'],['rolling','Rolling']],ST.start||'standing')}</span></div>`
- +`<div class="row8"><b>Weather</b><span class="seg" id="cWx">${seg(P.WX_ORDER.map(k=>[k,P.WX[k].n[0]+P.WX[k].n.slice(1).toLowerCase()]),ST.wx||'clear')}</span></div>`
- +`<div class="rsum"><div><small>Distance</small><b>${(dist/1000).toFixed(1)} km</b></div><div><small>Cars</small><b>${ST.players+(ST.cpus||0)}</b></div><div><small>Conditions</small><b>${wxn} &middot; ${(P.TOD[effTod()]||{n:''}).n}</b></div></div><small class="rnote">Everyone races at once${ST.players>1?' on split screen':''}. Grid order is drawn at random. ${ST.start==='rolling'?'Rolling start: the field drives up in formation and goes green when the leader reaches the line.':'Standing start from the grid boxes.'}</small></div>`}
+ +`<div class="row8"><b>Start</b><span class="seg" id="cStart">${seg([['standing','Standing'],['rolling','Rolling']],ST.start||'standing')}</span></div>`}
 function renderSetup(){const m=ST.mode;$('suTitle').innerHTML=MODE_NAME[m];
  $('trkList').innerHTML=D.map((d,i)=>!okTrack(m,i)?'':`<div class="trk ${i===ST.track?'sel':''}" data-i="${i}"><canvas width="56" height="42"></canvas><div><b>${d.name}</b><small>${P.TRACK_INFO[i].s} &middot; ${Math.round(tr(i).L)} m${d.cartoon?' &middot; 3D model':''}</small></div>${barnIcon(d)}</div>`).join('')
   +((P.TRK_TRACKS||[]).some(i=>okTrack(m,i))&&P.loadTrackFile?`<div class="trk trkAdd" id="trkAdd"><div style="width:56px;text-align:center;font-size:26px;line-height:42px">+</div><div><b>Add track file</b><small id="trkAddMsg">${Object.keys(P.trackPacks||{}).length?'Loaded: '+Object.values(P.trackPacks).map(p=>p.name).join(', '):'Load a .ptrack file from your computer'}</small></div><input type="file" accept=".ptrack,.json,.gz" style="display:none"></div>`:'');
@@ -310,7 +309,7 @@ function renderSetup(){const m=ST.mode;$('suTitle').innerHTML=MODE_NAME[m];
  if(m==='cutup')cfg+=`<div class="row8"><b>Traffic</b><span class="seg" id="cTr">${seg([['light','Light'],['heavy','Heavy']],ST.traffic)}</span></div><div class="row8"><b>Clock</b><span class="seg" id="cTime">${seg([[90,'90s'],[120,'120s'],[180,'180s']],ST.time)}</span></div>`;
 
  if(ST.players>=2&&m!=='rally'&&(m!=='track'||trkRace())&&m!=='ta'){const kc=(l,c)=>`<i class="kc${c?' '+c:''}">${l}</i>`,np=P.p2Keys==='numpad';cfg+=`<div class="p2kb"><h4>Player 2 keys <small>click a layout</small></h4><div class="kbs"><button class="kbo${np?'':' on'}" data-k="arrows"><div class="kg">${kc('PgUp','sh')}${kc('&uarr;','gas')}${kc('PgDn','sh')}${kc('&larr;','st')}${kc('&darr;','br')}${kc('&rarr;','st')}</div><b>Arrow keys</b><small>PgUp / PgDn shift</small></button><button class="kbo${np?' on':''}" data-k="numpad"><div class="kg">${kc('7','sh')}${kc('8','gas')}${kc('9','sh')}${kc('4','st')}${kc('5','br')}${kc('6','st')}</div><b>Numpad 8 4 5 6</b><small>7 down &middot; 9 up</small></button></div></div>`}
- if(m==='mp'||m==='elim')cfg+=`<div class="row8"><b>Weather</b><span class="seg" id="cWx">${seg(P.WX_ORDER.map(k=>[k,P.WX[k].n[0]+P.WX[k].n.slice(1).toLowerCase()]),ST.wx||'clear')}</span></div>`;
+ if(m==='mp'||m==='elim'||(m==='track'&&trkRace()))cfg+=`<div class="row8"><b>Weather</b><span class="seg" id="cWx">${seg(P.WX_ORDER.map(k=>[k,P.WX[k].n[0]+P.WX[k].n.slice(1).toLowerCase()]),ST.wx||'clear')}</span></div>`;
  /* rally and track: the gearbox is chosen up front (it sets every driver; each car can still be changed on the car step) */
  if(isRL(m))cfg+=`<div class="row8"><b>Gearbox</b><span class="seg" id="cGb">${seg([['0','Manual'],['1','Automatic']],P.isAuto({human:true,k:0})?'1':'0')}</span></div>`;
  cfg+=`<div class="row8"><b>Damage</b><span class="seg" id="cDmg">${seg([['0','Off'],['1','On']],dmgOf(m))}</span></div>`;
