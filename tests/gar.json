@@ -1,0 +1,4 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",2500],
+["js","(()=>{document.querySelector('#s8cards .card[data-m=track]').click();return 1})()"],["wait",2000],
+["js","(()=>{document.querySelector('#suDrv .drv > button').click();return 1})()"],["wait",2500],["shot","sec"],
+["js","(()=>{document.querySelector('#shList .sect[data-cat=PRO]').click();return 1})()"],["wait",2500],["shot","pro"]]

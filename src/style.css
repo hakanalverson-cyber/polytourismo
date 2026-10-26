@@ -1058,3 +1058,16 @@ b,strong,h1,h2,h3,button,.btn,.gtab,.gti b,.hdr h2,#gtBar .gtl,.gtp,.crbox b,.qc
 #s8setup .row8 .seg.eqw{display:grid;grid-template-columns:1fr 1fr}
 #s8setup .p2kb{margin:18px 0}#s8setup .tod{margin-top:16px}
 #s8setup .drv{margin-bottom:10px;padding:12px 14px}
+/* garage selector panels: slimmer so they never cover the car on the turntable */
+#s8show:not(.gtb) .lst{width:min(240px,19vw);padding-right:1.2vw}
+#s8show:not(.gtb) .lst .ci{padding:6px 8px}
+#s8show:not(.gtb) .lst .ci b{font-size:11px}
+#s8show:not(.gtb) .lst .ci small{display:none}
+#s8show:not(.gtb) .lst .sect{padding:10px 10px;font-size:11px}
+#s8show:not(.gtb) .stat{width:min(300px,23vw);padding:12px 3vw 24px 1.6vw;font-size:.92em}
+#s8show:not(.gtb) .stat .nm{font-size:18px}
+#s8show.gv-car:not(.gtb) .stat{width:min(300px,23vw);padding:12px 1.6vw 30px 3vw}
+#s8show:not(.gtb) .stat .bar{gap:6px}
+#s8show:not(.gtb) .stat .bar span{width:62px}
+#s8show:not(.gtb) .stat .bar i{min-width:60px}
+#s8show:not(.gtb) .stat .bar em{width:auto;min-width:52px}

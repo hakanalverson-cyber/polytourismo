@@ -1,0 +1,2 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",2500],
+["js","(()=>{const b=[...document.querySelectorAll('#menu button')].find(x=>/Brand Central/.test(x.textContent||''));if(b){b.click();return 'ok'}return 'none'})()"],["wait",4000],["shot","b"],["wait",8000],["shot","c"]]

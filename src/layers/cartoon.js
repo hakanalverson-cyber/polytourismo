@@ -17,7 +17,7 @@ const baseOf=pack=>D.findIndex(d=>pack.replaces==='imola'?d.imola:pack.replaces=
 P.trackPacks={};
 /* the files' gold times were measured with cars 30% quicker and no grip limit; now (25% quicker, 1.6 g grip) a CPU time-trial lap takes
    this much longer: 95.5 -> 107.6 s at Road Atlanta, 98.4 -> 114.7 s at Imola */
-const MEDK={ra:1.127,imola:1.166},ALAT=16;/* tyre grip limit on these tracks, m/s² (see the steering cap below) */
+const MEDK={ra:1.047,imola:1.097},ALAT=16;/* tyre grip limit on these tracks, m/s² (see the steering cap below) */
 /* newest file wins (pack.rev = build time): an older copy saved in this browser never replaces a newer built-in one */
 P.addTrackPack=pack=>{const i=baseOf(pack);if(i<0)throw new Error('This track file is for a track this game does not have ('+pack.replaces+')');const d=D[i];
  if(d.cartoon&&(d.cartoon.rev||0)>(pack.rev||0)){const e=new Error('This is an older version of '+pack.name+' than the one already in the game');e.older=true;throw e}
@@ -84,18 +84,23 @@ let sfx=null,sfxV=0;const speedFx=(c,v)=>{if(!c.human)return;if(!sfx){sfx=docume
 {const hide=()=>{if(sfx)sfx.style.opacity=0;sfxV=0};const cr=P.cleanupRace;if(cr)P.cleanupRace=function(){hide();return cr.apply(this,arguments)};setInterval(()=>{if(sfx&&(typeof scr==='undefined'||scr!=='game'||K()===1))hide()},400)}
 /* these circuits are full size and the cars drawn big, so at true speeds they crawl past the scenery: cars here are 25% quicker in every
    respect (top speed, acceleration, braking and grip together, so the handling balance stays the same) */
-const SPD=1.25;{const m0=P.mul;P.mul=c=>{const m=m0?m0(c):{acc:1,top:1,grip:1,brk:1};if(K()>1){m.top*=SPD;m.acc*=SPD;m.brk*=SPD;m.grip*=SPD;/* the tyre bite grip.js gives human drivers, for the CPU too here (it was a big part of why they were so slow) */if(!(c.human&&!c.forceAI)&&c.onRoad&&!c.cool)m.grip*=(window.PT8_GRIPK||1.4)}return m}}
+const SPD=1.25;{const m0=P.mul;P.mul=c=>{const m=m0?m0(c):{acc:1,top:1,grip:1,brk:1};if(K()>1){m.top*=SPD;m.acc*=1.1;/* acceleration only 10% up: first gear was too punchy */m.brk*=SPD;m.grip*=SPD;/* the tyre bite grip.js gives human drivers, for the CPU too here (it was a big part of why they were so slow) */if(!(c.human&&!c.forceAI)&&c.onRoad&&!c.cool)m.grip*=(window.PT8_GRIPK||1.4)}return m}}
 /* cornering grip. The arcade model turns as tight as the steering asks at any speed (well over 3 g at 100 mph), so a 40 mph corner went
    at 100. On these tracks the tyres hold about ALAT (1.6 g, scaled by the car's grip and the surface):
    every car (yours and the CPU's): the nose still turns in as sharply as you steer (up to 1.7x what the tyres hold), but the direction you travel can only
      bend at the grip limit, so pushing too hard makes the car slide with the nose in (a drift you can catch), never a dead push wide.
      A first version capped the steering itself: with keyboard steering that felt like heavy understeer everywhere. */
+/* grip grows with speed like downforce: 1.6 g in slow corners, about 2.6 g at 160 km/h, 3.5 g from 200 km/h, so slow corners stay real
+   and fast sweepers can be taken flat out instead of the car pushing wide at speed */
+const gripAt=(c,mt)=>{const v=c.sp||0;return ALAT*Math.min(2.2,1+.6*(v/35)*(v/35))*((c.cs&&c.cs.grip)||1)*(mt.grip||1)};
 {const ip0=P.inPost;P.inPost=(c,dt)=>{if(ip0)ip0(c,dt);if(K()===1||!c.in||c.exp>0)return;const vf=c.vx*Math.sin(c.yaw)+c.vz*Math.cos(c.yaw);if(vf<6)return;
- const mt=c.mt||{grip:1},a=ALAT*((c.cs&&c.cs.grip)||1)*(mt.grip||1),sr=2.5-Math.min(c.sp,40)*.03,mx=a/(vf*sr)*1.7,st=c.in.st||0;
+ const mt=c.mt||{grip:1},a=gripAt(c,mt),sr=2.5-Math.min(c.sp,40)*.03,mx=a/(vf*sr)*1.7;
+ /* calmer steering at low speed (first gear felt twitchy): full lock gives 60% of the old turn rate at walking pace, all of it from 90 km/h */
+ if(c.human&&!c.forceAI)c.in.st=(c.in.st||0)*(.6+.4*Math.min(1,Math.max(0,(vf-6)/19)));const st=c.in.st||0;
  if(Math.abs(st)>mx)c.in.st=Math.sign(st)*mx}}
 {const sg0=stepCar;stepCar=function(c,dt){const vx0=c.vx,vz0=c.vz,r=sg0.apply(this,arguments);
  if(K()===1||c.exp>0||!(dt>0))return r;const s0=Math.hypot(vx0,vz0),s1=Math.hypot(c.vx,c.vz);if(s0<6||s1<6||!c.m||!c.m.wheels.some(w=>w.g))return r;
- const mt=c.mt||{grip:1},a=ALAT*((c.cs&&c.cs.grip)||1)*(mt.grip||1),h0=Math.atan2(vx0,vz0),h1=Math.atan2(c.vx,c.vz),d=wr(h1-h0),mx=a*dt/s1;
+ const mt=c.mt||{grip:1},a=gripAt(c,mt),h0=Math.atan2(vx0,vz0),h1=Math.atan2(c.vx,c.vz),d=wr(h1-h0),mx=a*dt/s1;
  if(Math.abs(d)>mx){const h=h0+Math.sign(d)*mx;c.vx=Math.sin(h)*s1;c.vz=Math.cos(h)*s1}
  /* past about 35 degrees of slide the nose is eased back toward the travel direction, so a slide never turns into a spin */
  const hv=Math.atan2(c.vx,c.vz),sl=wr(c.yaw-hv);if(Math.abs(sl)>.6){c.yaw-=Math.sign(sl)*(Math.abs(sl)-.6)*Math.min(1,dt*6);c.yr*=.9}

@@ -1,0 +1,10 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",2500],
+["js","(()=>{window.SHOT=(o)=>{PT8.launch({mode:'mp',track:o.tr,laps:3,humans:[{id:o.car,alt:0}],ai:o.ai||[],tod:o.tod||'day',weather:o.wx||'clear',trackRace:o.tr>=14});show('game');const c=RACE.cars[0];c.forceAI=1;c.ai={skill:.95,lat:0,name:'T'};RACE.cars.forEach(k=>{if(k.ai)k.ai.skill=.95});for(let i=0;i<60*o.t;i++){step(1/60);if(RACE.state==='count')RACE.state='race'}const tg=o.pick==='lead'?RACE.cars.slice().sort((a,b)=>b.unw-a.unw)[0]:c;const s=Math.sin(tg.yaw),co=Math.cos(tg.yaw),k=PT8.carK?PT8.carK():1;const cam=new THREE.PerspectiveCamera(o.fov||30,16/9,.3,4000);cam.position.set(tg.x+s*o.ah*k+co*o.lat*k,tg.y+o.h*k,tg.z+co*o.ah*k-s*o.lat*k);cam.lookAt(tg.x+s*(o.lk||0)*k,tg.y+.6*k,tg.z+co*(o.lk||0)*k);R.setPixelRatio(1);R.setSize(1280,720,false);R.setScissorTest(false);R.setViewport(0,0,1280,720);R.render(RACE.scene,cam);return R.domElement.toDataURL('image/jpeg',.82)};return 1})()"],["wait",500],
+["js","SHOT({tr:9,car:'c91',t:9,ah:9,lat:5,h:.9,fov:32,tod:'day'})"],
+["js","SHOT({tr:5,car:'ford',t:14,ah:14,lat:-6,h:1.2,fov:26,tod:'sunset'})"],
+["js","SHOT({tr:15,car:'c107',t:12,ah:16,lat:7,h:1.1,fov:24,ai:PT8.makeAI({n:5,classes:['S','A'],skill:.95,rally:false}),pick:'lead'})"],
+["js","SHOT({tr:14,car:'p1',t:20,ah:-14,lat:5,h:1.5,fov:30,lk:6,tod:'sunset'})"],
+["js","SHOT({tr:16,car:'c34',t:25,ah:12,lat:-5,h:.8,fov:28})"],
+["js","SHOT({tr:7,car:'ferr',t:16,ah:10,lat:6,h:1,fov:30,tod:'sunset'})"],
+["js","SHOT({tr:13,car:'c50',t:12,ah:12,lat:6,h:1,fov:28})"],
+["js","SHOT({tr:1,car:'c43',t:12,ah:-12,lat:-5,h:1.4,fov:30,lk:5,tod:'dawn'})"]]
