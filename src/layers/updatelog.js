@@ -4,7 +4,8 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.12',d:'Oct 25, 2026',t:'New Road Atlanta and Imola scenery, smarter CPU, gearbox choice',items:[
-  'Real cornering on Imola and Road Atlanta: the tyres hold about 1.1 g (more for grippy cars, less on gravel), so a 40 mph corner is a 40 mph corner again instead of 100. Ask for more and the car runs wide and scrubs speed. Cars there are now 12% quicker than stock (was 30%). Gold times re-measured.',
+  'Real cornering on Imola and Road Atlanta: full steering lock gives the tightest turn the tyres can hold, about 1.3 g (more for grippy cars, less on gravel), so a 40 mph corner is no longer taken at 100. Holding full lock never costs speed (the first version scrubbed speed and understeered badly). Cars there are 12% quicker than stock (was 30%).',
+  'CPU cars on Imola and Road Atlanta are quicker: they brake later and corner harder (Road Atlanta CPU lap 117 s, Imola 126 s). Gold times re-measured.',
   'CPU cars keep their own grid lane off the start and ease onto the racing line over the next 250 m, instead of all swerving to one side. After the finish the autopilot keeps your car in its lane.',
   'Grid cars stand behind the painted line of their box, not on top of it.',
   'Rolling start is automatic: every car, yours too, is on autopilot in its own lane at about 100 km/h, and you get control the moment the leader takes the green flag at the line.',

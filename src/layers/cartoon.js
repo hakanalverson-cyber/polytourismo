@@ -16,8 +16,8 @@ function grid(pack){if(pack._g)return pack._g;const G=pack.grid,HG=new Int16Arra
 const baseOf=pack=>D.findIndex(d=>pack.replaces==='imola'?d.imola:pack.replaces==='ra'?d.ra:false);
 P.trackPacks={};
 /* the files' gold times were measured with cars 30% quicker and no grip limit; now (12% quicker, real cornering grip) a CPU lap takes
-   this much longer: 95.5 -> 124.3 s at Road Atlanta, 98.4 -> 133.7 s at Imola */
-const MEDK={ra:1.302,imola:1.359},ALAT=11;/* tyre grip limit on these tracks, m/s² (see the steering cap below) */
+   this much longer: 95.5 -> 117.0 s at Road Atlanta, 98.4 -> 126.1 s at Imola */
+const MEDK={ra:1.225,imola:1.282},ALAT=13,CPUG=1.12;/* tyre grip limit (CPU cars get CPUG more: they drive a cautious line, and were far too slow without it) on these tracks, m/s² (see the steering cap below) */
 /* newest file wins (pack.rev = build time): an older copy saved in this browser never replaces a newer built-in one */
 P.addTrackPack=pack=>{const i=baseOf(pack);if(i<0)throw new Error('This track file is for a track this game does not have ('+pack.replaces+')');const d=D[i];
  if(d.cartoon&&(d.cartoon.rev||0)>(pack.rev||0)){const e=new Error('This is an older version of '+pack.name+' than the one already in the game');e.older=true;throw e}
@@ -33,7 +33,7 @@ const ss=sampleTrack;sampleTrack=d=>{const T=ss(d);if(!d.cartoon)return T;const 
  if(T.tunnels&&T.tunnels.length){for(const[a,b]of T.tunnels)for(let i=a;i<=b;i++){const k=i%T.N;T.wall[k]=0;T.wh[k]=1.3}T.tunnels=[]}
  /* the CPU racing line keeps a bigger margin from the edges: the cars are drawn bigger here */
  T.rlm=((d.cartoon.carScale||1)-1)*1.2+1;
- T.alat=ALAT*.92;/* the CPU plans its corner speeds a little under the grip limit */
+ T.alat=ALAT*CPUG*.92;T.cbrk=20;/* and brakes for them later: the cars can brake far harder than the old plan assumed *//* the CPU plans its corner speeds a little under the grip limit */
  if(T.tn)T.tn.fill(0);T.ov=new Uint8Array(T.N);{let L=0;const Ls=new Float32Array(T.N);for(let i=1;i<T.N;i++){L+=Math.hypot(T.x[i]-T.x[i-1],T.z[i]-T.z[i-1]);Ls[i]=L}
   for(const[a,b]of d.cartoon.over||[])for(let i=0;i<T.N;i++)if(Ls[i]>=a-16&&Ls[i]<=b+4)T.ov[i]=1}
  const t0=T.terr;T.terr=(x,z)=>{const h=hAt(x,z);return h==null?t0(x,z):h};
@@ -86,11 +86,12 @@ let sfx=null,sfxV=0;const speedFx=(c,v)=>{if(!c.human)return;if(!sfx){sfx=docume
    respect (top speed, acceleration, braking and grip together, so the handling balance stays the same) */
 const SPD=1.12;{const m0=P.mul;P.mul=c=>{const m=m0?m0(c):{acc:1,top:1,grip:1,brk:1};if(K()>1){m.top*=SPD;m.acc*=SPD;m.brk*=SPD;m.grip*=SPD}return m}}
 /* real cornering: the arcade model turns as tight as the steering asks at any speed (well over 3 g at 100 mph), so a 40 mph corner went
-   at 100. Here the steering is capped at what the tyres can hold, about 1.1 g for a typical road car (scaled by the car's grip and the
-   surface); asking for more pushes the car wide and scrubs speed, like real understeer */
+   at 100. Here full steering lock gives the tightest turn the tyres can hold, about 1.3 g (scaled by the car's grip and the surface).
+   Holding full lock never costs speed (a first version scrubbed speed whenever the steering asked for more, and with keyboard steering
+   that meant heavy understeer all the time) */
 {const ip0=P.inPost;P.inPost=(c,dt)=>{if(ip0)ip0(c,dt);if(K()===1||!c.in||c.exp>0)return;const vf=c.vx*Math.sin(c.yaw)+c.vz*Math.cos(c.yaw);if(vf<6)return;
- const mt=c.mt||{grip:1},a=ALAT*((c.cs&&c.cs.grip)||1)*(mt.grip||1),sr=2.5-Math.min(c.sp,40)*.03,mx=a/(vf*sr),st=c.in.st||0;
- if(Math.abs(st)>mx){const over=Math.abs(st)/mx-1;c.in.st=Math.sign(st)*mx;const dv=Math.min(6,over*7)*dt,f=Math.max(0,1-dv/Math.max(c.sp,1));c.vx*=f;c.vz*=f}}}
+ const mt=c.mt||{grip:1},a=ALAT*(c.human&&!c.forceAI?1:CPUG)*((c.cs&&c.cs.grip)||1)*(mt.grip||1),sr=2.5-Math.min(c.sp,40)*.03,mx=a/(vf*sr),st=c.in.st||0;
+ if(Math.abs(st)>mx){c.in.st=Math.sign(st)*mx;/* the CPU (not you) scrubs speed when it asks for more: it keeps it on the road */if(!c.human||c.forceAI){const over=Math.abs(st)/mx-1,dv=Math.min(6,over*7)*dt,f=Math.max(0,1-dv/Math.max(c.sp,1));c.vx*=f;c.vz*=f}}}}
 /* hood camera: on these tracks only under something overhead (T.ov from the model) */
 /* it starts early (looking about 1.7 s ahead at the current speed) and blends in and out slowly, so the switch is finished by the time the
    bridge passes overhead instead of snapping at it */
