@@ -18,7 +18,7 @@ const IR=window.PT8_IMREF,irB=s=>{const b=atob(s),u=new Uint8Array(b.length);for
 const i16=s=>{const u=irB(s);return new Int16Array(u.buffer,0,u.length>>1)};
 /* ground layers (gravel, green paint, asphalt run-off): rows 1 m apart, each a list of [x0,x1] runs */
 const GRUN=(()=>{const o={};if(!IR||!IR.gr)return o;for(const k in IR.gr){const a=i16(IR.gr[k]),m=new Map();for(let i=0;i<a.length;i+=3){const r=a[i];(m.get(r)||m.set(r,[]).get(r)).push([a[i+1]/4,a[i+2]/4])}o[k]=m}return o})();
-const inLay=(nm,x,z)=>{const m=GRUN[nm];if(!m)return false;const A=m.get(Math.round(z+200-.25));if(!A)return false;for(const[a,b]of A)if(x>=a&&x<=b)return true;return false};
+const inLay=(nm,x,z)=>{const m=GRUN[nm];if(!m)return false;const A=m.get(Math.round((z+200-.25)/.5));if(!A)return false;for(const[a,b]of A)if(x>=a&&x<=b)return true;return false};
 
 /* ---------- track data: corners, sand traps, trap-aware surface ---------- */
 const wrp=a=>{while(a>PI)a-=2*PI;while(a<-PI)a+=2*PI;return a};
@@ -33,7 +33,7 @@ const ssI=sampleTrack;sampleTrack=d=>{const T=ssI(d);if(!d.imola)return T;
  if(!real)for(const c of kc){const side=c.dir>0?-1:1;for(let q=c.a-3;q<=c.b+6;q++)T.trapS[((q%N)+N)%N]=side}
  const s0=T.surf;T.surf=(x,z,y)=>{const r=s0(x,z,y);if(r.road)return r;const cx=Math.floor(x/16),cz=Math.floor(z/16);let bd=1e9,bi=-1,bl=0;
   for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const ids=T.grid.get((cx+a)*8192+cz+b);if(!ids)continue;for(const i of ids){const j=(i+1)%N;if(T.gap[i]||T.gap[j])continue;const dx=T.x[j]-T.x[i],dz=T.z[j]-T.z[i],l2=dx*dx+dz*dz||1,f=Math.max(0,Math.min(1,((x-T.x[i])*dx+(z-T.z[i])*dz)/l2)),px=T.x[i]+dx*f,pz=T.z[i]+dz*f,dd=Math.hypot(x-px,z-pz);if(dd<bd){bd=dd;bi=i;bl=(x-px)*Math.cos(T.psi[i])-(z-pz)*Math.sin(T.psi[i])}}}
-  if(real){if(inLay('sand',x,z))r.trap=1;else if(inLay('asph',x,z)||inLay('green',x,z))r.near=1/* paved run-off grips like the road */}
+  if(real){if(inLay('sand',x,z))r.trap=1;else if(inLay('asph',x,z)||inLay('green',x,z)||inLay('edge',x,z))r.near=1/* paved run-off grips like the road */}
   else if(bi>=0&&T.trapS[bi]&&Math.sign(bl)===T.trapS[bi]){const ex=Math.abs(bl)-T.hw[bi];if(ex>2.3&&ex<13.6)r.trap=1}
   return r};
  return T};
@@ -70,7 +70,9 @@ function dressIM(T,sc){
     grandstand, tent, vehicle and prop is a stack of flat-shaded blocks with the real footprint and height; trees stand where the real ones do ======== */
  const PS=-1;/* the pits are on the right of the start straight (side -1) */
  /* kerbs where the survey has them, as wide as it has them */
- const curbTex=ctex(2,8,(x,w,h)=>{for(let j=0;j<8;j++){x.fillStyle=j<4?'#e01a14':'#f4f4f4';x.fillRect(0,j,w,1)}}),curbM=new THREE.MeshStandardMaterial({map:curbTex,roughness:.8,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3});
+ const curbTex=ctex(64,64,(x,w,h)=>{/* across (u): pale blue-white raised strip, green band with white triangles, red outer line, as the survey paints them */
+  x.fillStyle='#d7e7ef';x.fillRect(0,0,22,h);x.fillStyle='#f6f8f8';x.fillRect(0,0,3,h);x.fillStyle='#1f9a74';x.fillRect(22,0,32,h);
+  x.fillStyle='#f2f4f2';x.beginPath();x.moveTo(25,6);x.lineTo(50,32);x.lineTo(25,58);x.closePath();x.fill();x.fillStyle='#dc2119';x.fillRect(54,0,10,h)}),curbM=new THREE.MeshStandardMaterial({map:curbTex,roughness:.8,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3});
  curbTex.wrapS=curbTex.wrapT=THREE.RepeatWrapping;curbTex.magFilter=THREE.NearestFilter;
  if(IRk){for(const side of[-1,1]){const K=IRk[side<0?0:1],pos=[],uv=[],idx=[];let prev=false,q=0;
    for(let i=0;i<=N;i++){const k=i%N,a=K[k],b=K[N+k];if(a===255){prev=false;continue}const w0=(a-20)/10,w1=Math.max(w0+.4,(b-20)/10),c=Math.cos(T.psi[k]),s=Math.sin(T.psi[k]),v=pos.length/3;
@@ -83,36 +85,39 @@ function dressIM(T,sc){
  const gy=(x,z)=>{const d=dRoad(x,z);if(d<1.2){const[k,l]=near(x,z);return T.y[k]-l*T.bank[k]}let y=terrainBed(T,x,z);if(DG){const h=DG(x,z);if(h!=null&&h>y)y=h}return y};
  /* GRAVEL, GREEN PAINT, ASPHALT RUN-OFF: the survey's outlines as rows 1 m apart; consecutive rows are joined edge to edge so the outline
     runs smooth, and each piece is cut every 4 m so it lies on the ground */
- const sandTex=ctex(32,32,(x,w,h)=>{x.fillStyle='#e6d29b';x.fillRect(0,0,w,h);x.fillStyle='#d4bd80';for(let j=0;j<h;j+=4)x.fillRect(0,j,w,1);x.fillStyle='#f1e3b4';for(let j=2;j<h;j+=8)x.fillRect(0,j,w,1)});
+ const sandTex=ctex(64,64,(x,w,h)=>{/* gravel: grey-beige pebbles, no stripes */x.fillStyle='#c9bda6';x.fillRect(0,0,w,h);let r=11;const R=()=>((r=(r*16807)%2147483647)/2147483647);const P=['#b2a48b','#ddd3c0','#a39782','#d2c6af','#bfb39b'];for(let i=0;i<700;i++){x.fillStyle=P[Math.floor(R()*P.length)];x.fillRect(Math.floor(R()*w),Math.floor(R()*h),1+Math.floor(R()*2),1+Math.floor(R()*2))}});
  sandTex.wrapS=sandTex.wrapT=THREE.RepeatWrapping;
  const LAY={sand:[new THREE.MeshStandardMaterial({map:sandTex,roughness:1,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-8}),.22],
   green:[new THREE.MeshStandardMaterial({color:lin(0x2f8a52),roughness:.9,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-6}),.16],
-  asph:[new THREE.MeshStandardMaterial({color:lin(0x45484e),roughness:.95,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4}),.12]};
+  asph:[new THREE.MeshStandardMaterial({color:lin(0x45484e),roughness:.95,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4}),.12],
+  edge:[new THREE.MeshStandardMaterial({color:lin(0xb4cfdc),roughness:.9,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4}),.12]};
  for(const nm in LAY){const R=GRUN[nm];if(!R)continue;const[mt,dy]=LAY[nm],pos=[],uv=[],idx=[];
   const quad=(z0,a0,a1,z1,b0,b1)=>{const n=Math.max(1,Math.ceil(Math.max(a1-a0,b1-b0)/4)),v=pos.length/3;
    for(let i=0;i<=n;i++){const t=i/n,xa=a0+(a1-a0)*t,xb=b0+(b1-b0)*t;pos.push(xa,gy(xa,z0)+dy,z0,xb,gy(xb,z1)+dy,z1);uv.push(xa/4,z0/4,xb/4,z1/4)}
    for(let i=0;i<n;i++){const a=v+i*2;idx.push(a,a+1,a+2,a+1,a+3,a+2)}};
   const rows=[...R.keys()].sort((a,b)=>a-b);
-  for(const r of rows){const A=R.get(r),B=R.get(r+1)||[],z0=-200+r+.25,z1=z0+1;
+  for(const r of rows){const A=R.get(r),B=R.get(r+1)||[],z0=-200+r*.5+.25,z1=z0+.5;
    for(const[a0,a1]of A){let joined=false;for(const[b0,b1]of B)if(a0<b1&&b0<a1){quad(z0,a0,a1,z1,b0,b1);joined=true}
-    if(!joined)quad(z0,a0,a1,z0+.5,a0+(a1-a0)*.25,a1-(a1-a0)*.25)}
+    if(!joined)quad(z0,a0,a1,z0+.25,a0+(a1-a0)*.25,a1-(a1-a0)*.25)}
    /* a row with no row below it still gets a short lip so the outline closes */
-   if(!R.has(r-1))for(const[a0,a1]of A)quad(z0-.5,a0+(a1-a0)*.25,a1-(a1-a0)*.25,z0,a0,a1)}
+   if(!R.has(r-1))for(const[a0,a1]of A)quad(z0-.25,a0+(a1-a0)*.25,a1-(a1-a0)*.25,z0,a0,a1)}
   if(!idx.length)continue;const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));gg.setIndex(idx);gg.computeVertexNormals();g.add(new THREE.Mesh(gg,mt))}
  /* BARRIERS along the survey's own lines */
  const LN={};if(IR&&IR.ln)for(const c in IR.ln){const meta=i16(IR.ln[c][0]),pts=i16(IR.ln[c][1]),out=[];let o=0;for(let i=0;i<meta.length;i+=3){const n=meta[i],p=[];for(let j=0;j<n;j++){p.push([pts[(o+j)*2]/4,pts[(o+j)*2+1]/4])}o+=n;out.push({p,h:meta[i+1]/10,b:meta[i+2]/10})}LN[c]=out}
  /* a barrier never crosses the road: break a line wherever it touches the asphalt */
  for(const c in LN){const out=[];for(const L of LN[c]){let cur=[];const push=()=>{if(cur.length>1)out.push({p:cur,h:L.h,b:L.b});cur=[]};
    for(let i=0;i<L.p.length;i++){const[x,z]=L.p[i];let hit=dRoad(x,z)<.35;if(!hit&&i){const[xa,za]=L.p[i-1],n=Math.ceil(Math.hypot(x-xa,z-za));for(let t=1;t<n&&!hit;t++)hit=dRoad(xa+(x-xa)*t/n,za+(z-za)*t/n)<.35}
-    if(hit){push();if(dRoad(x,z)>=.35)cur.push(L.p[i])}else cur.push(L.p[i])}push()}LN[c]=out}
+    if(hit){push();if(dRoad(x,z)>=.35)cur.push(L.p[i])}else cur.push(L.p[i])}push()}
+  /* and no short stub left pointing at the road where a line was cut */
+  LN[c]=out.filter(L=>{let ln=0;for(let i=1;i<L.p.length;i++)ln+=Math.hypot(L.p[i][0]-L.p[i-1][0],L.p[i][1]-L.p[i-1][1]);const e0=dRoad(...L.p[0]),e1=dRoad(...L.p[L.p.length-1]);return ln>=8||Math.min(e0,e1)>2})}
  const nearTrack=(x,z)=>dRoad(x,z)<45;
  /* walls: green with a white top beside the track, plain concrete further away; every link by the track is a collider */
- {const pos=[],col=[],idx=[],gC=lin(0x0c5a22),wC=lin(0xe9ebe6),cC=lin(0xb9bcb8);
+ {const pos=[],col=[],idx=[],gC=lin(0x4c6a38),wC=lin(0x6b8650),cC=lin(0x4c6a38);/* the survey's walls are painted olive green all round */
   for(const L of LN.wall||[]){const H=Math.max(.8,Math.min(4,L.h)),th=.4,p=L.p;if(p.length<2)continue;
-   for(let i=0;i<p.length-1;i++){const[x0,z0]=p[i],[x1,z1]=p[i+1],dx=x1-x0,dz=z1-z0,ln=Math.hypot(dx,dz);if(ln<.05)continue;const nx=-dz/ln*th/2,nz=dx/ln*th/2,y0=gy(x0,z0)-.2,y1=gy(x1,z1)-.2,tr=nearTrack((x0+x1)/2,(z0+z1)/2),c0=tr&&H<1.8?gC:cC,v=pos.length/3;
+   for(let i=0;i<p.length-1;i++){const[x0,z0]=p[i],[x1,z1]=p[i+1],dx=x1-x0,dz=z1-z0,ln=Math.hypot(dx,dz);if(ln<.05)continue;const nx=-dz/ln*th/2,nz=dx/ln*th/2,y0=gy(x0,z0)-.2,y1=gy(x1,z1)-.2,tr=nearTrack((x0+x1)/2,(z0+z1)/2),c0=gC,v=pos.length/3;
     /* a box per link: two long faces and the cap */
     const P=[[x0-nx,y0,z0-nz],[x1-nx,y1,z1-nz],[x1-nx,y1+H,z1-nz],[x0-nx,y0+H,z0-nz],[x0+nx,y0,z0+nz],[x1+nx,y1,z1+nz],[x1+nx,y1+H,z1+nz],[x0+nx,y0+H,z0+nz]];
-    for(const f of[[0,1,2,3],[5,4,7,6],[3,2,6,7],[4,0,3,7],[1,5,6,2]]){const b=pos.length/3,cc=f[0]===3?(tr&&H<1.8?wC:cC):c0;for(const q of f){pos.push(...P[q]);col.push(cc.r,cc.g,cc.b)}idx.push(b,b+1,b+2,b,b+2,b+3)}
+    for(const f of[[0,1,2,3],[5,4,7,6],[3,2,6,7],[4,0,3,7],[1,5,6,2]]){const b=pos.length/3,cc=f[0]===3?wC:c0;for(const q of f){pos.push(...P[q]);col.push(cc.r,cc.g,cc.b)}idx.push(b,b+1,b+2,b,b+2,b+3)}
     if(tr&&P.addSeg)P.addSeg(T,x0,z0,x1,z1,.3)}}
   if(pos.length){const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setAttribute('color',new THREE.Float32BufferAttribute(col,3));gg.setIndex(idx);gg.computeVertexNormals();g.add(new THREE.Mesh(gg,new THREE.MeshStandardMaterial({vertexColors:true,roughness:.9,flatShading:true,side:THREE.DoubleSide})))}}
  /* Armco: a galvanised band on posts */
@@ -129,9 +134,12 @@ function dressIM(T,sc){
    g.add(new THREE.Mesh(gg,new THREE.MeshBasicMaterial({map:tex,transparent:true,opacity:.55,alphaTest:.2,side:THREE.DoubleSide,depthWrite:false,color:0x9aa3aa})));
    inst(g,new THREE.CylinderGeometry(.06,.06,4,5),new THREE.MeshStandardMaterial({color:0x7d868d,metalness:.4,roughness:.5}),posts)}}
  /* tyre walls: stacks of tyres every 1.1 m along the line, black with a red block now and then; colliders by the track */
- {const B=[],R=[];for(const L of LN.tyre||[]){const p=L.p,rows=Math.max(1,Math.min(4,Math.round(L.h/.5)));let cnt=0;
+ {const B=[],R=[];/* tyre walls only where they stand against a wall, Armco or fence (2.5 m grid of barrier points) */
+  const BW=new Set(),bk=(x,z)=>Math.floor(x/2.5)*65536+Math.floor(z/2.5);for(const c of['wall','rail','fence'])for(const L of LN[c]||[])for(let i=0;i<L.p.length-1;i++){const[a,b]=L.p[i],[c2,d]=L.p[i+1],n=Math.ceil(Math.hypot(c2-a,d-b));for(let t=0;t<=n;t++)BW.add(bk(a+(c2-a)*t/n,b+(d-b)*t/n))}
+  const against=(x,z)=>{for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++)if(BW.has(bk(x+a*2.5,z+b*2.5)))return true;return false};
+  for(const L of LN.tyre||[]){const p=L.p,rows=Math.max(1,Math.min(4,Math.round(L.h/.5)));let cnt=0;
    for(let i=0;i<p.length-1;i++){const[x0,z0]=p[i],[x1,z1]=p[i+1],ln=Math.hypot(x1-x0,z1-z0),n=Math.max(1,Math.round(ln/1.1));
-    for(let t=0;t<n;t++){const f=t/n,x=x0+(x1-x0)*f,z=z0+(z1-z0)*f,y=gy(x,z),blk=Math.floor(cnt++/5)%9;for(let h=0;h<rows;h++)(blk===0?R:B).push([x,y+.25+h*.5,z,1,1,0])}
+    for(let t=0;t<n;t++){const f=t/n,x=x0+(x1-x0)*f,z=z0+(z1-z0)*f;if(!against(x,z))continue;const y=gy(x,z),blk=Math.floor(cnt++/5)%9;for(let h=0;h<rows;h++)(blk===0?R:B).push([x,y+.25+h*.5,z,1,1,0])}
     if(nearTrack(x0,z0)&&P.addSeg)P.addSeg(T,x0,z0,x1,z1,.6)}}
   const cg=new THREE.CylinderGeometry(.55,.55,.5,8);if(B.length)inst(g,cg,M_(0x0c0d10),B);if(R.length)inst(g,cg,M_(0x6e0c08),R)}
  /* BUILDINGS & OBJECTS: every object of the survey at its measured footprint and height, drawn as a clean low-poly model of its kind:
@@ -253,7 +261,7 @@ function dressIM(T,sc){
     cr=kd===1||kd===3?s_*17*.1:kd===2?s_*15*.38:s_*12*.36;
    /* no crown over the road, the gravel, the run-off, a barrier or a building */
    if(dRoad(x,z)<cr+2.5||!clear(x,z,cr))continue;
-   if(kd===1||kd===3)CY.push([x,y,z,s_,rot]);else if(kd===2)ST.push([x,y,z,s_,rot]);else G[r<.8?0:r<.88?1:r<.95?2:3].push([x,y,z,s_,rot])}
+   if(kd===1||kd===3)CY.push([x,y,z,s_,rot]);else if(kd===2)ST.push([x,y,z,s_,rot]);else G[0].push([x,y,z,s_,rot])/* green like the survey's trees */}
   P.qMix(g,['oak3','oak4','oak5'],G[0],[12,12,12],[0xffffff,0xf0f8e0,0xe4eed6],{gap:.7});
   P.qMix(g,['oak3','oak4'],G[1],[12,12],[0xffffff],{pal:AUT.or,gap:.7});P.qMix(g,['oak4','oak5'],G[2],[12,12],[0xffffff],{pal:AUT.ye,gap:.7});P.qMix(g,['oak5'],G[3],[12],[0xffffff],{pal:AUT.ru,gap:.7});
   P.lobTrees(g,CY,17,[0xffffff,0xe6eee0],'cypress');P.lobTrees(g,ST,15,[0xffffff,0xeef6e0],'stone');

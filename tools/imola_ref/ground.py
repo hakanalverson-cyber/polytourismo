@@ -10,16 +10,20 @@ gx,gz=np.meshgrid(X0+(np.arange(W)+.5)*C,Z0+(np.arange(H)+.5)*C)
 dd,j=tr.query(np.c_[gx.ravel(),gz.ravel()],distance_upper_bound=80);dd=dd.reshape(H,W);j=np.minimum(j,len(DH)-1).reshape(H,W)
 ex=dd-DH[j];onroad=ex<0.05
 def clean(m):m=ndimage.binary_closing(m,iterations=2);m=ndimage.binary_opening(m,iterations=1);return m
-layers={'sand':clean(M['sand']|M['sandb'])&~onroad,'green':clean(M['green'])&~onroad,'asph':clean(M['aold']|((M['road']|M['marb'])&(ex>0.4)))&~onroad}
+layers={'sand':clean(M['sand']|M['sandb'])&~onroad,'green':clean(M['green'])&~onroad,'asph':ndimage.binary_opening(clean(M['aold']|((M['road']|M['marb'])&(ex>2.0))),iterations=2)&~onroad}
+layers['asph']&=~M['grass']   # asphalt the survey hides under grass is not shown
+layers['asph']=ndimage.binary_opening(layers['asph'],iterations=2);layers['green']=ndimage.binary_opening(layers['green'],iterations=1)
 layers['green']&=~layers['sand'];layers['asph']&=~layers['sand']
+# asphalt hugging the road edge is the survey's pale blue painted strip
+layers['edge']=layers['asph']&(ex<4.5);layers['asph']&=~layers['edge']
 res={}
 for k,m in layers.items():
   rows=[]
-  for i in range(0,H,2):
+  for i in range(H):
     r=m[i];e=np.diff(np.r_[0,r.astype(np.int8),0]);s=np.nonzero(e==1)[0];t=np.nonzero(e==-1)[0]
     for a,b in zip(s,t):
       if b-a<2:continue
-      rows+= [i//2,round((X0+a*C)*4),round((X0+b*C)*4)]
+      rows+= [i,round((X0+a*C)*4),round((X0+b*C)*4)]
   res[k]=rows;print(k,len(rows)//3,'runs',m.sum()*C*C,'m2')
 # kerbs per sample and side: inner and outer offset past the road edge (m), from the model's kerb outline
 K=ndimage.binary_closing(M['kerb'],iterations=1);kb=[[],[]]
