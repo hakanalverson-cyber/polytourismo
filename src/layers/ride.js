@@ -13,9 +13,7 @@ updateVisual=(c,T,t)=>{uv(c,T,t);try{const m=c.m,W=m.ptWheels;if(!W||!m.visualMo
     (and by up to a metre when a corner sampled the bank beside the road). Keep it, but capped and eased, so the body glides instead of bobbing */
  {const base=-.72+m.visualHeight/2,lift=Math.min(.3,Math.max(0,m.visualModel.position.y-base));c._lift=c._lift==null?lift:c._lift+(lift-c._lift)*(lift>c._lift?.25:.1);m.visualModel.position.y=base+c._lift;if(m.ptRig&&m.ptBase!=null)m.ptRig.position.y=m.visualModel.position.y-m.ptBase;if(m.exhaustRig)m.exhaustRig.position.y=m.visualModel.position.y}
  const d=m._ride||0;if(d){m.visualModel.position.y+=d;if(m.ptRig)m.ptRig.position.y+=d;if(m.exhaustRig)m.exhaustRig.position.y+=d}
- /* the suspension answers every small step in the real elevation data; the drawn body follows it through a short low-pass (a few cm and
-    a degree or two at most), so hills read as smooth motion instead of shaking. Big moves (jumps, respawns) pass straight through. */
- {const g=m.g,y=g.position.y;c._sy=c._sy==null||Math.abs(c._sy-y)>1.2?y:c._sy+(y-c._sy)*.3;g.position.y=Math.max(y-.07,Math.min(y+.07,c._sy));
-  const ex=g.rotation.x,ez=g.rotation.z;c._sx=c._sx==null||Math.abs(c._sx-ex)>.3?ex:c._sx+(ex-c._sx)*.3;c._sz=c._sz==null||Math.abs(c._sz-ez)>.3?ez:c._sz+(ez-c._sz)*.3;
-  g.rotation.x=Math.max(ex-.04,Math.min(ex+.04,c._sx));g.rotation.z=Math.max(ez-.04,Math.min(ez+.04,c._sz))}}catch(e){}};
+ /* (removed: a per-frame low-pass clamped to 7 cm here saturated on every climb and dip at speed and snapped back, which was the hill
+    jitter; the body attitude is already smoothed in clean.js and extra.js, and the physics height is smooth) */
+}catch(e){}};
 })();

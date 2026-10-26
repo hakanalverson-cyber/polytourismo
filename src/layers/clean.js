@@ -293,7 +293,7 @@ const at0=P.applyTod;P.applyTod=function(sc,T,key){const r=at0.apply(this,argume
   if(m&&m.wheels){S=c._sv||(c._sv={y:c.y,p:c.pitch,r:c.roll,l:[0,0,0,0],init:0});const k=1-Math.exp(-dt/.055);
    if(!S.init||c.respT>.4||c.exp>0){S.l=m.wheels.map(w=>w.len);S.init=1}else m.wheels.forEach((w,i)=>{S.l[i]+=(w.len-S.l[i])*k;w.len=S.l[i]})}
   const hold=m&&m.wheels&&c.pitch,sp0=c.pitch,sr0=c.roll,sy0=c.y;
-  if(S){const kk=1-Math.exp(-dt/.05),kp=1-Math.exp(-dt/.07);if(Math.abs(c.y-S.y)>.9||c.respT>.4||c.exp>0){S.y=c.y;S.p=c.pitch;S.r=c.roll}else{S.y+=(c.y-S.y)*kk;S.p+=(c.pitch-S.p)*kp;S.r+=(c.roll-S.r)*kp}
+  if(S){const kk=1-Math.exp(-dt/.05),kp=1-Math.exp(-dt/.07);if(Math.abs(c.y-S.y)>3||c.respT>.4||c.exp>0){S.y=c.y;S.p=c.pitch;S.r=c.roll;S.v=0;S.cy=c.y}else{/* height is not filtered any more: physics height is already smooth, and the lag sank the body into uphill road and, at speed, passed the .9 m snap every few frames (the hill jitter) */S.y=c.y;S.p+=(c.pitch-S.p)*kp;S.r+=(c.roll-S.r)*kp}
    /* feed the smoothed pose to the renderer only, then restore the physics state */
    c.y=S.y;c.pitch=S.p;c.roll=S.r}
   let out;try{out=uvJ.apply(this,arguments)}finally{if(S){c.y=sy0;c.pitch=sp0;c.roll=sr0}}return out}}

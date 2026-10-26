@@ -17,7 +17,7 @@ const baseOf=pack=>D.findIndex(d=>pack.replaces==='imola'?d.imola:pack.replaces=
 P.trackPacks={};
 /* the files' gold times were measured with cars 30% quicker and no grip limit; now (25% quicker, 1.6 g grip) a CPU time-trial lap takes
    this much longer: 95.5 -> 107.6 s at Road Atlanta, 98.4 -> 114.7 s at Imola */
-const MEDK={ra:.991,imola:1.007},ALAT=23;/* tyre grip (16, then +20% and +20% more turning by request) limit on these tracks, m/s² (see the steering cap below) */
+const MEDK={ra:.766,imola:.776},ALAT=23;/* tyre grip (16, then +20% and +20% more turning by request) limit on these tracks, m/s² (see the steering cap below) */
 /* newest file wins (pack.rev = build time): an older copy saved in this browser never replaces a newer built-in one */
 P.addTrackPack=pack=>{const i=baseOf(pack);if(i<0)throw new Error('This track file is for a track this game does not have ('+pack.replaces+')');const d=D[i];
  /* the small download has no track built in, so it also knows the newest file's build time: an old copy saved in the browser (Road Atlanta's first
@@ -80,7 +80,11 @@ const uv=updateVisual;updateVisual=function(c,T,t){const m=c&&c.m,k=K();if(m&&m.
    width all follow speed, which made the picture jitter while the car itself moved smoothly */
 const so=soloCam;soloCam=function(c,dt,out){const sp0=c.sp||0;c._csp=c._csp==null?sp0:c._csp+(sp0-c._csp)*Math.min(1,(dt||.016)*3);c.sp=c._csp;try{so.apply(this,arguments)}finally{c.sp=sp0}const k=K();if(k===1||c.fin)return;const f=1+(k-1)*.5,y=c.camY==null?c.y:c.camY;
  out.p.set(c.x+(out.p.x-c.x)*f,y+(out.p.y-y)*f,c.z+(out.p.z-c.z)*f);out.l.set(c.x+(out.l.x-c.x)*f,y+(out.l.y-y)*f,c.z+(out.l.z-c.z)*f);
- const v=Math.max(0,Math.min(1,((c._csp||0)-20)/50)),hood=(c.tnB||0)>.5||c.camMode;out.f+=v*(hood?3:6)};/* speed streaks removed by request */
+ const v=Math.max(0,Math.min(1,((c._csp||0)-20)/50)),hood=(c.tnB||0)>.5||c.camMode;out.f+=v*(hood?3:6);
+ /* hood view on these tracks: the stock one sat 1 m up inside a car drawn 1.8x and tilted the view with the raw body pitch, so crests and dips
+    made it lurch and clip the bonnet. Here it rides at the big car's eye height and the tilt follows a smoothed pitch */
+ const hb=c.tnB||0;if(hb>.002&&!c.camMode){const kk=hb*hb*(3-2*hb),fx=Math.sin(c.yaw),fz=Math.cos(c.yaw),a=1-Math.exp(-(dt||.016)*6);c._hp=c._hp==null?c.pitch:c._hp+(c.pitch-c._hp)*a;
+  const ey=c.y+.95*k+.35,ex=c.x+fx*.9*k,ez=c.z+fz*.9*k,ly=ey-Math.tan(c._hp)*40-.6;out.p.set(out.p.x+(ex-out.p.x)*kk,out.p.y+(ey-out.p.y)*kk,out.p.z+(ez-out.p.z)*kk);out.l.set(out.l.x+(ex+fx*40-out.l.x)*kk,out.l.y+(ly-out.l.y)*kk,out.l.z+(ez+fz*40-out.l.z)*kk)}else c._hp=c.pitch};/* speed streaks removed by request */
 /* speed streaks at the screen edges, faint from about 55 km/h, strongest from 215 km/h up (model tracks only) */
 let sfx=null,sfxV=0;const speedFx=(c,v)=>{if(!c.human)return;if(!sfx){sfx=document.createElement('div');sfx.id='ptSpeedFx';
   sfx.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:4;opacity:0;mix-blend-mode:screen;background:repeating-conic-gradient(from 0deg at 50% 46%,rgba(255,255,255,.0) 0deg,rgba(255,255,255,.0) 2.2deg,rgba(255,255,255,.55) 2.5deg,rgba(255,255,255,0) 2.8deg,rgba(255,255,255,0) 5.3deg);-webkit-mask:radial-gradient(ellipse 62% 58% at 50% 46%,transparent 55%,#000 100%);mask:radial-gradient(ellipse 62% 58% at 50% 46%,transparent 55%,#000 100%)';
@@ -89,7 +93,7 @@ let sfx=null,sfxV=0;const speedFx=(c,v)=>{if(!c.human)return;if(!sfx){sfx=docume
 {const hide=()=>{if(sfx)sfx.style.opacity=0;sfxV=0};const cr=P.cleanupRace;if(cr)P.cleanupRace=function(){hide();return cr.apply(this,arguments)};setInterval(()=>{if(sfx&&(typeof scr==='undefined'||scr!=='game'||K()===1))hide()},400)}
 /* these circuits are full size and the cars drawn big, so at true speeds they crawl past the scenery: cars here are 25% quicker in every
    respect (top speed, acceleration, braking and grip together, so the handling balance stays the same) */
-const SPD=1.25,TOPK=1.5,ACCK=.72;{const m0=P.mul;P.mul=c=>{const m=m0?m0(c):{acc:1,top:1,grip:1,brk:1};if(K()>1){m.top*=TOPK;m.acc*=ACCK;/* top speed 50% up and full pickup: these long tracks felt slow (x1.1 pickup gave 0-60 mph in 2.5 s, x.6 felt sluggish) */m.brk*=SPD;m.grip*=SPD;/* the tyre bite grip.js gives human drivers, for the CPU too here (it was a big part of why they were so slow) */if(!(c.human&&!c.forceAI)&&c.onRoad&&!c.cool)m.grip*=(window.PT8_GRIPK||1.4)}return m}}
+const SPD=1.25,TOPK=1.5,ACCK=.52,TS=1.4;{const m0=P.mul;P.mul=c=>{const m=m0?m0(c):{acc:1,top:1,grip:1,brk:1};if(K()>1){m.top*=TOPK;{const r=Math.min(.99,(c.sp||0)/Math.max(1,((c.cs&&c.cs.top)||40)*m.top));m.acc*=ACCK*Math.min(4,(1-.5*r)/Math.max(.08,1-r))}/* the base pull fades in a straight line to zero at top speed (100-200 mph crawled); this keeps it strong to about 85% of top *//* top speed 50% up and full pickup: these long tracks felt slow (x1.1 pickup gave 0-60 mph in 2.5 s, x.6 felt sluggish) */m.brk*=SPD;m.grip*=SPD;/* the tyre bite grip.js gives human drivers, for the CPU too here (it was a big part of why they were so slow) */if(!(c.human&&!c.forceAI)&&c.onRoad&&!c.cool)m.grip*=(window.PT8_GRIPK||1.4)}return m}}
 /* cornering grip. The arcade model turns as tight as the steering asks at any speed (well over 3 g at 100 mph), so a 40 mph corner went
    at 100. On these tracks the tyres hold about ALAT (1.6 g, scaled by the car's grip and the surface):
    every car (yours and the CPU's): the nose still turns in as sharply as you steer (up to 1.7x what the tyres hold), but the direction you travel can only
@@ -113,6 +117,12 @@ const gripAt=(c,mt)=>{const v=c.sp||0;return ALAT*Math.min(2.2,1+.6*(v/35)*(v/35
 /* hood camera: on these tracks only under something overhead (T.ov from the model) */
 /* it starts early (looking about 1.7 s ahead at the current speed) and blends in and out slowly, so the switch is finished by the time the
    bridge passes overhead instead of snapping at it */
+/* sense of speed: the models are built 2.4x real size and the cars drawn 1.8x to match, so the road streamed past at little more than half
+   the speed the dial showed. Cars on these tracks run their physics TS times faster than the clock: the dial still reads physics speed,
+   but the car covers TS times the ground per real second (lap times and medals are real seconds) */
+{const ts0=stepCar;stepCar=function(c,dt){const k=K()>1;DRAG=k?.0007*.4:.0007;/* less air drag there too: it ate the pull from 100 mph up */if(!k)return ts0.call(this,c,dt);
+ /* fixed small physics steps: with big frame times (slow PCs, uneven frames) the car bounced where the slope changes on the hills */
+ const d=dt*TS,n=Math.max(1,Math.ceil(d/(1/200)));let r;for(let i=0;i<n;i++)r=ts0.call(this,c,d/n);return r}}
 {const sc0=stepCar;stepCar=function(c,dt){const r=sc0.apply(this,arguments);const R=typeof RACE!=='undefined'?RACE:null,T=R&&R.T;if(T&&T.ov){const N=T.N,i0=((c.idx|0)%N+N)%N,ah=Math.ceil(Math.max(20,(c.sp||0)*1.7)/T.sp);
   let on=false;for(let j=-1;j<=ah&&!on;j++)if(T.ov[(i0+j+N)%N])on=true;c.inTn=on&&!!c.onRoad;c.tnR=1.9}return r}}
 /* grid: each car stands in one of the boxes painted on the model's start straight (front row first) */

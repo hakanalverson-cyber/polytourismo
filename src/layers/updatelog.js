@@ -4,6 +4,9 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.12',d:'Oct 25, 2026',t:'New Road Atlanta and Imola scenery, smarter CPU, gearbox choice',items:[
+  'Sense of speed on Imola and Road Atlanta: the bought tracks are built bigger than life and the cars drawn 1.8x to match, so the road went by at about half the speed the dial showed. Cars there now cover 1.4x the ground for the same dial speed, with strong pull from 100 to 200 mph (less air drag). Laps are about 65 s; gold times re-measured.',
+  'Hill jitter fixed for real: two smoothing filters on the drawn car lagged behind on climbs and dips and snapped back (worse at low frame rates). They are gone; the car body is drawn exactly where the smooth physics puts it.',
+  'Hood camera on the model tracks sits at the big car\'s eye height and tilts with a smoothed pitch, so crests and dips no longer jolt it.',
   'Imola and Road Atlanta are fast again: top speed 50% higher there and strong pickup (a Mercedes does 0-60 mph in about 3 s, 0-100 in about 5.5 s). Gold times re-measured.',
   'Hill jitter fixed: the car was moving smoothly, but the chase camera set its height, distance and view width from a speed reading that twitched on hills. The camera now uses a smoothed speed.',
   'Speed lines removed (the streaks at the screen edges and the slipstream wind lines; the slipstream rings stay).',
