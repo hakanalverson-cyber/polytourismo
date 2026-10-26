@@ -4,6 +4,9 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.12',d:'Oct 25, 2026',t:'New Road Atlanta and Imola scenery, smarter CPU, gearbox choice',items:[
+  'Acceleration on Imola and Road Atlanta is back to real-world pace (a Mercedes did 0-60 mph in 2.5 s there; now about 4 s, 0-100 mph about 9 s). Turning is another 20% tighter in every gear. Gold times re-measured.',
+  'CPU cars always match the class you pick (cars the CPU cannot drive were swapped for a B-class Mercedes).',
+  'The small download turns away an old saved Road Atlanta file (the first one drove through the coned loops and had no grid boxes, so the start fixes did not apply there) and asks for the new one.',
   'Cars turn 20% tighter at every speed on Imola and Road Atlanta (tyre grip up 20% for everyone, CPU included). Gold times re-measured.',
   'Grip on Imola and Road Atlanta now builds with speed like downforce (about 1.6 g at low speed up to about 3.4 g flat out), so fast corners no longer wash wide. Steering at low speed is calmer, so first gear is not twitchy. Acceleration up 10%. Gold times re-measured.',
   'Brand Central shows a slow slideshow of action shots from the game (rally stages, the Nordschleife, coastal and canyon roads) behind the maker list.',

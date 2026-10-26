@@ -241,6 +241,13 @@ ANIM='<script>const ANIM_B64="'+b64('animals.bin')+'",ANIM_META='+open(W+'/asset
 BLD='<script>const BLD_B64="'+b64('bld.bin')+'",BLD_META='+open(W+'/assets/bld.json').read()+';</script>'
 FRM='<script>const FRM_B64="'+b64('frm.bin')+'",FRM_META='+open(W+'/assets/frm.json').read()+';</script>'
 #FAC='<script>const FAC_B64="'+b64('factory.bin')+'",FACS_B64="'+b64('factory_shell.glb.gz')+'";</script>'
+import glob as _g,gzip as _gz,re as _re,json as _js
+_rev={}
+for _f in sorted(_g.glob('/mnt/project-files/poly-gt/tracks/*.ptrack')):
+  with _gz.open(_f,'rt') as _h:_hd=_h.read(400)
+  _m=_re.search(r'"rev":\s*(\d+)',_hd);_r=_re.search(r'"replaces":\s*"(\w+)"',_hd)
+  if _m and _r:_rev[_r.group(1)]=int(_m.group(1))
+PREV='<script>window.PT8_PACKREV='+_js.dumps(_rev)+';</script>'
 BBG='<script>const BBG_B64=['+','.join('"'+b64('brandbg/b%d.jpg'%i)+'"' for i in range(6))+'];</script>'
 HPACK='<script>const HPACK_B64="'+b64('harbor_pack.glb.gz')+'";</script>'
 MUS=''.join('<script type="text/plain" id="mus_%s">%s</script>'%(k,base64.b64encode(open(W+('/assets/music_lite/' if os.environ.get('LITE') and f!='gt_countdown' else '/assets/music/')+f+'.mp3','rb').read()).decode()) for k,f in ([('baby','baby_so_free'),('glass','glasstress'),('nocomm','no_comm'),('cd','gt_countdown')] if os.environ.get('LITE') else [('baby','baby_so_free'),('supreme','supreme_moment'),('space','space'),('glass','glasstress'),('body','body_and_mind'),('nocomm','no_comm'),('cd','gt_countdown'),('lizzie','lizzie')]))
@@ -270,7 +277,7 @@ src=src.replace('<title>Poly Tourismo v7</title>','<title>Poly Tourismo</title>'
 src=src.replace('<body>','<body><div id="ptBoot">POLY TOURISMO<i></i><small>LOADING</small></div>',1)
 BOOT_JS='<script>(function(){function done(){var b=document.getElementById("ptBoot"),c=document.getElementById("ptBootCss");if(!b)return;b.style.opacity=0;setTimeout(function(){if(c)c.remove();b.remove()},260)}function go(){requestAnimationFrame(function(){requestAnimationFrame(function(){setTimeout(done,350)})})}if(document.readyState==="complete")go();else addEventListener("load",go);setTimeout(done,8000)})();</script>'
 GLTF='<script>'+open(W+'/assets/GLTFLoader.r128.js').read()+'</script>'
-add=GLTF+ANIM+BLD+FRM+CARS10+HPACK+BBG+MUS+'<style id="v8css">'+css+'</style><script>\n'+'\n'.join(parts)+'\n</script>'
+add=GLTF+ANIM+BLD+FRM+CARS10+HPACK+BBG+PREV+MUS+'<style id="v8css">'+css+'</style><script>\n'+'\n'.join(parts)+'\n</script>'
 i=src.rindex('</body>') if '</body>' in src else len(src)
 src=src[:i]+add+BOOT_JS+src[i:]
 

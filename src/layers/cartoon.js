@@ -17,9 +17,12 @@ const baseOf=pack=>D.findIndex(d=>pack.replaces==='imola'?d.imola:pack.replaces=
 P.trackPacks={};
 /* the files' gold times were measured with cars 30% quicker and no grip limit; now (25% quicker, 1.6 g grip) a CPU time-trial lap takes
    this much longer: 95.5 -> 107.6 s at Road Atlanta, 98.4 -> 114.7 s at Imola */
-const MEDK={ra:1.002,imola:1.039},ALAT=19.2;/* tyre grip (16, +20% turning by request) limit on these tracks, m/s² (see the steering cap below) */
+const MEDK={ra:1.071,imola:1.085},ALAT=23;/* tyre grip (16, then +20% and +20% more turning by request) limit on these tracks, m/s² (see the steering cap below) */
 /* newest file wins (pack.rev = build time): an older copy saved in this browser never replaces a newer built-in one */
 P.addTrackPack=pack=>{const i=baseOf(pack);if(i<0)throw new Error('This track file is for a track this game does not have ('+pack.replaces+')');const d=D[i];
+ /* the small download has no track built in, so it also knows the newest file's build time: an old copy saved in the browser (Road Atlanta's first
+    file drove through the coned loops and had no grid boxes) is turned away and deleted instead of quietly coming back */
+ {const nr=(window.PT8_PACKREV||{})[pack.replaces]||0;if((pack.rev||0)<nr){const e=new Error('This '+pack.name+' file is an older version: add the new '+(pack.replaces==='ra'?'road-atlanta':pack.replaces)+'.ptrack');e.older=true;throw e}}
  if(d.cartoon&&(d.cartoon.rev||0)>(pack.rev||0)){const e=new Error('This is an older version of '+pack.name+' than the one already in the game');e.older=true;throw e}
  if(!d._orig)d._orig={pts:d.pts,bank:d.bank,medal:P.MEDAL_REF[i]};
  d.pts=pack.pts;d.bank=0;d.cartoon=pack;if(pack.medal)P.MEDAL_REF[i]=pack.medal*(MEDK[pack.replaces]||1);P.trackPacks[pack.id]=pack;
@@ -84,7 +87,7 @@ let sfx=null,sfxV=0;const speedFx=(c,v)=>{if(!c.human)return;if(!sfx){sfx=docume
 {const hide=()=>{if(sfx)sfx.style.opacity=0;sfxV=0};const cr=P.cleanupRace;if(cr)P.cleanupRace=function(){hide();return cr.apply(this,arguments)};setInterval(()=>{if(sfx&&(typeof scr==='undefined'||scr!=='game'||K()===1))hide()},400)}
 /* these circuits are full size and the cars drawn big, so at true speeds they crawl past the scenery: cars here are 25% quicker in every
    respect (top speed, acceleration, braking and grip together, so the handling balance stays the same) */
-const SPD=1.25;{const m0=P.mul;P.mul=c=>{const m=m0?m0(c):{acc:1,top:1,grip:1,brk:1};if(K()>1){m.top*=SPD;m.acc*=1.1;/* acceleration only 10% up: first gear was too punchy */m.brk*=SPD;m.grip*=SPD;/* the tyre bite grip.js gives human drivers, for the CPU too here (it was a big part of why they were so slow) */if(!(c.human&&!c.forceAI)&&c.onRoad&&!c.cool)m.grip*=(window.PT8_GRIPK||1.4)}return m}}
+const SPD=1.25;{const m0=P.mul;P.mul=c=>{const m=m0?m0(c):{acc:1,top:1,grip:1,brk:1};if(K()>1){m.top*=SPD;m.acc*=.6;/* the big model tracks made 0-60 mph take 2.5 s in a Mercedes; this gives about 5 s */m.brk*=SPD;m.grip*=SPD;/* the tyre bite grip.js gives human drivers, for the CPU too here (it was a big part of why they were so slow) */if(!(c.human&&!c.forceAI)&&c.onRoad&&!c.cool)m.grip*=(window.PT8_GRIPK||1.4)}return m}}
 /* cornering grip. The arcade model turns as tight as the steering asks at any speed (well over 3 g at 100 mph), so a 40 mph corner went
    at 100. On these tracks the tyres hold about ALAT (1.6 g, scaled by the car's grip and the surface):
    every car (yours and the CPU's): the nose still turns in as sharply as you steer (up to 1.7x what the tyres hold), but the direction you travel can only
@@ -96,7 +99,7 @@ const gripAt=(c,mt)=>{const v=c.sp||0;return ALAT*Math.min(2.2,1+.6*(v/35)*(v/35
 {const ip0=P.inPost;P.inPost=(c,dt)=>{if(ip0)ip0(c,dt);if(K()===1||!c.in||c.exp>0)return;const vf=c.vx*Math.sin(c.yaw)+c.vz*Math.cos(c.yaw);if(vf<6)return;
  const mt=c.mt||{grip:1},a=gripAt(c,mt),sr=2.5-Math.min(c.sp,40)*.03,mx=a/(vf*sr)*1.7;
  /* calmer steering at low speed (first gear felt twitchy): full lock gives 60% of the old turn rate at walking pace, all of it from 90 km/h */
- if(c.human&&!c.forceAI)c.in.st=(c.in.st||0)*(.6+.4*Math.min(1,Math.max(0,(vf-6)/19)));const st=c.in.st||0;
+ if(c.human&&!c.forceAI)c.in.st=(c.in.st||0)*1.2*(.6+.4*Math.min(1,Math.max(0,(vf-6)/19)))/* x1.2: turn 20% tighter in every gear */;const st=c.in.st||0;
  if(Math.abs(st)>mx)c.in.st=Math.sign(st)*mx}}
 {const sg0=stepCar;stepCar=function(c,dt){const vx0=c.vx,vz0=c.vz,r=sg0.apply(this,arguments);
  if(K()===1||c.exp>0||!(dt>0))return r;const s0=Math.hypot(vx0,vz0),s1=Math.hypot(c.vx,c.vz);if(s0<6||s1<6||!c.m||!c.m.wheels.some(w=>w.g))return r;

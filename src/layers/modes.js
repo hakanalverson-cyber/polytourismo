@@ -104,6 +104,7 @@ P.makeAI=function({n,classes,skill,rally,cap,seed,ids}){
  const RALLY=['lr','urus','ford','ster'],capOk=c=>cap==null||CLS.indexOf(c.cls)<=CLS.indexOf(cap);
  let pool=rally?CARS.filter(c=>RALLY.includes(c.id)&&classes.includes(c.cls)&&capOk(c)):CARS.filter(c=>classes.includes(c.cls)&&capOk(c));
  if(rally&&!pool.length)pool=CARS.filter(c=>RALLY.includes(c.id)&&capOk(c));if(rally&&!pool.length)pool=CARS.filter(c=>RALLY.includes(c.id));
+ {/* cars the CPU can't race (track-mode-only and barn finds) would be swapped for a Mercedes later and break the class: leave them out */const ban=new Set([...(P.TRACK_ONLY||[]),...(P.BARN_IDS||[])]),q=pool.filter(c=>!ban.has(c.id));if(q.length)pool=q}
  if(ids&&ids.length){const q=CARS.filter(c=>ids.includes(c.id));if(q.length)pool=q}
  const list=pool.length?pool:[BYID.merc];
  const out=[],names=NAMES.slice().sort(()=>Math.random()-.5);
