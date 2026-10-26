@@ -23,6 +23,11 @@ P.addTrackPack=pack=>{const i=baseOf(pack);if(i<0)throw new Error('This track fi
 const ss=sampleTrack;sampleTrack=d=>{const T=ss(d);if(!d.cartoon)return T;const {hAt,kAt}=grid(d.cartoon);
  for(let i=0;i<T.N;i++){T.bank[i]=0;const h=hAt(T.x[i],T.z[i]);if(h!=null)T.y[i]=h}
  for(const c of T.cpts||[]){const h=hAt(c[0],c[1]);if(h!=null)c[2]=h}
+ /* no tunnels from the old hand-built track; the hood camera only comes in where the model has a bridge or other structure over the road
+    (pack.over: stretches in metres along the lap), from 16 m before it to 4 m after */
+ if(T.tunnels&&T.tunnels.length){for(const[a,b]of T.tunnels)for(let i=a;i<=b;i++){const k=i%T.N;T.wall[k]=0;T.wh[k]=1.3}T.tunnels=[]}
+ if(T.tn)T.tn.fill(0);T.ov=new Uint8Array(T.N);{let L=0;const Ls=new Float32Array(T.N);for(let i=1;i<T.N;i++){L+=Math.hypot(T.x[i]-T.x[i-1],T.z[i]-T.z[i-1]);Ls[i]=L}
+  for(const[a,b]of d.cartoon.over||[])for(let i=0;i<T.N;i++)if(Ls[i]>=a-16&&Ls[i]<=b+4)T.ov[i]=1}
  const t0=T.terr;T.terr=(x,z)=>{const h=hAt(x,z);return h==null?t0(x,z):h};
  const s0=T.surf;T.surf=(x,z,y)=>{const r=s0(x,z,y),h=hAt(x,z);if(h==null)return r;r.h=h;
   if(!r.road){const k=kAt(x,z);if(k===1||k===2)r.near=1;else if(k===3)r.trap=1}return r};
@@ -58,8 +63,25 @@ setTimeout(()=>{const bw=buildWorld;buildWorld=T=>{const sc=bw(T),pack=T.d&&T.d.
 const K=()=>{const R=typeof RACE!=="undefined"?RACE:null,d=R&&R.T&&R.T.d;return d&&d.cartoon&&d.cartoon.carScale||1};
 const uv=updateVisual;updateVisual=function(c,T,t){const m=c&&c.m,k=K();if(m&&m.g)m.g.scale.setScalar(1);const r=uv.apply(this,arguments);
  if(m&&m.g&&k!==1&&m.g.visible!==false){m.g.scale.setScalar(k);m.g.position.y+=(k-1)*.95;if(m.sh){m.sh.scale.x*=k;m.sh.scale.y*=k}}return r};
-const so=soloCam;soloCam=function(c,dt,out){so.apply(this,arguments);const k=K();if(k===1||c.fin)return;const f=1+(k-1)*.8,y=c.camY==null?c.y:c.camY;
- out.p.set(c.x+(out.p.x-c.x)*f,y+(out.p.y-y)*f,c.z+(out.p.z-c.z)*f);out.l.set(c.x+(out.l.x-c.x)*f,y+(out.l.y-y)*f,c.z+(out.l.z-c.z)*f)};
+/* chase camera: pulled back less than the car grew (the car fills more of the screen and the camera sits nearer the road, so the ground
+   streams past faster), plus a wider view and a light buzz at speed: the big tracks otherwise feel slow with big cars */
+const so=soloCam;soloCam=function(c,dt,out){so.apply(this,arguments);const k=K();if(k===1||c.fin)return;const f=1+(k-1)*.55,y=c.camY==null?c.y:c.camY;
+ out.p.set(c.x+(out.p.x-c.x)*f,y+(out.p.y-y)*f,c.z+(out.p.z-c.z)*f);out.l.set(c.x+(out.l.x-c.x)*f,y+(out.l.y-y)*f,c.z+(out.l.z-c.z)*f);
+ const v=Math.max(0,Math.min(1,((c.sp||0)-15)/45)),hood=(c.tnB||0)>.5||c.camMode;out.f+=v*(hood?6:12);
+ if(!hood&&v>0&&!(c.exp>0)){const t=performance.now()/1000,a=v*v*.06;out.p.x+=Math.sin(t*37.1)*a;out.p.y+=Math.sin(t*29.3+1)*a;out.p.z+=Math.sin(t*33.7+2)*a}
+ speedFx(c,v)};
+/* speed streaks at the screen edges, faint from about 55 km/h, strongest from 215 km/h up (model tracks only) */
+let sfx=null,sfxV=0;const speedFx=(c,v)=>{if(!c.human)return;if(!sfx){sfx=document.createElement('div');sfx.id='ptSpeedFx';
+  sfx.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:4;opacity:0;mix-blend-mode:screen;background:repeating-conic-gradient(from 0deg at 50% 46%,rgba(255,255,255,.0) 0deg,rgba(255,255,255,.0) 2.2deg,rgba(255,255,255,.55) 2.5deg,rgba(255,255,255,0) 2.8deg,rgba(255,255,255,0) 5.3deg);-webkit-mask:radial-gradient(ellipse 62% 58% at 50% 46%,transparent 55%,#000 100%);mask:radial-gradient(ellipse 62% 58% at 50% 46%,transparent 55%,#000 100%)';
+  document.body.appendChild(sfx)}
+ sfxV+=(v-sfxV)*.15;sfx.style.opacity=(sfxV*sfxV*.35).toFixed(3);sfx.style.transform='rotate('+(Math.random()*2.5).toFixed(2)+'deg) scale(1.05)'};
+{const hide=()=>{if(sfx)sfx.style.opacity=0;sfxV=0};const cr=P.cleanupRace;if(cr)P.cleanupRace=function(){hide();return cr.apply(this,arguments)};setInterval(()=>{if(sfx&&(typeof scr==='undefined'||scr!=='game'||K()===1))hide()},400)}
+/* hood camera: on these tracks only under something overhead (T.ov from the model) */
+{const sc0=stepCar;stepCar=function(c,dt){const r=sc0.apply(this,arguments);const R=typeof RACE!=='undefined'?RACE:null,T=R&&R.T;if(T&&T.ov)c.inTn=!!(T.ov[((c.idx|0)%T.N+T.N)%T.N]&&c.onRoad);return r}}
+/* grid: each car stands in one of the boxes painted on the model's start straight (front row first) */
+P.gridHook=(T,c,slot)=>{const pk=T.d&&T.d.cartoon,s=pk&&pk.slots&&pk.slots[slot];if(!s)return false;const N=T.N;let bi=0,bd=1e18;
+ for(let i=0;i<N;i++){const d=(T.x[i]-s[0])**2+(T.z[i]-s[1])**2;if(d<bd){bd=d;bi=i}}
+ c.x=s[0];c.z=s[1];c.y=T.surf(s[0],s[1],T.y[bi]+2).h+1.1;c.yaw=T.psi[bi];c.idx=bi;c.unw=bi>N/2?bi-N:bi;c.cy=c.yaw;c.camY=c.y;return true};
 const cc=carCollide;carCollide=function(a,b){const k=K();if(k===1||a.out||b.out)return cc.apply(this,arguments);
  const dx=b.x-a.x,dz=b.z-a.z,d=Math.hypot(dx,dz),D=3.2*k;if(!(d<D&&d>.01&&Math.abs(a.y-b.y)<1.6*k))return;
  const nx=dx/d,nz=dz/d,ov=(D-d)/2;a.x-=nx*ov;a.z-=nz*ov;b.x+=nx*ov;b.z+=nz*ov;const rv=(b.vx-a.vx)*nx+(b.vz-a.vz)*nz;

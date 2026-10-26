@@ -1,9 +1,146 @@
-{"id":"imola","name":"Imola","replaces":"imola","credit":"Cartoon Race Track Imola (Retro Cartoon Racing), bought by Hakan",
- "work":"/tmp/claude-0/-home-claude-polytourismo/4b0e7c59-35bd-554a-8c30-0ab78fa183a0/scratchpad/trk_imola","texdir":"/tmp/claude-0/-home-claude-polytourismo/4b0e7c59-35bd-554a-8c30-0ab78fa183a0/scratchpad/cimola2/textures/","S":0.05,"carScale":1.6,
- "centre":{"method":"strip","mesh":"imola_track_surface_road_imola_0","vlo":0.76,"vhi":0.99},
- "sign":-1,"start":{"mesh":"startlights","mode":"centroid"},
- "ground":[["bottom_rock",0,-0.1],["grass_1",0,0],["grass_2",0,0.03],["gravel",3,0.06],["stadium_road",2,0.09],["track_surface",1,0.12],["logo_ground",2,0.15]],
- "lift":{"white_line":0.18},"rock":"bottom_rock","colliders":"collider","skip":"collider",
- "texmap":[["track_surface|stadium_road","road.png"],["garages","garages_imola.png"],["_IMOLA","IMOLA.png"],["grass_1","grass_1.png"],["grass_2","grass_2.png"],["gravel","gravel.png"],["bottom_rock","rock.png"],["tyres","tyres.png"],["banners","banners.png"],["trees","trees.png"],["baloon","baloon.png"],["fence","imola_fence_fence_metal_0_Alpha.png"],["logo","imola_ground_logo.png"],["white_line","#d2d2d2"],["startlights","#ff2a1a"]],
- "bake":"trees|tyres|startlights","ratio":{"trees":0.16,"tyres":0.14,"default":0.2},
- "bigtex":["road","garages","IMOLA","banners","logo"],"alpha":["fence"],"sat":1.3,"medal":97.0}
+{
+"id": "imola",
+"name": "Imola",
+"replaces": "imola",
+"credit": "Cartoon Race Track Imola (Retro Cartoon Racing), bought by Hakan",
+"work": "/tmp/claude-0/-home-claude-polytourismo/4b0e7c59-35bd-554a-8c30-0ab78fa183a0/scratchpad/trk_imola",
+"texdir": "/tmp/claude-0/-home-claude-polytourismo/4b0e7c59-35bd-554a-8c30-0ab78fa183a0/scratchpad/cimola2/textures/",
+"S": 0.05,
+"carScale": 1.8,
+"centre": {
+"method": "strip",
+"mesh": "imola_track_surface_road_imola_0",
+"vlo": 0.76,
+"vhi": 0.99
+},
+"sign": -1,
+"start": {
+"mesh": "startlights",
+"mode": "centroid",
+"boxes": "start_line_white_line"
+},
+"ground": [
+[
+"bottom_rock",
+0,
+-0.1
+],
+[
+"grass_1",
+0,
+0
+],
+[
+"grass_2",
+0,
+0.03
+],
+[
+"gravel",
+3,
+0.06
+],
+[
+"stadium_road",
+2,
+0.09
+],
+[
+"track_surface",
+1,
+0.12
+],
+[
+"logo_ground",
+2,
+0.15
+]
+],
+"lift": {
+"white_line": 0.18
+},
+"rock": "bottom_rock",
+"colliders": "collider",
+"skip": "collider",
+"texmap": [
+[
+"track_surface|stadium_road",
+"road.png"
+],
+[
+"garages",
+"garages_imola.png"
+],
+[
+"_IMOLA",
+"IMOLA.png"
+],
+[
+"grass_1",
+"grass_1.png"
+],
+[
+"grass_2",
+"grass_2.png"
+],
+[
+"gravel",
+"gravel.png"
+],
+[
+"bottom_rock",
+"rock.png"
+],
+[
+"tyres",
+"tyres.png"
+],
+[
+"banners",
+"banners.png"
+],
+[
+"trees",
+"trees.png"
+],
+[
+"baloon",
+"baloon.png"
+],
+[
+"fence",
+"imola_fence_fence_metal_0_Alpha.png"
+],
+[
+"logo",
+"imola_ground_logo.png"
+],
+[
+"white_line",
+"#d2d2d2"
+],
+[
+"startlights",
+"#ff2a1a"
+]
+],
+"bake": "trees|tyres|startlights",
+"ratio": {
+"trees": 0.16,
+"tyres": 0.14,
+"default": 0.2
+},
+"bigtex": [
+"road",
+"garages",
+"IMOLA",
+"banners",
+"logo"
+],
+"alpha": [
+"fence"
+],
+"sat": 1.3,
+"medal": 98.3,
+"overhead": "tree|collider|grass|gravel|rock|track_surface|stadium_road|logo|white_line|start_line|startlights|fence"
+}

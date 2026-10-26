@@ -21,8 +21,18 @@ def texof(n):
   m=meta.get(n,{})
   if m.get('tex'):return os.path.basename(m['tex'])
   c=m.get('col',[1,1,1,1]);return '#%02x%02x%02x'%tuple(int(round(255*min(1,x)**(1/2.2))) for x in c[:3])
-def satc(rgb):  # same colour boost as the textures
-  im=Image.fromarray(np.asarray(rgb,np.uint8).reshape(1,-1,3));return np.asarray(ImageEnhance.Color(im).enhance(sat)).reshape(-1,3)
+# colour grading: textures listed in "grade" are tinted so their average colour becomes the given one (the Atlanta model ships olive grass and
+# brown asphalt; Imola's are a clear green and grey), then every colour gets the saturation boost
+GAIN={}
+def gain(t):
+  if t not in GAIN:
+    g=next((c for p,c in C.get('grade',[]) if re.search(p,t)),None)
+    GAIN[t]=None if g is None or t.startswith('#') else np.array(g,float)/np.maximum(1,np.asarray(Image.open(TX+t).convert('RGB').resize((64,64)),float).reshape(-1,3).mean(0))
+  return GAIN[t]
+def gradea(a,t):
+  k=gain(t);return a if k is None else np.clip(np.asarray(a,float)*k,0,255).astype(np.uint8)
+def satc(rgb,t=''):  # same colour boost as the textures
+  rgb=gradea(rgb,t);im=Image.fromarray(np.asarray(rgb,np.uint8).reshape(1,-1,3));return np.asarray(ImageEnhance.Color(im).enhance(sat)).reshape(-1,3)
 tcache={}
 def img(t):
   if t not in tcache:tcache[t]=np.asarray(Image.open(TX+t).convert('RGB').resize((512,512)))
@@ -58,7 +68,7 @@ for n in names:
   if re.search(C['bake'],n):
     if t.startswith('#'):fc=np.tile([int(t[1:3],16),int(t[3:5],16),int(t[5:7],16)],(len(f),1))
     else:im=img(t);c=uv[f].mean(1);fc=im[((1-np.mod(c[:,1],1))*511).astype(int),(np.mod(c[:,0],1)*511).astype(int)]
-    fc=satc(fc)
+    fc=satc(fc,t)
     vk,inv=np.unique(np.round(v,2),axis=0,return_inverse=True);ff=inv.ravel()[f];ff=ff[(ff[:,0]!=ff[:,1])&(ff[:,1]!=ff[:,2])&(ff[:,0]!=ff[:,2])]
     r=C['ratio'].get(next((k for k in C['ratio'] if k!='default' and re.search(k,n)),'default'))
     sim=pyfqmr.Simplify();sim.setMesh(vk,ff);sim.simplify_mesh(target_count=max(200,int(len(ff)*r)),aggressiveness=7,preserve_border=False,verbose=False)
@@ -76,12 +86,12 @@ tex={}
 for t in sorted(used):
   im=Image.open(TX+t).convert('RGBA');big=any(re.search(p,t) for p in C.get('bigtex',[]));sz=TS if big else min(512,TS)
   im=im.resize((sz,max(1,sz*im.size[1]//im.size[0])),Image.LANCZOS);b=io.BytesIO()
-  rgb=ImageEnhance.Color(im.convert('RGB')).enhance(sat)
+  rgb=ImageEnhance.Color(Image.fromarray(gradea(np.asarray(im.convert('RGB')),t))).enhance(sat)
   if any(re.search(p,t) for p in C.get('alpha',[])):rgb.putalpha(im.getchannel('A'));rgb.save(b,'PNG',optimize=True);tex[t]='data:image/png;base64,'+base64.b64encode(b.getvalue()).decode()
   else:rgb.save(b,'JPEG',quality=82);tex[t]='data:image/jpeg;base64,'+base64.b64encode(b.getvalue()).decode()
 g=J['grid'];g['h']=base64.b64encode(open(W+'/hf.i16','rb').read()).decode();g['k']=base64.b64encode(open(W+'/cls.rle','rb').read()).decode()
 out={'v':1,'id':C['id'],'name':C['name'],'replaces':C['replaces'],'medal':C.get('medal'),'carScale':C.get('carScale',1),'alpha':[t for t in used if any(re.search(p,t) for p in C.get('alpha',[]))],'S':S,'pts':J['pts'],'grid':g,
- 'segs':b64(np.array(J['segs'],np.float32).reshape(-1,4)),'tex':tex,'meshes':meshes,'credit':C.get('credit','')}
+ 'over':J.get('over',[]),'slots':J.get('slots',[]),'segs':b64(np.array(J['segs'],np.float32).reshape(-1,4)),'tex':tex,'meshes':meshes,'credit':C.get('credit','')}
 raw=json.dumps(out,separators=(',',':')).encode()
 if OUT.endswith('.json'):open(OUT,'wb').write(raw)
 else:open(OUT,'wb').write(gzip.compress(raw,6))

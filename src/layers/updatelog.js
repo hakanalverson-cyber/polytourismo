@@ -4,6 +4,12 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.12',d:'Oct 25, 2026',t:'New Road Atlanta and Imola scenery, smarter CPU, gearbox choice',items:[
+  'Road Atlanta follows the real circuit: the lap line used to run through three side loops the model closes off with cones (so driving the real road counted as leaving the track and blew the car up). Every coned road is now shut out of the lap.',
+  'Road Atlanta in proper colour: the model ships olive grass, brown asphalt and dull trees; they are now graded to clear greens and greys like Imola.',
+  'Cars on Imola and Road Atlanta are 1.8x (was 1.6x) and start in the grid boxes painted on the model. The chase camera sits closer and lower there, widens at speed, shakes lightly and shows speed streaks, so speed reads properly with the bigger cars.',
+  'The hood camera only takes over under a bridge or other structure over the road (Imola has one bridge; the old hand-built tunnels are gone).',
+  'Track mode has a Format option: Time trial (drivers take turns, as before) or Race: 1-4 drivers on split screen, up to 7 CPU drivers with level and class, standing or rolling start, grid order drawn at random. Rolling start: the field forms up behind the leader at about 100 km/h and goes green at the line.',
+  'Handbrake removed.',
   'Imola and Road Atlanta are now the cartoon track models Hakan bought, at their full size (Imola 3.9 km, Road Atlanta 4.0 km): each model\'s own road, kerbs, run-offs, gravel, grandstands, pit buildings, start gantry, trees, tyre walls and banners. The car drives on the model\'s real surfaces (heights, gravel and paved run-off), and the walls follow its barriers. On these two tracks the cars are drawn 1.6x bigger so they match the buildings; the chase camera, wall contact and car-to-car contact grow with them. Medal times reset from CPU laps.',
   'Fixed thin tears in the road on the model tracks (neighbouring road tiles were rounded to slightly different heights) and gave the model textures back their colour.',
   'The old hand-built Road Atlanta and Imola are deleted. Those two circuits now only appear once their track file is loaded (built into the full download and the online version).',

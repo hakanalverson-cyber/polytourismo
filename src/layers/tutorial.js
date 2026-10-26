@@ -5,7 +5,7 @@ const P=window.PT8;
 const auto=()=>!!(window.PTO&&PTO.autoShift);
 /* each step: interactive ones advance when the player does the thing, info ones wait for Next */
 const S=[
- {t:'Welcome',x:'This lesson is a free drive with prompts. <b>W</b> accelerate &middot; <b>S</b> brake / reverse &middot; <b>A</b> / <b>D</b> steer &middot; <b>Space</b> handbrake &middot; <b>Esc</b> pause. Wait for GO.',ok:(c,R)=>R.state==='race'},
+ {t:'Welcome',x:'This lesson is a free drive with prompts. <b>W</b> accelerate &middot; <b>S</b> brake / reverse &middot; <b>A</b> / <b>D</b> steer &middot; <b>Esc</b> pause. Wait for GO.',ok:(c,R)=>R.state==='race'},
  {t:'Throttle',x:'Hold <b>W</b> and build up some speed.',ok:c=>c.sp>12},
  {t:'Steering',x:'Steer both ways with <b>A</b> and <b>D</b>. Small, smooth inputs are faster than yanking the wheel.',ok:(c,R,s)=>s.a&&s.d&&c.sp>6},
  {t:'Gears',x:()=>auto()?'Auto-shift is on, so the gearbox changes for you. Reach 3rd gear. (Turn it off in Settings for manual shifting and perfect-shift boosts.)':'Press <b>E</b> to shift up and <b>Q</b> to shift down (the keys either side of W), or double-tap W / S. Shift close to the redline for a free <b>perfect-shift</b> boost. Reach 3rd gear.',ok:c=>(c.gear|0)>=2},
@@ -14,7 +14,7 @@ const S=[
  {t:'Weather',info:1,x:'Rain, storm and fog change the grip and visibility. Set it in the <b>Weather</b> row of Multiplayer or Elimination setup. In the wet, brake earlier and be gentle with the throttle.'},
  {t:'Tuning',info:1,x:'In the <b>Garage</b> you can tune <b>gearing, aero, tyres and more</b>. Changes show on the performance chart with a green <b>+</b> bar. Tuning applies in Multiplayer, Elimination and Career (not Time Attack).'},
  {t:'Rally gearbox',part:2,info:1,x:'Rally uses <b>real gearboxes</b>: every car has the number of gears it has in real life (6 to 9). Shifting is manual: <b>E</b> up, <b>Q</b> down, <b>W/S</b> throttle and brake, <b>A/D</b> steer. Short gears pull hard, tall gears go fast. Upshift near the limit, drop a gear before a corner. (Auto-shift in Settings still works.)'},
- {t:'Handbrake and camera',part:2,info:1,x:'Hold <b>Space</b> to lock the rear wheels and swing the tail round hairpins and junctions, then release to get grip back. Press <b>C</b> to cycle the camera: chase, hood, bumper, far chase. The suspension is much softer in Rally, so cars ride dips and crests.'},
+ {t:'Camera',part:2,info:1,x:'Press <b>C</b> to cycle the camera: chase, hood, bumper, far chase. The suspension is much softer in Rally, so cars ride dips and crests.'},
  {t:'Pace notes and checkpoints',part:2,info:1,x:'The arrow shows the next corner, turning the way it turns, and hotter colours mean tighter (hairpin is red). <b>WATER</b>, <b>JUMP</b> and <b>NARROW</b> warn you about fords, crests and pinch points. Each stage has gates that show your split time, and you can watch a replay at the end.'},
  {t:'Lesson complete',done:1,x:'That is the basics. Keep driving as long as you like, or head back to the menu.'}];
 let st=null;

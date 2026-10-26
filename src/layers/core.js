@@ -178,7 +178,24 @@ stepCar=(c,dt)=>{const Rc=RACE,T=Rc.T,st=c.cs||(c.cs=BYID.merc);
 
 /* ---------------- start grid ---------------- */
 function gridSlot(T,c,slot){const row=slot>>1,idx0=-(5+row*5),i=((idx0%T.N)+T.N)%T.N,lat=(slot&1?1:-1)*T.hw[0]*.36,s=Math.sin(T.psi[i]),co=Math.cos(T.psi[i]);
- c.x=T.x[i]+co*lat;c.z=T.z[i]-s*lat;c.y=T.y[i]-lat*T.bank[i]+1.1;c.yaw=T.psi[i];c.idx=i;c.unw=idx0;c.cy=T.psi[i];c.camY=T.y[i]+1}
+ c.x=T.x[i]+co*lat;c.z=T.z[i]-s*lat;c.y=T.y[i]-lat*T.bank[i]+1.1;c.yaw=T.psi[i];c.idx=i;c.unw=idx0;c.cy=T.psi[i];c.camY=T.y[i]+1;
+ if(PT8.gridHook)PT8.gridHook(T,c,slot);/* track files: the painted grid boxes */
+ if(RACE&&RACE.cfg&&RACE.cfg.rolling)rollBack(T,c)}
+/* rolling start: the whole grid moves 240 m back up the road (keeping each car's side), drives up in formation and goes green when the
+   leader crosses the line */
+function rollBack(T,c){const N=T.N,back=Math.round(240/T.sp),i=((c.idx|0)%N+N)%N,s=Math.sin(T.psi[i]),co=Math.cos(T.psi[i]),lat=(c.x-T.x[i])*co-(c.z-T.z[i])*s,along=(c.x-T.x[i])*s+(c.z-T.z[i])*co,j=((i-back)%N+N)%N,sj=Math.sin(T.psi[j]),cj=Math.cos(T.psi[j]);
+ c.x=T.x[j]+cj*lat+sj*along;c.z=T.z[j]-sj*lat+cj*along;c.y=T.surf(c.x,c.z,T.y[j]+2).h+1.1;c.yaw=T.psi[j];c.idx=j;c.unw-=back;c.cy=c.yaw;c.camY=c.y}
+{const sc0=stepCar;stepCar=function(c,dt){const R=RACE;if(R&&R.cfg&&R.cfg.rolling&&!R.green&&R.state==='race'&&!c.fin){
+  let lead=null;for(const o of R.cars)if(!lead||o.unw>lead.unw)lead=o;
+  if(lead&&lead.unw>=0){R.green=true;R.cars.forEach(o=>{if(o.human){o.pop='GREEN FLAG';o.popT=2}});if(typeof beep==='function')beep(880,.35,'square')}
+  else{/* pace: about 100 km/h, cars behind close up to a 14 m gap, the leader waits for the field */
+   let ahead=null;for(const o of R.cars)if(o!==c&&o.unw>c.unw&&(!ahead||o.unw<ahead.unw))ahead=o;
+   const gap=ahead?(ahead.unw-c.unw)*T_sp(R):14,last=Math.min(...R.cars.map(o=>o.unw)),tail=(c.unw-last)*T_sp(R);
+   let tgt=ahead?27.5+Math.max(-12,Math.min(16,(gap-14)*.7)):27.5-Math.max(0,Math.min(10,(tail-40)*.05));
+   if(c.human){c.pop='FORMATION \u00b7 HOLD POSITION';c.popT=Math.max(c.popT||0,.3)}
+   if(c.in&&c.sp>tgt){c.in.th=0;c.in.br=Math.min(1,(c.sp-tgt)/4)}else if(c.in&&!c.human&&c.sp<tgt-2)c.in.th=Math.max(c.in.th,.9)}}
+ return sc0.apply(this,arguments)}}
+const T_sp=R=>R.T.sp||3;
 
 /* ---------------- race launch ---------------- */
 const NAMES=['KAZE','RIVA','BOLT','MOSS','TANK','VEGA','DUSK','ORCA','NOVA','HAWK','LYNX','ONYX','ROOK','FINN','ZED','JUNO'];
@@ -294,8 +311,8 @@ PT8.TAPS=taps;
 /* universal shift keys: the keys either side of forward (Q/E, PageUp/PageDown, U/O, R/Y); rally/track handle their own */
 PT8.SHIFTK=[{dn:'KeyQ',up:'KeyE',n:['Q','E']},{dn:'PageUp',up:'PageDown',n:['PAGE UP','PAGE DOWN']},{dn:'KeyU',up:'KeyO',n:['U','O']},{dn:'KeyR',up:'KeyY',n:['R','Y']}];
 PT8.SHIFTK.forEach(k=>{GAME_KEYS.add(k.dn);GAME_KEYS.add(k.up)});
-/* handbrake is a single-driver tool: off whenever more than one human is racing */
-PT8.noHb=()=>!!(RACE&&RACE.cfg&&RACE.cfg.humans&&RACE.cfg.humans.length>1);
+/* no handbrake: the key does nothing for any driver (Hakan, v0.12) */
+PT8.noHb=()=>true;
 /* player 2 can use the arrow keys or the numpad (8 4 5 6, 7 / 9 shift) */
 {const AR={u:'ArrowUp',d:'ArrowDown',l:'ArrowLeft',r:'ArrowRight',h:'ShiftRight'},NP={u:'Numpad8',d:'Numpad5',l:'Numpad4',r:'Numpad6',h:'Numpad0'};
  PT8.p2Keys=(window.PTO&&PTO.p2numpad)?'numpad':'arrows';

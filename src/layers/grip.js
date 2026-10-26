@@ -1,7 +1,7 @@
 /* ===== Poly GT layer: grip (cars stay planted on tarmac) ===== */
 (function(){const P=window.PT8;
 /* the drift mode now needs the handbrake key held (patched in build.py): this says whether it is */
-window.PT8_HB=c=>!!(c._hb||(c.in&&c.in.hb)||(c.human&&typeof KM!=='undefined'&&KM[c.k]&&down.has(KM[c.k].h)));
+window.PT8_HB=c=>!!(c._hb||(c.in&&c.in.hb));/* keys no longer hold it (handbrake removed); AI drift still sets in.hb */
 /* firmer tarmac grip for the player: sideways slip on asphalt dies out 1.4x faster, so the car goes where it is pointed.
    Gravel, grass, dirt and ice keep their loose feel. The AI keeps the grip its speed planner was tuned on (with more grip its line
    control overshoots on fast downhill bends). */

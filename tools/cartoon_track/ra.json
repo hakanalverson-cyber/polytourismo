@@ -1,8 +1,153 @@
-{"id":"ra","name":"Road Atlanta","replaces":"ra","credit":"Cartoon Race Track Atlanta (Retro Cartoon Racing), bought by Hakan",
- "work":"/tmp/claude-0/-home-claude-polytourismo/4b0e7c59-35bd-554a-8c30-0ab78fa183a0/scratchpad/trk_ra","texdir":"/tmp/claude-0/-home-claude-polytourismo/4b0e7c59-35bd-554a-8c30-0ab78fa183a0/scratchpad/catl/textures/","width":26.2,"carScale":1.6,
- "centre":{"method":"skeleton","mesh":"TERRAIN_TARMAC_MAIN","cell":0.25},
- "sign":1,"start":{"mesh":"START_BOXES","mode":"front","ahead":8},
- "ground":[["TERRAIN_GRASS_grass",0,0],["GRASS_TRIMMED",0,0.03],["TERRAIN_SAND",3,0.05],["GRAVEL_TRAP",3,0.06],["TARMAC_DIRTY",2,0.08],["TARMAC_BLUE|TARMAC_YELLOW",2,0.1],["FINISH_LINE",2,0.1],["TARMAC_MAIN",1,0.12]],
- "lift":{"WHITE_LINES":0.15,"START_BOXES":0.17},"colliders":"COLLIDER","skip":"COLLIDER",
- "bake":"TREES|tyre|startlights","ratio":{"TREES":0.16,"tyre":0.14,"default":0.2},
- "bigtex":["road_ATLANTA","garages","^ATLANTA.png","banners","dirty_tarmac"],"alpha":["fence"],"sat":1.3,"medal":96.7}
+{
+"id": "ra",
+"name": "Road Atlanta",
+"replaces": "ra",
+"credit": "Cartoon Race Track Atlanta (Retro Cartoon Racing), bought by Hakan",
+"work": "/tmp/claude-0/-home-claude-polytourismo/4b0e7c59-35bd-554a-8c30-0ab78fa183a0/scratchpad/trk_ra",
+"texdir": "/tmp/claude-0/-home-claude-polytourismo/4b0e7c59-35bd-554a-8c30-0ab78fa183a0/scratchpad/catl/textures/",
+"width": 26.2,
+"carScale": 1.8,
+"centre": {
+"method": "skeleton",
+"mesh": "TERRAIN_TARMAC_MAIN",
+"cell": 0.25,
+"prune": 1,
+"block": [
+[
+-121.1,
+-353.2,
+8
+],
+[
+-106.1,
+3.0,
+8
+]
+],
+"cones": {
+"mesh": "startlight_pole_extention",
+"nverts": 161,
+"ext": [
+0.9627,
+1.0438,
+0.9627
+]
+}
+},
+"sign": 1,
+"start": {
+"mesh": "START_BOXES",
+"mode": "front",
+"ahead": 8,
+"boxes": "START_BOXES"
+},
+"ground": [
+[
+"TERRAIN_GRASS_grass",
+0,
+0
+],
+[
+"GRASS_TRIMMED",
+0,
+0.03
+],
+[
+"TERRAIN_SAND",
+3,
+0.05
+],
+[
+"GRAVEL_TRAP",
+3,
+0.06
+],
+[
+"TARMAC_DIRTY",
+2,
+0.08
+],
+[
+"TARMAC_BLUE|TARMAC_YELLOW",
+2,
+0.1
+],
+[
+"FINISH_LINE",
+2,
+0.1
+],
+[
+"TARMAC_MAIN",
+1,
+0.12
+]
+],
+"lift": {
+"WHITE_LINES": 0.15,
+"START_BOXES": 0.17
+},
+"colliders": "COLLIDER",
+"skip": "COLLIDER",
+"bake": "TREES|tyre|startlights",
+"ratio": {
+"TREES": 0.16,
+"tyre": 0.14,
+"default": 0.2
+},
+"bigtex": [
+"road_ATLANTA",
+"garages",
+"^ATLANTA.png",
+"banners",
+"dirty_tarmac"
+],
+"alpha": [
+"fence"
+],
+"sat": 1.45,
+"grade": [
+[
+"GRASS",
+[
+82,
+124,
+40
+]
+],
+[
+"trees_",
+[
+54,
+92,
+40
+]
+],
+[
+"^road_",
+[
+72,
+71,
+68
+]
+],
+[
+"dirty_tarmac",
+[
+66,
+67,
+69
+]
+],
+[
+"tyres",
+[
+120,
+120,
+128
+]
+]
+],
+"medal": 93.8,
+"overhead": "TREES|COLLIDER|TERRAIN_|startlights|WALL_FENCE"
+}

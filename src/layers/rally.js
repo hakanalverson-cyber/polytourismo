@@ -58,7 +58,7 @@ function fxStep(c,Rc,dt){roost(c,Rc,dt);if(c.human)smokeFx(c,Rc,dt);const T=Rc.T
  if(c.human&&Rc.cfg&&!Rc.cfg.noFx)stageFx(c,T,dt)}
 const sc0=stepCar;
 stepCar=function(c,dt){const Rc=RACE,rl=!!(Rc&&Rc.cfg&&Rc.cfg.rally&&c.human&&!c.forceAI),auto=P.isAuto(c);
- if(rl){if(c.rg===undefined)c.rg=c.gear|0;if(!auto)c.gear=c.rg;c._hb=!(S&&S.drv&&S.drv.length>1)&&Rc.state==='race'&&!c.fin&&c.respT<=0&&!(c.exp>0)&&!paused&&down.has(RK[curP].hb)}
+ if(rl){if(c.rg===undefined)c.rg=c.gear|0;if(!auto)c.gear=c.rg;c._hb=false&&Rc.state==='race'&&!c.fin&&c.respT<=0&&!(c.exp>0)&&!paused&&down.has(RK[curP].hb)}
  sc0.apply(this,arguments);
  if(rl){if(auto)c.rg=c.gear|0;else c.gear=c.rg;handbrakeFx(c,dt)}
  if(!Rc||!Rc.T||!Rc.dust)return;
@@ -110,7 +110,7 @@ const MOVE=['W A S D','Arrow keys','I J K L','T F G H'];P.rallyP2=np=>{MOVE[1]=n
 RK.forEach(k=>[k.dn,k.up,k.hb,k.cam].forEach(x=>GAME_KEYS.add(x)));
 let curP=0;const camPref={};const CAMS=['CHASE','HOOD','FAR CHASE'];
 P.rallyP2(P.p2Keys==='numpad');
-const ctlHTML=p=>{const k=RK[Math.min(p,3)].n,multi=S&&S.drv&&S.drv.length>1;return `<div class="rl-ctl"><span><b>${MOVE[Math.min(p,3)]}</b>drive</span><span><b>${k[0]} / ${k[1]}</b>shift down / up</span>${multi?'':`<span><b>${k[2]}</b>handbrake</span>`}<span><b>${k[3]}</b>camera</span></div>`};
+const ctlHTML=p=>{const k=RK[Math.min(p,3)].n,multi=S&&S.drv&&S.drv.length>1;return `<div class="rl-ctl"><span><b>${MOVE[Math.min(p,3)]}</b>drive</span><span><b>${k[0]} / ${k[1]}</b>shift down / up</span><span><b>${k[3]}</b>camera</span></div>`};
 function shiftR(c,d){const car=c.cs||BYID.merc,G=P.GT(car),g=c.rg|0,n=Math.max(0,Math.min(G.length-1,g+d));if(n===g)return;
  const rr=c.sp/Math.max(1,(CIR()&&P.effTop?P.effTop(car,g)*1.03:car.top*G[g].top)*(c.mt?c.mt.top:1));if(d>0&&rr>=.8&&rr<=1.06){c.pb=1.1;c.perfect=1}else c.perfect=0;
  c.rg=n;c.gear=n;c.shiftT=.14;c.gearFlash=.9;if(P.sfx){P.sfx(d>0?'up':'dn');if(c.perfect)P.sfx('move')}}
@@ -152,7 +152,7 @@ function mkDash(){if(dash)return dash;dash=document.createElement('div');dash.id
  dash.innerHTML=`<div class="rd-row"><div class="rd-side rd-l"><div class="rd-k"><small id="rdLbl">STAGE</small><b id="rdPct">0%</b><i class="rd-bar"><u id="rdBar"></u></i><em id="rdRem">-</em></div><div class="rd-k"><small>NEXT CHECKPOINT</small><b id="rdCp">-</b></div></div>
  <div class="rd-c"><canvas id="rdG" width="360" height="215"></canvas></div>
  <div class="rd-side rd-r"><div class="rd-k"><small>ALTITUDE</small><b id="rdAl">0 m</b></div><div class="rd-k"><small>SURFACE</small><b id="rdSf">-</b><em id="rdCm">-</em></div></div></div>
- <div class="rd-bars"><label>THR<i><u id="rdTh"></u></i></label><label>BRK<i><u id="rdBr"></u></i></label><label>HBK<i><u id="rdHk"></u></i></label><label>STR<i class="rd-st"><u id="rdSt"></u></i></label></div>`;
+ <div class="rd-bars"><label>THR<i><u id="rdTh"></u></i></label><label>BRK<i><u id="rdBr"></u></i></label><u id="rdHk" hidden></u><label>STR<i class="rd-st"><u id="rdSt"></u></i></label></div>`;
  document.body.appendChild(dash);return dash}
 function drawGauge(cv,o){const g=cv.getContext('2d'),w=cv.width,h=cv.height,cx=w/2,cy=h*.5,R=h*.43,a0=Math.PI*(150/180),sw=Math.PI*(240/180);g.clearRect(0,0,w,h);
  g.fillStyle='rgba(8,12,16,.78)';g.beginPath();g.arc(cx,cy,R+16,0,7);g.fill();g.strokeStyle='rgba(255,255,255,.14)';g.lineWidth=1.5;g.beginPath();g.arc(cx,cy,R+16,0,7);g.stroke();

@@ -1,0 +1,4 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",2500],
+["js","(()=>{document.querySelector('#s8cards .card[data-m=track]').click();return 1})()"],["wait",2000],
+["js","(()=>{const b=[...document.querySelectorAll('#cFmt button')].find(x=>x.dataset.v==='race');b.click();return 1})()"],["wait",1200],
+["js","(()=>{const b=[...document.querySelectorAll('#cStart button')].find(x=>x.dataset.v==='rolling');b.click();const p=[...document.querySelectorAll('#cPl button')].find(x=>x.dataset.v==='2');p.click();return document.getElementById('suCfg').innerText.slice(0,400)})()"],["wait",1200],["shot","race"]]

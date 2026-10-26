@@ -1,0 +1,5 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",2500],
+["js","(()=>{PT8.launch({mode:'mp',track:15,laps:1,humans:[{id:'merc',alt:0}],ai:PT8.makeAI({n:7,classes:['B','A'],skill:.88,rally:false}),trackRace:true});const c=RACE.cars[0];window._c=c;return JSON.stringify({slot:c.slot,ov:RACE.T.ov?RACE.T.ov.reduce((a,b)=>a+b,0):-1,tn:RACE.T.tn.reduce((a,b)=>a+b,0)})})()"],["wait",4000],["shot","grid"],
+["js","(()=>{const c=_c;c.forceAI=1;c.ai={skill:1,lat:0,name:'T'};window.ADV=n=>{for(let i=0;i<n;i++){step(1/60);if(RACE.state==='count')RACE.state='race'}return c.idx+' sp='+Math.round(c.sp*3.6)+' tnB='+(c.tnB||0).toFixed(2)+' inTn='+c.inTn};return ADV(60*9)})()"],["wait",900],["shot","fast"],
+["js","(()=>{const T=RACE.T;let hit=[];for(let i=0;i<60*120;i++){step(1/60);if(_c.inTn&&hit.length<1)hit.push(_c.idx);if(hit.length&&(_c.tnB||0)>.7)break}return 'hit '+hit+' idx '+_c.idx+' tnB '+(_c.tnB||0).toFixed(2)})()"],["wait",900],["shot","hood"],
+["js","ADV(60*3)"],["wait",900],["shot","after"]]
