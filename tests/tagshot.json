@@ -1,0 +1,2 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",2500],
+["js","(()=>{PT8.launch({mode:'mp',track:14,laps:1,humans:[{id:'merc',alt:0,name:'HAKAN'},{id:'merc',alt:0}],ai:[],trackRace:true,rolling:true,grid:'fixed'});show('game');for(let i=0;i<60*4;i++){step(1/60);if(RACE.state==='count')RACE.state='race'}return RACE.cars.map(c=>Math.round(c.unw*RACE.T.sp)).join(',')})()"],["wait",2500],["shot","tags"]]

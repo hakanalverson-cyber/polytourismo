@@ -6,7 +6,7 @@
 'use strict';
 const P=window.PT8;
 function line(T){if(T.rl)return T.rl;const N=T.N,o=new Float32Array(N),lo=new Float32Array(N),hi=new Float32Array(N),cx=new Float32Array(N),cz=new Float32Array(N),nx=new Float32Array(N),nz=new Float32Array(N);
- for(let i=0;i<N;i++){const m=T.wall&&T.wall[i]?1.9:1.45,w=Math.max(0,T.hw[i]-m);lo[i]=-w;hi[i]=w;nx[i]=Math.cos(T.psi[i]);nz[i]=-Math.sin(T.psi[i])}
+ for(let i=0;i<N;i++){const m=(T.wall&&T.wall[i]?1.9:1.45)+(T.rlm||0),w=Math.max(0,T.hw[i]-m);lo[i]=-w;hi[i]=w;nx[i]=Math.cos(T.psi[i]);nz[i]=-Math.sin(T.psi[i])}
  /* jumps, gaps and tunnels: stay near the middle */
  for(let i=0;i<N;i++)if((T.gap&&T.gap[i])||(T.tn&&T.tn[i])){const w=Math.min(hi[i],T.hw[i]*.25);lo[i]=-w;hi[i]=w}
  /* the band: each point moves toward the middle of its neighbours (coarse to fine), then is clamped back inside the road */
@@ -21,6 +21,7 @@ function line(T){if(T.rl)return T.rl;const N=T.N,o=new Float32Array(N),lo=new Fl
  const kap=new Float32Array(N);for(let i=0;i<N;i++){let m=0;for(let j=-2;j<=2;j++)m=Math.max(m,k[(i+j+N)%N]);/* never trust the line to be more than 2.2x wider than the centre line */kap[i]=Math.max(m,(T.kap?T.kap[i]:0)/2.2)}
  T.rlo=lo;T.rhi=hi;T.rlk=kap;return T.rl=o}
 P.racingLine=line;
+P.latOf=(T,c)=>{const N=T.N,i=((c.idx|0)%N+N)%N;return(c.x-T.x[i])*Math.cos(T.psi[i])-(c.z-T.z[i])*Math.sin(T.psi[i])};
 
 P.aiInput=function(c,dt){const Rc=RACE,T=Rc.T,N=T.N,a=c.ai||(c.ai={skill:.9,lat:0,mist:0,name:'CPU'}),K0=P.kappa(T),RL=line(T),K=T.rlk;
  const live=Rc.state==='race'&&c.respT<=0&&!(c.exp>0);
@@ -31,7 +32,12 @@ P.aiInput=function(c,dt){const Rc=RACE,T=Rc.T,N=T.N,a=c.ai||(c.ai={skill:.9,lat:
  /* target point on the racing line; each car keeps a small personal offset so the field does not run nose to tail on one thread */
  let kn=0;for(let j=1;j<=7;j++)kn=Math.max(kn,K[(c.idx+j)%N]);
  const ld=Math.min(6+c.sp*.5,Math.max(8,1.15/Math.max(kn,1e-3))),la=Math.max(3,Math.round(ld/T.sp)),ti=(c.idx+la)%N;
- let off=RL[ti]+(a.lat||0)*T.hw[ti]*.18;off=clamp(off,T.rlo[ti],T.rhi[ti]);
+ let off=RL[ti]+(a.lat||0)*T.hw[ti]*.18;
+ /* lane hold: off the start each car keeps its own grid lane for the first stretch and eases onto the line over the next 250 m;
+    after the finish (the autopilot cool-down lap) it simply stays in the lane it crossed the line in */
+ if(c.cool&&c.fin){if(c._finLat==null)c._finLat=clamp(P.latOf(T,c),T.rlo[ti],T.rhi[ti]);off=c._finLat}
+ else if(c.lane0!=null){const d=c.unw*T.sp;if(d<350){const t=clamp((d-100)/250,0,1),e=t*t*(3-2*t);off=c.lane0+(off-c.lane0)*e}}
+ off=clamp(off,T.rlo[ti],T.rhi[ti]);
  /* side by side: if another car is alongside ahead, move over within the road instead of driving into it */
  for(const o of Rc.cars){if(o===c||o.respT>0||o.fin&&o!==c)continue;const dx=o.x-c.x,dz=o.z-c.z,fw=dx*Math.sin(c.yaw)+dz*Math.cos(c.yaw);if(fw<-2||fw>14)continue;
   const lt=dx*Math.cos(c.yaw)-dz*Math.sin(c.yaw);if(Math.abs(lt)>2.6||o.sp>c.sp+1)continue;const side=lt>0?-1:1;off=clamp(off+side*(2.6-Math.abs(lt))*.9,T.rlo[ti],T.rhi[ti])}
@@ -39,7 +45,7 @@ P.aiInput=function(c,dt){const Rc=RACE,T=Rc.T,N=T.N,a=c.ai||(c.ai={skill:.9,lat:
  let st=clamp(wr(des-c.yaw)*2.2,-1,1);
  /* speed plan from the line's radius */
  const gfac=(mt.grip||1)*cs.grip;let tgt=1e9;
- const jm=Math.max(44,Math.min(160,Math.ceil(c.sp*c.sp/(25*cs.brk)/T.sp)+8));for(let j=2;j<=jm;j+=2){const i=(c.idx+j)%N;if(T.gap[i])continue;const k=Math.max(K[i],8e-4),R_=1/k,vz=Math.sqrt(6.5/Math.max(T.kz[i],1e-4)),ice=T.ice[i]?.3:1,vlim=Math.min(vz,P.steerLimit(R_)*.9*Math.min(1,.6+gfac*.4)*ice,Math.sqrt(26*gfac*ice*R_));
+ const jm=Math.max(44,Math.min(160,Math.ceil(c.sp*c.sp/(25*cs.brk)/T.sp)+8));for(let j=2;j<=jm;j+=2){const i=(c.idx+j)%N;if(T.gap[i])continue;const k=Math.max(K[i],8e-4),R_=1/k,vz=Math.sqrt(6.5/Math.max(T.kz[i],1e-4)),ice=T.ice[i]?.3:1,vlim=Math.min(vz,P.steerLimit(R_)*.9*Math.min(1,.6+gfac*.4)*ice,Math.sqrt((T.alat||26)*gfac*ice*R_));
   tgt=Math.min(tgt,Math.sqrt(vlim*vlim+2*(12.5*cs.brk)*j*T.sp))}
  const topNow=P.topSpeed(cs,P.GT(cs).length-1)*(mt.top||1);
  tgt=Math.min(tgt,topNow*(.9+.1*skill))*Math.min(1,.55+skill*.5);c._tg=tgt;c._tn=topNow;

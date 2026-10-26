@@ -1,0 +1,3 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",2500],
+["js","(()=>{window.GS=(tr)=>{PT8.launch({mode:'mp',track:tr,laps:1,humans:[{id:'merc',alt:0}],ai:PT8.makeAI({n:7,classes:['B','A'],skill:.88,rally:false}),trackRace:true,grid:'fixed'});const c=RACE.cars.reduce((a,b)=>a.unw>b.unw?a:b);const cam=new THREE.PerspectiveCamera(50,16/9,.1,3000);const s=Math.sin(c.yaw),co=Math.cos(c.yaw);cam.position.set(c.x+co*14+s*6,c.y+16,c.z-s*14+co*6);cam.lookAt(c.x+s*4,c.y,c.z+co*4);window.drawRace=()=>{R.render(RACE.scene,cam)};return 1};GS(14);return 1})()"],["wait",2500],["shot","ra"],
+["js","(()=>{GS(15);return 1})()"],["wait",2500],["shot","im"]]

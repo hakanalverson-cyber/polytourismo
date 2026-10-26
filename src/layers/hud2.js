@@ -20,21 +20,21 @@ hudUpdate=()=>{hu0();const Rc=RACE;if(!Rc)return;
   if(tg){tg.style.display=multi?'':'none';tg.style.color=col;tg.textContent=nm}
   if(multi){spd.querySelector('.spdmain').style.borderTop='3px solid '+col}else spd.querySelector('.spdmain').style.borderTop=''})};
 
-/* ---------- floating Smash-style player tags (only with 2+ humans; fade near the viewing camera) ---------- */
-function tagTex(c){const cv=document.createElement('canvas');cv.width=256;cv.height=128;const g=cv.getContext('2d');
- const col=PC[c.k%4],n='P'+(c.pnum||c.k+1),custom=c.ptName&&c.ptName!==n?c.ptName.toUpperCase():'';
- g.font='900 44px sans-serif';const nw=g.measureText(n).width;
- let fs=26,cw=0;if(custom){g.font='700 '+fs+'px sans-serif';cw=g.measureText(custom).width;const room=236-32-nw-14;if(cw>room){fs=Math.max(14,Math.floor(fs*room/cw));g.font='700 '+fs+'px sans-serif';cw=g.measureText(custom).width}}
- const w=custom?Math.min(244,Math.ceil(32+nw+14+cw)):132,x0=128-w/2;
- g.fillStyle='#0a0d11';g.strokeStyle=col;g.lineWidth=7;g.beginPath();
- g.moveTo(x0+16,10);g.lineTo(x0+w-16,10);g.quadraticCurveTo(x0+w,10,x0+w,26);g.lineTo(x0+w,64);g.quadraticCurveTo(x0+w,80,x0+w-16,80);g.lineTo(150,80);g.lineTo(128,108);g.lineTo(106,80);g.lineTo(x0+16,80);g.quadraticCurveTo(x0,80,x0,64);g.lineTo(x0,26);g.quadraticCurveTo(x0,10,x0+16,10);g.closePath();g.fill();g.stroke();
- g.textBaseline='middle';g.fillStyle=col;g.font='900 44px sans-serif';g.textAlign='left';
- if(custom){g.fillText(n,x0+16,47);g.fillStyle='#e8ecf1';g.font='700 '+fs+'px sans-serif';g.fillText(custom,x0+16+nw+14,48)}else{g.textAlign='center';g.fillText(n,128,47)}
- const t=new THREE.CanvasTexture(cv);t.minFilter=THREE.LinearFilter;return t}
+/* ---------- floating player tags (only with 2+ humans; hidden on the tagged player's own screen, fade near the viewing camera) ---------- */
+/* retro look: a square black plate with a stepped pixel border and pointer, lettered in the game's 5x7 pixel font (drawn small and
+   scaled up with no smoothing) */
+function tagTex(c){const cv=document.createElement('canvas');cv.width=128;cv.height=64;const g=cv.getContext('2d'),F=P.pxGlyphs||{};
+ const col=PC[c.k%4],n='P'+(c.pnum||c.k+1),custom=c.ptName&&c.ptName!==n?c.ptName.toUpperCase().slice(0,12):'';
+ const txt=(s,x,y,k,cl)=>{g.fillStyle=cl;for(const ch of s){const b=F[ch];if(b)b.split(' ').forEach((row,yy)=>{for(let i=0;i<5;i++)if(row[i]==='1')g.fillRect(x+i*k,y+yy*k,k,k)});x+=6*k}};
+ const nw=n.length*12-2,ck=custom&&custom.length<=7?2:1,cw=custom?custom.length*6*ck-ck:0,w=Math.min(126,(custom?nw+8+cw:nw)+12),x0=Math.round(64-w/2),y0=10,h=28;
+ g.fillStyle=col;g.fillRect(x0,y0,w,h);g.fillStyle='#0a0d11';g.fillRect(x0+2,y0+2,w-4,h-4);
+ /* stepped pointer */g.fillStyle=col;for(let i=0;i<5;i++)g.fillRect(64-6+i,y0+h+i,12-2*i,1);g.fillStyle='#0a0d11';for(let i=0;i<3;i++)g.fillRect(64-4+i,y0+h-2+i,8-2*i,1);
+ txt(n,x0+6,y0+7,2,col);if(custom)txt(custom,x0+6+nw+8,ck===2?y0+7:y0+11,ck,'#e8ecf1');
+ const t=new THREE.CanvasTexture(cv);t.minFilter=THREE.NearestFilter;t.magFilter=THREE.NearestFilter;t.generateMipmaps=false;return t}
 function addTags(Rc){const hs=Rc.cars.filter(c=>c.human);if(hs.length<2)return;
  for(const c of hs){if(!c.m||!c.m.g)continue;const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tagTex(c),transparent:true,depthTest:false,depthWrite:false,fog:false}));
   sp.scale.set(3.4,1.7,1);sp.position.set(0,2.5,0);sp.renderOrder=999;sp.frustumCulled=false;
-  const m=sp.material;sp.onBeforeRender=(r,sc,cam)=>{const d=cam.position.distanceTo(sp.getWorldPosition(new THREE.Vector3()));m.opacity=Math.max(0,Math.min(.95,(d-13)/6))};
+  const m=sp.material;sp.onBeforeRender=(r,sc,cam)=>{const d=cam.position.distanceTo(sp.getWorldPosition(new THREE.Vector3()));m.opacity=cam===c.cam&&!(c.cb>.5)?0:Math.max(0,Math.min(.95,(d-13)/6))};/* never on your own screen */
   c.m.g.add(sp);c.tag=sp}}
 
 /* ---------- slipstream: sonic-boom rings + streaking wind lines on whoever is sitting in another car's wind ---------- */

@@ -5,7 +5,7 @@ const P=window.PT8;
 const auto=()=>!!(window.PTO&&PTO.autoShift);
 /* each step: interactive ones advance when the player does the thing, info ones wait for Next */
 const S=[
- {t:'Welcome',x:'This lesson is a free drive with prompts. <b>W</b> accelerate &middot; <b>S</b> brake / reverse &middot; <b>A</b> / <b>D</b> steer &middot; <b>Esc</b> pause. Wait for GO.',ok:(c,R)=>R.state==='race'},
+ {t:'Welcome',x:'This lesson is a free drive with prompts. <b>W</b> accelerate &middot; <b>S</b> brake / reverse &middot; <b>A</b> / <b>D</b> steer &middot; <b>Tab</b> pause. Wait for GO.',ok:(c,R)=>R.state==='race'},
  {t:'Throttle',x:'Hold <b>W</b> and build up some speed.',ok:c=>c.sp>12},
  {t:'Steering',x:'Steer both ways with <b>A</b> and <b>D</b>. Small, smooth inputs are faster than yanking the wheel.',ok:(c,R,s)=>s.a&&s.d&&c.sp>6},
  {t:'Gears',x:()=>auto()?'Auto-shift is on, so the gearbox changes for you. Reach 3rd gear. (Turn it off in Settings for manual shifting and perfect-shift boosts.)':'Press <b>E</b> to shift up and <b>Q</b> to shift down (the keys either side of W), or double-tap W / S. Shift close to the redline for a free <b>perfect-shift</b> boost. Reach 3rd gear.',ok:c=>(c.gear|0)>=2},

@@ -66,6 +66,6 @@ const hu0=hudUpdate;hudUpdate=()=>{hu0();const Rc=RACE;if(!isEl(Rc)||!Rc.el)retu
    md.innerHTML='<div class="cu"><div class="sc"><small>NEXT OUT</small><b'+(urgent?' style="color:#ef6a5a"':'')+'>'+(Rc.state==='race'?left.toFixed(1)+'s':'--')+'</b></div><div class="sc"><small>'+(last?'LAST / +1.25% SPEED':'ALIVE')+'</small><b'+(last?' style="color:#f2c76b"':'')+'>'+al.length+'/'+Rc.cars.length+'</b></div></div><div class="cu" style="margin-top:5px"><div class="sc" style="min-width:190px"><small>NEXT TO GO</small><b'+(Rc.elimLast===c?' style="color:#ef6a5a"':'')+'>'+(Rc.elimLast?(Rc.elimLast===c?'YOU':Rc.elimLast.ptName):'--')+'</b></div></div>'}
   if(c.out){const fn=q('.h8fin');fn.innerHTML='<b style="font-size:.5em">OUT</b><span>SPECTATING / '+ord(c.place)+' PLACE</span>';fn.className='h8fin on'}
   else if(!c.fin){const k=st.indexOf(c)+1;q('.h8pos b').textContent=k;q('.h8pos i').textContent=ord(k).replace(/\d/g,'');q('.h8pos span').textContent='/'+al.length}
-  if(el.flash>0&&el.last&&!c.out){const pp=q('.h8pop');pp.textContent=el.last.ptName+' ELIMINATED';pp.className='h8pop on'}
+  if(el.flash>0&&el.last&&!c.out){const pp=q('.h8pop');P.pxText(pp,el.last.ptName+' ELIMINATED');pp.className='h8pop on'}
  })};
 })();

@@ -46,7 +46,7 @@ function tick(Rc,dt){const T=Rc.T,en=endur(Rc),pit=Rc.pit,N=T.N;
 P.raceTick=tick;
 
 /* ---------- inputs while being serviced / AI pit logic ---------- */
-P.inPost=c=>{if(c.pitSvc&&c.in){c.in.th=0;c.in.br=1;c.in.st=0;c.vx*=.85;c.vz*=.85}};
+{const ip0=P.inPost;P.inPost=(c,dt)=>{if(ip0)ip0(c,dt);if(c.pitSvc&&c.in){c.in.th=0;c.in.br=1;c.in.st=0;c.vx*=.85;c.vz*=.85}};}
 P.aiPost=(c,dt)=>{const Rc=RACE;if(!endur(Rc)||c.human||!Rc.pit||c.fin)return;const pit=Rc.pit,N=Rc.T.N,lapsLeft=Rc.laps-c.unw/N;
  const inZ=c.idx>=pit.a&&c.idx<=pit.b;
  if(!inZ){c.pitWant=false;c.pitSeen=false;return}

@@ -1,0 +1,5 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",2500],
+["js","(()=>{PT8.launch({mode:'mp',track:14,laps:1,humans:[{id:'merc',alt:0,name:'HAKAN'},{id:'merc',alt:0}],ai:PT8.makeAI({n:4,classes:['B','A'],skill:.88,rally:false}),trackRace:true,rolling:true});show('game');for(let i=0;i<60*6;i++){step(1/60);if(RACE.state==='count')RACE.state='race'}return RACE.cars.map(c=>c.forceAI?1:0).join('')})()"],["wait",2500],["shot","roll"],
+["js","(()=>{for(let i=0;i<60*14;i++){step(1/60)}return RACE.green+' '+RACE.cars[0].pop})()"],["wait",2000],["shot","green"],
+["js","(()=>{const R=RACE;R.cars.forEach((c,i)=>{c.unw=R.laps*R.T.N+(i===2?5:-50+i)});step(1/60);return R.fin.map(c=>c.ptName+':'+c.carId).join(',')})()"],["wait",1500],
+["js","(()=>{const R=RACE;R.cars.forEach(c=>{if(!c.fin)c.unw=R.laps*R.T.N+1});for(let i=0;i<60*12;i++)step(1/60);return scr})()"],["wait",4000],["shot","res"]]

@@ -33,7 +33,7 @@ P.CARS.forEach(c=>{c.tdiv=P.TRACK_CARS.includes(c.id)?(c.trackOnly||c.cls==='S'?
 P.TRACK_CARS.forEach(id=>{const c=P.BYID[id];if(c&&c._tk)Object.assign(c,c._tk)});
 P._to=false;
 const ow1=P.owns;P.owns=(id,alt)=>P._to&&P.TRACK_CARS.includes(id)?true:ow1(id,alt);
-P.trackSel=p=>{const sv=P.SV();sv.tsel=sv.tsel||[];let s=sv.tsel[p];if(!s||!P.TRACK_CARS.includes(s.id))s=sv.tsel[p]={id:P.TRACK_CARS[p%P.TRACK_CARS.length],alt:0};return s};
+P.trackSel=p=>{const sv=P.SV();sv.tsel=sv.tsel||[];let s=sv.tsel[p];if(!s||!(P.TRACK_CARS.includes(s.id)||(sv.owned[s.id]||0)>0))s=sv.tsel[p]={id:P.TRACK_CARS[p%P.TRACK_CARS.length],alt:0};return s};
 /* medals follow the car: platinum is the clean-lap pace of a 165 mph car (R33), scaled by real top speed, so every car gets a fair target */
 P.MEDAL_REF[14]=91.8;
 const mf=P.medalFor,mtm=P.medalTime,MD=P.MEDALS;

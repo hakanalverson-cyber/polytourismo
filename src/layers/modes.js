@@ -235,7 +235,7 @@ hudUpdate=()=>{const Rc=RACE,T=Rc.T;
   {const up=upN,rd=q('.rdot');rd.className='rdot'+(up?' on':'');
    const fx=P.surfFx(st,!!Rc.T.d.gravel),cd=q('.cond');cd.innerHTML=(Rc.T.d.gravel?'GRAVEL':'TARMAC')+' <b class="'+(fx.g>=0?'up':'dn')+'">GRIP '+(fx.g>=0?'+':'')+fx.g+'%</b>'+(fx.t<-1||fx.t>1?' <b class="'+(fx.t>=0?'up':'dn')+'">SPD '+(fx.t>=0?'+':'')+fx.t+'%</b>':'')}
   const w=q('.h8warn');w.textContent=c.warnT>0&&c.warn?c.warn:(c.wrong>1?'WRONG WAY':'');
-  const pp=q('.h8pop');pp.textContent=c.popT>0&&c.pop?c.pop:(c.lapFlash>0&&c.lapT&&c.lapT.length&&!cut?'LAP '+c.lapT.length+'  '+fmtT(c.lapT[c.lapT.length-1]):'');pp.className='h8pop'+((c.popT>0||c.lapFlash>0)?' on':'');
+  const pp=q('.h8pop');P.pxText(pp,c.popT>0&&c.pop?c.pop:(c.lapFlash>0&&c.lapT&&c.lapT.length&&!cut?'LAP '+c.lapT.length+'  '+fmtT(c.lapT[c.lapT.length-1]):''));pp.className='h8pop'+((c.popT>0||c.lapFlash>0)?' on':'');
   const fn=q('.h8fin');if(c.fin&&!cut){fn.innerHTML='<b>'+ord(c.place)+'</b><span>'+(Rc.cars.filter(h=>h.human&&!h.fin).length?'WAITING FOR OTHER DRIVERS':'')+'</span>';fn.className='h8fin on'}else fn.className='h8fin';
  });
  /* minimap */

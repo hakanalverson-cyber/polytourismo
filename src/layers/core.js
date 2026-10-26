@@ -185,16 +185,19 @@ function gridSlot(T,c,slot){const row=slot>>1,idx0=-(5+row*5),i=((idx0%T.N)+T.N)
    leader crosses the line */
 function rollBack(T,c){const N=T.N,back=Math.round(240/T.sp),i=((c.idx|0)%N+N)%N,s=Math.sin(T.psi[i]),co=Math.cos(T.psi[i]),lat=(c.x-T.x[i])*co-(c.z-T.z[i])*s,along=(c.x-T.x[i])*s+(c.z-T.z[i])*co,j=((i-back)%N+N)%N,sj=Math.sin(T.psi[j]),cj=Math.cos(T.psi[j]);
  c.x=T.x[j]+cj*lat+sj*along;c.z=T.z[j]-sj*lat+cj*along;c.y=T.surf(c.x,c.z,T.y[j]+2).h+1.1;c.yaw=T.psi[j];c.idx=j;c.unw-=back;c.cy=c.yaw;c.camY=c.y}
-{const sc0=stepCar;stepCar=function(c,dt){const R=RACE;if(R&&R.cfg&&R.cfg.rolling&&!R.green&&R.state==='race'&&!c.fin){
+/* the formation run drives itself: every car (yours too) is on autopilot in its own lane, the pack holds about 100 km/h with 14 m gaps,
+   and control is handed over the moment the leader takes the green flag at the line */
+{const sc0=stepCar;stepCar=function(c,dt){const R=RACE;if(R&&R.cfg&&R.cfg.rolling&&!R.green&&R.state!=='done'&&!c.fin){
+  if(c.human&&!c.forceAI){c.forceAI=true;c._rollAI=true}
   let lead=null;for(const o of R.cars)if(!lead||o.unw>lead.unw)lead=o;
-  if(lead&&lead.unw>=0){R.green=true;R.cars.forEach(o=>{if(o.human){o.pop='GREEN FLAG';o.popT=2}});if(typeof beep==='function')beep(880,.35,'square')}
-  else{/* pace: about 100 km/h, cars behind close up to a 14 m gap, the leader waits for the field */
-   let ahead=null;for(const o of R.cars)if(o!==c&&o.unw>c.unw&&(!ahead||o.unw<ahead.unw))ahead=o;
-   const gap=ahead?(ahead.unw-c.unw)*T_sp(R):14,last=Math.min(...R.cars.map(o=>o.unw)),tail=(c.unw-last)*T_sp(R);
-   let tgt=ahead?27.5+Math.max(-12,Math.min(16,(gap-14)*.7)):27.5-Math.max(0,Math.min(10,(tail-40)*.05));
-   if(c.human){c.pop='FORMATION \u00b7 HOLD POSITION';c.popT=Math.max(c.popT||0,.3)}
-   if(c.in&&c.sp>tgt){c.in.th=0;c.in.br=Math.min(1,(c.sp-tgt)/4)}else if(c.in&&!c.human&&c.sp<tgt-2)c.in.th=Math.max(c.in.th,.9)}}
+  if(R.state==='race'&&lead&&lead.unw>=0){R.green=true;R.cars.forEach(o=>{if(o._rollAI){o.forceAI=false;o._rollAI=false}if(o.human){o.pop='GREEN FLAG \u00b7 GO';o.popT=2}});if(typeof beep==='function')beep(880,.35,'square')}
+  else if(c.human){c.pop='ROLLING START \u00b7 AUTOPILOT';c.popT=Math.max(c.popT||0,.3)}}
  return sc0.apply(this,arguments)}}
+{const ip0=PT8.inPost;PT8.inPost=(c,dt)=>{if(ip0)ip0(c,dt);const R=RACE;if(!(R&&R.cfg&&R.cfg.rolling&&!R.green&&R.state==='race'&&!c.fin&&c.in))return;
+ let ahead=null;for(const o of R.cars)if(o!==c&&o.unw>c.unw&&(!ahead||o.unw<ahead.unw))ahead=o;
+ const G=14*(1+((PT8.carK?PT8.carK():1)-1)*.45)/* bigger cars, bigger gaps */,gap=ahead?(ahead.unw-c.unw)*T_sp(R):G,last=Math.min(...R.cars.map(o=>o.unw)),tail=(c.unw-last)*T_sp(R);
+ const tgt=ahead?27.5+Math.max(-8,Math.min(8,(gap-G)*.4)):27.5-Math.max(0,Math.min(8,(tail-60)*.04)),e=tgt-c.sp;
+ if(e<-.6){c.in.th=0;c.in.br=Math.min(1,-e/6)}else{c.in.br=0;c.in.th=Math.max(.25,Math.min(1,e/4+.3))}}}
 const T_sp=R=>R.T.sp||3;
 
 /* ---------------- race launch ---------------- */
@@ -279,6 +282,9 @@ clusters=function(R_){const hs=R_.cars.filter(c=>c.human),n=hs.length,par=hs.map
  const groups=new Map();hs.forEach((c,i)=>{const r=f(i);if(!groups.has(r))groups.set(r,[]);groups.get(r).push(c)});return[...groups.values()].sort((a,b)=>a[0].k-b[0].k)};
 
 /* ---------------- cinematic camera for finished humans ---------------- */
+/* the chase camera's height used to trail the car by a lag that grows with climb rate, and with uneven frame times that lag wobbled: the
+   camera visibly jittered on every hill. It now moves with the car's height change each frame and only smooths what is left (bumps, landings) */
+{const sv=soloCam;soloCam=(c,dt,out)=>{if(c.camY!=null&&c._pcy!=null&&!(c.respT>0)){const dy=c.y-c._pcy;if(Math.abs(dy)<3)c.camY+=dy*.9}c._pcy=c.y;return sv(c,dt,out)}}
 const prevSolo=soloCam,_a=new V(),_b=new V();
 soloCam=(c,dt,out)=>{
  if(!(c.fin&&c.cool&&RACE&&RACE.state!=='count')){prevSolo(c,dt,out);return}

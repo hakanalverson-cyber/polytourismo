@@ -1390,7 +1390,7 @@ function pano(T){const d=T.d,W=4096,H=512,hz=352,fog=new THREE.Color(d.fog),cv=d
 const prevBuild=buildWorld;buildWorld=T=>{const sc=prevBuild(T);tunnelMeshes(sc,T);sc.add(pano(T));return sc};
 /* ---------- hood camera inside tunnels ---------- */
 const prevSolo=soloCam,_hp=new V(),_hl=new V();
-soloCam=(c,dt,out)=>{prevSolo(c,dt,out);const want=c.inTn&&!(c.exp>0)?1:0;c.tnB=(c.tnB||0)+(want-(c.tnB||0))*(1-Math.exp(-dt*(want?4:2.6)));const k=c.tnB*c.tnB*(3-2*c.tnB);if(k>.002){
+soloCam=(c,dt,out)=>{prevSolo(c,dt,out);const want=c.inTn&&!(c.exp>0)?1:0;c.tnB=(c.tnB||0)+(want-(c.tnB||0))*(1-Math.exp(-dt*(want?(c.tnR||4):(c.tnR?c.tnR*.85:2.6))));const k=c.tnB*c.tnB*(3-2*c.tnB);if(k>.002){
  const fx_=Math.sin(c.yaw),fz_=Math.cos(c.yaw);_hp.set(c.x+fx_*1.25,c.y+1.02,c.z+fz_*1.25);_hl.set(c.x+fx_*40,c.y+1.02-Math.sin(c.pitch)*24-.4,c.z+fz_*40);out.p.lerp(_hp,k);out.l.lerp(_hl,k);out.f=lerp(out.f,80,k);c.cb=Math.min(c.cb,1-k)}};
 /* ---------- penalties: explosions ---------- */
 function ensure(c){if(c.safeIdx===undefined){c.safeIdx=c.idx;c.safeUnw=c.unw;c.farT=0}}
@@ -5135,6 +5135,7 @@ document.title='Poly GT';rs();window.PT7={makePhotos,photos};
 .btn>span{display:inline-block}
 .seg{display:inline-flex;gap:3px;flex-wrap:wrap}
 .seg .btn{padding:6px 11px;font-size:10px}
+.seg.eqw{display:inline-grid;grid-template-columns:1fr 1fr}.seg.eqw .btn{text-align:center;justify-content:center}
 .chip{display:inline-block;font:700 10px var(--mn);padding:2px 6px;border:1px solid var(--ln2);letter-spacing:.14em;color:var(--dim);text-transform:uppercase;margin:0 5px 4px 0}
 .cls{display:inline-block;min-width:1.6em;text-align:center;font:700 .95em var(--mn);padding:0 .3em;color:#05090b;letter-spacing:0}
 .cls.D{background:#9aa5a0}.cls.C{background:#7fd68a}.cls.B{background:#f1f3f5}.cls.A{background:#f2c76b}.cls.S{background:#ef6a5a}
@@ -6055,6 +6056,7 @@ b,strong,h1,h2,h3,button,.btn,.gtab,.gti b,.hdr h2,#gtBar .gtl,.gtp,.crbox b,.qc
 .rscar .rsn b{font-size:17px;letter-spacing:.08em;text-transform:uppercase;color:#fff}
 .rscar .rsn span{display:flex;gap:10px;align-items:center;font-size:11px;letter-spacing:.16em;color:#9db0ba;text-transform:uppercase}
 .rscar .rsn i{font-style:normal;padding:2px 8px;background:#fff;color:#0a0e12;font-weight:700}
+.rscar .rsn .rsw{font-size:10px;letter-spacing:.24em;color:#f2c76b;font-weight:700}
 .rsR .pay{padding:9px 10px;font-size:13px}.rsR .pay.tot{font-size:18px}
 .rsbtn{margin-top:26px!important;padding-top:20px;border-top:1px solid #ffffff14}
 .rsbtn .btn{min-width:150px}
@@ -6155,6 +6157,13 @@ b,strong,h1,h2,h3,button,.btn,.gtab,.gti b,.hdr h2,#gtBar .gtl,.gtp,.crbox b,.qc
 /* Poly GT: car strip. The scrollbar always has its own row under the cards and the strip sizes itself to the cards, so a scrollbar
    appearing never pushes the cards up into the clipped top edge (the raised selected card keeps its 34 px of headroom) */
 #s8show.gtb.mkc .gtstrip{overflow-x:scroll;overflow-y:hidden;height:auto;box-sizing:content-box;padding-top:34px;padding-bottom:8px;bottom:88px}
+/* setup panel: every option row is label + buttons on one line with the same label column, so the rows line up and breathe */
+#s8setup .row8{display:grid;grid-template-columns:86px minmax(0,1fr);align-items:center;column-gap:12px;margin:0 0 13px}
+#s8setup .row8>b{width:auto}
+#s8setup .row8 .seg{display:flex;flex-wrap:wrap;gap:4px}
+#s8setup .row8 .seg.eqw{display:grid;grid-template-columns:1fr 1fr}
+#s8setup .p2kb{margin:18px 0}#s8setup .tod{margin-top:16px}
+#s8setup .drv{margin-bottom:10px;padding:12px 14px}
 </style><script>
 /* ===== Poly GT v8 layer: core (economy, gears, AI, race flow, modes) ===== */
 (function v8core(){
@@ -6343,16 +6352,19 @@ function gridSlot(T,c,slot){const row=slot>>1,idx0=-(5+row*5),i=((idx0%T.N)+T.N)
    leader crosses the line */
 function rollBack(T,c){const N=T.N,back=Math.round(240/T.sp),i=((c.idx|0)%N+N)%N,s=Math.sin(T.psi[i]),co=Math.cos(T.psi[i]),lat=(c.x-T.x[i])*co-(c.z-T.z[i])*s,along=(c.x-T.x[i])*s+(c.z-T.z[i])*co,j=((i-back)%N+N)%N,sj=Math.sin(T.psi[j]),cj=Math.cos(T.psi[j]);
  c.x=T.x[j]+cj*lat+sj*along;c.z=T.z[j]-sj*lat+cj*along;c.y=T.surf(c.x,c.z,T.y[j]+2).h+1.1;c.yaw=T.psi[j];c.idx=j;c.unw-=back;c.cy=c.yaw;c.camY=c.y}
-{const sc0=stepCar;stepCar=function(c,dt){const R=RACE;if(R&&R.cfg&&R.cfg.rolling&&!R.green&&R.state==='race'&&!c.fin){
+/* the formation run drives itself: every car (yours too) is on autopilot in its own lane, the pack holds about 100 km/h with 14 m gaps,
+   and control is handed over the moment the leader takes the green flag at the line */
+{const sc0=stepCar;stepCar=function(c,dt){const R=RACE;if(R&&R.cfg&&R.cfg.rolling&&!R.green&&R.state!=='done'&&!c.fin){
+  if(c.human&&!c.forceAI){c.forceAI=true;c._rollAI=true}
   let lead=null;for(const o of R.cars)if(!lead||o.unw>lead.unw)lead=o;
-  if(lead&&lead.unw>=0){R.green=true;R.cars.forEach(o=>{if(o.human){o.pop='GREEN FLAG';o.popT=2}});if(typeof beep==='function')beep(880,.35,'square')}
-  else{/* pace: about 100 km/h, cars behind close up to a 14 m gap, the leader waits for the field */
-   let ahead=null;for(const o of R.cars)if(o!==c&&o.unw>c.unw&&(!ahead||o.unw<ahead.unw))ahead=o;
-   const gap=ahead?(ahead.unw-c.unw)*T_sp(R):14,last=Math.min(...R.cars.map(o=>o.unw)),tail=(c.unw-last)*T_sp(R);
-   let tgt=ahead?27.5+Math.max(-12,Math.min(16,(gap-14)*.7)):27.5-Math.max(0,Math.min(10,(tail-40)*.05));
-   if(c.human){c.pop='FORMATION \u00b7 HOLD POSITION';c.popT=Math.max(c.popT||0,.3)}
-   if(c.in&&c.sp>tgt){c.in.th=0;c.in.br=Math.min(1,(c.sp-tgt)/4)}else if(c.in&&!c.human&&c.sp<tgt-2)c.in.th=Math.max(c.in.th,.9)}}
+  if(R.state==='race'&&lead&&lead.unw>=0){R.green=true;R.cars.forEach(o=>{if(o._rollAI){o.forceAI=false;o._rollAI=false}if(o.human){o.pop='GREEN FLAG \u00b7 GO';o.popT=2}});if(typeof beep==='function')beep(880,.35,'square')}
+  else if(c.human){c.pop='ROLLING START \u00b7 AUTOPILOT';c.popT=Math.max(c.popT||0,.3)}}
  return sc0.apply(this,arguments)}}
+{const ip0=PT8.inPost;PT8.inPost=(c,dt)=>{if(ip0)ip0(c,dt);const R=RACE;if(!(R&&R.cfg&&R.cfg.rolling&&!R.green&&R.state==='race'&&!c.fin&&c.in))return;
+ let ahead=null;for(const o of R.cars)if(o!==c&&o.unw>c.unw&&(!ahead||o.unw<ahead.unw))ahead=o;
+ const G=14*(1+((PT8.carK?PT8.carK():1)-1)*.45)/* bigger cars, bigger gaps */,gap=ahead?(ahead.unw-c.unw)*T_sp(R):G,last=Math.min(...R.cars.map(o=>o.unw)),tail=(c.unw-last)*T_sp(R);
+ const tgt=ahead?27.5+Math.max(-8,Math.min(8,(gap-G)*.4)):27.5-Math.max(0,Math.min(8,(tail-60)*.04)),e=tgt-c.sp;
+ if(e<-.6){c.in.th=0;c.in.br=Math.min(1,-e/6)}else{c.in.br=0;c.in.th=Math.max(.25,Math.min(1,e/4+.3))}}}
 const T_sp=R=>R.T.sp||3;
 
 /* ---------------- race launch ---------------- */
@@ -6437,6 +6449,9 @@ clusters=function(R_){const hs=R_.cars.filter(c=>c.human),n=hs.length,par=hs.map
  const groups=new Map();hs.forEach((c,i)=>{const r=f(i);if(!groups.has(r))groups.set(r,[]);groups.get(r).push(c)});return[...groups.values()].sort((a,b)=>a[0].k-b[0].k)};
 
 /* ---------------- cinematic camera for finished humans ---------------- */
+/* the chase camera's height used to trail the car by a lag that grows with climb rate, and with uneven frame times that lag wobbled: the
+   camera visibly jittered on every hill. It now moves with the car's height change each frame and only smooths what is left (bumps, landings) */
+{const sv=soloCam;soloCam=(c,dt,out)=>{if(c.camY!=null&&c._pcy!=null&&!(c.respT>0)){const dy=c.y-c._pcy;if(Math.abs(dy)<3)c.camY+=dy*.9}c._pcy=c.y;return sv(c,dt,out)}}
 const prevSolo=soloCam,_a=new V(),_b=new V();
 soloCam=(c,dt,out)=>{
  if(!(c.fin&&c.cool&&RACE&&RACE.state!=='count')){prevSolo(c,dt,out);return}
@@ -7868,7 +7883,7 @@ hudUpdate=()=>{const Rc=RACE,T=Rc.T;
   {const up=upN,rd=q('.rdot');rd.className='rdot'+(up?' on':'');
    const fx=P.surfFx(st,!!Rc.T.d.gravel),cd=q('.cond');cd.innerHTML=(Rc.T.d.gravel?'GRAVEL':'TARMAC')+' <b class="'+(fx.g>=0?'up':'dn')+'">GRIP '+(fx.g>=0?'+':'')+fx.g+'%</b>'+(fx.t<-1||fx.t>1?' <b class="'+(fx.t>=0?'up':'dn')+'">SPD '+(fx.t>=0?'+':'')+fx.t+'%</b>':'')}
   const w=q('.h8warn');w.textContent=c.warnT>0&&c.warn?c.warn:(c.wrong>1?'WRONG WAY':'');
-  const pp=q('.h8pop');pp.textContent=c.popT>0&&c.pop?c.pop:(c.lapFlash>0&&c.lapT&&c.lapT.length&&!cut?'LAP '+c.lapT.length+'  '+fmtT(c.lapT[c.lapT.length-1]):'');pp.className='h8pop'+((c.popT>0||c.lapFlash>0)?' on':'');
+  const pp=q('.h8pop');P.pxText(pp,c.popT>0&&c.pop?c.pop:(c.lapFlash>0&&c.lapT&&c.lapT.length&&!cut?'LAP '+c.lapT.length+'  '+fmtT(c.lapT[c.lapT.length-1]):''));pp.className='h8pop'+((c.popT>0||c.lapFlash>0)?' on':'');
   const fn=q('.h8fin');if(c.fin&&!cut){fn.innerHTML='<b>'+ord(c.place)+'</b><span>'+(Rc.cars.filter(h=>h.human&&!h.fin).length?'WAITING FOR OTHER DRIVERS':'')+'</span>';fn.className='h8fin on'}else fn.className='h8fin';
  });
  /* minimap */
@@ -8226,6 +8241,16 @@ P.sway=SWAY;
 /* 5x7 bitmap digits for the speedo */
 const DIG={'0':'01110 10001 10011 10101 11001 10001 01110','1':'00100 01100 00100 00100 00100 00100 01110','2':'01110 10001 00001 00010 00100 01000 11111','3':'11110 00001 00001 01110 00001 00001 11110','4':'00010 00110 01010 10010 11111 00010 00010','5':'11111 10000 11110 00001 00001 10001 01110','6':'00110 01000 10000 11110 10001 10001 01110','7':'11111 00001 00010 00100 01000 01000 01000','8':'01110 10001 10001 01110 10001 10001 01110','9':'01110 10001 10001 01111 00001 00010 01100'};
 P.pxDraw=(cv,str,col)=>{const g=cv.getContext('2d');g.clearRect(0,0,cv.width,cv.height);g.fillStyle=col;let x=0;for(const ch of str){const b=DIG[ch];if(b){b.split(' ').forEach((row,y)=>{for(let i=0;i<5;i++)if(row[i]==='1')g.fillRect(x+i,y,1,1)})}x+=6}};
+
+/* the same 5x7 pixel lettering for whole messages (the yellow race messages): A-Z, digits and a few signs, drawn on a canvas and scaled up
+   in whole pixels */
+const PXF=P.pxGlyphs=Object.assign({"A": "01110 10001 10001 11111 10001 10001 10001", "B": "11110 10001 10001 11110 10001 10001 11110", "C": "01110 10001 10000 10000 10000 10001 01110", "D": "11110 10001 10001 10001 10001 10001 11110", "E": "11111 10000 10000 11110 10000 10000 11111", "F": "11111 10000 10000 11110 10000 10000 10000", "G": "01110 10001 10000 10111 10001 10001 01111", "H": "10001 10001 10001 11111 10001 10001 10001", "I": "01110 00100 00100 00100 00100 00100 01110", "J": "00111 00010 00010 00010 00010 10010 01100", "K": "10001 10010 10100 11000 10100 10010 10001", "L": "10000 10000 10000 10000 10000 10000 11111", "M": "10001 11011 10101 10101 10001 10001 10001", "N": "10001 10001 11001 10101 10011 10001 10001", "O": "01110 10001 10001 10001 10001 10001 01110", "P": "11110 10001 10001 11110 10000 10000 10000", "Q": "01110 10001 10001 10001 10101 10010 01101", "R": "11110 10001 10001 11110 10100 10010 10001", "S": "01111 10000 10000 01110 00001 00001 11110", "T": "11111 00100 00100 00100 00100 00100 00100", "U": "10001 10001 10001 10001 10001 10001 01110", "V": "10001 10001 10001 10001 10001 01010 00100", "W": "10001 10001 10001 10101 10101 10101 01010", "X": "10001 10001 01010 00100 01010 10001 10001", "Y": "10001 10001 01010 00100 00100 00100 00100", "Z": "11111 00001 00010 00100 01000 10000 11111", ":": "00000 01100 01100 00000 01100 01100 00000", ".": "00000 00000 00000 00000 00000 01100 01100", "·": "00000 00000 00000 01100 01100 00000 00000", "-": "00000 00000 00000 11111 00000 00000 00000", "/": "00001 00010 00010 00100 01000 01000 10000", "+": "00000 00100 00100 11111 00100 00100 00000", "!": "00100 00100 00100 00100 00100 00000 00100", "'": "00100 00100 01000 00000 00000 00000 00000", ",": "00000 00000 00000 00000 01100 00100 01000", "%": "11000 11001 00010 00100 01000 10011 00011", "(": "00010 00100 01000 01000 01000 00100 00010", ")": "01000 00100 00010 00010 00010 00100 01000", "?": "01110 10001 00001 00010 00100 00000 00100", "#": "01010 01010 11111 01010 11111 01010 01010"},DIG);
+P.pxText=(el,str,col)=>{str=String(str||'').toUpperCase();const hud=el.closest&&el.closest('.hud'),W=(hud&&hud.clientWidth)||innerWidth,H=(hud&&hud.clientHeight)||innerHeight,n0=Math.max(1,[...str].length);
+ /* whole-pixel scale: about 3% of the view's height, never wider than 92% of the view (split screen) */
+ const sc=Math.max(1,Math.min(Math.round(H*.032/7),Math.floor(W*.92/(n0*6))));if(el._px===str+sc)return;el._px=str+sc;
+ if(!str){el.innerHTML='';return}let cv=el.querySelector('canvas');if(!cv){el.innerHTML='';cv=document.createElement('canvas');cv.style.cssText='image-rendering:pixelated;display:inline-block;filter:drop-shadow(0 2px 0 #000a)';el.appendChild(cv)}
+ const n=[...str].length;cv.width=n*6-1;cv.height=7;cv.style.width=(cv.width*sc)+'px';cv.style.height=(7*sc)+'px';const g=cv.getContext('2d');g.fillStyle=col||'#f2c76b';let x=0;
+ for(const ch of str){const b=PXF[ch];if(b)b.split(' ').forEach((row,y)=>{for(let i=0;i<5;i++)if(row[i]==='1')g.fillRect(x+i,y,1,1)});x+=6}};
 })();
 
 /* ===== Poly GT v9 layer: race2 (slipstream, tyre wear, fuel, pit stops) ===== */
@@ -8276,7 +8301,7 @@ function tick(Rc,dt){const T=Rc.T,en=endur(Rc),pit=Rc.pit,N=T.N;
 P.raceTick=tick;
 
 /* ---------- inputs while being serviced / AI pit logic ---------- */
-P.inPost=c=>{if(c.pitSvc&&c.in){c.in.th=0;c.in.br=1;c.in.st=0;c.vx*=.85;c.vz*=.85}};
+{const ip0=P.inPost;P.inPost=(c,dt)=>{if(ip0)ip0(c,dt);if(c.pitSvc&&c.in){c.in.th=0;c.in.br=1;c.in.st=0;c.vx*=.85;c.vz*=.85}};}
 P.aiPost=(c,dt)=>{const Rc=RACE;if(!endur(Rc)||c.human||!Rc.pit||c.fin)return;const pit=Rc.pit,N=Rc.T.N,lapsLeft=Rc.laps-c.unw/N;
  const inZ=c.idx>=pit.a&&c.idx<=pit.b;
  if(!inZ){c.pitWant=false;c.pitSeen=false;return}
@@ -8408,7 +8433,7 @@ const hu0=hudUpdate;hudUpdate=()=>{hu0();const Rc=RACE;if(!isEl(Rc)||!Rc.el)retu
    md.innerHTML='<div class="cu"><div class="sc"><small>NEXT OUT</small><b'+(urgent?' style="color:#ef6a5a"':'')+'>'+(Rc.state==='race'?left.toFixed(1)+'s':'--')+'</b></div><div class="sc"><small>'+(last?'LAST / +1.25% SPEED':'ALIVE')+'</small><b'+(last?' style="color:#f2c76b"':'')+'>'+al.length+'/'+Rc.cars.length+'</b></div></div><div class="cu" style="margin-top:5px"><div class="sc" style="min-width:190px"><small>NEXT TO GO</small><b'+(Rc.elimLast===c?' style="color:#ef6a5a"':'')+'>'+(Rc.elimLast?(Rc.elimLast===c?'YOU':Rc.elimLast.ptName):'--')+'</b></div></div>'}
   if(c.out){const fn=q('.h8fin');fn.innerHTML='<b style="font-size:.5em">OUT</b><span>SPECTATING / '+ord(c.place)+' PLACE</span>';fn.className='h8fin on'}
   else if(!c.fin){const k=st.indexOf(c)+1;q('.h8pos b').textContent=k;q('.h8pos i').textContent=ord(k).replace(/\d/g,'');q('.h8pos span').textContent='/'+al.length}
-  if(el.flash>0&&el.last&&!c.out){const pp=q('.h8pop');pp.textContent=el.last.ptName+' ELIMINATED';pp.className='h8pop on'}
+  if(el.flash>0&&el.last&&!c.out){const pp=q('.h8pop');P.pxText(pp,el.last.ptName+' ELIMINATED');pp.className='h8pop on'}
  })};
 })();
 
@@ -10643,11 +10668,14 @@ function grid(pack){if(pack._g)return pack._g;const G=pack.grid,HG=new Int16Arra
  return pack._g={hAt,kAt}}
 const baseOf=pack=>D.findIndex(d=>pack.replaces==='imola'?d.imola:pack.replaces==='ra'?d.ra:false);
 P.trackPacks={};
+/* the files' gold times were measured with cars 30% quicker and no grip limit; now (12% quicker, real cornering grip) a CPU lap takes
+   this much longer: 95.5 -> 124.3 s at Road Atlanta, 98.4 -> 133.7 s at Imola */
+const MEDK={ra:1.302,imola:1.359},ALAT=11;/* tyre grip limit on these tracks, m/s² (see the steering cap below) */
 /* newest file wins (pack.rev = build time): an older copy saved in this browser never replaces a newer built-in one */
 P.addTrackPack=pack=>{const i=baseOf(pack);if(i<0)throw new Error('This track file is for a track this game does not have ('+pack.replaces+')');const d=D[i];
  if(d.cartoon&&(d.cartoon.rev||0)>(pack.rev||0)){const e=new Error('This is an older version of '+pack.name+' than the one already in the game');e.older=true;throw e}
  if(!d._orig)d._orig={pts:d.pts,bank:d.bank,medal:P.MEDAL_REF[i]};
- d.pts=pack.pts;d.bank=0;d.cartoon=pack;if(pack.medal)P.MEDAL_REF[i]=pack.medal;P.trackPacks[pack.id]=pack;
+ d.pts=pack.pts;d.bank=0;d.cartoon=pack;if(pack.medal)P.MEDAL_REF[i]=pack.medal*(MEDK[pack.replaces]||1);P.trackPacks[pack.id]=pack;
  if(P.ui&&P.ui.trClear)P.ui.trClear(i);return i};
 /* physics: road and ground heights come from the model's surfaces, so the car sits exactly on what is drawn */
 const ss=sampleTrack;sampleTrack=d=>{const T=ss(d);if(!d.cartoon)return T;const {hAt,kAt}=grid(d.cartoon);
@@ -10656,6 +10684,9 @@ const ss=sampleTrack;sampleTrack=d=>{const T=ss(d);if(!d.cartoon)return T;const 
  /* no tunnels from the old hand-built track; the hood camera only comes in where the model has a bridge or other structure over the road
     (pack.over: stretches in metres along the lap), from 16 m before it to 4 m after */
  if(T.tunnels&&T.tunnels.length){for(const[a,b]of T.tunnels)for(let i=a;i<=b;i++){const k=i%T.N;T.wall[k]=0;T.wh[k]=1.3}T.tunnels=[]}
+ /* the CPU racing line keeps a bigger margin from the edges: the cars are drawn bigger here */
+ T.rlm=((d.cartoon.carScale||1)-1)*1.2+1;
+ T.alat=ALAT*.92;/* the CPU plans its corner speeds a little under the grip limit */
  if(T.tn)T.tn.fill(0);T.ov=new Uint8Array(T.N);{let L=0;const Ls=new Float32Array(T.N);for(let i=1;i<T.N;i++){L+=Math.hypot(T.x[i]-T.x[i-1],T.z[i]-T.z[i-1]);Ls[i]=L}
   for(const[a,b]of d.cartoon.over||[])for(let i=0;i<T.N;i++)if(Ls[i]>=a-16&&Ls[i]<=b+4)T.ov[i]=1}
  const t0=T.terr;T.terr=(x,z)=>{const h=hAt(x,z);return h==null?t0(x,z):h};
@@ -10704,19 +10735,42 @@ let sfx=null,sfxV=0;const speedFx=(c,v)=>{if(!c.human)return;if(!sfx){sfx=docume
   document.body.appendChild(sfx)}
  sfxV+=(v-sfxV)*.15;sfx.style.opacity=(Math.min(1,sfxV)**2*.09).toFixed(3)};
 {const hide=()=>{if(sfx)sfx.style.opacity=0;sfxV=0};const cr=P.cleanupRace;if(cr)P.cleanupRace=function(){hide();return cr.apply(this,arguments)};setInterval(()=>{if(sfx&&(typeof scr==='undefined'||scr!=='game'||K()===1))hide()},400)}
-/* these circuits are full size and the cars drawn big, so at true speeds they crawl past the scenery: cars here are 30% quicker in every
+/* these circuits are full size and the cars drawn big, so at true speeds they crawl past the scenery: cars here are 12% quicker in every
    respect (top speed, acceleration, braking and grip together, so the handling balance stays the same) */
-const SPD=1.3;{const m0=P.mul;P.mul=c=>{const m=m0?m0(c):{acc:1,top:1,grip:1,brk:1};if(K()>1){m.top*=SPD;m.acc*=SPD;m.brk*=SPD;m.grip*=SPD}return m}}
+const SPD=1.12;{const m0=P.mul;P.mul=c=>{const m=m0?m0(c):{acc:1,top:1,grip:1,brk:1};if(K()>1){m.top*=SPD;m.acc*=SPD;m.brk*=SPD;m.grip*=SPD}return m}}
+/* real cornering: the arcade model turns as tight as the steering asks at any speed (well over 3 g at 100 mph), so a 40 mph corner went
+   at 100. Here the steering is capped at what the tyres can hold, about 1.1 g for a typical road car (scaled by the car's grip and the
+   surface); asking for more pushes the car wide and scrubs speed, like real understeer */
+{const ip0=P.inPost;P.inPost=(c,dt)=>{if(ip0)ip0(c,dt);if(K()===1||!c.in||c.exp>0)return;const vf=c.vx*Math.sin(c.yaw)+c.vz*Math.cos(c.yaw);if(vf<6)return;
+ const mt=c.mt||{grip:1},a=ALAT*((c.cs&&c.cs.grip)||1)*(mt.grip||1),sr=2.5-Math.min(c.sp,40)*.03,mx=a/(vf*sr),st=c.in.st||0;
+ if(Math.abs(st)>mx){const over=Math.abs(st)/mx-1;c.in.st=Math.sign(st)*mx;const dv=Math.min(6,over*7)*dt,f=Math.max(0,1-dv/Math.max(c.sp,1));c.vx*=f;c.vz*=f}}}
 /* hood camera: on these tracks only under something overhead (T.ov from the model) */
-{const sc0=stepCar;stepCar=function(c,dt){const r=sc0.apply(this,arguments);const R=typeof RACE!=='undefined'?RACE:null,T=R&&R.T;if(T&&T.ov)c.inTn=!!(T.ov[((c.idx|0)%T.N+T.N)%T.N]&&c.onRoad);return r}}
+/* it starts early (looking about 1.7 s ahead at the current speed) and blends in and out slowly, so the switch is finished by the time the
+   bridge passes overhead instead of snapping at it */
+{const sc0=stepCar;stepCar=function(c,dt){const r=sc0.apply(this,arguments);const R=typeof RACE!=='undefined'?RACE:null,T=R&&R.T;if(T&&T.ov){const N=T.N,i0=((c.idx|0)%N+N)%N,ah=Math.ceil(Math.max(20,(c.sp||0)*1.7)/T.sp);
+  let on=false;for(let j=-1;j<=ah&&!on;j++)if(T.ov[(i0+j+N)%N])on=true;c.inTn=on&&!!c.onRoad;c.tnR=1.9}return r}}
 /* grid: each car stands in one of the boxes painted on the model's start straight (front row first) */
-P.gridHook=(T,c,slot)=>{const pk=T.d&&T.d.cartoon,s=pk&&pk.slots&&pk.slots[slot];if(!s)return false;const N=T.N;let bi=0,bd=1e18;
+P.gridHook=(T,c,slot)=>{const pk=T.d&&T.d.cartoon;let s=pk&&pk.slots&&pk.slots[slot];if(!s)return false;const N=T.N;let bi=0,bd=1e18;
  for(let i=0;i<N;i++){const d=(T.x[i]-s[0])**2+(T.z[i]-s[1])**2;if(d<bd){bd=d;bi=i}}
- c.x=s[0];c.z=s[1];c.y=T.surf(s[0],s[1],T.y[bi]+2).h+1.1;c.yaw=T.psi[bi];c.idx=bi;c.unw=bi>N/2?bi-N:bi;c.cy=c.yaw;c.camY=c.y;return true};
-const cc=carCollide;carCollide=function(a,b){const k=K();if(k===1||a.out||b.out)return cc.apply(this,arguments);
- const dx=b.x-a.x,dz=b.z-a.z,d=Math.hypot(dx,dz),D=3.2*k;if(!(d<D&&d>.01&&Math.abs(a.y-b.y)<1.6*k))return;
- const nx=dx/d,nz=dz/d,ov=(D-d)/2;a.x-=nx*ov;a.z-=nz*ov;b.x+=nx*ov;b.z+=nz*ov;const rv=(b.vx-a.vx)*nx+(b.vz-a.vz)*nz;
- if(rv<0){const j=-rv*.75;a.vx-=nx*j;a.vz-=nz*j;b.vx+=nx*j;b.vz+=nz*j;if(rv<-3){fx((a.x+b.x)/2,a.y+.5,(a.z+b.z)/2,0xffe080,6,5,.3,.15,8);noise(.12,.2,1200);RACE.shake=Math.max(RACE.shake,Math.min(1,-rv/15))}}};
+ /* the slot is the painted line across the front of the box: the car stands with its nose just behind it */
+ const bk=2.45*K(),sx=s[0]-Math.sin(T.psi[bi])*bk,sz=s[1]-Math.cos(T.psi[bi])*bk;s=[sx,sz];
+ bd=1e18;for(let i=0;i<N;i++){const d=(T.x[i]-s[0])**2+(T.z[i]-s[1])**2;if(d<bd){bd=d;bi=i}}
+ c.x=s[0];c.z=s[1];c.lane0=(s[0]-T.x[bi])*Math.cos(T.psi[bi])-(s[1]-T.z[bi])*Math.sin(T.psi[bi]);c.y=T.surf(s[0],s[1],T.y[bi]+2).h+1.1;c.yaw=T.psi[bi];c.idx=bi;c.unw=bi>N/2?bi-N:bi;c.cy=c.yaw;c.camY=c.y;return true};
+/* car-to-car contact (every track): boxes the size of the drawn car (grown with carScale here), not a circle, so cars side by side no
+   longer touch at a car's width apart; a softer bounce so two cars don't ping-pong off each other, and one knock gives one set of sparks
+   (a pair can't spark/shake again for 0.6 s while they are still rubbing) */
+carCollide=function(a,b){if(a.out||b.out)return;const k=K(),dx=b.x-a.x,dz=b.z-a.z,HX=.95*k,HZ=2.1*k,R2=(HX+HZ)*(HX+HZ)*4;if(dx*dx+dz*dz>R2||Math.abs(a.y-b.y)>1.6*k)return;
+ const sa=Math.sin(a.yaw),ca=Math.cos(a.yaw),sb=Math.sin(b.yaw),cb=Math.cos(b.yaw);let best=1e9,bx=0,bz=0;
+ for(const[nx,nz]of[[ca,-sa],[sa,ca],[cb,-sb],[sb,cb]]){const ra=HX*Math.abs(nx*ca-nz*sa)+HZ*Math.abs(nx*sa+nz*ca),rb=HX*Math.abs(nx*cb-nz*sb)+HZ*Math.abs(nx*sb+nz*cb),pr=dx*nx+dz*nz,ov=ra+rb-Math.abs(pr);if(ov<=0)return;if(ov<best){best=ov;const sg=pr<0?-1:1;bx=nx*sg;bz=nz*sg}}
+ const ov=best/2+.01;a.x-=bx*ov;a.z-=bz*ov;b.x+=bx*ov;b.z+=bz*ov;const rv=(b.vx-a.vx)*bx+(b.vz-a.vz)*bz;if(!(rv<0))return;
+ const j=-rv*.6;a.vx-=bx*j;a.vz-=bz*j;b.vx+=bx*j;b.vz+=bz*j;
+ const R=RACE,key=Math.min(a.k,b.k)+'-'+Math.max(a.k,b.k),hit=R._hit||(R._hit={});if(rv<-3&&!(hit[key]>R.t)){hit[key]=R.t+.6;const x=(a.x+b.x)/2,y=a.y+.5,z=(a.z+b.z)/2;
+  fx(x,y,z,0xffe080,6,5,.3,.15,8);if(window.__hitFx)window.__hitFx(x,y,z,-rv,a,b);noise(.12,.2,1200);R.shake=Math.max(R.shake,Math.min(1,-rv/15))}};
+/* a chase camera that ends up inside the car behind (close racing, formation laps) used to fill the screen with that car's paint: cars whose
+   body the camera is inside are skipped for that view */
+{const rd=R.render.bind(R);R.render=function(sc,cam){const Rc=typeof RACE!=='undefined'?RACE:null;if(!Rc||!Rc.cars||sc!==Rc.scene||!cam||!cam.isPerspectiveCamera)return rd(sc,cam);
+  const k=K(),r2=(2.4*k)*(2.4*k),hid=[];for(const c of Rc.cars){const g=c.m&&c.m.g;if(!g||!g.visible)continue;const dx=cam.position.x-c.x,dy=cam.position.y-(c.y+.5*k),dz=cam.position.z-c.z;if(dx*dx+dy*dy+dz*dz<r2&&c.cam!==cam){g.visible=false;hid.push(g)}}
+  try{return rd(sc,cam)}finally{for(const g of hid)g.visible=true}}}
 P.carK=K},0);
 /* ---- track files: built in, loaded from disk, remembered ---- */
 const gunzip=async buf=>{const u=new Uint8Array(buf);if(u[0]!==0x1f||u[1]!==0x8b)return new TextDecoder().decode(u);
@@ -10972,7 +11026,7 @@ const P=window.PT8;
 const auto=()=>!!(window.PTO&&PTO.autoShift);
 /* each step: interactive ones advance when the player does the thing, info ones wait for Next */
 const S=[
- {t:'Welcome',x:'This lesson is a free drive with prompts. <b>W</b> accelerate &middot; <b>S</b> brake / reverse &middot; <b>A</b> / <b>D</b> steer &middot; <b>Esc</b> pause. Wait for GO.',ok:(c,R)=>R.state==='race'},
+ {t:'Welcome',x:'This lesson is a free drive with prompts. <b>W</b> accelerate &middot; <b>S</b> brake / reverse &middot; <b>A</b> / <b>D</b> steer &middot; <b>Tab</b> pause. Wait for GO.',ok:(c,R)=>R.state==='race'},
  {t:'Throttle',x:'Hold <b>W</b> and build up some speed.',ok:c=>c.sp>12},
  {t:'Steering',x:'Steer both ways with <b>A</b> and <b>D</b>. Small, smooth inputs are faster than yanking the wheel.',ok:(c,R,s)=>s.a&&s.d&&c.sp>6},
  {t:'Gears',x:()=>auto()?'Auto-shift is on, so the gearbox changes for you. Reach 3rd gear. (Turn it off in Settings for manual shifting and perfect-shift boosts.)':'Press <b>E</b> to shift up and <b>Q</b> to shift down (the keys either side of W), or double-tap W / S. Shift close to the redline for a free <b>perfect-shift</b> boost. Reach 3rd gear.',ok:c=>(c.gear|0)>=2},
@@ -11025,6 +11079,16 @@ window.__optAction=k=>{if(k==='@tutorial')P.startTutorial()};
 const P=window.PT8;
 P.LOG=[
  {v:'0.12',d:'Oct 25, 2026',t:'New Road Atlanta and Imola scenery, smarter CPU, gearbox choice',items:[
+  'Real cornering on Imola and Road Atlanta: the tyres hold about 1.1 g (more for grippy cars, less on gravel), so a 40 mph corner is a 40 mph corner again instead of 100. Ask for more and the car runs wide and scrubs speed. Cars there are now 12% quicker than stock (was 30%). Gold times re-measured.',
+  'CPU cars keep their own grid lane off the start and ease onto the racing line over the next 250 m, instead of all swerving to one side. After the finish the autopilot keeps your car in its lane.',
+  'Grid cars stand behind the painted line of their box, not on top of it.',
+  'Rolling start is automatic: every car, yours too, is on autopilot in its own lane at about 100 km/h, and you get control the moment the leader takes the green flag at the line.',
+  'The chase camera no longer jitters on hills (its height trailed the car on climbs and wobbled with the frame rate). A camera that ends up inside the car behind no longer fills the screen with it.',
+  'The hood camera under bridges switches earlier (about 1.7 s ahead) and blends in and out more slowly.',
+  'Car-to-car contact uses boxes the size of the drawn cars (the big cars on the model tracks used a 5.8 m circle), with a softer bounce, so one knock is one hit.',
+  'Race messages (yellow) are in the pixel font. Player name tags are retro pixel plates and are hidden on your own screen.',
+  'Results show the winning car. Pause is on Tab (Escape no longer flashes the pause menu when held).',
+  'Track races pick cars on the setup page like Quick Play (name, gearbox, Garage button per driver); options line up in one column. The Track and Rally garages have an OWNED section: your own garage cars, usable there too.',
   'Cars on Imola and Road Atlanta are 30% quicker in every respect (top speed, acceleration, braking and grip), so the big full-size tracks feel fast. Camera shake removed; speed streaks much fainter. Track mode opens on the Race format.',
   'A track file saved in the browser can no longer replace a newer built-in one (an old saved Road Atlanta was bringing the coned route back); stale saved copies are deleted.',
   'Road Atlanta follows the real circuit: the lap line used to run through three side loops the model closes off with cones (so driving the real road counted as leaving the track and blew the car up). Every coned road is now shut out of the lap.',
@@ -11182,21 +11246,21 @@ hudUpdate=()=>{hu0();const Rc=RACE;if(!Rc)return;
   if(tg){tg.style.display=multi?'':'none';tg.style.color=col;tg.textContent=nm}
   if(multi){spd.querySelector('.spdmain').style.borderTop='3px solid '+col}else spd.querySelector('.spdmain').style.borderTop=''})};
 
-/* ---------- floating Smash-style player tags (only with 2+ humans; fade near the viewing camera) ---------- */
-function tagTex(c){const cv=document.createElement('canvas');cv.width=256;cv.height=128;const g=cv.getContext('2d');
- const col=PC[c.k%4],n='P'+(c.pnum||c.k+1),custom=c.ptName&&c.ptName!==n?c.ptName.toUpperCase():'';
- g.font='900 44px sans-serif';const nw=g.measureText(n).width;
- let fs=26,cw=0;if(custom){g.font='700 '+fs+'px sans-serif';cw=g.measureText(custom).width;const room=236-32-nw-14;if(cw>room){fs=Math.max(14,Math.floor(fs*room/cw));g.font='700 '+fs+'px sans-serif';cw=g.measureText(custom).width}}
- const w=custom?Math.min(244,Math.ceil(32+nw+14+cw)):132,x0=128-w/2;
- g.fillStyle='#0a0d11';g.strokeStyle=col;g.lineWidth=7;g.beginPath();
- g.moveTo(x0+16,10);g.lineTo(x0+w-16,10);g.quadraticCurveTo(x0+w,10,x0+w,26);g.lineTo(x0+w,64);g.quadraticCurveTo(x0+w,80,x0+w-16,80);g.lineTo(150,80);g.lineTo(128,108);g.lineTo(106,80);g.lineTo(x0+16,80);g.quadraticCurveTo(x0,80,x0,64);g.lineTo(x0,26);g.quadraticCurveTo(x0,10,x0+16,10);g.closePath();g.fill();g.stroke();
- g.textBaseline='middle';g.fillStyle=col;g.font='900 44px sans-serif';g.textAlign='left';
- if(custom){g.fillText(n,x0+16,47);g.fillStyle='#e8ecf1';g.font='700 '+fs+'px sans-serif';g.fillText(custom,x0+16+nw+14,48)}else{g.textAlign='center';g.fillText(n,128,47)}
- const t=new THREE.CanvasTexture(cv);t.minFilter=THREE.LinearFilter;return t}
+/* ---------- floating player tags (only with 2+ humans; hidden on the tagged player's own screen, fade near the viewing camera) ---------- */
+/* retro look: a square black plate with a stepped pixel border and pointer, lettered in the game's 5x7 pixel font (drawn small and
+   scaled up with no smoothing) */
+function tagTex(c){const cv=document.createElement('canvas');cv.width=128;cv.height=64;const g=cv.getContext('2d'),F=P.pxGlyphs||{};
+ const col=PC[c.k%4],n='P'+(c.pnum||c.k+1),custom=c.ptName&&c.ptName!==n?c.ptName.toUpperCase().slice(0,12):'';
+ const txt=(s,x,y,k,cl)=>{g.fillStyle=cl;for(const ch of s){const b=F[ch];if(b)b.split(' ').forEach((row,yy)=>{for(let i=0;i<5;i++)if(row[i]==='1')g.fillRect(x+i*k,y+yy*k,k,k)});x+=6*k}};
+ const nw=n.length*12-2,ck=custom&&custom.length<=7?2:1,cw=custom?custom.length*6*ck-ck:0,w=Math.min(126,(custom?nw+8+cw:nw)+12),x0=Math.round(64-w/2),y0=10,h=28;
+ g.fillStyle=col;g.fillRect(x0,y0,w,h);g.fillStyle='#0a0d11';g.fillRect(x0+2,y0+2,w-4,h-4);
+ /* stepped pointer */g.fillStyle=col;for(let i=0;i<5;i++)g.fillRect(64-6+i,y0+h+i,12-2*i,1);g.fillStyle='#0a0d11';for(let i=0;i<3;i++)g.fillRect(64-4+i,y0+h-2+i,8-2*i,1);
+ txt(n,x0+6,y0+7,2,col);if(custom)txt(custom,x0+6+nw+8,ck===2?y0+7:y0+11,ck,'#e8ecf1');
+ const t=new THREE.CanvasTexture(cv);t.minFilter=THREE.NearestFilter;t.magFilter=THREE.NearestFilter;t.generateMipmaps=false;return t}
 function addTags(Rc){const hs=Rc.cars.filter(c=>c.human);if(hs.length<2)return;
  for(const c of hs){if(!c.m||!c.m.g)continue;const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tagTex(c),transparent:true,depthTest:false,depthWrite:false,fog:false}));
   sp.scale.set(3.4,1.7,1);sp.position.set(0,2.5,0);sp.renderOrder=999;sp.frustumCulled=false;
-  const m=sp.material;sp.onBeforeRender=(r,sc,cam)=>{const d=cam.position.distanceTo(sp.getWorldPosition(new THREE.Vector3()));m.opacity=Math.max(0,Math.min(.95,(d-13)/6))};
+  const m=sp.material;sp.onBeforeRender=(r,sc,cam)=>{const d=cam.position.distanceTo(sp.getWorldPosition(new THREE.Vector3()));m.opacity=cam===c.cam&&!(c.cb>.5)?0:Math.max(0,Math.min(.95,(d-13)/6))};/* never on your own screen */
   c.m.g.add(sp);c.tag=sp}}
 
 /* ---------- slipstream: sonic-boom rings + streaking wind lines on whoever is sitting in another car's wind ---------- */
@@ -11408,8 +11472,8 @@ $$('#s8cards .card',root).forEach((c,k)=>{c.onmouseenter=()=>setFoc(k,1);c.oncli
 let qf=0;const setQf=(i,hv)=>{const cs=$$('#s8quick .qc',root);qf=(i+cs.length)%cs.length;cs.forEach((c,k)=>c.classList.toggle('foc',(kbMode||hv)&&k===qf))};
 function quickPick(c){P.sfx&&P.sfx('select');if(c.dataset.p)ST.players=+c.dataset.p;pickMode(c.dataset.m);ST.ret='s8quick'}
 $$('#s8quick .qc',root).forEach((c,k)=>{c.onmouseenter=()=>setQf(k,1);c.onclick=()=>quickPick(c)});
-const barnIcon=d=>{const b=P.BARNS&&P.BARNS[d.name];if(!b||d.gravel)return '';const f=P.barnFound&&P.barnFound(b.car);return `<span class="bnh ${f?'got':''}" title="${f?'Barn find collected':'Barn find hidden here'}"><svg viewBox="0 0 16 16" width="15" height="15" shape-rendering="crispEdges"><path d="M8 1.5 1.5 7.5h2V14h3.6v-3.8h1.8V14h3.6V7.5h2z" fill="currentColor"/></svg></span>`};const isStg=i=>P.STAGES.indexOf(i)>=0,isTrk=i=>(P.TRK_TRACKS||[]).indexOf(i)>=0,gone=i=>!!D[i]&&(D[i].ra||D[i].imola)&&!D[i].cartoon/* the old hand-built Road Atlanta and Imola are gone: these slots only show a loaded track file */,okTrack=(m,i)=>gone(i)?false:m==='rally'?isStg(i):m==='track'?isTrk(i):!isStg(i)&&!isTrk(i)/* circuits are Track-mode exclusives */,firstTrack=m=>m==='rally'?P.STAGES[0]:m==='track'?(P.TRK_TRACKS.find(i=>!gone(i))??P.TRK_TRACKS[0]):0,isRL=m=>m==='rally'||m==='track';
-function pickMode(m){if(m==='quick'){P.sfx&&P.sfx('select');show('s8quick');setQf(0)}else{ST.mode=m;P._to=m==='track';P._ro=m==='rally';if(isRL(m))ST.rstep=1;if(!okTrack(m,ST.track))ST.track=firstTrack(m);ST.ret='s8cards';if(m==='rally'&&P.rallyIntro){P.rallyIntro(()=>{renderSetup();show('s8setup');if(P.prewarmStages)setTimeout(P.prewarmStages,1500)},ST.track)}else{renderSetup();show('s8setup')}}}
+const barnIcon=d=>{const b=P.BARNS&&P.BARNS[d.name];if(!b||d.gravel)return '';const f=P.barnFound&&P.barnFound(b.car);return `<span class="bnh ${f?'got':''}" title="${f?'Barn find collected':'Barn find hidden here'}"><svg viewBox="0 0 16 16" width="15" height="15" shape-rendering="crispEdges"><path d="M8 1.5 1.5 7.5h2V14h3.6v-3.8h1.8V14h3.6V7.5h2z" fill="currentColor"/></svg></span>`};const isStg=i=>P.STAGES.indexOf(i)>=0,isTrk=i=>(P.TRK_TRACKS||[]).indexOf(i)>=0,gone=i=>!!D[i]&&(D[i].ra||D[i].imola)&&!D[i].cartoon/* the old hand-built Road Atlanta and Imola are gone: these slots only show a loaded track file */,okTrack=(m,i)=>gone(i)?false:m==='rally'?isStg(i):m==='track'?isTrk(i):!isStg(i)&&!isTrk(i)/* circuits are Track-mode exclusives */,firstTrack=m=>m==='rally'?P.STAGES[0]:m==='track'?(P.TRK_TRACKS.find(i=>!gone(i))??P.TRK_TRACKS[0]):0,isRL=m=>m==='rally'||(m==='track'&&ST.trkType==='tt');/* a Track race picks cars on the setup page, like Quick Play */
+function pickMode(m){if(m==='quick'){P.sfx&&P.sfx('select');show('s8quick');setQf(0)}else{ST.mode=m;P._to=m==='track';P._ro=m==='rally';if(isRL(m)||m==='track')ST.rstep=1;if(!okTrack(m,ST.track))ST.track=firstTrack(m);ST.ret='s8cards';if(m==='rally'&&P.rallyIntro){P.rallyIntro(()=>{renderSetup();show('s8setup');if(P.prewarmStages)setTimeout(P.prewarmStages,1500)},ST.track)}else{renderSetup();show('s8setup')}}}
 
 /* ---- main menu ---- */
 const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+({play:'<path d="M7 4.5v15l12-7.5z" fill="currentColor"/>',garage:'<path d="M3 15l2-5.5C5.4 8.5 6.2 8 7.2 8h9.6c1 0 1.8.5 2.2 1.5L21 15v3h-3v-1.5H6V18H3z"/><circle cx="7.5" cy="13.2" r=".6" fill="currentColor"/><circle cx="16.5" cy="13.2" r=".6" fill="currentColor"/>',brand:'<path d="M4 12.5V5h7.5l8.5 8.5-7 7z"/><circle cx="8.2" cy="8.7" r="1.2" fill="currentColor"/>',set:'<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',log:'<path d="M5 6h14M5 12h14M5 18h9"/>'})[n]+'</svg><span>'+l+'</span>';P.mi=mi;
@@ -11539,7 +11603,7 @@ const effTod=()=>ST.todUser||D[ST.track].tod0||'day';
 const seg=(items,cur)=>items.map(([v,l])=>`<button class="btn sm ${v===cur?'sel':''}" data-v="${v}"><span>${l}</span></button>`).join('');
 /* Track mode has two formats: time trial (drivers take turns, the original) and race (everyone at once, split screen, CPU drivers) */
 const trkRace=()=>ST.trkType!=='tt';/* Race is the default */
-const fmtRow=()=>`<div class="row8"><b>Format</b><span class="seg" id="cFmt">${seg([['race','Race (CPU / split screen)'],['tt','Time trial (take turns)']],trkRace()?'race':'tt')}</span></div>`;
+const fmtRow=()=>`<div class="row8"><b>Format</b><span class="seg eqw" id="cFmt">${seg([['race','Race (CPU / split screen)'],['tt','Time trial (take turns)']],trkRace()?'race':'tt')}</span></div>`;
 function trackRaceCfg(){const Tn=tr(ST.track),dist=Tn.L*(ST.rlaps||1),wxn=(P.WX[ST.wx||'clear']||{n:'CLEAR'}).n;if(ST.players+(ST.cpus||0)>8)ST.cpus=8-ST.players;
  return `<div class="rcfg"><h4>Circuit configuration</h4>${fmtRow()}<div class="row8"><b>Race laps</b><span class="seg" id="cRL">${seg([[1,'1'],[2,'2'],[3,'3'],[5,'5']],ST.rlaps)}</span></div>`
  +`<div class="row8"><b>Drivers</b><span class="seg" id="cPl">${seg([[1,'1'],[2,'2'],[3,'3'],[4,'4']],ST.players)}</span></div>`
@@ -11779,10 +11843,11 @@ function carBig(id){if(TBC.has(id))return TBC.get(id);const W=720,H=430;
  TB.r.render(TB.sc,TB.cam);const cv=document.createElement('canvas');cv.width=W;cv.height=H;cv.getContext('2d').drawImage(TB.r.domElement,0,0);TB.sc.remove(car_);TBC.set(id,cv);return cv}
 function resLayout(){const b=document.getElementById('resBox');if(!b||b.querySelector('.rsgrid')||!b.querySelector('.lb,.lbsolo'))return;
  const kids=[...b.children],btn=kids[kids.length-1],pay=kids.find(e=>e.querySelector&&e.querySelector('.pay')),left=kids.filter(e=>e!==btn&&e!==pay);
- let id=null;try{const h=RACE&&RACE.cars&&RACE.cars.find(c=>c.human);id=h&&h.carId}catch(e){}
+ /* the car shown is the winner's (the first across the line; your own in a solo run) */
+ let id=null,who='';try{const cs=RACE&&RACE.cars||[],w=(RACE.fin&&RACE.fin[0])||(cs.length>1?cs.slice().sort((a,b)=>b.unw-a.unw)[0]:cs[0]);id=w&&w.carId;if(w&&cs.length>1)who=w.ptName||''}catch(e){}
  const g=document.createElement('div');g.className='rsgrid';const L=document.createElement('div');L.className='rsL';const R=document.createElement('div');R.className='rsR';
  left.forEach(e=>L.appendChild(e));
- if(id&&BYID[id]){const c=BYID[id],cd=document.createElement('div');cd.className='rscar';cd.innerHTML='<canvas width="720" height="430"></canvas><div class="rsn"><b>'+lbEsc(c.name)+'</b><span><i class="cls '+c.cls+'">'+c.cls+'</i>'+lbEsc(c.type||'')+'</span></div>';R.appendChild(cd);
+ if(id&&BYID[id]){const c=BYID[id],cd=document.createElement('div');cd.className='rscar';cd.innerHTML='<canvas width="720" height="430"></canvas><div class="rsn">'+(who?'<small class="rsw">WINNER &middot; '+lbEsc(who).toUpperCase()+'</small>':'')+'<b>'+lbEsc(c.name)+'</b><span><i class="cls '+c.cls+'">'+c.cls+'</i>'+lbEsc(c.type||'')+'</span></div>';R.appendChild(cd);
   setTimeout(()=>{try{const t=carBig(id),cv=cd.querySelector('canvas');if(t){cv.getContext('2d').drawImage(t,0,0);cv.classList.add('rdy')}}catch(e){}},30)}
  if(pay)R.appendChild(pay);g.appendChild(L);g.appendChild(R);b.insertBefore(g,btn);btn.classList.add('rsbtn')}
 try{const rb=document.getElementById('resBox');if(rb)new MutationObserver(resLayout).observe(rb,{childList:true})}catch(e){}
@@ -11808,9 +11873,10 @@ function cardsHTML(list,sv){
  const byPP=(a,b)=>P.pp(BYID[a.id])-P.pp(BYID[b.id])||a.price-b.price;list=list.slice().sort(byPP);const reg=list.filter(c=>!c.barn),barn=list.filter(c=>c.barn),cats=(P.CATS||[]).filter(k=>reg.some(c=>c.cat===k));
  const own=c=>!c.lk&&!c.off;let h='',order=[];
  const nOwn=list.filter(c=>!c.lk).length;
- h+=`<div class="gtools"><button class="of ${SR.of?'on':''}" data-of="1"><span></span>Owned first</button><em>${nOwn} / ${list.length} cars</em></div><div class="cats">`+cats.map(k=>`<button data-jump="${k}">${k}<i>${reg.filter(c=>c.cat===k).length}</i></button>`).join('')+(barn.length?`<button data-jump="__barn">Barn finds<i>${barn.length}</i></button>`:'')+'</div>';
+ if(RGOWN())h+=`<button class="secback" data-back="1"><span>&lsaquo; SECTIONS</span><i>OWNED &middot; ${nOwn} of ${list.length}</i></button>`;
+ h+=`<div class="gtools"><button class="of ${SR.of||RGOWN()?'on':''}" data-of="1"${RGOWN()?' style="display:none"':''}><span></span>Owned first</button><em>${nOwn} / ${list.length} cars</em></div><div class="cats">`+cats.map(k=>`<button data-jump="${k}">${k}<i>${reg.filter(c=>c.cat===k).length}</i></button>`).join('')+(barn.length?`<button data-jump="__barn">Barn finds<i>${barn.length}</i></button>`:'')+'</div>';
  let used=new Set();
- if(SR.of){const mine=reg.filter(c=>!c.lk);if(mine.length){h+=`<div class="gh" data-sec="__own">Your cars<i>${mine.length}</i></div><div class="gg">`+mine.map(c=>cardHTML(c,sv)).join('')+'</div>';mine.forEach(c=>{used.add(c.id);if(own(c))order.push(c.id)})}}
+ if(SR.of||RGOWN()){const mine=reg.filter(c=>!c.lk);if(mine.length){h+=`<div class="gh" data-sec="__own">Your cars<i>${mine.length}</i></div><div class="gg">`+mine.map(c=>cardHTML(c,sv)).join('')+'</div>';mine.forEach(c=>{used.add(c.id);if(own(c))order.push(c.id)})}}
  for(const k of cats){const v=reg.filter(c=>c.cat===k&&!used.has(c.id));if(!v.length)continue;h+=`<div class="gh" data-sec="${k}">${k}<i>${v.length}</i></div><div class="gg">`+v.map(c=>cardHTML(c,sv)).join('')+'</div>';v.forEach(c=>{if(own(c))order.push(c.id)})}
  if(barn.length){h+=`<div class="gh barn" data-sec="__barn">Barn finds<i>${barn.filter(c=>!c.lk).length} / ${barn.length}</i></div><div class="gg">`+barn.map(c=>cardHTML(c,sv)).join('')+'</div>';barn.forEach(c=>{if(own(c))order.push(c.id)})}
  SR.order=order;return h}
@@ -11827,10 +11893,13 @@ function openShow(kind,o){SR.sec=0;SR.mk=null;P._ro=!!o.rally&&kind==='garage';P
  const list=showList();if(kind==='garage'){const s=SR.rally?P.rallySel(SR.player):SR.trk?P.trackSel(SR.player):P.SV().sel[SR.player];const ok=list.find(c=>c.id===s.id&&!c.off&&!c.lk);const f=ok||list.find(c=>!c.off&&!c.lk)||list.find(c=>!c.lk)||BYID.merc;SR.id=f.id;SR.alt=(ok&&P.owns(f.id,s.alt))?s.alt:(P.owns(f.id,0)?0:1)}
  else{if(!BYID[SR.id])SR.id='merc';if(SR.alt&&!P.owns(SR.id,1))SR.alt=0}
  if(SR.flow){SR.cat=SR.trk?(BYID[SR.id].tdiv||'PRO'):(BYID[SR.id].rdiv||'WRC');SR.sec=0}
+ if(kind==='garage'&&(SR.rally||SR.trk)){const s=SR.rally?P.rallySel(SR.player):P.trackSel(SR.player);if(s&&!(SR.trk?P.TRACK_CARS:P.RALLY_CARS).includes(s.id)&&(P.SV().owned[s.id]||0)>0){SR.cat='OWNED';SR.sec=1;SR.id=s.id;SR.alt=P.owns(s.id,s.alt)?s.alt:0;SR.view='car'}}
  renderShow();show('s8show');}
 function showList(){const l=showList0();return l.sort((a,b)=>CLS.indexOf(a.cls)-CLS.indexOf(b.cls)||P.pp(BYID[a.id])-P.pp(BYID[b.id])||a.price-b.price)}
-function showList0(){const sv=P.SV();let l=SORTED.map(c=>({...c,off:false}));if(SR.rally&&SR.kind==='garage')return l.filter(c=>P.RALLY_CARS.includes(c.id));if(SR.trk&&SR.kind==='garage')return l.filter(c=>P.TRACK_CARS.includes(c.id));l=l.filter(c=>!c.rallyOnly&&!c.trackOnly);if(SR.kind==='brand')l=l.filter(c=>!c.barn);if(SR.kind==='garage'){l.forEach(c=>{c.lk=!((sv.owned[c.id]||0)>0);c.off=SR.cap!=null&&CLS.indexOf(c.cls)>CLS.indexOf(SR.cap)})}return l}
-const CARDS=()=>SR.kind==='garage'&&!SR.rally&&!SR.trk;
+function showList0(){const sv=P.SV();let l=SORTED.map(c=>({...c,off:false}));if(RGOWN()){l=l.filter(c=>!c.rallyOnly&&!c.trackOnly);l.forEach(c=>{c.lk=!((sv.owned[c.id]||0)>0)});return l}if(SR.rally&&SR.kind==='garage')return l.filter(c=>P.RALLY_CARS.includes(c.id));if(SR.trk&&SR.kind==='garage')return l.filter(c=>P.TRACK_CARS.includes(c.id));l=l.filter(c=>!c.rallyOnly&&!c.trackOnly);if(SR.kind==='brand')l=l.filter(c=>!c.barn);if(SR.kind==='garage'){l.forEach(c=>{c.lk=!((sv.owned[c.id]||0)>0);c.off=SR.cap!=null&&CLS.indexOf(c.cls)>CLS.indexOf(SR.cap)})}return l}
+/* the rally and track garages' OWNED section is the full garage (your own cars, the rest locked until bought) */
+const RGOWN=()=>SR.kind==='garage'&&(SR.rally||SR.trk)&&SR.cat==='OWNED'&&!!SR.sec;
+const CARDS=()=>SR.kind==='garage'&&(!SR.rally&&!SR.trk||RGOWN());
 function statBars(c,tn){const f=tn?P.tuneFx(tn,false):{top:1,acc:1,grip:1,brk:1},fg=tn?P.tuneFx(tn,true):{grip:1};
  const gt=P.gearTops(c).map(v=>v*2.23694*f.top),hi=gt[gt.length-1];const n=(v,a,b)=>clamp((v-a)/(b-a),0,1);
  /* [label, tuned bar, text, ratio vs stock, stock bar] */
@@ -11848,14 +11917,14 @@ function tuneHTML(car){const t=P.tuneGet(car.id,SR.alt);
  return `<div class="tune"><div class="th"><b>TUNING</b><button class="btn sm" id="tuReset"><span>Reset</span></button></div>`+P.TUNE.map(d=>{const v=t[d.k],pips=[];for(let i=-d.r;i<=d.r;i++)pips.push(`<i class="${i===0?'ctr ':''}${(v>0&&i>0&&i<=v)||(v<0&&i<0&&i>=v)?'on':''}"></i>`);
   return `<div class="tr"><span>${d.n}</span><button class="btn sm" data-k="${d.k}" data-d="-1"><span>&lsaquo;</span></button><div class="pp5">${pips.join('')}</div><button class="btn sm" data-k="${d.k}" data-d="1"><span>&rsaquo;</span></button><em>${v===0?'STOCK':v<0?d.lo:d.hi}${v&&d.r>1?' '+Math.abs(v):''}</em></div>`}).join('')+`<div class="tn">${P._tuneMsg?'<b style="color:var(--ac2)">'+P._tuneMsg+'</b><br>':''}Each step away from stock costs ${fmtCr(P.tuneBase(car.id))} x level (reset is free). Applies to races &amp; events; Time Attack runs stock.</div></div>`}
 function renderShow(){SR.alt=0;try{const c0=BYID[SR.id],mk=$('shMk');if(mk&&c0){const m0=makerOf(c0);mk.innerHTML=(P.LOGO?P.LOGO(m0,76):'')+'<b>'+m0+'</b><span>'+c0.name.slice(m0.length).trim()+'</span><div class="cl"><i>CLASS '+c0.cls+'</i><i>'+(c0.type||'')+'</i></div>'}}catch(e){}{const sh=$('s8show');sh.classList.toggle('gtb',SR.kind==='brand');if(SR.kind!=='brand')sh.classList.remove('lo')}{const sh=$('s8show');sh.classList.toggle('gtb',SR.kind==='brand');if(SR.kind!=='brand')sh.classList.remove('lo')}const kind=SR.kind,sv=P.SV(),list=showList(),car=BYID[SR.id],owned=P.owns(car.id,0),ownAlt=P.owns(car.id,1);
- $('shTitle').innerHTML=kind==='garage'?(SR.rally?'RALLY <em>GARAGE</em>':SR.trk?'TRACK <em>GARAGE</em>':'YOUR <em>GARAGE</em>'):'BRAND <em>CENTRAL</em>';$('shSub').textContent=kind==='garage'?(SR.flow?(D[ST.track].name+' · '+(Math.round(tr(ST.track).L)*(ST.rlaps||1)/1000).toFixed(1)+' km · '+(ST.rlaps||1)+' lap'+((ST.rlaps||1)>1?'s':'')+' · '+((P.WX[ST.wx||'clear']||{n:'CLEAR'}).n)+' · '+((P.TOD[effTod()]||{n:''}).n)+' · '+ST.players+' driver'+(ST.players>1?'s':'')):SR.trk?'Circuit cars only / free to use':SR.rally?'Rally-spec all-wheel-drive cars with gravel tyres / free to use':(SR.cap?'Class '+SR.cap+' and below':'')):'Buy cars';
- const RG=(SR.rally||SR.trk)&&kind==='garage',dc=c=>RG?(SR.trk?c.tdiv:c.rdiv):c.cat,cats=RG?(SR.trk?['PRO','CLUB']:['WRC','CASUAL']):['ALL',...(P.CATS||[]),...(kind==='brand'?['OWNED']:[])],cnt=k=>list.filter(c=>k==='ALL'||(k==='OWNED'?(sv.owned[c.id]||0)>0:dc(c)===k)).length;
+ $('shTitle').innerHTML=kind==='garage'?(SR.rally?'RALLY <em>GARAGE</em>':SR.trk?'TRACK <em>GARAGE</em>':'YOUR <em>GARAGE</em>'):'BRAND <em>CENTRAL</em>';$('shSub').textContent=kind==='garage'?(SR.flow?(D[ST.track].name+' · '+(Math.round(tr(ST.track).L)*(ST.rlaps||1)/1000).toFixed(1)+' km · '+(ST.rlaps||1)+' lap'+((ST.rlaps||1)>1?'s':'')+' · '+((P.WX[ST.wx||'clear']||{n:'CLEAR'}).n)+' · '+((P.TOD[effTod()]||{n:''}).n)+' · '+ST.players+' driver'+(ST.players>1?'s':'')):RGOWN()?'Your own cars / buy more in Brand Central':SR.trk?'Circuit cars only / free to use':SR.rally?'Rally-spec all-wheel-drive cars with gravel tyres / free to use':(SR.cap?'Class '+SR.cap+' and below':'')):'Buy cars';
+ const RG=(SR.rally||SR.trk)&&kind==='garage',dc=c=>RG?(SR.trk?c.tdiv:c.rdiv):c.cat,cats=RG?(SR.trk?['PRO','CLUB','OWNED']:['WRC','CASUAL','OWNED']):['ALL',...(P.CATS||[]),...(kind==='brand'?['OWNED']:[])],regOwn=SORTED.filter(c=>!c.rallyOnly&&!c.trackOnly&&(sv.owned[c.id]||0)>0).length,cnt=k=>RG&&k==='OWNED'?regOwn:list.filter(c=>k==='ALL'||(k==='OWNED'?(sv.owned[c.id]||0)>0:dc(c)===k)).length;
  if(!cats.includes(SR.cat))SR.cat=cats[0];
  const vis=list.filter(c=>SR.cat==='ALL'||(SR.cat==='OWNED'?(sv.owned[c.id]||0)>0:dc(c)===SR.cat));
 const secMode=true;let h='',last=null;
  if(kind==='brand'){h=brandHTML(list,sv)}
  else if(CARDS()){h=cardsHTML(list,sv)}
- else if(secMode&&!SR.sec){h='<div class="secs">'+cats.filter(k=>k!=='ALL'&&cnt(k)).concat(RG?[]:['ALL']).map(k=>{const v=list.filter(c=>k==='ALL'||(k==='OWNED'?(sv.owned[c.id]||0)>0:dc(c)===k));const lo=Math.min(...v.map(c=>c.price));return `<button class="sect" data-cat="${k}"><b>${k==='ALL'?'ALL CARS':k}</b><small>${v.length} cars${kind==='brand'&&k!=='OWNED'?' &middot; from '+fmtCr(lo):''}</small></button>`}).join('')+'</div>'}
+ else if(secMode&&!SR.sec){h='<div class="secs">'+cats.filter(k=>k!=='ALL'&&cnt(k)).concat(RG?[]:['ALL']).map(k=>{const v=list.filter(c=>k==='ALL'||(k==='OWNED'?(sv.owned[c.id]||0)>0:dc(c)===k));const lo=Math.min(...v.map(c=>c.price));if(RG&&k==='OWNED')return `<button class="sect own" data-cat="OWNED"><b>OWNED</b><small>${regOwn} car${regOwn===1?'':'s'} &middot; your garage</small></button>`;return `<button class="sect" data-cat="${k}"><b>${k==='ALL'?'ALL CARS':k}</b><small>${v.length} cars${kind==='brand'&&k!=='OWNED'?' &middot; from '+fmtCr(lo):''}</small></button>`}).join('')+'</div>'}
  else{
   if(secMode)h+=`<button class="secback" data-back="1"><span>&lsaquo; SECTIONS</span><i>${SR.cat==='ALL'?'ALL CARS':SR.cat} &middot; ${vis.length}</i></button>`;
   else h+='<div class="cats">'+cats.filter(k=>cnt(k)||k==='ALL').map(k=>`<button class="${k===SR.cat?'sel':''}" data-cat="${k}">${k==='ALL'?'ALL':k==='OWNED'?'OWNED':k}<i>${cnt(k)}</i></button>`).join('')+'</div>';
@@ -11863,8 +11932,8 @@ const secMode=true;let h='',last=null;
    h+=`<div class="ci ${c.id===SR.id?'sel':''} ${c.off?'off':''}" data-id="${c.id}"><b>${c.name}</b><small>${kind==='brand'?(o?'Owned':fmtCr(c.price)):(c.off?'Class cap':c.type)}</small></div>`}}
  $('shList').innerHTML=h;{const sh=$('s8show'),bm=kind==='brand';sh.classList.toggle('mkl',bm&&!SR.mk);sh.classList.toggle('mkc',bm&&!!SR.mk);if(bm){$$('#shList .mk',root).forEach(e=>e.onclick=()=>{SR.mk=e.dataset.mk;const v=list.filter(c=>makerOf(c)===SR.mk).sort((a,b)=>P.pp(BYID[a.id])-P.pp(BYID[b.id])||a.price-b.price);const f=v.find(c=>!((sv.owned[c.id]||0)>0))||v[0];SR.id=f.id;SR.alt=0;P.sfx&&P.sfx('select');fadeTo(()=>renderShow())});brandStrip(list,sv)}}
  $('shList').classList.toggle('cards',CARDS());$('s8show').classList.toggle('gv-grid',inGrid());$('s8show').classList.toggle('gv-car',inCar());if(inCar()){const o=SR.order||[];$('shPos').textContent=(o.indexOf(SR.id)+1)+' / '+o.length}if(CARDS())bindCards(list);$$('#shList .cats button',root).forEach(b=>b.onclick=()=>{SR.cat=b.dataset.cat;const v=list.filter(c=>SR.cat==='ALL'||(SR.cat==='OWNED'?(sv.owned[c.id]||0)>0:dc(c)===SR.cat));if(v.length&&!v.some(c=>c.id===SR.id)){SR.id=v[0].id;SR.alt=0}P.sfx('select');renderShow();$('shList').scrollTop=0});$$('#shList .ci',root).forEach(e=>e.onclick=()=>{SR.id=e.dataset.id;if(!P.owns(SR.id,SR.alt))SR.alt=0;renderShow()});
- $$('#shList .sect',root).forEach(b=>b.onclick=()=>{SR.cat=b.dataset.cat;SR.sec=1;const v=list.filter(c=>SR.cat==='ALL'||(SR.cat==='OWNED'?(sv.owned[c.id]||0)>0:dc(c)===SR.cat));if(v.length&&!v.some(c=>c.id===SR.id)){SR.id=v[0].id;SR.alt=0}P.sfx('select');renderShow();$('shList').scrollTop=0});
- $$('#shList .secback',root).forEach(b=>b.onclick=()=>{SR.sec=0;P.sfx('select');renderShow();$('shList').scrollTop=0});
+ $$('#shList .sect',root).forEach(b=>b.onclick=()=>{SR.cat=b.dataset.cat;SR.sec=1;if(RGOWN()){const o=showList().find(c=>!c.lk);if(o){SR.id=o.id;SR.alt=0}SR.view='grid';P.sfx('select');renderShow();$('shList').scrollTop=0;return}const v=list.filter(c=>SR.cat==='ALL'||(SR.cat==='OWNED'?(sv.owned[c.id]||0)>0:dc(c)===SR.cat));if(v.length&&!v.some(c=>c.id===SR.id)){SR.id=v[0].id;SR.alt=0}P.sfx('select');renderShow();$('shList').scrollTop=0});
+ $$('#shList .secback',root).forEach(b=>b.onclick=()=>{SR.sec=0;SR.view='grid';P.sfx('select');renderShow();$('shList').scrollTop=0});
  const sel=$$('#shList .ci.sel',root)[0];if(sel)sel.scrollIntoView({block:'nearest'});
  const tn=kind==='garage'&&owned?P.tuneGet(car.id,SR.alt):null,sb=statBars(car,tn),bars=sb.bars,gt=sb.gt;
  $('shStat').innerHTML=`<div class="nm">${car.name}${SR.alt?' <span style="color:var(--ac2);font-size:.6em">ALT</span>':''}</div><div class="tp">${car.type} &middot; ${car.drive}</div>${SR.flow?`<input id="shNm" class="nmi" maxlength="12" spellcheck="false" placeholder="Name (P${SR.player+1})" value="${((ST.names||[])[SR.player]||'').replace(/[<>&"]/g,'')}">`:''}
@@ -11887,13 +11956,13 @@ const secMode=true;let h='',last=null;
   if(altOwn){act.innerHTML='<span>Owned</span>';act.classList.add('off')}
   else if(SR.alt&&!owned){act.innerHTML='<span>Buy car first</span>';act.classList.add('off')}
   else{act.innerHTML='<span>Buy '+fmtCr(price)+'</span>';if(sv.cr<price){act.classList.add('off');act.innerHTML='<span>Need '+fmtCr(price-sv.cr)+' more</span>'}}}
- else{const off=list.find(c=>c.id===car.id).off;act.classList.toggle('off',off||!altOwn);act.innerHTML='<span>'+(off?'Class cap':altOwn?(SR.flow?(SR.player<ST.players-1?'Next driver >':(SR.trk?'Start race':'Start stage')):'Select'):'Locked')+'</span>'}
+ else{const off=(list.find(c=>c.id===car.id)||{off:true}).off;act.classList.toggle('off',off||!altOwn);act.innerHTML='<span>'+(off?'Class cap':altOwn?(SR.flow?(SR.player<ST.players-1?'Next driver >':(SR.trk?'Start race':'Start stage')):'Select'):'Locked')+'</span>'}
  $$('.crv',root).forEach(e=>e.textContent=fmtCr(sv.cr))}
 $('shCars').onclick=()=>$('s8show').classList.toggle('lo');$('shCars').onclick=()=>$('s8show').classList.toggle('lo');$('shPrev').onclick=()=>flipCar(-1);$('shNext').onclick=()=>flipCar(1);
 $('shStat').addEventListener('input',e=>{if(e.target.id==='shNm')(ST.names=ST.names||[])[SR.player]=e.target.value});
 $('shAct').onclick=()=>{const car=BYID[SR.id];
  if(SR.kind==='brand'){if(P.buy(car.id,SR.alt)){P.sfx('buy');renderShow();buyShowcase(car)}}
- else{const it=showList().find(c=>c.id===car.id);if(it.off||!P.owns(car.id,SR.alt))return;if(SR.rally){const sv=P.SV();(sv.rsel=sv.rsel||[])[SR.player]={id:car.id,alt:SR.alt?1:0};P.save()}else if(SR.trk){const sv=P.SV();(sv.tsel=sv.tsel||[])[SR.player]={id:car.id,alt:SR.alt?1:0};P.save()}else P.setSel(SR.player,car.id,SR.alt);P.sfx('select');
+ else{const it=showList().find(c=>c.id===car.id);if(!it||it.off||!P.owns(car.id,SR.alt))return;if(SR.rally){const sv=P.SV();(sv.rsel=sv.rsel||[])[SR.player]={id:car.id,alt:SR.alt?1:0};P.save()}else if(SR.trk){const sv=P.SV();(sv.tsel=sv.tsel||[])[SR.player]={id:car.id,alt:SR.alt?1:0};P.save()}else P.setSel(SR.player,car.id,SR.alt);P.sfx('select');
   if(SR.flow){if(SR.player<ST.players-1){openShow('garage',{player:SR.player+1,cap:null,ret:'s8setup',rally:SR.rally,track:SR.trk,flow:true});return}ST.rstep=2;$('suGo').click();ST.rstep=1;return}
   leaveShow();}};
 (function(){const el=$('s8show');let lx=0;el.addEventListener('pointerdown',e=>{if(e.target.closest('.lst,.stat,.bot,.hdr,.gtstrip,.gtmk'))return;SR.drag=true;lx=e.clientX;el.setPointerCapture(e.pointerId)});el.addEventListener('pointermove',e=>{if(!SR.drag)return;const d=e.clientX-lx;lx=e.clientX;SR.ang+=d*.01;SR.vel=d*.5});el.addEventListener('pointerup',()=>{SR.drag=false});el.addEventListener('pointercancel',()=>{SR.drag=false})})();
@@ -11959,6 +12028,11 @@ P.studioDbg=()=>S;P.ui={openCards,openShow,renderSetup,renderCareer,ST,SR,trClea
 document.title='Poly GT';
 refreshMenuCars();MS=null;
 })();
+/* pause on Tab, not Escape: holding Escape to leave full screen or the page made the pause menu flash on and off. In a race (and on the
+   pause screen) a real Escape press does nothing; menus still go back with Escape, and a controller's B button still works */
+addEventListener('keydown',e=>{if(typeof scr==='undefined'||(scr!=='game'&&scr!=='pause'))return;const R_=typeof RACE!=='undefined'?RACE:null;if(R_&&(R_.prep||R_.replay))return;
+ if(e.code==='Tab'){e.preventDefault();e.stopImmediatePropagation();if(!e.repeat)esc();return}
+ if(e.code==='Escape'&&e.isTrusted){e.preventDefault();e.stopImmediatePropagation()}},true);
 
 /* ===== Poly GT layer: cinematic menu. Still-frame "photo shoots" (dark studio, neon street, sunset road, foggy dawn, tunnel, concrete bunker) cut in between the moving drive-by ===== */
 (function cinema(){
@@ -12110,7 +12184,7 @@ P.RALLY_CARS=['ford','lr','urus','gtr','ster'];P.CARS.forEach(c=>{if(c.rallyOnly
 const WRCX=[];['c21','c53','c61','c5','c132'].forEach(id=>{if(P.BYID[id]&&!P.RALLY_CARS.includes(id))P.RALLY_CARS.push(id)});{const NO=['gtr','c67','c93'];P.RALLY_CARS=P.RALLY_CARS.filter(id=>!NO.includes(id))}P.CARS.forEach(c=>{c.rdiv=P.RALLY_CARS.includes(c.id)?(c.rallyOnly||WRCX.includes(c.id)?'WRC':'CASUAL'):null;if(c.rdiv==='WRC'){c.type='WRC RALLY CAR';c.drive='AWD'}});
 {const setS=(id,sc,cl)=>{const c=P.BYID[id];if(!c)return;c.cls=cl;c.top=+(34+19*sc).toFixed(1);c.acc=+(20+15*sc).toFixed(1);c.grip=+(.96+.15*sc).toFixed(3);c.brk=+(.92+.25*sc).toFixed(3)};setS('c51',.88,'S');setS('c120',.86,'S');setS('c65',.84,'S');setS('c108',.74,'A');P.SORTED.sort((a,b)=>P.CLS.indexOf(a.cls)-P.CLS.indexOf(b.cls)||a.price-b.price)}
 const ow0=P.owns;P.owns=(id,alt)=>P._ro&&P.RALLY_CARS.includes(id)?true:ow0(id,alt);
-P.rallySel=p=>{const sv=P.SV();sv.rsel=sv.rsel||[];let s=sv.rsel[p];if(!s||!P.RALLY_CARS.includes(s.id))s=sv.rsel[p]={id:P.RALLY_CARS[p%P.RALLY_CARS.length],alt:0};return s};
+P.rallySel=p=>{const sv=P.SV();sv.rsel=sv.rsel||[];let s=sv.rsel[p];if(!s||!(P.RALLY_CARS.includes(s.id)||(sv.owned[s.id]||0)>0))s=sv.rsel[p]={id:P.RALLY_CARS[p%P.RALLY_CARS.length],alt:0};return s};
 /* water: grip / speed drag */
 const mul0=P.mul;
 P.mul=c=>{const m=mul0(c);if(c.human&&RACE&&RACE.cfg&&RACE.cfg.rally){const o=(c.cs&&c.cs.off)||0;if(!RACE.cfg.circuit){if(o<.9){m.grip*=(.5+.45*.9)/(.5+.45*o);m.top*=(.78+.22*.9)/(.78+.22*o);m.acc*=(.6+.37*.9)/(.6+.37*o)}m.grip*=.72;m.top*=1.06;m.acc*=1.1;m.brk*=.52}{const dm=c.dmg||0;if(dm>0){m.acc*=1-.5*Math.pow(dm,1.2);m.top*=1-.32*dm;m.grip*=1-.14*dm;m.brk*=1-.3*dm}}if(c._hb){m.grip*=.3;m.brk*=.85;m.acc*=.8}}if(c._wet>0){const k=Math.min(1,c._wet);m.top*=1-.1*k;m.acc*=1-.18*k;m.brk*=1-.12*k}return m};
@@ -12687,7 +12761,7 @@ P.CARS.forEach(c=>{c.tdiv=P.TRACK_CARS.includes(c.id)?(c.trackOnly||c.cls==='S'?
 P.TRACK_CARS.forEach(id=>{const c=P.BYID[id];if(c&&c._tk)Object.assign(c,c._tk)});
 P._to=false;
 const ow1=P.owns;P.owns=(id,alt)=>P._to&&P.TRACK_CARS.includes(id)?true:ow1(id,alt);
-P.trackSel=p=>{const sv=P.SV();sv.tsel=sv.tsel||[];let s=sv.tsel[p];if(!s||!P.TRACK_CARS.includes(s.id))s=sv.tsel[p]={id:P.TRACK_CARS[p%P.TRACK_CARS.length],alt:0};return s};
+P.trackSel=p=>{const sv=P.SV();sv.tsel=sv.tsel||[];let s=sv.tsel[p];if(!s||!(P.TRACK_CARS.includes(s.id)||(sv.owned[s.id]||0)>0))s=sv.tsel[p]={id:P.TRACK_CARS[p%P.TRACK_CARS.length],alt:0};return s};
 /* medals follow the car: platinum is the clean-lap pace of a 165 mph car (R33), scaled by real top speed, so every car gets a fair target */
 P.MEDAL_REF[14]=91.8;
 const mf=P.medalFor,mtm=P.medalTime,MD=P.MEDALS;
@@ -13578,7 +13652,7 @@ const sc0=stepCar;stepCar=function(c,dt){try{const T=RACE&&RACE.T;let g=0;if(T&&
 'use strict';
 const P=window.PT8;
 function line(T){if(T.rl)return T.rl;const N=T.N,o=new Float32Array(N),lo=new Float32Array(N),hi=new Float32Array(N),cx=new Float32Array(N),cz=new Float32Array(N),nx=new Float32Array(N),nz=new Float32Array(N);
- for(let i=0;i<N;i++){const m=T.wall&&T.wall[i]?1.9:1.45,w=Math.max(0,T.hw[i]-m);lo[i]=-w;hi[i]=w;nx[i]=Math.cos(T.psi[i]);nz[i]=-Math.sin(T.psi[i])}
+ for(let i=0;i<N;i++){const m=(T.wall&&T.wall[i]?1.9:1.45)+(T.rlm||0),w=Math.max(0,T.hw[i]-m);lo[i]=-w;hi[i]=w;nx[i]=Math.cos(T.psi[i]);nz[i]=-Math.sin(T.psi[i])}
  /* jumps, gaps and tunnels: stay near the middle */
  for(let i=0;i<N;i++)if((T.gap&&T.gap[i])||(T.tn&&T.tn[i])){const w=Math.min(hi[i],T.hw[i]*.25);lo[i]=-w;hi[i]=w}
  /* the band: each point moves toward the middle of its neighbours (coarse to fine), then is clamped back inside the road */
@@ -13593,6 +13667,7 @@ function line(T){if(T.rl)return T.rl;const N=T.N,o=new Float32Array(N),lo=new Fl
  const kap=new Float32Array(N);for(let i=0;i<N;i++){let m=0;for(let j=-2;j<=2;j++)m=Math.max(m,k[(i+j+N)%N]);/* never trust the line to be more than 2.2x wider than the centre line */kap[i]=Math.max(m,(T.kap?T.kap[i]:0)/2.2)}
  T.rlo=lo;T.rhi=hi;T.rlk=kap;return T.rl=o}
 P.racingLine=line;
+P.latOf=(T,c)=>{const N=T.N,i=((c.idx|0)%N+N)%N;return(c.x-T.x[i])*Math.cos(T.psi[i])-(c.z-T.z[i])*Math.sin(T.psi[i])};
 
 P.aiInput=function(c,dt){const Rc=RACE,T=Rc.T,N=T.N,a=c.ai||(c.ai={skill:.9,lat:0,mist:0,name:'CPU'}),K0=P.kappa(T),RL=line(T),K=T.rlk;
  const live=Rc.state==='race'&&c.respT<=0&&!(c.exp>0);
@@ -13603,7 +13678,12 @@ P.aiInput=function(c,dt){const Rc=RACE,T=Rc.T,N=T.N,a=c.ai||(c.ai={skill:.9,lat:
  /* target point on the racing line; each car keeps a small personal offset so the field does not run nose to tail on one thread */
  let kn=0;for(let j=1;j<=7;j++)kn=Math.max(kn,K[(c.idx+j)%N]);
  const ld=Math.min(6+c.sp*.5,Math.max(8,1.15/Math.max(kn,1e-3))),la=Math.max(3,Math.round(ld/T.sp)),ti=(c.idx+la)%N;
- let off=RL[ti]+(a.lat||0)*T.hw[ti]*.18;off=clamp(off,T.rlo[ti],T.rhi[ti]);
+ let off=RL[ti]+(a.lat||0)*T.hw[ti]*.18;
+ /* lane hold: off the start each car keeps its own grid lane for the first stretch and eases onto the line over the next 250 m;
+    after the finish (the autopilot cool-down lap) it simply stays in the lane it crossed the line in */
+ if(c.cool&&c.fin){if(c._finLat==null)c._finLat=clamp(P.latOf(T,c),T.rlo[ti],T.rhi[ti]);off=c._finLat}
+ else if(c.lane0!=null){const d=c.unw*T.sp;if(d<350){const t=clamp((d-100)/250,0,1),e=t*t*(3-2*t);off=c.lane0+(off-c.lane0)*e}}
+ off=clamp(off,T.rlo[ti],T.rhi[ti]);
  /* side by side: if another car is alongside ahead, move over within the road instead of driving into it */
  for(const o of Rc.cars){if(o===c||o.respT>0||o.fin&&o!==c)continue;const dx=o.x-c.x,dz=o.z-c.z,fw=dx*Math.sin(c.yaw)+dz*Math.cos(c.yaw);if(fw<-2||fw>14)continue;
   const lt=dx*Math.cos(c.yaw)-dz*Math.sin(c.yaw);if(Math.abs(lt)>2.6||o.sp>c.sp+1)continue;const side=lt>0?-1:1;off=clamp(off+side*(2.6-Math.abs(lt))*.9,T.rlo[ti],T.rhi[ti])}
@@ -13611,7 +13691,7 @@ P.aiInput=function(c,dt){const Rc=RACE,T=Rc.T,N=T.N,a=c.ai||(c.ai={skill:.9,lat:
  let st=clamp(wr(des-c.yaw)*2.2,-1,1);
  /* speed plan from the line's radius */
  const gfac=(mt.grip||1)*cs.grip;let tgt=1e9;
- const jm=Math.max(44,Math.min(160,Math.ceil(c.sp*c.sp/(25*cs.brk)/T.sp)+8));for(let j=2;j<=jm;j+=2){const i=(c.idx+j)%N;if(T.gap[i])continue;const k=Math.max(K[i],8e-4),R_=1/k,vz=Math.sqrt(6.5/Math.max(T.kz[i],1e-4)),ice=T.ice[i]?.3:1,vlim=Math.min(vz,P.steerLimit(R_)*.9*Math.min(1,.6+gfac*.4)*ice,Math.sqrt(26*gfac*ice*R_));
+ const jm=Math.max(44,Math.min(160,Math.ceil(c.sp*c.sp/(25*cs.brk)/T.sp)+8));for(let j=2;j<=jm;j+=2){const i=(c.idx+j)%N;if(T.gap[i])continue;const k=Math.max(K[i],8e-4),R_=1/k,vz=Math.sqrt(6.5/Math.max(T.kz[i],1e-4)),ice=T.ice[i]?.3:1,vlim=Math.min(vz,P.steerLimit(R_)*.9*Math.min(1,.6+gfac*.4)*ice,Math.sqrt((T.alat||26)*gfac*ice*R_));
   tgt=Math.min(tgt,Math.sqrt(vlim*vlim+2*(12.5*cs.brk)*j*T.sp))}
  const topNow=P.topSpeed(cs,P.GT(cs).length-1)*(mt.top||1);
  tgt=Math.min(tgt,topNow*(.9+.1*skill))*Math.min(1,.55+skill*.5);c._tg=tgt;c._tn=topNow;

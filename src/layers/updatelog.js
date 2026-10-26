@@ -4,6 +4,16 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.12',d:'Oct 25, 2026',t:'New Road Atlanta and Imola scenery, smarter CPU, gearbox choice',items:[
+  'Real cornering on Imola and Road Atlanta: the tyres hold about 1.1 g (more for grippy cars, less on gravel), so a 40 mph corner is a 40 mph corner again instead of 100. Ask for more and the car runs wide and scrubs speed. Cars there are now 12% quicker than stock (was 30%). Gold times re-measured.',
+  'CPU cars keep their own grid lane off the start and ease onto the racing line over the next 250 m, instead of all swerving to one side. After the finish the autopilot keeps your car in its lane.',
+  'Grid cars stand behind the painted line of their box, not on top of it.',
+  'Rolling start is automatic: every car, yours too, is on autopilot in its own lane at about 100 km/h, and you get control the moment the leader takes the green flag at the line.',
+  'The chase camera no longer jitters on hills (its height trailed the car on climbs and wobbled with the frame rate). A camera that ends up inside the car behind no longer fills the screen with it.',
+  'The hood camera under bridges switches earlier (about 1.7 s ahead) and blends in and out more slowly.',
+  'Car-to-car contact uses boxes the size of the drawn cars (the big cars on the model tracks used a 5.8 m circle), with a softer bounce, so one knock is one hit.',
+  'Race messages (yellow) are in the pixel font. Player name tags are retro pixel plates and are hidden on your own screen.',
+  'Results show the winning car. Pause is on Tab (Escape no longer flashes the pause menu when held).',
+  'Track races pick cars on the setup page like Quick Play (name, gearbox, Garage button per driver); options line up in one column. The Track and Rally garages have an OWNED section: your own garage cars, usable there too.',
   'Cars on Imola and Road Atlanta are 30% quicker in every respect (top speed, acceleration, braking and grip), so the big full-size tracks feel fast. Camera shake removed; speed streaks much fainter. Track mode opens on the Race format.',
   'A track file saved in the browser can no longer replace a newer built-in one (an old saved Road Atlanta was bringing the coned route back); stale saved copies are deleted.',
   'Road Atlanta follows the real circuit: the lap line used to run through three side loops the model closes off with cones (so driving the real road counted as leaving the track and blew the car up). Every coned road is now shut out of the lap.',

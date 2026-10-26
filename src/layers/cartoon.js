@@ -15,11 +15,14 @@ function grid(pack){if(pack._g)return pack._g;const G=pack.grid,HG=new Int16Arra
  return pack._g={hAt,kAt}}
 const baseOf=pack=>D.findIndex(d=>pack.replaces==='imola'?d.imola:pack.replaces==='ra'?d.ra:false);
 P.trackPacks={};
+/* the files' gold times were measured with cars 30% quicker and no grip limit; now (12% quicker, real cornering grip) a CPU lap takes
+   this much longer: 95.5 -> 124.3 s at Road Atlanta, 98.4 -> 133.7 s at Imola */
+const MEDK={ra:1.302,imola:1.359},ALAT=11;/* tyre grip limit on these tracks, m/s² (see the steering cap below) */
 /* newest file wins (pack.rev = build time): an older copy saved in this browser never replaces a newer built-in one */
 P.addTrackPack=pack=>{const i=baseOf(pack);if(i<0)throw new Error('This track file is for a track this game does not have ('+pack.replaces+')');const d=D[i];
  if(d.cartoon&&(d.cartoon.rev||0)>(pack.rev||0)){const e=new Error('This is an older version of '+pack.name+' than the one already in the game');e.older=true;throw e}
  if(!d._orig)d._orig={pts:d.pts,bank:d.bank,medal:P.MEDAL_REF[i]};
- d.pts=pack.pts;d.bank=0;d.cartoon=pack;if(pack.medal)P.MEDAL_REF[i]=pack.medal;P.trackPacks[pack.id]=pack;
+ d.pts=pack.pts;d.bank=0;d.cartoon=pack;if(pack.medal)P.MEDAL_REF[i]=pack.medal*(MEDK[pack.replaces]||1);P.trackPacks[pack.id]=pack;
  if(P.ui&&P.ui.trClear)P.ui.trClear(i);return i};
 /* physics: road and ground heights come from the model's surfaces, so the car sits exactly on what is drawn */
 const ss=sampleTrack;sampleTrack=d=>{const T=ss(d);if(!d.cartoon)return T;const {hAt,kAt}=grid(d.cartoon);
@@ -28,6 +31,9 @@ const ss=sampleTrack;sampleTrack=d=>{const T=ss(d);if(!d.cartoon)return T;const 
  /* no tunnels from the old hand-built track; the hood camera only comes in where the model has a bridge or other structure over the road
     (pack.over: stretches in metres along the lap), from 16 m before it to 4 m after */
  if(T.tunnels&&T.tunnels.length){for(const[a,b]of T.tunnels)for(let i=a;i<=b;i++){const k=i%T.N;T.wall[k]=0;T.wh[k]=1.3}T.tunnels=[]}
+ /* the CPU racing line keeps a bigger margin from the edges: the cars are drawn bigger here */
+ T.rlm=((d.cartoon.carScale||1)-1)*1.2+1;
+ T.alat=ALAT*.92;/* the CPU plans its corner speeds a little under the grip limit */
  if(T.tn)T.tn.fill(0);T.ov=new Uint8Array(T.N);{let L=0;const Ls=new Float32Array(T.N);for(let i=1;i<T.N;i++){L+=Math.hypot(T.x[i]-T.x[i-1],T.z[i]-T.z[i-1]);Ls[i]=L}
   for(const[a,b]of d.cartoon.over||[])for(let i=0;i<T.N;i++)if(Ls[i]>=a-16&&Ls[i]<=b+4)T.ov[i]=1}
  const t0=T.terr;T.terr=(x,z)=>{const h=hAt(x,z);return h==null?t0(x,z):h};
@@ -76,19 +82,42 @@ let sfx=null,sfxV=0;const speedFx=(c,v)=>{if(!c.human)return;if(!sfx){sfx=docume
   document.body.appendChild(sfx)}
  sfxV+=(v-sfxV)*.15;sfx.style.opacity=(Math.min(1,sfxV)**2*.09).toFixed(3)};
 {const hide=()=>{if(sfx)sfx.style.opacity=0;sfxV=0};const cr=P.cleanupRace;if(cr)P.cleanupRace=function(){hide();return cr.apply(this,arguments)};setInterval(()=>{if(sfx&&(typeof scr==='undefined'||scr!=='game'||K()===1))hide()},400)}
-/* these circuits are full size and the cars drawn big, so at true speeds they crawl past the scenery: cars here are 30% quicker in every
+/* these circuits are full size and the cars drawn big, so at true speeds they crawl past the scenery: cars here are 12% quicker in every
    respect (top speed, acceleration, braking and grip together, so the handling balance stays the same) */
-const SPD=1.3;{const m0=P.mul;P.mul=c=>{const m=m0?m0(c):{acc:1,top:1,grip:1,brk:1};if(K()>1){m.top*=SPD;m.acc*=SPD;m.brk*=SPD;m.grip*=SPD}return m}}
+const SPD=1.12;{const m0=P.mul;P.mul=c=>{const m=m0?m0(c):{acc:1,top:1,grip:1,brk:1};if(K()>1){m.top*=SPD;m.acc*=SPD;m.brk*=SPD;m.grip*=SPD}return m}}
+/* real cornering: the arcade model turns as tight as the steering asks at any speed (well over 3 g at 100 mph), so a 40 mph corner went
+   at 100. Here the steering is capped at what the tyres can hold, about 1.1 g for a typical road car (scaled by the car's grip and the
+   surface); asking for more pushes the car wide and scrubs speed, like real understeer */
+{const ip0=P.inPost;P.inPost=(c,dt)=>{if(ip0)ip0(c,dt);if(K()===1||!c.in||c.exp>0)return;const vf=c.vx*Math.sin(c.yaw)+c.vz*Math.cos(c.yaw);if(vf<6)return;
+ const mt=c.mt||{grip:1},a=ALAT*((c.cs&&c.cs.grip)||1)*(mt.grip||1),sr=2.5-Math.min(c.sp,40)*.03,mx=a/(vf*sr),st=c.in.st||0;
+ if(Math.abs(st)>mx){const over=Math.abs(st)/mx-1;c.in.st=Math.sign(st)*mx;const dv=Math.min(6,over*7)*dt,f=Math.max(0,1-dv/Math.max(c.sp,1));c.vx*=f;c.vz*=f}}}
 /* hood camera: on these tracks only under something overhead (T.ov from the model) */
-{const sc0=stepCar;stepCar=function(c,dt){const r=sc0.apply(this,arguments);const R=typeof RACE!=='undefined'?RACE:null,T=R&&R.T;if(T&&T.ov)c.inTn=!!(T.ov[((c.idx|0)%T.N+T.N)%T.N]&&c.onRoad);return r}}
+/* it starts early (looking about 1.7 s ahead at the current speed) and blends in and out slowly, so the switch is finished by the time the
+   bridge passes overhead instead of snapping at it */
+{const sc0=stepCar;stepCar=function(c,dt){const r=sc0.apply(this,arguments);const R=typeof RACE!=='undefined'?RACE:null,T=R&&R.T;if(T&&T.ov){const N=T.N,i0=((c.idx|0)%N+N)%N,ah=Math.ceil(Math.max(20,(c.sp||0)*1.7)/T.sp);
+  let on=false;for(let j=-1;j<=ah&&!on;j++)if(T.ov[(i0+j+N)%N])on=true;c.inTn=on&&!!c.onRoad;c.tnR=1.9}return r}}
 /* grid: each car stands in one of the boxes painted on the model's start straight (front row first) */
-P.gridHook=(T,c,slot)=>{const pk=T.d&&T.d.cartoon,s=pk&&pk.slots&&pk.slots[slot];if(!s)return false;const N=T.N;let bi=0,bd=1e18;
+P.gridHook=(T,c,slot)=>{const pk=T.d&&T.d.cartoon;let s=pk&&pk.slots&&pk.slots[slot];if(!s)return false;const N=T.N;let bi=0,bd=1e18;
  for(let i=0;i<N;i++){const d=(T.x[i]-s[0])**2+(T.z[i]-s[1])**2;if(d<bd){bd=d;bi=i}}
- c.x=s[0];c.z=s[1];c.y=T.surf(s[0],s[1],T.y[bi]+2).h+1.1;c.yaw=T.psi[bi];c.idx=bi;c.unw=bi>N/2?bi-N:bi;c.cy=c.yaw;c.camY=c.y;return true};
-const cc=carCollide;carCollide=function(a,b){const k=K();if(k===1||a.out||b.out)return cc.apply(this,arguments);
- const dx=b.x-a.x,dz=b.z-a.z,d=Math.hypot(dx,dz),D=3.2*k;if(!(d<D&&d>.01&&Math.abs(a.y-b.y)<1.6*k))return;
- const nx=dx/d,nz=dz/d,ov=(D-d)/2;a.x-=nx*ov;a.z-=nz*ov;b.x+=nx*ov;b.z+=nz*ov;const rv=(b.vx-a.vx)*nx+(b.vz-a.vz)*nz;
- if(rv<0){const j=-rv*.75;a.vx-=nx*j;a.vz-=nz*j;b.vx+=nx*j;b.vz+=nz*j;if(rv<-3){fx((a.x+b.x)/2,a.y+.5,(a.z+b.z)/2,0xffe080,6,5,.3,.15,8);noise(.12,.2,1200);RACE.shake=Math.max(RACE.shake,Math.min(1,-rv/15))}}};
+ /* the slot is the painted line across the front of the box: the car stands with its nose just behind it */
+ const bk=2.45*K(),sx=s[0]-Math.sin(T.psi[bi])*bk,sz=s[1]-Math.cos(T.psi[bi])*bk;s=[sx,sz];
+ bd=1e18;for(let i=0;i<N;i++){const d=(T.x[i]-s[0])**2+(T.z[i]-s[1])**2;if(d<bd){bd=d;bi=i}}
+ c.x=s[0];c.z=s[1];c.lane0=(s[0]-T.x[bi])*Math.cos(T.psi[bi])-(s[1]-T.z[bi])*Math.sin(T.psi[bi]);c.y=T.surf(s[0],s[1],T.y[bi]+2).h+1.1;c.yaw=T.psi[bi];c.idx=bi;c.unw=bi>N/2?bi-N:bi;c.cy=c.yaw;c.camY=c.y;return true};
+/* car-to-car contact (every track): boxes the size of the drawn car (grown with carScale here), not a circle, so cars side by side no
+   longer touch at a car's width apart; a softer bounce so two cars don't ping-pong off each other, and one knock gives one set of sparks
+   (a pair can't spark/shake again for 0.6 s while they are still rubbing) */
+carCollide=function(a,b){if(a.out||b.out)return;const k=K(),dx=b.x-a.x,dz=b.z-a.z,HX=.95*k,HZ=2.1*k,R2=(HX+HZ)*(HX+HZ)*4;if(dx*dx+dz*dz>R2||Math.abs(a.y-b.y)>1.6*k)return;
+ const sa=Math.sin(a.yaw),ca=Math.cos(a.yaw),sb=Math.sin(b.yaw),cb=Math.cos(b.yaw);let best=1e9,bx=0,bz=0;
+ for(const[nx,nz]of[[ca,-sa],[sa,ca],[cb,-sb],[sb,cb]]){const ra=HX*Math.abs(nx*ca-nz*sa)+HZ*Math.abs(nx*sa+nz*ca),rb=HX*Math.abs(nx*cb-nz*sb)+HZ*Math.abs(nx*sb+nz*cb),pr=dx*nx+dz*nz,ov=ra+rb-Math.abs(pr);if(ov<=0)return;if(ov<best){best=ov;const sg=pr<0?-1:1;bx=nx*sg;bz=nz*sg}}
+ const ov=best/2+.01;a.x-=bx*ov;a.z-=bz*ov;b.x+=bx*ov;b.z+=bz*ov;const rv=(b.vx-a.vx)*bx+(b.vz-a.vz)*bz;if(!(rv<0))return;
+ const j=-rv*.6;a.vx-=bx*j;a.vz-=bz*j;b.vx+=bx*j;b.vz+=bz*j;
+ const R=RACE,key=Math.min(a.k,b.k)+'-'+Math.max(a.k,b.k),hit=R._hit||(R._hit={});if(rv<-3&&!(hit[key]>R.t)){hit[key]=R.t+.6;const x=(a.x+b.x)/2,y=a.y+.5,z=(a.z+b.z)/2;
+  fx(x,y,z,0xffe080,6,5,.3,.15,8);if(window.__hitFx)window.__hitFx(x,y,z,-rv,a,b);noise(.12,.2,1200);R.shake=Math.max(R.shake,Math.min(1,-rv/15))}};
+/* a chase camera that ends up inside the car behind (close racing, formation laps) used to fill the screen with that car's paint: cars whose
+   body the camera is inside are skipped for that view */
+{const rd=R.render.bind(R);R.render=function(sc,cam){const Rc=typeof RACE!=='undefined'?RACE:null;if(!Rc||!Rc.cars||sc!==Rc.scene||!cam||!cam.isPerspectiveCamera)return rd(sc,cam);
+  const k=K(),r2=(2.4*k)*(2.4*k),hid=[];for(const c of Rc.cars){const g=c.m&&c.m.g;if(!g||!g.visible)continue;const dx=cam.position.x-c.x,dy=cam.position.y-(c.y+.5*k),dz=cam.position.z-c.z;if(dx*dx+dy*dy+dz*dz<r2&&c.cam!==cam){g.visible=false;hid.push(g)}}
+  try{return rd(sc,cam)}finally{for(const g of hid)g.visible=true}}}
 P.carK=K},0);
 /* ---- track files: built in, loaded from disk, remembered ---- */
 const gunzip=async buf=>{const u=new Uint8Array(buf);if(u[0]!==0x1f||u[1]!==0x8b)return new TextDecoder().decode(u);
