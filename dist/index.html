@@ -173,7 +173,7 @@ T.surf=(x,z,y)=>{
  const cx=Math.floor(x/CS),cz=Math.floor(z/CS);let best=-1e9,bi=-1,bl=0,cn=0,h2=0;const cH=SF_H,cI=SF_I,cL=SF_L;
  for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const ids=T.grid.get(gk(cx+a,cz+b));if(!ids)continue;
  for(const i of ids){const j=(i+1)%N;if(T.gap[i]||T.gap[j])continue;
- const dx=T.x[j]-T.x[i],dz=T.z[j]-T.z[i],len2=dx*dx+dz*dz,f=((x-T.x[i])*dx+(z-T.z[i])*dz)/len2;if(f<0||f>1)continue;
+ const dx=T.x[j]-T.x[i],dz=T.z[j]-T.z[i],len2=dx*dx+dz*dz,f0=((x-T.x[i])*dx+(z-T.z[i])*dz)/len2;if(f0<-.15||f0>1.15)continue;const f=f0<0?0:f0>1?1:f0;
  const px=lerp(T.x[i],T.x[j],f),pz=lerp(T.z[i],T.z[j],f),psi=T.psi[i]+wr(T.psi[j]-T.psi[i])*f,lat=(x-px)*Math.cos(psi)-(z-pz)*Math.sin(psi),hw=lerp(T.hw[i],T.hw[j],f);if(Math.abs(lat)>hw)continue;
  const h=lerp(T.y[i],T.y[j],f)-lat*lerp(T.bank[i],T.bank[j],f)+.05;
  if(h<=y+1.2){if(h>best)best=h;if(cn<64){cH[cn]=h;cI[cn]=i;cL[cn]=lat;cn++}}
@@ -10908,6 +10908,7 @@ window.__optAction=k=>{if(k==='@tutorial')P.startTutorial()};
 const P=window.PT8;
 P.LOG=[
  {v:'0.12',d:'Oct 25, 2026',t:'New Road Atlanta and Imola scenery, smarter CPU, gearbox choice',items:[
+  'Fixed the car jumping on downhills (worst at the Nürburgring): at the joins between road pieces on the outside of a bend the game briefly read the ground about 1 m above the road and bounced the car off it. A CPU lap of the Nürburgring now has 0 airborne moments (was 4, up to 2 m); Road Atlanta and Imola stay at 0.',
   'Road Atlanta rebuilt to feel like a real circuit, the way the Nordschleife does: worn grey tarmac, Armco rails close on both sides (swung back behind the red clay run-offs), white concrete walls with catch fencing on the straights, and tall loblolly pine and oak woods right up behind the barriers. A proper pit building with garages, a glazed upper floor and a tarmac pit lane, darker grandstands with crowds, steel gantry legs. The random boxes and flags are gone.',
   'Imola checked against the survey from the driver seat at 32 points round the lap: kerbs in the real colours (pale blue-white strip, green band with white triangles, red edge), gravel in grey-beige pebbles with clean edges, olive green walls, green trees, tyre walls only against a barrier, no barrier stubs at the chicanes, and the thin dark asphalt strips along the edges replaced by the pale blue painted strips where the real track has them.',
   'Imola buildings redone as proper low-poly models at the survey positions: the pit building (garages with red posts, navy balcony, offices and rooftop pavilions), the angled paddock block, the red end block and the striped control tower are modelled by hand; every other building has floors of windows, houses have pitched roofs, covered grandstands stand on legs under their roofs, plus tents, vans, trucks and boards. The blocky pillars, slabs and black tyre rubble are gone, and barriers never cross the road. Gravel traps, kerbs and run-offs follow the survey outlines; the road follows the real white lines (CPU lap about 3 s slower, medal times adjusted). Far tree trunks are brown again.',
