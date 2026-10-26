@@ -17,7 +17,7 @@ const baseOf=pack=>D.findIndex(d=>pack.replaces==='imola'?d.imola:pack.replaces=
 P.trackPacks={};
 /* the files' gold times were measured with cars 30% quicker and no grip limit; now (25% quicker, 1.6 g grip) a CPU time-trial lap takes
    this much longer: 95.5 -> 107.6 s at Road Atlanta, 98.4 -> 114.7 s at Imola */
-const MEDK={ra:1.047,imola:1.097},ALAT=16;/* tyre grip limit on these tracks, m/s² (see the steering cap below) */
+const MEDK={ra:1.002,imola:1.039},ALAT=19.2;/* tyre grip (16, +20% turning by request) limit on these tracks, m/s² (see the steering cap below) */
 /* newest file wins (pack.rev = build time): an older copy saved in this browser never replaces a newer built-in one */
 P.addTrackPack=pack=>{const i=baseOf(pack);if(i<0)throw new Error('This track file is for a track this game does not have ('+pack.replaces+')');const d=D[i];
  if(d.cartoon&&(d.cartoon.rev||0)>(pack.rev||0)){const e=new Error('This is an older version of '+pack.name+' than the one already in the game');e.older=true;throw e}

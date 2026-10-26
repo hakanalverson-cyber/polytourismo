@@ -4,6 +4,7 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.12',d:'Oct 25, 2026',t:'New Road Atlanta and Imola scenery, smarter CPU, gearbox choice',items:[
+  'Cars turn 20% tighter at every speed on Imola and Road Atlanta (tyre grip up 20% for everyone, CPU included). Gold times re-measured.',
   'Grip on Imola and Road Atlanta now builds with speed like downforce (about 1.6 g at low speed up to about 3.4 g flat out), so fast corners no longer wash wide. Steering at low speed is calmer, so first gear is not twitchy. Acceleration up 10%. Gold times re-measured.',
   'Brand Central shows a slow slideshow of action shots from the game (rally stages, the Nordschleife, coastal and canyon roads) behind the maker list.',
   'The garage car list and stats panel are slimmer, so they no longer cover the car on display.',
