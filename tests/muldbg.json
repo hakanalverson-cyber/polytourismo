@@ -1,0 +1,1 @@
+[["wait",2000],["js","(()=>{PT8.launch({mode:'mp',track:14,laps:1,humans:[{id:'merc',alt:0}],ai:[],trackRace:true});const c=RACE.cars[0];const m=PT8.mul(c);const r=JSON.stringify(m)+' K='+(RACE.T.d.cartoon&&RACE.T.d.cartoon.carScale)+' st='+JSON.stringify({acc:c.cs.acc,top:c.cs.top});PT8.cleanupRace();return r})()"]]

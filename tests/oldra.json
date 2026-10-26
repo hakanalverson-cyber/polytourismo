@@ -1,0 +1,6 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",2500],
+["js","(()=>{document.querySelector('#s8cards .card[data-m=track]').click();return 1})()"],["wait",1500],
+["file","#trkAdd input","/tmp/claude-0/-home-claude-polytourismo/4b0e7c59-35bd-554a-8c30-0ab78fa183a0/scratchpad/old-ra.ptrack"],["wait",10000],
+["js","(()=>[...document.querySelectorAll('#trkList .trk')].map(b=>b.textContent.slice(0,90)).join(' | '))()"],["shot","old"],
+["file","#trkAdd input","/mnt/project-files/poly-gt/tracks/road-atlanta.ptrack"],["wait",10000],
+["js","(()=>[...document.querySelectorAll('#trkList .trk')].map(b=>b.textContent.slice(0,60)).join(' | '))()"]]

@@ -1,0 +1,5 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",2500],
+["js","(()=>{document.querySelector('#s8cards .card[data-m=track]').click();return 1})()"],["wait",1500],
+["file","#trkAdd input","/mnt/project-files/poly-gt/tracks/road-atlanta.ptrack"],["wait",12000],
+["file","#trkAdd input","/mnt/project-files/poly-gt/tracks/imola.ptrack"],["wait",12000],
+["js","(()=>[...document.querySelectorAll('#trkList .trk')].map(b=>b.textContent.slice(0,40)).join(' | '))()"],["shot","list"]]
