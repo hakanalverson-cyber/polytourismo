@@ -1,0 +1,4 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",2500],
+["js","(()=>{document.querySelector('#s8cards .card[data-m=track]').click();return [...document.querySelectorAll('#trkList .trk b')].map(b=>b.textContent).join(' | ')})()"],["wait",2000],["shot","list"],
+["file","#trkAdd input","/mnt/project-files/poly-gt/tracks/imola.ptrack"],["wait",12000],
+["js","(()=>[...document.querySelectorAll('#trkList .trk')].map(e=>e.textContent).join(' | ')+' medal15='+PT8.MEDAL_REF[15])()"],["wait",500],["shot","after"]]
