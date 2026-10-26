@@ -183,5 +183,5 @@ function dressRA(T,sc){
 /* the Quarry world's tunnel does not belong on Road Atlanta (the look is borrowed, the tunnel slot is not) */
 const ssRA=sampleTrack;sampleTrack=d=>{const T=ssRA(d);if(d.ra&&T.tunnels&&T.tunnels.length){for(const[a,b]of T.tunnels)for(let i=a;i<=b;i++){const k=i%T.N;T.tn[k]=0;T.wall[k]=0;T.wh[k]=1.3}T.tunnels=[]}return T};
 const bwRA=buildWorld;
-buildWorld=T=>{const sc=bwRA(T);if(T.d&&T.d.ra){try{dressRA(T,sc)}catch(e){console.error('roadAtlanta dress',e)}}return sc};
+buildWorld=T=>{const sc=bwRA(T);if(T.d&&T.d.ra&&!T.d.cartoon){try{dressRA(T,sc)}catch(e){console.error('roadAtlanta dress',e)}}return sc};
 })();

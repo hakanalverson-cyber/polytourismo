@@ -17,7 +17,7 @@ def blk(m):
         v=c.group(2)
         if len(v)<300000: return c.group(0)
         return 'var %s=__ld("%s")'%(c.group(1),dump(v))
-    body=re.sub(r'window\.PT8_IMC=(\{.*?\});\n',lambda c:'window.PT8_IMC=JSON.parse(__ld("%s"));\n'%dump(c.group(1)),body,flags=re.S)  # bought Imola model
+    body=re.sub(r'PT8_PACKS\.push\((\{.*?\})\);\n',lambda c:'PT8_PACKS.push(JSON.parse(__ld("%s")));\n'%dump(c.group(1)),body,flags=re.S)  # built-in track files
     return '<script%s>%s</script>'%(at,re.sub(r'const (\w+)="([^"]*)"',cst,body))
 h=re.sub(r'<script([^>]*)>(.*?)</script>',blk,s,flags=re.S)
 h=re.sub(r'<!DOCTYPE[^>]*>','',h,flags=re.I);h=re.sub(r'</?(html|head|body)[^>]*>','',h,flags=re.I);h=re.sub(r'<meta charset[^>]*>','',h,count=1)

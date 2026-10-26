@@ -1,0 +1,6 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",2500],
+["js","(()=>{const c=document.querySelector('#s8cards .card[data-m=track]');c.click();return JSON.stringify({packs:Object.keys(PT8.trackPacks||{}),add:!!document.getElementById('trkAdd')})})()"],["wait",2500],
+["js","(()=>{const a=document.getElementById('trkAdd');a.scrollIntoView();return a.textContent})()"],["wait",800],["shot","list"],
+["file","#trkAdd input","/mnt/project-files/poly-gt/tracks/road-atlanta.ptrack"],["wait",12000],
+["js","(()=>JSON.stringify({packs:Object.keys(PT8.trackPacks||{}),msg:(document.getElementById('trkAddMsg')||{}).textContent}))()"],["wait",500],["shot","loaded"],
+["js","(()=>{PT8.launch({rally:true,circuit:true,mode:'mp',track:14,laps:1,humans:[{id:'merc',alt:0}],ai:[]});return JSON.stringify({cart:!!RACE.T.d.cartoon,L:Math.round(RACE.T.L),k:PT8.carK()})})()"],["wait",9000],["shot","race"]]

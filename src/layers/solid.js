@@ -28,7 +28,7 @@ function grid(T){const x=X(T),g=new Map(),put=(k,o)=>{let l=g.get(k);if(!l){l=[]
 let cd=0;
 function touch(g,x,z){const cx=Math.floor(x/8),cz=Math.floor(z/8);for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const l=g.get((cx+a)+','+(cz+b));if(!l)continue;
  for(const s of l){let qx,qz,r;if(s.length===5){const dx=s[2]-s[0],dz=s[3]-s[1],ll=dx*dx+dz*dz||1,t=Math.max(0,Math.min(1,((x-s[0])*dx+(z-s[1])*dz)/ll));qx=s[0]+dx*t;qz=s[1]+dz*t;r=s[4]}else{qx=s[0];qz=s[1];r=s[2]}
-  if(Math.hypot(x-qx,z-qz)<r+.88)return true}}return false}
+  if(Math.hypot(x-qx,z-qz)<r+.88*(P.carK?P.carK():1))return true}}return false}
 function hit(Rc,c,v,nx,nz){if(P.hitFx)P.hitFx(Rc,c,v,c.x-nx*.9,c.y+.35,c.z-nz*.9,nx,nz);if(!c.human)return;if(cd>0)return;cd=.3;Rc.shake=Math.max(Rc.shake||0,Math.min(1,v/16));if(P.sfx)P.sfx('crash');if(P.dmgOn&&P.dmgOn(Rc)&&P.hurt&&!((c.cdT||0)>0)){c.cdT=.7;P.hurt(Rc,c,v,nx,nz)}}
 function bStep(Rc,dt){const T=Rc.T;if(!T||Rc.state!=='race')return;cd-=dt;const g=T._bg||grid(T);if(!g.size)return;
  /* every car, CPU included: nothing the player bumps into can be driven through by the CPU */
@@ -38,7 +38,7 @@ function bStep(Rc,dt){const T=Rc.T;if(!T||Rc.state!=='race')return;cd-=dt;const 
   const cx=Math.floor(c.x/8),cz=Math.floor(c.z/8),gy=T.terr?T.terr(c.x,c.z):c.y;if(c.y-gy>3.2){c._px=c.x;c._pz=c.z;continue}
   for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const l=g.get((cx+a)+','+(cz+b));if(!l)continue;
    for(const s of l){let qx,qz,r;if(s.length===5){const dx=s[2]-s[0],dz=s[3]-s[1],ll=dx*dx+dz*dz||1,t=Math.max(0,Math.min(1,((c.x-s[0])*dx+(c.z-s[1])*dz)/ll));qx=s[0]+dx*t;qz=s[1]+dz*t;r=s[4]}else{qx=s[0];qz=s[1];r=s[2]}
-    const ex=c.x-qx,ez=c.z-qz,d=Math.hypot(ex,ez),R=r+.88;if(d>=R||d<.001)continue;const nx=ex/d,nz=ez/d,vn=c.vx*nx+c.vz*nz;c.x+=nx*(R-d);c.z+=nz*(R-d);
+    const ex=c.x-qx,ez=c.z-qz,d=Math.hypot(ex,ez),R=r+.88*(P.carK?P.carK():1);if(d>=R||d<.001)continue;const nx=ex/d,nz=ez/d,vn=c.vx*nx+c.vz*nz;c.x+=nx*(R-d);c.z+=nz*(R-d);
     {const vt=Math.abs(-c.vx*nz+c.vz*nx);if(vt>8&&P.scrapeFx&&((c._scT=(c._scT||0)-dt)<=0)){c._scT=.05;P.scrapeFx(c,c.x-nx*.9,c.y+.3,c.z-nz*.9,vt,nx,nz)}}
     if(vn<0){c.vx-=1.25*vn*nx;c.vz-=1.25*vn*nz;const sp0=Math.hypot(c.vx,c.vz),k=Math.min(1,-vn/Math.max(1,sp0+-vn)*3);const ds=1-.12*k;c.vx*=ds;c.vz*=ds;if(-vn>2.2)hit(Rc,c,-vn,nx,nz)}slide(c,-nx,-nz,dt)}}c._px=c.x;c._pz=c.z}}
 const bw=buildWorld;buildWorld=function(T){const sc=bw.apply(this,arguments);try{collect(sc,T)}catch(e){console.warn('solid',e)}return sc};

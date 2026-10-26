@@ -1,20 +1,20 @@
 /* ===== Poly GT layer: tracks4 (circuit-mode track: Imola, the real circuit's layout shrunk and dressed as a proper race track) ===== */
 (function v9tracks4(){
 'use strict';
-const P=window.PT8,IMC=window.PT8_IMC,IM=IMC?{pts:IMC.pts}:window.PT8_IMOLA;
+const P=window.PT8,IM=window.PT8_IMOLA;
 if(!IM||!P.TRK_TRACKS)return;
 const PI=Math.PI,IMK=1,IMY=1,lin=h=>new THREE.Color(h).convertSRGBToLinear();/* data is already at real size (4,909 m lap, 1 unit = 1 m) */
-const imola={id:15,look:0,name:'Imola',desc:'italian grand prix circuit / chicanes / sand traps / tyre walls',hw:7.4,bank:IMC?0:5,off:'grass',idw:.85,offs:0,amp:2.6,up:4,shoulder:17,
+const imola={id:15,look:0,name:'Imola',desc:'italian grand prix circuit / chicanes / sand traps / tyre walls',hw:7.4,bank:5,off:'grass',idw:.85,offs:0,amp:2.6,up:4,shoulder:17,
  sky:[0x3f86d2,0xcfe4f4],fog:0xcfe0ea,sun:0xfff0d0,hemi:[0xd4e8f8,0x4f7a3c],road:'#3b3d43',tod0:'day',imola:1,
  pts:IM.pts.map(q=>[q[0]*IMK,q[1]*IMK,q[2]*IMY,q[3]]),walls:[],ice:[],boost:[],jumps:[]};
 D.push(imola);
 P.TRACK_INFO.push({s:'TARMAC',tags:['CHICANES','SAND TRAPS','TYRE WALLS','KERBS']});
 P.TRK_TRACKS.push(D.length-1);
-P.MEDAL_REF[D.length-1]=IMC?74.3:110.8;
+P.MEDAL_REF[D.length-1]=110.8;
 MATS.sandtrap={grip:.42,top:.5,acc:.4};
 const IMX=D.length-1;
 /* the real circuit's trackside layout (imola_ref.js): per-sample offsets past the road edge for each side, or -1 */
-const IR=IMC?null:window.PT8_IMREF,irB=s=>{const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u};
+const IR=window.PT8_IMREF,irB=s=>{const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u};
 const i16=s=>{const u=irB(s);return new Int16Array(u.buffer,0,u.length>>1)};
 /* ground layers (gravel, green paint, asphalt run-off): rows 1 m apart, each a list of [x0,x1] runs */
 const GRUN=(()=>{const o={};if(!IR||!IR.gr)return o;for(const k in IR.gr){const a=i16(IR.gr[k]),m=new Map();for(let i=0;i<a.length;i+=3){const r=a[i];(m.get(r)||m.set(r,[]).get(r)).push([a[i+1]/4,a[i+2]/4])}o[k]=m}return o})();
@@ -25,7 +25,7 @@ const wrp=a=>{while(a>PI)a-=2*PI;while(a<-PI)a+=2*PI;return a};
 function cornersOf(T){const N=T.N,curv=new Float32Array(N);for(let i=0;i<N;i++)curv[i]=wrp(T.psi[(i+5)%N]-T.psi[(i-5+N)%N])/(10*T.sp);
  const corners=[];let s=-1;for(let i=0;i<N;i++){const on=Math.abs(curv[i])>.0105;if(on&&s<0)s=i;if(!on&&s>=0){if(i-s>6){let pk=0,pi=s;for(let q=s;q<i;q++)if(Math.abs(curv[q])>pk){pk=Math.abs(curv[q]);pi=q}corners.push({a:s,b:i,dir:Math.sign(curv[pi]),pk,pi})}s=-1}}
  let tot=0;for(let i=0;i<N;i++)tot+=curv[i];return{curv,corners,left:tot>=0?1:-1}}
-const ssI=sampleTrack;sampleTrack=d=>{const T=ssI(d);if(!d.imola||IMC)return T;/* the bought model (imola_cartoon.js) brings its own surfaces */
+const ssI=sampleTrack;sampleTrack=d=>{const T=ssI(d);if(!d.imola||d.cartoon)return T;/* a track file (cartoon.js) brings its own surfaces */
  if(T.tunnels&&T.tunnels.length){for(const[a,b]of T.tunnels)for(let i=a;i<=b;i++){const k=i%T.N;T.tn[k]=0;T.wall[k]=0;T.wh[k]=1.3}T.tunnels=[]}
  const C=cornersOf(T);T._im=C;const N=T.N;T.trapS=new Int8Array(N);
  const kc=[];for(const c of C.corners){const p=kc[kc.length-1];if(p&&p.dir===c.dir&&c.a-p.b<16)p.b=c.b;else kc.push({a:c.a,b:c.b,dir:c.dir})}
@@ -282,5 +282,5 @@ function dressIM(T,sc){
  {const rm=[];sc.traverse(o=>{if(o.isInstancedMesh&&o.geometry&&/Octahedron|Icosahedron|Dodecahedron/.test(o.geometry.type))rm.push(o)});rm.forEach(o=>o.parent&&o.parent.remove(o))}
  styleScene(g);sc.add(g);
 }
-const bwI=buildWorld;buildWorld=T=>{const sc=bwI(T);if(T.d&&T.d.imola&&!IMC){try{dressIM(T,sc)}catch(e){console.error('imola dress',e)}}return sc};
+const bwI=buildWorld;buildWorld=T=>{const sc=bwI(T);if(T.d&&T.d.imola&&!T.d.cartoon){try{dressIM(T,sc)}catch(e){console.error('imola dress',e)}}return sc};
 })();

@@ -189,6 +189,7 @@ const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="current
 
 /* ================= TRACK PREVIEW (map + elevation) ================= */
 const TS=[];function tr(i){return TS[i]||(TS[i]=sampleTrack(D[i]))}
+P.trClear=i=>{TS[i]=undefined};
 function mix3(a,b,t){return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t]}
 /* corners for the track previews: severity per sample (0 straight .. 4 hairpin) and a numbered list in lap order */
 P.SEV_COL=['#f1f3f5','#f2df6b','#f2a43a','#e8572f','#c22a4a'];
@@ -269,8 +270,12 @@ const dmgOf=m=>{const v=(ST.dmgBy||{})[m];return v!==undefined?v:(m==='rally'||m
 const effTod=()=>ST.todUser||D[ST.track].tod0||'day';
 const seg=(items,cur)=>items.map(([v,l])=>`<button class="btn sm ${v===cur?'sel':''}" data-v="${v}"><span>${l}</span></button>`).join('');
 function renderSetup(){const m=ST.mode;$('suTitle').innerHTML=MODE_NAME[m];
- $('trkList').innerHTML=D.map((d,i)=>!okTrack(m,i)?'':`<div class="trk ${i===ST.track?'sel':''}" data-i="${i}"><canvas width="56" height="42"></canvas><div><b>${d.name}</b><small>${P.TRACK_INFO[i].s} &middot; ${Math.round(tr(i).L)} m</small></div>${barnIcon(d)}</div>`).join('');
- $$('#trkList .trk',root).forEach(e=>{const i=+e.dataset.i;drawTrack(e.querySelector('canvas'),i,false);e.onclick=()=>{ST.track=i;renderSetup()}});
+ $('trkList').innerHTML=D.map((d,i)=>!okTrack(m,i)?'':`<div class="trk ${i===ST.track?'sel':''}" data-i="${i}"><canvas width="56" height="42"></canvas><div><b>${d.name}</b><small>${P.TRACK_INFO[i].s} &middot; ${Math.round(tr(i).L)} m${d.cartoon?' &middot; 3D model':''}</small></div>${barnIcon(d)}</div>`).join('')
+  +((P.TRK_TRACKS||[]).some(i=>okTrack(m,i))&&P.loadTrackFile?`<div class="trk trkAdd" id="trkAdd"><div style="width:56px;text-align:center;font-size:26px;line-height:42px">+</div><div><b>Add track file</b><small id="trkAddMsg">${Object.keys(P.trackPacks||{}).length?'Loaded: '+Object.values(P.trackPacks).map(p=>p.name).join(', '):'Load a .ptrack file from your computer'}</small></div><input type="file" accept=".ptrack,.json,.gz" style="display:none"></div>`:'');
+ $$('#trkList .trk',root).forEach(e=>{if(e.id==='trkAdd')return;const i=+e.dataset.i;drawTrack(e.querySelector('canvas'),i,false);e.onclick=()=>{ST.track=i;renderSetup()}});
+ {const a=$('trkAdd');if(a){const inp=a.querySelector('input'),msg=a.querySelector('#trkAddMsg');a.onclick=e=>{if(e.target!==inp)inp.click()};
+  inp.onchange=async()=>{const f=inp.files&&inp.files[0];if(!f)return;msg.textContent='Loading '+f.name+'...';
+   try{const r=await P.loadTrackFile(f);ST.track=r.i;renderSetup()}catch(e){console.error(e);msg.textContent='Could not load: '+(e&&e.message||e)}}}}
  if(!okTrack(m,ST.track))ST.track=firstTrack(m);
  const T=tr(ST.track);
  if(m==='rally'&&P.stageRender){const want=ST.track,cv=$('trkPrev'),g=cv.getContext('2d'),paint=img=>{g.fillStyle='#0c1218';g.fillRect(0,0,cv.width,cv.height);if(img){const h=cv.width*img.height/img.width;g.drawImage(img,0,(cv.height-h)/2,cv.width,h)}else{g.fillStyle='#8a949c';g.font='12px monospace';g.textAlign='center';g.fillText('RENDERING STAGE MAP...',cv.width/2,cv.height/2)}},c0=P.stageCached&&P.stageCached(want);
@@ -668,7 +673,7 @@ frame=function(n){requestAnimationFrame(frame);const dt=Math.min(.05,Math.max(0,
    Only the menu itself and the full-screen fades/vignette stay */
 (function(){const st=document.createElement('style');st.textContent='body.ptPause>div:not(#pause):not(#ptOptions):not(#v8):not(#fade):not(#ptWipe):not(#rlFade):not(#rlDip){visibility:hidden!important}';document.head.appendChild(st);
  const sh=show;show=n=>{sh(n);if(n==='pause')document.body.classList.add('ptPause');else if(n!=='ptOptions')document.body.classList.remove('ptPause')}})();
-P.studioDbg=()=>S;P.ui={openCards,openShow,renderSetup,renderCareer,ST,SR};
+P.studioDbg=()=>S;P.ui={openCards,openShow,renderSetup,renderCareer,ST,SR,trClear:i=>P.trClear(i),refreshTracks:()=>{const e=document.getElementById('s8setup');if(e&&e.offsetParent)renderSetup()}};
 document.title='Poly Tourismo v9';
 refreshMenuCars();MS=null;
 })();

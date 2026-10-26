@@ -15,5 +15,5 @@ const ROOT=path.dirname(__dirname),OUT=path.join(ROOT,'tests','out');fs.mkdirSyn
   else if(s[0]==='wait')await pg.waitForTimeout(s[1]);
   else if(s[0]==='shot')await pg.screenshot({path:path.join(OUT,pre+'_'+s[1]+'.png')});
   else if(s[0]==='key')await pg.keyboard.press(s[1]);else if(s[0]==='down')await pg.keyboard.down(s[1]);else if(s[0]==='up')await pg.keyboard.up(s[1]);
-  else if(s[0]==='click')await pg.click(s[1]);}catch(e){console.log('ERR',String(e).slice(0,300))}}
+  else if(s[0]==='click')await pg.click(s[1]);else if(s[0]==='file')await pg.setInputFiles(s[1],s[2]);}catch(e){console.log('ERR',String(e).slice(0,300))}}
  console.log(logs.slice(-25).join('\n'));await b.close()})();

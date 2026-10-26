@@ -1,0 +1,3 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",2500],
+["js","(()=>{const ids=['c102','merc','c102','merc','c102','merc','c102'];PT8.launch({mode:'mp',rally:true,circuit:true,track:15,laps:1,humans:[{id:'merc',alt:0}],ai:ids.map((id,i)=>({id,alt:0,skill:.9}))});return 1})()"],["wait",9000],["shot","grid"],
+["js","(()=>{for(let i=0;i<60*6;i++){step(1/60);if(RACE.state==='count')RACE.state='race'}return 1})()"],["wait",1500],["shot","go"]]
