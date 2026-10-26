@@ -15,7 +15,9 @@ function grid(pack){if(pack._g)return pack._g;const G=pack.grid,HG=new Int16Arra
  return pack._g={hAt,kAt}}
 const baseOf=pack=>D.findIndex(d=>pack.replaces==='imola'?d.imola:pack.replaces==='ra'?d.ra:false);
 P.trackPacks={};
+/* newest file wins (pack.rev = build time): an older copy saved in this browser never replaces a newer built-in one */
 P.addTrackPack=pack=>{const i=baseOf(pack);if(i<0)throw new Error('This track file is for a track this game does not have ('+pack.replaces+')');const d=D[i];
+ if(d.cartoon&&(d.cartoon.rev||0)>(pack.rev||0)){const e=new Error('This is an older version of '+pack.name+' than the one already in the game');e.older=true;throw e}
  if(!d._orig)d._orig={pts:d.pts,bank:d.bank,medal:P.MEDAL_REF[i]};
  d.pts=pack.pts;d.bank=0;d.cartoon=pack;if(pack.medal)P.MEDAL_REF[i]=pack.medal;P.trackPacks[pack.id]=pack;
  if(P.ui&&P.ui.trClear)P.ui.trClear(i);return i};
@@ -65,17 +67,18 @@ const uv=updateVisual;updateVisual=function(c,T,t){const m=c&&c.m,k=K();if(m&&m.
  if(m&&m.g&&k!==1&&m.g.visible!==false){m.g.scale.setScalar(k);m.g.position.y+=(k-1)*.95;if(m.sh){m.sh.scale.x*=k;m.sh.scale.y*=k}}return r};
 /* chase camera: pulled back less than the car grew (the car fills more of the screen and the camera sits nearer the road, so the ground
    streams past faster), plus a wider view and a light buzz at speed: the big tracks otherwise feel slow with big cars */
-const so=soloCam;soloCam=function(c,dt,out){so.apply(this,arguments);const k=K();if(k===1||c.fin)return;const f=1+(k-1)*.55,y=c.camY==null?c.y:c.camY;
+const so=soloCam;soloCam=function(c,dt,out){so.apply(this,arguments);const k=K();if(k===1||c.fin)return;const f=1+(k-1)*.5,y=c.camY==null?c.y:c.camY;
  out.p.set(c.x+(out.p.x-c.x)*f,y+(out.p.y-y)*f,c.z+(out.p.z-c.z)*f);out.l.set(c.x+(out.l.x-c.x)*f,y+(out.l.y-y)*f,c.z+(out.l.z-c.z)*f);
- const v=Math.max(0,Math.min(1,((c.sp||0)-15)/45)),hood=(c.tnB||0)>.5||c.camMode;out.f+=v*(hood?6:12);
- if(!hood&&v>0&&!(c.exp>0)){const t=performance.now()/1000,a=v*v*.06;out.p.x+=Math.sin(t*37.1)*a;out.p.y+=Math.sin(t*29.3+1)*a;out.p.z+=Math.sin(t*33.7+2)*a}
- speedFx(c,v)};
+ const v=Math.max(0,Math.min(1,((c.sp||0)-20)/50)),hood=(c.tnB||0)>.5||c.camMode;out.f+=v*(hood?3:6);speedFx(c,Math.max(0,((c.sp||0)-42)/30))};
 /* speed streaks at the screen edges, faint from about 55 km/h, strongest from 215 km/h up (model tracks only) */
 let sfx=null,sfxV=0;const speedFx=(c,v)=>{if(!c.human)return;if(!sfx){sfx=document.createElement('div');sfx.id='ptSpeedFx';
   sfx.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:4;opacity:0;mix-blend-mode:screen;background:repeating-conic-gradient(from 0deg at 50% 46%,rgba(255,255,255,.0) 0deg,rgba(255,255,255,.0) 2.2deg,rgba(255,255,255,.55) 2.5deg,rgba(255,255,255,0) 2.8deg,rgba(255,255,255,0) 5.3deg);-webkit-mask:radial-gradient(ellipse 62% 58% at 50% 46%,transparent 55%,#000 100%);mask:radial-gradient(ellipse 62% 58% at 50% 46%,transparent 55%,#000 100%)';
   document.body.appendChild(sfx)}
- sfxV+=(v-sfxV)*.15;sfx.style.opacity=(sfxV*sfxV*.35).toFixed(3);sfx.style.transform='rotate('+(Math.random()*2.5).toFixed(2)+'deg) scale(1.05)'};
+ sfxV+=(v-sfxV)*.15;sfx.style.opacity=(Math.min(1,sfxV)**2*.09).toFixed(3)};
 {const hide=()=>{if(sfx)sfx.style.opacity=0;sfxV=0};const cr=P.cleanupRace;if(cr)P.cleanupRace=function(){hide();return cr.apply(this,arguments)};setInterval(()=>{if(sfx&&(typeof scr==='undefined'||scr!=='game'||K()===1))hide()},400)}
+/* these circuits are full size and the cars drawn big, so at true speeds they crawl past the scenery: cars here are 30% quicker in every
+   respect (top speed, acceleration, braking and grip together, so the handling balance stays the same) */
+const SPD=1.3;{const m0=P.mul;P.mul=c=>{const m=m0?m0(c):{acc:1,top:1,grip:1,brk:1};if(K()>1){m.top*=SPD;m.acc*=SPD;m.brk*=SPD;m.grip*=SPD}return m}}
 /* hood camera: on these tracks only under something overhead (T.ov from the model) */
 {const sc0=stepCar;stepCar=function(c,dt){const r=sc0.apply(this,arguments);const R=typeof RACE!=='undefined'?RACE:null,T=R&&R.T;if(T&&T.ov)c.inTn=!!(T.ov[((c.idx|0)%T.N+T.N)%T.N]&&c.onRoad);return r}}
 /* grid: each car stands in one of the boxes painted on the model's start straight (front row first) */
@@ -97,6 +100,6 @@ P.loadTrackFile=async file=>{const buf=await file.arrayBuffer();const pack=JSON.
 P.removeTrackPack=async id=>{const p=P.trackPacks[id];if(!p)return;const i=baseOf(p),d=D[i];if(d&&d._orig){d.pts=d._orig.pts;d.bank=d._orig.bank;P.MEDAL_REF[i]=d._orig.medal;delete d.cartoon;if(P.ui&&P.ui.trClear)P.ui.trClear(i)}
  delete P.trackPacks[id];try{await idbDo('readwrite',st=>st.delete(id))}catch(e){}};
 for(const p of window.PT8_PACKS||[]){try{P.addTrackPack(p)}catch(e){console.error('built-in track file',e)}}
-P.trackPacksReady=(async()=>{try{const keys=await idbDo('readonly',st=>st.getAllKeys());for(const k of keys||[]){const buf=await idbDo('readonly',st=>st.get(k));try{P.addTrackPack(JSON.parse(await gunzip(buf)))}catch(e){console.warn('saved track file',k,e)}}
+P.trackPacksReady=(async()=>{try{const keys=await idbDo('readonly',st=>st.getAllKeys());for(const k of keys||[]){const buf=await idbDo('readonly',st=>st.get(k));try{P.addTrackPack(JSON.parse(await gunzip(buf)))}catch(e){if(e&&e.older){try{await idbDo('readwrite',st=>st.delete(k))}catch(_){}}else console.warn('saved track file',k,e)}}
  if(keys&&keys.length&&P.ui&&P.ui.refreshTracks)P.ui.refreshTracks()}catch(e){console.warn('saved track files unavailable',e)}})();
 })();

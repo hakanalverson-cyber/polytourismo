@@ -1,0 +1,8 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",2500],
+["js","(()=>{document.querySelector('#s8cards .card[data-m=track]').click();return 1})()"],["wait",2000],
+["js","(()=>{[...document.querySelectorAll('#cFmt button')].find(x=>x.dataset.v==='race').click();return 1})()"],["wait",800],
+["js","(()=>{[...document.querySelectorAll('#cCpu button')].find(x=>x.dataset.v==='3').click();return 1})()"],["wait",800],
+["js","(()=>{document.getElementById('suGo').click();return 1})()"],["wait",2500],["shot","garage"],
+["js","(()=>{const a=document.getElementById('shAct');a&&a.click();return a?a.textContent:'none'})()"],["wait",4000],
+["js","(()=>{const s=document.getElementById('suGo');return (RACE?JSON.stringify({mode:RACE.cfg.mode,n:RACE.cars.length,tr:RACE.cfg.trackRace}):'no race')+' scr='+scr})()"],["wait",6000],["shot","race"],
+["js","(()=>RACE?JSON.stringify({mode:RACE.cfg.mode,n:RACE.cars.length}):'no race '+scr)()"]]

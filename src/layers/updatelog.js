@@ -4,6 +4,8 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.12',d:'Oct 25, 2026',t:'New Road Atlanta and Imola scenery, smarter CPU, gearbox choice',items:[
+  'Cars on Imola and Road Atlanta are 30% quicker in every respect (top speed, acceleration, braking and grip), so the big full-size tracks feel fast. Camera shake removed; speed streaks much fainter. Track mode opens on the Race format.',
+  'A track file saved in the browser can no longer replace a newer built-in one (an old saved Road Atlanta was bringing the coned route back); stale saved copies are deleted.',
   'Road Atlanta follows the real circuit: the lap line used to run through three side loops the model closes off with cones (so driving the real road counted as leaving the track and blew the car up). Every coned road is now shut out of the lap.',
   'Road Atlanta in proper colour: the model ships olive grass, brown asphalt and dull trees; they are now graded to clear greens and greys like Imola.',
   'Cars on Imola and Road Atlanta are 1.8x (was 1.6x) and start in the grid boxes painted on the model. The chase camera sits closer and lower there, widens at speed, shakes lightly and shows speed streaks, so speed reads properly with the bigger cars.',

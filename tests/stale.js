@@ -1,0 +1,8 @@
+const {chromium}=require('playwright');const ROOT='/home/claude/polytourismo';
+(async()=>{const b=await chromium.launch({args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});const ctx=await b.newContext();const p=await ctx.newPage();
+await p.route('**/*',r=>{const u=r.request().url();if(u.startsWith('file:'))return r.continue();if(u.includes('three.min.js'))return r.fulfill({path:ROOT+'/node_modules/three/build/three.min.js'});if(u.includes('GLTFLoader'))return r.fulfill({path:ROOT+'/node_modules/three/examples/js/loaders/GLTFLoader.js'});return r.abort()});
+await p.goto('file://'+ROOT+'/dist/Poly-Tourismo.html',{timeout:240000,waitUntil:'commit'});await p.waitForTimeout(30000);
+console.log(await p.evaluate(async()=>{const pk=Object.assign({},PT8.trackPacks.ra);delete pk.rev;delete pk._g;delete pk._m;pk.pts=pk.pts.slice(0,50);const s=JSON.stringify(pk);
+ await new Promise((ok,no)=>{const r=indexedDB.open('polygt_tracks',1);r.onupgradeneeded=()=>r.result.createObjectStore('packs');r.onsuccess=()=>{const tx=r.result.transaction('packs','readwrite');tx.objectStore('packs').put(new TextEncoder().encode(s).buffer,'ra');tx.oncomplete=ok;tx.onerror=no}});return 'stored stale'}));
+await p.reload({waitUntil:'commit'});await p.waitForTimeout(30000);
+console.log(await p.evaluate(async()=>{await PT8.trackPacksReady;const keys=await new Promise(ok=>{const r=indexedDB.open('polygt_tracks',1);r.onsuccess=()=>{const q=r.result.transaction('packs').objectStore('packs').getAllKeys();q.onsuccess=()=>ok(q.result)}});return JSON.stringify({rev:PT8.trackPacks.ra.rev,pts:D.find(d=>d.ra).pts.length,keys})}));await b.close()})();

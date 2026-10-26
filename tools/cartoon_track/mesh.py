@@ -90,7 +90,8 @@ for t in sorted(used):
   if any(re.search(p,t) for p in C.get('alpha',[])):rgb.putalpha(im.getchannel('A'));rgb.save(b,'PNG',optimize=True);tex[t]='data:image/png;base64,'+base64.b64encode(b.getvalue()).decode()
   else:rgb.save(b,'JPEG',quality=82);tex[t]='data:image/jpeg;base64,'+base64.b64encode(b.getvalue()).decode()
 g=J['grid'];g['h']=base64.b64encode(open(W+'/hf.i16','rb').read()).decode();g['k']=base64.b64encode(open(W+'/cls.rle','rb').read()).decode()
-out={'v':1,'id':C['id'],'name':C['name'],'replaces':C['replaces'],'medal':C.get('medal'),'carScale':C.get('carScale',1),'alpha':[t for t in used if any(re.search(p,t) for p in C.get('alpha',[]))],'S':S,'pts':J['pts'],'grid':g,
+import time
+out={'v':1,'rev':int(time.time()),'id':C['id'],'name':C['name'],'replaces':C['replaces'],'medal':C.get('medal'),'carScale':C.get('carScale',1),'alpha':[t for t in used if any(re.search(p,t) for p in C.get('alpha',[]))],'S':S,'pts':J['pts'],'grid':g,
  'over':J.get('over',[]),'slots':J.get('slots',[]),'segs':b64(np.array(J['segs'],np.float32).reshape(-1,4)),'tex':tex,'meshes':meshes,'credit':C.get('credit','')}
 raw=json.dumps(out,separators=(',',':')).encode()
 if OUT.endswith('.json'):open(OUT,'wb').write(raw)

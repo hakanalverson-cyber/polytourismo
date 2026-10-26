@@ -270,8 +270,8 @@ const dmgOf=m=>{const v=(ST.dmgBy||{})[m];return v!==undefined?v:(m==='rally'||m
 const effTod=()=>ST.todUser||D[ST.track].tod0||'day';
 const seg=(items,cur)=>items.map(([v,l])=>`<button class="btn sm ${v===cur?'sel':''}" data-v="${v}"><span>${l}</span></button>`).join('');
 /* Track mode has two formats: time trial (drivers take turns, the original) and race (everyone at once, split screen, CPU drivers) */
-const trkRace=()=>ST.trkType==='race';
-const fmtRow=()=>`<div class="row8"><b>Format</b><span class="seg" id="cFmt">${seg([['tt','Time trial'],['race','Race']],ST.trkType||'tt')}</span></div>`;
+const trkRace=()=>ST.trkType!=='tt';/* Race is the default */
+const fmtRow=()=>`<div class="row8"><b>Format</b><span class="seg" id="cFmt">${seg([['race','Race (CPU / split screen)'],['tt','Time trial (take turns)']],trkRace()?'race':'tt')}</span></div>`;
 function trackRaceCfg(){const Tn=tr(ST.track),dist=Tn.L*(ST.rlaps||1),wxn=(P.WX[ST.wx||'clear']||{n:'CLEAR'}).n;if(ST.players+(ST.cpus||0)>8)ST.cpus=8-ST.players;
  return `<div class="rcfg"><h4>Circuit configuration</h4>${fmtRow()}<div class="row8"><b>Race laps</b><span class="seg" id="cRL">${seg([[1,'1'],[2,'2'],[3,'3'],[5,'5']],ST.rlaps)}</span></div>`
  +`<div class="row8"><b>Drivers</b><span class="seg" id="cPl">${seg([[1,'1'],[2,'2'],[3,'3'],[4,'4']],ST.players)}</span></div>`
