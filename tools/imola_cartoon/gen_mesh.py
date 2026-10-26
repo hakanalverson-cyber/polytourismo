@@ -13,9 +13,11 @@ def texof(n):
   return '?'
 TEXF={'road':'road.png','garages_imola':'garages_imola.png','IMOLA':'IMOLA.png','grass_1':'grass_1.png','grass_2':'grass_2.png','gravel':'gravel.png','rock':'rock.png','tyres':'tyres.png','banners':'banners.png','trees':'trees.png','baloon':'baloon.png','fence':'imola_fence_fence_metal_0_Alpha.png','logo':'imola_ground_logo.png'}
 SIZE={'road':TS,'garages_imola':TS,'IMOLA':TS,'banners':TS,'logo':TS,'grass_1':512,'grass_2':512,'gravel':512,'rock':256,'tyres':256,'trees':256,'baloon':256,'fence':256}
-BAKE=lambda n:bool(re.search(r'trees|tyres|seats_0[1-9]_|startlights',n))
+BAKE=lambda n:bool(re.search(r'trees|tyres|startlights',n))
 RATIO=lambda n:.16 if 'trees' in n else .14 if 'tyres' in n else .3 if 'seats' in n else .2
 tcache={}
+# stacked ground layers are lifted a few cm apart instead of depth-offset (offsets swallow anything standing on a slope)
+LIFT={'imola_bottom_rock_0':-.1,'imola_grass_2_grass_2_0':.03,'imola_gravel_nocol1_gravel_0':.06,'imola_stadium_road_imola_0':.09,'imola_track_surface_road_imola_0':.12,'imola_logo_ground_imola_ground_logo_0':.15,'start_line_white_line_0':.18}
 def img(t):
   if t not in tcache:tcache[t]=np.asarray(Image.open(TX+TEXF[t]).convert('RGBA').resize((512,512)))
   return tcache[t]
@@ -43,6 +45,7 @@ for n in names:
   t=texof(n)
   if t is None:continue
   v=d[n+'_v'].astype(np.float64)*S;f=d[n+'_f'];uv=d[n+'_uv'].astype(np.float64)
+  v=v+np.array([0,LIFT.get(n,0),0])
   if BAKE(n):
     # per-face colour from the texture, then merge + decimate, then recolour from the nearest original face
     if t.startswith('#'):fc=np.tile(np.array([int(t[1:3],16),int(t[3:5],16),int(t[5:7],16)]),(len(f),1))

@@ -27,9 +27,6 @@ let MESH=null;
 function meshes(){if(MESH)return MESH;const tx=textures(),mats={},lut=new Float32Array(256);for(let i=0;i<256;i++){const c=i/255;lut[i]=c<.04045?c/12.92:Math.pow((c+.055)/1.055,2.4)}
  const mat=k=>mats[k]||(mats[k]=k==='c'?new THREE.MeshLambertMaterial({vertexColors:true,side:THREE.DoubleSide}):k[0]==='#'?new THREE.MeshLambertMaterial({color:new THREE.Color(k).convertSRGBToLinear(),side:THREE.DoubleSide}):
   new THREE.MeshLambertMaterial({map:tx[k==='road_s'?'road':k],side:THREE.DoubleSide,alphaTest:k==='fence'?.5:0,transparent:false}));
- /* the ground layers lie on top of each other: pull the upper ones forward in depth so they never flicker */
- const LAYER={rock:-2,grass_1:0,grass_2:1,gravel:2,road_s:3,road:4,logo:5,'#d2d2d2':6};/* rock is the cliff under the world: always behind the grass */
- for(const k in LAYER){const L=LAYER[k];if(!L)continue;const m=mat(k);m.polygonOffset=true;m.polygonOffsetFactor=-L;m.polygonOffsetUnits=-L*4}
  const out=[];
  for(const m of C.meshes){const q=m.q,o=m.o,p16=new Int16Array(dec(m.p).buffer),u8=dec(m.i),idx=m.i32?new Uint32Array(u8.buffer):new Uint16Array(u8.buffer),g=new THREE.BufferGeometry();
   const pos=new Float32Array(p16.length);for(let i=0;i<p16.length;i++)pos[i]=p16[i]*q+o[i%3];
@@ -38,7 +35,7 @@ function meshes(){if(MESH)return MESH;const tx=textures(),mats={},lut=new Float3
    g.setAttribute('position',new THREE.BufferAttribute(P2,3));g.setAttribute('color',new THREE.BufferAttribute(C2,3))}
   else{g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setIndex(new THREE.BufferAttribute(idx,1));
    if(m.u){const u16=new Int16Array(dec(m.u).buffer),uv=new Float32Array(u16.length);for(let i=0;i<u16.length;i++)uv[i]=u16[i]/256;g.setAttribute('uv',new THREE.BufferAttribute(uv,2))}}
-  g.computeVertexNormals();g.computeBoundingSphere();const me=new THREE.Mesh(g,mat(m.m));me.matrixAutoUpdate=false;me.updateMatrix();me.name='imc_'+m.m;out.push(me)}
+  g.computeVertexNormals();g.computeBoundingSphere();const me=new THREE.Mesh(g,mat(m.m));me.matrixAutoUpdate=false;me.updateMatrix();me.name='imc_'+m.m;me.userData.noMerge=1;/* the static-mesh merger drops polygon offsets and per-face colours */out.push(me)}
  return MESH=out}
 /* wrap buildWorld last (after every other layer has loaded) so whatever they add to the world is hidden too */
 setTimeout(()=>{const bw=buildWorld;buildWorld=T=>{const sc=bw(T);if(!(T.d&&T.d.imola))return sc;

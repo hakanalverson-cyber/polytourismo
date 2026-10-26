@@ -1,0 +1,4 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",2500],
+["js","(()=>{PT8.launch({rally:true,circuit:true,mode:'mp',track:15,laps:1,humans:[{id:'r33',alt:0}],ai:[]});return RACE.state})()"],
+["wait",2500],["shot","i1"],["wait",3000],["shot","i2"],["wait",3000],["shot","i3"],
+["js","(()=>{const cam=RACE.cars[0].cam;const o={};if(cam)o.cam=[cam.position.x,cam.position.y,cam.position.z,cam.near,cam.far];o.state=RACE.state;let hid=0,vis=0;RACE.scene.traverse(m=>{if(m.name&&m.name.startsWith('imc_')){if(m.visible)vis++;else hid++}});o.vis=vis;o.hid=hid;return JSON.stringify(o)})()"]]

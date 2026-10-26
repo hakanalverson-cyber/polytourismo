@@ -31,11 +31,12 @@ if np.sum(dk)<0:R=R[::-1];Wr=Wr[::-1];q=q[::-1];oi=oi[::-1]
 sl=d['imola_startlights_led_c001_startlights_0_v'].mean(0)*S;st=int(np.argmin(np.linalg.norm(R[:,[0,2]]-sl[[0,2]],axis=1)));R=np.roll(R,-st,0);Wr=np.roll(Wr,-st);print('start idx',st,'pts',len(R),'lap m',round(Lc[-1]),'width',np.percentile(Wr,[5,50,95]))
 pts=[[round(a[0],2),round(a[2],2),round(a[1],2),round(w/2,2)] for a,w in zip(R,Wr)]
 # ---- ground height + class grid (2 m cells): top-most ground surface; class 0 grass,1 asphalt,2 paved run-off,3 gravel
-CELL=2.;layers=[('imola_bottom_rock_0',0),('imola_grass_1_nocol_grass_1_0',0),('imola_grass_2_grass_2_0',0),('imola_gravel_nocol1_gravel_0',3),('imola_stadium_road_imola_0',2),('imola_logo_ground_imola_ground_logo_0',2),('imola_track_surface_road_imola_0',1)]
+CELL=1.5;layers=[('imola_bottom_rock_0',0),('imola_grass_1_nocol_grass_1_0',0),('imola_grass_2_grass_2_0',0),('imola_gravel_nocol1_gravel_0',3),('imola_stadium_road_imola_0',2),('imola_logo_ground_imola_ground_logo_0',2),('imola_track_surface_road_imola_0',1)]
+LIFT={'imola_bottom_rock_0':-.1,'imola_grass_2_grass_2_0':.03,'imola_gravel_nocol1_gravel_0':.06,'imola_stadium_road_imola_0':.09,'imola_track_surface_road_imola_0':.12,'imola_logo_ground_imola_ground_logo_0':.15}  # same lifts as gen_mesh: stacked ground layers never share a depth
 allv=np.concatenate([G(n)[0] for n,_ in layers]);x0,z0=np.floor(allv[:,[0,2]].min(0)/CELL)*CELL;x1,z1=np.ceil(allv[:,[0,2]].max(0)/CELL)*CELL
 nx,nz=int((x1-x0)/CELL)+1,int((z1-z0)/CELL)+1;H=np.full((nz,nx),-1e9);K=np.zeros((nz,nx),np.uint8);print('grid',nx,nz)
 for n,cl in layers:
-  v,f,_=G(n);T=v[f]
+  v,f,_=G(n);v=v+np.array([0,LIFT.get(n,0),0]);T=v[f]
   for t in T:
     a,b,c=t[:,[0,2]];mn=np.floor((np.minimum(np.minimum(a,b),c)-[x0,z0])/CELL).astype(int);mx=np.ceil((np.maximum(np.maximum(a,b),c)-[x0,z0])/CELL).astype(int)
     mn=np.maximum(mn,0);mx=np.minimum(mx,[nx-1,nz-1])

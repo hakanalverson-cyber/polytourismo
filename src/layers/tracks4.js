@@ -10,7 +10,7 @@ const imola={id:15,look:0,name:'Imola',desc:'italian grand prix circuit / chican
 D.push(imola);
 P.TRACK_INFO.push({s:'TARMAC',tags:['CHICANES','SAND TRAPS','TYRE WALLS','KERBS']});
 P.TRK_TRACKS.push(D.length-1);
-P.MEDAL_REF[D.length-1]=IMC?97.0:110.8;
+P.MEDAL_REF[D.length-1]=IMC?74.3:110.8;
 MATS.sandtrap={grip:.42,top:.5,acc:.4};
 const IMX=D.length-1;
 /* the real circuit's trackside layout (imola_ref.js): per-sample offsets past the road edge for each side, or -1 */
