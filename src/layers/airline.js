@@ -36,7 +36,7 @@ P.aiInput=function(c,dt){const Rc=RACE,T=Rc.T,N=T.N,a=c.ai||(c.ai={skill:.9,lat:
  /* lane hold: off the start each car keeps its own grid lane for the first stretch and eases onto the line over the next 250 m;
     after the finish (the autopilot cool-down lap) it simply stays in the lane it crossed the line in */
  if(c.cool&&c.fin){if(c._finLat==null)c._finLat=clamp(P.latOf(T,c),T.rlo[ti],T.rhi[ti]);off=c._finLat}
- else if(c.lane0!=null){const d=c.unw*T.sp;if(d<350){const t=clamp((d-100)/250,0,1),e=t*t*(3-2*t);off=c.lane0+(off-c.lane0)*e}}
+ else if(c.lane0!=null){const d=(c.unw-(c.unw0||0))*T.sp;/* metres from the car's own grid box */if(d<350){const t=clamp((d-100)/250,0,1),e=t*t*(3-2*t);off=c.lane0+(off-c.lane0)*e}}
  off=clamp(off,T.rlo[ti],T.rhi[ti]);
  /* side by side: if another car is alongside ahead, move over within the road instead of driving into it */
  for(const o of Rc.cars){if(o===c||o.respT>0||o.fin&&o!==c)continue;const dx=o.x-c.x,dz=o.z-c.z,fw=dx*Math.sin(c.yaw)+dz*Math.cos(c.yaw);if(fw<-2||fw>14)continue;

@@ -1,0 +1,86 @@
+{
+"carScale": 1.8,
+"sign": 1,
+"medal": 90,
+"sat": 1.3,
+"bake": "tree|tyre|startlights",
+"ratio": {
+"tree": 0.16,
+"tyre": 0.14,
+"default": 0.2
+},
+"alpha": [
+"fence"
+],
+"id": "laguna",
+"name": "Laguna Seca",
+"replaces": "laguna",
+"credit": "Cartoon Track Laguna Seca (Retro Cartoon Racing), bought by Hakan",
+"work": "/tmp/claude-0/-home-claude-polytourismo/4b0e7c59-35bd-554a-8c30-0ab78fa183a0/scratchpad/trk_lag",
+"texdir": "/tmp/claude-0/-home-claude-polytourismo/4b0e7c59-35bd-554a-8c30-0ab78fa183a0/scratchpad/clag/textures/",
+"centre": {
+"method": "skeleton",
+"mesh": "laguna_tarmac_road",
+"cell": 40
+},
+"start": {
+"mesh": "laguna_start_line_white_line",
+"mode": "front",
+"ahead": 6,
+"boxes": "laguna_start_line_white_line",
+"cluster": 1
+},
+"ground": [
+[
+"laguna_rock",
+0,
+-0.1
+],
+[
+"terrain_grass",
+0,
+0
+],
+[
+"gravel",
+3,
+0.06
+],
+[
+"sand",
+3,
+0.05
+],
+[
+"dirty_tarmac",
+2,
+0.08
+],
+[
+"bridge_tarmac_road",
+2,
+0.1
+],
+[
+"laguna_tarmac_road",
+1,
+0.12
+]
+],
+"lift": {
+"white_line": 0.16
+},
+"rock": "laguna_rock",
+"colliders": "wall_fence|outer_fence",
+"skip": "^$",
+"bigtex": [
+"road_laguna",
+"garages",
+"^LAGUNA.png",
+"banners",
+"dirty_tarmac"
+],
+"overhead": "tree|tyre|fence|grass|gravel|rock|sand|tarmac|white_line|startlights|water|wall_laguna",
+"width": 29.3,
+"overmin": 10
+}

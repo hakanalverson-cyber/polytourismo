@@ -370,7 +370,7 @@ function buildRing(T){const d=T.d,N=T.N,sc=new THREE.Scene(),C=T._rc||cornersOf(
  return sc}
 
 const bwR=buildWorld;/* the Eifel forest should look lush: richer colour grade on this track only (every time of day) */
-if(P.applyTod){const at0=P.applyTod;P.applyTod=(sc,T,key)=>{const r=at0(sc,T,key);if(T&&T.d&&(T.d.ring||T.d.ra||T.d.imola)&&window.TODU)window.TODU.sat.value*=1.45;return r}}
+if(P.applyTod){const at0=P.applyTod;P.applyTod=(sc,T,key)=>{const r=at0(sc,T,key);if(T&&T.d&&(T.d.ring||T.d.ra||T.d.imola||T.d.packOnly)&&window.TODU)window.TODU.sat.value*=1.45;return r}}
 buildWorld=T=>T.d&&T.d.ring?buildRing(T):bwR(T);
 /* running along the very edge (gutter, kerb) for a long way must not count as a shortcut: on this track the
    last-safe point also follows the car while it stays right beside the road */

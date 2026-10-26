@@ -9,27 +9,31 @@ const dec=s=>{const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;
 /* ground height (2 cm steps) and surface class (0 grass, 1 asphalt, 2 paved run-off, 3 gravel) on the model's own grid */
 function grid(pack){if(pack._g)return pack._g;const G=pack.grid,HG=new Int16Array(dec(G.h).buffer),KG=new Uint8Array(G.nx*G.nz);
  {const r=dec(G.k);let o=0;for(let i=0;i<r.length;i+=2){KG.fill(r[i],o,o+r[i+1]);o+=r[i+1]}}
- const hAt=(x,z)=>{const fx=(x-G.x0)/G.cell,fz=(z-G.z0)/G.cell;if(!(fx>=0&&fz>=0&&fx<G.nx-1&&fz<G.nz-1))return null;
-  const ix=fx|0,iz=fz|0,tx=fx-ix,tz=fz-iz,i=iz*G.nx+ix;return((HG[i]*(1-tx)+HG[i+1]*tx)*(1-tz)+(HG[i+G.nx]*(1-tx)+HG[i+G.nx+1]*tx)*tz)*.02};
+ /* two-level road (Suzuka's crossover): G.up lists the cells where the circuit asphalt also runs higher up; with a height hint the corner
+    values come from the level nearest it, without one from the lower road */
+ const UP=new Map();if(G.up){const a=new Int32Array(dec(G.up).buffer);for(let i=0;i<a.length;i+=2)UP.set(a[i],a[i+1])}
+ const hv=(i,y)=>{const lo=HG[i]*.02;if(y==null||!UP.size)return lo;const u=UP.get(i);if(u==null)return lo;const hi=u*.02;return Math.abs(y-hi)<Math.abs(y-lo)?hi:lo};
+ const hAt=(x,z,y)=>{const fx=(x-G.x0)/G.cell,fz=(z-G.z0)/G.cell;if(!(fx>=0&&fz>=0&&fx<G.nx-1&&fz<G.nz-1))return null;
+  const ix=fx|0,iz=fz|0,tx=fx-ix,tz=fz-iz,i=iz*G.nx+ix;return(hv(i,y)*(1-tx)+hv(i+1,y)*tx)*(1-tz)+(hv(i+G.nx,y)*(1-tx)+hv(i+G.nx+1,y)*tx)*tz};
  const kAt=(x,z)=>{const ix=Math.round((x-G.x0)/G.cell),iz=Math.round((z-G.z0)/G.cell);return ix<0||iz<0||ix>=G.nx||iz>=G.nz?0:KG[iz*G.nx+ix]};
  return pack._g={hAt,kAt}}
-const baseOf=pack=>D.findIndex(d=>pack.replaces==='imola'?d.imola:pack.replaces==='ra'?d.ra:false);
+const baseOf=pack=>D.findIndex(d=>/^(imola|ra|laguna|suzuka)$/.test(pack.replaces)&&!!d[pack.replaces]);
 P.trackPacks={};
 /* the files' gold times were measured with cars 30% quicker and no grip limit; now (25% quicker, 1.6 g grip) a CPU time-trial lap takes
    this much longer: 95.5 -> 107.6 s at Road Atlanta, 98.4 -> 114.7 s at Imola */
-const MEDK={ra:.766,imola:.776},ALAT=23;/* tyre grip (16, then +20% and +20% more turning by request) limit on these tracks, m/s² (see the steering cap below) */
+const MEDK={ra:.766,imola:.776,laguna:.710,suzuka:1.002},ALAT=23;/* tyre grip (16, then +20% and +20% more turning by request) limit on these tracks, m/s² (see the steering cap below) */
 /* newest file wins (pack.rev = build time): an older copy saved in this browser never replaces a newer built-in one */
 P.addTrackPack=pack=>{const i=baseOf(pack);if(i<0)throw new Error('This track file is for a track this game does not have ('+pack.replaces+')');const d=D[i];
  /* the small download has no track built in, so it also knows the newest file's build time: an old copy saved in the browser (Road Atlanta's first
     file drove through the coned loops and had no grid boxes) is turned away and deleted instead of quietly coming back */
- {const nr=(window.PT8_PACKREV||{})[pack.replaces]||0;if((pack.rev||0)<nr){const e=new Error('This '+pack.name+' file is an older version: add the new '+(pack.replaces==='ra'?'road-atlanta':pack.replaces)+'.ptrack');e.older=true;throw e}}
+ {const nr=(window.PT8_PACKREV||{})[pack.replaces]||0;if((pack.rev||0)<nr){const e=new Error('This '+pack.name+' file is an older version: add the new '+({ra:'road-atlanta',suzuka:'suzuka',laguna:'laguna-seca'}[pack.replaces]||pack.replaces)+'.ptrack');e.older=true;throw e}}
  if(d.cartoon&&(d.cartoon.rev||0)>(pack.rev||0)){const e=new Error('This is an older version of '+pack.name+' than the one already in the game');e.older=true;throw e}
  if(!d._orig)d._orig={pts:d.pts,bank:d.bank,medal:P.MEDAL_REF[i]};
  d.pts=pack.pts;d.bank=0;d.cartoon=pack;if(pack.medal)P.MEDAL_REF[i]=pack.medal*(MEDK[pack.replaces]||1);P.trackPacks[pack.id]=pack;
  if(P.ui&&P.ui.trClear)P.ui.trClear(i);return i};
 /* physics: road and ground heights come from the model's surfaces, so the car sits exactly on what is drawn */
 const ss=sampleTrack;sampleTrack=d=>{const T=ss(d);if(!d.cartoon)return T;const {hAt,kAt}=grid(d.cartoon);
- for(let i=0;i<T.N;i++){T.bank[i]=0;const h=hAt(T.x[i],T.z[i]);if(h!=null)T.y[i]=h}
+ for(let i=0;i<T.N;i++){T.bank[i]=0;const h=hAt(T.x[i],T.z[i],T.y[i]);if(h!=null)T.y[i]=h}
  for(const c of T.cpts||[]){const h=hAt(c[0],c[1]);if(h!=null)c[2]=h}
  /* no tunnels from the old hand-built track; the hood camera only comes in where the model has a bridge or other structure over the road
     (pack.over: stretches in metres along the lap), from 16 m before it to 4 m after */
@@ -40,7 +44,7 @@ const ss=sampleTrack;sampleTrack=d=>{const T=ss(d);if(!d.cartoon)return T;const 
  if(T.tn)T.tn.fill(0);T.ov=new Uint8Array(T.N);{let L=0;const Ls=new Float32Array(T.N);for(let i=1;i<T.N;i++){L+=Math.hypot(T.x[i]-T.x[i-1],T.z[i]-T.z[i-1]);Ls[i]=L}
   for(const[a,b]of d.cartoon.over||[])for(let i=0;i<T.N;i++)if(Ls[i]>=a-16&&Ls[i]<=b+4)T.ov[i]=1}
  const t0=T.terr;T.terr=(x,z)=>{const h=hAt(x,z);return h==null?t0(x,z):h};
- const s0=T.surf;T.surf=(x,z,y)=>{const r=s0(x,z,y),h=hAt(x,z);if(h==null)return r;r.h=h;
+ const s0=T.surf;T.surf=(x,z,y)=>{const r=s0(x,z,y),h=hAt(x,z,y);if(h==null)return r;r.h=h;
   if(!r.road){const k=kAt(x,z);if(k===1||k===2)r.near=1;else if(k===3)r.trap=1}return r};
  return T};
 /* scenery: tiles of the model, built once per track file */
@@ -131,7 +135,7 @@ P.gridHook=(T,c,slot)=>{const pk=T.d&&T.d.cartoon;let s=pk&&pk.slots&&pk.slots[s
  /* the slot is the painted line across the front of the box: the car stands with its nose just behind it */
  const bk=2.45*K(),sx=s[0]-Math.sin(T.psi[bi])*bk,sz=s[1]-Math.cos(T.psi[bi])*bk;s=[sx,sz];
  bd=1e18;for(let i=0;i<N;i++){const d=(T.x[i]-s[0])**2+(T.z[i]-s[1])**2;if(d<bd){bd=d;bi=i}}
- c.x=s[0];c.z=s[1];c.lane0=(s[0]-T.x[bi])*Math.cos(T.psi[bi])-(s[1]-T.z[bi])*Math.sin(T.psi[bi]);c.y=T.surf(s[0],s[1],T.y[bi]+2).h+1.1;c.yaw=T.psi[bi];c.idx=bi;c.unw=bi>N/2?bi-N:bi;c.cy=c.yaw;c.camY=c.y;return true};
+ c.x=s[0];c.z=s[1];c.lane0=(s[0]-T.x[bi])*Math.cos(T.psi[bi])-(s[1]-T.z[bi])*Math.sin(T.psi[bi]);c.y=T.surf(s[0],s[1],T.y[bi]+2).h+1.1;c.yaw=T.psi[bi];c.idx=bi;c.unw=bi>N/2?bi-N:bi;c.unw0=c.unw;c.cy=c.yaw;c.camY=c.y;return true};
 /* car-to-car contact (every track): boxes the size of the drawn car (grown with carScale here), not a circle, so cars side by side no
    longer touch at a car's width apart; a softer bounce so two cars don't ping-pong off each other, and one knock gives one set of sparks
    (a pair can't spark/shake again for 0.6 s while they are still rubbing) */

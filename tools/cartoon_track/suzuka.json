@@ -1,0 +1,86 @@
+{
+"carScale": 1.8,
+"sign": 1,
+"medal": 90,
+"sat": 1.3,
+"bake": "tree|tyre|startlights",
+"ratio": {
+"tree": 0.16,
+"tyre": 0.14,
+"default": 0.2
+},
+"alpha": [
+"fence"
+],
+"id": "suzuka",
+"name": "Suzuka",
+"replaces": "suzuka",
+"credit": "Cartoon Race Track Suzuka (Retro Cartoon Racing), bought by Hakan",
+"work": "/tmp/claude-0/-home-claude-polytourismo/4b0e7c59-35bd-554a-8c30-0ab78fa183a0/scratchpad/trk_suz",
+"texdir": "/tmp/claude-0/-home-claude-polytourismo/4b0e7c59-35bd-554a-8c30-0ab78fa183a0/scratchpad/csuz/textures/",
+"S": 2.26,
+"centre": {
+"method": "strip",
+"mesh": "TARMAC_road_suzuka",
+"vlo": 0.51,
+"vhi": 0.74
+},
+"start": {
+"mesh": "start_line_secondary_white_line",
+"mode": "front",
+"ahead": 6,
+"boxes": "start_line_secondary_white_line",
+"cluster": 1
+},
+"ground": [
+[
+"^grass_grass",
+0,
+0
+],
+[
+"football",
+0,
+0.02
+],
+[
+"sand_1",
+3,
+0.05
+],
+[
+"runoff_gravel",
+3,
+0.06
+],
+[
+"pits_parking",
+2,
+0.08
+],
+[
+"tarmac_runoff",
+2,
+0.1
+],
+[
+"TARMAC_road",
+1,
+0.12
+]
+],
+"lift": {
+"white_line": 0.16
+},
+"colliders": "collider",
+"skip": "collider",
+"bigtex": [
+"road_suzuka",
+"garages",
+"^SUZUKA.png",
+"banners",
+"dirty_tarmac"
+],
+"overhead": "tree|collider|fence|grass|gravel|sand|football|TARMAC|tarmac|white_line|startlights|water|barrier|baloon",
+"twolevel": 1
+}

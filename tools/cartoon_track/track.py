@@ -123,6 +123,13 @@ if st.get('boxes'):
       if 1.2<e[0]<7 and 5<e[1]<9:slots.append(q.mean(0))
   if slots:
     sl=np.array(slots);_,ii=cKDTree(R[:,[0,2]]).query(sl[:,[0,2]]);rel=(ii+len(R)//2)%len(R)  # boxes behind the start line sit near the end of the lap
+    if st.get('cluster'):
+      # keep the biggest run of boxes (gaps under 40 m: a second grid elsewhere is dropped) and start the lap just past its front box
+      o=np.argsort(rel);rr=rel[o];runs=[[o[0]]]
+      for k_ in range(1,len(o)):
+        (runs[-1].append(o[k_]) if (rr[k_]-rr[k_-1])*8<40 else runs.append([o[k_]]))
+      g=max(runs,key=len);sl=sl[g];ii=ii[g];rel=rel[g];front=ii[np.argmax(rel)];sh=(front+int(round(st.get('ahead',8)/8)))%len(R)
+      R=np.roll(R,-sh,0);Wr=np.roll(Wr,-sh);_,ii=cKDTree(R[:,[0,2]]).query(sl[:,[0,2]]);rel=(ii+len(R)//2)%len(R);print('grid run',len(g),'start moved',sh)
     o=np.argsort(-rel);slots=[[round(a[0],2),round(a[2],2),round(a[1],2)] for a in sl[o]]
   print('grid boxes',len(slots))
 print('pts',len(R),'lap m',round(Lc[-1]),'width',np.percentile(Wr,[5,50,95]).round(1))
@@ -142,6 +149,17 @@ for nm,cl,lift in layers:
   elif cl==1:m=ok  # the circuit's own asphalt always wins (bridges cross over it and under it)
   else:m=ok&(unset|RK|((h>=H-.02)&(h<=H+2.5)));RK&=~m
   H[m]=h[m];K[m]=cl
+# ---- two-level road (Suzuka's figure of eight crosses itself on a bridge): where the circuit asphalt exists at two heights more than 3 m
+# apart, the grid keeps the lower road and a sparse list holds the upper one; the game picks the level nearest the car
+UP=None
+if C.get('twolevel'):
+  lo=np.full((nz,nx),np.nan);hi=np.full((nz,nx),np.nan)
+  for nm,cl,lift in layers:
+    if cl!=1:continue
+    v,f,_=G(nm);v=v+[0,lift,0];raster(v,f,x0,z0,nx,nz,CELL,lo,top=False);raster(v,f,x0,z0,nx,nz,CELL,hi,top=True)
+  two=(hi-lo>3)&~np.isnan(lo);two=ndimage.binary_dilation(two,iterations=1)&~np.isnan(lo)&(hi-lo>1)
+  H[two]=lo[two];K[two]=1;iz_,ix_=np.nonzero(two)
+  UP=np.c_[iz_*nx+ix_,np.round(hi[two]/.02)].astype(np.int32);print('two-level cells',len(UP))
 bad=H<-1e8
 if bad.any():_,(iz,ix)=ndimage.distance_transform_edt(bad,return_indices=True);H=H[iz,ix]
 print('grid',nx,nz,'classes',np.bincount(K.ravel(),minlength=4))
@@ -195,9 +213,12 @@ if C.get('overhead'):
     if flag[k]:
       e=k
       while e<len(flag) and flag[e]:e+=1
-      if e-k>=5:over.append([round(sf[k],1),round(sf[e-1],1)])
+      if e-k>=C.get('overmin',5):over.append([round(sf[k],1),round(sf[e-1],1)])
       k=e
     else:k+=1
   print('overhead',over)
-json.dump({'S':S,'over':over,'slots':slots,'pts':pts,'grid':{'x0':x0,'z0':z0,'nx':nx,'nz':nz,'cell':CELL},'segs':np.round(segs,2).tolist()},open(W+'/track.json','w'))
+import base64
+gd={'x0':x0,'z0':z0,'nx':nx,'nz':nz,'cell':CELL}
+if UP is not None:gd['up']=base64.b64encode(UP.tobytes()).decode()
+json.dump({'S':S,'over':over,'slots':slots,'pts':pts,'grid':gd,'segs':np.round(segs,2).tolist()},open(W+'/track.json','w'))
 Hq.tofile(W+'/hf.i16');np.array(rle,np.uint8).tofile(W+'/cls.rle')

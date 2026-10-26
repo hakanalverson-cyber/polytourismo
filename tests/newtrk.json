@@ -1,0 +1,2 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",2500],
+["js","(()=>{const r=[];D.forEach((d,i)=>{if(d.laguna||d.suzuka)r.push(i+':'+d.name+':'+(!!d.cartoon)+':N'+d.pts.length)});document.querySelector('#s8cards .card[data-m=track]').click();return r.join(' ')+' | '+[...document.querySelectorAll('#trkList .trk b')].map(b=>b.textContent).join(',')})()"],["wait",1500],["shot","list"]]

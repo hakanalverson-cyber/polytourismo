@@ -4,6 +4,9 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.12',d:'Oct 25, 2026',t:'New Road Atlanta and Imola scenery, smarter CPU, gearbox choice',items:[
+  'Two new circuits in Track mode, built from bought cartoon models: Laguna Seca (3.6 km, with the Corkscrew) and Suzuka (5.8 km figure eight, the track crosses over itself under the bridge). Both have their real grid boxes, a standing start and gold times measured from a CPU lap.',
+  'Six new songs in the main menu rotation: Doctor Rockit - Cafe de Flore (Charles Webster\'s Latin Lovers Mix), I-Cube - Adore, and Lenny Ibizarre - All About The Girl, Vision, Forbidden Fruit and Sixtyfour Hippos.',
+  'CPU cars hold their grid lane for the first stretch measured from their own box, so they no longer swerve off a standing start on long grids.',
   'New menu sounds from Hakan\'s sample set: a chime to select, a short blip for options, a softer tone for back, a whoosh between screens, a tick when the pointer moves onto an item and a rising sweep when a race starts. The menu music dips for a moment under each one so they stand out.',
   'Sense of speed on Imola and Road Atlanta: the bought tracks are built bigger than life and the cars drawn 1.8x to match, so the road went by at about half the speed the dial showed. Cars there now cover 1.4x the ground for the same dial speed, with strong pull from 100 to 200 mph (less air drag). Laps are about 65 s; gold times re-measured.',
   'Hill jitter fixed for real: two smoothing filters on the drawn car lagged behind on climbs and dips and snapped back (worse at low frame rates). They are gone; the car body is drawn exactly where the smooth physics puts it.',

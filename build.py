@@ -225,7 +225,7 @@ src=rep(src,"let bi=c.idx,bd=1e9;for(let k=-6;k<=30;k++){","let bi=c.idx,bd=1e9;
 src=rep(src,"c.wrong=hd<-3&&live?c.wrong+dt:0;","c.wrong=!T.free&&hd<-3&&live?c.wrong+dt:0;")
 src=rep(src,"if(live&&(c.y<T.y[c.idx]-12||Math.abs(c.roll)>.68","if(live&&((!T.free&&c.y<T.y[c.idx]-12)||Math.abs(c.roll)>.68")
 src=rep(src," if(!live)return;\n const sf=T.surf(c.x,c.z,c.y);"," if(!live||T.free)return;\n const sf=T.surf(c.x,c.z,c.y);")
-parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','frmodels','frdress','frtown','frworld','freeroam','cars10','audio','modes','tracks','hpack','tracks2','extra','race2','elim','tod','bridge','props','bld','stages','trees_q','propkit','scenery','ra_data','tracks3','imola_data','tracks4','ring_data','ring_forest','tracks5','cartoon','logos','weather','ambience','menuaudio','tutorial','updatelog','hud2','shade','ui','cinema','rally','trackmode','realspeed','barn','animals','franimals','frlife','clean','solid','damage','grip','airline','ride','snap','perf','econ','frhud','title','brandbg','uifx']  if os.path.exists(f'{SRC}/layers/{n}.js')]
+parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','frmodels','frdress','frtown','frworld','freeroam','cars10','audio','modes','tracks','hpack','tracks2','extra','race2','elim','tod','bridge','props','bld','stages','trees_q','propkit','scenery','ra_data','tracks3','imola_data','tracks4','ring_data','ring_forest','tracks5','tracks6','cartoon','logos','weather','ambience','menuaudio','tutorial','updatelog','hud2','shade','ui','cinema','rally','trackmode','realspeed','barn','animals','franimals','frlife','clean','solid','damage','grip','airline','ride','snap','perf','econ','frhud','title','brandbg','uifx']  if os.path.exists(f'{SRC}/layers/{n}.js')]
 # track files (bought cartoon models of Imola / Road Atlanta, made by tools/cartoon_track, kept out of the public repo in project files).
 # PACKS=1 builds them in (Artifact, full build); otherwise players load them with "+ Add track file" so the lite file stays small.
 if os.environ.get('PACKS'):
@@ -256,6 +256,11 @@ PREV='<script>window.PT8_PACKREV='+_js.dumps(_rev)+';</script>'
 BBG='<script>const BBG_B64=['+','.join('"'+b64('brandbg/b%d.jpg'%i)+'"' for i in range(6))+'];</script>'
 HPACK='<script>const HPACK_B64="'+b64('harbor_pack.glb.gz')+'";</script>'
 MUS=''.join('<script type="text/plain" id="mus_%s">%s</script>'%(k,base64.b64encode(open(W+('/assets/music_lite/' if os.environ.get('LITE') and f!='gt_countdown' else '/assets/music/')+f+'.mp3','rb').read()).decode()) for k,f in ([('baby','baby_so_free'),('glass','glasstress'),('nocomm','no_comm'),('cd','gt_countdown')] if os.environ.get('LITE') else [('baby','baby_so_free'),('supreme','supreme_moment'),('space','space'),('glass','glasstress'),('body','body_and_mind'),('nocomm','no_comm'),('cd','gt_countdown'),('lizzie','lizzie')]))
+# the songs Hakan added later (kept in project files, not in the public repo): full builds only
+if os.environ.get('PACKS'):
+  for _k,_f in (('cafe','cafe_de_flore'),('adore','adore'),('girl','all_about_the_girl'),('vision','vision'),('fruit','forbidden_fruit'),('hippos','sixtyfour_hippos')):
+    _p='/mnt/project-files/poly-gt/music/'+_f+'.mp3'
+    if os.path.exists(_p):MUS+='<script type="text/plain" id="mus_%s">%s</script>'%(_k,base64.b64encode(open(_p,'rb').read()).decode())
 CARS10='<script>const CAR10_BIN_B64="'+b64('cars_v10.bin.gz')+'",CAR10_TEX_B64="'+b64('cars_v10_tex.png')+'",CAR10_META='+open(W+'/assets/cars_v10.json').read()+';</script>'
 src=rep(src,"bins[k].tire=true;","bins[k].tire=true;(bins[k].tp||(bins[k].tp=[])).push(part);")
 src=rep(src,"    for(const [g,m] of b.parts){\n      g.translate(-center.x,-center.y,-center.z);\n      spin.add(new THREE.Mesh(g,m));\n    }","""    for(const [g] of b.parts)g.translate(-center.x,-center.y,-center.z);

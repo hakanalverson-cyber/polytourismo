@@ -4,8 +4,9 @@
 const P=window.PT8;let M=null;
 const O=()=>window.PTO||{master:.7,sfx:.65,engine:.55};
 /* tracks are embedded as base64 <script type="text/plain" id="mus_*"> blocks and decoded the first time they are needed */
-const TR={baby:['Baby So Free','mus_baby'],supreme:['Supreme Moment','mus_supreme'],space:['Space','mus_space'],glass:['Glasstress','mus_glass'],body:['Body And Mind','mus_body'],nocomm:['No Communication No Love','mus_nocomm'],lizzie:["Lizzie's Balloon",'mus_lizzie']};
-const MENU=['baby','supreme','space','glass','nocomm','lizzie'],urls={};
+const TR={baby:['Baby So Free','mus_baby'],supreme:['Supreme Moment','mus_supreme'],space:['Space','mus_space'],glass:['Glasstress','mus_glass'],body:['Body And Mind','mus_body'],nocomm:['No Communication No Love','mus_nocomm'],lizzie:["Lizzie's Balloon",'mus_lizzie'],
+ cafe:['Café de Flore','mus_cafe'],adore:['Adore','mus_adore'],girl:['All About The Girl','mus_girl'],vision:['Vision','mus_vision'],fruit:['Forbidden Fruit','mus_fruit'],hippos:['Sixtyfour Hippos','mus_hippos']};
+const MENU=['baby','supreme','space','glass','nocomm','lizzie','cafe','adore','girl','vision','fruit','hippos'],urls={};
 function urlOf(k){if(urls[k])return urls[k];const e=document.getElementById(TR[k][1]);if(!e)return null;const b=atob(e.textContent.trim()),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return urls[k]=URL.createObjectURL(new Blob([u],{type:'audio/mpeg'}))}
 let deck=[],menuKey=null,pop=null,popT=0,shown='',blockedUntilGesture=false;const AU={};
 const has=k=>!!document.getElementById(TR[k][1]);
