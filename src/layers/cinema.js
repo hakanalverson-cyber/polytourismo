@@ -98,16 +98,18 @@ function build(sc,id){if(cache[id])return cache[id];const car=P.BYID[id],idx=P.m
  return cache[id]={g:outer,L:Math.max(sz.x,sz.z)*k}}
 function photo(){const sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(34,1,.1,300),hemi=new THREE.HemisphereLight(0xffffff,0x222222,1),key=new THREE.DirectionalLight(0xffffff,2),rim=new THREE.DirectionalLight(0xffffff,1),p1=new THREE.PointLight(0xffffff,0,26),p2=new THREE.PointLight(0xffffff,0,26),env=new THREE.Group(),fade=new THREE.Mesh(new THREE.PlaneGeometry(4,4),new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:1,depthTest:false,depthWrite:false,fog:false}));
  key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.bias=-.0005;key.shadow.radius=4;{const sh=key.shadow.camera;sh.left=-16;sh.right=16;sh.top=16;sh.bottom=-16;sh.near=1;sh.far=60}sc.add(hemi,key,key.target,rim,p1,p2,env,cam);fade.renderOrder=999;fade.position.z=-.3;cam.add(fade);let curEnv=null,curCars=[],curBl=.2;
- return{sc,cam,fade,get bl(){return curBl},set(s){const e=ENV[s.env];curBl=e.bl||.2;if(curEnv!==s.env){env.clear();e.build(env);curEnv=s.env}
+ return{sc,cam,fade,dirty:1,get bl(){return curBl},set(s){this.dirty=1;const e=ENV[s.env];curBl=e.bl||.2;if(curEnv!==s.env){env.clear();e.build(env);curEnv=s.env}
   sc.background=new THREE.Color(e.bg);sc.environment=envMap(s.env);sc.fog=new THREE.Fog(e.fog[0],e.fog[1],e.fog[2]);hemi.color.setHex(e.hs);hemi.groundColor.setHex(e.hg);hemi.intensity=e.hp*.6;key.color.setHex(e.kc);key.intensity=e.kp*.5;key.position.set(...e.kp3);rim.color.setHex(e.rc);rim.intensity=e.rp*.55;rim.position.set(...e.rp3);
   [p1,p2].forEach((p,i)=>{const q=e.pts[i];p.intensity=q?q[1]*.4:0;if(q){p.color.setHex(q[0]);p.position.set(...q[2])}});
   curCars.forEach(o=>sc.remove(o));curCars=[];let ok=true;s.cars.forEach((q,i)=>{const c=carById(q[0]),b=c&&build(sc,c.id);if(!b){if(i===0)ok=false;return}const o=b.g.clone(true);o.position.set(q[1],0,q[2]);o.rotation.y=(q[3]||0)*Math.PI/180;sc.add(o);curCars.push(o);const m=o.clone(true);m.scale.y=-1;m.traverse(q=>{if(q.isMesh){q.castShadow=false;q.receiveShadow=false}});sc.add(m);curCars.push(m)});return ok&&curCars.length>0}}}
 /* the studio's own render path (MSAA, bloom, tone map, vignette) at native resolution */
-const ST={on:false},SCR=['menu','s8cards','s8quick','s8setup','s8career','s8res'];let POST=null;
-function off(){if(!ST.on)return;ST.on=false;R.toneMapping=ST.tm;R.shadowMap.enabled=ST.se;R.shadowMap.type=ST.st;$('c').style.imageRendering='';R.setRenderTarget(null);try{rs()}catch(e){}}
-function draw(pt){if(!ST.on){ST.on=true;ST.tm=R.toneMapping;ST.se=R.shadowMap.enabled;ST.st=R.shadowMap.type;R.toneMapping=THREE.NoToneMapping;R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;$('c').style.imageRendering='auto'}
- const d=Math.min(devicePixelRatio||1,2);if(R.domElement.width!==Math.max(2,innerWidth*d|0)||R.domElement.height!==Math.max(2,innerHeight*d|0))P.sizeNative();if(!POST){POST=P.makePost();POST.bl.value=.2;POST.th.value=2.1}
- const W=R.domElement.width,H=R.domElement.height;R.setScissorTest(false);R.setViewport(0,0,W,H);POST.bl.value=pt.bl;POST.render(pt.sc,pt.cam);R.setRenderTarget(null)}
+const ST={on:false,last:0,sh:0},SCR=['menu','s8cards','s8quick','s8setup','s8career','s8res'];let POST=null;
+function off(){if(!ST.on)return;ST.on=false;P.menuShadowHold=false;R.shadowMap.autoUpdate=true;R.toneMapping=ST.tm;R.shadowMap.enabled=ST.se;R.shadowMap.type=ST.st;$('c').style.imageRendering='';R.setRenderTarget(null);try{rs()}catch(e){}}
+function draw(pt){if(!ST.on){ST.on=true;ST.sh=0;ST.last=0;ST.tm=R.toneMapping;ST.se=R.shadowMap.enabled;ST.st=R.shadowMap.type;R.toneMapping=THREE.NoToneMapping;R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;$('c').style.imageRendering='auto'}
+ const d=P.studioDPR?P.studioDPR():1;if(R.domElement.width!==Math.max(2,innerWidth*d|0)||R.domElement.height!==Math.max(2,innerHeight*d|0))P.sizeNative();if(!POST){POST=P.makePost();POST.bl.value=.2;POST.th.value=2.1}
+ const W=R.domElement.width,H=R.domElement.height;R.setScissorTest(false);R.setViewport(0,0,W,H);/* the stills drift slowly: 30 frames a second is plenty, and the shadows only change when the shot does */
+ const now=performance.now();if(now-ST.last<31&&!pt.dirty)return;ST.last=now;P.menuShadowHold=true;R.shadowMap.autoUpdate=false;if(pt.dirty||!ST.sh){R.shadowMap.needsUpdate=true;ST.sh=1;pt.dirty=0}
+ POST.bl.value=pt.bl;POST.render(pt.sc,pt.cam);R.setRenderTarget(null)}
 const sh0=show;show=function(n){if(ST.on&&SCR.indexOf(n)<0)off();return sh0.apply(this,arguments)};setInterval(()=>{if(ST.on&&SCR.indexOf(scr)<0)off()},200);
 /* a shuffled run of stills, forever */
 function menuScene2(){const pt=photo();let t0=performance.now()/1000,order=[],cur=null,shotT=0,last=-1;

@@ -120,7 +120,9 @@ if st.get('boxes'):
     _,lab=connected_components(coo_matrix((np.ones(len(ff)*2),(np.r_[ff[:,0],ff[:,1]],np.r_[ff[:,1],ff[:,2]])),shape=(m,m)),directed=False);lv=lab[inv]
     for c in np.unique(lv):
       q=v[lv==c];e=sorted(np.ptp(q[:,[0,2]],0))
-      if 1.2<e[0]<7 and 5<e[1]<9:slots.append(q.mean(0))
+      bx=st.get('boxsize',[1.2,7,5,9])
+      if st.get('debug'):print('comp',[round(x,1) for x in e])
+      if bx[0]<e[0]<bx[1] and bx[2]<e[1]<bx[3]:slots.append(q.mean(0))
   if slots:
     sl=np.array(slots);_,ii=cKDTree(R[:,[0,2]]).query(sl[:,[0,2]]);rel=(ii+len(R)//2)%len(R)  # boxes behind the start line sit near the end of the lap
     if st.get('cluster'):

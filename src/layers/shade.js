@@ -32,6 +32,6 @@ R.render=function(scene,cam){const sun=scene&&scene.userData&&scene.userData.sun
   cam.getWorldDirection(_d);_d.y=0;_d.normalize();_f.copy(cam.position).addScaledVector(_d,34);
   const q=2.5;_f.x=Math.round(_f.x/q)*q;_f.z=Math.round(_f.z/q)*q;_f.y=Math.round(_f.y/q)*q;
   sun.target.position.copy(_f);sun.target.updateMatrixWorld();sun.position.copy(_f).addScaledVector(sun.userData.d0,260)}}}
- else R.shadowMap.autoUpdate=true; /* studio / menus: always refresh shadows (stale race shadow maps smeared over the showroom cars) */
+ else if(!P.menuShadowHold)R.shadowMap.autoUpdate=true; /* (the menu stills hold theirs between shots: cinema.js) studio / menus: always refresh shadows (stale race shadow maps smeared over the showroom cars) */
  return r0(scene,cam)};
 })();

@@ -1,0 +1,86 @@
+{
+"carScale": 1.8,
+"sign": 1,
+"medal": 90,
+"sat": 1.3,
+"bake": "tree|tyre|startlights",
+"ratio": {
+"tree": 0.16,
+"tyre": 0.14,
+"default": 0.2
+},
+"alpha": [
+"fence"
+],
+"id": "spa",
+"name": "Spa-Francorchamps",
+"replaces": "spa",
+"credit": "Cartoon Race Track Spa (Retro Cartoon Racing), bought by Hakan",
+"work": "/tmp/claude-0/-home-claude-polytourismo/4b0e7c59-35bd-554a-8c30-0ab78fa183a0/scratchpad/trk_spa",
+"texdir": "/tmp/claude-0/-home-claude-polytourismo/4b0e7c59-35bd-554a-8c30-0ab78fa183a0/scratchpad/cspa/textures/",
+"centre": {
+"method": "skeleton",
+"mesh": "spa_tarmac_road",
+"cell": 40
+},
+"start": {
+"mesh": "start_line_spa_white_line",
+"mode": "front",
+"ahead": 6,
+"boxes": "start_line_spa_white_line",
+"cluster": 1
+},
+"ground": [
+[
+"spa_brown_ground_rock",
+0,
+-0.1
+],
+[
+"spa_grass_outside",
+0,
+-0.02
+],
+[
+"spa_grass_trackside",
+0,
+0
+],
+[
+"spa_gravel_runoff",
+3,
+0.06
+],
+[
+"runoff_tarmac_tarmac_dirty",
+2,
+0.08
+],
+[
+"runoff_tarmac_black",
+2,
+0.1
+],
+[
+"spa_tarmac_road",
+1,
+0.12
+]
+],
+"lift": {
+"white_line": 0.16
+},
+"rock": "spa_brown_ground_rock",
+"colliders": "fence_block|wall_fence",
+"skip": "^$",
+"bigtex": [
+"road_spa",
+"garages",
+"^SPA.png",
+"banners",
+"dirty_tarmac"
+],
+"overhead": "tree|TREE|fence|grass|gravel|rock|tarmac|white_line|startlights|baloon|barrier|seats",
+"overmin": 10,
+"S": 0.0638
+}

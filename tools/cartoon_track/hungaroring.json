@@ -1,0 +1,101 @@
+{
+"carScale": 1.8,
+"sign": 1,
+"medal": 90,
+"sat": 1.3,
+"bake": "TREE|startlights",
+"ratio": {
+"tree": 0.16,
+"tyre": 0.14,
+"default": 0.2
+},
+"alpha": [
+"FENCE"
+],
+"id": "hungaroring",
+"name": "Hungaroring",
+"replaces": "hungaroring",
+"credit": "Cartoon Race Track Budapest (Retro Cartoon Racing), bought by Hakan",
+"work": "/tmp/claude-0/-home-claude-polytourismo/4b0e7c59-35bd-554a-8c30-0ab78fa183a0/scratchpad/trk_bud",
+"texdir": "/tmp/claude-0/-home-claude-polytourismo/4b0e7c59-35bd-554a-8c30-0ab78fa183a0/scratchpad/cbud/textures/",
+"S": 2.124,
+"centre": {
+"method": "skeleton",
+"mesh": "TERRAIN_TARMAC_road_BUDAPEST",
+"cell": 0.5
+},
+"start": {
+"mesh": "TERRAIN_START_POSITION_LINE_WHITE",
+"mode": "front",
+"ahead": 6,
+"boxes": "TERRAIN_START_POSITION_LINE_WHITE",
+"cluster": 1,
+"boxsize": [
+1,
+2,
+6.5,
+8
+]
+},
+"ground": [
+[
+"Object155_GRASS",
+0,
+-0.02
+],
+[
+"TERRAIN_GRASS_STRIPED",
+0,
+0
+],
+[
+"TERRAIN_SAND",
+3,
+0.05
+],
+[
+"GRAVEL_TRAP",
+3,
+0.06
+],
+[
+"TERRAIN_CONCRETE",
+2,
+0.07
+],
+[
+"DARK_TARMAC",
+2,
+0.08
+],
+[
+"TARMAC_GREEN",
+2,
+0.09
+],
+[
+"PITLANE_LIMITER",
+2,
+0.1
+],
+[
+"TERRAIN_TARMAC_road",
+1,
+0.12
+]
+],
+"lift": {
+"LINE_WHITE": 0.16
+},
+"colliders": "COLLIDER",
+"skip": "COLLIDER",
+"bigtex": [
+"road_BUDAPEST",
+"garages",
+"^BUDAPEST.png",
+"banners",
+"dark_tarmac"
+],
+"overhead": "TREE|COLLIDER|FENCE|GRASS|SAND|GRAVEL|CONCRETE|TARMAC|LINE_WHITE|startlights|BARRIERS|POLES|LIMITER|SEATS|VEHICLE|TABLE",
+"overmin": 4
+}

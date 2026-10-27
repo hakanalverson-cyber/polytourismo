@@ -1,0 +1,92 @@
+{
+"carScale": 1.8,
+"sign": -1,
+"medal": 90,
+"sat": 1.3,
+"bake": "TREE|startlights",
+"ratio": {
+"tree": 0.16,
+"tyre": 0.14,
+"default": 0.2
+},
+"alpha": [
+"fence",
+"MOUNT_TEXT"
+],
+"id": "bathurst",
+"name": "Bathurst",
+"replaces": "bathurst",
+"credit": "Cartoon Race Track Bathurst (Retro Cartoon Racing), bought by Hakan",
+"work": "/tmp/claude-0/-home-claude-polytourismo/4b0e7c59-35bd-554a-8c30-0ab78fa183a0/scratchpad/trk_bat",
+"texdir": "/tmp/claude-0/-home-claude-polytourismo/4b0e7c59-35bd-554a-8c30-0ab78fa183a0/scratchpad/cbat/textures/",
+"S": 2.666,
+"centre": {
+"method": "skeleton",
+"mesh": "TARMAC_MAIN_road",
+"cell": 0.5
+},
+"start": {
+"mesh": "GRID_SLOTS_white_line",
+"mode": "front",
+"ahead": 6,
+"boxes": "GRID_SLOTS_white_line",
+"cluster": 1,
+"boxsize": [
+2.5,
+3.5,
+8.5,
+9.5
+]
+},
+"ground": [
+[
+"TERRAIN_GRASS",
+0,
+0
+],
+[
+"VINEFIELD",
+0,
+0.02
+],
+[
+"TERRAIN_SAND",
+3,
+0.05
+],
+[
+"TERRAIN_GRAVEL",
+3,
+0.06
+],
+[
+"tarmac_dirty",
+2,
+0.08
+],
+[
+"TARMAC_GREEN",
+2,
+0.09
+],
+[
+"TARMAC_MAIN",
+1,
+0.12
+]
+],
+"lift": {
+"white_line": 0.16
+},
+"colliders": "COLLIDER",
+"skip": "COLLIDER",
+"bigtex": [
+"road_BATHURST",
+"garages",
+"^BATHURST.png",
+"banners",
+"dirty_tarmac"
+],
+"overhead": "TREE|COLLIDER|fence|GRASS|SAND|GRAVEL|tarmac|TARMAC|white_line|startlights|VINEFIELD|MOUNT_TEXT|cone|TENTS|VEHICLES",
+"overmin": 4
+}

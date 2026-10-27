@@ -1,0 +1,5 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",3000],
+["js","'heap MB '+Math.round(performance.memory.usedJSHeapSize/1e6)+' / '+Math.round(performance.memory.totalJSHeapSize/1e6)"],
+["js","(()=>{PT8._to=true;PT8.launch({mode:'mp',track:15,laps:3,humans:[{id:'merc',alt:0}],ai:PT8.makeAI({n:7,classes:['B','A'],skill:.88,rally:false}),trackRace:true});return 1})()"],["wait",8000],
+["js","'race heap MB '+Math.round(performance.memory.usedJSHeapSize/1e6)+' / '+Math.round(performance.memory.totalJSHeapSize/1e6)"],
+["js","(()=>{let n=0;const t0=performance.now();return new Promise(ok=>{const f=()=>{n++;if(performance.now()-t0<4000)requestAnimationFrame(f);else ok('frames '+n+' gcs?')};requestAnimationFrame(f)})})()"]]

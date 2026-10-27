@@ -1,4 +1,4 @@
-/* ===== Poly GT layer: tracks6 (circuit slots for Laguna Seca and Suzuka. They exist only as bought cartoon models, so each slot shows
+/* ===== Poly GT layer: tracks6 (circuit slots for Laguna Seca, Suzuka, the Hungaroring, Bathurst and Spa. They exist only as bought cartoon models, so each slot shows
    up once its track file is loaded: built into the full download, or added with "Add track file") ===== */
 (function v9tracks6(){
 'use strict';
@@ -10,4 +10,7 @@ const mk=(key,name,desc,tags)=>{const d={id:D.length,look:0,name,desc,hw:7,bank:
  d[key]=1;D.push(d);P.TRACK_INFO.push({s:'TARMAC',tags});P.TRK_TRACKS.push(D.length-1);P.MEDAL_REF[D.length-1]=100};
 mk('laguna','Laguna Seca','californian circuit / the corkscrew / big elevation changes',['CORKSCREW','ELEVATION','3.6 KM']);
 mk('suzuka','Suzuka','japanese grand prix circuit / figure of eight / s curves / 130r',['FIGURE EIGHT','S CURVES','130R']);
+mk('hungaroring','Hungaroring','hungarian grand prix circuit / tight and twisty / budapest',['TWISTY','BUDAPEST','4.4 KM']);
+mk('bathurst','Bathurst','mount panorama / the mountain climb and the dipper / australia',['MOUNTAIN','THE DIPPER','6.2 KM']);
+mk('spa','Spa-Francorchamps','belgian grand prix circuit / eau rouge and raidillon / the ardennes',['EAU ROUGE','ARDENNES','7.0 KM']);
 })();

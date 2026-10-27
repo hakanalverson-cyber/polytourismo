@@ -464,7 +464,10 @@ function buyShowcase(car){let o=$('shBuy');if(!o){o=document.createElement('div'
 const REV_DIR=1,SIDE=1;P.revSet=t=>{if(S&&S.rev)S.rev.t=t};P.revStart=()=>startReveal(true);
 
 function studioOn(){if(STU.on)return;STU.on=true;document.body.classList.add('studio');$('c').style.imageRendering='auto';STU.tm=R.toneMapping;R.toneMapping=THREE.NoToneMapping;R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;sizeStudio()}
-function sizeStudio(){const d=Math.min(devicePixelRatio||1,2);R.setPixelRatio(1);R.setSize(Math.max(2,innerWidth*d|0),Math.max(2,innerHeight*d|0),false)}
+/* menus and garage render at the screen's pixel density, capped at 1.25 (and at the performance setting's cap): at 2x on high-density
+   screens they drew four times the pixels through MSAA, bloom and soft shadows, which made the menus crawl */
+P.studioDPR=()=>Math.min(devicePixelRatio||1,1.25,(window.PTO&&window.PTO.maxDensity)||1.25);
+function sizeStudio(){const d=P.studioDPR();R.setPixelRatio(1);R.setSize(Math.max(2,innerWidth*d|0),Math.max(2,innerHeight*d|0),false)}
 P.makePost=makePost;P.sizeNative=sizeStudio;function studioOff(){if(!STU.on)return;STU.on=false;{const nm=$('shRev');if(nm)nm.style.opacity=0;const sh=$('s8show');if(sh){sh.style.opacity='';sh.style.pointerEvents=''}}S.rev=null;document.body.classList.remove('studio');$('c').style.imageRendering='';R.toneMapping=STU.tm;R.setRenderTarget(null);rs()}
 const rs0=rs;rs=()=>{if(STU.on)sizeStudio();else rs0()};
 function drawShow(dt){studioOn();ensureStudio();if(P.studioDress)P.studioDress(S,SR);const car=BYID[SR.id],idx=P.modelOf(SR.id,SR.alt);if(S.idx!==idx&&CAR_MODELS[idx])setStudioCar(idx);

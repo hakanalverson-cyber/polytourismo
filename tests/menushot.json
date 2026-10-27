@@ -1,0 +1,1 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById(\"ptTitle\");if(t)t.click();return 1})()"],["wait",5000],["shot","menu"],["js","R.domElement.width+\"x\"+R.domElement.height+\" auto \"+R.shadowMap.autoUpdate"]]

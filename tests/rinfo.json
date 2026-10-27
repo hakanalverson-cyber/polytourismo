@@ -1,0 +1,3 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",3000],
+["js","(()=>{R.info.autoReset=true;return new Promise(ok=>requestAnimationFrame(()=>requestAnimationFrame(()=>{const i=R.info;ok('calls '+i.render.calls+' tris '+i.render.triangles+' size '+R.domElement.width+'x'+R.domElement.height+' shadow '+R.shadowMap.enabled+' type '+R.shadowMap.type+' geos '+i.memory.geometries+' tex '+i.memory.textures+' progs '+(i.programs||[]).length+' MSdraw '+(!!(MS&&MS.draw))+' dpr '+devicePixelRatio)})))})()"],
+["js","(()=>{let n=0,l=0;MS.sc.traverse(o=>{n++;if(o.isLight&&o.castShadow)l++});return 'objs '+n+' shadowLights '+l+' '+String(MS.draw||'').slice(0,400)})()"]]

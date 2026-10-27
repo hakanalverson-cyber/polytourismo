@@ -15,7 +15,7 @@ P.perfPre=()=>{const o=O(),pr=PRE[o.perfPreset];if(o.perfPreset!==lastPP){lastPP
 P.PERF_PRESETS=PRE;
 /* render size = screen pixels x min(device density, cap) x render scale */
 const rs1=rs;
-rs=()=>{rs1();if(document.body.classList.contains('studio')||(typeof PX!=='undefined'&&PX!==1))return;const o=O(),d2=Math.min(dpr,2),f=Math.min(dpr,o.maxDensity||1.5)/d2*(o.resolution||1)*((typeof scr!=='undefined'&&scr==='game')?P.dynRes:1);
+rs=()=>{rs1();if(document.body.classList.contains('studio')||(typeof PX!=='undefined'&&PX!==1))return;const o=O(),d2=Math.min(dpr,2),f=Math.min(dpr,o.maxDensity||1.25)/d2*(o.resolution||1)*((typeof scr!=='undefined'&&scr==='game')?P.dynRes:1);
  if(Math.abs(f-1)>.002){R.setSize(Math.max(2,Math.round(cv.width*f)),Math.max(2,Math.round(cv.height*f)),false);cv.style.imageRendering='auto'}else cv.style.imageRendering=''};
 /* FPS counter */
 let fe=null,n=0,t0=performance.now(),worst=0,lt=t0;
