@@ -3,6 +3,11 @@
 'use strict';
 const P=window.PT8;
 P.LOG=[
+ {v:'0.14',d:'Oct 27, 2026',t:'Smarter CPU drivers, softer brakes',items:[
+  'CPU drivers follow the racing line through the apexes instead of running wide: they used to plan each corner faster than the car could turn and slide 2-8 m off the line; now they stay within about a metre of it and are quicker for it. If one does run wide it lifts until it is back on line.',
+  'CPU throttle and brakes are progressive instead of all-or-nothing, and moving over for a car alongside eases in and out (it used to jump sideways), sized for the big cars on the model tracks.',
+  'Difficulty now shapes how they drive, not just how fast: Hard CPUs hold the line tightly, brake late and carry full speed; Easy ones wander off the line a little, brake earlier and corner slower.',
+  'Brakes are softer for every car: 130 mph to a stop took about 2 seconds, now about 4.5, closer to a real car. Plan your braking points a little earlier.']},
  {v:'0.13',d:'Oct 27, 2026',t:'The Nurburgring GP circuit, rolling starts that roll, smoother frame rate',items:[
   'The Nordschleife is replaced by the Nurburgring GP circuit (5.1 km), built from the bought cartoon model: real grid boxes, the castle, the Mercedes Arena. Gold time from a CPU lap.',
   'Rolling start: no more text. When the black fade clears the field is already rolling in formation; a 3-2-1 countdown runs as the leader nears the line, and on GO everyone is let go. The race clock starts at GO.',
