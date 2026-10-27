@@ -253,7 +253,12 @@ if os.environ.get('PACKS'):
   _u={k:'/mnt/project-files/poly-gt/uifx/UIFX%d.wav'%n for k,n in (('select',2),('click',3),('whoosh',4),('back',5),('move',6),('start',7))}
   if all(os.path.exists(f) for f in _u.values()):UIFX='<script>window.UIFX_B64='+_js.dumps({k:base64.b64encode(open(f,'rb').read()).decode() for k,f in _u.items()})+';</script>'
 PREV='<script>window.PT8_PACKREV='+_js.dumps(_rev)+';</script>'
-BBG='<script>const BBG_B64=['+','.join('"'+b64('brandbg/b%d.jpg'%i)+'"' for i in range(6))+'];</script>'
+_bb=['"'+b64('brandbg/b%d.jpg'%i)+'"' for i in range(6)]
+# action stills on the bought model tracks (kept in project files, not in the public repo): PACKS builds only
+if os.environ.get('PACKS'):
+  import glob as _gb
+  _bb+=['"'+base64.b64encode(open(f,'rb').read()).decode()+'"' for f in sorted(_gb.glob('/mnt/project-files/poly-gt/brandbg/*.jpg'))]
+BBG='<script>const BBG_B64=['+','.join(_bb)+'];</script>'
 HPACK='<script>const HPACK_B64="'+b64('harbor_pack.glb.gz')+'";</script>'
 MUS=''.join('<script type="text/plain" id="mus_%s">%s</script>'%(k,base64.b64encode(open(W+('/assets/music_lite/' if os.environ.get('LITE') and f!='gt_countdown' else '/assets/music/')+f+'.mp3','rb').read()).decode()) for k,f in ([('baby','baby_so_free'),('glass','glasstress'),('nocomm','no_comm'),('cd','gt_countdown')] if os.environ.get('LITE') else [('baby','baby_so_free'),('supreme','supreme_moment'),('space','space'),('glass','glasstress'),('body','body_and_mind'),('nocomm','no_comm'),('cd','gt_countdown'),('lizzie','lizzie')]))
 # the songs Hakan added later (kept in project files, not in the public repo): full builds only

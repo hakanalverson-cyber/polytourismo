@@ -17,16 +17,16 @@ function grid(pack){if(pack._g)return pack._g;const G=pack.grid,HG=new Int16Arra
   const ix=fx|0,iz=fz|0,tx=fx-ix,tz=fz-iz,i=iz*G.nx+ix;return(hv(i,y)*(1-tx)+hv(i+1,y)*tx)*(1-tz)+(hv(i+G.nx,y)*(1-tx)+hv(i+G.nx+1,y)*tx)*tz};
  const kAt=(x,z)=>{const ix=Math.round((x-G.x0)/G.cell),iz=Math.round((z-G.z0)/G.cell);return ix<0||iz<0||ix>=G.nx||iz>=G.nz?0:KG[iz*G.nx+ix]};
  return pack._g={hAt,kAt}}
-const baseOf=pack=>D.findIndex(d=>/^(imola|ra|laguna|suzuka|hungaroring|bathurst|spa)$/.test(pack.replaces)&&!!d[pack.replaces]);
+const baseOf=pack=>D.findIndex(d=>/^(imola|ra|laguna|suzuka|hungaroring|bathurst|spa|nurburg)$/.test(pack.replaces)&&!!d[pack.replaces]);
 P.trackPacks={};
 /* the files' gold times were measured with cars 30% quicker and no grip limit; now (25% quicker, 1.6 g grip) a CPU time-trial lap takes
    this much longer: 95.5 -> 107.6 s at Road Atlanta, 98.4 -> 114.7 s at Imola */
-const MEDK={ra:.787,imola:.796,laguna:.762,suzuka:1.032,hungaroring:.857,spa:1.182,bathurst:.997},ALAT=23,DFK=.35,DFMAX=1.5;/* tyre grip (16, then +20% and +20% more turning by request) limit on these tracks, m/s² (see the steering cap below) */
+const MEDK={ra:.787,imola:.796,laguna:.762,suzuka:1.032,hungaroring:.857,spa:1.182,bathurst:.997,nurburg:.742},ALAT=23,DFK=.35,DFMAX=1.5;/* tyre grip (16, then +20% and +20% more turning by request) limit on these tracks, m/s² (see the steering cap below) */
 /* newest file wins (pack.rev = build time): an older copy saved in this browser never replaces a newer built-in one */
 P.addTrackPack=pack=>{const i=baseOf(pack);if(i<0)throw new Error('This track file is for a track this game does not have ('+pack.replaces+')');const d=D[i];
  /* the small download has no track built in, so it also knows the newest file's build time: an old copy saved in the browser (Road Atlanta's first
     file drove through the coned loops and had no grid boxes) is turned away and deleted instead of quietly coming back */
- {const nr=(window.PT8_PACKREV||{})[pack.replaces]||0;if((pack.rev||0)<nr){const e=new Error('This '+pack.name+' file is an older version: add the new '+({ra:'road-atlanta',suzuka:'suzuka',laguna:'laguna-seca',hungaroring:'hungaroring',bathurst:'bathurst',spa:'spa'}[pack.replaces]||pack.replaces)+'.ptrack');e.older=true;throw e}}
+ {const nr=(window.PT8_PACKREV||{})[pack.replaces]||0;if((pack.rev||0)<nr){const e=new Error('This '+pack.name+' file is an older version: add the new '+({ra:'road-atlanta',suzuka:'suzuka',laguna:'laguna-seca',hungaroring:'hungaroring',bathurst:'bathurst',spa:'spa',nurburg:'nurburgring'}[pack.replaces]||pack.replaces)+'.ptrack');e.older=true;throw e}}
  if(d.cartoon&&(d.cartoon.rev||0)>(pack.rev||0)){const e=new Error('This is an older version of '+pack.name+' than the one already in the game');e.older=true;throw e}
  if(!d._orig)d._orig={pts:d.pts,bank:d.bank,medal:P.MEDAL_REF[i]};
  d.pts=pack.pts;d.bank=0;d.cartoon=pack;if(pack.medal)P.MEDAL_REF[i]=pack.medal*(MEDK[pack.replaces]||1);P.trackPacks[pack.id]=pack;
@@ -61,7 +61,10 @@ function meshes(pack){if(pack._m)return pack._m;const tx={},mats={},lut=new Floa
   else{g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setIndex(new THREE.BufferAttribute(idx,1));
    if(m.u){const u16=new Int16Array(dec(m.u).buffer),uv=new Float32Array(u16.length);for(let i=0;i<u16.length;i++)uv[i]=u16[i]/256;g.setAttribute('uv',new THREE.BufferAttribute(uv,2))}}
   g.computeVertexNormals();g.computeBoundingSphere();const me=new THREE.Mesh(g,mat(m.m));me.matrixAutoUpdate=false;me.updateMatrix();me.name='ct_'+m.m;
-  me.userData.noMerge=1;/* the static-mesh merger drops per-face colours and swallowed whole tiles */out.push(me)}
+  me.userData.noMerge=1;/* the static-mesh merger drops per-face colours and swallowed whole tiles */
+  /* round 17 (frame rate): tiles wholly beyond the fog are skipped, and small pieces (seats, cones, signs, a few trees) are not drawn past 420 m,
+     where they are a few pixels in the haze */
+  me.userData.fogCull=1;if(g.boundingSphere.radius<40){me.userData.lodLo=0;me.userData.lodHi=420}out.push(me)}
  return pack._m=out}
 /* wrap buildWorld last (after every other layer has loaded) so whatever they add to the world is removed too */
 setTimeout(()=>{const bw=buildWorld;buildWorld=T=>{const sc=bw(T),pack=T.d&&T.d.cartoon;if(!pack)return sc;
@@ -88,9 +91,9 @@ const uv=updateVisual;updateVisual=function(c,T,t){const m=c&&c.m,k=K();if(m&&m.
    streams past faster), plus a wider view and a light buzz at speed: the big tracks otherwise feel slow with big cars */
 /* the camera reads a smoothed speed: c.sp twitches by up to 0.8 m/s per frame on the hills and the camera's height, distance and view
    width all follow speed, which made the picture jitter while the car itself moved smoothly */
-const so=soloCam;soloCam=function(c,dt,out){const sp0=c.sp||0;c._csp=c._csp==null?sp0:c._csp+(sp0-c._csp)*Math.min(1,(dt||.016)*3);c.sp=c._csp;try{so.apply(this,arguments)}finally{c.sp=sp0}const k=K();if(c.fin||!TRK())return;const f=1+(k-1)*.5,y=c.camY==null?c.y:c.camY;
+const so=soloCam;soloCam=function(c,dt,out){const sp0=c.sp||0;c._csp=c._csp==null?sp0:c._csp+(sp0-c._csp)*Math.min(1,(dt||.016)*3);const dk=P.dialK(),cap=150/(2.237*dk)/* round 17: past 150 on the dial the view stops widening and the camera stops pulling back (it felt unreal) */;c.sp=TRK()?Math.min(c._csp,cap):c._csp;try{so.apply(this,arguments)}finally{c.sp=sp0}const k=K();if(c.fin||!TRK())return;const f=1+(k-1)*.5,y=c.camY==null?c.y:c.camY;
  out.p.set(c.x+(out.p.x-c.x)*f,y+(out.p.y-y)*f,c.z+(out.p.z-c.z)*f);out.l.set(c.x+(out.l.x-c.x)*f,y+(out.l.y-y)*f,c.z+(out.l.z-c.z)*f);
- const v=Math.max(0,Math.min(1,((c._csp||0)-20)/50)),hood=(c.tnB||0)>.5||c.camMode;out.f+=v*(hood?3:6);
+ const v=Math.max(0,Math.min(1,((c._csp||0)*2.237*dk-40)/110)),hood=(c.tnB||0)>.5||c.camMode;out.f=Math.min(out.f+v*(hood?3:5),((window.PTO&&PTO.fov)||58)+(hood?12:16));
  /* hood view on these tracks: the stock one sat 1 m up inside a car drawn 1.8x and tilted the view with the raw body pitch, so crests and dips
     made it lurch and clip the bonnet. Here it rides at the big car's eye height and the tilt follows a smoothed pitch */
  const hb=c.tnB||0;if(hb>.002&&!c.camMode){const kk=hb*hb*(3-2*hb),fx=Math.sin(c.yaw),fz=Math.cos(c.yaw),a=1-Math.exp(-(dt||.016)*6);c._hp=c._hp==null?c.pitch:c._hp+(c.pitch-c._hp)*a;
@@ -115,20 +118,21 @@ const SPD=1.25,TOPK=1.5,ACCK=.52,TS=1.4;{const m0=P.mul;P.mul=c=>{const m=m0?m0(
      A first version capped the steering itself: with keyboard steering that felt like heavy understeer everywhere. */
 /* grip grows with speed like downforce: 1.6 g in slow corners, about 2.6 g at 160 km/h, 3.5 g from 200 km/h, so slow corners stay real
    and fast sweepers can be taken flat out instead of the car pushing wide at speed */
-/* 1st gear steers 15% less, easing back to full over the top quarter of the gear so that at the shift it matches 2nd (1st is never
-   wider than 2nd) */
 /* steering feel by the speed on the dial: the low gears turned sharper than the high ones by 4 to 1 (about 80 degrees a second at
    20-30 mph, 18 at 160), so slow corners felt twitchy and fast ones numb. This evens it out to about 2 to 1 */
 /* scaled x.8 overall by request (it was too sharp everywhere) */
-const STKP=[[0,.68],[10,.7],[20,.6],[30,.6],[45,.72],[60,.88],[80,1],[100,1.08],[130,1.16],[160,1.24]];
+/* round 17: the steering angle follows the speed only, never the gear (1st used to steer 15% less, which on cars with a tall 1st like the
+   R8 LMS reached far up the speed range); that 15% is folded into the slow end of this curve instead */
+const STKP=[[0,.58],[10,.6],[20,.51],[30,.55],[45,.72],[60,.88],[80,1],[100,1.08],[130,1.16],[160,1.24]];
 const STK=m=>{const p=STKP;if(m<=p[0][0])return p[0][1];for(let i=1;i<p.length;i++)if(m<=p[i][0]){const a=p[i-1],b=p[i];return a[1]+(b[1]-a[1])*(m-a[0])/(b[0]-a[0])}return p[p.length-1][1]};
-const g1k=(c,vf)=>{let t=8;try{t=P.gearTops(c.cs)[0]||8}catch(e){}const r=vf/Math.max(1,t);return .85+.15*Math.min(1,Math.max(0,(r-.75)/.25))};
 /* downforce-like growth, toned down (it reached 2.2x and cornered like an F1 car): up to 1.5x from about 200 km/h */
 const gripAt=(c,mt)=>{const v=c.sp||0;return ALAT*Math.min(DFMAX,1+DFK*(v/35)*(v/35))*((c.cs&&c.cs.grip)||1)*(mt.grip||1)};
 {const ip0=P.inPost;P.inPost=(c,dt)=>{if(ip0)ip0(c,dt);if(!TRK()||!c.in||c.exp>0)return;const vf=c.vx*Math.sin(c.yaw)+c.vz*Math.cos(c.yaw);if(vf<6)return;
- const mt=c.mt||{grip:1},a=gripAt(c,mt),sr=2.5-Math.min(c.sp,40)*.03,mx=a/(vf*sr)*1.25;/* the nose turns in up to 1.25x what the tyres hold (was 1.7x): asking for more pushes the car wide */
+ const mt=c.mt||{grip:1},a=gripAt(c,mt),sr=2.5-Math.min(c.sp,40)*.03,hk=Math.min(1.45,Math.max(.85,1+(((c.cs&&c.cs.grip)||1)-1)*2.6)),mx=a/(vf*sr)*(c.human&&!c.forceAI?1.4*hk:1.25)/* CPU drivers keep the old line, so their lap times and the gold times stay put */;
+ /* the nose turns in up to 1.4x what the tyres hold (was 1.25x, before that 1.7x): asking for more pushes the car wide. The Handling rating
+    moves that line: about 1.2x for the softest road cars (0.96), 1.6x at 1.05, 2x for GT3 cars like the R8 LMS (1.16) */
  /* calmer steering at low speed (first gear felt twitchy): full lock gives 60% of the old turn rate at walking pace, all of it from 90 km/h */
- const hm=c.human&&!c.forceAI,sk=hm?STK(vf*2.237*P.dialK()):1;if(hm)c.in.st=(c.in.st||0)*1.2*(.6+.4*Math.min(1,Math.max(0,(vf-6)/19)))*sk/* x1.2: turn 20% tighter in every gear */*((c.gear|0)===0?g1k(c,vf):1)/* 1st gear 15% less (it was twitchy) */;const st=c.in.st||0;
+ const hm=c.human&&!c.forceAI,sk=hm?STK(vf*2.237*P.dialK()):1;if(hm)c.in.st=(c.in.st||0)*1.2*(.6+.4*Math.min(1,Math.max(0,(vf-6)/19)))*sk/* x1.2: turn 20% tighter in every gear */;const st=c.in.st||0;
  const mx2=mx*Math.max(1,sk);if(Math.abs(st)>mx2){c.in.st=Math.sign(st)*mx2;/* understeer scrub: steering far past the limit (turning in too fast) bleeds speed as the fronts push */if(hm&&Math.abs(st)>mx2*1.35){const e=Math.min(1,Math.abs(st)/mx2-1.35),k=1-e*.5*(dt||.016);c.vx*=k;c.vz*=k}}}}
 {const sg0=stepCar;stepCar=function(c,dt){const vx0=c.vx,vz0=c.vz,y0=c.yaw,r=sg0.apply(this,arguments);
  if(!TRK()||c.exp>0||!(dt>0))return r;

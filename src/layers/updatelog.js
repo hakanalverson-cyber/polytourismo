@@ -3,6 +3,16 @@
 'use strict';
 const P=window.PT8;
 P.LOG=[
+ {v:'0.13',d:'Oct 27, 2026',t:'The Nurburgring GP circuit, rolling starts that roll, smoother frame rate',items:[
+  'The Nordschleife is replaced by the Nurburgring GP circuit (5.1 km), built from the bought cartoon model: real grid boxes, the castle, the Mercedes Arena. Gold time from a CPU lap.',
+  'Rolling start: no more text. When the black fade clears the field is already rolling in formation; a 3-2-1 countdown runs as the leader nears the line, and on GO everyone is let go. The race clock starts at GO.',
+  'Steering angle now depends on speed only, never on the gear (first gear used to steer 15% less, which on cars with a tall first gear like the R8 LMS reached well up the speed range). The same calm feel at walking pace is kept in the speed curve.',
+  'Less understeer, and the Handling rating now matters: the softest road cars push wide a little earlier than before, an average car a little later, and GT3 cars like the R8 LMS bite much harder before the front washes out.',
+  'Past 150 on the dial the view no longer keeps widening and the camera stops pulling back, so very high speeds stay believable.',
+  'Frame rate on the model tracks: track pieces beyond the haze are skipped and small props are not drawn past 420 m, about 40% fewer triangles and draw calls per frame. The new Nurburgring was built lighter from the start.',
+  'Fixed long stretched fence streaks across the track (Spa start, Laguna Seca, Suzuka): a few fence faces in the models joined posts hundreds of metres apart.',
+  'Hungaroring kerbs: the car rode into some of them and drove over angled ones as if flat. The ground map now takes the top of every kerb.',
+  'Brand Central: the backdrop no longer snaps back at the end of a picture, there are 12 new action shots from the circuits, and leaving fades out to black before the menu.']},
  {v:'0.12',d:'Oct 25, 2026',t:'New Road Atlanta and Imola scenery, smarter CPU, gearbox choice',items:[
   'Minimum turning circle at low speed: crawling, the car could pivot almost on the spot (the grip limit only starts at about 40 km/h). Now full lock at walking pace draws a circle about 1.2 car lengths across, like a real road car.',
   'Less F1, more GT car: grip still builds with speed but tops out at 1.5x (was 2.2x), so fast corners need a lift or a brake. Turning in too fast now makes the front push wide and scrub off speed, with the nose following the car instead of sliding in; a clean entry corners as before. Steering is 20% less sensitive overall. CPU drivers plan for the new grip; gold times re-measured on every circuit.',

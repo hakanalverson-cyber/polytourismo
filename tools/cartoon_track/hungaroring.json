@@ -97,5 +97,7 @@
 "dark_tarmac"
 ],
 "overhead": "TREE|COLLIDER|FENCE|GRASS|SAND|GRAVEL|CONCRETE|TARMAC|LINE_WHITE|startlights|BARRIERS|POLES|LIMITER|SEATS|VEHICLE|TABLE",
-"overmin": 4
+"overmin": 4,
+"cell": 1.5,
+"roadmax": 4
 }

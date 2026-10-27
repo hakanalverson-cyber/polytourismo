@@ -181,17 +181,19 @@ function gridSlot(T,c,slot){const row=slot>>1,idx0=-(5+row*5),i=((idx0%T.N)+T.N)
  c.x=T.x[i]+co*lat;c.z=T.z[i]-s*lat;c.y=T.y[i]-lat*T.bank[i]+1.1;c.yaw=T.psi[i];c.idx=i;c.unw=idx0;c.cy=T.psi[i];c.camY=T.y[i]+1;
  if(PT8.gridHook)PT8.gridHook(T,c,slot);/* track files: the painted grid boxes */
  if(RACE&&RACE.cfg&&RACE.cfg.rolling)rollBack(T,c)}
-/* rolling start: the whole grid moves 240 m back up the road (keeping each car's side), drives up in formation and goes green when the
+/* rolling start: the whole grid moves 170 m back up the road (240 before round 17) (keeping each car's side), drives up in formation and goes green when the
    leader crosses the line */
-function rollBack(T,c){const N=T.N,back=Math.round(240/T.sp),i=((c.idx|0)%N+N)%N,s=Math.sin(T.psi[i]),co=Math.cos(T.psi[i]),lat=(c.x-T.x[i])*co-(c.z-T.z[i])*s,along=(c.x-T.x[i])*s+(c.z-T.z[i])*co,j=((i-back)%N+N)%N,sj=Math.sin(T.psi[j]),cj=Math.cos(T.psi[j]);
+function rollBack(T,c){const N=T.N,back=Math.round(170/T.sp),i=((c.idx|0)%N+N)%N,s=Math.sin(T.psi[i]),co=Math.cos(T.psi[i]),lat=(c.x-T.x[i])*co-(c.z-T.z[i])*s,along=(c.x-T.x[i])*s+(c.z-T.z[i])*co,j=((i-back)%N+N)%N,sj=Math.sin(T.psi[j]),cj=Math.cos(T.psi[j]);
  c.x=T.x[j]+cj*lat+sj*along;c.z=T.z[j]-sj*lat+cj*along;c.y=T.surf(c.x,c.z,T.y[j]+2).h+1.1;c.yaw=T.psi[j];c.idx=j;c.unw-=back;c.cy=c.yaw;c.camY=c.y}
 /* the formation run drives itself: every car (yours too) is on autopilot in its own lane, the pack holds about 100 km/h with 14 m gaps,
    and control is handed over the moment the leader takes the green flag at the line */
 {const sc0=stepCar;stepCar=function(c,dt){const R=RACE;if(R&&R.cfg&&R.cfg.rolling&&!R.green&&R.state!=='done'&&!c.fin){
   if(c.human&&!c.forceAI){c.forceAI=true;c._rollAI=true}
   let lead=null;for(const o of R.cars)if(!lead||o.unw>lead.unw)lead=o;
-  if(R.state==='race'&&lead&&lead.unw>=0){R.green=true;R.cars.forEach(o=>{if(o._rollAI){o.forceAI=false;o._rollAI=false}if(o.human){o.pop='GREEN FLAG \u00b7 GO';o.popT=2}});if(typeof beep==='function')beep(880,.35,'square')}
-  else if(c.human){c.pop='ROLLING START \u00b7 AUTOPILOT';c.popT=Math.max(c.popT||0,.3)}}
+  /* round 17: no text, just the 3-2-1 countdown, timed so GO lands about when the leader reaches the line; on GO everyone is let go */
+  if(R.state==='race'&&lead&&c===R.cars[0]){R.t=0;/* the race clock waits for GO */if(R._lu!=null&&dt>0)R._lv=(R._lv||0)*.9+.1*(lead.unw-R._lu)*R.T.sp/dt;R._lu=lead.unw;/* measured road speed (some tracks run the clock faster) */const ttl=-lead.unw*R.T.sp/Math.max(5,R._lv||lead.sp||0);
+   if(R._rcd||ttl<=3.2||lead.unw>=0){R._rcd=1;const cs=PT8.cdStep(R,dt);$('cd').textContent=cs.txt;
+    if(cs.go){R.green=true;R.t=0;R.cars.forEach(o=>{if(o._rollAI){o.forceAI=false;o._rollAI=false}o.lapStart=0});setTimeout(()=>{if(RACE===R&&R.state!=='done')$('cd').textContent=''},800)}}}}
  return sc0.apply(this,arguments)}}
 {const ip0=PT8.inPost;PT8.inPost=(c,dt)=>{if(ip0)ip0(c,dt);const R=RACE;if(!(R&&R.cfg&&R.cfg.rolling&&!R.green&&R.state==='race'&&!c.fin&&c.in))return;
  let ahead=null;for(const o of R.cars)if(o!==c&&o.unw>c.unw&&(!ahead||o.unw<ahead.unw))ahead=o;
@@ -247,6 +249,9 @@ function launch(cfg){
 }
 PT8.launch=launch;
 startRace=()=>{if(PT8.lastCfg)PT8.launch(PT8.lastCfg)};
+/* rolling start: the cars are already moving at the formation pace from the first frame (no standing countdown first) */
+{const L0=PT8.launch;PT8.launch=function(cfg){const r=L0.apply(this,arguments);const R=RACE;if(R&&cfg&&cfg.rolling&&cfg.mode!=='rally'){R.state='race';R.cd=0;R.t=0;
+ for(const c of R.cars){const v=27.5;c.vx=Math.sin(c.yaw)*v;c.vz=Math.cos(c.yaw)*v;c.sp=v;if(c.human&&!c.forceAI){c.forceAI=true;c._rollAI=true}}}return r}}
 
 /* ---------------- race end / finish ---------------- */
 function endRace(){const Rc=RACE;if(Rc.ending>0||Rc.state==='done')return;Rc.ending=Rc.mode==='cutup'?1.8:2.6;Rc.endAt=Rc.t}

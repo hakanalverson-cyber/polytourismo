@@ -1,0 +1,93 @@
+{
+"carScale": 1.8,
+"sign": 1,
+"medal": 90,
+"sat": 1.3,
+"bake": "tree|tyre|startlights|seats|cones|baloon",
+"ratio": {
+"tree": 0.1,
+"tyre": 0.06,
+"seats": 0.12,
+"default": 0.15
+},
+"alpha": [
+"fence"
+],
+"id": "nurburg",
+"name": "Nürburgring",
+"replaces": "nurburg",
+"credit": "Cartoon Race Track Nurburg (Retro Cartoon Racing), bought by Hakan",
+"work": "/tmp/claude-0/-home-claude-polytourismo/4b0e7c59-35bd-554a-8c30-0ab78fa183a0/scratchpad/trk_nurb",
+"texdir": "/tmp/claude-0/-home-claude-polytourismo/4b0e7c59-35bd-554a-8c30-0ab78fa183a0/scratchpad/nurb/textures/",
+"centre": {
+"method": "skeleton",
+"mesh": "nurburg_tarmac_road",
+"cell": 40
+},
+"start": {
+"mesh": "line_start_finish_white_line",
+"mode": "front",
+"ahead": 6,
+"boxes": "line_start_finish_white_line",
+"cluster": 1
+},
+"ground": [
+[
+"outer_grass",
+0,
+-0.02
+],
+[
+"grass_runoff_grass_1",
+0,
+0
+],
+[
+"grass_runoff_striped",
+0,
+0
+],
+[
+"sand_gravel",
+3,
+0.05
+],
+[
+"gravel_traps",
+3,
+0.06
+],
+[
+"tarmac_dirty",
+2,
+0.08
+],
+[
+"tarmac_pitlane",
+2,
+0.1
+],
+[
+"nurburg_tarmac_road",
+1,
+0.12
+]
+],
+"lift": {
+"white_line": 0.16
+},
+"colliders": "wall_nurburg_wall|safety_wall|barrier_nurburg|pitwall|tyre_stack",
+"skip": "nurburg_bottom",
+"bigtex": [
+"road_nurburg",
+"garages",
+"^NURBURG.png",
+"banners",
+"dirty_tarmac"
+],
+"overhead": "tree|fence|grass|gravel|sand|tarmac|white_line|startlights|baloon|barrier|seats|cones|tyre",
+"overmin": 10,
+"S": 0.05,
+"roadmax": 4,
+"wallsnap": 1.0
+}

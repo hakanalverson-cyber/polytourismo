@@ -146,11 +146,24 @@ nx,nz=int((x1-x0)/CELL)+1,int((z1-z0)/CELL)+1;H=np.full((nz,nx),-1e9);K=np.zeros
 # the rock shell under the world only fills cells nothing else covers.
 RK=np.zeros((nz,nx),bool);rockpat=C.get('rock')
 for nm,cl,lift in layers:
-  v,f,_=G(nm);v=v+[0,lift,0];h=raster(v,f,x0,z0,nx,nz,CELL);ok=~np.isnan(h);unset=H<-1e8
+  v,f,_=G(nm);v=v+[0,lift,0]
+  if cl==1 and C.get('roadmax'):
+    # narrow raised kerbs modelled in the road mesh fall between grid points: sample the asphalt finer and keep the highest point around
+    # each grid point, so the car rides up onto them instead of sinking in
+    k_=int(C['roadmax']);hf=raster(v,f,x0,z0,nx*k_,nz*k_,CELL/k_);hm=np.where(np.isnan(hf),-1e9,hf);hm=ndimage.maximum_filter(hm,size=k_+1,mode='nearest')[::k_,::k_][:nz,:nx]
+    h=np.where(hm<-1e8,np.nan,hm)
+  else:h=raster(v,f,x0,z0,nx,nz,CELL)
+  ok=~np.isnan(h);unset=H<-1e8
   if rockpat and re.search(rockpat,nm):m=ok&unset;RK|=m
   elif cl==1:m=ok  # the circuit's own asphalt always wins (bridges cross over it and under it)
   else:m=ok&(unset|RK|((h>=H-.02)&(h<=H+2.5)));RK&=~m
   H[m]=h[m];K[m]=cl
+# ---- kerbs drawn as their own mesh over the asphalt (the Hungaroring's): the asphalt layer runs on under them and always won, so the
+# raised kerbs sank into the road. They go on top here wherever they sit up to 0.8 m above what is there
+for pat,lift in C.get('kerbs',[]):
+  for nm in pick(pat):
+    v,f,_=G(nm);v=v+[0,lift,0];h=raster(v,f,x0,z0,nx,nz,CELL);m=~np.isnan(h)&(H>-1e8)&(h>H-.02)&(h<H+.8);H[m]=h[m];K[m]=2
+    print('kerb cells',nm,int(m.sum()))
 # ---- two-level road (Suzuka's figure of eight crosses itself on a bridge): where the circuit asphalt exists at two heights more than 3 m
 # apart, the grid keeps the lower road and a sparse list holds the upper one; the game picks the level nearest the car
 UP=None
@@ -185,6 +198,9 @@ for nm in pick(C['colliders']):
     if abs(u_[0]*w_[1]-u_[1]*w_[0])>L*1.0:continue
     segs.append([a[0],a[1],b[0],b[1]])
 segs=np.unique(np.round(np.array(segs),2),axis=0) if segs else np.zeros((0,4))
+if C.get('wallsnap') and len(segs):  # dense props (tyre stacks, fences): ends snapped to a coarse grid, so thousands of small faces become a few walls
+  q=C['wallsnap'];segs=np.round(segs/q)*q;segs=segs[np.hypot(segs[:,2]-segs[:,0],segs[:,3]-segs[:,1])>=q*.9]
+  a=segs[:,:2].copy();b=segs[:,2:].copy();sw=(a[:,0]>b[:,0])|((a[:,0]==b[:,0])&(a[:,1]>b[:,1]));segs=np.where(sw[:,None],np.c_[b,a],np.c_[a,b]);segs=np.unique(segs,axis=0);print('snapped wall segs',len(segs))
 tree=cKDTree(R[:,[0,2]]);keep=[]
 for sg in segs:
   a,b=sg[:2],sg[2:];k=max(2,int(np.linalg.norm(b-a)/1.5));t=np.linspace(0,1,k)[:,None];Pp=a*(1-t)+b*t;dd,ii=tree.query(Pp);keep.append(not(dd<Wr[ii]/2+.5).any())

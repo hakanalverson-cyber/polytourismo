@@ -1,0 +1,1 @@
+[["js", "JSON.stringify(PT8.CARS.filter(c=>/R8|GT3|LMS|F40|918/.test(c.name)).map(c=>[c.id,c.name,c.cls,c.grip,c.mph||c.top,c.acc,c.brk]))"], ["js", "JSON.stringify([Math.min(...PT8.CARS.map(c=>c.grip)),Math.max(...PT8.CARS.map(c=>c.grip))])"]]

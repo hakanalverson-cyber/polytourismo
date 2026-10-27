@@ -13,4 +13,5 @@ mk('suzuka','Suzuka','japanese grand prix circuit / figure of eight / s curves /
 mk('hungaroring','Hungaroring','hungarian grand prix circuit / tight and twisty / budapest',['TWISTY','BUDAPEST','4.4 KM']);
 mk('bathurst','Bathurst','mount panorama / the mountain climb and the dipper / australia',['MOUNTAIN','THE DIPPER','6.2 KM']);
 mk('spa','Spa-Francorchamps','belgian grand prix circuit / eau rouge and raidillon / the ardennes',['EAU ROUGE','ARDENNES','7.0 KM']);
+mk('nurburg','Nürburgring','german grand prix circuit / mercedes arena / under the castle',['GP CIRCUIT','EIFEL','5.1 KM']);
 })();

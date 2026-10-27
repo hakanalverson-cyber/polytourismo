@@ -1,0 +1,1 @@
+[["wait",2000],["js","(()=>{PT8._to=true;PT8.launch({mode:'mp',track:19,laps:1,humans:[{id:'merc',alt:0}],ai:[],trackRace:true});return 1})()"],["wait",3000],["js","(()=>{const c={};RACE.scene.traverse(o=>{if(o.isMesh){const k=(o.name||'?').slice(0,30);c[k]=(c[k]||0)+1}});return JSON.stringify(c).slice(0,1500)})()"]]
