@@ -115,11 +115,14 @@ const SPD=1.25,TOPK=1.5,ACCK=.52,TS=1.4;{const m0=P.mul;P.mul=c=>{const m=m0?m0(
      A first version capped the steering itself: with keyboard steering that felt like heavy understeer everywhere. */
 /* grip grows with speed like downforce: 1.6 g in slow corners, about 2.6 g at 160 km/h, 3.5 g from 200 km/h, so slow corners stay real
    and fast sweepers can be taken flat out instead of the car pushing wide at speed */
+/* 1st gear steers 15% less, easing back to full over the top quarter of the gear so that at the shift it matches 2nd (1st is never
+   wider than 2nd) */
+const g1k=(c,vf)=>{let t=8;try{t=P.gearTops(c.cs)[0]||8}catch(e){}const r=vf/Math.max(1,t);return .85+.15*Math.min(1,Math.max(0,(r-.75)/.25))};
 const gripAt=(c,mt)=>{const v=c.sp||0;return ALAT*Math.min(2.2,1+.6*(v/35)*(v/35))*((c.cs&&c.cs.grip)||1)*(mt.grip||1)};
 {const ip0=P.inPost;P.inPost=(c,dt)=>{if(ip0)ip0(c,dt);if(!TRK()||!c.in||c.exp>0)return;const vf=c.vx*Math.sin(c.yaw)+c.vz*Math.cos(c.yaw);if(vf<6)return;
  const mt=c.mt||{grip:1},a=gripAt(c,mt),sr=2.5-Math.min(c.sp,40)*.03,mx=a/(vf*sr)*1.7;
  /* calmer steering at low speed (first gear felt twitchy): full lock gives 60% of the old turn rate at walking pace, all of it from 90 km/h */
- if(c.human&&!c.forceAI)c.in.st=(c.in.st||0)*1.2*(.6+.4*Math.min(1,Math.max(0,(vf-6)/19)))/* x1.2: turn 20% tighter in every gear */;const st=c.in.st||0;
+ if(c.human&&!c.forceAI)c.in.st=(c.in.st||0)*1.2*(.6+.4*Math.min(1,Math.max(0,(vf-6)/19)))/* x1.2: turn 20% tighter in every gear */*((c.gear|0)===0?g1k(c,vf):1)/* 1st gear 15% less (it was twitchy) */;const st=c.in.st||0;
  if(Math.abs(st)>mx)c.in.st=Math.sign(st)*mx}}
 {const sg0=stepCar;stepCar=function(c,dt){const vx0=c.vx,vz0=c.vz,r=sg0.apply(this,arguments);
  if(!TRK()||c.exp>0||!(dt>0))return r;const s0=Math.hypot(vx0,vz0),s1=Math.hypot(c.vx,c.vz);if(s0<6||s1<6||!c.m||!c.m.wheels.some(w=>w.g))return r;

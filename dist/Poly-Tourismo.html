@@ -6471,23 +6471,39 @@ soloCam=(c,dt,out)=>{
  const T=RACE.T,N=T.N,s=c.cine||(c.cine={t:0,shot:-1,pos:new V(),look:new V(),f:50,ang:0,init:0});
  const fx_=Math.sin(c.yaw),fz_=Math.cos(c.yaw),rx_=Math.cos(c.yaw),rz_=-Math.sin(c.yaw);
  s.t-=dt;
- const pickShot=()=>{s.shot=(s.shot+1)%5;s.t=2.6+Math.random()*1.2;s.init=0;s.ang=Math.random()*6.28};
+ const pickShot=()=>{s.shot=(s.shot+1)%7;s.t=2.6+Math.random()*1.2;s.init=0;s.ang=Math.random()*6.28};
  if(s.shot<0||s.t<=0)pickShot();
  const road=(i,lat)=>{i=((i%N)+N)%N;const sn=Math.sin(T.psi[i]),cs=Math.cos(T.psi[i]);return[T.x[i]+cs*lat,T.y[i]-lat*T.bank[i],T.z[i]-sn*lat]};
- const sh=s.shot;let wantPos=null,wantLook=null,fov=50;const cy=c.y+.9;
- if(sh===0||sh===4){ /* trackside / far high, static ahead of the car */
-  if(!s.init){const ahead=Math.round((sh===0?28+c.sp*1.3:48+c.sp*1.5)/T.sp),side=Math.random()<.5?-1:1,p=road(c.idx+ahead,side*(T.hw[c.idx]+(sh===0?6:10)));s.pos.set(p[0],p[1]+(sh===0?1.2:(14+Math.random()*8)),p[2]);const g=RACE.T.surf(s.pos.x,s.pos.z,s.pos.y+3).h;if(sh===0)s.pos.y=Math.max(s.pos.y,g+1.1);s.init=1}
-  wantPos=s.pos;wantLook=_a.set(c.x+c.vx*.12,cy,c.z+c.vz*.12);fov=sh===0?lerp(34,52,clamp(Math.hypot(c.x-s.pos.x,c.z-s.pos.z)/50,0,1)):44;
-  /* car has gone past: new shot */
-  const dx=c.x-s.pos.x,dz=c.z-s.pos.z;if(dx*fx_+dz*fz_>16)s.t=Math.min(s.t,.01);
- }else if(sh===1){ /* in front, low, looking back */
-  wantPos=_b.set(c.x+fx_*(9+c.sp*.12),c.y+.9,c.z+fz_*(9+c.sp*.12));wantLook=_a.set(c.x,c.y+.9,c.z);fov=64;
- }else if(sh===2){ /* orbit */
-  s.ang+=dt*.9;wantPos=_b.set(c.x+Math.cos(s.ang)*13,c.y+5.2,c.z+Math.sin(s.ang)*13);wantLook=_a.set(c.x,c.y+.8,c.z);fov=52;
- }else{ /* low rear-quarter chase */
-  wantPos=_b.set(c.x-fx_*5.2+rx_*3.4,c.y+.8,c.z-fz_*5.2+rz_*3.4);wantLook=_a.set(c.x+fx_*3,c.y+.7,c.z+fz_*3);fov=72;
+ /* every distance grows with the drawn car size (1.8x on the model tracks), so the camera never ends up in a bumper, and low shots stay
+    on the tarmac side of the walls and fences: a point is pulled back inside the road edge unless it is well above the barriers */
+ const K=PT8.carK?PT8.carK():1,L=4.6*K,cy=c.y+.9*K;
+ const latOf=(x,z,i)=>{i=((i%N)+N)%N;return (x-T.x[i])*Math.cos(T.psi[i])-(z-T.z[i])*Math.sin(T.psi[i])};
+ const inRoad=v=>{const al=(v.x-c.x)*fx_+(v.z-c.z)*fz_,i=c.idx+Math.round(al/T.sp),ii=((i%N)+N)%N,hw=(T.hw[ii]||7)-.8,ry=T.y[ii];
+  if(v.y-ry<4.5*K){const lt=latOf(v.x,v.z,ii);if(Math.abs(lt)>hw){const d=Math.sign(lt)*hw-lt;v.x+=Math.cos(T.psi[ii])*d;v.z-=Math.sin(T.psi[ii])*d}}
+  const g=T.surf(v.x,v.z,v.y+2).h;if(g!=null&&v.y<g+.6*K)v.y=g+.6*K;return v};
+ /* far enough that the whole car fits the frame with some room around it */
+ const fit=(fov,d)=>Math.max(d,L*.62/Math.tan(fov*Math.PI/360));
+ const sh=s.shot;let wantPos=null,wantLook=null,fov=50;const cLat=latOf(c.x,c.z,c.idx);
+ if(sh===0||sh===4){s.need=0; /* 0: trackside at the kerb on the far side of the car's line, low; 4: crane shot high above the edge */
+  if(!s.init){const ahead=Math.round((sh===0?30+c.sp*1.3:26+c.sp*1.1)/T.sp),i=c.idx+ahead,ii=((i%N)+N)%N,side=cLat>0?-1:1,hw=(T.hw[ii]||7);
+   const p=road(i,side*(sh===0?hw-1:hw+2));s.pos.set(p[0],p[1]+(sh===0?1.1*K:(7+Math.random()*4)*K),p[2]);if(sh===0)inRoad(s.pos);s.init=1}
+  wantPos=s.pos;wantLook=_a.set(c.x+c.vx*.12,cy,c.z+c.vz*.12);const dd=Math.hypot(c.x-s.pos.x,c.z-s.pos.z);
+  fov=clamp(2*Math.atan(L*(sh===0?.75:1.3)/Math.max(1,dd))*180/Math.PI,20,62);
+  const dx=c.x-s.pos.x,dz=c.z-s.pos.z;if(dx*fx_+dz*fz_>6*K)s.t=Math.min(s.t,.01);
+ }else if(sh===1){ /* ahead of the car, low, looking back at the nose */
+  fov=50;const d=fit(fov,L*.5+3.5*K+c.sp*.1);s.need=d;wantPos=inRoad(_b.set(c.x+fx_*d,c.y+.75*K,c.z+fz_*d));wantLook=_a.set(c.x,c.y+.6*K,c.z);
+ }else if(sh===2){ /* slow orbit, a little above the roof */
+  fov=48;s.ang+=dt*.55;const d=fit(fov,6.5*K+2);s.need=d;wantPos=inRoad(_b.set(c.x+Math.cos(s.ang)*d,c.y+2*K+1,c.z+Math.sin(s.ang)*d));wantLook=_a.set(c.x,c.y+.7*K,c.z);
+ }else if(sh===3){ /* low rear three-quarter chase */
+  fov=58;const d=fit(fov,5*K+2.5);s.need=d;const sd=s.ang>3.14?1:-1;wantPos=inRoad(_b.set(c.x-fx_*d*.85+rx_*sd*d*.5,c.y+.65*K,c.z-fz_*d*.85+rz_*sd*d*.5));wantLook=_a.set(c.x+fx_*2*K,c.y+.6*K,c.z+fz_*2*K);
+ }else if(sh===5){ /* side-on tracking shot at wheel height, keeping pace with the car */
+  fov=44;const d=fit(fov,4.5*K+3);s.need=d;const sd=cLat>0?-1:1;wantPos=inRoad(_b.set(c.x+rx_*sd*d+fx_*1.2*K,c.y+.55*K,c.z+rz_*sd*d+fz_*1.2*K));wantLook=_a.set(c.x+fx_*.8*K,c.y+.6*K,c.z+fz_*.8*K);
+ }else{ /* high chase from behind, the road ahead opening up */
+  fov=46;const d=fit(fov,9*K+4);s.need=0;wantPos=_b.set(c.x-fx_*d,c.y+d*.55,c.z-fz_*d);wantLook=_a.set(c.x+fx_*6*K,c.y,c.z+fz_*6*K);
  }
- const k=(sh===0||sh===4)?1:1-Math.exp(-dt*(sh===1?6:9));
+ /* a shot pulled in from behind a wall is lifted until it is back at its distance, so it looks down over the barrier at the whole car */
+ if(wantPos!==s.pos&&s.need){const dx=wantPos.x-c.x,dz=wantPos.z-c.z,h=Math.hypot(dx,dz),dy=wantPos.y-cy,d3=Math.hypot(h,dy);if(d3<s.need)wantPos.y=cy+Math.sqrt(Math.max(0,s.need*s.need-h*h))}
+ const k=(sh===0||sh===4)?1:1-Math.exp(-dt*(sh===1||sh===5?6:9));
  if(s.sm===undefined||s.lastShot!==sh){s.lastShot=sh;s.sm=1;s.cur=s.cur||new V();s.cur.copy(wantPos);s.lk=s.lk||new V();s.lk.copy(wantLook)}
  s.cur.lerp(wantPos,k);s.lk.lerp(wantLook,1-Math.exp(-dt*12));s.f+=(fov-s.f)*(1-Math.exp(-dt*5));
  out.p.copy(s.cur);out.l.copy(s.lk);out.f=s.f;c.cb=0;c.inTn=false;
@@ -10800,11 +10816,14 @@ const SPD=1.25,TOPK=1.5,ACCK=.52,TS=1.4;{const m0=P.mul;P.mul=c=>{const m=m0?m0(
      A first version capped the steering itself: with keyboard steering that felt like heavy understeer everywhere. */
 /* grip grows with speed like downforce: 1.6 g in slow corners, about 2.6 g at 160 km/h, 3.5 g from 200 km/h, so slow corners stay real
    and fast sweepers can be taken flat out instead of the car pushing wide at speed */
+/* 1st gear steers 15% less, easing back to full over the top quarter of the gear so that at the shift it matches 2nd (1st is never
+   wider than 2nd) */
+const g1k=(c,vf)=>{let t=8;try{t=P.gearTops(c.cs)[0]||8}catch(e){}const r=vf/Math.max(1,t);return .85+.15*Math.min(1,Math.max(0,(r-.75)/.25))};
 const gripAt=(c,mt)=>{const v=c.sp||0;return ALAT*Math.min(2.2,1+.6*(v/35)*(v/35))*((c.cs&&c.cs.grip)||1)*(mt.grip||1)};
 {const ip0=P.inPost;P.inPost=(c,dt)=>{if(ip0)ip0(c,dt);if(!TRK()||!c.in||c.exp>0)return;const vf=c.vx*Math.sin(c.yaw)+c.vz*Math.cos(c.yaw);if(vf<6)return;
  const mt=c.mt||{grip:1},a=gripAt(c,mt),sr=2.5-Math.min(c.sp,40)*.03,mx=a/(vf*sr)*1.7;
  /* calmer steering at low speed (first gear felt twitchy): full lock gives 60% of the old turn rate at walking pace, all of it from 90 km/h */
- if(c.human&&!c.forceAI)c.in.st=(c.in.st||0)*1.2*(.6+.4*Math.min(1,Math.max(0,(vf-6)/19)))/* x1.2: turn 20% tighter in every gear */;const st=c.in.st||0;
+ if(c.human&&!c.forceAI)c.in.st=(c.in.st||0)*1.2*(.6+.4*Math.min(1,Math.max(0,(vf-6)/19)))/* x1.2: turn 20% tighter in every gear */*((c.gear|0)===0?g1k(c,vf):1)/* 1st gear 15% less (it was twitchy) */;const st=c.in.st||0;
  if(Math.abs(st)>mx)c.in.st=Math.sign(st)*mx}}
 {const sg0=stepCar;stepCar=function(c,dt){const vx0=c.vx,vz0=c.vz,r=sg0.apply(this,arguments);
  if(!TRK()||c.exp>0||!(dt>0))return r;const s0=Math.hypot(vx0,vz0),s1=Math.hypot(c.vx,c.vz);if(s0<6||s1<6||!c.m||!c.m.wheels.some(w=>w.g))return r;
@@ -11155,6 +11174,8 @@ window.__optAction=k=>{if(k==='@tutorial')P.startTutorial()};
 const P=window.PT8;
 P.LOG=[
  {v:'0.12',d:'Oct 25, 2026',t:'New Road Atlanta and Imola scenery, smarter CPU, gearbox choice',items:[
+  'First gear steers 15% less (it was twitchy), easing back to full right at the shift, so it still turns at least as tight as second.',
+  'Finish cinematic reworked: seven shots (kerbside, nose-on, slow orbit, low rear three-quarter, crane, side-on tracking, high chase) all sized to the car, so the camera never sits inside a bumper and the whole car stays in frame. Low shots stay on the road side of walls and fences, and a shot that would end up behind a barrier rises to look over it.',
   'Three new circuits in Track mode, built from bought cartoon models: the Hungaroring (4.4 km), Bathurst (6.2 km, up and over the Mountain) and Spa-Francorchamps (7.0 km, Eau Rouge and Raidillon). Each has its real grid boxes, a standing start and gold times measured from a CPU lap.',
   'Smoother menus: the main menu and garage drew up to four times the pixels on high-density screens, with soft shadows redrawn every frame. They now draw at most 1.25x the screen density, the slow menu shots run at 30 frames a second, and their shadows only redraw when the shot changes. Races are capped at 1.25x density by default too (Options can raise it).',
   'The speedometer on Imola, Road Atlanta, Laguna Seca and Suzuka shows the speed you see: it read about 1.7x too high (100 on the dial looked like 60). Cars there now show their real top speeds, and 100 to 200 builds up as it should (a Mercedes does 0-100 mph in about 7.5 s).',

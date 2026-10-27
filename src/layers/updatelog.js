@@ -4,6 +4,8 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.12',d:'Oct 25, 2026',t:'New Road Atlanta and Imola scenery, smarter CPU, gearbox choice',items:[
+  'First gear steers 15% less (it was twitchy), easing back to full right at the shift, so it still turns at least as tight as second.',
+  'Finish cinematic reworked: seven shots (kerbside, nose-on, slow orbit, low rear three-quarter, crane, side-on tracking, high chase) all sized to the car, so the camera never sits inside a bumper and the whole car stays in frame. Low shots stay on the road side of walls and fences, and a shot that would end up behind a barrier rises to look over it.',
   'Three new circuits in Track mode, built from bought cartoon models: the Hungaroring (4.4 km), Bathurst (6.2 km, up and over the Mountain) and Spa-Francorchamps (7.0 km, Eau Rouge and Raidillon). Each has its real grid boxes, a standing start and gold times measured from a CPU lap.',
   'Smoother menus: the main menu and garage drew up to four times the pixels on high-density screens, with soft shadows redrawn every frame. They now draw at most 1.25x the screen density, the slow menu shots run at 30 frames a second, and their shadows only redraw when the shot changes. Races are capped at 1.25x density by default too (Options can raise it).',
   'The speedometer on Imola, Road Atlanta, Laguna Seca and Suzuka shows the speed you see: it read about 1.7x too high (100 on the dial looked like 60). Cars there now show their real top speeds, and 100 to 200 builds up as it should (a Mercedes does 0-100 mph in about 7.5 s).',
