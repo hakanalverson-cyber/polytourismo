@@ -93,7 +93,7 @@ const uv=updateVisual;updateVisual=function(c,T,t){const m=c&&c.m,k=K();if(m&&m.
    width all follow speed, which made the picture jitter while the car itself moved smoothly */
 const so=soloCam;soloCam=function(c,dt,out){const sp0=c.sp||0;c._csp=c._csp==null?sp0:c._csp+(sp0-c._csp)*Math.min(1,(dt||.016)*3);const dk=P.dialK(),cap=150/(2.237*dk)/* round 17: past 150 on the dial the view stops widening and the camera stops pulling back (it felt unreal) */;c.sp=TRK()?Math.min(c._csp,cap):c._csp;try{so.apply(this,arguments)}finally{c.sp=sp0}const k=K();if(c.fin||!TRK())return;const f=1+(k-1)*.5,y=c.camY==null?c.y:c.camY;
  out.p.set(c.x+(out.p.x-c.x)*f,y+(out.p.y-y)*f,c.z+(out.p.z-c.z)*f);out.l.set(c.x+(out.l.x-c.x)*f,y+(out.l.y-y)*f,c.z+(out.l.z-c.z)*f);
- const v=Math.max(0,Math.min(1,((c._csp||0)*2.237*dk-40)/110)),hood=(c.tnB||0)>.5||c.camMode;out.f=Math.min(out.f+v*(hood?3:5),((window.PTO&&PTO.fov)||58)+(hood?12:16));
+ const v=Math.max(0,Math.min(1,((c._csp||0)*2.237*dk-40)/110)),hb0=c.camMode?1:Math.min(1,c.tnB||0),hk_=hb0*hb0*(3-2*hb0);out.f=Math.min(out.f+v*(5-2*hk_),((window.PTO&&PTO.fov)||58)+16-4*hk_);/* round 21: the hood view's narrower widening blends in with the camera (it switched at the halfway point and the view popped 4 degrees) */
  /* hood view on these tracks: the stock one sat 1 m up inside a car drawn 1.8x and tilted the view with the raw body pitch, so crests and dips
     made it lurch and clip the bonnet. Here it rides at the big car's eye height and the tilt follows a smoothed pitch */
  const hb=c.tnB||0;if(hb>.002&&!c.camMode){const kk=hb*hb*(3-2*hb),fx=Math.sin(c.yaw),fz=Math.cos(c.yaw),a=1-Math.exp(-(dt||.016)*6);c._hp=c._hp==null?c.pitch:c._hp+(c.pitch-c._hp)*a;
@@ -123,7 +123,12 @@ const SPD=1.25,TOPK=1.32,ACCK=.46,TS=1.4,BRKK=.42;/* round 19: top speed and pic
 /* scaled x.8 overall by request (it was too sharp everywhere) */
 /* round 17: the steering angle follows the speed only, never the gear. Round 20: the speed curve (STKP) is gone, see the turn-rate target below */
 /* downforce-like growth, toned down (it reached 2.2x and cornered like an F1 car): up to 1.5x from about 200 km/h */
-const gripAt=(c,mt)=>{const v=c.sp||0;return ALAT*Math.min(DFMAX,1+DFK*(v/35)*(v/35))*((c.cs&&c.cs.grip)||1)*(mt.grip||1)*(c.human&&!c.forceAI&&c.in&&c.in.br>0&&c.in.th<=0?1.15:1)/* round 20: trail braking, the weight on the fronts gives 15% more bite (player only, so the CPU laps and gold times stay put) */};
+/* round 21 (player only), by the speed on the dial: HG = more tyre at speed (none to 90 mph, +20% from 130: the understeer at 120 felt
+   like what 220 should give, still a little more push than the mid range); SF = how much of the turn limit full lock asks for: 95% in
+   first gear, 75% from 30 to 80 mph (it felt sharper there than first gear), back to all of it from 110 */
+const DM=v=>v*2.237*P.dialK(),HG=v=>1+.2*Math.min(1,Math.max(0,(DM(v)-90)/40));
+const SFP=[[0,.95],[20,.95],[30,.75],[80,.75],[110,1]],SF=m=>{const p=SFP;if(m<=p[0][0])return p[0][1];for(let i=1;i<p.length;i++)if(m<=p[i][0]){const a=p[i-1],b=p[i];return a[1]+(b[1]-a[1])*(m-a[0])/(b[0]-a[0])}return p[p.length-1][1]};
+const gripAt=(c,mt)=>{const v=c.sp||0;return ALAT*Math.min(DFMAX,1+DFK*(v/35)*(v/35))*((c.cs&&c.cs.grip)||1)*(mt.grip||1)*(c.human&&!c.forceAI?(c.in&&c.in.br>0&&c.in.th<=0?1.15:1)*HG(v):1)/* round 20: trail braking, the weight on the fronts gives 15% more bite (player only, so the CPU laps and gold times stay put) */};
 {const ip0=P.inPost;P.inPost=(c,dt)=>{if(ip0)ip0(c,dt);if(!TRK()||!c.in||c.exp>0)return;const vf=c.vx*Math.sin(c.yaw)+c.vz*Math.cos(c.yaw);if(vf<6)return;
  const mt=c.mt||{grip:1},a=gripAt(c,mt),sr=2.5-Math.min(c.sp,40)*.03,hk=Math.min(1.45,Math.max(.85,1+(((c.cs&&c.cs.grip)||1)-1)*2.6)),mx=a/(vf*sr)*(c.human&&!c.forceAI?1.4*hk:1.25)/* CPU drivers keep the old line, so their lap times and the gold times stay put */;
  /* the nose turns in up to 1.4x what the tyres hold (was 1.25x, before that 1.7x): asking for more pushes the car wide. The Handling rating
@@ -132,7 +137,7 @@ const gripAt=(c,mt)=>{const v=c.sp||0;return ALAT*Math.min(DFMAX,1+DFK*(v/35)*(v
  /* round 20: full lock now asks for a turn rate, not a fraction of the old one. It is the tighter of a fixed smallest turn (6.5 m radius,
     grown with the drawn car size) and what the tyres hold (x1.1, more with Handling). The old speed curve shrank the steering as the car
     slowed (60% at 30 mph), so braking into a corner made it turn wider than it did at speed: the understeer under braking */
- const hm=c.human&&!c.forceAI;if(hm){const sb=(2.25-.033*Math.min(c.sp,42))*Math.min(1,vf/6),w=Math.min(vf/(6.5*K()),a*1.1*hk/vf);const dm=vf*2.237*P.dialK(),lo=.88+.12*Math.min(1,Math.max(0,(dm-70)/20))/* round 20b: 12% calmer below 70 mph on the dial, back to full by 90 (it felt too reactive under 80) */;c.in.st=clamp(c.in.st||0,-1,1)*w*lo/sb}const st=c.in.st||0;
+ const hm=c.human&&!c.forceAI;if(hm){const sb=(2.25-.033*Math.min(c.sp,42))*Math.min(1,vf/6),w=Math.min(vf/(6.5*K()),a*1.1*hk/vf);const lo=SF(DM(vf));c.in.st=clamp(c.in.st||0,-1,1)*w*lo/sb}const st=c.in.st||0;
  const mx2=hm?1e9:mx;if(Math.abs(st)>mx2){c.in.st=Math.sign(st)*mx2;/* understeer scrub: steering far past the limit (turning in too fast) bleeds speed as the fronts push */if(hm&&Math.abs(st)>mx2*1.35){const e=Math.min(1,Math.abs(st)/mx2-1.35),k=1-e*.5*(dt||.016);c.vx*=k;c.vz*=k}}}}
 {const sg0=stepCar;stepCar=function(c,dt){const vx0=c.vx,vz0=c.vz,y0=c.yaw,r=sg0.apply(this,arguments);
  if(!TRK()||c.exp>0||!(dt>0))return r;
@@ -172,7 +177,7 @@ carCollide=function(a,b){if(a.out||b.out)return;const k=K(),dx=b.x-a.x,dz=b.z-a.
  const ov=best/2+.01;a.x-=bx*ov;a.z-=bz*ov;b.x+=bx*ov;b.z+=bz*ov;const rv=(b.vx-a.vx)*bx+(b.vz-a.vz)*bz;if(!(rv<0))return;
  const j=-rv*.6;a.vx-=bx*j;a.vz-=bz*j;b.vx+=bx*j;b.vz+=bz*j;
  const R=RACE,key=Math.min(a.k,b.k)+'-'+Math.max(a.k,b.k),hit=R._hit||(R._hit={});if(rv<-3&&!(hit[key]>R.t)){hit[key]=R.t+.6;const x=(a.x+b.x)/2,y=a.y+.5,z=(a.z+b.z)/2;
-  fx(x,y,z,0xffe080,6,5,.3,.15,8);if(window.__hitFx)window.__hitFx(x,y,z,-rv,a,b);noise(.12,.2,1200);R.shake=Math.max(R.shake,Math.min(1,-rv/15))}};
+  fx(x,y,z,0xffe080,6,5,.3,.15,8);if(window.__hitFx)window.__hitFx(x,y,z,-rv,a,b);noise(.12,.2,1200);{const k_=Math.min(1,-rv/15);a.shk=Math.max(a.shk||0,k_);b.shk=Math.max(b.shk||0,k_)}}};
 /* a chase camera that ends up inside the car behind (close racing, formation laps) used to fill the screen with that car's paint: cars whose
    body the camera is inside are skipped for that view */
 {const rd=R.render.bind(R);R.render=function(sc,cam){const Rc=typeof RACE!=='undefined'?RACE:null;if(!Rc||!Rc.cars||sc!==Rc.scene||!cam||!cam.isPerspectiveCamera)return rd(sc,cam);

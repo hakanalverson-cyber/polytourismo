@@ -3,6 +3,11 @@
 'use strict';
 const P=window.PT8;
 P.LOG=[
+ {v:'0.17',d:'Oct 27, 2026',t:'Steering by speed, personal screen shake, calmer start screen',items:[
+  'Steering by speed: first gear turns about 9% sharper, 30-80 mph is 6-12% calmer (it felt sharper than first gear), and from about 100 mph the tyres hold more (about 13% more turn at 120 mph). Fast corners still push a little more than the mid range.',
+  'Screen shake only shakes the screen of the driver who crashed (both cars in a collision), not every player in split screen.',
+  'Hood camera: switching to and from it no longer pops halfway through (the view width jumped 4 degrees).',
+  'Start screen before a run: one quiet line (length, laps, weather) instead of rows of boxes, no control chips, no minimap. The car is in the small label; the driver line only shows when players take turns.']},
  {v:'0.16',d:'Oct 27, 2026',t:'No more understeer under braking',items:[
   'Steering no longer gets weaker as you slow down. It used to scale down to about 60% at 30 mph, so braking into a corner made the car turn wider than it did at speed. Full lock now always asks for the tightest turn the tyres can hold (or a 6.5 m radius at low speed), and the Handling rating still moves that limit.',
   'Trail braking: with the brake on (and the throttle off) the front tyres bite 15% harder, so the nose tucks in as you brake into a corner instead of pushing wide.',

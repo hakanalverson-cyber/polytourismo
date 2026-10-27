@@ -321,7 +321,7 @@ c.vx=fx_*vf+rx*vr;c.vz=fz_*vf+rz*vr;c.vy+=(sumF-G0)*dt;c.wpt+=tP/IP*dt;c.wrl+=tR
 c.pitch=clamp(c.pitch+c.wpt*dt,-.7,.7);c.roll=clamp(c.roll+c.wrl*dt,-.7,.7);
 if(RACE.state!='race'||c.fin){c.vx*=.9;c.vz*=.9;if(RACE.state!='race'){c.vx=c.vz=0}}
 c.x+=c.vx*dt;c.y+=c.vy*dt;c.z+=c.vz*dt;if(c.y<sc.h+.3){c.y=sc.h+.3;if(c.vy<0)c.vy=0}
-if(sc.road&&T.wall[sc.i]&&Math.abs(sc.lat)>(T.hw[sc.i]+.3-(1.0*Math.abs(Math.cos(wr(c.yaw-T.psi[sc.i])))+2.0*Math.abs(Math.sin(wr(c.yaw-T.psi[sc.i])))*.62))){const sg=Math.sign(sc.lat),nx=Math.cos(T.psi[sc.i])*sg,nz=-Math.sin(T.psi[sc.i])*sg,ov=Math.abs(sc.lat)-((T.hw[sc.i]+.3-(1.0*Math.abs(Math.cos(wr(c.yaw-T.psi[sc.i])))+2.0*Math.abs(Math.sin(wr(c.yaw-T.psi[sc.i])))*.62)));c.x-=nx*ov;c.z-=nz*ov;const vn=c.vx*nx+c.vz*nz;if(vn>0){c.vx-=1.3*vn*nx;c.vz-=1.3*vn*nz;if(vn>4){fx(c.x+nx,c.y,c.z+nz,0xffe080,6,5,.3,.15,8);c.hl=1;if(c.human)RACE.shake=Math.min(1,vn/20);noise(.15,.25,900)}}}
+if(sc.road&&T.wall[sc.i]&&Math.abs(sc.lat)>(T.hw[sc.i]+.3-(1.0*Math.abs(Math.cos(wr(c.yaw-T.psi[sc.i])))+2.0*Math.abs(Math.sin(wr(c.yaw-T.psi[sc.i])))*.62))){const sg=Math.sign(sc.lat),nx=Math.cos(T.psi[sc.i])*sg,nz=-Math.sin(T.psi[sc.i])*sg,ov=Math.abs(sc.lat)-((T.hw[sc.i]+.3-(1.0*Math.abs(Math.cos(wr(c.yaw-T.psi[sc.i])))+2.0*Math.abs(Math.sin(wr(c.yaw-T.psi[sc.i])))*.62)));c.x-=nx*ov;c.z-=nz*ov;const vn=c.vx*nx+c.vz*nz;if(vn>0){c.vx-=1.3*vn*nx;c.vz-=1.3*vn*nz;if(vn>4){fx(c.x+nx,c.y,c.z+nz,0xffe080,6,5,.3,.15,8);c.hl=1;c.shk=Math.min(1,vn/20);noise(.15,.25,900)}}}
 const spd=Math.hypot(c.vx,c.vz);c.sp=spd;
 if(hb&&spd>14&&Math.abs(vr)>2.2&&nG>=2)c.dts+=dt;else if(!hb){if(c.dts>.7){c.boost=Math.min(1.8,.5+c.dts*.6);beep(500,.25,'sawtooth',.6)}c.dts=0}
 if(c.boost>0)c.boost-=dt;
@@ -337,7 +337,7 @@ function respawn(c){const T=RACE.T;let i=(c.idx-4+T.N)%T.N;i=(i-(PT8.jumpBack?PT
 function carCollide(a,b){const dx=b.x-a.x,dz=b.z-a.z;if(dx*dx+dz*dz>25||Math.abs(a.y-b.y)>1.6)return;const sa=Math.sin(a.yaw),ca=Math.cos(a.yaw),sb=Math.sin(b.yaw),cb=Math.cos(b.yaw),HX=.95,HZ=2.1;let best=1e9,bx=0,bz=0;
  for(const [nx,nz] of [[ca,-sa],[sa,ca],[cb,-sb],[sb,cb]]){const ra=HX*Math.abs(nx*ca-nz*sa)+HZ*Math.abs(nx*sa+nz*ca),rb=HX*Math.abs(nx*cb-nz*sb)+HZ*Math.abs(nx*sb+nz*cb),pr=dx*nx+dz*nz,ov=ra+rb-Math.abs(pr);if(ov<=0)return;if(ov<best){best=ov;const sg=pr<0?-1:1;bx=nx*sg;bz=nz*sg}}
  const ov=best/2+.01;a.x-=bx*ov;a.z-=bz*ov;b.x+=bx*ov;b.z+=bz*ov;const rv=(b.vx-a.vx)*bx+(b.vz-a.vz)*bz;
- if(rv<0){const j=-rv*.75;a.vx-=bx*j;a.vz-=bz*j;b.vx+=bx*j;b.vz+=bz*j;if(rv<-3){fx((a.x+b.x)/2,a.y+.5,(a.z+b.z)/2,0xffe080,6,5,.3,.15,8);noise(.12,.2,1200);RACE.shake=Math.max(RACE.shake,Math.min(1,-rv/15))}}}
+ if(rv<0){const j=-rv*.75;a.vx-=bx*j;a.vz-=bz*j;b.vx+=bx*j;b.vz+=bz*j;if(rv<-3){fx((a.x+b.x)/2,a.y+.5,(a.z+b.z)/2,0xffe080,6,5,.3,.15,8);noise(.12,.2,1200);{const k_=Math.min(1,-rv/15);a.shk=Math.max(a.shk||0,k_);b.shk=Math.max(b.shk||0,k_)}}}}
 /* ---------------- cameras / layout ---------------- */
 const RECTS={1:[[0,0,1,1]],2:[[0,0,.5,1],[.5,0,.5,1]],3:[[0,.5,.5,.5],[.5,.5,.5,.5],[0,0,1,.5]],4:[[0,.5,.5,.5],[.5,.5,.5,.5],[0,0,.5,.5],[.5,0,.5,.5]]};
 const MERGE=34,SPLIT=54;
@@ -356,7 +356,7 @@ const so={p:new V(),l:new V(),f:60},go={p:new V(),l:new V(),f:60};
 for(const c of hs){const t=tgt.get(c);c.rect=c.rect||t.r.slice();for(let j=0;j<4;j++)c.rect[j]+=(t.r[j]-c.rect[j])*Math.min(1,dt*6);c.cb+=((t.g.length>1?1:0)-c.cb)*Math.min(1,dt*3);c.grp=t.g}
 for(const c of hs){const t=tgt.get(c);soloCam(c,dt,so);groupCam(t.g,go);const b=c.cb*c.cb*(3-2*c.cb),cam=c.cam||(c.cam=new THREE.PerspectiveCamera(60,1,.3,2500));
 cam.position.lerpVectors(so.p,go.p,b);_cl.lerpVectors(so.l,go.l,b);const gh=Rc.T.surf(cam.position.x,cam.position.z,cam.position.y+2).h+1.5;if(cam.position.y<gh)cam.position.y=gh;
-if(Rc.shake>0&&c.human){const s=Rc.shake*.5;cam.position.x+=(Math.random()-.5)*s;cam.position.y+=(Math.random()-.5)*s}
+if((c.shk||0)>0&&c.human){const s=c.shk*.5;cam.position.x+=(Math.random()-.5)*s;cam.position.y+=(Math.random()-.5)*s}
 cam.lookAt(_cl);cam.fov=lerp(so.f,go.f,b);const r=c.rect,g=2,x=Math.round(r[0]*W+(r[0]>.01?g:0)),y=Math.round(r[1]*H+(r[1]>.01?g:0)),w=Math.round((r[0]+r[2])*W-(r[0]+r[2]<.99?g:0))-x,h=Math.round((r[1]+r[3])*H-(r[1]+r[3]<.99?g:0))-y;
 cam.aspect=Math.max(.1,w/h);cam.updateProjectionMatrix();R.setViewport(x,y,w,h);R.setScissor(x,y,w,h);R.render(Rc.scene,cam)}}
 /* ---------------- race flow ---------------- */
@@ -400,7 +400,7 @@ function step(dt){const Rc=RACE;Rc.t+=dt;
 if(Rc.state=='count'){const cs=PT8.cdStep(Rc,dt);$('cd').textContent=cs.txt;if(cs.go){Rc.state='race';Rc.t=0;setTimeout(()=>{if(RACE===Rc&&Rc.state!='done')$('cd').textContent=''},800)}}
 for(const c of Rc.cars)if(c.human&&Rc.state!='done'){const k=readIn(c.k);c.in=k}
 for(let s=0;s<2;s++){for(const c of Rc.cars)stepCar(c,dt/2);for(let i=0;i<Rc.cars.length;i++)for(let j=i+1;j<Rc.cars.length;j++)carCollide(Rc.cars[i],Rc.cars[j])}
-Rc.shake=Math.max(0,Rc.shake-dt*3);fxu(dt);for(const c of Rc.cars)updateVisual(c,Rc.T,Rc.t+T0);Rc.cars.forEach((c,i)=>engineSnd(c,i));
+Rc.shake=0;for(const q of Rc.cars)q.shk=Math.max(0,(q.shk||0)-dt*3);fxu(dt);for(const c of Rc.cars)updateVisual(c,Rc.T,Rc.t+T0);Rc.cars.forEach((c,i)=>engineSnd(c,i));
 if(Rc.state=='race'){finishCheck()}
 if(Rc.state=='done'){Rc.doneT+=dt;if(Rc.doneT>1.2&&!Rc.shown){Rc.shown=1;stopEng();const rl=[...Rc.cars].sort((a,b)=>(b.fin?1e6-b.finT:0)-(a.fin?1e6-a.finT:0)||b.unw-a.unw);$('rl').innerHTML=rl.map((c,i)=>`${i+1}. <b style="color:${CS[c.k]}">P${c.k+1}</b> — ${c.fin?c.finT.toFixed(2)+'s':'DNF'}`).join('<br>');paused=true;show('res');beep(784,.5,'triangle')}}}
 /* ---------------- ui ---------------- */
@@ -882,8 +882,8 @@ soloCam=compile(soloCam.toString().replace(
 ));
 
 drawRace=compile(drawRace.toString().replace(
- 'if(Rc.shake>0&&c.human)',
- 'if(o.shake&&Rc.shake>0&&c.human)'
+ 'if((c.shk||0)>0&&c.human)',
+ 'if(o.shake&&(c.shk||0)>0&&c.human)'
 ));
 
 hudUpdate=compile(hudUpdate.toString().replace(
@@ -1401,7 +1401,7 @@ function explode(c,kind){if(c.exp>0)return;ensure(c);const Rc=RACE,v=Rc.v7||(Rc.
  fx(c.x,c.y+.6,c.z,0xffb030,34,16,1,.55,4);fx(c.x,c.y+.6,c.z,0xff6a20,22,10,.8,.7,2);fx(c.x,c.y+.8,c.z,0x1a1a1a,16,5,2,.9,-1.2);
  for(const [col,sz,op] of [[0xfff0a0,1,.95],[0xff8a2a,1.7,.7]]){const m=new THREE.Mesh(new THREE.SphereGeometry(sz,12,8),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:op,blending:THREE.AdditiveBlending,depthWrite:false}));m.position.set(c.x,c.y+.7,c.z);Rc.scene.add(m);v.ball.push({m,t:0,s:sz})}
  for(let i=0;i<14;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(.2+Math.random()*.4,.1,.3+Math.random()*.5),new THREE.MeshStandardMaterial({color:[0x222222,0x888888,c.col,0x444444][i%4],roughness:.7}));m.position.set(c.x,c.y+.6,c.z);Rc.scene.add(m);const a=Math.random()*6.28,s=6+Math.random()*9;v.deb.push({m,t:0,vx:Math.cos(a)*s,vy:8+Math.random()*9,vz:Math.sin(a)*s,rx:Math.random()*9,rz:Math.random()*9})}
- beep(70,.7,'sawtooth',1.2);noise(.9,.7,900);Rc.shake=1}
+ beep(70,.7,'sawtooth',1.2);noise(.9,.7,900);c.shk=1}
 function v7Update(dt){const Rc=RACE;if(!Rc||!Rc.v7)return;const v=Rc.v7;for(const b of v.ball){b.t+=dt;b.m.scale.setScalar(1+b.t*5);b.m.material.opacity=Math.max(0,.9-b.t*1.6)}
  v.ball=v.ball.filter(b=>{if(b.t>.6){Rc.scene.remove(b.m);return false}return true});
  for(const d of v.deb){d.t+=dt;d.vy-=26*dt;d.m.position.x+=d.vx*dt;d.m.position.y+=d.vy*dt;d.m.position.z+=d.vz*dt;d.m.rotation.x+=d.rx*dt;d.m.rotation.z+=d.rz*dt}
@@ -5566,6 +5566,7 @@ body:after{background:repeating-linear-gradient(0deg,#00000010 0 1px,transparent
 #rlPrep{position:fixed;inset:0;display:none;z-index:30;justify-content:space-between;align-items:flex-end;padding:5vh 5vw;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.45),transparent 22%,transparent 62%,rgba(0,0,0,.65))}
 #rlPrep .rp-l small{letter-spacing:.2em;color:#cfd6dc;font-size:12px}
 #rlPrep h2{margin:4px 0 10px;font-size:clamp(28px,5vw,54px);letter-spacing:.06em;color:#fff;text-transform:uppercase}
+#rlPrep .rp-f{font-size:14px;letter-spacing:.08em;color:#cfd6dc}
 #rlPrep .rp-c{display:flex;gap:8px;flex-wrap:wrap}
 #rlPrep .rp-c span{padding:4px 10px;border:1px solid rgba(255,255,255,.35);border-radius:3px;font-size:12px;letter-spacing:.08em;color:#fff;background:rgba(0,0,0,.35)}
 #rlPrep .rp-c .hot{border-color:#7fe3f2;color:#7fe3f2}
@@ -5575,7 +5576,7 @@ body:after{background:repeating-linear-gradient(0deg,#00000010 0 1px,transparent
 #rlPrep .rp-r{text-align:right;pointer-events:auto}
 #rlPrep .rp-r small{display:block;margin-top:8px;color:#cfd6dc}
 #rlPrep .btn{font-size:20px;padding:14px 34px}
-body.rprep #hud,body.rprep .hud,body.rprep #h8pace,body.rprep .h8pace,body.rprep #mini,body.rprep #touch{display:none!important}
+body.rprep #hud,body.rprep .hud,body.rprep #h8pace,body.rprep .h8pace,body.rprep #mini,body.rprep #mm,body.rprep #touch{display:none!important}
 #rlCp{position:fixed;z-index:20;opacity:0;transition:opacity .6s;pointer-events:none}
 #rlCp .h8top{position:static;transform:scale(var(--s,1));transform-origin:top left}
 .rl-spl{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
@@ -7771,7 +7772,7 @@ function trafficTick(Rc,dt){const T=Rc.T,N=T.N;spaceTraffic(Rc,dt);
    if(Math.abs(t.y-c.y)<2.5&&P.obbHit(c.x,c.z,c.yaw,t.x,t.z,t.yaw)){ /* crash */
     const rel=Math.hypot(c.vx-(Math.sin(t.yaw)*t.v),c.vz-(Math.cos(t.yaw)*t.v));
     t.hit=2.4;t.vx=c.vx*.9+rnd(-3,3);t.vz=c.vz*.9+rnd(-3,3);t.vy=rnd(7,12);t.spin=0;
-    c.vx*=.4;c.vz*=.4;c.combo=0;c.comboT=0;c.crashes++;Rc.shake=Math.max(Rc.shake,.9);popTxt(c,'CRASH / COMBO LOST');
+    c.vx*=.4;c.vz*=.4;c.combo=0;c.comboT=0;c.crashes++;c.shk=Math.max(c.shk||0,.9);popTxt(c,'CRASH / COMBO LOST');
     if(P.hitFx)P.hitFx(Rc,c,Math.min(20,rel),c.x+fx_*1.8,c.y+.5,c.z+fz_*1.8,-fx_*.6,-fz_*.6);c.score=Math.max(0,c.score-Math.round(rel*4));fx(c.x+fx_*2,c.y+.6,c.z+fz_*2,0xffe080,10,7,.35,.2,8);noise(.2,.4,900);beep(120,.25,'sawtooth',.8);continue}
    if(prev!==undefined&&prev>0&&lon<=0&&lat<3.9&&c.sp>16){ /* passed it */
     if(lat>=2.15){const gap=lat-2.15,close=gap<(Rc.heavy?1.25:1.1);c.passes++;
@@ -10802,7 +10803,7 @@ const uv=updateVisual;updateVisual=function(c,T,t){const m=c&&c.m,k=K();if(m&&m.
    width all follow speed, which made the picture jitter while the car itself moved smoothly */
 const so=soloCam;soloCam=function(c,dt,out){const sp0=c.sp||0;c._csp=c._csp==null?sp0:c._csp+(sp0-c._csp)*Math.min(1,(dt||.016)*3);const dk=P.dialK(),cap=150/(2.237*dk)/* round 17: past 150 on the dial the view stops widening and the camera stops pulling back (it felt unreal) */;c.sp=TRK()?Math.min(c._csp,cap):c._csp;try{so.apply(this,arguments)}finally{c.sp=sp0}const k=K();if(c.fin||!TRK())return;const f=1+(k-1)*.5,y=c.camY==null?c.y:c.camY;
  out.p.set(c.x+(out.p.x-c.x)*f,y+(out.p.y-y)*f,c.z+(out.p.z-c.z)*f);out.l.set(c.x+(out.l.x-c.x)*f,y+(out.l.y-y)*f,c.z+(out.l.z-c.z)*f);
- const v=Math.max(0,Math.min(1,((c._csp||0)*2.237*dk-40)/110)),hood=(c.tnB||0)>.5||c.camMode;out.f=Math.min(out.f+v*(hood?3:5),((window.PTO&&PTO.fov)||58)+(hood?12:16));
+ const v=Math.max(0,Math.min(1,((c._csp||0)*2.237*dk-40)/110)),hb0=c.camMode?1:Math.min(1,c.tnB||0),hk_=hb0*hb0*(3-2*hb0);out.f=Math.min(out.f+v*(5-2*hk_),((window.PTO&&PTO.fov)||58)+16-4*hk_);/* round 21: the hood view's narrower widening blends in with the camera (it switched at the halfway point and the view popped 4 degrees) */
  /* hood view on these tracks: the stock one sat 1 m up inside a car drawn 1.8x and tilted the view with the raw body pitch, so crests and dips
     made it lurch and clip the bonnet. Here it rides at the big car's eye height and the tilt follows a smoothed pitch */
  const hb=c.tnB||0;if(hb>.002&&!c.camMode){const kk=hb*hb*(3-2*hb),fx=Math.sin(c.yaw),fz=Math.cos(c.yaw),a=1-Math.exp(-(dt||.016)*6);c._hp=c._hp==null?c.pitch:c._hp+(c.pitch-c._hp)*a;
@@ -10832,7 +10833,12 @@ const SPD=1.25,TOPK=1.32,ACCK=.46,TS=1.4,BRKK=.42;/* round 19: top speed and pic
 /* scaled x.8 overall by request (it was too sharp everywhere) */
 /* round 17: the steering angle follows the speed only, never the gear. Round 20: the speed curve (STKP) is gone, see the turn-rate target below */
 /* downforce-like growth, toned down (it reached 2.2x and cornered like an F1 car): up to 1.5x from about 200 km/h */
-const gripAt=(c,mt)=>{const v=c.sp||0;return ALAT*Math.min(DFMAX,1+DFK*(v/35)*(v/35))*((c.cs&&c.cs.grip)||1)*(mt.grip||1)*(c.human&&!c.forceAI&&c.in&&c.in.br>0&&c.in.th<=0?1.15:1)/* round 20: trail braking, the weight on the fronts gives 15% more bite (player only, so the CPU laps and gold times stay put) */};
+/* round 21 (player only), by the speed on the dial: HG = more tyre at speed (none to 90 mph, +20% from 130: the understeer at 120 felt
+   like what 220 should give, still a little more push than the mid range); SF = how much of the turn limit full lock asks for: 95% in
+   first gear, 75% from 30 to 80 mph (it felt sharper there than first gear), back to all of it from 110 */
+const DM=v=>v*2.237*P.dialK(),HG=v=>1+.2*Math.min(1,Math.max(0,(DM(v)-90)/40));
+const SFP=[[0,.95],[20,.95],[30,.75],[80,.75],[110,1]],SF=m=>{const p=SFP;if(m<=p[0][0])return p[0][1];for(let i=1;i<p.length;i++)if(m<=p[i][0]){const a=p[i-1],b=p[i];return a[1]+(b[1]-a[1])*(m-a[0])/(b[0]-a[0])}return p[p.length-1][1]};
+const gripAt=(c,mt)=>{const v=c.sp||0;return ALAT*Math.min(DFMAX,1+DFK*(v/35)*(v/35))*((c.cs&&c.cs.grip)||1)*(mt.grip||1)*(c.human&&!c.forceAI?(c.in&&c.in.br>0&&c.in.th<=0?1.15:1)*HG(v):1)/* round 20: trail braking, the weight on the fronts gives 15% more bite (player only, so the CPU laps and gold times stay put) */};
 {const ip0=P.inPost;P.inPost=(c,dt)=>{if(ip0)ip0(c,dt);if(!TRK()||!c.in||c.exp>0)return;const vf=c.vx*Math.sin(c.yaw)+c.vz*Math.cos(c.yaw);if(vf<6)return;
  const mt=c.mt||{grip:1},a=gripAt(c,mt),sr=2.5-Math.min(c.sp,40)*.03,hk=Math.min(1.45,Math.max(.85,1+(((c.cs&&c.cs.grip)||1)-1)*2.6)),mx=a/(vf*sr)*(c.human&&!c.forceAI?1.4*hk:1.25)/* CPU drivers keep the old line, so their lap times and the gold times stay put */;
  /* the nose turns in up to 1.4x what the tyres hold (was 1.25x, before that 1.7x): asking for more pushes the car wide. The Handling rating
@@ -10841,7 +10847,7 @@ const gripAt=(c,mt)=>{const v=c.sp||0;return ALAT*Math.min(DFMAX,1+DFK*(v/35)*(v
  /* round 20: full lock now asks for a turn rate, not a fraction of the old one. It is the tighter of a fixed smallest turn (6.5 m radius,
     grown with the drawn car size) and what the tyres hold (x1.1, more with Handling). The old speed curve shrank the steering as the car
     slowed (60% at 30 mph), so braking into a corner made it turn wider than it did at speed: the understeer under braking */
- const hm=c.human&&!c.forceAI;if(hm){const sb=(2.25-.033*Math.min(c.sp,42))*Math.min(1,vf/6),w=Math.min(vf/(6.5*K()),a*1.1*hk/vf);const dm=vf*2.237*P.dialK(),lo=.88+.12*Math.min(1,Math.max(0,(dm-70)/20))/* round 20b: 12% calmer below 70 mph on the dial, back to full by 90 (it felt too reactive under 80) */;c.in.st=clamp(c.in.st||0,-1,1)*w*lo/sb}const st=c.in.st||0;
+ const hm=c.human&&!c.forceAI;if(hm){const sb=(2.25-.033*Math.min(c.sp,42))*Math.min(1,vf/6),w=Math.min(vf/(6.5*K()),a*1.1*hk/vf);const lo=SF(DM(vf));c.in.st=clamp(c.in.st||0,-1,1)*w*lo/sb}const st=c.in.st||0;
  const mx2=hm?1e9:mx;if(Math.abs(st)>mx2){c.in.st=Math.sign(st)*mx2;/* understeer scrub: steering far past the limit (turning in too fast) bleeds speed as the fronts push */if(hm&&Math.abs(st)>mx2*1.35){const e=Math.min(1,Math.abs(st)/mx2-1.35),k=1-e*.5*(dt||.016);c.vx*=k;c.vz*=k}}}}
 {const sg0=stepCar;stepCar=function(c,dt){const vx0=c.vx,vz0=c.vz,y0=c.yaw,r=sg0.apply(this,arguments);
  if(!TRK()||c.exp>0||!(dt>0))return r;
@@ -10881,7 +10887,7 @@ carCollide=function(a,b){if(a.out||b.out)return;const k=K(),dx=b.x-a.x,dz=b.z-a.
  const ov=best/2+.01;a.x-=bx*ov;a.z-=bz*ov;b.x+=bx*ov;b.z+=bz*ov;const rv=(b.vx-a.vx)*bx+(b.vz-a.vz)*bz;if(!(rv<0))return;
  const j=-rv*.6;a.vx-=bx*j;a.vz-=bz*j;b.vx+=bx*j;b.vz+=bz*j;
  const R=RACE,key=Math.min(a.k,b.k)+'-'+Math.max(a.k,b.k),hit=R._hit||(R._hit={});if(rv<-3&&!(hit[key]>R.t)){hit[key]=R.t+.6;const x=(a.x+b.x)/2,y=a.y+.5,z=(a.z+b.z)/2;
-  fx(x,y,z,0xffe080,6,5,.3,.15,8);if(window.__hitFx)window.__hitFx(x,y,z,-rv,a,b);noise(.12,.2,1200);R.shake=Math.max(R.shake,Math.min(1,-rv/15))}};
+  fx(x,y,z,0xffe080,6,5,.3,.15,8);if(window.__hitFx)window.__hitFx(x,y,z,-rv,a,b);noise(.12,.2,1200);{const k_=Math.min(1,-rv/15);a.shk=Math.max(a.shk||0,k_);b.shk=Math.max(b.shk||0,k_)}}};
 /* a chase camera that ends up inside the car behind (close racing, formation laps) used to fill the screen with that car's paint: cars whose
    body the camera is inside are skipped for that view */
 {const rd=R.render.bind(R);R.render=function(sc,cam){const Rc=typeof RACE!=='undefined'?RACE:null;if(!Rc||!Rc.cars||sc!==Rc.scene||!cam||!cam.isPerspectiveCamera)return rd(sc,cam);
@@ -11195,6 +11201,11 @@ window.__optAction=k=>{if(k==='@tutorial')P.startTutorial()};
 'use strict';
 const P=window.PT8;
 P.LOG=[
+ {v:'0.17',d:'Oct 27, 2026',t:'Steering by speed, personal screen shake, calmer start screen',items:[
+  'Steering by speed: first gear turns about 9% sharper, 30-80 mph is 6-12% calmer (it felt sharper than first gear), and from about 100 mph the tyres hold more (about 13% more turn at 120 mph). Fast corners still push a little more than the mid range.',
+  'Screen shake only shakes the screen of the driver who crashed (both cars in a collision), not every player in split screen.',
+  'Hood camera: switching to and from it no longer pops halfway through (the view width jumped 4 degrees).',
+  'Start screen before a run: one quiet line (length, laps, weather) instead of rows of boxes, no control chips, no minimap. The car is in the small label; the driver line only shows when players take turns.']},
  {v:'0.16',d:'Oct 27, 2026',t:'No more understeer under braking',items:[
   'Steering no longer gets weaker as you slow down. It used to scale down to about 60% at 30 mph, so braking into a corner made the car turn wider than it did at speed. Full lock now always asks for the tightest turn the tyres can hold (or a 6.5 m radius at low speed), and the Handling rating still moves that limit.',
   'Trail braking: with the brake on (and the throttle off) the front tyres bite 15% harder, so the nose tucks in as you brake into a corner instead of pushing wide.',
@@ -12402,7 +12413,7 @@ function roost(c,Rc,dt){const T=Rc.T;if(!c.human||!(T.d.gravel||(T.gv&&T.gv[c.id
   if(Math.random()<.55)for(let k=0;k<2;k++)P.puff(x,y,z,-sy*sp*.3+(Math.random()-.5)*6,rnd(2.8,6.5),-cy*sp*.3+(Math.random()-.5)*6,dk,rnd(.14,.26),rnd(.6,1.1),.95,16)}}
 function fxStep(c,Rc,dt){roost(c,Rc,dt);if(c.human)smokeFx(c,Rc,dt);const T=Rc.T;if(T.fords&&T.fords.length){const dep=waterDepth(T,c),was=c._wet>0;c._wet=dep;
   if(dep>0){c._wet=dep;if(c.sp>3)splash(c,T,dt,dep);
-   if(!was&&c.sp>6){if(c.human){P.sfx&&P.sfx('splash',Math.min(1,c.sp/45));Rc.shake=Math.max(Rc.shake||0,.1*Math.min(1,c.sp/40))}}
+   if(!was&&c.sp>6){if(c.human){P.sfx&&P.sfx('splash',Math.min(1,c.sp/45));c.shk=Math.max(c.shk||0,.1*Math.min(1,c.sp/40))}}
    if(c.human&&c.sp>10){c._wS=(c._wS||0)-dt;if(c._wS<=0){c._wS=.28;P.sfx&&P.sfx('splash',.18+Math.min(.3,c.sp/150))}}}
   else if(was&&c.human&&c.sp>6)P.sfx&&P.sfx('splash',Math.min(.8,c.sp/60))}
  if(c.human&&Rc.cfg&&!Rc.cfg.noFx)stageFx(c,T,dt)}
@@ -12617,7 +12628,7 @@ function crashStep(Rc,dt){const c=human(Rc);if(!c)return;const T=Rc.T;if(!T.soli
   for(const s of l){const dx=c.x-s[0],dz=c.z-s[1],d=Math.hypot(dx,dz),R=s[2]+1.05;if(d>=R||d<.001)continue;const nx=dx/d,nz=dz/d,vn=c.vx*nx+c.vz*nz;
    if(Math.abs(c.y-(T.terr?T.terr(s[0],s[1]):c.y))>3.5)continue;c.x+=nx*(R-d);c.z+=nz*(R-d);
    if(vn<0){c.vx-=1.28*vn*nx;c.vz-=1.28*vn*nz;c.vx*=.82;c.vz*=.82;if(-vn>2.2&&c.cdT<=0){c.cdT=.7;hurt(Rc,c,-vn,nx,nz)}}}}}
-function hurt(Rc,c,v,nx,nz){if(P.hitFx)P.hitFx(Rc,c,v,c.x-nx*.9,c.y+.35,c.z-nz*.9,nx,nz);if(!P.dmgOn(Rc)){Rc.shake=Math.max(Rc.shake||0,Math.min(1,v/16));if(P.sfx)P.sfx('crash');return}if(v<4){if(P.sfx&&v>2.6)P.sfx('crash');return}const was=c.dmg||0,add=Math.min(.5,Math.pow((v-3.5)/24,1.5)*.9);c.dmg=Math.min(1,was+add);c.hits=(c.hits||0)+1;Rc.shake=Math.max(Rc.shake||0,Math.min(1.2,v/14));
+function hurt(Rc,c,v,nx,nz){if(P.hitFx)P.hitFx(Rc,c,v,c.x-nx*.9,c.y+.35,c.z-nz*.9,nx,nz);if(!P.dmgOn(Rc)){c.shk=Math.max(c.shk||0,Math.min(1,v/16));if(P.sfx)P.sfx('crash');return}if(v<4){if(P.sfx&&v>2.6)P.sfx('crash');return}const was=c.dmg||0,add=Math.min(.5,Math.pow((v-3.5)/24,1.5)*.9);c.dmg=Math.min(1,was+add);c.hits=(c.hits||0)+1;c.shk=Math.max(c.shk||0,Math.min(1.2,v/14));
  c.yaw+=(Math.random()<.5?-1:1)*Math.min(.5,v*.02);if(!c._pull)c._pull=(Math.random()<.5?-1:1);
  if(P.sfx)P.sfx('crash');const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);
  for(let k=0;k<10;k++)P.puff(c.x-nx*1.1,c.y+.2,c.z-nz*1.1,-nx*rnd(1,6)+rnd(-2,2),rnd(1,5),-nz*rnd(1,6)+rnd(-2,2),k%2?[1,.7,.2]:[.55,.5,.45],rnd(.12,.3),rnd(.4,.9),.95,14);
@@ -12655,8 +12666,11 @@ const prepCam=new THREE.PerspectiveCamera(48,1,.2,3500);
 function enterPrep(d,i){const Rc=RACE;if(!Rc)return;Rc.prep=true;Rc.prepT=0;Rc.shot0=(Math.random()*5)|0;Rc.shot=-1;const T=Rc.T,st=T.d,cps=P.cpsOf(T);
  let e=$i('rlPrep');if(!e){e=document.createElement('div');e.id='rlPrep';document.body.appendChild(e)}
  const car=BYID[d.id],wx=Rc.wx?Rc.wx.n:'Clear',tod=(P.TOD&&Rc.todKey&&P.TOD[Rc.todKey])?P.TOD[Rc.todKey].n:'';
- e.innerHTML=`<div class="rp-l"><small>${W('RALLY','TRACK')} &middot; ${S.drv.length>1?'RUN '+(i+1)+' OF '+S.drv.length:'SOLO RUN'}</small><h2>${st.name}</h2><div class="rp-c"><span>${(T.L/1000).toFixed(1)} km</span><span>${S.cfg.laps} lap${S.cfg.laps>1?'s':''}</span><span>${cps.length} checkpoints</span>${T.fords&&T.fords.length?`<span class="hot">${T.fords.length} fords</span>`:''}${T.jumps&&T.jumps.length?'<span>jump</span>':''}<span>${wx}</span></div>${ctlHTML(0)}<div class="rp-d"><i style="background:${PCOL[d.p%4]}"></i><b>${d.name.replace(/</g,'')}</b><small>${car.name}${d.alt?' ALT':''} &middot; ${keyHint(0)}</small></div></div>
- <div class="rp-r"><button class="btn go" id="rlPlay"><span>${W('Start stage','Start race')}</span></button><small>Enter to start &middot; Esc to leave</small></div>`;
+ /* round 21: less clutter. One quiet facts line instead of a row of boxes, no control chips (the briefing shows them when drivers swap,
+    and the tutorial covers them), the car in the small label, and the driver line only when several people take turns */
+ const multi=S.drv.length>1,facts=[(T.L/1000).toFixed(1)+' km',S.cfg.laps+' lap'+(S.cfg.laps>1?'s':''),wx].concat(T.fords&&T.fords.length?[T.fords.length+' fords']:[],T.jumps&&T.jumps.length?['jump']:[]);
+ e.innerHTML=`<div class="rp-l"><small>${W('RALLY','TRACK')} &middot; ${multi?'RUN '+(i+1)+' OF '+S.drv.length:car.name.toUpperCase()+(d.alt?' ALT':'')}</small><h2>${st.name}</h2><div class="rp-f">${facts.join(' &middot; ')}</div>${multi?`<div class="rp-d"><i style="background:${PCOL[d.p%4]}"></i><b>${d.name.replace(/</g,'')}</b><small>${car.name}${d.alt?' ALT':''} &middot; ${keyHint(0)}</small></div>`:''}</div>
+ <div class="rp-r"><button class="btn go" id="rlPlay"><span>${W('Start stage','Start race')}</span></button><small>Enter to start &middot; C camera &middot; Esc to leave</small></div>`;
  e.style.display='flex';bodyCls('rprep',true);$i('rlPlay').onclick=startStage}
 function startStage(){const Rc=RACE;if(!Rc||!Rc.prep)return;const hc=human(Rc);if(hc)hc.camMode=camPref[curP]||0;Rc.prep=false;bodyCls('rprep',false);const e=$i('rlPrep');if(e)e.style.display='none';dip();beep(700,.1)}
 function prepDraw(Rc,dt){const c=human(Rc),W=R.domElement.width,H=R.domElement.height;Rc.prepT+=dt;
@@ -12695,7 +12709,7 @@ function replayTick(Rc,dt){const R_=Rc.replay,c=human(Rc),rec=Rc.rec,t0=rec[0][0
  const a=rec[lo],b=rec[Math.min(rec.length-1,lo+1)],u=b[0]>a[0]?Math.min(1,Math.max(0,(R_.t-a[0])/(b[0]-a[0]))):0,L=i=>a[i]+(b[i]-a[i])*u,A=i=>a[i]+wrp(b[i]-a[i])*u;
  c.x=L(1);c.y=L(2);c.z=L(3);c.yaw=A(4);c.pitch=A(5);c.roll=A(6);c.vx=L(7);c.vy=L(8);c.vz=L(9);c.st=L(10);c.sp=L(11);c.idx=a[12];c.in={th:1,br:a[13],st:0,hb:0};c.onRoad=!!a[15];c.drifting=!!a[16];c.respT=0;c.exp=0;c.dts=0;c.fin=0;
  c.m.wheels.forEach((w,i)=>{w.g=!!(a[14]&(1<<i));w.s={h:c.y-1,road:c.onRoad}});
- Rc.shake=0;try{updateVisual(c,Rc.T,T0);fxStep(c,Rc,R_.paused?0:dt*R_.speed)}catch(e){}
+ c.shk=0;try{updateVisual(c,Rc.T,T0);fxStep(c,Rc,R_.paused?0:dt*R_.speed)}catch(e){}
  if(!R_.paused&&P.dustTick)P.dustTick(Rc,dt*R_.speed);
  const f=$i('rrFill');if(f)f.style.width=(100*(R_.t-t0)/Math.max(.01,t1-t0))+'%'}
 function replayDraw(Rc,dt){const R_=Rc.replay,c=human(Rc),W=R.domElement.width,H=R.domElement.height,T=Rc.T,sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);let p,l,fov=60;
@@ -13721,7 +13735,7 @@ let cd=0;
 function touch(g,x,z){const cx=Math.floor(x/8),cz=Math.floor(z/8);for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const l=g.get((cx+a)+','+(cz+b));if(!l)continue;
  for(const s of l){let qx,qz,r;if(s.length===5){const dx=s[2]-s[0],dz=s[3]-s[1],ll=dx*dx+dz*dz||1,t=Math.max(0,Math.min(1,((x-s[0])*dx+(z-s[1])*dz)/ll));qx=s[0]+dx*t;qz=s[1]+dz*t;r=s[4]}else{qx=s[0];qz=s[1];r=s[2]}
   if(Math.hypot(x-qx,z-qz)<r+.88*(P.carK?P.carK():1))return true}}return false}
-function hit(Rc,c,v,nx,nz){if(P.hitFx)P.hitFx(Rc,c,v,c.x-nx*.9,c.y+.35,c.z-nz*.9,nx,nz);if(!c.human)return;if(cd>0)return;cd=.3;Rc.shake=Math.max(Rc.shake||0,Math.min(1,v/16));if(P.sfx)P.sfx('crash');if(P.dmgOn&&P.dmgOn(Rc)&&P.hurt&&!((c.cdT||0)>0)){c.cdT=.7;P.hurt(Rc,c,v,nx,nz)}}
+function hit(Rc,c,v,nx,nz){if(P.hitFx)P.hitFx(Rc,c,v,c.x-nx*.9,c.y+.35,c.z-nz*.9,nx,nz);if(!c.human)return;if(cd>0)return;cd=.3;c.shk=Math.max(c.shk||0,Math.min(1,v/16));if(P.sfx)P.sfx('crash');if(P.dmgOn&&P.dmgOn(Rc)&&P.hurt&&!((c.cdT||0)>0)){c.cdT=.7;P.hurt(Rc,c,v,nx,nz)}}
 function bStep(Rc,dt){const T=Rc.T;if(!T||Rc.state!=='race')return;cd-=dt;const g=T._bg||grid(T);if(!g.size)return;
  /* every car, CPU included: nothing the player bumps into can be driven through by the CPU */
  for(const c of Rc.cars){if(c.fin||c.respT>0||c.exp>0)continue;
@@ -13762,7 +13776,7 @@ function kerb(Rc,dt){const T=Rc.T;if(!T||Rc.state!=='race'||!T.wall)return;const
   const i=best.i,lim=T.hw[i]-.9;
   if(T.wall[i]&&Math.abs(best.lat)>lim&&c._wl!=null&&Math.abs(c._wl)<=lim+.3&&c.y-T.y[i]<3){
    const sg=Math.sign(best.lat),nx=Math.cos(best.ps)*sg,nz=-Math.sin(best.ps)*sg,ov=Math.abs(best.lat)-lim;c.x-=nx*ov;c.z-=nz*ov;
-   const vn=c.vx*nx+c.vz*nz;if(vn>0){c.vx-=1.3*vn*nx;c.vz-=1.3*vn*nz;if(vn>4){c.hl=1;if(c.human)Rc.shake=Math.min(1,vn/20)}}
+   const vn=c.vx*nx+c.vz*nz;if(vn>0){c.vx-=1.3*vn*nx;c.vz-=1.3*vn*nz;if(vn>4){c.hl=1;c.shk=Math.min(1,vn/20)}}
    c._wl=sg*lim;slide(c,nx,nz,dt)}else{c._wl=best.lat;if(T.wall[i]&&Math.abs(best.lat)>lim-.35){const sg=Math.sign(best.lat);slide(c,Math.cos(best.ps)*sg,-Math.sin(best.ps)*sg,dt)}}}}
 const st0=step;step=function(dt){st0.apply(this,arguments);try{if(RACE){if(!P.noKerb)kerb(RACE,dt);if(!P.noBS)bStep(RACE,dt)}}catch(e){if(!P._sErr){P._sErr=1;console.warn('solid',e)}}};
 })();

@@ -20,6 +20,14 @@ src=src.replace("color:d.id==3?0x7af0ff:0xfff0c8","color:d.id==3?0xffe2a8:0xfff0
 # suspension damper: measure the body's vertical speed relative to the ground under it (c._gv, set in grip.js), not absolute. With the
 # absolute speed a car descending a hill had its damper pushing it up, so on downhills the tyres barely touched and grip vanished.
 src=rep(src,"vf=Math.max(vf-REV*br*dt,-14)","vf=Math.max(vf-REV*br*dt,-8)")  # round 19: reverse tops out at 18 mph (was 31: with full lock it ran tight circles fast enough to look like spins)
+# round 21: screen shake belongs to the car that crashed (c.shk), not to every screen (RACE.shake shook all split-screen views)
+src=rep(src,"if(c.human)RACE.shake=Math.min(1,vn/20)","c.shk=Math.min(1,vn/20)")
+src=rep(src,"RACE.shake=Math.max(RACE.shake,Math.min(1,-rv/15))","{const k_=Math.min(1,-rv/15);a.shk=Math.max(a.shk||0,k_);b.shk=Math.max(b.shk||0,k_)}")
+src=rep(src,"if(Rc.shake>0&&c.human){const s=Rc.shake*.5;","if((c.shk||0)>0&&c.human){const s=c.shk*.5;")
+src=rep(src,"'if(Rc.shake>0&&c.human)',","'if((c.shk||0)>0&&c.human)',")
+src=rep(src,"'if(o.shake&&Rc.shake>0&&c.human)'","'if(o.shake&&(c.shk||0)>0&&c.human)'")
+src=rep(src,"Rc.shake=Math.max(0,Rc.shake-dt*3);","Rc.shake=0;for(const q of Rc.cars)q.shk=Math.max(0,(q.shk||0)-dt*3);")
+src=rep(src,"noise(.9,.7,900);Rc.shake=1}","noise(.9,.7,900);c.shk=1}")
 src=rep(src,"*(1-Math.exp(-dt*(want?4:2.6)))","*(1-Math.exp(-dt*(want?(c.tnR||4):(c.tnR?c.tnR*.85:2.6))))")
 src=rep(src,"vi=c.vy-c.wpt*WL[i][1]+c.wrl*WL[i][0]","vi=c.vy-(c._gv||0)-c.wpt*WL[i][1]+c.wrl*WL[i][0]")
 src=rep(src,"x.fillStyle='#e8e8e8';x.fillRect(w/2-1,0,2,h/2)}","if(!(d.ra||d.imola)){x.fillStyle='#e8e8e8';x.fillRect(w/2-1,0,2,h/2)}else{/* real circuits: worn tarmac like the Nordschleife */const q=rngf(5);for(let i=0;i<120;i++){x.fillStyle=q()<.5?'rgba(0,0,0,.05)':'rgba(255,255,255,.035)';x.fillRect(q()*w|0,q()*h|0,1,1)}x.fillStyle='#ffffffc0';x.fillRect(1,0,1,h);x.fillRect(w-2,0,1,h)}}")
@@ -140,7 +148,7 @@ j0=src.index("function carCollide(a,b){");j1=src.index("/* ---------------- came
 newcc="""function carCollide(a,b){const dx=b.x-a.x,dz=b.z-a.z;if(dx*dx+dz*dz>25||Math.abs(a.y-b.y)>1.6)return;const sa=Math.sin(a.yaw),ca=Math.cos(a.yaw),sb=Math.sin(b.yaw),cb=Math.cos(b.yaw),HX=.95,HZ=2.1;let best=1e9,bx=0,bz=0;
  for(const [nx,nz] of [[ca,-sa],[sa,ca],[cb,-sb],[sb,cb]]){const ra=HX*Math.abs(nx*ca-nz*sa)+HZ*Math.abs(nx*sa+nz*ca),rb=HX*Math.abs(nx*cb-nz*sb)+HZ*Math.abs(nx*sb+nz*cb),pr=dx*nx+dz*nz,ov=ra+rb-Math.abs(pr);if(ov<=0)return;if(ov<best){best=ov;const sg=pr<0?-1:1;bx=nx*sg;bz=nz*sg}}
  const ov=best/2+.01;a.x-=bx*ov;a.z-=bz*ov;b.x+=bx*ov;b.z+=bz*ov;const rv=(b.vx-a.vx)*bx+(b.vz-a.vz)*bz;
- if(rv<0){const j=-rv*.75;a.vx-=bx*j;a.vz-=bz*j;b.vx+=bx*j;b.vz+=bz*j;if(rv<-3){fx((a.x+b.x)/2,a.y+.5,(a.z+b.z)/2,0xffe080,6,5,.3,.15,8);noise(.12,.2,1200);RACE.shake=Math.max(RACE.shake,Math.min(1,-rv/15))}}}
+ if(rv<0){const j=-rv*.75;a.vx-=bx*j;a.vz-=bz*j;b.vx+=bx*j;b.vz+=bz*j;if(rv<-3){fx((a.x+b.x)/2,a.y+.5,(a.z+b.z)/2,0xffe080,6,5,.3,.15,8);noise(.12,.2,1200);{const k_=Math.min(1,-rv/15);a.shk=Math.max(a.shk||0,k_);b.shk=Math.max(b.shk||0,k_)}}}}
 """
 src=src[:j0]+newcc+src[j1:]
 

@@ -460,6 +460,7 @@ body:after{background:repeating-linear-gradient(0deg,#00000010 0 1px,transparent
 #rlPrep{position:fixed;inset:0;display:none;z-index:30;justify-content:space-between;align-items:flex-end;padding:5vh 5vw;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.45),transparent 22%,transparent 62%,rgba(0,0,0,.65))}
 #rlPrep .rp-l small{letter-spacing:.2em;color:#cfd6dc;font-size:12px}
 #rlPrep h2{margin:4px 0 10px;font-size:clamp(28px,5vw,54px);letter-spacing:.06em;color:#fff;text-transform:uppercase}
+#rlPrep .rp-f{font-size:14px;letter-spacing:.08em;color:#cfd6dc}
 #rlPrep .rp-c{display:flex;gap:8px;flex-wrap:wrap}
 #rlPrep .rp-c span{padding:4px 10px;border:1px solid rgba(255,255,255,.35);border-radius:3px;font-size:12px;letter-spacing:.08em;color:#fff;background:rgba(0,0,0,.35)}
 #rlPrep .rp-c .hot{border-color:#7fe3f2;color:#7fe3f2}
@@ -469,7 +470,7 @@ body:after{background:repeating-linear-gradient(0deg,#00000010 0 1px,transparent
 #rlPrep .rp-r{text-align:right;pointer-events:auto}
 #rlPrep .rp-r small{display:block;margin-top:8px;color:#cfd6dc}
 #rlPrep .btn{font-size:20px;padding:14px 34px}
-body.rprep #hud,body.rprep .hud,body.rprep #h8pace,body.rprep .h8pace,body.rprep #mini,body.rprep #touch{display:none!important}
+body.rprep #hud,body.rprep .hud,body.rprep #h8pace,body.rprep .h8pace,body.rprep #mini,body.rprep #mm,body.rprep #touch{display:none!important}
 #rlCp{position:fixed;z-index:20;opacity:0;transition:opacity .6s;pointer-events:none}
 #rlCp .h8top{position:static;transform:scale(var(--s,1));transform-origin:top left}
 .rl-spl{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
