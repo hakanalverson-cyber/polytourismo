@@ -130,8 +130,12 @@ const gripAt=(c,mt)=>{const v=c.sp||0;return ALAT*Math.min(DFMAX,1+DFK*(v/35)*(v
  /* calmer steering at low speed (first gear felt twitchy): full lock gives 60% of the old turn rate at walking pace, all of it from 90 km/h */
  const hm=c.human&&!c.forceAI,sk=hm?STK(vf*2.237*P.dialK()):1;if(hm)c.in.st=(c.in.st||0)*1.2*(.6+.4*Math.min(1,Math.max(0,(vf-6)/19)))*sk/* x1.2: turn 20% tighter in every gear */*((c.gear|0)===0?g1k(c,vf):1)/* 1st gear 15% less (it was twitchy) */;const st=c.in.st||0;
  const mx2=mx*Math.max(1,sk);if(Math.abs(st)>mx2){c.in.st=Math.sign(st)*mx2;/* understeer scrub: steering far past the limit (turning in too fast) bleeds speed as the fronts push */if(hm&&Math.abs(st)>mx2*1.35){const e=Math.min(1,Math.abs(st)/mx2-1.35),k=1-e*.5*(dt||.016);c.vx*=k;c.vz*=k}}}}
-{const sg0=stepCar;stepCar=function(c,dt){const vx0=c.vx,vz0=c.vz,r=sg0.apply(this,arguments);
- if(!TRK()||c.exp>0||!(dt>0))return r;const s0=Math.hypot(vx0,vz0),s1=Math.hypot(c.vx,c.vz);if(s0<6||s1<6||!c.m||!c.m.wheels.some(w=>w.g))return r;
+{const sg0=stepCar;stepCar=function(c,dt){const vx0=c.vx,vz0=c.vz,y0=c.yaw,r=sg0.apply(this,arguments);
+ if(!TRK()||c.exp>0||!(dt>0))return r;
+ /* minimum turning circle at low speed (about 5.5 m for a road car, grown with the drawn size): below about 40 km/h the grip limit below
+    does not apply and the arcade steering pivoted the car almost on the spot */
+ {const vf=Math.abs(c.vx*Math.sin(c.yaw)+c.vz*Math.cos(c.yaw));if(vf<12&&!(c.respT>0)&&c.m&&c.m.wheels.some(w=>w.g)){const mx=(vf+.25)*dt/(5.5*K()),d=wr(c.yaw-y0);
+  if(Math.abs(d)>mx){c.yaw=y0+Math.sign(d)*mx;if(Math.abs(c.yr||0)>mx/dt)c.yr=Math.sign(c.yr)*mx/dt}}}const s0=Math.hypot(vx0,vz0),s1=Math.hypot(c.vx,c.vz);if(s0<6||s1<6||!c.m||!c.m.wheels.some(w=>w.g))return r;
  const mt=c.mt||{grip:1},a=gripAt(c,mt),h0=Math.atan2(vx0,vz0),h1=Math.atan2(c.vx,c.vz),d=wr(h1-h0),mx=a*dt/s1;
  if(Math.abs(d)>mx){const h=h0+Math.sign(d)*mx;c.vx=Math.sin(h)*s1;c.vz=Math.cos(h)*s1}
  /* past about 35 degrees of slide the nose is eased back toward the travel direction, so a slide never turns into a spin */

@@ -4,6 +4,7 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.12',d:'Oct 25, 2026',t:'New Road Atlanta and Imola scenery, smarter CPU, gearbox choice',items:[
+  'Minimum turning circle at low speed: crawling, the car could pivot almost on the spot (the grip limit only starts at about 40 km/h). Now full lock at walking pace draws a circle about 1.2 car lengths across, like a real road car.',
   'Less F1, more GT car: grip still builds with speed but tops out at 1.5x (was 2.2x), so fast corners need a lift or a brake. Turning in too fast now makes the front push wide and scrub off speed, with the nose following the car instead of sliding in; a clean entry corners as before. Steering is 20% less sensitive overall. CPU drivers plan for the new grip; gold times re-measured on every circuit.',
   'Steering evened out across the gears: low gears turned about four times as sharply as top gear (80 degrees a second at 20-30 mph, 18 at 160 mph). Now full lock gives about 55-60 degrees a second in the low gears and 28-38 in the high ones, so slow corners are calmer and fast ones respond.',
   'First gear steers 15% less (it was twitchy), easing back to full right at the shift, so it still turns at least as tight as second.',
