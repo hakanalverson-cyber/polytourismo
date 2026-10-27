@@ -5,7 +5,8 @@ const P=window.PT8;
 P.LOG=[
  {v:'0.16',d:'Oct 27, 2026',t:'No more understeer under braking',items:[
   'Steering no longer gets weaker as you slow down. It used to scale down to about 60% at 30 mph, so braking into a corner made the car turn wider than it did at speed. Full lock now always asks for the tightest turn the tyres can hold (or a 6.5 m radius at low speed), and the Handling rating still moves that limit.',
-  'Trail braking: with the brake on (and the throttle off) the front tyres bite 15% harder, so the nose tucks in as you brake into a corner instead of pushing wide.']},
+  'Trail braking: with the brake on (and the throttle off) the front tyres bite 15% harder, so the nose tucks in as you brake into a corner instead of pushing wide.',
+  'Steering is 12% calmer below 70 mph on the dial (blending back to full by 90): it felt too reactive at lower speeds.']},
  {v:'0.15',d:'Oct 27, 2026',t:'No more reverse spins, slower cars, Nurburgring hairpin',items:[
   'Fixed spinning on the spot when reversing and steering: the slide correction thought a car going backwards was sliding sideways and kept turning it. Reverse also tops out at 18 mph (was 31), so full lock in reverse is a normal slow circle.',
   'Every car on the circuit tracks is about 12% slower at the top end and picks up speed a little more gently. Gold times are eased to match (CPU laps are about 3-4% longer).',

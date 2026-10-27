@@ -132,7 +132,7 @@ const gripAt=(c,mt)=>{const v=c.sp||0;return ALAT*Math.min(DFMAX,1+DFK*(v/35)*(v
  /* round 20: full lock now asks for a turn rate, not a fraction of the old one. It is the tighter of a fixed smallest turn (6.5 m radius,
     grown with the drawn car size) and what the tyres hold (x1.1, more with Handling). The old speed curve shrank the steering as the car
     slowed (60% at 30 mph), so braking into a corner made it turn wider than it did at speed: the understeer under braking */
- const hm=c.human&&!c.forceAI;if(hm){const sb=(2.25-.033*Math.min(c.sp,42))*Math.min(1,vf/6),w=Math.min(vf/(6.5*K()),a*1.1*hk/vf);c.in.st=clamp(c.in.st||0,-1,1)*w/sb}const st=c.in.st||0;
+ const hm=c.human&&!c.forceAI;if(hm){const sb=(2.25-.033*Math.min(c.sp,42))*Math.min(1,vf/6),w=Math.min(vf/(6.5*K()),a*1.1*hk/vf);const dm=vf*2.237*P.dialK(),lo=.88+.12*Math.min(1,Math.max(0,(dm-70)/20))/* round 20b: 12% calmer below 70 mph on the dial, back to full by 90 (it felt too reactive under 80) */;c.in.st=clamp(c.in.st||0,-1,1)*w*lo/sb}const st=c.in.st||0;
  const mx2=hm?1e9:mx;if(Math.abs(st)>mx2){c.in.st=Math.sign(st)*mx2;/* understeer scrub: steering far past the limit (turning in too fast) bleeds speed as the fronts push */if(hm&&Math.abs(st)>mx2*1.35){const e=Math.min(1,Math.abs(st)/mx2-1.35),k=1-e*.5*(dt||.016);c.vx*=k;c.vz*=k}}}}
 {const sg0=stepCar;stepCar=function(c,dt){const vx0=c.vx,vz0=c.vz,y0=c.yaw,r=sg0.apply(this,arguments);
  if(!TRK()||c.exp>0||!(dt>0))return r;
