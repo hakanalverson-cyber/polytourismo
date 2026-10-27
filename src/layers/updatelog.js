@@ -4,6 +4,7 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.12',d:'Oct 25, 2026',t:'New Road Atlanta and Imola scenery, smarter CPU, gearbox choice',items:[
+  'Steering evened out across the gears: low gears turned about four times as sharply as top gear (80 degrees a second at 20-30 mph, 18 at 160 mph). Now full lock gives about 55-60 degrees a second in the low gears and 28-38 in the high ones, so slow corners are calmer and fast ones respond.',
   'First gear steers 15% less (it was twitchy), easing back to full right at the shift, so it still turns at least as tight as second.',
   'Finish cinematic reworked: seven shots (kerbside, nose-on, slow orbit, low rear three-quarter, crane, side-on tracking, high chase) all sized to the car, so the camera never sits inside a bumper and the whole car stays in frame. Low shots stay on the road side of walls and fences, and a shot that would end up behind a barrier rises to look over it.',
   'Three new circuits in Track mode, built from bought cartoon models: the Hungaroring (4.4 km), Bathurst (6.2 km, up and over the Mountain) and Spa-Francorchamps (7.0 km, Eau Rouge and Raidillon). Each has its real grid boxes, a standing start and gold times measured from a CPU lap.',
