@@ -45,7 +45,7 @@ P.aiInput=function(c,dt){const Rc=RACE,T=Rc.T,N=T.N,a=c.ai||(c.ai={skill:.9,lat:
  let st=clamp(wr(des-c.yaw)*2.2,-1,1);
  /* speed plan from the line's radius */
  const gfac=(mt.grip||1)*cs.grip;let tgt=1e9;
- const jm=Math.max(44,Math.min(160,Math.ceil(c.sp*c.sp/(2*(T.cbrk||12.5)*cs.brk)/T.sp)+8));for(let j=2;j<=jm;j+=2){const i=(c.idx+j)%N;if(T.gap[i])continue;const k=Math.max(K[i],8e-4),R_=1/k,vz=Math.sqrt(6.5/Math.max(T.kz[i],1e-4)),ice=T.ice[i]?.3:1,vlim=Math.min(vz,P.steerLimit(R_)*.9*Math.min(1,.6+gfac*.4)*ice,(T.alat?Math.sqrt(T.alat*gfac*ice*R_/Math.max(1/2.2,1-.6*T.alat*R_/1225)):Math.sqrt(26*gfac*ice*R_)));
+ const jm=Math.max(44,Math.min(160,Math.ceil(c.sp*c.sp/(2*(T.cbrk||12.5)*cs.brk)/T.sp)+8));for(let j=2;j<=jm;j+=2){const i=(c.idx+j)%N;if(T.gap[i])continue;const k=Math.max(K[i],8e-4),R_=1/k,vz=Math.sqrt(6.5/Math.max(T.kz[i],1e-4)),ice=T.ice[i]?.3:1,vlim=Math.min(vz,P.steerLimit(R_)*.9*Math.min(1,.6+gfac*.4)*ice,(T.alat?Math.sqrt(T.alat*gfac*ice*R_/Math.max(1/(T.dfmax||2.2),1-(T.dfk||.6)*T.alat*R_/1225)):Math.sqrt(26*gfac*ice*R_)));
   tgt=Math.min(tgt,Math.sqrt(vlim*vlim+2*((T.cbrk||12.5)*cs.brk)*j*T.sp))}
  const topNow=P.topSpeed(cs,P.GT(cs).length-1)*(mt.top||1);
  tgt=Math.min(tgt,topNow*(.9+.1*skill))*Math.min(1,.55+skill*.5);c._tg=tgt;c._tn=topNow;
