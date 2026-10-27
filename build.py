@@ -19,6 +19,7 @@ src=src.replace("color:d.id==3?0x7af0ff:0xfff0c8","color:d.id==3?0xffe2a8:0xfff0
 # real circuits (Road Atlanta, Imola): no centre line, and the grey/white full-lap edge strip becomes plain asphalt run-off (kerbs live only at corners)
 # suspension damper: measure the body's vertical speed relative to the ground under it (c._gv, set in grip.js), not absolute. With the
 # absolute speed a car descending a hill had its damper pushing it up, so on downhills the tyres barely touched and grip vanished.
+src=rep(src,"vf=Math.max(vf-REV*br*dt,-14)","vf=Math.max(vf-REV*br*dt,-8)")  # round 19: reverse tops out at 18 mph (was 31: with full lock it ran tight circles fast enough to look like spins)
 src=rep(src,"*(1-Math.exp(-dt*(want?4:2.6)))","*(1-Math.exp(-dt*(want?(c.tnR||4):(c.tnR?c.tnR*.85:2.6))))")
 src=rep(src,"vi=c.vy-c.wpt*WL[i][1]+c.wrl*WL[i][0]","vi=c.vy-(c._gv||0)-c.wpt*WL[i][1]+c.wrl*WL[i][0]")
 src=rep(src,"x.fillStyle='#e8e8e8';x.fillRect(w/2-1,0,2,h/2)}","if(!(d.ra||d.imola)){x.fillStyle='#e8e8e8';x.fillRect(w/2-1,0,2,h/2)}else{/* real circuits: worn tarmac like the Nordschleife */const q=rngf(5);for(let i=0;i<120;i++){x.fillStyle=q()<.5?'rgba(0,0,0,.05)':'rgba(255,255,255,.035)';x.fillRect(q()*w|0,q()*h|0,1,1)}x.fillStyle='#ffffffc0';x.fillRect(1,0,1,h);x.fillRect(w-2,0,1,h)}}")

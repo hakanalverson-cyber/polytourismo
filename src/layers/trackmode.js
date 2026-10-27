@@ -41,6 +41,6 @@ const trRef=(track,car)=>{const k=+String(track).replace('r','');if(!(P.TRK_TRAC
 P.medalFor=(track,car,lap)=>{const r=trRef(track,car);if(r==null)return mf(track,car,lap);if(lap==null)return -1;for(let i=0;i<MD.length;i++)if(lap<=r*MD[i].f)return i;return MD.length};
 P.medalTime=(track,car,i)=>{const r=trRef(track,car);return r==null?mtm(track,car,i):r*MD[i].f};
 /* track-only cars are hidden from every regular fleet */
-const mk=P.makeAI;P.makeAI=function(o){const r=mk.apply(this,arguments);return r.map(a=>P.TRACK_ONLY.includes(a.id)?Object.assign(a,{id:'merc'}):a)};
+const mk=P.makeAI;P.makeAI=function(o){const r=mk.apply(this,arguments);if(o&&o.trackCars)return r;return r.map(a=>P.TRACK_ONLY.includes(a.id)?Object.assign(a,{id:'merc'}):a)};
 const ll=P.loanerFor;P.loanerFor=function(cap,rally){const c=ll.apply(this,arguments);return c&&c.trackOnly?(P.BYID.merc):c};
 })();

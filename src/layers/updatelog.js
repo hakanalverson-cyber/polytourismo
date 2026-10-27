@@ -3,6 +3,11 @@
 'use strict';
 const P=window.PT8;
 P.LOG=[
+ {v:'0.15',d:'Oct 27, 2026',t:'No more reverse spins, slower cars, Nurburgring hairpin',items:[
+  'Fixed spinning on the spot when reversing and steering: the slide correction thought a car going backwards was sliding sideways and kept turning it. Reverse also tops out at 18 mph (was 31), so full lock in reverse is a normal slow circle.',
+  'Every car on the circuit tracks is about 12% slower at the top end and picks up speed a little more gently. Gold times are eased to match (CPU laps are about 3-4% longer).',
+  'New option in Track race setup: CPU cars Any or Track cars. With Track cars, the CPU field only drives cars from the Track cars section.',
+  'Nurburgring: the CPU no longer cuts across the barrier at the first hairpin. Its lap now follows the real layout through the hairpin and the Mercedes Arena loop (4.0 km).']},
  {v:'0.14',d:'Oct 27, 2026',t:'Smarter CPU drivers, softer brakes',items:[
   'CPU drivers follow the racing line through the apexes instead of running wide: they used to plan each corner faster than the car could turn and slide 2-8 m off the line; now they stay within about a metre of it and are quicker for it. If one does run wide it lifts until it is back on line.',
   'CPU throttle and brakes are progressive instead of all-or-nothing, and moving over for a car alongside eases in and out (it used to jump sideways), sized for the big cars on the model tracks.',

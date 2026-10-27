@@ -134,6 +134,9 @@ if st.get('boxes'):
       R=np.roll(R,-sh,0);Wr=np.roll(Wr,-sh);_,ii=cKDTree(R[:,[0,2]]).query(sl[:,[0,2]]);rel=(ii+len(R)//2)%len(R);print('grid run',len(g),'start moved',sh)
     o=np.argsort(-rel);slots=[[round(a[0],2),round(a[2],2),round(a[1],2)] for a in sl[o]]
   print('grid boxes',len(slots))
+for sx,sz,sr,it in cc.get('resmooth',[]):  # extra smoothing where the centreline kinks (a closed junction leaves a cusp), game metres
+  w=np.clip(1.5-np.hypot(R[:,0]-sx,R[:,2]-sz)/sr,0,1)[:,None]  # full strength in the middle, fading out to the edge
+  for _ in range(it):o=(np.roll(R,1,0)+2*R+np.roll(R,-1,0))/4;R=R+w*(o-R)
 print('pts',len(R),'lap m',round(Lc[-1]),'width',np.percentile(Wr,[5,50,95]).round(1))
 pts=[[round(a[0],2),round(a[2],2),round(a[1],2),round(w/2,2)] for a,w in zip(R,Wr)]
 # ---- ground grid: top-most ground layer per cell; layers lifted a few cm apart (same lifts as the meshes)
