@@ -37,7 +37,7 @@ P.trackSel=p=>{const sv=P.SV();sv.tsel=sv.tsel||[];let s=sv.tsel[p];if(!s||!(P.T
 /* medals follow the car: platinum is the clean-lap pace of a 165 mph car (R33), scaled by real top speed, so every car gets a fair target */
 P.MEDAL_REF[14]=91.8;
 const mf=P.medalFor,mtm=P.medalTime,MD=P.MEDALS;
-const trRef=(track,car)=>{const k=+String(track).replace('r','');if(!(P.TRK_TRACKS||[]).includes(k)||!car||!car._tk)return null;return P.MEDAL_REF[k]*Math.pow(165/car._tk.mph,.35)};
+const trRef=(track,car)=>{const k=+String(track).replace('r','');if(!(P.TRK_TRACKS||[]).includes(k)||!car||!car._tk)return null;return P.MEDAL_REF[k]*((P.trkMedK&&P.trkMedK[k])||1)*Math.pow(165/car._tk.mph,.35)};
 P.medalFor=(track,car,lap)=>{const r=trRef(track,car);if(r==null)return mf(track,car,lap);if(lap==null)return -1;for(let i=0;i<MD.length;i++)if(lap<=r*MD[i].f)return i;return MD.length};
 P.medalTime=(track,car,i)=>{const r=trRef(track,car);return r==null?mtm(track,car,i):r*MD[i].f};
 /* track-only cars are hidden from every regular fleet */

@@ -4,6 +4,10 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.12',d:'Oct 25, 2026',t:'New Road Atlanta and Imola scenery, smarter CPU, gearbox choice',items:[
+  'The speedometer on Imola, Road Atlanta, Laguna Seca and Suzuka shows the speed you see: it read about 1.7x too high (100 on the dial looked like 60). Cars there now show their real top speeds, and 100 to 200 builds up as it should (a Mercedes does 0-100 mph in about 7.5 s).',
+  'Laguna Seca runs the right way round: you start facing the line and the Corkscrew is the big drop it should be. Gold time re-measured.',
+  'A short black fade when a race starts from the menus, so the track loads out of sight.',
+  'The Nordschleife in Track mode gets the same handling as the other circuits: grip that builds with speed, harder brakes, the sharper steering and the smoothed camera. Gold time re-measured.',
   'Two new circuits in Track mode, built from bought cartoon models: Laguna Seca (3.6 km, with the Corkscrew) and Suzuka (5.8 km figure eight, the track crosses over itself under the bridge). Both have their real grid boxes, a standing start and gold times measured from a CPU lap.',
   'Six new songs in the main menu rotation: Doctor Rockit - Cafe de Flore (Charles Webster\'s Latin Lovers Mix), I-Cube - Adore, and Lenny Ibizarre - All About The Girl, Vision, Forbidden Fruit and Sixtyfour Hippos.',
   'CPU cars hold their grid lane for the first stretch measured from their own box, so they no longer swerve off a standing start on long grids.',

@@ -171,8 +171,8 @@ function statUpdate(Rc,c){if(!stEl){stEl=document.createElement('div');stEl.id='
  const ht=document.querySelector('#h0 .h8top');if(ht){const rc=ht.getBoundingClientRect();stEl.style.left=(rc.right+8)+'px';stEl.style.top=rc.top+'px';stEl.style.setProperty('--pw',ht.offsetWidth+'px');stEl.style.setProperty('--ph',ht.offsetHeight+'px');const pv=ht.parentNode.style.getPropertyValue('--s');if(pv)stEl.style.setProperty('--s',pv)}else{stEl.style.left='210px';stEl.style.top='12px'}
  stEl.style.display='flex'}
 function dashUpdate(Rc,c){const d=mkDash(),on=scr==='game'&&!Rc.prep&&!Rc.replay&&!c.fin;d.style.display=on?'flex':'none';bodyCls('rallyhud',on);if(!on){if(stEl)stEl.style.display='none';return}
- const T=Rc.T,car=c.cs||BYID.merc,G=P.GT(car),gi=Math.min(c.gear|0,G.length-1),mt=(c.mt&&c.mt.top)||1,lim=(CIR()&&P.effTop?P.effTop(car,gi)*1.03:car.top*G[gi].top)*mt,rev=.2+.8*Math.min(1.05,c.sp/Math.max(1,lim)),kmh=Math.round(c.sp*2.23694),N=T.N;
- drawGauge(q$('rdG'),{rev,kmh,gear:gi+1,gi,NG:G.length,lim:Math.round(lim*2.23694),flash:c.gearFlash>0,shift:rev>.9&&gi<G.length-1&&Rc.state==='race'&&!P.isAuto(c)});
+ const T=Rc.T,car=c.cs||BYID.merc,G=P.GT(car),gi=Math.min(c.gear|0,G.length-1),mt=(c.mt&&c.mt.top)||1,lim=(CIR()&&P.effTop?P.effTop(car,gi)*1.03:car.top*G[gi].top)*mt,rev=.2+.8*Math.min(1.05,c.sp/Math.max(1,lim)),DK=P.dialK?P.dialK():1,kmh=Math.round(c.sp*2.23694*DK),N=T.N;
+ drawGauge(q$('rdG'),{rev,kmh,gear:gi+1,gi,NG:G.length,lim:Math.round(lim*2.23694*DK),flash:c.gearFlash>0,shift:rev>.9&&gi<G.length-1&&Rc.state==='race'&&!P.isAuto(c)});
  const tot=N*Rc.laps,pr=Math.max(0,Math.min(1,c.unw/tot));q$('rdPct').textContent=Math.round(pr*100)+'%';q$('rdBar').style.width=pr*100+'%';q$('rdRem').textContent=Math.max(0,(tot-c.unw)*T.sp/1000).toFixed(1)+' km left';
  const cps=P.cpsOf(T),K=cps.length,n=(Rc.splits||[]).length,lapI=Math.floor(n/K);let cpT='FINISH',cd=(Rc.laps*N-c.unw)*T.sp;if(lapI<Rc.laps&&K&&n<K*Rc.laps){cpT='CP '+(n%K+1)+' / '+(K+1);cd=(lapI*N+cps[n%K]-c.unw)*T.sp}q$('rdCp').textContent=cpT+'  '+Math.max(0,Math.round(cd))+' m';
  const i0=c.idx||0;q$('rdAl').textContent=Math.round(c.y)+' m';

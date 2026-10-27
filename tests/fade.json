@@ -1,0 +1,2 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",2500],
+["js","(()=>{PT8._to=true;PT8.launchWithIntro({mode:'mp',track:17,laps:1,humans:[{id:'merc',alt:0}],ai:PT8.makeAI({n:5,classes:['B','A'],skill:.88,rally:false}),trackRace:true});return document.getElementById('ptFade').style.opacity})()"],["wait",150],["shot","a"],["js","document.getElementById('ptFade').style.opacity+' scr '+scr"],["wait",2500],["shot","b"],["js","document.getElementById('ptFade').style.opacity+' scr '+scr+' sp '+(PT8.dialK&&PT8.dialK())"]]

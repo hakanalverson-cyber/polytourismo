@@ -21,7 +21,7 @@ const baseOf=pack=>D.findIndex(d=>/^(imola|ra|laguna|suzuka)$/.test(pack.replace
 P.trackPacks={};
 /* the files' gold times were measured with cars 30% quicker and no grip limit; now (25% quicker, 1.6 g grip) a CPU time-trial lap takes
    this much longer: 95.5 -> 107.6 s at Road Atlanta, 98.4 -> 114.7 s at Imola */
-const MEDK={ra:.766,imola:.776,laguna:.710,suzuka:1.002},ALAT=23;/* tyre grip (16, then +20% and +20% more turning by request) limit on these tracks, m/s² (see the steering cap below) */
+const MEDK={ra:.766,imola:.776,laguna:.751,suzuka:1.002},ALAT=23;/* tyre grip (16, then +20% and +20% more turning by request) limit on these tracks, m/s² (see the steering cap below) */
 /* newest file wins (pack.rev = build time): an older copy saved in this browser never replaces a newer built-in one */
 P.addTrackPack=pack=>{const i=baseOf(pack);if(i<0)throw new Error('This track file is for a track this game does not have ('+pack.replaces+')');const d=D[i];
  /* the small download has no track built in, so it also knows the newest file's build time: an old copy saved in the browser (Road Atlanta's first
@@ -76,13 +76,19 @@ setTimeout(()=>{const bw=buildWorld;buildWorld=T=>{const sc=bw(T),pack=T.d&&T.d.
 /* the bought models are built at their real size, which dwarfs our cars: on these tracks the cars are drawn bigger (carScale), and the
    chase camera, wall contact and car-to-car contact grow with them. Physics speeds are unchanged. */
 const K=()=>{const R=typeof RACE!=="undefined"?RACE:null,d=R&&R.T&&R.T.d;return d&&d.cartoon&&d.cartoon.carScale||1};
+/* Track mode on any circuit (the Nordschleife too) gets the same handling as the model tracks: grip that builds with speed, harder brakes,
+   the steering feel and the smoothed camera. Top speed, pickup, time scale and the dial factor stay model-track only (those make up for
+   the models' size; the Nordschleife is real size) */
+/* Track-mode gold on the Nordschleife follows the new handling (CPU time-trial lap 435.1 -> 406.7 s) */
+P.trkMedK=Object.assign(P.trkMedK||{},{[P.RING_IDX]:.935});
+const TRK=()=>{if(K()>1)return true;const R=typeof RACE!=="undefined"?RACE:null,f=R&&R.cfg;return !!(f&&(f.trackRace||f.circuit))};P.trkPhys=TRK;
 const uv=updateVisual;updateVisual=function(c,T,t){const m=c&&c.m,k=K();if(m&&m.g)m.g.scale.setScalar(1);const r=uv.apply(this,arguments);
  if(m&&m.g&&k!==1&&m.g.visible!==false){m.g.scale.setScalar(k);m.g.position.y+=(k-1)*.95;if(m.sh){m.sh.scale.x*=k;m.sh.scale.y*=k}}return r};
 /* chase camera: pulled back less than the car grew (the car fills more of the screen and the camera sits nearer the road, so the ground
    streams past faster), plus a wider view and a light buzz at speed: the big tracks otherwise feel slow with big cars */
 /* the camera reads a smoothed speed: c.sp twitches by up to 0.8 m/s per frame on the hills and the camera's height, distance and view
    width all follow speed, which made the picture jitter while the car itself moved smoothly */
-const so=soloCam;soloCam=function(c,dt,out){const sp0=c.sp||0;c._csp=c._csp==null?sp0:c._csp+(sp0-c._csp)*Math.min(1,(dt||.016)*3);c.sp=c._csp;try{so.apply(this,arguments)}finally{c.sp=sp0}const k=K();if(k===1||c.fin)return;const f=1+(k-1)*.5,y=c.camY==null?c.y:c.camY;
+const so=soloCam;soloCam=function(c,dt,out){const sp0=c.sp||0;c._csp=c._csp==null?sp0:c._csp+(sp0-c._csp)*Math.min(1,(dt||.016)*3);c.sp=c._csp;try{so.apply(this,arguments)}finally{c.sp=sp0}const k=K();if(c.fin||!TRK())return;const f=1+(k-1)*.5,y=c.camY==null?c.y:c.camY;
  out.p.set(c.x+(out.p.x-c.x)*f,y+(out.p.y-y)*f,c.z+(out.p.z-c.z)*f);out.l.set(c.x+(out.l.x-c.x)*f,y+(out.l.y-y)*f,c.z+(out.l.z-c.z)*f);
  const v=Math.max(0,Math.min(1,((c._csp||0)-20)/50)),hood=(c.tnB||0)>.5||c.camMode;out.f+=v*(hood?3:6);
  /* hood view on these tracks: the stock one sat 1 m up inside a car drawn 1.8x and tilted the view with the raw body pitch, so crests and dips
@@ -97,7 +103,11 @@ let sfx=null,sfxV=0;const speedFx=(c,v)=>{if(!c.human)return;if(!sfx){sfx=docume
 {const hide=()=>{if(sfx)sfx.style.opacity=0;sfxV=0};const cr=P.cleanupRace;if(cr)P.cleanupRace=function(){hide();return cr.apply(this,arguments)};setInterval(()=>{if(sfx&&(typeof scr==='undefined'||scr!=='game'||K()===1))hide()},400)}
 /* these circuits are full size and the cars drawn big, so at true speeds they crawl past the scenery: cars here are 25% quicker in every
    respect (top speed, acceleration, braking and grip together, so the handling balance stays the same) */
-const SPD=1.25,TOPK=1.5,ACCK=.52,TS=1.4;{const m0=P.mul;P.mul=c=>{const m=m0?m0(c):{acc:1,top:1,grip:1,brk:1};if(K()>1){m.top*=TOPK;{const r=Math.min(.99,(c.sp||0)/Math.max(1,((c.cs&&c.cs.top)||40)*m.top));m.acc*=ACCK*Math.min(4,(1-.5*r)/Math.max(.08,1-r))}/* the base pull fades in a straight line to zero at top speed (100-200 mph crawled); this keeps it strong to about 85% of top *//* top speed 50% up and full pickup: these long tracks felt slow (x1.1 pickup gave 0-60 mph in 2.5 s, x.6 felt sluggish) */m.brk*=SPD;m.grip*=SPD;/* the tyre bite grip.js gives human drivers, for the CPU too here (it was a big part of why they were so slow) */if(!(c.human&&!c.forceAI)&&c.onRoad&&!c.cool)m.grip*=(window.PT8_GRIPK||1.4)}return m}}
+/* the dial on these tracks: the models are about 2.4x real size and run TS times fast, so the ground goes by at about TS/2.4 of the
+   physics speed. The dial shows that felt speed (it read 100 mph where it looked like 60) */
+P.dialK=()=>K()>1?.6:1;
+{const l0=P.launch;P.launch=function(cfg){const r=l0.apply(this,arguments);const T=typeof RACE!=="undefined"&&RACE&&RACE.T;if(T&&!(T.d&&T.d.cartoon)){if(TRK()){T.alat=ALAT;T.cbrk=24}else{delete T.alat;delete T.cbrk}}return r}}
+const SPD=1.25,TOPK=1.5,ACCK=.52,TS=1.4;{const m0=P.mul;P.mul=c=>{const m=m0?m0(c):{acc:1,top:1,grip:1,brk:1};if(K()>1){m.top*=TOPK;{const r=Math.min(.99,(c.sp||0)/Math.max(1,((c.cs&&c.cs.top)||40)*m.top));m.acc*=ACCK*Math.min(4,(1-.5*r)/Math.max(.08,1-r))}}if(TRK()){/* the base pull fades in a straight line to zero at top speed (100-200 mph crawled); this keeps it strong to about 85% of top *//* top speed 50% up and full pickup: these long tracks felt slow (x1.1 pickup gave 0-60 mph in 2.5 s, x.6 felt sluggish) */m.brk*=SPD;m.grip*=SPD;/* the tyre bite grip.js gives human drivers, for the CPU too here (it was a big part of why they were so slow) */if(!(c.human&&!c.forceAI)&&c.onRoad&&!c.cool)m.grip*=(window.PT8_GRIPK||1.4)}return m}}
 /* cornering grip. The arcade model turns as tight as the steering asks at any speed (well over 3 g at 100 mph), so a 40 mph corner went
    at 100. On these tracks the tyres hold about ALAT (1.6 g, scaled by the car's grip and the surface):
    every car (yours and the CPU's): the nose still turns in as sharply as you steer (up to 1.7x what the tyres hold), but the direction you travel can only
@@ -106,13 +116,13 @@ const SPD=1.25,TOPK=1.5,ACCK=.52,TS=1.4;{const m0=P.mul;P.mul=c=>{const m=m0?m0(
 /* grip grows with speed like downforce: 1.6 g in slow corners, about 2.6 g at 160 km/h, 3.5 g from 200 km/h, so slow corners stay real
    and fast sweepers can be taken flat out instead of the car pushing wide at speed */
 const gripAt=(c,mt)=>{const v=c.sp||0;return ALAT*Math.min(2.2,1+.6*(v/35)*(v/35))*((c.cs&&c.cs.grip)||1)*(mt.grip||1)};
-{const ip0=P.inPost;P.inPost=(c,dt)=>{if(ip0)ip0(c,dt);if(K()===1||!c.in||c.exp>0)return;const vf=c.vx*Math.sin(c.yaw)+c.vz*Math.cos(c.yaw);if(vf<6)return;
+{const ip0=P.inPost;P.inPost=(c,dt)=>{if(ip0)ip0(c,dt);if(!TRK()||!c.in||c.exp>0)return;const vf=c.vx*Math.sin(c.yaw)+c.vz*Math.cos(c.yaw);if(vf<6)return;
  const mt=c.mt||{grip:1},a=gripAt(c,mt),sr=2.5-Math.min(c.sp,40)*.03,mx=a/(vf*sr)*1.7;
  /* calmer steering at low speed (first gear felt twitchy): full lock gives 60% of the old turn rate at walking pace, all of it from 90 km/h */
  if(c.human&&!c.forceAI)c.in.st=(c.in.st||0)*1.2*(.6+.4*Math.min(1,Math.max(0,(vf-6)/19)))/* x1.2: turn 20% tighter in every gear */;const st=c.in.st||0;
  if(Math.abs(st)>mx)c.in.st=Math.sign(st)*mx}}
 {const sg0=stepCar;stepCar=function(c,dt){const vx0=c.vx,vz0=c.vz,r=sg0.apply(this,arguments);
- if(K()===1||c.exp>0||!(dt>0))return r;const s0=Math.hypot(vx0,vz0),s1=Math.hypot(c.vx,c.vz);if(s0<6||s1<6||!c.m||!c.m.wheels.some(w=>w.g))return r;
+ if(!TRK()||c.exp>0||!(dt>0))return r;const s0=Math.hypot(vx0,vz0),s1=Math.hypot(c.vx,c.vz);if(s0<6||s1<6||!c.m||!c.m.wheels.some(w=>w.g))return r;
  const mt=c.mt||{grip:1},a=gripAt(c,mt),h0=Math.atan2(vx0,vz0),h1=Math.atan2(c.vx,c.vz),d=wr(h1-h0),mx=a*dt/s1;
  if(Math.abs(d)>mx){const h=h0+Math.sign(d)*mx;c.vx=Math.sin(h)*s1;c.vz=Math.cos(h)*s1}
  /* past about 35 degrees of slide the nose is eased back toward the travel direction, so a slide never turns into a spin */
