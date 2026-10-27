@@ -121,19 +121,19 @@ const SPD=1.25,TOPK=1.32,ACCK=.46,TS=1.4,BRKK=.42;/* round 19: top speed and pic
 /* steering feel by the speed on the dial: the low gears turned sharper than the high ones by 4 to 1 (about 80 degrees a second at
    20-30 mph, 18 at 160), so slow corners felt twitchy and fast ones numb. This evens it out to about 2 to 1 */
 /* scaled x.8 overall by request (it was too sharp everywhere) */
-/* round 17: the steering angle follows the speed only, never the gear (1st used to steer 15% less, which on cars with a tall 1st like the
-   R8 LMS reached far up the speed range); that 15% is folded into the slow end of this curve instead */
-const STKP=[[0,.58],[10,.6],[20,.51],[30,.55],[45,.72],[60,.88],[80,1],[100,1.08],[130,1.16],[160,1.24]];
-const STK=m=>{const p=STKP;if(m<=p[0][0])return p[0][1];for(let i=1;i<p.length;i++)if(m<=p[i][0]){const a=p[i-1],b=p[i];return a[1]+(b[1]-a[1])*(m-a[0])/(b[0]-a[0])}return p[p.length-1][1]};
+/* round 17: the steering angle follows the speed only, never the gear. Round 20: the speed curve (STKP) is gone, see the turn-rate target below */
 /* downforce-like growth, toned down (it reached 2.2x and cornered like an F1 car): up to 1.5x from about 200 km/h */
-const gripAt=(c,mt)=>{const v=c.sp||0;return ALAT*Math.min(DFMAX,1+DFK*(v/35)*(v/35))*((c.cs&&c.cs.grip)||1)*(mt.grip||1)};
+const gripAt=(c,mt)=>{const v=c.sp||0;return ALAT*Math.min(DFMAX,1+DFK*(v/35)*(v/35))*((c.cs&&c.cs.grip)||1)*(mt.grip||1)*(c.human&&!c.forceAI&&c.in&&c.in.br>0&&c.in.th<=0?1.15:1)/* round 20: trail braking, the weight on the fronts gives 15% more bite (player only, so the CPU laps and gold times stay put) */};
 {const ip0=P.inPost;P.inPost=(c,dt)=>{if(ip0)ip0(c,dt);if(!TRK()||!c.in||c.exp>0)return;const vf=c.vx*Math.sin(c.yaw)+c.vz*Math.cos(c.yaw);if(vf<6)return;
  const mt=c.mt||{grip:1},a=gripAt(c,mt),sr=2.5-Math.min(c.sp,40)*.03,hk=Math.min(1.45,Math.max(.85,1+(((c.cs&&c.cs.grip)||1)-1)*2.6)),mx=a/(vf*sr)*(c.human&&!c.forceAI?1.4*hk:1.25)/* CPU drivers keep the old line, so their lap times and the gold times stay put */;
  /* the nose turns in up to 1.4x what the tyres hold (was 1.25x, before that 1.7x): asking for more pushes the car wide. The Handling rating
     moves that line: about 1.2x for the softest road cars (0.96), 1.6x at 1.05, 2x for GT3 cars like the R8 LMS (1.16) */
  /* calmer steering at low speed (first gear felt twitchy): full lock gives 60% of the old turn rate at walking pace, all of it from 90 km/h */
- const hm=c.human&&!c.forceAI,sk=hm?STK(vf*2.237*P.dialK()):1;if(hm)c.in.st=(c.in.st||0)*1.2*(.6+.4*Math.min(1,Math.max(0,(vf-6)/19)))*sk/* x1.2: turn 20% tighter in every gear */;const st=c.in.st||0;
- const mx2=mx*Math.max(1,sk);if(Math.abs(st)>mx2){c.in.st=Math.sign(st)*mx2;/* understeer scrub: steering far past the limit (turning in too fast) bleeds speed as the fronts push */if(hm&&Math.abs(st)>mx2*1.35){const e=Math.min(1,Math.abs(st)/mx2-1.35),k=1-e*.5*(dt||.016);c.vx*=k;c.vz*=k}}}}
+ /* round 20: full lock now asks for a turn rate, not a fraction of the old one. It is the tighter of a fixed smallest turn (6.5 m radius,
+    grown with the drawn car size) and what the tyres hold (x1.1, more with Handling). The old speed curve shrank the steering as the car
+    slowed (60% at 30 mph), so braking into a corner made it turn wider than it did at speed: the understeer under braking */
+ const hm=c.human&&!c.forceAI;if(hm){const sb=(2.25-.033*Math.min(c.sp,42))*Math.min(1,vf/6),w=Math.min(vf/(6.5*K()),a*1.1*hk/vf);c.in.st=clamp(c.in.st||0,-1,1)*w/sb}const st=c.in.st||0;
+ const mx2=hm?1e9:mx;if(Math.abs(st)>mx2){c.in.st=Math.sign(st)*mx2;/* understeer scrub: steering far past the limit (turning in too fast) bleeds speed as the fronts push */if(hm&&Math.abs(st)>mx2*1.35){const e=Math.min(1,Math.abs(st)/mx2-1.35),k=1-e*.5*(dt||.016);c.vx*=k;c.vz*=k}}}}
 {const sg0=stepCar;stepCar=function(c,dt){const vx0=c.vx,vz0=c.vz,y0=c.yaw,r=sg0.apply(this,arguments);
  if(!TRK()||c.exp>0||!(dt>0))return r;
  /* minimum turning circle at low speed (about 5.5 m for a road car, grown with the drawn size): below about 40 km/h the grip limit below
