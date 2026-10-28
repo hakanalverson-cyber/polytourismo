@@ -585,7 +585,7 @@ const slip=spd0>3?wr(Math.atan2(c.vx,c.vz)-c.yaw):0;
 
 code=code.replace(
   'c.st+=(c.in.st-c.st)*Math.min(1,dt*(Math.abs(c.in.st)<.01?14:8));',
-  'c.st+=(clamp(c.in.st*o.steering,-1.35,1.35)-c.st)*(1-Math.exp(-dt*7));'
+  'c.st+=(clamp(c.in.st*o.steering,-1.6,1.6)-c.st)*(1-Math.exp(-dt*7));'
 ).replace(
   '(hb?.2:1)','lerp(1,.24,mix)'
 ).replace(
@@ -1059,7 +1059,7 @@ const pages={
   ['sfx','EFFECTS VOLUME',0,1,.05]
  ],
  DRIVING:[
-  ['steering','STEERING',.65,1.35,.05],
+  ['steering','STEERING',.5,1.5,.05],
   ['drifts','DRIFTING'],
   
   ['driftAssist','DRIFT ASSIST',0,1,.05],
@@ -10836,8 +10836,8 @@ const SPD=1.25,TOPK=1.32,ACCK=.46,TS=1.4,BRKK=.42;/* round 19: top speed and pic
 /* round 21 (player only), by the speed on the dial: HG = more tyre at speed (none to 90 mph, +20% from 130: the understeer at 120 felt
    like what 220 should give, still a little more push than the mid range); SF = how much of the turn limit full lock asks for: 95% in
    first gear, 75% from 30 to 80 mph (it felt sharper there than first gear), back to all of it from 110 */
-const DM=v=>v*2.237*P.dialK(),HG=v=>1+.2*Math.min(1,Math.max(0,(DM(v)-90)/40));
-const SFP=[[0,.95],[20,.95],[30,.75],[80,.75],[110,1]],SF=m=>{const p=SFP;if(m<=p[0][0])return p[0][1];for(let i=1;i<p.length;i++)if(m<=p[i][0]){const a=p[i-1],b=p[i];return a[1]+(b[1]-a[1])*(m-a[0])/(b[0]-a[0])}return p[p.length-1][1]};
+const DM=v=>v*2.237*P.dialK(),HG=v=>1+.45*Math.min(1,Math.max(0,(DM(v)-60)/50));/* round 22: +45% by 110 mph, ramping from 60 (was +20% from 90 to 130: past 80 the turn was still far too wide) */
+const SFP=[[0,.95],[20,.95],[30,.75],[60,.75],[80,1]],SF=m=>{const p=SFP;if(m<=p[0][0])return p[0][1];for(let i=1;i<p.length;i++)if(m<=p[i][0]){const a=p[i-1],b=p[i];return a[1]+(b[1]-a[1])*(m-a[0])/(b[0]-a[0])}return p[p.length-1][1]};
 const gripAt=(c,mt)=>{const v=c.sp||0;return ALAT*Math.min(DFMAX,1+DFK*(v/35)*(v/35))*((c.cs&&c.cs.grip)||1)*(mt.grip||1)*(c.human&&!c.forceAI?(c.in&&c.in.br>0&&c.in.th<=0?1.15:1)*HG(v):1)/* round 20: trail braking, the weight on the fronts gives 15% more bite (player only, so the CPU laps and gold times stay put) */};
 {const ip0=P.inPost;P.inPost=(c,dt)=>{if(ip0)ip0(c,dt);if(!TRK()||!c.in||c.exp>0)return;const vf=c.vx*Math.sin(c.yaw)+c.vz*Math.cos(c.yaw);if(vf<6)return;
  const mt=c.mt||{grip:1},a=gripAt(c,mt),sr=2.5-Math.min(c.sp,40)*.03,hk=Math.min(1.45,Math.max(.85,1+(((c.cs&&c.cs.grip)||1)-1)*2.6)),mx=a/(vf*sr)*(c.human&&!c.forceAI?1.4*hk:1.25)/* CPU drivers keep the old line, so their lap times and the gold times stay put */;
@@ -11201,6 +11201,9 @@ window.__optAction=k=>{if(k==='@tutorial')P.startTutorial()};
 'use strict';
 const P=window.PT8;
 P.LOG=[
+ {v:'0.18',d:'Oct 28, 2026',t:'Tighter turning at speed, steering sensitivity',items:[
+  'Above 80 mph the car turns much tighter: the tyres gain grip from 60 mph up to 45% more by 110 mph, and full lock asks for all of it from 80 mph. About 25-30% more turn at 80-120 mph than before.',
+  'Steering sensitivity: Settings > Driving > Steering now goes from 0.5 to 1.5 (was 0.65 to 1.35).']},
  {v:'0.17',d:'Oct 27, 2026',t:'Steering by speed, personal screen shake, calmer start screen',items:[
   'Steering by speed: first gear turns about 9% sharper, 30-80 mph is 6-12% calmer (it felt sharper than first gear), and from about 100 mph the tyres hold more (about 13% more turn at 120 mph). Fast corners still push a little more than the mid range.',
   'Screen shake only shakes the screen of the driver who crashed (both cars in a collision), not every player in split screen.',
@@ -14273,6 +14276,50 @@ const s0=show;let busy=false,pend=null;
 show=n=>{if(busy){pend=n;return}if(typeof scr==='undefined'||scr!=='s8show'||n==='s8show'||!(P.SR&&P.SR.kind==='brand'))return s0(n);
  busy=true;el.style.transition='opacity .4s ease';el.style.pointerEvents='auto';el.style.opacity='1';
  setTimeout(()=>{try{s0(n);if(pend!=null&&pend!==n)s0(pend)}finally{busy=false;pend=null;el.style.transition='opacity .6s ease';el.style.opacity='0';el.style.pointerEvents='none'}},420)};
+})();
+
+/* ===== Poly GT layer: Drive Lab (DRIVE=1 builds only) =====
+   A small test build for handling: the same physics as the game, but only one or two model tracks, no extra music or stills, and it
+   skips the menus. A bar at the top picks the track and car, sets the steering sensitivity (live, the game's own STEERING option) and
+   restarts the run. */
+(function ptDriveLab(){
+'use strict';
+if(!window.PT8_DRIVE)return;
+const P=window.PT8;
+const LS='ptDriveLab',sv=(()=>{try{return JSON.parse(localStorage.getItem(LS)||'{}')}catch(e){return{}}})(),save=()=>{try{localStorage.setItem(LS,JSON.stringify(sv))}catch(e){}};
+const css=document.createElement('style');css.textContent=`
+#dlab{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:99995;display:flex;gap:10px;align-items:center;padding:7px 12px;border-radius:6px;
+ background:rgba(8,10,12,.78);color:#e8ecee;font:12px/1.2 system-ui,sans-serif;letter-spacing:.04em;white-space:nowrap;transition:opacity .3s}
+#dlab b{font-weight:800;letter-spacing:.12em;color:#fff}
+#dlab select,#dlab button{font:inherit;color:#fff;background:#1d2327;border:1px solid #3a444a;border-radius:4px;padding:4px 6px}
+#dlab button{cursor:pointer;background:#e8ecee;color:#111;font-weight:700;padding:4px 12px}
+#dlab input{width:110px;vertical-align:middle}
+#dlab .v{display:inline-block;width:34px;text-align:right;font-variant-numeric:tabular-nums}
+body.dlabDrive #dlab{opacity:.35}body.dlabDrive #dlab:hover{opacity:1}`;
+document.head.appendChild(css);
+function tracks(){const out=[];if(typeof D==='undefined')return out;D.forEach((d,i)=>{if(!d||i===P.RING_IDX)return;if(d.packOnly&&!d.cartoon)return;out.push([i,d.name])});
+ /* the model tracks first */out.sort((a,b)=>(D[b[0]].cartoon?1:0)-(D[a[0]].cartoon?1:0));return out}
+function cars(){const tc=P.TRACK_CARS||[];return P.CARS.slice().sort((a,b)=>(tc.includes(b.id)?1:0)-(tc.includes(a.id)?1:0)||a.name.localeCompare(b.name))}
+function steer(v){if(window.PTO){PTO.steering=v;try{localStorage.setItem('pt7-options',JSON.stringify(PTO))}catch(e){}}}
+function bar(){let e=document.getElementById('dlab');if(e)return e;e=document.createElement('div');e.id='dlab';
+ const tr=tracks(),cs=cars(),tc=P.TRACK_CARS||[];if(sv.track==null||!tr.some(t=>t[0]===sv.track))sv.track=tr.length?tr[0][0]:0;
+ if(!sv.car||!cs.some(c=>c.id===sv.car)){const r8=cs.find(c=>/r8/i.test(c.id+c.name));sv.car=(r8||cs[0]).id}
+ if(!(sv.steer>0))sv.steer=(window.PTO&&PTO.steering)||1;
+ e.innerHTML=`<b>DRIVE LAB</b><select id="dlT">${tr.map(t=>`<option value="${t[0]}"${t[0]===sv.track?' selected':''}>${t[1]}</option>`).join('')}</select>
+ <select id="dlC">${cs.map(c=>`<option value="${c.id}"${c.id===sv.car?' selected':''}>${tc.includes(c.id)?'':'· '}${c.name}</option>`).join('')}</select>
+ <label>Steering <input id="dlS" type="range" min="0.5" max="1.5" step="0.05" value="${sv.steer}"><span class="v" id="dlSv">${(+sv.steer).toFixed(2)}</span></label>
+ <button id="dlGo">Drive</button>`;document.body.appendChild(e);
+ const T=e.querySelector('#dlT'),C=e.querySelector('#dlC'),S=e.querySelector('#dlS');
+ /* lists and the slider give the keyboard back at once, so the arrow keys and WASD drive instead of changing them */
+ T.onchange=()=>{sv.track=+T.value;save();T.blur();go()};C.onchange=()=>{sv.car=C.value;save();C.blur();go()};
+ S.oninput=()=>{sv.steer=+S.value;e.querySelector('#dlSv').textContent=sv.steer.toFixed(2);steer(sv.steer);save()};S.onchange=()=>S.blur();
+ e.querySelector('#dlGo').onclick=ev=>{ev.target.blur();go()};steer(+sv.steer);return e}
+function go(){try{if(typeof RACE!=='undefined'&&RACE&&P.cleanupRace)P.cleanupRace()}catch(e){}
+ P.launch({mode:'rally',circuit:true,track:sv.track,laps:5,humans:[{id:sv.car,alt:0,name:'Driver'}],ai:[],tod:'day',endur:false,weather:'clear'})}
+/* boot: wait for the game, skip the title and menus, open straight on the start line */
+const t0=Date.now(),iv=setInterval(()=>{if(!(P.launch&&P.CARS&&typeof D!=='undefined'))return;const ti=document.getElementById('ptTitle');
+ if(ti&&!ti.classList.contains('out')){ti.click();return}if(Date.now()-t0<1500)return;clearInterval(iv);bar();go()},300);
+setInterval(()=>{document.body.classList.toggle('dlabDrive',typeof RACE!=='undefined'&&!!RACE&&!RACE.prep&&typeof scr!=='undefined'&&scr==='game')},300);
 })();
 
 </script><script>(function(){function done(){var b=document.getElementById("ptBoot"),c=document.getElementById("ptBootCss");if(!b)return;b.style.opacity=0;setTimeout(function(){if(c)c.remove();b.remove()},260)}function go(){requestAnimationFrame(function(){requestAnimationFrame(function(){setTimeout(done,350)})})}if(document.readyState==="complete")go();else addEventListener("load",go);setTimeout(done,8000)})();</script></body></html>

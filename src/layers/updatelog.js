@@ -3,6 +3,9 @@
 'use strict';
 const P=window.PT8;
 P.LOG=[
+ {v:'0.18',d:'Oct 28, 2026',t:'Tighter turning at speed, steering sensitivity',items:[
+  'Above 80 mph the car turns much tighter: the tyres gain grip from 60 mph up to 45% more by 110 mph, and full lock asks for all of it from 80 mph. About 25-30% more turn at 80-120 mph than before.',
+  'Steering sensitivity: Settings > Driving > Steering now goes from 0.5 to 1.5 (was 0.65 to 1.35).']},
  {v:'0.17',d:'Oct 27, 2026',t:'Steering by speed, personal screen shake, calmer start screen',items:[
   'Steering by speed: first gear turns about 9% sharper, 30-80 mph is 6-12% calmer (it felt sharper than first gear), and from about 100 mph the tyres hold more (about 13% more turn at 120 mph). Fast corners still push a little more than the mid range.',
   'Screen shake only shakes the screen of the driver who crashed (both cars in a collision), not every player in split screen.',

@@ -28,6 +28,9 @@ src=rep(src,"'if(Rc.shake>0&&c.human)',","'if((c.shk||0)>0&&c.human)',")
 src=rep(src,"'if(o.shake&&Rc.shake>0&&c.human)'","'if(o.shake&&(c.shk||0)>0&&c.human)'")
 src=rep(src,"Rc.shake=Math.max(0,Rc.shake-dt*3);","Rc.shake=0;for(const q of Rc.cars)q.shk=Math.max(0,(q.shk||0)-dt*3);")
 src=rep(src,"noise(.9,.7,900);Rc.shake=1}","noise(.9,.7,900);c.shk=1}")
+# steering sensitivity: the STEERING option reaches .5-1.5 (was .65-1.35) and the steering may go that far past full lock
+src=rep(src,"['steering','STEERING',.65,1.35,.05],","['steering','STEERING',.5,1.5,.05],")
+src=rep(src,"clamp(c.in.st*o.steering,-1.35,1.35)","clamp(c.in.st*o.steering,-1.6,1.6)")
 src=rep(src,"*(1-Math.exp(-dt*(want?4:2.6)))","*(1-Math.exp(-dt*(want?(c.tnR||4):(c.tnR?c.tnR*.85:2.6))))")
 src=rep(src,"vi=c.vy-c.wpt*WL[i][1]+c.wrl*WL[i][0]","vi=c.vy-(c._gv||0)-c.wpt*WL[i][1]+c.wrl*WL[i][0]")
 src=rep(src,"x.fillStyle='#e8e8e8';x.fillRect(w/2-1,0,2,h/2)}","if(!(d.ra||d.imola)){x.fillStyle='#e8e8e8';x.fillRect(w/2-1,0,2,h/2)}else{/* real circuits: worn tarmac like the Nordschleife */const q=rngf(5);for(let i=0;i<120;i++){x.fillStyle=q()<.5?'rgba(0,0,0,.05)':'rgba(255,255,255,.035)';x.fillRect(q()*w|0,q()*h|0,1,1)}x.fillStyle='#ffffffc0';x.fillRect(1,0,1,h);x.fillRect(w-2,0,1,h)}}")
@@ -234,13 +237,16 @@ src=rep(src,"let bi=c.idx,bd=1e9;for(let k=-6;k<=30;k++){","let bi=c.idx,bd=1e9;
 src=rep(src,"c.wrong=hd<-3&&live?c.wrong+dt:0;","c.wrong=!T.free&&hd<-3&&live?c.wrong+dt:0;")
 src=rep(src,"if(live&&(c.y<T.y[c.idx]-12||Math.abs(c.roll)>.68","if(live&&((!T.free&&c.y<T.y[c.idx]-12)||Math.abs(c.roll)>.68")
 src=rep(src," if(!live)return;\n const sf=T.surf(c.x,c.z,c.y);"," if(!live||T.free)return;\n const sf=T.surf(c.x,c.z,c.y);")
-parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','frmodels','frdress','frtown','frworld','freeroam','cars10','audio','modes','tracks','hpack','tracks2','extra','race2','elim','tod','bridge','props','bld','stages','trees_q','propkit','scenery','ra_data','tracks3','imola_data','tracks4','ring_data','ring_forest','tracks5','tracks6','cartoon','logos','weather','ambience','menuaudio','tutorial','updatelog','hud2','shade','ui','cinema','rally','trackmode','realspeed','barn','animals','franimals','frlife','clean','solid','damage','grip','airline','ride','snap','perf','econ','frhud','title','brandbg','uifx','fade']  if os.path.exists(f'{SRC}/layers/{n}.js')]
+parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','frmodels','frdress','frtown','frworld','freeroam','cars10','audio','modes','tracks','hpack','tracks2','extra','race2','elim','tod','bridge','props','bld','stages','trees_q','propkit','scenery','ra_data','tracks3','imola_data','tracks4','ring_data','ring_forest','tracks5','tracks6','cartoon','logos','weather','ambience','menuaudio','tutorial','updatelog','hud2','shade','ui','cinema','rally','trackmode','realspeed','barn','animals','franimals','frlife','clean','solid','damage','grip','airline','ride','snap','perf','econ','frhud','title','brandbg','uifx','fade','drivelab']  if os.path.exists(f'{SRC}/layers/{n}.js')]
 # track files (bought cartoon models of Imola / Road Atlanta, made by tools/cartoon_track, kept out of the public repo in project files).
 # PACKS=1 builds them in (Artifact, full build); otherwise players load them with "+ Add track file" so the lite file stays small.
-if os.environ.get('PACKS'):
+# DRIVE=1: the Drive Lab test build (src/layers/drivelab.js): lite assets plus only the packs named in DRIVE_TRACKS (default the Nurburgring)
+DRIVE=os.environ.get('DRIVE');DRV_T=(os.environ.get('DRIVE_TRACKS') or 'nurburgring').split(',')
+if os.environ.get('PACKS') or DRIVE:
   import glob,gzip
   k=[i for i,p in enumerate(parts) if p.startswith('/* ===== Poly GT layer: cartoon')][0]
   for f in sorted(glob.glob('/mnt/project-files/poly-gt/tracks/*.ptrack')):
+    if DRIVE and os.path.basename(f)[:-7] not in DRV_T:continue
     parts.insert(k,'window.PT8_PACKS=window.PT8_PACKS||[];PT8_PACKS.push('+gzip.decompress(open(f,'rb').read()).decode()+');\n')
     print('built in',os.path.basename(f))
 css=open(f'{SRC}/style.css').read()
@@ -269,7 +275,7 @@ if os.environ.get('PACKS'):
   _bb+=['"'+base64.b64encode(open(f,'rb').read()).decode()+'"' for f in sorted(_gb.glob('/mnt/project-files/poly-gt/brandbg/*.jpg'))]
 BBG='<script>const BBG_B64=['+','.join(_bb)+'];</script>'
 HPACK='<script>const HPACK_B64="'+b64('harbor_pack.glb.gz')+'";</script>'
-MUS=''.join('<script type="text/plain" id="mus_%s">%s</script>'%(k,base64.b64encode(open(W+('/assets/music_lite/' if os.environ.get('LITE') and f!='gt_countdown' else '/assets/music/')+f+'.mp3','rb').read()).decode()) for k,f in ([('baby','baby_so_free'),('glass','glasstress'),('nocomm','no_comm'),('cd','gt_countdown')] if os.environ.get('LITE') else [('baby','baby_so_free'),('supreme','supreme_moment'),('space','space'),('glass','glasstress'),('body','body_and_mind'),('nocomm','no_comm'),('cd','gt_countdown'),('lizzie','lizzie')]))
+MUS=''.join('<script type="text/plain" id="mus_%s">%s</script>'%(k,base64.b64encode(open(W+('/assets/music_lite/' if (os.environ.get('LITE') or DRIVE) and f!='gt_countdown' else '/assets/music/')+f+'.mp3','rb').read()).decode()) for k,f in ([('baby','baby_so_free'),('glass','glasstress'),('nocomm','no_comm'),('cd','gt_countdown')] if (os.environ.get('LITE') or DRIVE) else [('baby','baby_so_free'),('supreme','supreme_moment'),('space','space'),('glass','glasstress'),('body','body_and_mind'),('nocomm','no_comm'),('cd','gt_countdown'),('lizzie','lizzie')]))
 # the songs Hakan added later (kept in project files, not in the public repo): full builds only
 if os.environ.get('PACKS'):
   for _k,_f in (('cafe','cafe_de_flore'),('adore','adore'),('girl','all_about_the_girl'),('vision','vision'),('fruit','forbidden_fruit'),('hippos','sixtyfour_hippos')):
@@ -301,7 +307,7 @@ src=src.replace('<title>Poly Tourismo v7</title>','<title>Poly Tourismo</title>'
 src=src.replace('<body>','<body><div id="ptBoot">POLY TOURISMO<i></i><small>LOADING</small></div>',1)
 BOOT_JS='<script>(function(){function done(){var b=document.getElementById("ptBoot"),c=document.getElementById("ptBootCss");if(!b)return;b.style.opacity=0;setTimeout(function(){if(c)c.remove();b.remove()},260)}function go(){requestAnimationFrame(function(){requestAnimationFrame(function(){setTimeout(done,350)})})}if(document.readyState==="complete")go();else addEventListener("load",go);setTimeout(done,8000)})();</script>'
 GLTF='<script>'+open(W+'/assets/GLTFLoader.r128.js').read()+'</script>'
-add=GLTF+ANIM+BLD+FRM+CARS10+HPACK+BBG+PREV+UIFX+MUS+'<style id="v8css">'+css+'</style><script>\n'+'\n'.join(parts)+'\n</script>'
+add=('<script>window.PT8_DRIVE=1</script>' if DRIVE else '')+GLTF+ANIM+BLD+FRM+CARS10+HPACK+BBG+PREV+UIFX+MUS+'<style id="v8css">'+css+'</style><script>\n'+'\n'.join(parts)+'\n</script>'
 i=src.rindex('</body>') if '</body>' in src else len(src)
 src=src[:i]+add+BOOT_JS+src[i:]
 
