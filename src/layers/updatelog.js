@@ -3,6 +3,9 @@
 'use strict';
 const P=window.PT8;
 P.LOG=[
+ {v:'0.19',d:'Oct 28, 2026',t:'Even steering by speed, grass only slows you',items:[
+  'The steering no longer gets quicker as you speed up: from 60 to 120 mph full lock turns the car at the same rate (it used to climb from 60 to 80 mph). Fast corners still turn about 25% tighter than before 0.18.',
+  'Grass and run-off beside the road now only cost speed: the steering and grip stay the same as on the road, so clipping the edge no longer makes the car vague. Sand traps still bite.']},
  {v:'0.18',d:'Oct 28, 2026',t:'Tighter turning at speed, steering sensitivity',items:[
   'Above 80 mph the car turns much tighter: the tyres gain grip from 60 mph up to 45% more by 110 mph, and full lock asks for all of it from 80 mph. About 25-30% more turn at 80-120 mph than before.',
   'Steering sensitivity: Settings > Driving > Steering now goes from 0.5 to 1.5 (was 0.65 to 1.35).']},
