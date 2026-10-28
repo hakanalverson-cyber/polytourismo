@@ -84,6 +84,10 @@ const K=()=>{const R=typeof RACE!=="undefined"?RACE:null,d=R&&R.T&&R.T.d;return 
    the models' size; the Nordschleife is real size) */
 /* Track-mode gold on the Nordschleife follows the new handling (CPU time-trial lap 437.1 s with the round 15 grip; base ref was set at 435.1 s) */
 P.trkMedK=Object.assign(P.trkMedK||{},{[P.RING_IDX]:1.005});
+/* Track Mode itself (circuit time trials and track races), not just a model track: the v0.19 handling and steering feel apply only here */
+const TM=()=>{const R=typeof RACE!=="undefined"?RACE:null,f=R&&R.cfg;return !!(f&&(f.trackRace||f.circuit))};P.trackMode=TM;
+/* Track Mode steering sensitivity: the slider's 1.0 here is the old 0.55 (Hakan's sweet spot); other modes keep the slider as it is */
+P.tmSteer=c=>c&&c.human&&!c.forceAI&&TM()?.55:1;
 const TRK=()=>{if(K()>1)return true;const R=typeof RACE!=="undefined"?RACE:null,f=R&&R.cfg;return !!(f&&(f.trackRace||f.circuit))};P.trkPhys=TRK;
 const uv=updateVisual;updateVisual=function(c,T,t){const m=c&&c.m,k=K();if(m&&m.g)m.g.scale.setScalar(1);const r=uv.apply(this,arguments);
  if(m&&m.g&&k!==1&&m.g.visible!==false){m.g.scale.setScalar(k);m.g.position.y+=(k-1)*.95;if(m.sh){m.sh.scale.x*=k;m.sh.scale.y*=k}}return r};
@@ -131,7 +135,7 @@ const DM=v=>v*2.237*P.dialK(),HG=v=>1+.45*Math.min(1,Math.max(0,(DM(v)-60)/50));
    never climbs with speed: about 51 deg/s from 60 to 120 mph, then easing off. Corners past 80 still turn about 25% tighter than before v0.18 */
 /* round 24: the low gears a little sharper (first +8%, 30-60 mph +12%), 3rd gear (80-110) as it was */
 /* round 25 (first gear +5%) was too sensitive: back to round 24, which Hakan called perfect */
-const SFP=[[0,1.03],[20,1.03],[30,.84],[60,.84],[80,.87],[100,.92],[120,1]],SF=m=>{const p=SFP;if(m<=p[0][0])return p[0][1];for(let i=1;i<p.length;i++)if(m<=p[i][0]){const a=p[i-1],b=p[i];return a[1]+(b[1]-a[1])*(m-a[0])/(b[0]-a[0])}return p[p.length-1][1]};
+const SFP=[[0,1.03],[20,1.03],[30,.84],[60,.84],[80,.87],[100,.92],[120,1]],SFP0=[[0,.95],[20,.95],[30,.75],[60,.75],[80,1]]/* v0.18, outside Track Mode */,SF=m=>{const p=TM()?SFP:SFP0;if(m<=p[0][0])return p[0][1];for(let i=1;i<p.length;i++)if(m<=p[i][0]){const a=p[i-1],b=p[i];return a[1]+(b[1]-a[1])*(m-a[0])/(b[0]-a[0])}return p[p.length-1][1]};
 const gripAt=(c,mt)=>{const v=c.sp||0;return ALAT*Math.min(DFMAX,1+DFK*(v/35)*(v/35))*((c.cs&&c.cs.grip)||1)*(P.lawn&&P.lawn(c)?1:(mt.grip||1))/* round 23: grass slows the player but never cuts the steering */*(c.human&&!c.forceAI?(c.in&&c.in.br>0&&c.in.th<=0?1.15:1)*HG(v):1)/* round 20: trail braking, the weight on the fronts gives 15% more bite (player only, so the CPU laps and gold times stay put) */};
 {const ip0=P.inPost;P.inPost=(c,dt)=>{if(ip0)ip0(c,dt);if(!TRK()||!c.in||c.exp>0)return;const vf=c.vx*Math.sin(c.yaw)+c.vz*Math.cos(c.yaw);if(vf<6)return;
  const mt=c.mt||{grip:1},a=gripAt(c,mt),sr=2.5-Math.min(c.sp,40)*.03,hk=Math.min(1.45,Math.max(.85,1+(((c.cs&&c.cs.grip)||1)-1)*2.6)),mx=a/(vf*sr)*(c.human&&!c.forceAI?1.4*hk:1.25)/* CPU drivers keep the old line, so their lap times and the gold times stay put */;

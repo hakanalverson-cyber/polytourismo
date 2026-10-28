@@ -3,11 +3,10 @@
 'use strict';
 const P=window.PT8;
 P.LOG=[
- {v:'0.19',d:'Oct 28, 2026',t:'Even steering by speed, grass only slows you',items:[
-  'Steering sensitivity now starts at 0.55 (Settings > Driving > Steering). If yours was on the old default of 1.0 it moves to 0.55 once; any other value is kept.',
-  'First and second gear steer a little sharper (about 8% up to 30 mph, 12% from 30 to 60 mph); third gear (80-110 mph) is unchanged.',
-  'The steering no longer gets quicker as you speed up: from 60 to 120 mph full lock turns the car at the same rate (it used to climb from 60 to 80 mph). Fast corners still turn about 25% tighter than before 0.18.',
-  'Grass and run-off beside the road now only cost speed: the steering and grip stay the same as on the road, so clipping the edge no longer makes the car vague. Sand traps still bite.']},
+ {v:'0.19',d:'Oct 28, 2026',t:'Track Mode handling',items:[
+  'Track Mode only: the steering no longer gets quicker as you speed up (60-120 mph turns at an even rate), first and second gear steer a little sharper, and third gear (80-110 mph) is unchanged.',
+  'Track Mode only: grass and run-off beside the road only cost speed; the steering and grip stay as on the road. Sand traps still bite.',
+  'Track Mode only: steering sensitivity 1.0 now feels like the old 0.55. The rest of the game steers as before.']},
  {v:'0.18',d:'Oct 28, 2026',t:'Tighter turning at speed, steering sensitivity',items:[
   'Above 80 mph the car turns much tighter: the tyres gain grip from 60 mph up to 45% more by 110 mph, and full lock asks for all of it from 80 mph. About 25-30% more turn at 80-120 mph than before.',
   'Steering sensitivity: Settings > Driving > Steering now goes from 0.5 to 1.5 (was 0.65 to 1.35).']},

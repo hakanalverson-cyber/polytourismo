@@ -30,10 +30,10 @@ src=rep(src,"Rc.shake=Math.max(0,Rc.shake-dt*3);","Rc.shake=0;for(const q of Rc.
 src=rep(src,"noise(.9,.7,900);Rc.shake=1}","noise(.9,.7,900);c.shk=1}")
 # steering sensitivity: the STEERING option reaches .5-1.5 (was .65-1.35) and the steering may go that far past full lock
 src=rep(src,"['steering','STEERING',.65,1.35,.05],","['steering','STEERING',.5,1.5,.05],")
-# default steering sensitivity .55 (Hakan's sweet spot); a saved 1.0 (the old default) moves to .55 once
-src=rep(src,"steering:1,driftAssist:.7,","steering:.55,driftAssist:.7,")
-src=rep(src,"Object.assign(o,JSON.parse(localStorage.getItem('pt7-options')||'{}'));","Object.assign(o,JSON.parse(localStorage.getItem('pt7-options')||'{}'));if(!o.steerV2){if(o.steering===1)o.steering=.55;o.steerV2=1}")
-src=rep(src,"clamp(c.in.st*o.steering,-1.35,1.35)","clamp(c.in.st*o.steering,-1.6,1.6)")
+# Track Mode steering sensitivity
+# (the .55 is now built into Track Mode instead, see PT8.tmSteer: a slider moved to .55 by the short-lived default goes back to 1.0 once)
+src=rep(src,"Object.assign(o,JSON.parse(localStorage.getItem('pt7-options')||'{}'));","Object.assign(o,JSON.parse(localStorage.getItem('pt7-options')||'{}'));if(o.steerV2===1){if(o.steering===.55)o.steering=1;o.steerV2=2}")
+src=rep(src,"clamp(c.in.st*o.steering,-1.35,1.35)","clamp(c.in.st*o.steering*(window.PT8&&PT8.tmSteer?PT8.tmSteer(c):1),-1.6,1.6)")
 src=rep(src,"*(1-Math.exp(-dt*(want?4:2.6)))","*(1-Math.exp(-dt*(want?(c.tnR||4):(c.tnR?c.tnR*.85:2.6))))")
 src=rep(src,"vi=c.vy-c.wpt*WL[i][1]+c.wrl*WL[i][0]","vi=c.vy-(c._gv||0)-c.wpt*WL[i][1]+c.wrl*WL[i][0]")
 src=rep(src,"x.fillStyle='#e8e8e8';x.fillRect(w/2-1,0,2,h/2)}","if(!(d.ra||d.imola)){x.fillStyle='#e8e8e8';x.fillRect(w/2-1,0,2,h/2)}else{/* real circuits: worn tarmac like the Nordschleife */const q=rngf(5);for(let i=0;i<120;i++){x.fillStyle=q()<.5?'rgba(0,0,0,.05)':'rgba(255,255,255,.035)';x.fillRect(q()*w|0,q()*h|0,1,1)}x.fillStyle='#ffffffc0';x.fillRect(1,0,1,h);x.fillRect(w-2,0,1,h)}}")

@@ -5,9 +5,9 @@ window.PT8_HB=c=>!!(c._hb||(c.in&&c.in.hb));/* keys no longer hold it (handbrake
 /* firmer tarmac grip for the player: sideways slip on asphalt dies out 1.4x faster, so the car goes where it is pointed.
    Gravel, grass, dirt and ice keep their loose feel. The AI keeps the grip its speed planner was tuned on (with more grip its line
    control overshoots on fast downhill bends). */
-/* round 23: on the circuits, grass and paved run-off off the edge of the road (not sand traps or ice) only cost the player speed: the steering
+/* round 23: in Track Mode, grass and paved run-off off the edge of the road (not sand traps or ice) only cost the player speed: the steering
    and sideways grip stay as on the road (the edge of the road read as grass and the steering went vague) */
-P.lawn=c=>!!(c.human&&!c.forceAI&&!c.onRoad&&c.mt&&c.mt!==MATS.sandtrap&&c.mt!==MATS.ice&&P.trkPhys&&P.trkPhys());
+P.lawn=c=>!!(c.human&&!c.forceAI&&!c.onRoad&&c.mt&&c.mt!==MATS.sandtrap&&c.mt!==MATS.ice&&P.trackMode&&P.trackMode());
 const m0=P.mul;P.mul=c=>{const m=m0?m0(c):{acc:1,top:1,grip:1,brk:1};const T=RACE&&RACE.T;
  if(T&&c.human&&!c.forceAI&&!c.cool&&!T.d.gravel&&c.onRoad&&!(T.ice&&T.ice[c.idx]))m.grip*=(window.PT8_GRIPK||1.4);
  else if(T&&!c.cool&&!T.d.gravel&&P.lawn(c))m.grip*=(window.PT8_GRIPK||1.4)/Math.max(.1,c.mt.grip||1);return m};
