@@ -130,7 +130,8 @@ const DM=v=>v*2.237*P.dialK(),HG=v=>1+.45*Math.min(1,Math.max(0,(DM(v)-60)/50));
 /* round 23: the 60-80 mph ramp to full lock made the car turn faster the faster it went (51 deg/s at 60, 60 at 80). Now the turn rate
    never climbs with speed: about 51 deg/s from 60 to 120 mph, then easing off. Corners past 80 still turn about 25% tighter than before v0.18 */
 /* round 24: the low gears a little sharper (first +8%, 30-60 mph +12%), 3rd gear (80-110) as it was */
-const SFP=[[0,1.03],[20,1.03],[30,.84],[60,.84],[80,.87],[100,.92],[120,1]],SF=m=>{const p=SFP;if(m<=p[0][0])return p[0][1];for(let i=1;i<p.length;i++)if(m<=p[i][0]){const a=p[i-1],b=p[i];return a[1]+(b[1]-a[1])*(m-a[0])/(b[0]-a[0])}return p[p.length-1][1]};
+/* round 25: first gear (0-40 mph) about 5% sharper again, still a touch of understeer there */
+const SFP=[[0,1.08],[20,1.08],[30,.89],[40,.88],[60,.84],[80,.87],[100,.92],[120,1]],SF=m=>{const p=SFP;if(m<=p[0][0])return p[0][1];for(let i=1;i<p.length;i++)if(m<=p[i][0]){const a=p[i-1],b=p[i];return a[1]+(b[1]-a[1])*(m-a[0])/(b[0]-a[0])}return p[p.length-1][1]};
 const gripAt=(c,mt)=>{const v=c.sp||0;return ALAT*Math.min(DFMAX,1+DFK*(v/35)*(v/35))*((c.cs&&c.cs.grip)||1)*(P.lawn&&P.lawn(c)?1:(mt.grip||1))/* round 23: grass slows the player but never cuts the steering */*(c.human&&!c.forceAI?(c.in&&c.in.br>0&&c.in.th<=0?1.15:1)*HG(v):1)/* round 20: trail braking, the weight on the fronts gives 15% more bite (player only, so the CPU laps and gold times stay put) */};
 {const ip0=P.inPost;P.inPost=(c,dt)=>{if(ip0)ip0(c,dt);if(!TRK()||!c.in||c.exp>0)return;const vf=c.vx*Math.sin(c.yaw)+c.vz*Math.cos(c.yaw);if(vf<6)return;
  const mt=c.mt||{grip:1},a=gripAt(c,mt),sr=2.5-Math.min(c.sp,40)*.03,hk=Math.min(1.45,Math.max(.85,1+(((c.cs&&c.cs.grip)||1)-1)*2.6)),mx=a/(vf*sr)*(c.human&&!c.forceAI?1.4*hk:1.25)/* CPU drivers keep the old line, so their lap times and the gold times stay put */;
