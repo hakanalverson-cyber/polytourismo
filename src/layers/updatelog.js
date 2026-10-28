@@ -13,6 +13,7 @@ P.LOG=[
   'Rally and Track Mode handling are unchanged.']},
  {v:'0.19',d:'Oct 28, 2026',t:'Track Mode handling',items:[
   'Track Mode only: the steering no longer gets quicker as you speed up (60-120 mph turns at an even rate), first and second gear steer a little sharper, and third gear (80-110 mph) is unchanged.',
+  'Track Mode only: above 80 mph the car pushes wide 5% less (5% more grip from 85 mph, easing in from 75).',
   'Track Mode only: grass and run-off beside the road only cost speed; the steering and grip stay as on the road. Sand traps still bite.',
   'Track Mode only: steering sensitivity 1.0 now feels like the old 0.55. The rest of the game steers as before.']},
  {v:'0.18',d:'Oct 28, 2026',t:'Tighter turning at speed, steering sensitivity',items:[

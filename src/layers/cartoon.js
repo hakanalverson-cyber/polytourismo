@@ -155,7 +155,7 @@ const SPD=1.25,TOPK=1.32,ACCK=.46,TS=1.4,BRKK=.42;/* round 19: top speed and pic
 /* round 21 (player only), by the speed on the dial: HG = more tyre at speed (none to 90 mph, +20% from 130: the understeer at 120 felt
    like what 220 should give, still a little more push than the mid range); SF = how much of the turn limit full lock asks for: 95% in
    first gear, 75% from 30 to 80 mph (it felt sharper there than first gear), back to all of it from 110 */
-const DM=v=>v*2.237*P.dialK(),HG=v=>1+.45*Math.min(1,Math.max(0,(DM(v)-60)/50));/* round 22: +45% by 110 mph, ramping from 60 (was +20% from 90 to 130: past 80 the turn was still far too wide) */
+const DM=v=>v*2.237*P.dialK(),HG=v=>(1+.45*Math.min(1,Math.max(0,(DM(v)-60)/50)))*(TM()?1+.05*Math.min(1,Math.max(0,(DM(v)-75)/10)):1);/* round 26 (Track Mode): 5% more tyre from 85 mph (ramping in from 75), so fast corners push wide 5% less *//* round 22: +45% by 110 mph, ramping from 60 (was +20% from 90 to 130: past 80 the turn was still far too wide) */
 /* round 23: the 60-80 mph ramp to full lock made the car turn faster the faster it went (51 deg/s at 60, 60 at 80). Now the turn rate
    never climbs with speed: about 51 deg/s from 60 to 120 mph, then easing off. Corners past 80 still turn about 25% tighter than before v0.18 */
 /* round 24: the low gears a little sharper (first +8%, 30-60 mph +12%), 3rd gear (80-110) as it was */
