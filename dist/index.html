@@ -463,7 +463,7 @@ const defaults = {
   scanlines:true,vignette:true,menuMotion:true,
   garageRotate:true,mapOrbit:true,
   master:.7,engine:.55,sfx:.65,sound:true,
-  steering:1,driftAssist:.7,drifts:true,driftMph:47,
+  steering:.55,driftAssist:.7,drifts:true,driftMph:47,
   hillHold:true,autoShift:false,shortcutPenalty:true,p2numpad:false,perfPreset:'MEDIUM',maxDensity:1.25,shadowRate:2,shadowRes:1024,showFps:false,cameraDistance:1,fov:58,shake:true,
   boostFov:true,minimap:true,timer:true,hudScale:1,
   units:'mph',showroom:true,splitAlways:true
@@ -471,7 +471,7 @@ const defaults = {
 
 const o = {...defaults};
 try {
-  Object.assign(o,JSON.parse(localStorage.getItem('pt7-options')||'{}'));
+  Object.assign(o,JSON.parse(localStorage.getItem('pt7-options')||'{}'));if(!o.steerV2){if(o.steering===1)o.steering=.55;o.steerV2=1}
 } catch(e) {}
 o.units='mph';
 
@@ -11206,6 +11206,7 @@ window.__optAction=k=>{if(k==='@tutorial')P.startTutorial()};
 const P=window.PT8;
 P.LOG=[
  {v:'0.19',d:'Oct 28, 2026',t:'Even steering by speed, grass only slows you',items:[
+  'Steering sensitivity now starts at 0.55 (Settings > Driving > Steering). If yours was on the old default of 1.0 it moves to 0.55 once; any other value is kept.',
   'First and second gear steer a little sharper (about 8% up to 30 mph, 12% from 30 to 60 mph); third gear (80-110 mph) is unchanged.',
   'The steering no longer gets quicker as you speed up: from 60 to 120 mph full lock turns the car at the same rate (it used to climb from 60 to 80 mph). Fast corners still turn about 25% tighter than before 0.18.',
   'Grass and run-off beside the road now only cost speed: the steering and grip stay the same as on the road, so clipping the edge no longer makes the car vague. Sand traps still bite.']},

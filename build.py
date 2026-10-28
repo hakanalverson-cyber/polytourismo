@@ -30,6 +30,9 @@ src=rep(src,"Rc.shake=Math.max(0,Rc.shake-dt*3);","Rc.shake=0;for(const q of Rc.
 src=rep(src,"noise(.9,.7,900);Rc.shake=1}","noise(.9,.7,900);c.shk=1}")
 # steering sensitivity: the STEERING option reaches .5-1.5 (was .65-1.35) and the steering may go that far past full lock
 src=rep(src,"['steering','STEERING',.65,1.35,.05],","['steering','STEERING',.5,1.5,.05],")
+# default steering sensitivity .55 (Hakan's sweet spot); a saved 1.0 (the old default) moves to .55 once
+src=rep(src,"steering:1,driftAssist:.7,","steering:.55,driftAssist:.7,")
+src=rep(src,"Object.assign(o,JSON.parse(localStorage.getItem('pt7-options')||'{}'));","Object.assign(o,JSON.parse(localStorage.getItem('pt7-options')||'{}'));if(!o.steerV2){if(o.steering===1)o.steering=.55;o.steerV2=1}")
 src=rep(src,"clamp(c.in.st*o.steering,-1.35,1.35)","clamp(c.in.st*o.steering,-1.6,1.6)")
 src=rep(src,"*(1-Math.exp(-dt*(want?4:2.6)))","*(1-Math.exp(-dt*(want?(c.tnR||4):(c.tnR?c.tnR*.85:2.6))))")
 src=rep(src,"vi=c.vy-c.wpt*WL[i][1]+c.wrl*WL[i][0]","vi=c.vy-(c._gv||0)-c.wpt*WL[i][1]+c.wrl*WL[i][0]")

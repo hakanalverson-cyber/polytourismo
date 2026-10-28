@@ -4,6 +4,7 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.19',d:'Oct 28, 2026',t:'Even steering by speed, grass only slows you',items:[
+  'Steering sensitivity now starts at 0.55 (Settings > Driving > Steering). If yours was on the old default of 1.0 it moves to 0.55 once; any other value is kept.',
   'First and second gear steer a little sharper (about 8% up to 30 mph, 12% from 30 to 60 mph); third gear (80-110 mph) is unchanged.',
   'The steering no longer gets quicker as you speed up: from 60 to 120 mph full lock turns the car at the same rate (it used to climb from 60 to 80 mph). Fast corners still turn about 25% tighter than before 0.18.',
   'Grass and run-off beside the road now only cost speed: the steering and grip stay the same as on the road, so clipping the edge no longer makes the car vague. Sand traps still bite.']},
