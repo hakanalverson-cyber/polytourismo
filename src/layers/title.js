@@ -21,14 +21,54 @@ body.ptTitle #menu{opacity:0!important;pointer-events:none!important}
 #ptTitle .pr{position:absolute;bottom:15vh;font:700 min(1.7vw,15px)/1 system-ui,sans-serif;letter-spacing:.55em;margin-right:-.55em;opacity:0;color:#fff}
 #ptTitle.on .pr{animation:ptBlink 2.2s ease-in-out 2.2s infinite}
 #ptTitle .vv{position:absolute;right:3vw;bottom:11vh;font:600 10px/1 system-ui,sans-serif;letter-spacing:.3em;opacity:.45}
+#ptTitle .bg{position:absolute;inset:0;z-index:-2;overflow:hidden;background:#000}
+#ptTitle .bg div{position:absolute;inset:-2%;background-size:cover;background-position:center;opacity:0;transition:opacity 1.6s ease;will-change:transform,opacity}
+#ptTitle .bg div.on{opacity:1}
+#ptTitle .bg div.kb{animation:ptKB 8.5s linear forwards}
+#ptTitle .sh{position:absolute;inset:0;z-index:-1;background:radial-gradient(ellipse at 50% 50%,rgba(0,0,0,.35) 0%,rgba(0,0,0,.6) 55%,rgba(0,0,0,.92) 100%),linear-gradient(0deg,rgba(0,0,0,.7),transparent 35%,transparent 70%,rgba(0,0,0,.45));pointer-events:none}
+#ptTitle .gr{position:absolute;inset:0;z-index:-1;opacity:.07;pointer-events:none;background-image:repeating-linear-gradient(0deg,#fff 0 1px,transparent 1px 3px);mix-blend-mode:overlay}
+#ptTitle .lg{clip-path:inset(0 100% 0 0);transition:opacity .3s ease .4s,transform 1.6s cubic-bezier(.2,.7,.2,1) .4s,clip-path 1.1s cubic-bezier(.7,0,.2,1) .45s}
+#ptTitle.on .lg{clip-path:inset(0 0 0 0)}
+#ptTitle .st{margin-top:1.6vh;font:700 10px/1 system-ui,sans-serif;letter-spacing:.42em;margin-right:-.42em;color:#e9d9a6;opacity:0;transition:opacity 1s ease 1.6s}
+#ptTitle.on .st{opacity:.8}
+#ptTitle .cap{position:absolute;left:3vw;bottom:11vh;font:600 10px/1.5 system-ui,sans-serif;letter-spacing:.3em;color:#fff;opacity:0;transition:opacity .6s}
+#ptTitle .cap.on{opacity:.7}#ptTitle .cap b{display:block;font-size:13px;letter-spacing:.24em;opacity:1}
+#ptTitle .tk{position:absolute;right:3vw;top:11vh;display:flex;gap:5px}
+#ptTitle .tk i{display:block;width:16px;height:2px;background:#ffffff40;transition:background .4s}#ptTitle .tk i.on{background:#fff}
+#ptTitle .sl{position:absolute;left:0;right:0;top:50%;height:0;z-index:-1;pointer-events:none}
+#ptTitle .sl i{position:absolute;height:1px;width:22vw;left:-25vw;background:linear-gradient(90deg,transparent,#ffffffaa,transparent);opacity:0}
+#ptTitle.on .sl i{animation:ptStreak 3.8s cubic-bezier(.5,0,.5,1) infinite}
+@keyframes ptKB{from{transform:scale(1.14) translate(var(--x0),var(--y0))}to{transform:scale(1.02) translate(var(--x1),var(--y1))}}
+@keyframes ptStreak{0%{left:-25vw;opacity:0}10%{opacity:.9}60%{opacity:.6}100%{left:105vw;opacity:0}}
 @keyframes ptSheen{0%,50%{background-position:175% 0}100%{background-position:-175% 0}}
 @keyframes ptBlink{0%,100%{opacity:.25}50%{opacity:1}}`;document.head.appendChild(st);
-const d=document.createElement('div');d.id='ptTitle';d.innerHTML='<div class="bar t"></div><div class="bar b"></div><div class="lg">POLY<i>GT</i></div><div class="sub">GRAND TOUR</div><div class="ln"></div><div class="pr">PRESS ANY BUTTON</div><div class="vv">MOTOR DIVISION</div>';
-document.body.appendChild(d);document.body.classList.add('ptTitle');requestAnimationFrame(()=>requestAnimationFrame(()=>d.classList.add('on')));
+const d=document.createElement('div');d.id='ptTitle';d.innerHTML='<div class="bg"></div><div class="sh"></div><div class="gr"></div><div class="sl">'+[[-14,0],[9,1.3],[-4,2.4],[17,.7],[-21,3.1]].map(([y,t])=>'<i style="top:'+y+'vh;animation-delay:'+t+'s"></i>').join('')+'</div><div class="bar t"></div><div class="bar b"></div><div class="lg">POLY<i>GT</i></div><div class="sub">GRAND TOUR</div><div class="st"></div><div class="ln"></div><div class="pr">PRESS ANY BUTTON</div><div class="cap"></div><div class="tk"></div><div class="vv">MOTOR DIVISION</div>';
+document.body.appendChild(d);document.body.classList.add('ptTitle');
+/* stills behind the title, Brand Central style: the action shots on the real circuits when the build has them, slowly drifting
+   (Ken Burns) and crossfading, with the circuit's name in the corner */
+const CN={bat:'MOUNT PANORAMA \u00b7 BATHURST',hun:'HUNGARORING',imo:'IMOLA',lag:'LAGUNA SECA',nur:'N\u00dcRBURGRING',ra0:'ROAD ATLANTA',spa:'SPA-FRANCORCHAMPS',suz:'SUZUKA'};
+let SL=[];try{const nm=window.BBG_NAMES||[];SL=(typeof BBG_B64!=='undefined'?BBG_B64:[]).map((b,i)=>({u:'url(data:image/jpeg;base64,'+b+')',n:CN[nm[i]]||CN[(nm[i]||'').slice(0,3)]||''}));
+ const named=SL.filter(x=>x.n);if(named.length>=4)SL=named;for(let i=SL.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[SL[i],SL[j]]=[SL[j],SL[i]]}SL=SL.slice(0,8)}catch(e){SL=[]}
+const bg=d.querySelector('.bg'),cap=d.querySelector('.cap'),tk=d.querySelector('.tk');tk.innerHTML=SL.map(()=>'<i></i>').join('');
+let si=-1,slT=0;const R=()=>(Math.random()*4-2).toFixed(2)+'%';
+function slide(){if(!SL.length||done)return;si=(si+1)%SL.length;const x=SL[si],e=document.createElement('div');e.style.backgroundImage=x.u;e.style.setProperty('--x0',R());e.style.setProperty('--y0',R());e.style.setProperty('--x1',R());e.style.setProperty('--y1',R());
+ bg.appendChild(e);void e.offsetWidth;e.classList.add('kb','on');const old=[...bg.children].filter(c=>c!==e);setTimeout(()=>old.forEach(c=>c.remove()),1800);
+ cap.classList.remove('on');setTimeout(()=>{cap.innerHTML=x.n?'<b>'+x.n+'</b>NOW SHOWING':'';cap.classList.toggle('on',!!x.n)},500);
+ [...tk.children].forEach((t,k)=>t.classList.toggle('on',k===si));slT=setTimeout(slide,6500)}
+try{const st=d.querySelector('.st'),nc=(P.CARS||[]).length,nt=(P.TRK_TRACKS||[]).length,ns=(P.STAGES||[]).length;st.textContent=[nc&&nc+' CARS',nt&&nt+' CIRCUITS',ns&&ns+' RALLY STAGES'].filter(Boolean).join(' \u00b7 ')}catch(e){}
+/* everything that would otherwise load later (the Track Mode circuit shots and the rally stage renders) is made now, behind the boot
+   screen with a progress bar; the title comes in when it is done */
+window.PT8_BOOT=new Promise(res=>{const run=()=>setTimeout(async()=>{try{const b=document.getElementById('ptBoot'),bar=b&&b.querySelector('u'),lab=b&&b.querySelector('small');
+  const jobs=[];const isC=i=>typeof D!=='undefined'&&D[i]&&D[i].cartoon;for(const i of(P.TRK_TRACKS||[]))if(isC(i)&&P.trackShot)jobs.push([D[i].name,()=>P.trackShot(i)]);
+  for(const i of(P.STAGES||[]))if(P.stageRender&&typeof D!=='undefined'&&D[i])jobs.push([D[i].name,()=>P.stageRender(i)]);
+  if(b&&jobs.length)b.classList.add('det');
+  for(let k=0;k<jobs.length;k++){if(lab)lab.textContent='LOADING '+jobs[k][0].toUpperCase();await Promise.race([jobs[k][1]().catch(()=>null),new Promise(r=>setTimeout(r,120000))]);if(bar)bar.style.width=Math.round((k+1)/jobs.length*100)+'%'}
+ }catch(e){console.error('boot warm-up',e)}res()},400);if(document.readyState==='complete')run();else addEventListener('load',run)});
+window.PT8_BOOT.then(()=>{P.bootDone=1});window.PT8_BOOT.then(()=>setTimeout(()=>{d.classList.add('on');slide()},400));
 let done=false;
 function go(e){if(done)return;done=true;if(e){try{e.preventDefault();e.stopImmediatePropagation()}catch(x){}}
  try{P.audioReady&&P.audioReady();P.sfx&&P.sfx('select')}catch(x){}
- d.classList.add('out');document.body.classList.remove('ptTitle');setTimeout(()=>d.remove(),1100);for(const ev of EV)removeEventListener(ev,go,true);clearInterval(gp)}
+ clearTimeout(slT);d.classList.add('out');document.body.classList.remove('ptTitle');setTimeout(()=>d.remove(),1100);for(const ev of EV)removeEventListener(ev,go,true);clearInterval(gp)}
 const EV=['keydown','pointerdown','mousedown','touchstart','click'];for(const ev of EV)addEventListener(ev,go,true);
 /* game pads count as buttons too */
 const gp=setInterval(()=>{try{for(const g of(navigator.getGamepads?navigator.getGamepads():[]))if(g&&g.buttons.some(b=>b.pressed))go()}catch(x){}},150);

@@ -154,7 +154,9 @@ const pkLoad=document.createElement('div');pkLoad.id='pkLoad';pkLoad.innerHTML='
 const pkRender=i=>!P.trackShot?Promise.resolve(null):Promise.race([P.trackShot(i),new Promise(r=>setTimeout(()=>r(null),120000))]).catch(()=>null);
 function openPick(back){const m=ST.mode;if(!okTrack(m,ST.track))ST.track=firstTrack(m);PK.list=D.map((d,i)=>okTrack(m,i)?i:-1).filter(i=>i>=0);
  const todo=PK.list.filter(i=>!(P.trackShotCached&&P.trackShotCached(i))&&!PK.fail[i]),done=()=>{renderPick();show('s8pick')};
- if(back||!todo.length){done();return}
+ /* everything is made behind the boot screen (title.js), so this never shows a loading screen; a shot still missing (it failed
+    at boot) is drawn as the map and swaps in when ready */
+ if(back||!todo.length||P.bootDone){done();return}
  /* black fade, render the missing aerials one at a time, then fade back in on the grid */
  const bar=pkLoad.querySelector('u'),lab=pkLoad.querySelector('small');bar.style.width='0%';lab.textContent='';pkLoad.classList.add('on');
  let k=0;const next=()=>{if(k>=todo.length){bar.style.width='100%';setTimeout(()=>{done();setTimeout(()=>pkLoad.classList.remove('on'),120)},250);return}
