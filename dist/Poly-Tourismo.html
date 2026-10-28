@@ -6178,6 +6178,20 @@ b,strong,h1,h2,h3,button,.btn,.gtab,.gti b,.hdr h2,#gtBar .gtl,.gtp,.crbox b,.qc
 #s8show:not(.gtb) .stat .bar span{width:62px}
 #s8show:not(.gtb) .stat .bar i{min-width:60px}
 #s8show:not(.gtb) .stat .bar em{width:auto;min-width:52px}
+
+/* setup screen tidy (v0.21): grouped options, equal-width buttons, one row each */
+#s8setup .suGroups{display:flex;flex-direction:column;gap:12px}
+#s8setup .sug{padding:0 0 10px;border-bottom:1px solid #ffffff12}
+#s8setup .sug:last-child{border-bottom:0;padding-bottom:0}
+#s8setup .sug h5{margin:0 0 9px;font:700 9px var(--mn);letter-spacing:.32em;color:#f1f3f5;opacity:.5;text-transform:uppercase}
+#s8setup .sug .row8{margin:0 0 6px}
+#s8setup .sug .row8 .seg,#s8setup .sug .row8 .seg.eqw{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);grid-template-columns:none;gap:3px;width:100%}
+#s8setup .sug .row8 .seg .btn{padding:6px 2px;text-align:center;justify-content:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+#s8setup .sug canvas.todMini{display:block;width:calc(100% - 98px);margin:2px 0 0 98px;height:38px;aspect-ratio:auto;object-fit:cover;image-rendering:pixelated;border:0;opacity:.85}
+#s8setup .sug .rnote{display:block;margin:2px 0 2px 98px;font-size:10px;line-height:1.4;color:var(--dim)}
+#s8setup .sug .p2kb{margin:10px 0 2px}
+#s8setup #suTod:empty{display:none}
+#s8setup .pnl:has(#suCfg){overflow-y:auto;scrollbar-width:thin}
 </style><script>
 /* ===== Poly GT v8 layer: core (economy, gears, AI, race flow, modes) ===== */
 (function v8core(){
@@ -11209,6 +11223,9 @@ window.__optAction=k=>{if(k==='@tutorial')P.startTutorial()};
 'use strict';
 const P=window.PT8;
 P.LOG=[
+ {v:'0.21',d:'Oct 28, 2026',t:'Cleaner race setup',items:[
+  'Race setup options are now in four short groups: Race, Field, Conditions and Car rules. Every row is one line with even buttons (weather no longer wraps).',
+  'Time of day sits under Conditions with a small preview, so nothing is cut off at the bottom of the panel.']},
  {v:'0.20',d:'Oct 28, 2026',t:'Arcade Quickplay',items:[
   'Quickplay modes (Quick Race, Time Attack, Elimination, Cut-Up, Versus) now drive like an arcade racer: 30% more grip, brakes twice as strong, and the steering reaches the wheel quicker.',
   'Walls no longer stop you dead: the car slides along them and is turned back down the road.',
@@ -11851,6 +11868,15 @@ function renderSetup(){const m=ST.mode;$('suTitle').innerHTML=MODE_NAME[m];
  $('suCfg').innerHTML=cfg;
  const td=effTod();$('suTod').innerHTML=`<div class="tod"><h4 style="margin:0 0 7px;font:700 10px var(--mn);letter-spacing:.3em;color:var(--dim)">TIME OF DAY</h4><canvas id="todPrev" width="168" height="70"></canvas><span class="seg" id="cTod">${seg(P.TOD_ORDER.map(k=>[k,P.TOD[k].n]),td)}</span></div>`;
  drawTod($('todPrev'),ST.track,td);
+ /* setup options in four short groups (Race, Field, Conditions, Car rules) with equal-width buttons, time of day folded into Conditions */
+ {const cf=$('suCfg'),G=[['Race',['cFmt','cLaps','cRL','cIv','cRev','cStart','cTr','cTime']],['Field',['cPl','cCpu','cDif','cCc','cCpuCar']],['Conditions',['cWx']],['Car rules',['cGb','cDmg']]];
+  const note=cf.querySelector('.rnote'),kb=cf.querySelector('.p2kb'),out=document.createElement('div');out.className='suGroups';
+  for(const[n,ids]of G){const sec=document.createElement('section');sec.className='sug';sec.innerHTML='<h5>'+n+'</h5>';
+   for(const id of ids){const e=cf.querySelector('#'+id);if(e&&e.closest('.row8'))sec.appendChild(e.closest('.row8'))}
+   if(n==='Field'){if(note)sec.appendChild(note);if(kb)sec.appendChild(kb)}
+   if(n==='Conditions'){const tod=$('suTod'),cs=tod.querySelector('#cTod'),cv=tod.querySelector('#todPrev');if(cs){const r=document.createElement('div');r.className='row8';r.innerHTML='<b>Time</b>';r.appendChild(cs);sec.appendChild(r)}if(cv){cv.classList.add('todMini');sec.appendChild(cv)}tod.innerHTML=''}
+   if(sec.children.length>1)out.appendChild(sec)}
+  cf.innerHTML='';cf.appendChild(out)}
  const bind=(id,k,num)=>{const e=$(id);if(e)$$('button',e).forEach(b=>b.onclick=()=>{ST[k]=num?+b.dataset.v:b.dataset.v;if(k==='players'&&(ST.mode==='mp'||ST.mode==='elim'||ST.mode==='track')&&ST.players+(ST.cpus||0)>8)ST.cpus=8-ST.players;renderSetup()})};
  $$('.p2kb .kbo',root).forEach(b=>b.onclick=()=>{P.setP2Keys(b.dataset.k);P.sfx('select');renderSetup()});bind('cLaps','laps',1);bind('cRL','rlaps',1);bind('cIv','iv',1);bind('cWx','wx',0);bind('cEnd','endurS',0);{const e=$('cRev');if(e)$$('button',e).forEach(b=>b.onclick=()=>{ST.rev=b.dataset.v==='1';renderSetup()})}bind('cPl','players',1);bind('cCpu','cpus',1);bind('cDif','diff',1);bind('cCc','cc',0);bind('cTime','time',1);bind('cFmt','trkType',0);bind('cStart','start',0);bind('cCpuCar','cpuCar',0);bind('cTr','traffic',0);bind('cTod','todUser',0);{const e=$('cGb');if(e)$$('button',e).forEach(b=>b.onclick=()=>{for(let p=0;p<4;p++)P.setTX(p,b.dataset.v==='1');P.sfx('select');renderSetup()})}{const e=$('cDmg');if(e)$$('button',e).forEach(b=>b.onclick=()=>{(ST.dmgBy=ST.dmgBy||{})[m]=b.dataset.v;P.sfx('select');renderSetup()})}
  const np=m==='ta'?1:ST.players;let dv='<h4 style="margin:6px 0 8px;font:700 10px var(--mn);letter-spacing:.3em;color:var(--dim)">VEHICLES</h4>';

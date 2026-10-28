@@ -1072,3 +1072,17 @@ b,strong,h1,h2,h3,button,.btn,.gtab,.gti b,.hdr h2,#gtBar .gtl,.gtp,.crbox b,.qc
 #s8show:not(.gtb) .stat .bar span{width:62px}
 #s8show:not(.gtb) .stat .bar i{min-width:60px}
 #s8show:not(.gtb) .stat .bar em{width:auto;min-width:52px}
+
+/* setup screen tidy (v0.21): grouped options, equal-width buttons, one row each */
+#s8setup .suGroups{display:flex;flex-direction:column;gap:12px}
+#s8setup .sug{padding:0 0 10px;border-bottom:1px solid #ffffff12}
+#s8setup .sug:last-child{border-bottom:0;padding-bottom:0}
+#s8setup .sug h5{margin:0 0 9px;font:700 9px var(--mn);letter-spacing:.32em;color:#f1f3f5;opacity:.5;text-transform:uppercase}
+#s8setup .sug .row8{margin:0 0 6px}
+#s8setup .sug .row8 .seg,#s8setup .sug .row8 .seg.eqw{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);grid-template-columns:none;gap:3px;width:100%}
+#s8setup .sug .row8 .seg .btn{padding:6px 2px;text-align:center;justify-content:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+#s8setup .sug canvas.todMini{display:block;width:calc(100% - 98px);margin:2px 0 0 98px;height:38px;aspect-ratio:auto;object-fit:cover;image-rendering:pixelated;border:0;opacity:.85}
+#s8setup .sug .rnote{display:block;margin:2px 0 2px 98px;font-size:10px;line-height:1.4;color:var(--dim)}
+#s8setup .sug .p2kb{margin:10px 0 2px}
+#s8setup #suTod:empty{display:none}
+#s8setup .pnl:has(#suCfg){overflow-y:auto;scrollbar-width:thin}

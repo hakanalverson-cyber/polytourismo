@@ -3,6 +3,9 @@
 'use strict';
 const P=window.PT8;
 P.LOG=[
+ {v:'0.21',d:'Oct 28, 2026',t:'Cleaner race setup',items:[
+  'Race setup options are now in four short groups: Race, Field, Conditions and Car rules. Every row is one line with even buttons (weather no longer wraps).',
+  'Time of day sits under Conditions with a small preview, so nothing is cut off at the bottom of the panel.']},
  {v:'0.20',d:'Oct 28, 2026',t:'Arcade Quickplay',items:[
   'Quickplay modes (Quick Race, Time Attack, Elimination, Cut-Up, Versus) now drive like an arcade racer: 30% more grip, brakes twice as strong, and the steering reaches the wheel quicker.',
   'Walls no longer stop you dead: the car slides along them and is turned back down the road.',

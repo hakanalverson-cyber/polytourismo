@@ -317,6 +317,15 @@ function renderSetup(){const m=ST.mode;$('suTitle').innerHTML=MODE_NAME[m];
  $('suCfg').innerHTML=cfg;
  const td=effTod();$('suTod').innerHTML=`<div class="tod"><h4 style="margin:0 0 7px;font:700 10px var(--mn);letter-spacing:.3em;color:var(--dim)">TIME OF DAY</h4><canvas id="todPrev" width="168" height="70"></canvas><span class="seg" id="cTod">${seg(P.TOD_ORDER.map(k=>[k,P.TOD[k].n]),td)}</span></div>`;
  drawTod($('todPrev'),ST.track,td);
+ /* setup options in four short groups (Race, Field, Conditions, Car rules) with equal-width buttons, time of day folded into Conditions */
+ {const cf=$('suCfg'),G=[['Race',['cFmt','cLaps','cRL','cIv','cRev','cStart','cTr','cTime']],['Field',['cPl','cCpu','cDif','cCc','cCpuCar']],['Conditions',['cWx']],['Car rules',['cGb','cDmg']]];
+  const note=cf.querySelector('.rnote'),kb=cf.querySelector('.p2kb'),out=document.createElement('div');out.className='suGroups';
+  for(const[n,ids]of G){const sec=document.createElement('section');sec.className='sug';sec.innerHTML='<h5>'+n+'</h5>';
+   for(const id of ids){const e=cf.querySelector('#'+id);if(e&&e.closest('.row8'))sec.appendChild(e.closest('.row8'))}
+   if(n==='Field'){if(note)sec.appendChild(note);if(kb)sec.appendChild(kb)}
+   if(n==='Conditions'){const tod=$('suTod'),cs=tod.querySelector('#cTod'),cv=tod.querySelector('#todPrev');if(cs){const r=document.createElement('div');r.className='row8';r.innerHTML='<b>Time</b>';r.appendChild(cs);sec.appendChild(r)}if(cv){cv.classList.add('todMini');sec.appendChild(cv)}tod.innerHTML=''}
+   if(sec.children.length>1)out.appendChild(sec)}
+  cf.innerHTML='';cf.appendChild(out)}
  const bind=(id,k,num)=>{const e=$(id);if(e)$$('button',e).forEach(b=>b.onclick=()=>{ST[k]=num?+b.dataset.v:b.dataset.v;if(k==='players'&&(ST.mode==='mp'||ST.mode==='elim'||ST.mode==='track')&&ST.players+(ST.cpus||0)>8)ST.cpus=8-ST.players;renderSetup()})};
  $$('.p2kb .kbo',root).forEach(b=>b.onclick=()=>{P.setP2Keys(b.dataset.k);P.sfx('select');renderSetup()});bind('cLaps','laps',1);bind('cRL','rlaps',1);bind('cIv','iv',1);bind('cWx','wx',0);bind('cEnd','endurS',0);{const e=$('cRev');if(e)$$('button',e).forEach(b=>b.onclick=()=>{ST.rev=b.dataset.v==='1';renderSetup()})}bind('cPl','players',1);bind('cCpu','cpus',1);bind('cDif','diff',1);bind('cCc','cc',0);bind('cTime','time',1);bind('cFmt','trkType',0);bind('cStart','start',0);bind('cCpuCar','cpuCar',0);bind('cTr','traffic',0);bind('cTod','todUser',0);{const e=$('cGb');if(e)$$('button',e).forEach(b=>b.onclick=()=>{for(let p=0;p<4;p++)P.setTX(p,b.dataset.v==='1');P.sfx('select');renderSetup()})}{const e=$('cDmg');if(e)$$('button',e).forEach(b=>b.onclick=()=>{(ST.dmgBy=ST.dmgBy||{})[m]=b.dataset.v;P.sfx('select');renderSetup()})}
  const np=m==='ta'?1:ST.players;let dv='<h4 style="margin:6px 0 8px;font:700 10px var(--mn);letter-spacing:.3em;color:var(--dim)">VEHICLES</h4>';
