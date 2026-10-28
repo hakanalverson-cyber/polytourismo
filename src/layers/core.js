@@ -340,7 +340,7 @@ PT8.TAPS=taps;
 PT8.SHIFTK=[{dn:'KeyQ',up:'KeyE',n:['Q','E']},{dn:'PageUp',up:'PageDown',n:['PAGE UP','PAGE DOWN']},{dn:'KeyU',up:'KeyO',n:['U','O']},{dn:'KeyR',up:'KeyY',n:['R','Y']}];
 PT8.SHIFTK.forEach(k=>{GAME_KEYS.add(k.dn);GAME_KEYS.add(k.up)});
 /* no handbrake: the key does nothing for any driver (Hakan, v0.12) */
-PT8.noHb=()=>!(PT8.arcade&&PT8.arcade());/* the handbrake key only works in the Quickplay (arcade) modes, where it starts a drift */
+PT8.noHb=()=>true;/* (arcade drifts start by turning hard, src/layers/arcade.js, never from a key) */
 /* player 2 can use the arrow keys or the numpad (8 4 5 6, 7 / 9 shift) */
 {const AR={u:'ArrowUp',d:'ArrowDown',l:'ArrowLeft',r:'ArrowRight',h:'ShiftRight'},NP={u:'Numpad8',d:'Numpad5',l:'Numpad4',r:'Numpad6',h:'Numpad0'};
  PT8.p2Keys=(window.PTO&&PTO.p2numpad)?'numpad':'arrows';

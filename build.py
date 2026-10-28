@@ -33,8 +33,7 @@ src=rep(src,"['steering','STEERING',.65,1.35,.05],","['steering','STEERING',.5,1
 # Track Mode steering sensitivity
 # (the .55 is now built into Track Mode instead, see PT8.tmSteer: a slider moved to .55 by the short-lived default goes back to 1.0 once)
 src=rep(src,"Object.assign(o,JSON.parse(localStorage.getItem('pt7-options')||'{}'));","Object.assign(o,JSON.parse(localStorage.getItem('pt7-options')||'{}'));if(o.steerV2===1){if(o.steering===.55)o.steering=1;o.steerV2=2}")
-# arcade handling (src/layers/arcade.js): the handbrake key drifts again in the Quickplay modes, quicker steering ramp, softer walls
-src=rep(src,"return{th,br,st,hb:0}}","return{th,br,st,hb:(window.PT8&&PT8.arcade&&PT8.arcade())?hb:0}}")
+# arcade handling (src/layers/arcade.js): quicker steering ramp, softer walls
 src=rep(src,"c.vx-=1.3*vn*nx;c.vz-=1.3*vn*nz;if(vn>4){fx(c.x+nx,","{const wk_=window.PT8&&PT8.arcWall?PT8.arcWall(c,T.psi[sc.i],dt):1.3;c.vx-=wk_*vn*nx;c.vz-=wk_*vn*nz}if(vn>4){fx(c.x+nx,")
 src=rep(src,"clamp(c.in.st*o.steering,-1.35,1.35)","clamp(c.in.st*o.steering*(window.PT8&&PT8.tmSteer?PT8.tmSteer(c):1),-1.6,1.6)")
 src=rep(src,"PT8.tmSteer(c):1),-1.6,1.6)-c.st)*(1-Math.exp(-dt*7));","PT8.tmSteer(c):1),-1.6,1.6)-c.st)*(1-Math.exp(-dt*(window.PT8&&PT8.arcSnap?PT8.arcSnap(c):7)));")
