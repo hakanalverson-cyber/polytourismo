@@ -11750,8 +11750,9 @@ function pickMode(m){if(m==='quick'){P.sfx&&P.sfx('select');show('s8quick');setQ
    for the options. The shots (P.trackShot, cartoon.js) are made once per session behind a black loading fade */
 const PK={list:[],cols:4,fail:{}};
 const pkLoad=document.createElement('div');pkLoad.id='pkLoad';pkLoad.innerHTML='<div><b>LOADING TRACKS</b><i><u></u></i><small></small></div>';document.body.appendChild(pkLoad);
-/* a render that takes too long falls back to the map drawing */
-const pkRender=i=>!P.trackShot?Promise.resolve(null):Promise.race([P.trackShot(i),new Promise(r=>setTimeout(()=>r(null),25000))]).catch(()=>null);
+/* the loading screen waits for every shot (a slow model just keeps the bar there longer); only a shot that fails (or hangs for two
+   minutes) falls back to the map drawing */
+const pkRender=i=>!P.trackShot?Promise.resolve(null):Promise.race([P.trackShot(i),new Promise(r=>setTimeout(()=>r(null),120000))]).catch(()=>null);
 function openPick(back){const m=ST.mode;if(!okTrack(m,ST.track))ST.track=firstTrack(m);PK.list=D.map((d,i)=>okTrack(m,i)?i:-1).filter(i=>i>=0);
  const todo=PK.list.filter(i=>!(P.trackShotCached&&P.trackShotCached(i))&&!PK.fail[i]),done=()=>{renderPick();show('s8pick')};
  if(back||!todo.length){done();return}
