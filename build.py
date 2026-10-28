@@ -33,7 +33,11 @@ src=rep(src,"['steering','STEERING',.65,1.35,.05],","['steering','STEERING',.5,1
 # Track Mode steering sensitivity
 # (the .55 is now built into Track Mode instead, see PT8.tmSteer: a slider moved to .55 by the short-lived default goes back to 1.0 once)
 src=rep(src,"Object.assign(o,JSON.parse(localStorage.getItem('pt7-options')||'{}'));","Object.assign(o,JSON.parse(localStorage.getItem('pt7-options')||'{}'));if(o.steerV2===1){if(o.steering===.55)o.steering=1;o.steerV2=2}")
+# arcade handling (src/layers/arcade.js): the handbrake key drifts again in the Quickplay modes, quicker steering ramp, softer walls
+src=rep(src,"return{th,br,st,hb:0}}","return{th,br,st,hb:(window.PT8&&PT8.arcade&&PT8.arcade())?hb:0}}")
+src=rep(src,"c.vx-=1.3*vn*nx;c.vz-=1.3*vn*nz;if(vn>4){fx(c.x+nx,","{const wk_=window.PT8&&PT8.arcWall?PT8.arcWall(c,T.psi[sc.i],dt):1.3;c.vx-=wk_*vn*nx;c.vz-=wk_*vn*nz}if(vn>4){fx(c.x+nx,")
 src=rep(src,"clamp(c.in.st*o.steering,-1.35,1.35)","clamp(c.in.st*o.steering*(window.PT8&&PT8.tmSteer?PT8.tmSteer(c):1),-1.6,1.6)")
+src=rep(src,"PT8.tmSteer(c):1),-1.6,1.6)-c.st)*(1-Math.exp(-dt*7));","PT8.tmSteer(c):1),-1.6,1.6)-c.st)*(1-Math.exp(-dt*(window.PT8&&PT8.arcSnap?PT8.arcSnap(c):7)));")
 src=rep(src,"*(1-Math.exp(-dt*(want?4:2.6)))","*(1-Math.exp(-dt*(want?(c.tnR||4):(c.tnR?c.tnR*.85:2.6))))")
 src=rep(src,"vi=c.vy-c.wpt*WL[i][1]+c.wrl*WL[i][0]","vi=c.vy-(c._gv||0)-c.wpt*WL[i][1]+c.wrl*WL[i][0]")
 src=rep(src,"x.fillStyle='#e8e8e8';x.fillRect(w/2-1,0,2,h/2)}","if(!(d.ra||d.imola)){x.fillStyle='#e8e8e8';x.fillRect(w/2-1,0,2,h/2)}else{/* real circuits: worn tarmac like the Nordschleife */const q=rngf(5);for(let i=0;i<120;i++){x.fillStyle=q()<.5?'rgba(0,0,0,.05)':'rgba(255,255,255,.035)';x.fillRect(q()*w|0,q()*h|0,1,1)}x.fillStyle='#ffffffc0';x.fillRect(1,0,1,h);x.fillRect(w-2,0,1,h)}}")
@@ -240,7 +244,7 @@ src=rep(src,"let bi=c.idx,bd=1e9;for(let k=-6;k<=30;k++){","let bi=c.idx,bd=1e9;
 src=rep(src,"c.wrong=hd<-3&&live?c.wrong+dt:0;","c.wrong=!T.free&&hd<-3&&live?c.wrong+dt:0;")
 src=rep(src,"if(live&&(c.y<T.y[c.idx]-12||Math.abs(c.roll)>.68","if(live&&((!T.free&&c.y<T.y[c.idx]-12)||Math.abs(c.roll)>.68")
 src=rep(src," if(!live)return;\n const sf=T.surf(c.x,c.z,c.y);"," if(!live||T.free)return;\n const sf=T.surf(c.x,c.z,c.y);")
-parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','frmodels','frdress','frtown','frworld','freeroam','cars10','audio','modes','tracks','hpack','tracks2','extra','race2','elim','tod','bridge','props','bld','stages','trees_q','propkit','scenery','ra_data','tracks3','imola_data','tracks4','ring_data','ring_forest','tracks5','tracks6','cartoon','logos','weather','ambience','menuaudio','tutorial','updatelog','hud2','shade','ui','cinema','rally','trackmode','realspeed','barn','animals','franimals','frlife','clean','solid','damage','grip','airline','ride','snap','perf','econ','frhud','title','brandbg','uifx','fade','drivelab']  if os.path.exists(f'{SRC}/layers/{n}.js')]
+parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','frmodels','frdress','frtown','frworld','freeroam','cars10','audio','modes','tracks','hpack','tracks2','extra','race2','elim','tod','bridge','props','bld','stages','trees_q','propkit','scenery','ra_data','tracks3','imola_data','tracks4','ring_data','ring_forest','tracks5','tracks6','cartoon','logos','weather','ambience','menuaudio','tutorial','updatelog','hud2','shade','ui','cinema','rally','trackmode','realspeed','barn','animals','franimals','frlife','clean','solid','damage','grip','airline','ride','snap','perf','econ','frhud','title','brandbg','uifx','fade','arcade','drivelab']  if os.path.exists(f'{SRC}/layers/{n}.js')]
 # track files (bought cartoon models of Imola / Road Atlanta, made by tools/cartoon_track, kept out of the public repo in project files).
 # PACKS=1 builds them in (Artifact, full build); otherwise players load them with "+ Add track file" so the lite file stays small.
 # DRIVE=1: the Drive Lab test build (src/layers/drivelab.js): lite assets plus only the packs named in DRIVE_TRACKS (default the Nurburgring)

@@ -110,7 +110,7 @@ const KM=[{u:'KeyW',d:'KeyS',l:'KeyA',r:'KeyD',h:'Space'},{u:'ArrowUp',d:'ArrowD
 const down=new Set(),GAME_KEYS=new Set(KM.flatMap(k=>Object.values(k)));
 function readIn(p){const k=KM[p];let th=down.has(k.u)?1:0,br=down.has(k.d)?1:0,st=(down.has(k.l)?1:0)-(down.has(k.r)?1:0),hb=(!(window.PT8&&PT8.noHb&&PT8.noHb())&&down.has(k.h))?1:0;
 try{const g=(navigator.getGamepads?navigator.getGamepads():[])[p];if(g){const ax=g.axes[0]||0;if(Math.abs(ax)>.12)st=-ax;th=Math.max(th,g.buttons[7]?g.buttons[7].value:0,g.buttons[0]&&g.buttons[0].pressed?1:0);br=Math.max(br,g.buttons[6]?g.buttons[6].value:0,g.buttons[1]&&g.buttons[1].pressed?1:0);if(g.buttons[2]&&g.buttons[2].pressed&&!(window.PT8&&PT8.noHb&&PT8.noHb()))hb=1}}catch(e){}
-return{th,br,st,hb:0}}
+return{th,br,st,hb:(window.PT8&&PT8.arcade&&PT8.arcade())?hb:0}}
 addEventListener('keydown',e=>{if(e.code=='Escape'){e.preventDefault();esc();return}if(scr=='game'&&GAME_KEYS.has(e.code))e.preventDefault();down.add(e.code)});
 addEventListener('keyup',e=>down.delete(e.code));addEventListener('blur',()=>{down.clear();if(scr=='game')esc()});
 /* ---------------- audio / fx ---------------- */
@@ -321,7 +321,7 @@ c.vx=fx_*vf+rx*vr;c.vz=fz_*vf+rz*vr;c.vy+=(sumF-G0)*dt;c.wpt+=tP/IP*dt;c.wrl+=tR
 c.pitch=clamp(c.pitch+c.wpt*dt,-.7,.7);c.roll=clamp(c.roll+c.wrl*dt,-.7,.7);
 if(RACE.state!='race'||c.fin){c.vx*=.9;c.vz*=.9;if(RACE.state!='race'){c.vx=c.vz=0}}
 c.x+=c.vx*dt;c.y+=c.vy*dt;c.z+=c.vz*dt;if(c.y<sc.h+.3){c.y=sc.h+.3;if(c.vy<0)c.vy=0}
-if(sc.road&&T.wall[sc.i]&&Math.abs(sc.lat)>(T.hw[sc.i]+.3-(1.0*Math.abs(Math.cos(wr(c.yaw-T.psi[sc.i])))+2.0*Math.abs(Math.sin(wr(c.yaw-T.psi[sc.i])))*.62))){const sg=Math.sign(sc.lat),nx=Math.cos(T.psi[sc.i])*sg,nz=-Math.sin(T.psi[sc.i])*sg,ov=Math.abs(sc.lat)-((T.hw[sc.i]+.3-(1.0*Math.abs(Math.cos(wr(c.yaw-T.psi[sc.i])))+2.0*Math.abs(Math.sin(wr(c.yaw-T.psi[sc.i])))*.62)));c.x-=nx*ov;c.z-=nz*ov;const vn=c.vx*nx+c.vz*nz;if(vn>0){c.vx-=1.3*vn*nx;c.vz-=1.3*vn*nz;if(vn>4){fx(c.x+nx,c.y,c.z+nz,0xffe080,6,5,.3,.15,8);c.hl=1;c.shk=Math.min(1,vn/20);noise(.15,.25,900)}}}
+if(sc.road&&T.wall[sc.i]&&Math.abs(sc.lat)>(T.hw[sc.i]+.3-(1.0*Math.abs(Math.cos(wr(c.yaw-T.psi[sc.i])))+2.0*Math.abs(Math.sin(wr(c.yaw-T.psi[sc.i])))*.62))){const sg=Math.sign(sc.lat),nx=Math.cos(T.psi[sc.i])*sg,nz=-Math.sin(T.psi[sc.i])*sg,ov=Math.abs(sc.lat)-((T.hw[sc.i]+.3-(1.0*Math.abs(Math.cos(wr(c.yaw-T.psi[sc.i])))+2.0*Math.abs(Math.sin(wr(c.yaw-T.psi[sc.i])))*.62)));c.x-=nx*ov;c.z-=nz*ov;const vn=c.vx*nx+c.vz*nz;if(vn>0){{const wk_=window.PT8&&PT8.arcWall?PT8.arcWall(c,T.psi[sc.i],dt):1.3;c.vx-=wk_*vn*nx;c.vz-=wk_*vn*nz}if(vn>4){fx(c.x+nx,c.y,c.z+nz,0xffe080,6,5,.3,.15,8);c.hl=1;c.shk=Math.min(1,vn/20);noise(.15,.25,900)}}}
 const spd=Math.hypot(c.vx,c.vz);c.sp=spd;
 if(hb&&spd>14&&Math.abs(vr)>2.2&&nG>=2)c.dts+=dt;else if(!hb){if(c.dts>.7){c.boost=Math.min(1.8,.5+c.dts*.6);beep(500,.25,'sawtooth',.6)}c.dts=0}
 if(c.boost>0)c.boost-=dt;
@@ -585,7 +585,7 @@ const slip=spd0>3?wr(Math.atan2(c.vx,c.vz)-c.yaw):0;
 
 code=code.replace(
   'c.st+=(c.in.st-c.st)*Math.min(1,dt*(Math.abs(c.in.st)<.01?14:8));',
-  'c.st+=(clamp(c.in.st*o.steering*(window.PT8&&PT8.tmSteer?PT8.tmSteer(c):1),-1.6,1.6)-c.st)*(1-Math.exp(-dt*7));'
+  'c.st+=(clamp(c.in.st*o.steering*(window.PT8&&PT8.tmSteer?PT8.tmSteer(c):1),-1.6,1.6)-c.st)*(1-Math.exp(-dt*(window.PT8&&PT8.arcSnap?PT8.arcSnap(c):7)));'
 ).replace(
   '(hb?.2:1)','lerp(1,.24,mix)'
 ).replace(
@@ -6349,10 +6349,11 @@ stepCar=(c,dt)=>{const Rc=RACE,T=Rc.T,st=c.cs||(c.cs=BYID.merc);
  MATS.road.grip=gv?lerpf(.5,.95,off):lerpf(1.04,.96,off);MATS.road.top=gv?lerpf(.78,1,off):1;MATS.road.acc=gv?lerpf(.6,.97,off):1;
  const om=lerpf(.82,1.12,off);for(const k of LOOSE){const b=BASE[k];MATS[k].grip=b.grip*om;MATS[k].top=Math.min(1,b.top*om);MATS[k].acc=Math.min(1,b.acc*om)}
  const keep=c.cool&&c.fin;if(keep)c.fin=0;
- c.boost=0;c.dts=0;
+ /* no turbo in this game, except the drift turbo of the Quickplay (arcade) modes */
+ const arc=c.human&&!c.forceAI&&PT8.arcade&&PT8.arcade();if(!arc){c.boost=0;c.dts=0}
  innerStepCar(c,dt);
  if(keep)c.fin=1;
- c.boost=0;c.dts=0;
+ if(!arc){c.boost=0;c.dts=0}
  /* engine braking when above the gear ceiling */
  if((c.gear|0)<GT(st).length-1&&c.exp<=0){const mt=c.mt||MATS.road,lt=topSpeed(st,c.gear|0)*mt.top,ex=c.sp-lt;if(ex>.6){let n=0;for(const w of c.m.wheels)if(w.g)n++;if(n>=2){const f=Math.min(.5,.5*dt*ex/Math.max(c.sp,1));c.vx*=1-f;c.vz*=1-f}}}
 };
@@ -6520,7 +6521,7 @@ PT8.TAPS=taps;
 PT8.SHIFTK=[{dn:'KeyQ',up:'KeyE',n:['Q','E']},{dn:'PageUp',up:'PageDown',n:['PAGE UP','PAGE DOWN']},{dn:'KeyU',up:'KeyO',n:['U','O']},{dn:'KeyR',up:'KeyY',n:['R','Y']}];
 PT8.SHIFTK.forEach(k=>{GAME_KEYS.add(k.dn);GAME_KEYS.add(k.up)});
 /* no handbrake: the key does nothing for any driver (Hakan, v0.12) */
-PT8.noHb=()=>true;
+PT8.noHb=()=>!(PT8.arcade&&PT8.arcade());/* the handbrake key only works in the Quickplay (arcade) modes, where it starts a drift */
 /* player 2 can use the arrow keys or the numpad (8 4 5 6, 7 / 9 shift) */
 {const AR={u:'ArrowUp',d:'ArrowDown',l:'ArrowLeft',r:'ArrowRight',h:'ShiftRight'},NP={u:'Numpad8',d:'Numpad5',l:'Numpad4',r:'Numpad6',h:'Numpad0'};
  PT8.p2Keys=(window.PTO&&PTO.p2numpad)?'numpad':'arrows';
@@ -11209,6 +11210,11 @@ window.__optAction=k=>{if(k==='@tutorial')P.startTutorial()};
 'use strict';
 const P=window.PT8;
 P.LOG=[
+ {v:'0.20',d:'Oct 28, 2026',t:'Arcade Quickplay',items:[
+  'Quickplay modes (Quick Race, Time Attack, Elimination, Cut-Up, Versus) now drive like an arcade racer: 30% more grip, brakes twice as strong, and the steering reaches the wheel quicker.',
+  'Drift for turbo: hold Space (P2 Right Shift) while turning to drift. The meter at the bottom fills as you slide and the turbo fires when the drift ends.',
+  'Walls no longer stop you dead: the car slides along them and is turned back down the road.',
+  'Rally and Track Mode handling are unchanged.']},
  {v:'0.19',d:'Oct 28, 2026',t:'Track Mode handling',items:[
   'Track Mode only: the steering no longer gets quicker as you speed up (60-120 mph turns at an even rate), first and second gear steer a little sharper, and third gear (80-110 mph) is unchanged.',
   'Track Mode only: grass and run-off beside the road only cost speed; the steering and grip stay as on the road. Sand traps still bite.',
@@ -13791,7 +13797,7 @@ function kerb(Rc,dt){const T=Rc.T;if(!T||Rc.state!=='race'||!T.wall)return;const
   const i=best.i,lim=T.hw[i]-.9;
   if(T.wall[i]&&Math.abs(best.lat)>lim&&c._wl!=null&&Math.abs(c._wl)<=lim+.3&&c.y-T.y[i]<3){
    const sg=Math.sign(best.lat),nx=Math.cos(best.ps)*sg,nz=-Math.sin(best.ps)*sg,ov=Math.abs(best.lat)-lim;c.x-=nx*ov;c.z-=nz*ov;
-   const vn=c.vx*nx+c.vz*nz;if(vn>0){c.vx-=1.3*vn*nx;c.vz-=1.3*vn*nz;if(vn>4){c.hl=1;c.shk=Math.min(1,vn/20)}}
+   const vn=c.vx*nx+c.vz*nz;if(vn>0){{const wk_=P.arcWall?P.arcWall(c,null,dt):1.3;c.vx-=wk_*vn*nx;c.vz-=wk_*vn*nz}if(vn>4){c.hl=1;c.shk=Math.min(1,vn/20)}}
    c._wl=sg*lim;slide(c,nx,nz,dt)}else{c._wl=best.lat;if(T.wall[i]&&Math.abs(best.lat)>lim-.35){const sg=Math.sign(best.lat);slide(c,Math.cos(best.ps)*sg,-Math.sin(best.ps)*sg,dt)}}}}
 const st0=step;step=function(dt){st0.apply(this,arguments);try{if(RACE){if(!P.noKerb)kerb(RACE,dt);if(!P.noBS)bStep(RACE,dt)}}catch(e){if(!P._sErr){P._sErr=1;console.warn('solid',e)}}};
 })();
@@ -14292,6 +14298,39 @@ const s0=show;let busy=false,pend=null;
 show=n=>{if(busy){pend=n;return}if(typeof scr==='undefined'||scr!=='s8show'||n==='s8show'||!(P.SR&&P.SR.kind==='brand'))return s0(n);
  busy=true;el.style.transition='opacity .4s ease';el.style.pointerEvents='auto';el.style.opacity='1';
  setTimeout(()=>{try{s0(n);if(pend!=null&&pend!==n)s0(pend)}finally{busy=false;pend=null;el.style.transition='opacity .6s ease';el.style.opacity='0';el.style.pointerEvents='none'}},420)};
+})();
+
+/* ===== Poly GT layer: arcade handling (Quickplay modes only: Quick Race, Time Attack, Elimination, Cut-Up, Versus) =====
+   Rally and Track Mode keep their own handling. For the player in these modes:
+   - grippier (sideways slip dies out 1.3x faster) and brakes twice as strong
+   - the steering reaches the wheel quicker (patched in build.py through PT8.arcSnap)
+   - the handbrake key (Space for P1, Right Shift for P2, U for P3) drifts again; a drift charges the turbo, which fires when it ends
+   - walls take only the speed going into them and turn the car back along the road (patched in build.py through PT8.arcWall) */
+(function ptArcade(){
+'use strict';
+const P=window.PT8;
+const AM={mp:1,ta:1,elim:1,cutup:1};
+P.arcade=()=>{const R=typeof RACE!=='undefined'?RACE:null,f=R&&R.cfg;return !!(f&&AM[f.mode]&&!f.trackRace&&!f.circuit&&!f.rally&&!f.free)};
+const hu=c=>c&&c.human&&!c.forceAI;
+{const m0=P.mul;P.mul=c=>{const m=m0?m0(c):{acc:1,top:1,grip:1,brk:1};if(hu(c)&&P.arcade()){m.grip*=1.3;m.brk*=2}return m}}
+/* steering ramp rate: 7 per second in the base game, 12 here */
+P.arcSnap=c=>hu(c)&&P.arcade()?12:7;
+/* wall contact: the base pushes back 1.3x the speed into the wall (a bounce off it); here 1.05x, and the nose is eased toward the
+   road direction so the car slides along the wall and carries on */
+P.arcWall=(c,psi,dt)=>{if(!(hu(c)&&P.arcade()))return 1.3;if(psi!=null){const f=Math.cos(c.yaw-psi)>=0?psi:psi+Math.PI;let d=f-c.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));c.yaw+=d*Math.min(1,(dt||.016)*10);c.yr*=.5}return 1.05};
+/* turbo meter (player 1): fills while you drift, drains while the turbo fires. Hidden outside the arcade modes */
+const css=document.createElement('style');css.textContent=`#arcTurbo{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);width:220px;z-index:40;pointer-events:none;display:none;
+ font:800 11px/1 Arial,sans-serif;letter-spacing:.18em;color:#fff;text-align:center;text-shadow:0 1px 2px #000a}
+#arcTurbo i{display:block;height:6px;margin-top:5px;background:#ffffff33;border-radius:3px;overflow:hidden}
+#arcTurbo b{display:block;height:100%;width:0;background:#fff;border-radius:3px}
+#arcTurbo.on b{background:#ffb02e}`;document.head.appendChild(css);
+const el=document.createElement('div');el.id='arcTurbo';el.innerHTML='<span>TURBO</span><i><b></b></i>';document.body.appendChild(el);
+const lb=el.querySelector('span'),bar=el.querySelector('b');
+(function tick(){requestAnimationFrame(tick);let show=false;try{const R=typeof RACE!=='undefined'?RACE:null,c=R&&R.cars&&R.cars[0];
+ if(c&&c.human&&P.arcade()&&R.state!=='done'&&typeof scr!=='undefined'&&scr==='game'){show=true;const on=c.boost>0;
+  el.classList.toggle('on',on);lb.textContent=on?'TURBO':c.ptDrift?'DRIFT / CHARGING':'HOLD SPACE TO DRIFT';
+  bar.style.width=Math.max(0,Math.min(100,on?c.boost/1.6*100:(c.dts||0)/3*100))+'%'}}catch(e){}
+ el.style.display=show?'block':'none'})();
 })();
 
 /* ===== Poly GT layer: Drive Lab (DRIVE=1 builds only) =====

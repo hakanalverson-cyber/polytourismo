@@ -168,10 +168,11 @@ stepCar=(c,dt)=>{const Rc=RACE,T=Rc.T,st=c.cs||(c.cs=BYID.merc);
  MATS.road.grip=gv?lerpf(.5,.95,off):lerpf(1.04,.96,off);MATS.road.top=gv?lerpf(.78,1,off):1;MATS.road.acc=gv?lerpf(.6,.97,off):1;
  const om=lerpf(.82,1.12,off);for(const k of LOOSE){const b=BASE[k];MATS[k].grip=b.grip*om;MATS[k].top=Math.min(1,b.top*om);MATS[k].acc=Math.min(1,b.acc*om)}
  const keep=c.cool&&c.fin;if(keep)c.fin=0;
- c.boost=0;c.dts=0;
+ /* no turbo in this game, except the drift turbo of the Quickplay (arcade) modes */
+ const arc=c.human&&!c.forceAI&&PT8.arcade&&PT8.arcade();if(!arc){c.boost=0;c.dts=0}
  innerStepCar(c,dt);
  if(keep)c.fin=1;
- c.boost=0;c.dts=0;
+ if(!arc){c.boost=0;c.dts=0}
  /* engine braking when above the gear ceiling */
  if((c.gear|0)<GT(st).length-1&&c.exp<=0){const mt=c.mt||MATS.road,lt=topSpeed(st,c.gear|0)*mt.top,ex=c.sp-lt;if(ex>.6){let n=0;for(const w of c.m.wheels)if(w.g)n++;if(n>=2){const f=Math.min(.5,.5*dt*ex/Math.max(c.sp,1));c.vx*=1-f;c.vz*=1-f}}}
 };
@@ -339,7 +340,7 @@ PT8.TAPS=taps;
 PT8.SHIFTK=[{dn:'KeyQ',up:'KeyE',n:['Q','E']},{dn:'PageUp',up:'PageDown',n:['PAGE UP','PAGE DOWN']},{dn:'KeyU',up:'KeyO',n:['U','O']},{dn:'KeyR',up:'KeyY',n:['R','Y']}];
 PT8.SHIFTK.forEach(k=>{GAME_KEYS.add(k.dn);GAME_KEYS.add(k.up)});
 /* no handbrake: the key does nothing for any driver (Hakan, v0.12) */
-PT8.noHb=()=>true;
+PT8.noHb=()=>!(PT8.arcade&&PT8.arcade());/* the handbrake key only works in the Quickplay (arcade) modes, where it starts a drift */
 /* player 2 can use the arrow keys or the numpad (8 4 5 6, 7 / 9 shift) */
 {const AR={u:'ArrowUp',d:'ArrowDown',l:'ArrowLeft',r:'ArrowRight',h:'ShiftRight'},NP={u:'Numpad8',d:'Numpad5',l:'Numpad4',r:'Numpad6',h:'Numpad0'};
  PT8.p2Keys=(window.PTO&&PTO.p2numpad)?'numpad':'arrows';

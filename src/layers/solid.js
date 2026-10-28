@@ -70,7 +70,7 @@ function kerb(Rc,dt){const T=Rc.T;if(!T||Rc.state!=='race'||!T.wall)return;const
   const i=best.i,lim=T.hw[i]-.9;
   if(T.wall[i]&&Math.abs(best.lat)>lim&&c._wl!=null&&Math.abs(c._wl)<=lim+.3&&c.y-T.y[i]<3){
    const sg=Math.sign(best.lat),nx=Math.cos(best.ps)*sg,nz=-Math.sin(best.ps)*sg,ov=Math.abs(best.lat)-lim;c.x-=nx*ov;c.z-=nz*ov;
-   const vn=c.vx*nx+c.vz*nz;if(vn>0){c.vx-=1.3*vn*nx;c.vz-=1.3*vn*nz;if(vn>4){c.hl=1;c.shk=Math.min(1,vn/20)}}
+   const vn=c.vx*nx+c.vz*nz;if(vn>0){{const wk_=P.arcWall?P.arcWall(c,null,dt):1.3;c.vx-=wk_*vn*nx;c.vz-=wk_*vn*nz}if(vn>4){c.hl=1;c.shk=Math.min(1,vn/20)}}
    c._wl=sg*lim;slide(c,nx,nz,dt)}else{c._wl=best.lat;if(T.wall[i]&&Math.abs(best.lat)>lim-.35){const sg=Math.sign(best.lat);slide(c,Math.cos(best.ps)*sg,-Math.sin(best.ps)*sg,dt)}}}}
 const st0=step;step=function(dt){st0.apply(this,arguments);try{if(RACE){if(!P.noKerb)kerb(RACE,dt);if(!P.noBS)bStep(RACE,dt)}}catch(e){if(!P._sErr){P._sErr=1;console.warn('solid',e)}}};
 })();

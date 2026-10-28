@@ -3,6 +3,11 @@
 'use strict';
 const P=window.PT8;
 P.LOG=[
+ {v:'0.20',d:'Oct 28, 2026',t:'Arcade Quickplay',items:[
+  'Quickplay modes (Quick Race, Time Attack, Elimination, Cut-Up, Versus) now drive like an arcade racer: 30% more grip, brakes twice as strong, and the steering reaches the wheel quicker.',
+  'Drift for turbo: hold Space (P2 Right Shift) while turning to drift. The meter at the bottom fills as you slide and the turbo fires when the drift ends.',
+  'Walls no longer stop you dead: the car slides along them and is turned back down the road.',
+  'Rally and Track Mode handling are unchanged.']},
  {v:'0.19',d:'Oct 28, 2026',t:'Track Mode handling',items:[
   'Track Mode only: the steering no longer gets quicker as you speed up (60-120 mph turns at an even rate), first and second gear steer a little sharper, and third gear (80-110 mph) is unchanged.',
   'Track Mode only: grass and run-off beside the road only cost speed; the steering and grip stay as on the road. Sand traps still bite.',
