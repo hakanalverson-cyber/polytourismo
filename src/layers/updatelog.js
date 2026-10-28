@@ -5,7 +5,7 @@ const P=window.PT8;
 P.LOG=[
  {v:'0.20',d:'Oct 28, 2026',t:'Arcade Quickplay',items:[
   'Quickplay modes (Quick Race, Time Attack, Elimination, Cut-Up, Versus) now drive like an arcade racer: 30% more grip, brakes twice as strong, and the steering reaches the wheel quicker.',
-  'Drift for turbo: turn hard at speed and the car drifts by itself (no extra key, so every player can). The meter at the bottom fills as you slide and the turbo fires when the drift ends.',
+  'Drift for turbo: hold the wheel hard over at speed and the tail swings out gradually into a drift (no extra key, so every player can). The longer you drift, the bigger the tyre smoke. A very faint glow round the screen edge shows the turbo you will get when you let go: none, blue small, orange medium, purple big. The exhaust flame matches.',
   'Walls no longer stop you dead: the car slides along them and is turned back down the road.',
   'Rally and Track Mode handling are unchanged.']},
  {v:'0.19',d:'Oct 28, 2026',t:'Track Mode handling',items:[

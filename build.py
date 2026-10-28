@@ -35,6 +35,8 @@ src=rep(src,"['steering','STEERING',.65,1.35,.05],","['steering','STEERING',.5,1
 src=rep(src,"Object.assign(o,JSON.parse(localStorage.getItem('pt7-options')||'{}'));","Object.assign(o,JSON.parse(localStorage.getItem('pt7-options')||'{}'));if(o.steerV2===1){if(o.steering===.55)o.steering=1;o.steerV2=2}")
 # arcade handling (src/layers/arcade.js): quicker steering ramp, softer walls
 src=rep(src,"c.vx-=1.3*vn*nx;c.vz-=1.3*vn*nz;if(vn>4){fx(c.x+nx,","{const wk_=window.PT8&&PT8.arcWall?PT8.arcWall(c,T.psi[sc.i],dt):1.3;c.vx-=wk_*vn*nx;c.vz-=wk_*vn*nz}if(vn>4){fx(c.x+nx,")
+src=rep(src,"const rate=target>(c.ptBlend||0)?4.3:2.15;","const rate=target>(c.ptBlend||0)?(window.PT8&&PT8.arcBlendIn?PT8.arcBlendIn(c):4.3):2.15;")
+src=rep(src,"if(c.drifting&&(c.ptBlend||0)>.72&&c.sp>22","if(c.drifting&&!(c.human&&window.PT8&&PT8.arcade&&PT8.arcade())&&(c.ptBlend||0)>.72&&c.sp>22")
 src=rep(src,"clamp(c.in.st*o.steering,-1.35,1.35)","clamp(c.in.st*o.steering*(window.PT8&&PT8.tmSteer?PT8.tmSteer(c):1),-1.6,1.6)")
 src=rep(src,"PT8.tmSteer(c):1),-1.6,1.6)-c.st)*(1-Math.exp(-dt*7));","PT8.tmSteer(c):1),-1.6,1.6)-c.st)*(1-Math.exp(-dt*(window.PT8&&PT8.arcSnap?PT8.arcSnap(c):7)));")
 src=rep(src,"*(1-Math.exp(-dt*(want?4:2.6)))","*(1-Math.exp(-dt*(want?(c.tnR||4):(c.tnR?c.tnR*.85:2.6))))")
