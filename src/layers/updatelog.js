@@ -206,7 +206,7 @@ P.LOG=[
   'Smoother menus: black fades, lists pop in once, beeping ambience removed.',
   'Afterhours skyline rebuilt with the building pack.']}
 ];
-P.VERSION=(P.LOG.find(e=>e.v)||{}).v||'0.01';
+P.VERSION=(P.LOG.find(e=>e.v)||{}).v||'0.01';/* VERSION in the repo root must match the top release entry */
 const css=document.createElement('style');
 /* laid out like the other menu screens: header with the accent underline, a list on the left and the notes on the right, Back at the bottom */
 css.textContent=`@keyframes ptFadeIn{from{opacity:0}}#ptLog{position:fixed;inset:0;z-index:8000;display:none;background:radial-gradient(ellipse at 50% 40%,#0b0e12e6,#030405f8);backdrop-filter:blur(6px);color:var(--tx);font-family:var(--mn)}

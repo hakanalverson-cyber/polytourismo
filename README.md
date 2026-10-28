@@ -103,4 +103,4 @@ Brand Central and the garage filter by category: hatchback, wagon, sedan, coupe,
 
 ## Versioning
 
-The version lives in `VERSION` (currently shown in the main menu). It starts at 0.01 and every update raises it by 0.01. Deliver builds as `Poly-GT-v<version>.html`.
+The version lives in `VERSION` (shown in the main menu, on the title screen and in the update log). Hakan reset it to 0.01 on Oct 28, 2026; every major update raises it by 0.01 (bump `VERSION` and add a `{v:'0.0x',...}` entry at the top of `P.LOG` in `src/layers/updatelog.js`). Smaller fixes go into the current version's log entry. The builds before 0.01 are kept in the log as preview builds (`pre:` entries).

@@ -11475,7 +11475,7 @@ P.LOG=[
   'Smoother menus: black fades, lists pop in once, beeping ambience removed.',
   'Afterhours skyline rebuilt with the building pack.']}
 ];
-P.VERSION=(P.LOG.find(e=>e.v)||{}).v||'0.01';
+P.VERSION=(P.LOG.find(e=>e.v)||{}).v||'0.01';/* VERSION in the repo root must match the top release entry */
 const css=document.createElement('style');
 /* laid out like the other menu screens: header with the accent underline, a list on the left and the notes on the right, Back at the bottom */
 css.textContent=`@keyframes ptFadeIn{from{opacity:0}}#ptLog{position:fixed;inset:0;z-index:8000;display:none;background:radial-gradient(ellipse at 50% 40%,#0b0e12e6,#030405f8);backdrop-filter:blur(6px);color:var(--tx);font-family:var(--mn)}
@@ -11805,7 +11805,7 @@ const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="current
  const b=document.createElement('button');b.innerHTML=mi('brand','Brand Central');b.style.order=3;b.onclick=()=>openShow('brand',{player:0,cap:null,ret:'menu'});
  ma.append(g,b);bt[1].style.order=4;bt[1].innerHTML=mi('set','Settings');
  const lg=$('logo');if(lg)lg.innerHTML='POLY<br><span>GT</span><small>GRAN TURISMO STYLE RACING</small>';
- const mt=document.querySelector('.menuTop');if(mt){mt.querySelector('.brandMark').textContent='POLY GT';const sm=mt.querySelector('small');if(sm)sm.textContent='V0.04'}
+ const mt=document.querySelector('.menuTop');if(mt){mt.querySelector('.brandMark').textContent='POLY GT';const sm=mt.querySelector('small');if(sm)sm.textContent='V0.01'}
  const f=document.createElement('div');f.className='mfoot';$('menu').appendChild(f);
  P.menuStats=()=>{const sv=P.SV();f.innerHTML='<span>Cars owned <b>'+Object.keys(sv.owned||{}).filter(k=>sv.owned[k]>0).length+'</b></span><span>Career <b>'+P.RANKS[P.careerRank()].n+'</b></span><span>Races <b>'+sv.stats.races+'</b></span><span>Wins <b>'+sv.stats.wins+'</b></span>'};
  P.menuStats()
