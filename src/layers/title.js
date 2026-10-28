@@ -34,7 +34,7 @@ body.ptTitle #menu{opacity:0!important;pointer-events:none!important}
 #ptTitle .cap{position:absolute;left:3vw;bottom:11vh;font:600 10px/1.5 system-ui,sans-serif;letter-spacing:.3em;color:#fff;opacity:0;transition:opacity .6s}
 #ptTitle .cap.on{opacity:.7}#ptTitle .cap b{display:block;font-size:13px;letter-spacing:.24em;opacity:1}
 #ptTitle .tk{position:absolute;right:3vw;top:11vh;display:flex;gap:5px}
-#ptTitle .tk i{display:block;width:16px;height:2px;background:#ffffff40;transition:background .4s}#ptTitle .tk i.on{background:#fff}
+#ptTitle .tk i{display:block;width:10px;height:2px;background:#ffffff40;transition:background .4s}#ptTitle .tk i.on{background:#fff}
 #ptTitle .sl{position:absolute;left:0;right:0;top:50%;height:0;z-index:-1;pointer-events:none}
 #ptTitle .sl i{position:absolute;height:1px;width:22vw;left:-25vw;background:linear-gradient(90deg,transparent,#ffffffaa,transparent);opacity:0}
 #ptTitle.on .sl i{animation:ptStreak 3.8s cubic-bezier(.5,0,.5,1) infinite}
@@ -47,15 +47,20 @@ document.body.appendChild(d);document.body.classList.add('ptTitle');
 /* stills behind the title, Brand Central style: the action shots on the real circuits when the build has them, slowly drifting
    (Ken Burns) and crossfading, with the circuit's name in the corner */
 const CN={bat:'MOUNT PANORAMA \u00b7 BATHURST',hun:'HUNGARORING',imo:'IMOLA',lag:'LAGUNA SECA',nur:'N\u00dcRBURGRING',ra0:'ROAD ATLANTA',spa:'SPA-FRANCORCHAMPS',suz:'SUZUKA'};
-let SL=[];try{const nm=window.BBG_NAMES||[];SL=(typeof BBG_B64!=='undefined'?BBG_B64:[]).map((b,i)=>({u:'url(data:image/jpeg;base64,'+b+')',n:CN[nm[i]]||CN[(nm[i]||'').slice(0,3)]||''}));
- const named=SL.filter(x=>x.n);if(named.length>=4)SL=named;for(let i=SL.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[SL[i],SL[j]]=[SL[j],SL[i]]}SL=SL.slice(0,8)}catch(e){SL=[]}
+/* mostly the photoshoot stills (the same ones the loading screen pans over), with a few hand-picked track shots spaced between them */
+const PICK=['bat0','suz0','nur0'];
+let SL=[];try{const nm=window.BBG_NAMES||[],bb=typeof BBG_B64!=='undefined'?BBG_B64:[],U=b=>'url(data:image/jpeg;base64,'+b+')',shuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+ const ph=shuf((window.PT8_BOOTBG||[]).map(b=>({u:U(b),n:''})));let tr=PICK.map(k=>nm.indexOf(k)).filter(i=>i>=0).map(i=>({u:U(bb[i]),n:CN[nm[i].slice(0,3)]||''}));
+ if(!tr.length)tr=[3,2].filter(i=>bb[i]).map(i=>({u:U(bb[i]),n:''}));tr=shuf(tr);
+ if(window.PT8_BOOTI!=null&&ph.length>1){/* don't open on the still the loading screen was just showing */const cur=U(window.PT8_BOOTBG[window.PT8_BOOTI]),k=ph.findIndex(x=>x.u===cur);if(k===0)ph.push(ph.shift())}
+ SL=ph.slice();tr.forEach((t,k)=>SL.splice(Math.min(SL.length,3+k*4),0,t))}catch(e){SL=[]}
 const bg=d.querySelector('.bg'),cap=d.querySelector('.cap'),tk=d.querySelector('.tk');tk.innerHTML=SL.map(()=>'<i></i>').join('');
 let si=-1,slT=0;const R=()=>(Math.random()*4-2).toFixed(2)+'%';
 function slide(){if(!SL.length||done)return;si=(si+1)%SL.length;const x=SL[si],e=document.createElement('div');e.style.backgroundImage=x.u;e.style.setProperty('--x0',R());e.style.setProperty('--y0',R());e.style.setProperty('--x1',R());e.style.setProperty('--y1',R());
  bg.appendChild(e);void e.offsetWidth;e.classList.add('kb','on');const old=[...bg.children].filter(c=>c!==e);setTimeout(()=>old.forEach(c=>c.remove()),1800);
  cap.classList.remove('on');setTimeout(()=>{cap.innerHTML=x.n?'<b>'+x.n+'</b>NOW SHOWING':'';cap.classList.toggle('on',!!x.n)},500);
  [...tk.children].forEach((t,k)=>t.classList.toggle('on',k===si));slT=setTimeout(slide,6500)}
-try{const st=d.querySelector('.st'),nc=(P.CARS||[]).length,nt=(P.TRK_TRACKS||[]).length,ns=(P.STAGES||[]).length;st.textContent=[nc&&nc+' CARS',nt&&nt+' CIRCUITS',ns&&ns+' RALLY STAGES'].filter(Boolean).join(' \u00b7 ')}catch(e){}
+d.querySelector('.st').textContent='VERSION '+(P.VERSION||'0.01');
 /* everything that would otherwise load later (the Track Mode circuit shots and the rally stage renders) is made now, behind the boot
    screen with a progress bar; the title comes in when it is done */
 window.PT8_BOOT=new Promise(res=>{const run=()=>setTimeout(async()=>{try{const b=document.getElementById('ptBoot'),bar=b&&b.querySelector('u'),lab=b&&b.querySelector('small');

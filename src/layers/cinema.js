@@ -45,7 +45,22 @@ const SH=[
  {env:'redroom',cars:[[C.zon,-3,0,10],[C.ven,3,0,-10],[C.f1,0,-5.6,0]],a:[[0,.55,8.6],[0,.7,-1]],b:[[0,.7,7],[0,.7,-1]],fov:38},
  /* arctic road */
  {env:'arctic',cars:[[C.evo,0,0,-35],[C.sup2,-5,-4,15],[C.gt350,5.2,-4.6,-12]],a:[[5.6,.9,7],[0,.6,-.6]],b:[[3.6,1,8],[0,.6,-.6]],fov:34},
- {env:'arctic',cars:[[C.gt2,0,0,0],[C.r34,0,6,0],[C.m3,0,12,0]],a:[[8,.9,3],[0,.6,6]],b:[[8,.9,10],[0,.6,6]],fov:30}];
+ {env:'arctic',cars:[[C.gt2,0,0,0],[C.r34,0,6,0],[C.m3,0,12,0]],a:[[8,.9,3],[0,.6,6]],b:[[8,.9,10],[0,.6,6]],fov:30},
+ /* sunset road */
+ {env:'sunset',cars:[['FERRARI 599 GTB',0,0,-25],[C.cnt,-5.2,-4,14]],a:[[4.6,.7,6.6],[0,.8,-1]],b:[[3,.75,7.2],[0,.8,-1]],fov:34},
+ {env:'sunset',cars:[['MAZDA 787B',0,0,-30],['MAZDA RX-7 VEILSIDE',-5.6,-3.4,15],[C.r34,5.4,-4.4,-12]],a:[[5.4,.65,6.4],[0,.8,-1]],b:[[3.6,.7,7],[0,.8,-1]],fov:34},
+ {env:'sunset',cars:[[C.f40,-2.6,0,0],['FERRARI 288 GTO',2.6,5,0],['FERRARI ENZO',-2.6,10,0]],a:[[0,.8,-8],[0,.9,10]],b:[[1,.9,-6],[0,.9,11]],fov:42},
+ /* pale studio */
+ {env:'pale',cars:[['FERRARI 288 GTO',-6,0,0],[C.f40,-2,0,0],['FERRARI F430',2,0,0],['FERRARI 458 ITALIA',6,0,0]],a:[[-11,.85,9],[-1,.6,0]],b:[[-6,.9,10],[0,.6,0]],fov:38},
+ {env:'pale',cars:[['LANCIA STRATOS',0,0,-28],['LANCIA 037 RALLY',-5.6,-4,16],['LANCIA DELTA INTEGRALE',5.6,-4.6,-14]],a:[[7.4,1.2,10.6],[0,.6,-1.6]],b:[[5,1.3,11.6],[0,.6,-1.6]],fov:40},
+ {env:'pale',cars:[['ALFA ROMEO 8C',-3,0,10],['MASERATI GRANTURISMO',3,0,-10],['ASTON MARTIN VANQUISH',0,-5.6,0]],a:[[0,.6,9],[0,.7,-1]],b:[[0,.8,7.4],[0,.7,-1]],fov:38},
+ /* more studio sets */
+ {env:'void',cars:[['FERRARI ENZO',0,0,-22],['KOENIGSEGG JESKO',-5,-4.6,12],['BUGATTI DIVO',5.2,-5,-10]],a:[[4.4,.7,6.4],[0,.6,-.6]],b:[[3,.75,7],[0,.6,-.6]],fov:34},
+ {env:'bunker',cars:[['FORD GT90',-4,0,8],['FORD GT (2005)',0,-.6,0],['FORD GT (2017)',4,0,-8]],a:[[0,.8,8.8],[0,.6,-.5]],b:[[0,.9,7.6],[0,.6,-.5]],fov:38},
+ {env:'neon',cars:[['NISSAN SKYLINE GT-R R32',-3.2,0,10],['NISSAN SKYLINE GT-R R33',0,-1.2,0],[C.r34,3.2,0,-10]],a:[[0,.6,8.2],[0,.65,-1]],b:[[0,.75,6.8],[0,.65,-1]],fov:38},
+ {env:'tunnel',cars:[['SALEEN S7',-2.4,0,4],['HENNESSEY VENOM F5',2.4,-5.4,-4]],a:[[-3.4,.7,6.8],[0,.6,-2]],b:[[-2.2,.75,7.4],[0,.6,-2]],fov:36},
+ {env:'void',cars:[['BMW M1 PROCAR',0,4.6,90],['BMW M3 GTR (GT3)',4.6,0,180],['BMW M4 GT3',0,-4.6,270],['BMW M3 (E30)',-4.6,0,0]],a:[[2,6.8,11],[0,.2,.4]],b:[[4,7,9.6],[0,.2,.4]],fov:46},
+ {env:'bunker',cars:[['DODGE CHALLENGER',-6,0,0],['PLYMOUTH BARRACUDA',-2,0,0],['CHEVROLET CHEVELLE SS',2,0,0],['CHEVROLET CAMARO Z28',6,0,0]],a:[[-11,.8,9.4],[-1,.7,0]],b:[[-6,.85,10],[0,.7,0]],fov:38}];
 const hdr=(c,k)=>new THREE.Color(c).multiplyScalar(k),bm=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.8},o||{})),em=(c,k)=>new THREE.MeshBasicMaterial({color:hdr(c,(k||2.6)*.72)}),box=(g,m,x,y,z,p)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(g[0],g[1],g[2]),m);o.position.set(x,y,z);o.receiveShadow=true;p.add(o);return o};
 /* floors are glass-like: the mirrored copies of the cars underneath show through */
 const floor=(w,d,c,o)=>{const f=new THREE.Mesh(new THREE.PlaneGeometry(w,d),new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.42,metalness:.1,transparent:true,opacity:.8},o||{})));f.rotation.x=-Math.PI/2;f.receiveShadow=true;return f};
@@ -80,6 +95,18 @@ const ENV={
   soft:[[12,2,0,8,0,1.5707,0,[3.2,1.7,.6]],[2,6,-8,3,0,0,1.5707,[2.4,1.2,.5]],[2,6,8,3,0,0,1.5707,[2.4,1.2,.5]]],
   build(g){g.add(floor(17,140,0x15130f,{roughness:.3,opacity:.84}));box([.6,8,140],bm(0x1c1a17),-8.3,4,0,g);box([.6,8,140],bm(0x1c1a17),8.3,4,0,g);box([17,.6,140],bm(0x1c1a17),0,8,0,g);
    for(let i=0;i<16;i++){box([2.4,.2,.5],em(0xffc070,1.5),0,7.6,-44+i*6,g);box([.3,.3,.8],em(0xffc070,1.3),-7.6,1.2,-44+i*6,g);box([.3,.3,.8],em(0xffc070,1.3),7.6,1.2,-44+i*6,g)}box([.2,.02,140],em(0xe8d8a0,1.3),-3.4,.02,0,g);box([.2,.02,140],em(0xe8d8a0,1.3),3.4,.02,0,g)}},
+ /* sunset road: a painted gradient sky with a low sun and mesas in silhouette behind the cars */
+ sunset:{bg:0xe0703a,fog:[0xe8804a,30,120],hs:0xff9a7a,hg:0x2a1426,hp:.5,kc:0xffa860,kp:1.6,kp3:[-6,6,-14],rc:0xffd0a0,rp:1.2,rp3:[9,5,9],pts:[],bl:.12,
+  soft:[[30,6,0,3,-14,0,0,[1.6,.8,.4]],[24,8,0,10,0,1.5707,0,[1.4,.8,1]],[8,4,9,3,4,0,1.5707,[1.2,.9,1.1]]],
+  build(g){g.add(floor(60,220,0x2a1820,{roughness:.28,opacity:.86}));for(const s of[-1,1])box([.18,.02,200],em(0xffe2c4,1.1),s*5.6,.02,0,g);for(let i=0;i<24;i++)box([.18,.02,2.6],em(0xffe2c4,1.1),0,.02,-60+i*6,g);
+   const cv=document.createElement('canvas');cv.width=4;cv.height=256;const x=cv.getContext('2d'),gr=x.createLinearGradient(0,0,0,256);gr.addColorStop(0,'#120c30');gr.addColorStop(.35,'#5a1e5e');gr.addColorStop(.62,'#c8385a');gr.addColorStop(.82,'#ff6a30');gr.addColorStop(1,'#ffb050');x.fillStyle=gr;x.fillRect(0,0,4,256);
+   const tx=new THREE.CanvasTexture(cv),mk=(m)=>{m.fog=false;return m};for(const [px,pz,ry] of[[0,-95,0],[-95,0,1.5707],[95,0,-1.5707],[0,95,3.1416]]){const sk=new THREE.Mesh(new THREE.PlaneGeometry(260,90),mk(new THREE.MeshBasicMaterial({map:tx})));sk.position.set(px,36,pz);sk.rotation.y=ry;g.add(sk)}
+   const sun=new THREE.Mesh(new THREE.CircleGeometry(9,48),mk(new THREE.MeshBasicMaterial({color:hdr(0xffd890,1.25)})));sun.position.set(-10,6,-92);g.add(sun);
+   const R2=((n)=>()=>(n=(n*16807)%2147483647)/2147483647)(11);for(let i=0;i<30;i++){const h=1+R2()*R2()*7,w=8+R2()*22,x2=(R2()-.5)*260,z=-84-R2()*6;const m=box([w,h,4],mk(new THREE.MeshBasicMaterial({color:0x2a0f2a})),x2,h/2-.3,z,g);m.receiveShadow=false;const m2=box([w,h,4],mk(new THREE.MeshBasicMaterial({color:0x2a0f2a})),z,h/2-.3,-x2,g);m2.rotation.y=1.5707;const m3=box([w,h,4],mk(new THREE.MeshBasicMaterial({color:0x2a0f2a})),x2,h/2-.3,-z,g)}}},
+ /* pale studio: a warm cream cyclorama, soft light from above */
+ pale:{bg:0xece6dc,fog:[0xece6dc,16,70],hs:0xfffaf0,hg:0xb4aa9c,hp:.95,kc:0xfff4e4,kp:2.3,kp3:[5,12,6],rc:0xf0e0c8,rp:.8,rp3:[-8,5,-7],pts:[],bl:.08,
+  soft:[[30,14,0,12,0,1.5707,0,[2.5,2.4,2.2]],[10,6,-9,4,-3,0,1.5707,[1.8,1.7,1.5]],[10,6,9,4,3,0,1.5707,[1.5,1.4,1.3]]],
+  build(g){g.add(floor(160,160,0xe2dacd,{roughness:.36,opacity:.94}))}},
  bunker:{bg:0x08090a,fog:[0x08090a,12,55],hs:0x9aa0a6,hg:0x101214,hp:.3,kc:0xfff4e6,kp:2.2,kp3:[3,9,6],rc:0xffb070,rp:1.2,rp3:[-8,3,-8],pts:[[0xffd9a0,14,[-5,3.6,2]]],
   soft:[[18,3,0,8.6,0,1.5707,0,[2.6,2.5,2.4]],[4,8,-13,4,0,0,0,[.5,.5,.55]]],
   build(g){g.add(floor(44,44,0x2a2c2e,{roughness:.4,opacity:.86}));box([44,9,.6],bm(0x2e3033),0,4.5,-15,g);box([.6,9,44],bm(0x26282a),-15,4.5,0,g);box([.6,9,44],bm(0x26282a),15,4.5,0,g);box([44,.6,44],bm(0x1a1b1d),0,9,0,g);

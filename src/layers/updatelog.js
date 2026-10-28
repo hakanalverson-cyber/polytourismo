@@ -3,44 +3,50 @@
 'use strict';
 const P=window.PT8;
 P.LOG=[
- {v:'0.21',d:'Oct 28, 2026',t:'Cleaner race setup',items:[
+ {v:'0.01',d:'Oct 28, 2026',t:'Poly GT 0.01',items:[
+  'Poly GT now has real version numbers. This is version 0.01, and every major update adds 0.01. The builds before it are listed below as preview builds.',
+  'The loading screen is now just slowly panning photoshoot stills, with no text or loading bar. Everything still loads there once, and after it there are only black fades.',
+  'New photoshoots: a sunset road with a low sun and a painted sky, a pale cream studio, and twelve new sets (Ferrari Enzo with the Jesko and Divo, three Ford GTs, three generations of Skyline GT-R, Lancia rally legends, Ferraris old and new, BMW racers, muscle cars and more). They also play in the main menu.',
+  'The title screen shows mostly photoshoots, with a few hand-picked circuit shots, and the version number in place of the car and circuit counts.',
+  'The update log has been restyled to match the rest of the menus: versions on the left, the notes on the right.']},
+ {pre:21,d:'Oct 28, 2026',t:'Cleaner race setup',items:[
   'Race setup options are now in four short groups: Race, Field, Conditions and Car rules. Every row is one line with even buttons (weather no longer wraps).',
   'Time of day sits under Conditions with a small preview, so nothing is cut off at the bottom of the panel.',
   'Track Mode: picking a circuit is its own step, with big cards showing a trackside view of a corner of each circuit. The setup step then gives the map and options the full width.',
   'Everything now loads once, on the first POLY GT loading screen (with a real progress bar naming what it is loading). After that there are no loading screens, only black fades.',
   'New title screen: slow panning stills of the circuits and cars, light streaks, a wipe-in logo, the car/circuit/stage count and a "now showing" caption.']},
- {v:'0.20',d:'Oct 28, 2026',t:'Arcade Quickplay',items:[
+ {pre:20,d:'Oct 28, 2026',t:'Arcade Quickplay',items:[
   'Quickplay modes (Quick Race, Time Attack, Elimination, Cut-Up, Versus) now drive like an arcade racer: 30% more grip, brakes twice as strong, and the steering reaches the wheel quicker.',
   'Walls no longer stop you dead: the car slides along them and is turned back down the road.',
   'Rally and Track Mode handling are unchanged.']},
- {v:'0.19',d:'Oct 28, 2026',t:'Track Mode handling',items:[
+ {pre:19,d:'Oct 28, 2026',t:'Track Mode handling',items:[
   'Track Mode only: the steering no longer gets quicker as you speed up (60-120 mph turns at an even rate), first and second gear steer a little sharper, and third gear (80-110 mph) is unchanged.',
   'Track Mode only: above 80 mph the car pushes wide 5% less (5% more grip from 85 mph, easing in from 75).',
   'Track Mode only: grass and run-off beside the road only cost speed; the steering and grip stay as on the road. Sand traps still bite.',
   'Track Mode only: steering sensitivity 1.0 now feels like the old 0.55. The rest of the game steers as before.']},
- {v:'0.18',d:'Oct 28, 2026',t:'Tighter turning at speed, steering sensitivity',items:[
+ {pre:18,d:'Oct 28, 2026',t:'Tighter turning at speed, steering sensitivity',items:[
   'Above 80 mph the car turns much tighter: the tyres gain grip from 60 mph up to 45% more by 110 mph, and full lock asks for all of it from 80 mph. About 25-30% more turn at 80-120 mph than before.',
   'Steering sensitivity: Settings > Driving > Steering now goes from 0.5 to 1.5 (was 0.65 to 1.35).']},
- {v:'0.17',d:'Oct 27, 2026',t:'Steering by speed, personal screen shake, calmer start screen',items:[
+ {pre:17,d:'Oct 27, 2026',t:'Steering by speed, personal screen shake, calmer start screen',items:[
   'Steering by speed: first gear turns about 9% sharper, 30-80 mph is 6-12% calmer (it felt sharper than first gear), and from about 100 mph the tyres hold more (about 13% more turn at 120 mph). Fast corners still push a little more than the mid range.',
   'Screen shake only shakes the screen of the driver who crashed (both cars in a collision), not every player in split screen.',
   'Hood camera: switching to and from it no longer pops halfway through (the view width jumped 4 degrees).',
   'Start screen before a run: one quiet line (length, laps, weather) instead of rows of boxes, no control chips, no minimap. The car is in the small label; the driver line only shows when players take turns.']},
- {v:'0.16',d:'Oct 27, 2026',t:'No more understeer under braking',items:[
+ {pre:16,d:'Oct 27, 2026',t:'No more understeer under braking',items:[
   'Steering no longer gets weaker as you slow down. It used to scale down to about 60% at 30 mph, so braking into a corner made the car turn wider than it did at speed. Full lock now always asks for the tightest turn the tyres can hold (or a 6.5 m radius at low speed), and the Handling rating still moves that limit.',
   'Trail braking: with the brake on (and the throttle off) the front tyres bite 15% harder, so the nose tucks in as you brake into a corner instead of pushing wide.',
   'Steering is 12% calmer below 70 mph on the dial (blending back to full by 90): it felt too reactive at lower speeds.']},
- {v:'0.15',d:'Oct 27, 2026',t:'No more reverse spins, slower cars, Nurburgring hairpin',items:[
+ {pre:15,d:'Oct 27, 2026',t:'No more reverse spins, slower cars, Nurburgring hairpin',items:[
   'Fixed spinning on the spot when reversing and steering: the slide correction thought a car going backwards was sliding sideways and kept turning it. Reverse also tops out at 18 mph (was 31), so full lock in reverse is a normal slow circle.',
   'Every car on the circuit tracks is about 12% slower at the top end and picks up speed a little more gently. Gold times are eased to match (CPU laps are about 3-4% longer).',
   'New option in Track race setup: CPU cars Any or Track cars. With Track cars, the CPU field only drives cars from the Track cars section.',
   'Nurburgring: the CPU no longer cuts across the barrier at the first hairpin. Its lap now follows the real layout through the hairpin and the Mercedes Arena loop (4.0 km).']},
- {v:'0.14',d:'Oct 27, 2026',t:'Smarter CPU drivers, softer brakes',items:[
+ {pre:14,d:'Oct 27, 2026',t:'Smarter CPU drivers, softer brakes',items:[
   'CPU drivers follow the racing line through the apexes instead of running wide: they used to plan each corner faster than the car could turn and slide 2-8 m off the line; now they stay within about a metre of it and are quicker for it. If one does run wide it lifts until it is back on line.',
   'CPU throttle and brakes are progressive instead of all-or-nothing, and moving over for a car alongside eases in and out (it used to jump sideways), sized for the big cars on the model tracks.',
   'Difficulty now shapes how they drive, not just how fast: Hard CPUs hold the line tightly, brake late and carry full speed; Easy ones wander off the line a little, brake earlier and corner slower.',
   'Brakes are softer for every car: 130 mph to a stop took about 2 seconds, now about 4.5, closer to a real car. Plan your braking points a little earlier.']},
- {v:'0.13',d:'Oct 27, 2026',t:'The Nurburgring GP circuit, rolling starts that roll, smoother frame rate',items:[
+ {pre:13,d:'Oct 27, 2026',t:'The Nurburgring GP circuit, rolling starts that roll, smoother frame rate',items:[
   'The Nordschleife is replaced by the Nurburgring GP circuit (5.1 km), built from the bought cartoon model: real grid boxes, the castle, the Mercedes Arena. Gold time from a CPU lap.',
   'Rolling start: no more text. When the black fade clears the field is already rolling in formation; a 3-2-1 countdown runs as the leader nears the line, and on GO everyone is let go. The race clock starts at GO.',
   'Steering angle now depends on speed only, never on the gear (first gear used to steer 15% less, which on cars with a tall first gear like the R8 LMS reached well up the speed range). The same calm feel at walking pace is kept in the speed curve.',
@@ -50,7 +56,7 @@ P.LOG=[
   'Fixed long stretched fence streaks across the track (Spa start, Laguna Seca, Suzuka): a few fence faces in the models joined posts hundreds of metres apart.',
   'Hungaroring kerbs: the car rode into some of them and drove over angled ones as if flat. The ground map now takes the top of every kerb.',
   'Brand Central: the backdrop no longer snaps back at the end of a picture, there are 12 new action shots from the circuits, and leaving fades out to black before the menu.']},
- {v:'0.12',d:'Oct 25, 2026',t:'New Road Atlanta and Imola scenery, smarter CPU, gearbox choice',items:[
+ {pre:12,d:'Oct 25, 2026',t:'New Road Atlanta and Imola scenery, smarter CPU, gearbox choice',items:[
   'Minimum turning circle at low speed: crawling, the car could pivot almost on the spot (the grip limit only starts at about 40 km/h). Now full lock at walking pace draws a circle about 1.2 car lengths across, like a real road car.',
   'Less F1, more GT car: grip still builds with speed but tops out at 1.5x (was 2.2x), so fast corners need a lift or a brake. Turning in too fast now makes the front push wide and scrub off speed, with the nose following the car instead of sliding in; a clean entry corners as before. Steering is 20% less sensitive overall. CPU drivers plan for the new grip; gold times re-measured on every circuit.',
   'Steering evened out across the gears: low gears turned about four times as sharply as top gear (80 degrees a second at 20-30 mph, 18 at 160 mph). Now full lock gives about 55-60 degrees a second in the low gears and 28-38 in the high ones, so slow corners are calmer and fast ones respond.',
@@ -124,19 +130,19 @@ P.LOG=[
   'Multiplayer with damage on: every player gets their own damage readout beside their HUD.',
   'Brand Central: buying a car plays the full showcase sequence again.',
   'Menus: the car strip scrollbar no longer pushes the cards up, and the yellow accents on tabs, maker cards and highlights are now white. Hovering a brand in Brand Central uses the same light grey as the mode tabs instead of blue.']},
- {v:'0.11',d:'Oct 25, 2026',t:'Smoother ride, cleaner scenery, faster',items:[
+ {pre:11,d:'Oct 25, 2026',t:'Smoother ride, cleaner scenery, faster',items:[
   'No more jitter on hills: the drawn body no longer bobs as the road climbs and falls. The ride-height drop is measured once per car instead of every frame, the anti-clipping lift is capped and eased, and the real elevation data is smoothed.',
   'Nordschleife: the pale green walls behind the trees are gone. About 380 m from the road the ground used to jump up to the lap\'s average height, a 150 m cliff beside the low valleys. It now eases out gently, and the wooded slopes beyond the tree line carry distant forest.',
   'Nordschleife: the Karussell concrete fades in and out instead of starting on a hard straight line, and the corner-name boards that cut through the Armco are gone.',
   'The pause menu now hides every other piece of UI: dash, stage panel, now-playing card, prompts and the FPS counter.',
   'Performance on every track: sun shadows use cheaper filtering, the ground is no longer re-drawn into the shadow map, and hundreds of separate trackside props are merged into a few draws (Quick Play: 339 to 186 draw calls per frame). Higher graphics settings should hold their frame rate much better.']},
- {v:'0.10',d:'Oct 24, 2026',t:'Grip, ride height, trees and props',items:[
+ {pre:10,d:'Oct 24, 2026',t:'Grip, ride height, trees and props',items:[
   'Grip fixed on every track: the car no longer slides when you tap the steering. The drift mode used to switch itself on with every quick steering tap above 47 mph, cutting sideways grip to a quarter; now it only engages while you hold the handbrake. Tarmac grip is also firmer for the player, so the car goes where it is pointed. Gravel, grass and ice keep their loose feel.',
   'Cars sit on the road: every car was riding 6 to 10 cm above the surface. The body now settles so the tyres touch the ground under them, on every track.',
   'Nothing floats: on every map, trees and props are now set onto the ground as it is actually drawn (the drawn ground is a triangle grid that differs from the smooth height used for placement by up to a metre on slopes).',
   'Fewer, tidier trees on Road Atlanta, Imola and the Nordschleife: every tree keeps a clear space around it so crowns never stack, with fewer rows and clumps. The painted forest backdrop sits further back, lower and in shade, so it adds depth without reading as a wall.',
   'New simple props instead of plain boxes: grandstands with stepped seat rows and a roof, pit garages with roller doors, paddock cabins with windows and awnings, a race-control tower with a glass cab, marshal huts with pitched roofs, gazebos and shaped camper vans.']},
- {v:'0.09',d:'Oct 24, 2026',t:'New track: the Nordschleife',items:[
+ {pre:9,d:'Oct 24, 2026',t:'New track: the Nordschleife',items:[
   'The Nurburgring Nordschleife is a new circuit-mode track and by far the longest in the game: a 20.8 km lap with about 290 m of climb, from Hatzenbach, Flugplatz and Aremberg down to Breidscheid, up through Kesselchen to the banked Karussell, round Brunnchen and Pflanzgarten and back along the Dottinger Hohe. The layout was rebuilt from the real corner sequence and lap length, not from a surveyed map, so it is close to the real track but not exact.',
   'Armco on both sides of the whole lap, kerbs on every corner, gravel traps and tyre walls at the slowest corners, dense Eifel forest, spectator camps at the famous corners, corner name boards and km boards, bridges, the T13 grandstand and Nurburg castle on its hill.',
   'No lag on the long lap: the landscape is built in tiles a few milliseconds at a time around the camera and dropped again behind you, and distant scenery is thinned and culled. Medal times were calibrated with the same rule as Road Atlanta and Imola.',
@@ -151,7 +157,7 @@ P.LOG=[
   'Quick Play (Quick Race, Time Attack, Elimination, Cut-Up, Versus) has the 10 original maps; Road Atlanta, Imola and the Nordschleife are exclusive to Track mode.',
   'Track previews are white with numbered corners tinted by how tight they are. The Now Playing card sits in the bottom-right corner.',
   'Results screen is minimal and the same in every mode: position, driver with the car underneath, best lap and time, with your row highlighted. No coloured chips or blocks.']},
- {v:'0.08',d:'Oct 24, 2026',t:'Tracks, menus and Brand Central',items:[
+ {pre:8,d:'Oct 24, 2026',t:'Tracks, menus and Brand Central',items:[
   'The original maps are back in the track picker for Quick Race, Time Attack, Elimination, Cut-Up and Versus, alongside Road Atlanta and Imola. Track mode still has only the circuit tracks and Rally only the stages.',
   'Road Atlanta and Imola were re-traced from real layout maps and sized to their real lap lengths (4,088 m and 4,909 m, 1 unit = 1 m), with real-scale widths and roughly real elevation. Medal times were recalibrated. The sky and distant hills now follow the camera on big tracks.',
   'Brand Central cards and the Quickplay drop-down use the garage card look with a white outline on the selected one. The menu footer shows cars owned. Imola is 1.6x longer.',
@@ -162,32 +168,32 @@ P.LOG=[
   'Brand Central is a black showroom: car on the left, specs and price on the right, Back bottom left, Buy bottom right, arrows to flip cars and an All cars list. Sharp corners and a calmer upright font everywhere.',
   'Brand Central lists cars by manufacturer: pick a maker (with its logo), then browse the cars from that maker as a card strip with Back and Buy buttons. Logos are CC0 vector marks from Simple Icons plus logo image files from the car-logos-dataset project; the two makers without a file (Shelby, Tommy Kaira) get an initials badge.',
   'Class fixes: the RS4 Avant and a few other class B cars had class D top speeds and now match their class. Lighter default shadows and a lower pixel-density cap for better frame rates; adaptive resolution reacts faster.']},
- {v:'0.07',d:'Oct 24, 2026',t:'New track: Imola',items:[
+ {pre:7,d:'Oct 24, 2026',t:'New track: Imola',items:[
   'Imola is a new circuit-mode track: the real Grand Prix layout, shrunk to about a third and with the tightest chicanes opened up, so a lap is short and busy. Only the road layout was used, the rest is built from scratch in the Poly GT low-poly look.',
   'Real race track furniture: red and white kerbs on every corner, raked sand traps on the outside of each corner that really bog you down, painted tyre walls at the sharpest corners, guardrails, pit wall and pit garages, a control tower, grandstands, a footbridge, grid boxes, corner boards and marshal posts.',
   'Performance: dense forests now thin out with distance, and the night city uses fewer dynamic lights.']},
- {v:'0.06',d:'Oct 21, 2026',t:'Free Roam makeover',items:[
+ {pre:6,d:'Oct 21, 2026',t:'Free Roam makeover',items:[
   'The whole Free Roam map is rebuilt from open-source (CC0) models: a model-built town with towers, shops, houses and a park fountain; roadside villages, farms with barns, silos, crop plots and tractors; a wind farm, camp, harbour and roadside diners.',
   'New roads: a north bypass, a south coast road, a west coast road and dirt lanes to the farms. Rolling hills, patchwork fields, new tree and boulder models and a sky with drifting clouds.',
   'Cows, horses, deer and more graze near farms and in the meadows, and bolt when you drive too close.',
   'Your garage is now a closed room with a corner desk, TV lounge, workbench, tyres, rug, posters and a window onto the dusk.',
   'Stops are marked by a simple floating icon (a house for your garage) instead of the light beam.']},
- {v:'0.05',d:'Oct 21, 2026',t:'Free Roam',items:[
+ {pre:5,d:'Oct 21, 2026',t:'Free Roam',items:[
   'Career is now Free Roam: pick it and the screen fades to black, then you are dropped on your street in an open world about 6.7 km across, with a coast, a lake, a mountain pass, a forest, a town and an airfield.',
   'The world streams in chunks around your car and fades into distance haze, with a light blur at the edge of the view, so a big map stays smooth.',
   'Your garage is the house on your street and opens the same car viewer, now inside a garage. Brand Central, a tune shop (garage and tuning), a gas station and a race office are all in town; the race office holds the old career events and prizes.',
   'Make money with delivery jobs from the job board, drift scores at Drift Pier, speed traps around the island, airfield top-speed runs, the summit overlook and the car meet. M opens the map and lets you set a GPS marker.']},
- {v:'0.04',d:'Oct 20, 2026',t:'New track: Grand Valley',items:[
+ {pre:4,d:'Oct 20, 2026',t:'New track: Grand Valley',items:[
   'Harbor Lights is gone, replaced by Grand Valley, the first track of a brand-new roster: a short, low orange suspension bridge with two towers, hangers and cables, leading to a walled island city.',
   'City Island is built from the building pack and KayKit buildings: unbroken rows of buildings face every shore, corner towers, brick gate houses over both roads, shopfronts, trees, hydrants, bins and rooftop water towers. Any gap between buildings is a tiny alley with dumpsters, bins and crates; larger leftovers become pocket parks.',
   'Leave the city through the west gate and the race runs on into a forest valley: a winding, hilly gravel path (loose-surface grip) with real terrain, no rails, pine and broadleaf trees, bushes, boulders, logs, stumps, wild flowers, chevron boards on the sharp bends, and farm and camp sites with houses, barns, wells, haystacks and fences.',
   'The road swings round the valley and comes back to the start straight, with overhead signs, buoys and boats in the channel; the whole map works at dawn, day, sunset and night.',
   'Jumps can now have their own gap length and ramp height.']},
- {v:'0.03',d:'Oct 20, 2026',t:'New streetlights',items:[
+ {pre:3,d:'Oct 20, 2026',t:'New streetlights',items:[
   'All streetlights on every map: new lamp model, a much wider and softer pool of light, a smoother glow, and lights that fade in and out instead of popping.',
   'Only the rally mode has a loading screen now; everything else launches straight in. The loader car\'s front wheels point straight.',
   'Update log reset: everything before this is folded into 0.02.']},
- {v:'0.02',d:'Oct 20, 2026',t:'Everything so far',items:[
+ {pre:2,d:'Oct 20, 2026',t:'Everything so far',items:[
   'The game is now Poly GT, with an update log in the main menu and the tutorial under Settings > Driving.',
   'Leaderboard podium cards with animated blocks, a full table, and a title for each driver.',
   'Damage setting in every mode: sparks, smoke and debris on impacts, explosions at 100% and a respawn after 3 seconds.',
@@ -200,28 +206,41 @@ P.LOG=[
   'Smoother menus: black fades, lists pop in once, beeping ambience removed.',
   'Afterhours skyline rebuilt with the building pack.']}
 ];
+P.VERSION=(P.LOG.find(e=>e.v)||{}).v||'0.01';
 const css=document.createElement('style');
-css.textContent=`@keyframes ptFadeIn{from{opacity:0}}#ptLog{position:fixed;inset:0;z-index:8000;display:none;align-items:center;justify-content:center;background:#05070acc;backdrop-filter:blur(3px)}
-#ptLog.on{display:flex;animation:ptFadeIn .25s ease both}
-#ptLog .lgBox{width:min(720px,92vw);max-height:84vh;display:flex;flex-direction:column;background:linear-gradient(180deg,#121920,#0b0f13);border:1px solid #ffffff18;border-top:3px solid #f1f3f5}
-#ptLog .lgHd{display:flex;align-items:center;padding:16px 22px;border-bottom:1px solid #ffffff12}
-#ptLog .lgHd h2{margin:0;font:800 18px var(--mn);letter-spacing:.28em;font-style:italic}#ptLog .lgHd h2 em{color:#7fe3f2;font-style:italic}
-#ptLog .lgHd span{margin-left:auto;font:700 10px var(--mn);letter-spacing:.2em;color:var(--dim)}
-#ptLog .lgBody{overflow:auto;padding:6px 22px 18px}
-#ptLog .lgV{padding:16px 0 4px;border-bottom:1px solid #ffffff0d}#ptLog .lgV:last-child{border:0}
-#ptLog .lgV h3{margin:0 0 4px;font:800 15px var(--mn);letter-spacing:.14em;display:flex;gap:12px;align-items:baseline}
-#ptLog .lgV h3 b{color:#f2c76b}#ptLog .lgV h3 small{font:600 10px var(--mn);letter-spacing:.18em;color:var(--dim)}
-#ptLog .lgV h4{margin:0 0 8px;font:600 11px var(--mn);letter-spacing:.2em;color:#9fb0ba;text-transform:uppercase}
-#ptLog ul{margin:0 0 12px;padding-left:18px}#ptLog li{margin:5px 0;font:500 13px/1.45 system-ui,sans-serif;color:#d7dde2}
-#ptLog .lgFt{padding:12px 22px;border-top:1px solid #ffffff12;display:flex;justify-content:flex-end}`;
+/* laid out like the other menu screens: header with the accent underline, a list on the left and the notes on the right, Back at the bottom */
+css.textContent=`@keyframes ptFadeIn{from{opacity:0}}#ptLog{position:fixed;inset:0;z-index:8000;display:none;background:radial-gradient(ellipse at 50% 40%,#0b0e12e6,#030405f8);backdrop-filter:blur(6px);color:var(--tx);font-family:var(--mn)}
+#ptLog.on{display:block;animation:ptFadeIn .25s ease both}
+#ptLog .hdr small b{color:var(--ac);font-weight:700}
+#ptLog .cols{grid-template-columns:minmax(230px,30%) 1fr}
+#ptLog .lgL{overflow:auto;padding:4px 1.3vw}
+#ptLog .lgS{font-size:10px;letter-spacing:.24em;color:var(--dim);text-transform:uppercase;margin:14px 0 6px}#ptLog .lgS:first-child{margin-top:4px}
+#ptLog .lgR{display:flex;align-items:baseline;gap:12px;width:100%;text-align:left;background:#ffffff08;border:0;border-bottom:2px solid transparent;color:var(--tx);padding:9px 12px;margin:0 0 4px;cursor:pointer;font:600 12px var(--mn);letter-spacing:.08em;transition:background .08s}
+#ptLog .lgR:hover{background:#ffffff14}#ptLog .lgR.on{background:#ffffff1c;border-bottom-color:#fff}
+#ptLog .lgR b{flex:none;min-width:46px;font:italic 700 13px var(--mn);letter-spacing:.06em;color:#f2c76b}#ptLog .lgR.p b{color:#9fb0ba;font-size:11px}
+#ptLog .lgR span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase;font-size:10px;letter-spacing:.14em;color:#c9d2d8}
+#ptLog .lgD{overflow:auto;padding:4px 2vw}
+#ptLog .lgD .vv{display:flex;align-items:baseline;gap:16px;padding-bottom:12px;border-bottom:1px solid #ffffff14}
+#ptLog .lgD .vv b{font:italic 900 clamp(28px,6vh,52px)/1 var(--hd);letter-spacing:.02em;color:#fff}#ptLog .lgD .vv small{font-size:10px;letter-spacing:.24em;color:var(--dim);text-transform:uppercase}
+#ptLog .lgD h3{margin:14px 0 10px;font:italic 700 15px var(--mn);letter-spacing:.16em;text-transform:uppercase;color:var(--ac)}
+#ptLog .lgD ul{list-style:none;margin:0;padding:0}#ptLog .lgD li{position:relative;padding:9px 0 9px 22px;border-bottom:1px solid #ffffff0b;font:500 13px/1.5 system-ui,sans-serif;color:#d7dde2}
+#ptLog .lgD li::before{content:"";position:absolute;left:4px;top:16px;width:8px;height:2px;background:var(--ac)}`;
 document.head.appendChild(css);
 const ov=document.createElement('div');ov.id='ptLog';document.body.appendChild(ov);
-const open=()=>{const cur=(document.querySelector('.menuTop small')||{}).textContent||'';
- ov.innerHTML=`<div class="lgBox"><div class="lgHd"><h2>UPDATE <em>LOG</em></h2><span>${cur}</span></div><div class="lgBody">`+P.LOG.map(e=>`<div class="lgV"><h3><b>v${e.v}</b><small>${e.d}</small></h3><h4>${e.t}</h4><ul>${e.items.map(i=>`<li>${i}</li>`).join('')}</ul></div>`).join('')+`</div><div class="lgFt"><button class="btn" id="lgClose"><span>Close</span></button></div></div>`;
+let sel=0;const lbl=e=>e.v?'v'+e.v:'P'+String(e.pre).padStart(2,'0');
+function det(){const e=P.LOG[sel],d=ov.querySelector('.lgD');if(!e||!d)return;ov.querySelectorAll('.lgR').forEach((r,k)=>r.classList.toggle('on',k===sel));
+ d.innerHTML=`<div class="vv"><b>${e.v?'VERSION '+e.v:'PREVIEW BUILD '+e.pre}</b><small>${e.d}</small></div><h3>${e.t}</h3><ul>${e.items.map(i=>`<li>${i}</li>`).join('')}</ul>`;d.scrollTop=0;
+ const r=ov.querySelectorAll('.lgR')[sel];if(r&&r.scrollIntoView)r.scrollIntoView({block:'nearest'})}
+const open=()=>{sel=0;let row='',lastPre=false;P.LOG.forEach((e,k)=>{if(!e.v&&!lastPre){row+='<div class="lgS">Preview builds</div>';lastPre=true}else if(k===0)row+='<div class="lgS">Releases</div>';
+  row+=`<button class="lgR${e.v?'':' p'}" data-k="${k}"><b>${lbl(e)}</b><span>${e.t}</span></button>`});
+ ov.innerHTML=`<div class="hdr"><h2>UPDATE <em>LOG</em></h2><div class="sp"></div><small>CURRENT VERSION <b>${P.VERSION}</b></small></div><div class="cols"><div class="pnl lgL">${row}</div><div class="pnl lgD"></div></div><div class="foot8"><button class="btn" id="lgClose"><span>&lt; Back</span></button><div class="hint8">&uarr; &darr; select &middot; Esc back</div><span style="width:90px"></span></div>`;
+ ov.querySelectorAll('.lgR').forEach(b=>b.onclick=()=>{sel=+b.dataset.k;det();if(P.sfx)P.sfx('move')});det();
  ov.classList.add('on');if(P.sfx)P.sfx('select');ov.querySelector('#lgClose').onclick=close};
 const close=()=>{if(ov.classList.contains('on')){ov.classList.remove('on');if(P.sfx)P.sfx('back')}};
-ov.addEventListener('click',e=>{if(e.target===ov)close()});
-addEventListener('keydown',e=>{if(ov.classList.contains('on')&&(e.code==='Escape'||e.code==='Enter')){e.stopImmediatePropagation();e.preventDefault();close()}},true);
+addEventListener('keydown',e=>{if(!ov.classList.contains('on'))return;const c=e.code;
+ if(c==='Escape'||c==='Backspace'){e.stopImmediatePropagation();e.preventDefault();close()}
+ else if(c==='ArrowDown'||c==='ArrowUp'||c==='KeyS'||c==='KeyW'){e.stopImmediatePropagation();e.preventDefault();sel=Math.max(0,Math.min(P.LOG.length-1,sel+(c==='ArrowDown'||c==='KeyS'?1:-1)));det();if(P.sfx)P.sfx('move')}
+ else if(c==='Enter'){e.stopImmediatePropagation();e.preventDefault()}},true);
 const ma=document.querySelector('.menuActions');
 if(ma){const b=document.createElement('button');b.innerHTML=P.mi?P.mi('log','Update log'):'Update log';b.style.order=5;b.onclick=open;ma.append(b)}
 P.openUpdateLog=open;
