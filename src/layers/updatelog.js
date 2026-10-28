@@ -5,9 +5,10 @@ const P=window.PT8;
 P.LOG=[
  {v:'0.01',d:'Oct 28, 2026',t:'Poly GT 0.01',items:[
   'Poly GT now has real version numbers. This is version 0.01, and every major update adds 0.01. The builds before it are listed below as preview builds.',
-  'The loading screen is now just slowly panning photoshoot stills, with no text or loading bar. Everything still loads there once, and after it there are only black fades.',
+  'The loading screen and the title screen are now one screen: full HD photoshoot stills pan slowly behind the POLY GT logo, with a progress bar in the menus\' style. When everything has loaded the bar gives way to PRESS ANY BUTTON. After it there are only black fades.',
   'New photoshoots: a sunset road with a low sun and a painted sky, a pale cream studio, and twelve new sets (Ferrari Enzo with the Jesko and Divo, three Ford GTs, three generations of Skyline GT-R, Lancia rally legends, Ferraris old and new, BMW racers, muscle cars and more). They also play in the main menu.',
   'The title screen shows mostly photoshoots, with a few hand-picked circuit shots, and the version number in place of the car and circuit counts.',
+  'Brand Central runs much smoother: the 3D car studio no longer renders hidden behind the maker list, and the maker tiles no longer blur the moving pictures behind them every frame.',
   'The update log has been restyled to match the rest of the menus: versions on the left, the notes on the right.']},
  {pre:21,d:'Oct 28, 2026',t:'Cleaner race setup',items:[
   'Race setup options are now in four short groups: Race, Field, Conditions and Car rules. Every row is one line with even buttons (weather no longer wraps).',

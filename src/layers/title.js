@@ -38,6 +38,7 @@ body.ptTitle #menu{opacity:0!important;pointer-events:none!important}
 #ptTitle .sl{position:absolute;left:0;right:0;top:50%;height:0;z-index:-1;pointer-events:none}
 #ptTitle .sl i{position:absolute;height:1px;width:22vw;left:-25vw;background:linear-gradient(90deg,transparent,#ffffffaa,transparent);opacity:0}
 #ptTitle.on .sl i{animation:ptStreak 3.8s cubic-bezier(.5,0,.5,1) infinite}
+#ptTitle.ov{background:none}#ptTitle.ov .bg,#ptTitle.ov .sh,#ptTitle.ov .gr,#ptTitle.ov .lg,#ptTitle.ov .sub,#ptTitle.ov .st,#ptTitle.ov .ln,#ptTitle.ov .tk,#ptTitle.ov .cap,#ptTitle.ov .bar{display:none}
 @keyframes ptKB{from{transform:scale(1.14) translate(var(--x0),var(--y0))}to{transform:scale(1.02) translate(var(--x1),var(--y1))}}
 @keyframes ptStreak{0%{left:-25vw;opacity:0}10%{opacity:.9}60%{opacity:.6}100%{left:105vw;opacity:0}}
 @keyframes ptSheen{0%,50%{background-position:175% 0}100%{background-position:-175% 0}}
@@ -54,6 +55,10 @@ let SL=[];try{const nm=window.BBG_NAMES||[],bb=typeof BBG_B64!=='undefined'?BBG_
  if(!tr.length)tr=[3,2].filter(i=>bb[i]).map(i=>({u:U(bb[i]),n:''}));tr=shuf(tr);
  if(window.PT8_BOOTI!=null&&ph.length>1){/* don't open on the still the loading screen was just showing */const cur=U(window.PT8_BOOTBG[window.PT8_BOOTI]),k=ph.findIndex(x=>x.u===cur);if(k===0)ph.push(ph.shift())}
  SL=ph.slice();tr.forEach((t,k)=>SL.splice(Math.min(SL.length,3+k*4),0,t))}catch(e){SL=[]}
+/* the loading screen already shows the logo over the stills: the title then only adds its prompt on top of it, and the hand-picked track
+   shots join the loading screen's slideshow */
+const BT=document.getElementById('ptBoot');if(BT){d.classList.add('ov');try{const L=window.PT8_BOOTBG,nm=window.BBG_NAMES||[],bb=typeof BBG_B64!=='undefined'?BBG_B64:[];let ix=PICK.map(k=>nm.indexOf(k)).filter(i=>i>=0);if(!ix.length)ix=[3,2].filter(i=>bb[i]);
+ ix.forEach((i,k)=>L.splice(Math.min(L.length,((window.PT8_BOOTI|0)+3+k*4)%(L.length+1)),0,bb[i]))}catch(e){}}
 const bg=d.querySelector('.bg'),cap=d.querySelector('.cap'),tk=d.querySelector('.tk');tk.innerHTML=SL.map(()=>'<i></i>').join('');
 let si=-1,slT=0;const R=()=>(Math.random()*4-2).toFixed(2)+'%';
 function slide(){if(!SL.length||done)return;si=(si+1)%SL.length;const x=SL[si],e=document.createElement('div');e.style.backgroundImage=x.u;e.style.setProperty('--x0',R());e.style.setProperty('--y0',R());e.style.setProperty('--x1',R());e.style.setProperty('--y1',R());
@@ -63,15 +68,14 @@ function slide(){if(!SL.length||done)return;si=(si+1)%SL.length;const x=SL[si],e
 d.querySelector('.st').textContent='VERSION '+(P.VERSION||'0.01');
 /* everything that would otherwise load later (the Track Mode circuit shots and the rally stage renders) is made now, behind the boot
    screen with a progress bar; the title comes in when it is done */
-window.PT8_BOOT=new Promise(res=>{const run=()=>setTimeout(async()=>{try{const b=document.getElementById('ptBoot'),bar=b&&b.querySelector('u'),lab=b&&b.querySelector('small');
+window.PT8_BOOT=new Promise(res=>{const run=()=>setTimeout(async()=>{try{const BP=window.PT8_BP||(()=>{});
   const jobs=[];const isC=i=>typeof D!=='undefined'&&D[i]&&D[i].cartoon;for(const i of(P.TRK_TRACKS||[]))if(isC(i)&&P.trackShot)jobs.push([D[i].name,()=>P.trackShot(i)]);
   for(const i of(P.STAGES||[]))if(P.stageRender&&typeof D!=='undefined'&&D[i])jobs.push([D[i].name,()=>P.stageRender(i)]);
-  if(b&&jobs.length)b.classList.add('det');
-  for(let k=0;k<jobs.length;k++){if(lab)lab.textContent='LOADING '+jobs[k][0].toUpperCase();await Promise.race([jobs[k][1]().catch(()=>null),new Promise(r=>setTimeout(r,120000))]);if(bar)bar.style.width=Math.round((k+1)/jobs.length*100)+'%'}
+  BP(.5);for(let k=0;k<jobs.length;k++){await Promise.race([jobs[k][1]().catch(()=>null),new Promise(r=>setTimeout(r,120000))]);BP(.5+.5*(k+1)/jobs.length)}
  }catch(e){console.error('boot warm-up',e)}res()},400);if(document.readyState==='complete')run();else addEventListener('load',run)});
-window.PT8_BOOT.then(()=>{P.bootDone=1});window.PT8_BOOT.then(()=>setTimeout(()=>{d.classList.add('on');slide()},400));
+window.PT8_BOOT.then(()=>{P.bootDone=1});window.PT8_BOOT.then(()=>setTimeout(()=>{d.classList.add('on');if(!BT)slide()},400));
 let done=false;
-function go(e){if(done)return;done=true;if(e){try{e.preventDefault();e.stopImmediatePropagation()}catch(x){}}
+function go(e){if(done||!P.bootDone)return;done=true;const bt=document.getElementById('ptBoot');if(bt){bt.style.opacity=0;setTimeout(()=>bt.remove(),1050)}if(e){try{e.preventDefault();e.stopImmediatePropagation()}catch(x){}}
  try{P.audioReady&&P.audioReady();P.sfx&&P.sfx('select')}catch(x){}
  clearTimeout(slT);d.classList.add('out');document.body.classList.remove('ptTitle');setTimeout(()=>d.remove(),1100);for(const ev of EV)removeEventListener(ev,go,true);clearInterval(gp)}
 const EV=['keydown','pointerdown','mousedown','touchstart','click'];for(const ev of EV)addEventListener(ev,go,true);

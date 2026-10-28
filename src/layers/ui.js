@@ -726,7 +726,7 @@ addEventListener('keydown',e=>{
 /* ================= frame loop ================= */
 frame=function(n){requestAnimationFrame(frame);const dt=Math.min(.05,Math.max(0,(n-last)/1000));last=n;dtf=dt;T0+=dt;
  if(RACE&&(scr==='game'||scr==='pause'||scr==='s8res')){if(!paused)step(dt);drawRace(dt);if(scr==='game')hudUpdate()}
- else if(scr==='s8show'){if(!inGrid())drawShow(dt)}
+ else if(scr==='s8show'){/* Brand Central's maker list covers the studio with its stills: don't render the studio behind it */if(!inGrid()&&!$('s8show').classList.contains('mkl'))drawShow(dt)}
  else if(scr==='menu'||scr==='s8cards'||scr==='s8quick'||scr==='s8pick'||scr==='s8setup'||scr==='s8career'||scr==='s8res'){MS=MS||menuScene();MS.tick(Math.max(0,T0));R.setScissorTest(false);R.setViewport(0,0,R.domElement.width,R.domElement.height);MS.draw?MS.draw():R.render(MS.sc,MS.cam)}};
 /* pause menu */
 (function(){const b=$('pause').querySelector('.b'),opt=[...b.querySelectorAll('button')].pop();b.innerHTML='<button id="pRes">Resume</button><button id="pRst">Restart</button><button id="pQuit">Quit to menu</button>';b.appendChild(opt);

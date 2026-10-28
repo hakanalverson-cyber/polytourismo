@@ -309,21 +309,44 @@ src=rep(src,"function loadEmbeddedCarPack(){\n try{","function loadEmbeddedCarPa
 src=rep(src,"scale=4.5/Math.max(size.x,size.z,.001)","scale=(source.userData.gl||4.5)/Math.max(size.x,size.z,.001)")
 src=re.sub(r'<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"[^>]*></script>','',src)
 src=src.replace("const compile = s => eval('('+s+')');","const compile = s => eval('('+s+')');window.PTO=o;",1)
-BOOT_CSS='<style id="ptBootCss">html,body{background:#000!important}body>*:not(#ptBoot){visibility:hidden!important}#ptBoot{position:fixed;inset:0;z-index:2147483647;background:#000;overflow:hidden;visibility:visible!important;transition:opacity 1.2s ease}#ptBoot>div{position:absolute;inset:-2%;background-size:cover;background-position:center;opacity:0;transition:opacity 1.6s ease;will-change:transform,opacity;animation:ptbk 8s linear forwards}#ptBoot>div.on{opacity:1}#ptBoot:after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(0,0,0,0) 40%,rgba(0,0,0,.55) 100%);box-shadow:inset 0 9vh 0 #000,inset 0 -9vh 0 #000}@keyframes ptbk{from{transform:scale(1.14) translate(var(--x0),var(--y0))}to{transform:scale(1.02) translate(var(--x1),var(--y1))}}</style>'
+VERSION=open(W+'/VERSION').read().strip()
+# the loading screen is the title screen: photoshoot stills panning and crossfading behind the POLY GT logo, with a progress bar in the
+# menus' style. The stills are inlined right after it so they show while the rest of the file is still arriving. When loading is done the
+# bar gives way to the title's PRESS ANY BUTTON on the same screen (title.js lays its prompt over this backdrop instead of its own).
+_FN='"Inter","SF Pro Display","Segoe UI","Helvetica Neue",Arial,"Liberation Sans",sans-serif'
+BOOT_CSS=('<style id="ptBootCss">html,body{background:#000!important}body>*:not(#ptBoot){visibility:hidden!important}#ptBoot{z-index:2147483647}</style>'
+ '<style id="ptBootSt">#ptBoot{position:fixed;inset:0;z-index:99989;background:#000;overflow:hidden;visibility:visible!important;transition:opacity 1s ease;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#f3f5f4;font-family:'+_FN+';pointer-events:none}'
+ '#ptBoot .bs{position:absolute;inset:0;overflow:hidden}#ptBoot .bs div{position:absolute;inset:-1%;background-size:cover;background-position:center;opacity:0;transition:opacity 1.6s ease;will-change:transform,opacity;animation:ptbk 8s linear forwards}#ptBoot .bs div.on{opacity:1}'
+ '#ptBoot .bv{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(0,0,0,.3) 0%,rgba(0,0,0,.55) 55%,rgba(0,0,0,.9) 100%),linear-gradient(0deg,rgba(0,0,0,.7),transparent 35%,transparent 70%,rgba(0,0,0,.45));box-shadow:inset 0 9vh 0 #000,inset 0 -9vh 0 #000}'
+ '#ptBoot .lg{position:relative;font:italic 700 min(12vw,150px)/.86 '+_FN+';letter-spacing:.02em;text-align:center;padding:0 .16em 0 .06em;background:linear-gradient(100deg,#fff 0%,#fff 38%,#9fb0b4 50%,#fff 62%,#fff 100%);background-size:260% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:ptbIn 1.2s ease both,ptbSheen 5.5s ease-in-out 1.8s infinite}'
+ '#ptBoot .lg i{display:block;color:transparent;background:linear-gradient(100deg,#8a98a0,#5b6a72);-webkit-background-clip:text;background-clip:text}'
+ '#ptBoot .st{position:relative;margin-top:1.6vh;font:700 10px/1 '+_FN+';letter-spacing:.42em;margin-right:-.42em;color:#e9d9a6;opacity:.8;animation:ptbIn 1s ease .6s both}'
+ '#ptBoot .ln{position:relative;width:min(34vw,420px);height:1px;margin-top:3.2vh;background:linear-gradient(90deg,transparent,#e9d9a6,transparent);animation:ptbIn 1s ease .8s both}'
+ '#ptBoot .bp{position:absolute;left:50%;bottom:14.5vh;width:min(30vw,340px);transform:translateX(-50%);transition:opacity .5s ease;animation:ptbIn 1s ease 1s both}#ptBoot.rdy .bp{opacity:0}'
+ '#ptBoot .bl{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px;font:600 10px/1 '+_FN+';letter-spacing:.32em;color:#c9d2d8}#ptBoot .bl b{font-weight:700;color:#fff;letter-spacing:.12em}'
+ '#ptBoot .bt{position:relative;height:2px;background:#ffffff1f;overflow:hidden}#ptBoot .bt u{position:absolute;left:0;top:0;bottom:0;width:0;background:#f1f3f5;box-shadow:0 0 8px #ffffff90;transition:width .45s ease}'
+ '#ptBoot .bt:after{content:"";position:absolute;top:0;bottom:0;width:60px;left:-60px;background:linear-gradient(90deg,transparent,#ffffffb0,transparent);animation:ptbRun 1.6s ease-in-out infinite}'
+ '@keyframes ptbk{from{transform:scale(1.07) translate(var(--x0),var(--y0))}to{transform:scale(1) translate(0,0)}}@keyframes ptbIn{from{opacity:0}}@keyframes ptbSheen{0%,50%{background-position:175% 0}100%{background-position:-175% 0}}@keyframes ptbRun{to{left:100%}}</style>')
 src=src.replace('<title>Poly Tourismo v7</title>','<title>Poly Tourismo</title>'+BOOT_CSS)
-# the loading screen is only the photoshoot stills panning and crossfading (no text, no bar); they are inlined right after it so they show while the rest of the file is still arriving
 import glob as _gb2
 _pb=sorted(_gb2.glob(W+'/assets/bootbg/*.jpg'))
-BOOTBG='<script>window.PT8_BOOTBG=['+','.join('"'+base64.b64encode(open(f,'rb').read()).decode()+'"' for f in _pb)+'];(function(){var b=document.getElementById("ptBoot"),L=window.PT8_BOOTBG,i=Math.random()*L.length|0,r=function(){return(Math.random()*4-2).toFixed(2)+"%"};if(!b||!L.length)return;function nx(){if(!b.isConnected)return;i=(i+1)%L.length;var e=document.createElement("div");e.style.backgroundImage="url(data:image/jpeg;base64,"+L[i]+")";["--x0","--y0","--x1","--y1"].forEach(function(k){e.style.setProperty(k,r())});b.appendChild(e);void e.offsetWidth;e.className="on";var o=[].slice.call(b.children).filter(function(c){return c!==e});setTimeout(function(){o.forEach(function(c){c.remove()})},1800);window.PT8_BOOTI=i;setTimeout(nx,6000)}nx()})();</script>'
-src=src.replace('<body>','<body><div id="ptBoot"></div>'+BOOTBG,1)
-BOOT_JS='<script>(function(){function done(){var b=document.getElementById("ptBoot"),c=document.getElementById("ptBootCss");if(!b)return;b.style.opacity=0;setTimeout(function(){if(c)c.remove();b.remove()},1250)}function go(){var w=window.PT8_BOOT;(w&&w.then?w:Promise.resolve()).then(function(){requestAnimationFrame(function(){requestAnimationFrame(function(){setTimeout(done,350)})})})}if(document.readyState==="complete")go();else addEventListener("load",go);setTimeout(done,900000)})();</script>'
+BOOTBG=('<script>window.PT8_BOOTBG=['+','.join('"'+base64.b64encode(open(f,'rb').read()).decode()+'"' for f in _pb)+'];'
+ '(function(){var b=document.getElementById("ptBoot"),s=b&&b.querySelector(".bs"),L=window.PT8_BOOTBG,i=Math.random()*L.length|0,P0=0,r=function(){return(Math.random()*3-1.5).toFixed(2)+"%"};'
+ 'window.PT8_BP=function(f){f=Math.max(P0,Math.min(1,f));P0=f;if(!b)return;var u=b.querySelector(".bt u"),t=b.querySelector(".bl b");if(u)u.style.width=(f*100).toFixed(1)+"%";if(t)t.textContent=Math.round(f*100)+"%"};'
+ 'if(!s||!L.length)return;function nx(){if(!b.isConnected)return;i=(i+1)%L.length;var e=document.createElement("div");e.style.backgroundImage="url(data:image/jpeg;base64,"+L[i]+")";["--x0","--y0"].forEach(function(k){e.style.setProperty(k,r())});s.appendChild(e);void e.offsetWidth;e.className="on";var o=[].slice.call(s.children).filter(function(c){return c!==e});setTimeout(function(){o.forEach(function(c){c.remove()})},1800);window.PT8_BOOTI=i;setTimeout(nx,6500)}nx()})();</script>')
+src=src.replace('<body>','<body><div id="ptBoot"><div class="bs"></div><div class="bv"></div><div class="lg">POLY<i>GT</i></div><div class="st">VERSION '+VERSION+'</div><div class="ln"></div><div class="bp"><div class="bl"><span>LOADING</span><b>0%</b></div><div class="bt"><u></u></div></div></div>'+BOOTBG,1)
+# when the warm-up is done: unhide the page and drop the loading screen under the title (or fade it out if there is no title)
+BOOT_JS='<script>(function(){var fin=0;function done(){if(fin)return;fin=1;var b=document.getElementById("ptBoot"),c=document.getElementById("ptBootCss");if(window.PT8_BP)PT8_BP(1);if(c)c.remove();if(!b)return;b.classList.add("rdy");if(!document.getElementById("ptTitle")){b.style.opacity=0;setTimeout(function(){b.remove()},1050)}}function go(){var w=window.PT8_BOOT;(w&&w.then?w:Promise.resolve()).then(function(){requestAnimationFrame(function(){requestAnimationFrame(function(){setTimeout(done,350)})})})}if(document.readyState==="complete")go();else addEventListener("load",go);setTimeout(done,900000)})();</script>'
 GLTF='<script>'+open(W+'/assets/GLTFLoader.r128.js').read()+'</script>'
-add=('<script>window.PT8_DRIVE=1</script>' if DRIVE else '')+GLTF+ANIM+BLD+FRM+CARS10+HPACK+BBG+PREV+UIFX+MUS+'<style id="v8css">'+css+'</style><script>\n'+'\n'.join(parts)+'\n</script>'
+# the first half of the bar follows the file as it is read in (a marker after each big block), the second half the warm-up in title.js
+_pcs=[('<script>window.PT8_DRIVE=1</script>' if DRIVE else ''),GLTF,ANIM,BLD,FRM,CARS10,HPACK,BBG,PREV,UIFX,MUS,'<style id="v8css">'+css+'</style><script>\n'+'\n'.join(parts)+'\n</script>']
 i=src.rindex('</body>') if '</body>' in src else len(src)
+_tot=i+sum(len(x) for x in _pcs);_c=i;add=''
+for _x in _pcs:
+  _c+=len(_x);add+=_x+('<script>window.PT8_BP&&PT8_BP(%.3f)</script>'%(.5*_c/_tot) if _x else '')
 src=src[:i]+add+BOOT_JS+src[i:]
 
 src=src.replace("'Poly Tourismo v7'","'Poly Tourismo'").replace("'Poly Tourismo v9'","'Poly Tourismo'")
-VERSION=open(W+'/VERSION').read().strip()
 src=src.replace('GRAND TOUR / V9','GRAND TOUR / V'+VERSION).replace("sm.textContent='V9'","sm.textContent='V"+VERSION+"'")
 src=rep(src,"      let input;\n      if(typeof o[key]==='boolean'){","      let input;\n      if(kind==='@btn'){input=document.createElement('button');input.textContent=max;input.className='sel';input.onclick=()=>{if(window.__optAction)window.__optAction(key)};row.append(input);return row}\n      if(typeof o[key]==='boolean'){")
 # rename: Poly Tourismo -> Poly GT (visible text only; save-data keys are untouched)
