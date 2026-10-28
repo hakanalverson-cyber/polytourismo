@@ -6192,6 +6192,30 @@ b,strong,h1,h2,h3,button,.btn,.gtab,.gti b,.hdr h2,#gtBar .gtl,.gtp,.crbox b,.qc
 #s8setup .sug .p2kb{margin:10px 0 2px}
 #s8setup #suTod:empty{display:none}
 #s8setup .pnl:has(#suCfg){overflow-y:auto;scrollbar-width:thin}
+
+/* Track Mode pick step (v0.21): big trackside track cards */
+#s8pick .pkGrid{position:absolute;left:3.4vw;right:3.4vw;top:14vh;bottom:11vh;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;align-content:start;overflow-y:auto;padding:4px 6px 12px 2px;scrollbar-width:thin;z-index:2}
+#s8pick .pk{position:relative;cursor:pointer;background:#0a0d11;border:1px solid #ffffff14;outline:2px solid transparent;outline-offset:2px;transition:outline-color .15s,transform .15s;overflow:hidden}
+#s8pick .pk:hover{transform:translateY(-2px)}
+#s8pick .pk.sel{outline-color:#f1f3f5}
+#s8pick .pk canvas{display:block;width:100%;aspect-ratio:16/9;height:auto}
+#s8pick .pkI{position:absolute;left:0;right:0;bottom:0;padding:22px 12px 9px;background:linear-gradient(transparent,#07090cee 55%)}
+#s8pick .pkI b{display:block;font:700 13px var(--mn);letter-spacing:.14em;color:#f1f3f5;text-transform:uppercase}
+#s8pick .pkI small{font:700 9px var(--mn);letter-spacing:.18em;color:var(--dim);text-transform:uppercase}
+#s8pick .pk .bnh{position:absolute;top:8px;right:9px;color:#f2c76b}
+#s8pick .pkNew{position:absolute;top:8px;left:9px;font:800 9px var(--mn);letter-spacing:.2em;font-style:normal;color:#111;background:#f2c76b;padding:3px 6px}
+#s8pick .pkAdd{display:flex;align-items:center;justify-content:center;aspect-ratio:16/9;border-style:dashed}
+#s8pick .pkPlus{font:300 46px/1 sans-serif;color:var(--dim);margin-bottom:26px}
+#pkLoad{position:fixed;inset:0;z-index:2147483000;background:#000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .35s}
+#pkLoad.on{opacity:1;pointer-events:auto}
+#pkLoad div{width:min(360px,70vw);text-align:center;color:#f1f3f5}
+#pkLoad b{font:800 13px var(--mn,monospace);letter-spacing:.4em}
+#pkLoad i{display:block;height:2px;background:#ffffff22;margin:16px 0 10px}
+#pkLoad u{display:block;height:100%;width:0;background:#f1f3f5;transition:width .25s;text-decoration:none}
+#pkLoad small{font:700 9px var(--mn,monospace);letter-spacing:.25em;color:#8a949c}
+/* Track Mode setup: the circuit was picked on the cards, so the list column goes and the map and options share the width */
+#s8setup.pkMode:not(.rs2) .cols{grid-template-columns:minmax(0,1.35fr) minmax(320px,1fr)}
+#s8setup.pkMode:not(.rs2) .cols>.pnl:first-child{display:none}
 </style><script>
 /* ===== Poly GT v8 layer: core (economy, gears, AI, race flow, modes) ===== */
 (function v8core(){
@@ -10800,6 +10824,31 @@ setTimeout(()=>{const bw=buildWorld;buildWorld=T=>{const sc=bw(T),pack=T.d&&T.d.
   if(P.addSeg){const s=new Float32Array(dec(pack.segs).buffer);for(let i=0;i<s.length;i+=4)P.addSeg(T,s[i],s[i+1],s[i+2],s[i+3],.35)}
  }catch(e){console.error('cartoon track',e)}
  return sc};
+/* Track Mode card art: a trackside shot of one corner of the bought model (outside of the corner, looking back up the approach).
+   Made once per track per session on a small renderer of its own; textures are waited for so the model is not drawn black */
+const SHOT={};let shR=null;
+P.trackShot=idx=>SHOT[idx]||(SHOT[idx]=new Promise(res=>setTimeout(async()=>{let sc=null,grp=null;try{
+ const def=Object.assign({},D[idx]);const T=sampleTrack(def);sc=buildWorld(T);sc.traverse(o=>{if(o.name==='cartoonTrack')grp=o});
+ const ims=[];sc.traverse(o=>{const m=o.material;if(m&&m.map&&m.map.image)ims.push(m.map.image)});
+ for(let t=0;t<60&&ims.some(im=>!(im.complete&&im.naturalWidth));t++)await new Promise(r=>setTimeout(r,50));
+ const N=T.N,k=(def.cartoon&&def.cartoon.carScale)||1,cv_=new Float32Array(N);for(let i=0;i<N;i++){let d=T.psi[(i+6)%N]-T.psi[(i-6+N)%N];d=Math.atan2(Math.sin(d),Math.cos(d));cv_[i]=d/(12*T.sp)}
+ /* the corners: local curvature peaks; the second sharpest makes a better picture than the hairpin (often a slow first-gear box) */
+ const pk=[];for(let i=0;i<N;i++){const a=Math.abs(cv_[i]);if(a<.012)continue;let top=true;for(let j=-25;j<=25&&top;j++)if(j&&Math.abs(cv_[(i+j+N)%N])>a)top=false;if(top)pk.push(i)}
+ pk.sort((a,b)=>Math.abs(cv_[b])-Math.abs(cv_[a]));if(!pk.length)pk.push(Math.round(N*.3));if(pk.length>1)pk.push(pk.shift());/* the hairpin goes last */
+ /* the first corner whose view of the approach is not blocked by a bank, wall or building of the model */
+ const cam=new THREE.PerspectiveCamera(42,16/9,.5,9000),rc=new THREE.Raycaster(),V=THREE.Vector3;let ok=false;
+ for(const a of pk.slice(0,6)){const sg=Math.sign(cv_[a])||1,ps=T.psi[a],rx=Math.cos(ps),rz=-Math.sin(ps),off=-sg*(T.hw[a]+9*k),cx=T.x[a]+rx*off,cz=T.z[a]+rz*off;
+  const gh=(T.surf?T.surf(cx,cz,T.y[a]+40).h:T.y[a]);const back=Math.round(70*k/T.sp),b=(a-back+N)%N,f=(a+Math.round(8*k/T.sp))%N;
+  const tx=T.x[b]*.6+T.x[f]*.4,tz=T.z[b]*.6+T.z[f]*.4;cam.position.set(cx,Math.max(gh,T.y[a])+4.5*k,cz);cam.lookAt(tx,T.y[a]+.5*k,tz);cam.updateMatrixWorld();
+  if(!grp){ok=true;break}let clear=true;for(const q of [a,b,(a-Math.round(back/2)+N)%N]){const to=new V(T.x[q],T.y[q]+1.2*k,T.z[q]),dir=to.clone().sub(cam.position),dl=dir.length();rc.set(cam.position,dir.normalize());rc.far=dl-3*k;if(rc.intersectObject(grp,true).length){clear=false;break}}
+  if(clear){ok=true;break}}
+ if(!shR){shR=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});shR.outputEncoding=THREE.sRGBEncoding;shR.toneMapping=THREE.ACESFilmicToneMapping;shR.toneMappingExposure=1.05;shR.setPixelRatio(1)}
+ shR.setSize(800,450,false);if(sc.fog&&sc.fog.far)sc.fog.far=Math.max(sc.fog.far,2400);shR.render(sc,cam);
+ const out=document.createElement('canvas');out.width=800;out.height=450;out.getContext('2d').drawImage(shR.domElement,0,0);res(out)}
+ catch(e){console.error('track shot',e);delete SHOT[idx];res(null)}
+ finally{if(sc){if(grp&&grp.parent)grp.parent.remove(grp);try{disposeWorld(sc)}catch(e){}}}},30)));
+P.trackShotCached=idx=>SHOT[idx]&&SHOT[idx]._v||null;
+{const ts=P.trackShot;P.trackShot=idx=>{const pr=ts(idx);pr.then(v=>{if(v&&SHOT[idx])SHOT[idx]._v=v});return pr}}
 /* the bought models are built at their real size, which dwarfs our cars: on these tracks the cars are drawn bigger (carScale), and the
    chase camera, wall contact and car-to-car contact grow with them. Physics speeds are unchanged. */
 const K=()=>{const R=typeof RACE!=="undefined"?RACE:null,d=R&&R.T&&R.T.d;return d&&d.cartoon&&d.cartoon.carScale||1};
@@ -11225,7 +11274,8 @@ const P=window.PT8;
 P.LOG=[
  {v:'0.21',d:'Oct 28, 2026',t:'Cleaner race setup',items:[
   'Race setup options are now in four short groups: Race, Field, Conditions and Car rules. Every row is one line with even buttons (weather no longer wraps).',
-  'Time of day sits under Conditions with a small preview, so nothing is cut off at the bottom of the panel.']},
+  'Time of day sits under Conditions with a small preview, so nothing is cut off at the bottom of the panel.',
+  'Track Mode: picking a circuit is its own step, with big cards showing a trackside view of a corner of each circuit (made behind a short black loading screen the first time). The setup step then gives the map and options the full width.']},
  {v:'0.20',d:'Oct 28, 2026',t:'Arcade Quickplay',items:[
   'Quickplay modes (Quick Race, Time Attack, Elimination, Cut-Up, Versus) now drive like an arcade racer: 30% more grip, brakes twice as strong, and the steering reaches the wheel quicker.',
   'Walls no longer stop you dead: the car slides along them and is turned back down the road.',
@@ -11555,7 +11605,7 @@ R.render=function(scene,cam){const sun=scene&&scene.userData&&scene.userData.sun
 const P=window.PT8,CARS=P.CARS,BYID=P.BYID,CLS=P.CLS,fmtCr=P.fmtCr,fmtT=P.fmtT,ord=P.ord,SORTED=P.SORTED;
 const $$=(s,r)=>[...(r||document).querySelectorAll(s)];
 const root=document.createElement('div');root.id='v8';document.body.appendChild(root);
-const SCREENS=['s8cards','s8quick','s8setup','s8career','s8show','s8res'];
+const SCREENS=['s8cards','s8quick','s8pick','s8setup','s8career','s8show','s8res'];
 const ST={mode:'ta',track:0,laps:3,rlaps:1,players:1,cpus:3,diff:1,time:120,traffic:'light',todUser:null,ret:'s8cards',cev:null,crank:null};
 const SR={cat:'ALL',kind:'garage',player:0,cap:null,ret:'s8setup',id:'merc',alt:0,ang:.6,vel:0,drag:false,rally:false};P.SR=SR;
 const crHTML='<div class="crbox"><small>BALANCE</small><b class="crv"></b></div>';
@@ -11643,6 +11693,9 @@ root.innerHTML=`
 </div>
 <div class="foot8"><button class="btn" data-a="back"><span>&lt; Back</span></button><div class="hint8">Arrows / 1-5 select &middot; Enter confirm &middot; Esc back</div><span style="width:90px"></span></div></section>
 
+<section class="v8s" id="s8pick"><div class="hdr"><h2 id="pkTitle"></h2><div class="sp"></div>${crHTML}</div><div class="pkGrid" id="pkGrid"></div>
+<div class="foot8"><button class="btn" data-a="back"><span>&lt; Back</span></button><div class="hint8">Arrows select &middot; Enter next &middot; Esc back</div><button class="btn go" id="pkGo"><span>Next: Setup &gt;</span></button></div></section>
+
 <section class="v8s" id="s8setup"><div class="hdr"><h2 id="suTitle">TIME <em>ATTACK</em></h2><div class="sp"></div>${crHTML}</div>
 <div class="cols"><div class="pnl"><h4>Track</h4><div id="trkList"></div></div>
 <div class="pnl"><div class="prev"><canvas id="trkPrev" width="480" height="320"></canvas></div><div class="tinfo" id="trkInfo"></div><div id="trkExtra"></div></div>
@@ -11663,15 +11716,15 @@ $$('.ico',root).forEach(e=>{e.appendChild(IC[e.dataset.i]())});
 /* ================= screen switching ================= */
 const rawShow=show;let prevScr='menu';
 const WP=document.createElement('div');WP.id='ptWipe';document.body.appendChild(WP);
-const MENUS=['menu','s8cards','s8quick','s8setup','s8career','s8show','s8res'];let wipeT=0;
+const MENUS=['menu','s8cards','s8quick','s8pick','s8setup','s8career','s8show','s8res'];let wipeT=0;
 function wipe(){try{WP.classList.remove('go');void WP.offsetWidth;WP.classList.add('go');clearTimeout(wipeT);wipeT=setTimeout(()=>WP.classList.remove('go'),600)}catch(e){}}
-show=n=>{const was=scr;if(was&&was!==n&&MENUS.includes(n)&&was!=='game'&&was!=='pause')wipe();rawShow(n);if(was!==n&&['s8cards','s8quick','s8setup','s8career','s8show'].includes(n)){const e=$(n);e.classList.add('enter');clearTimeout(e._en);e._en=setTimeout(()=>e.classList.remove('enter'),900)}if(was!==n&&P.sfx&&['s8cards','s8quick','s8setup','s8career','s8show','s8res','menu'].includes(n))P.sfx('whoosh');for(const id of SCREENS)$(id).classList.toggle('on',id===n);
+show=n=>{const was=scr;if(was&&was!==n&&MENUS.includes(n)&&was!=='game'&&was!=='pause')wipe();rawShow(n);if(was!==n&&['s8cards','s8quick','s8pick','s8setup','s8career','s8show'].includes(n)){const e=$(n);e.classList.add('enter');clearTimeout(e._en);e._en=setTimeout(()=>e.classList.remove('enter'),900)}if(was!==n&&P.sfx&&['s8cards','s8quick','s8pick','s8setup','s8career','s8show','s8res','menu'].includes(n))P.sfx('whoosh');for(const id of SCREENS)$(id).classList.toggle('on',id===n);
  $$('.crv',root).forEach(e=>e.textContent=fmtCr(P.SV().cr));
  if(was==='s8show'&&n!=='s8show')studioOff();
- if(['menu','s8cards','s8quick','s8setup','s8career','s8res'].includes(n))refreshMenuCars();
+ if(['menu','s8cards','s8quick','s8pick','s8setup','s8career','s8res'].includes(n))refreshMenuCars();
  if(n==='menu'&&P.menuStats)P.menuStats()};
 function refreshMenuCars(){const sv=P.SV();for(let i=0;i<4;i++){const s=sv.sel[i];carChoices[i]=P.modelOf(s.id,s.alt)}}
-const goBack={s8cards:()=>show('menu'),s8quick:()=>show('s8cards'),s8setup:()=>{if(isRL(ST.mode)&&ST.rstep===2){ST.rstep=1;renderSetup();return}show(ST.ret)},s8career:()=>{if(P.frBack&&P.frBack())return;show('s8cards')},s8res:()=>resContinue()};
+const goBack={s8cards:()=>show('menu'),s8quick:()=>show('s8cards'),s8pick:()=>show(ST.ret),s8setup:()=>{if(isRL(ST.mode)&&ST.rstep===2){ST.rstep=1;renderSetup();return}if(ST.fromPick&&ST.mode==='track'){openPick(true);return}show(ST.ret)},s8career:()=>{if(P.frBack&&P.frBack())return;show('s8cards')},s8res:()=>resContinue()};
 const leaveShow=()=>{const r=SR.ret;if(r==='s8res_back'){renderSetup();show('s8setup');return}show(r);if(r==='s8setup')renderSetup();if(r==='s8career')renderCareer()};
 function fadeTo(fn){const f=$('shFade');f.classList.add('on');setTimeout(()=>{try{fn()}catch(e){console.error('fadeTo',e&&e.stack||e)}setTimeout(()=>f.classList.remove('on'),260)},230)}
 const inGrid=()=>CARDS()&&SR.view==='grid',inCar=()=>CARDS()&&SR.view==='car';
@@ -11692,7 +11745,32 @@ let qf=0;const setQf=(i,hv)=>{const cs=$$('#s8quick .qc',root);qf=(i+cs.length)%
 function quickPick(c){P.sfx&&P.sfx('select');if(c.dataset.p)ST.players=+c.dataset.p;pickMode(c.dataset.m);ST.ret='s8quick'}
 $$('#s8quick .qc',root).forEach((c,k)=>{c.onmouseenter=()=>setQf(k,1);c.onclick=()=>quickPick(c)});
 const barnIcon=d=>{const b=P.BARNS&&P.BARNS[d.name];if(!b||d.gravel)return '';const f=P.barnFound&&P.barnFound(b.car);return `<span class="bnh ${f?'got':''}" title="${f?'Barn find collected':'Barn find hidden here'}"><svg viewBox="0 0 16 16" width="15" height="15" shape-rendering="crispEdges"><path d="M8 1.5 1.5 7.5h2V14h3.6v-3.8h1.8V14h3.6V7.5h2z" fill="currentColor"/></svg></span>`};const isStg=i=>P.STAGES.indexOf(i)>=0,isTrk=i=>(P.TRK_TRACKS||[]).indexOf(i)>=0,gone=i=>!!D[i]&&(!!D[i].ring||(D[i].ra||D[i].imola||D[i].packOnly)&&!D[i].cartoon)/* the old hand-built Road Atlanta and Imola are gone: these slots only show a loaded track file; the Nordschleife was swapped for the Nürburgring GP model (round 17) */,okTrack=(m,i)=>gone(i)?false:m==='rally'?isStg(i):m==='track'?isTrk(i):!isStg(i)&&!isTrk(i)/* circuits are Track-mode exclusives */,firstTrack=m=>m==='rally'?P.STAGES[0]:m==='track'?(P.TRK_TRACKS.find(i=>!gone(i))??P.TRK_TRACKS[0]):0,isRL=m=>m==='rally'||(m==='track'&&ST.trkType==='tt');/* a Track race picks cars on the setup page, like Quick Play */
-function pickMode(m){if(m==='quick'){P.sfx&&P.sfx('select');show('s8quick');setQf(0)}else{ST.mode=m;P._to=m==='track';P._ro=m==='rally';if(isRL(m)||m==='track')ST.rstep=1;if(!okTrack(m,ST.track))ST.track=firstTrack(m);ST.ret='s8cards';if(m==='rally'&&P.rallyIntro){P.rallyIntro(()=>{renderSetup();show('s8setup');if(P.prewarmStages)setTimeout(P.prewarmStages,1500)},ST.track)}else{renderSetup();show('s8setup')}}}
+function pickMode(m){if(m==='quick'){P.sfx&&P.sfx('select');show('s8quick');setQf(0)}else{ST.mode=m;P._to=m==='track';P._ro=m==='rally';if(isRL(m)||m==='track')ST.rstep=1;if(!okTrack(m,ST.track))ST.track=firstTrack(m);ST.ret='s8cards';if(m==='rally'&&P.rallyIntro){ST.fromPick=false;P.rallyIntro(()=>{renderSetup();show('s8setup');if(P.prewarmStages)setTimeout(P.prewarmStages,1500)},ST.track)}else if(m==='track')openPick();else{ST.fromPick=false;renderSetup();show('s8setup')}}}
+/* ================= TRACK PICK (Track Mode step 1): big cards with a trackside shot of a corner of each circuit, then the setup screen with room
+   for the options. The shots (P.trackShot, cartoon.js) are made once per session behind a black loading fade */
+const PK={list:[],cols:4,fail:{}};
+const pkLoad=document.createElement('div');pkLoad.id='pkLoad';pkLoad.innerHTML='<div><b>LOADING TRACKS</b><i><u></u></i><small></small></div>';document.body.appendChild(pkLoad);
+/* a render that takes too long falls back to the map drawing */
+const pkRender=i=>!P.trackShot?Promise.resolve(null):Promise.race([P.trackShot(i),new Promise(r=>setTimeout(()=>r(null),25000))]).catch(()=>null);
+function openPick(back){const m=ST.mode;if(!okTrack(m,ST.track))ST.track=firstTrack(m);PK.list=D.map((d,i)=>okTrack(m,i)?i:-1).filter(i=>i>=0);
+ const todo=PK.list.filter(i=>!(P.trackShotCached&&P.trackShotCached(i))&&!PK.fail[i]),done=()=>{renderPick();show('s8pick')};
+ if(back||!todo.length){done();return}
+ /* black fade, render the missing aerials one at a time, then fade back in on the grid */
+ const bar=pkLoad.querySelector('u'),lab=pkLoad.querySelector('small');bar.style.width='0%';lab.textContent='';pkLoad.classList.add('on');
+ let k=0;const next=()=>{if(k>=todo.length){bar.style.width='100%';setTimeout(()=>{done();setTimeout(()=>pkLoad.classList.remove('on'),120)},250);return}
+  const i=todo[k];lab.textContent=D[i].name.toUpperCase();pkRender(i).then(c=>{if(!c)PK.fail[i]=1;k++;bar.style.width=Math.round(k/todo.length*100)+'%';setTimeout(next,30)})};
+ setTimeout(next,380)}
+function pkThumb(cv,i){const c=P.trackShotCached&&P.trackShotCached(i),g=cv.getContext('2d');if(c){const W=cv.width,H=cv.height,s=Math.max(W/c.width,H/c.height),w=c.width*s,h=c.height*s;g.drawImage(c,(W-w)/2,(H-h)/2,w,h)}else drawTrack(cv,i,false)}
+function renderPick(){const m=ST.mode;$('pkTitle').innerHTML='<em>TRACK</em> SELECT CIRCUIT';
+ const g=$('pkGrid');g.innerHTML=PK.list.map(i=>{const d=D[i],T=tr(i);return `<div class="pk${i===ST.track?' sel':''}" data-i="${i}"><canvas width="480" height="270"></canvas><div class="pkI"><b>${d.name}</b><small>${P.TRACK_INFO[i].s} &middot; ${(T.L/1000).toFixed(1)} km${d.cartoon?' &middot; 3D model':''}</small></div>${barnIcon(d)}${isStg(i)||isTrk(i)?'<em class="pkNew">NEW</em>':''}</div>`}).join('')
+  +((P.TRK_TRACKS||[]).some(i=>okTrack(m,i))&&P.loadTrackFile?`<div class="pk pkAdd" id="pkAdd"><div class="pkPlus">+</div><div class="pkI"><b>Add track file</b><small id="pkAddMsg">Load a .ptrack file</small></div><input type="file" accept=".ptrack,.json,.gz" style="display:none"></div>`:'');
+ $$('#pkGrid .pk',root).forEach(e=>{if(e.id==='pkAdd')return;const i=+e.dataset.i;pkThumb(e.querySelector('canvas'),i);if(!(P.trackShotCached&&P.trackShotCached(i))&&P.trackShot)P.trackShot(i).then(c=>{if(c&&e.isConnected){delete PK.fail[i];pkThumb(e.querySelector('canvas'),i)}});/* a slow shot swaps in when it is ready */e.onclick=()=>pickSel(i);e.ondblclick=()=>{pickSel(i);pickNext()}});
+ {const a=$('pkAdd');if(a){const inp=a.querySelector('input'),msg=a.querySelector('#pkAddMsg');a.onclick=e=>{if(e.target!==inp)inp.click()};
+  inp.onchange=async()=>{const f=inp.files&&inp.files[0];if(!f)return;msg.textContent='Loading '+f.name+'...';try{const r=await P.loadTrackFile(f);ST.track=r.i;openPick()}catch(e){msg.textContent='Could not load: '+(e&&e.message||e)}}}}
+ $('pkGo').onclick=()=>pickNext();
+ requestAnimationFrame(()=>{const cs=$$('#pkGrid .pk',root);if(cs.length>1)PK.cols=Math.max(1,cs.filter(c=>c.offsetTop===cs[0].offsetTop).length);const s=g.querySelector('.pk.sel');if(s)s.scrollIntoView({block:'nearest'})})}
+function pickSel(i,scroll){ST.track=i;P.sfx&&P.sfx('move');$$('#pkGrid .pk',root).forEach(e=>e.classList.toggle('sel',+e.dataset.i===i));if(scroll){const s=$('pkGrid').querySelector('.pk.sel');if(s)s.scrollIntoView({block:'nearest'})}}
+function pickNext(){if(!PK.list.includes(ST.track))return;P.sfx&&P.sfx('select');ST.fromPick=true;renderSetup();show('s8setup')}
 
 /* ---- main menu ---- */
 const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+({play:'<path d="M7 4.5v15l12-7.5z" fill="currentColor"/>',garage:'<path d="M3 15l2-5.5C5.4 8.5 6.2 8 7.2 8h9.6c1 0 1.8.5 2.2 1.5L21 15v3h-3v-1.5H6V18H3z"/><circle cx="7.5" cy="13.2" r=".6" fill="currentColor"/><circle cx="16.5" cy="13.2" r=".6" fill="currentColor"/>',brand:'<path d="M4 12.5V5h7.5l8.5 8.5-7 7z"/><circle cx="8.2" cy="8.7" r="1.2" fill="currentColor"/>',set:'<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',log:'<path d="M5 6h14M5 12h14M5 18h9"/>'})[n]+'</svg><span>'+l+'</span>';P.mi=mi;
@@ -11832,7 +11910,7 @@ function trackRaceCfg(){if(ST.players+(ST.cpus||0)>8)ST.cpus=8-ST.players;
  +`<div class="row8"><b>CPU class</b><span class="seg" id="cCc">${seg([['auto','Auto'],['C','C'],['B','B'],['A','A'],['S','S']],ST.cc||'auto')}</span></div>`
  +`<div class="row8"><b>CPU cars</b><span class="seg" id="cCpuCar">${seg([['any','Any'],['track','Track cars']],ST.cpuCar||'any')}</span></div>`
  +`<div class="row8"><b>Start</b><span class="seg" id="cStart">${seg([['standing','Standing'],['rolling','Rolling']],ST.start||'standing')}</span></div>`}
-function renderSetup(){const m=ST.mode;$('suTitle').innerHTML=MODE_NAME[m];
+function renderSetup(){const m=ST.mode;$('s8setup').classList.toggle('pkMode',m==='track');$('suTitle').innerHTML=MODE_NAME[m];
  $('trkList').innerHTML=D.map((d,i)=>!okTrack(m,i)?'':`<div class="trk ${i===ST.track?'sel':''}" data-i="${i}"><canvas width="56" height="42"></canvas><div><b>${d.name}</b><small>${P.TRACK_INFO[i].s} &middot; ${Math.round(tr(i).L)} m${d.cartoon?' &middot; 3D model':''}</small></div>${barnIcon(d)}</div>`).join('')
   +((P.TRK_TRACKS||[]).some(i=>okTrack(m,i))&&P.loadTrackFile?`<div class="trk trkAdd" id="trkAdd"><div style="width:56px;text-align:center;font-size:26px;line-height:42px">+</div><div><b>Add track file</b><small id="trkAddMsg">${Object.keys(P.trackPacks||{}).length?'Loaded: '+Object.values(P.trackPacks).map(p=>p.name).join(', '):'Load a .ptrack file from your computer'}</small></div><input type="file" accept=".ptrack,.json,.gz" style="display:none"></div>`:'');
  $$('#trkList .trk',root).forEach(e=>{if(e.id==='trkAdd')return;const i=+e.dataset.i;drawTrack(e.querySelector('canvas'),i,false);e.onclick=()=>{ST.track=i;renderSetup()}});
@@ -12238,6 +12316,7 @@ addEventListener('keydown',e=>{
   if(CARDS()){if(inGrid()){if(e.code==='ArrowLeft'||e.code==='ArrowUp'){e.preventDefault();gridMove(-1)}else if(e.code==='ArrowRight'||e.code==='ArrowDown'){e.preventDefault();gridMove(1)}else if(e.code==='Enter'){if((P.SV().owned[SR.id]||0)>0)openCar(SR.id)}return}
    if(e.code==='ArrowLeft'||e.code==='KeyQ')flipCar(-1);else if(e.code==='ArrowRight'||e.code==='KeyE')flipCar(1);else if(e.code==='Enter')$('shAct').click();return}
   const list=(CARDS()&&SR.order)?SR.order.map(id=>BYID[id]):showList().filter(c=>!SR.sec||SR.cat==='ALL'||(SR.cat==='OWNED'?(P.SV().owned[c.id]||0)>0:((SR.rally||SR.trk)&&SR.kind==='garage'?(SR.trk?c.tdiv:c.rdiv):c.cat)===SR.cat)),i=Math.max(0,list.findIndex(c=>c.id===SR.id));if(!list.length)return;if(e.code==='ArrowDown'){SR.id=list[Math.min(list.length-1,i+1)].id;SR.alt=P.owns(SR.id,SR.alt)?SR.alt:0;renderShow()}else if(e.code==='ArrowUp'){SR.id=list[Math.max(0,i-1)].id;SR.alt=P.owns(SR.id,SR.alt)?SR.alt:0;renderShow()}else if(e.code==='ArrowLeft')SR.vel-=3;else if(e.code==='ArrowRight')SR.vel+=3;else if(e.code==='Enter')$('shAct').click();return}
+ if(scr==='s8pick'){const n=PK.list.length;if(!n)return;let k=Math.max(0,PK.list.indexOf(ST.track));if(e.code==='ArrowRight'||e.code==='KeyD')k=(k+1)%n;else if(e.code==='ArrowLeft'||e.code==='KeyA')k=(k+n-1)%n;else if(e.code==='ArrowDown'||e.code==='KeyS')k=Math.min(n-1,k+PK.cols);else if(e.code==='ArrowUp'||e.code==='KeyW')k=Math.max(0,k-PK.cols);else if(e.code==='Enter'){pickNext();return}else return;e.preventDefault();pickSel(PK.list[k],true);return}
  if(scr==='s8setup'&&e.code==='Enter'){$('suGo').click();return}
  if(scr==='menu'&&P.menuKey&&P.menuKey(e)){return}
  if(scr==='s8res'&&e.code==='Enter'){resContinue()}});
@@ -12246,7 +12325,7 @@ addEventListener('keydown',e=>{
 frame=function(n){requestAnimationFrame(frame);const dt=Math.min(.05,Math.max(0,(n-last)/1000));last=n;dtf=dt;T0+=dt;
  if(RACE&&(scr==='game'||scr==='pause'||scr==='s8res')){if(!paused)step(dt);drawRace(dt);if(scr==='game')hudUpdate()}
  else if(scr==='s8show'){if(!inGrid())drawShow(dt)}
- else if(scr==='menu'||scr==='s8cards'||scr==='s8quick'||scr==='s8setup'||scr==='s8career'||scr==='s8res'){MS=MS||menuScene();MS.tick(Math.max(0,T0));R.setScissorTest(false);R.setViewport(0,0,R.domElement.width,R.domElement.height);MS.draw?MS.draw():R.render(MS.sc,MS.cam)}};
+ else if(scr==='menu'||scr==='s8cards'||scr==='s8quick'||scr==='s8pick'||scr==='s8setup'||scr==='s8career'||scr==='s8res'){MS=MS||menuScene();MS.tick(Math.max(0,T0));R.setScissorTest(false);R.setViewport(0,0,R.domElement.width,R.domElement.height);MS.draw?MS.draw():R.render(MS.sc,MS.cam)}};
 /* pause menu */
 (function(){const b=$('pause').querySelector('.b'),opt=[...b.querySelectorAll('button')].pop();b.innerHTML='<button id="pRes">Resume</button><button id="pRst">Restart</button><button id="pQuit">Quit to menu</button>';b.appendChild(opt);
  $('pRes').onclick=()=>resume();$('pRst').onclick=()=>{startRace()};$('pQuit').onclick=()=>{const r=RACE_RET();P.cleanupRace();show(r);if(r==='s8setup')renderSetup();if(r==='s8career')renderCareer()};

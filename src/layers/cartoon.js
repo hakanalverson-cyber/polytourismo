@@ -76,6 +76,31 @@ setTimeout(()=>{const bw=buildWorld;buildWorld=T=>{const sc=bw(T),pack=T.d&&T.d.
   if(P.addSeg){const s=new Float32Array(dec(pack.segs).buffer);for(let i=0;i<s.length;i+=4)P.addSeg(T,s[i],s[i+1],s[i+2],s[i+3],.35)}
  }catch(e){console.error('cartoon track',e)}
  return sc};
+/* Track Mode card art: a trackside shot of one corner of the bought model (outside of the corner, looking back up the approach).
+   Made once per track per session on a small renderer of its own; textures are waited for so the model is not drawn black */
+const SHOT={};let shR=null;
+P.trackShot=idx=>SHOT[idx]||(SHOT[idx]=new Promise(res=>setTimeout(async()=>{let sc=null,grp=null;try{
+ const def=Object.assign({},D[idx]);const T=sampleTrack(def);sc=buildWorld(T);sc.traverse(o=>{if(o.name==='cartoonTrack')grp=o});
+ const ims=[];sc.traverse(o=>{const m=o.material;if(m&&m.map&&m.map.image)ims.push(m.map.image)});
+ for(let t=0;t<60&&ims.some(im=>!(im.complete&&im.naturalWidth));t++)await new Promise(r=>setTimeout(r,50));
+ const N=T.N,k=(def.cartoon&&def.cartoon.carScale)||1,cv_=new Float32Array(N);for(let i=0;i<N;i++){let d=T.psi[(i+6)%N]-T.psi[(i-6+N)%N];d=Math.atan2(Math.sin(d),Math.cos(d));cv_[i]=d/(12*T.sp)}
+ /* the corners: local curvature peaks; the second sharpest makes a better picture than the hairpin (often a slow first-gear box) */
+ const pk=[];for(let i=0;i<N;i++){const a=Math.abs(cv_[i]);if(a<.012)continue;let top=true;for(let j=-25;j<=25&&top;j++)if(j&&Math.abs(cv_[(i+j+N)%N])>a)top=false;if(top)pk.push(i)}
+ pk.sort((a,b)=>Math.abs(cv_[b])-Math.abs(cv_[a]));if(!pk.length)pk.push(Math.round(N*.3));if(pk.length>1)pk.push(pk.shift());/* the hairpin goes last */
+ /* the first corner whose view of the approach is not blocked by a bank, wall or building of the model */
+ const cam=new THREE.PerspectiveCamera(42,16/9,.5,9000),rc=new THREE.Raycaster(),V=THREE.Vector3;let ok=false;
+ for(const a of pk.slice(0,6)){const sg=Math.sign(cv_[a])||1,ps=T.psi[a],rx=Math.cos(ps),rz=-Math.sin(ps),off=-sg*(T.hw[a]+9*k),cx=T.x[a]+rx*off,cz=T.z[a]+rz*off;
+  const gh=(T.surf?T.surf(cx,cz,T.y[a]+40).h:T.y[a]);const back=Math.round(70*k/T.sp),b=(a-back+N)%N,f=(a+Math.round(8*k/T.sp))%N;
+  const tx=T.x[b]*.6+T.x[f]*.4,tz=T.z[b]*.6+T.z[f]*.4;cam.position.set(cx,Math.max(gh,T.y[a])+4.5*k,cz);cam.lookAt(tx,T.y[a]+.5*k,tz);cam.updateMatrixWorld();
+  if(!grp){ok=true;break}let clear=true;for(const q of [a,b,(a-Math.round(back/2)+N)%N]){const to=new V(T.x[q],T.y[q]+1.2*k,T.z[q]),dir=to.clone().sub(cam.position),dl=dir.length();rc.set(cam.position,dir.normalize());rc.far=dl-3*k;if(rc.intersectObject(grp,true).length){clear=false;break}}
+  if(clear){ok=true;break}}
+ if(!shR){shR=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});shR.outputEncoding=THREE.sRGBEncoding;shR.toneMapping=THREE.ACESFilmicToneMapping;shR.toneMappingExposure=1.05;shR.setPixelRatio(1)}
+ shR.setSize(800,450,false);if(sc.fog&&sc.fog.far)sc.fog.far=Math.max(sc.fog.far,2400);shR.render(sc,cam);
+ const out=document.createElement('canvas');out.width=800;out.height=450;out.getContext('2d').drawImage(shR.domElement,0,0);res(out)}
+ catch(e){console.error('track shot',e);delete SHOT[idx];res(null)}
+ finally{if(sc){if(grp&&grp.parent)grp.parent.remove(grp);try{disposeWorld(sc)}catch(e){}}}},30)));
+P.trackShotCached=idx=>SHOT[idx]&&SHOT[idx]._v||null;
+{const ts=P.trackShot;P.trackShot=idx=>{const pr=ts(idx);pr.then(v=>{if(v&&SHOT[idx])SHOT[idx]._v=v});return pr}}
 /* the bought models are built at their real size, which dwarfs our cars: on these tracks the cars are drawn bigger (carScale), and the
    chase camera, wall contact and car-to-car contact grow with them. Physics speeds are unchanged. */
 const K=()=>{const R=typeof RACE!=="undefined"?RACE:null,d=R&&R.T&&R.T.d;return d&&d.cartoon&&d.cartoon.carScale||1};
