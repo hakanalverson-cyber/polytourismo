@@ -1341,3 +1341,9 @@ button.gxs{cursor:pointer;transition:background .15s}button.gxs:hover{background
 #gxTop button.gxs:hover,#gxTop button.gxs:hover b{color:#fff!important}
 #gxTop .gxcar:hover small{color:#c9d2d8}
 #gxTop .gxcar:hover .gxcard{box-shadow:0 0 0 1.5px #fff,0 0 0 3px #0008,0 0 14px #ffffff55}
+/* the white outline on a selected or hovered card is drawn outside the card: give every scrolling card area room for it */
+#v8 #s8show.gtb.mkc .gtstrip{padding:10px 8px 8px!important}
+#v8 #s8show .lst{padding:6px 8px 8px!important;box-sizing:border-box}
+#v8 #s8show .gg,#v8 #s8show .mkg{padding:4px}
+#v8 #pkGrid{padding:8px!important;box-sizing:border-box}
+#v8 .evl{padding:4px}

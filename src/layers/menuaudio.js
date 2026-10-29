@@ -12,22 +12,33 @@ let deck=[],menuKey=null,pop=null,popT=0,shown='',blockedUntilGesture=false;cons
 const has=k=>!!document.getElementById(TR[k][1]);
 function shuffle(last){deck=MENU.filter(has);for(let i=deck.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[deck[i],deck[j]]=[deck[j],deck[i]]}if(deck[0]===last&&deck.length>1)deck.push(deck.shift())}
 function popup(k){try{if(scr!=='menu')return;/* only on the main menu (the music itself keeps playing everywhere) */const txt=TR[k][0];
- /* now playing: a small sharp-cornered card in the bottom-right corner, above the screen buttons; slides in, fades out */
- if(!pop){pop=document.createElement('div');pop.id='ptNowPlaying';pop.style.cssText='position:fixed;right:28px;bottom:48px;z-index:99999;pointer-events:none;font-family:var(--gt,inherit);color:#eef1f3;background:rgba(9,12,16,.86);border-left:2px solid #f1f3f5;padding:9px 16px 10px 14px;min-width:170px;max-width:320px;box-shadow:0 6px 24px rgba(0,0,0,.35);opacity:0;transform:translateX(16px);transition:opacity .45s ease,transform .45s ease';document.body.appendChild(pop)}
- {/* the same gap (28 px) to the right edge and to the footer bar below it */const f=document.querySelector('#menu .mfoot'),fr=f&&f.getBoundingClientRect();pop.style.right='28px';pop.style.bottom=((fr&&fr.height?innerHeight-fr.top:0)+28)+'px'}
- clearTimeout(popT);pop.innerHTML='<div style="font-size:9px;letter-spacing:.3em;color:#8d97a3;margin-bottom:5px">NOW PLAYING</div><div style="font-size:13px;font-weight:700;letter-spacing:.08em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+txt.toUpperCase()+'</div>';
- requestAnimationFrame(()=>{pop.style.opacity=1;pop.style.transform='none'});popT=setTimeout(()=>{pop.style.opacity=0;pop.style.transform='translateX(16px)'},5000)}catch(e){}}
+ /* now playing, PS3 style: a soft translucent plate under the top bar on the right, a music-note disc, the song in white and
+    "Now Playing" under it; it glides in, waits, and fades away */
+ if(!pop){pop=document.createElement('div');pop.id='ptNowPlaying';document.body.appendChild(pop);const st=document.createElement('style');st.textContent=
+  '#ptNowPlaying{position:fixed;right:24px;top:82px;z-index:99999;pointer-events:none;display:flex;align-items:center;gap:12px;min-width:220px;max-width:340px;padding:10px 18px 10px 10px;border-radius:8px!important;'
+  +'background:linear-gradient(180deg,rgba(70,76,84,.62) 0%,rgba(30,33,37,.72) 50%,rgba(14,15,18,.78) 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.28),inset 0 0 0 1px rgba(255,255,255,.08),0 8px 26px rgba(0,0,0,.45);'
+  +'-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);color:#fff;font-family:var(--gt,sans-serif);opacity:0;transform:translateX(24px);transition:opacity .5s ease,transform .6s cubic-bezier(.2,.8,.2,1)}'
+  +'#ptNowPlaying .d{flex:none;width:38px;height:38px;border-radius:50%!important;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#7d8a95,#2b3239 70%);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 2px 6px rgba(0,0,0,.5)}'
+  +'#ptNowPlaying .d svg{width:18px;height:18px}#ptNowPlaying.on .d{animation:ptNpS 2.4s ease-in-out infinite}'
+  +'#ptNowPlaying b{display:block;font-weight:400;font-size:14px;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px rgba(0,0,0,.6)}'
+  +'#ptNowPlaying small{display:block;margin-top:3px;font-size:10px;letter-spacing:.06em;color:#b8c1c8}'
+  +'#ptNowPlaying .eq{display:flex;gap:2px;align-items:flex-end;height:12px;margin-left:auto;padding-left:8px}#ptNowPlaying .eq i{width:2px;background:#e9ecef;border-radius:1px!important;animation:ptNpE 1s ease-in-out infinite}'
+  +'#ptNowPlaying .eq i:nth-child(2){animation-delay:-.4s}#ptNowPlaying .eq i:nth-child(3){animation-delay:-.7s}'
+  +'@keyframes ptNpE{0%,100%{height:3px}50%{height:12px}}@keyframes ptNpS{0%,100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 2px 6px rgba(0,0,0,.5)}50%{box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 0 12px rgba(255,255,255,.25)}}';document.head.appendChild(st)}
+ clearTimeout(popT);const esc=t=>String(t).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]);
+ pop.innerHTML='<div class="d"><svg viewBox="0 0 24 24" fill="#fff"><path d="M9 17.5V6l10-2v11.5" fill="none" stroke="#fff" stroke-width="1.6"/><circle cx="6.8" cy="17.6" r="2.4"/><circle cx="16.8" cy="15.6" r="2.4"/></svg></div><div style="min-width:0"><b>'+esc(txt)+'</b><small>Now Playing</small></div><div class="eq"><i></i><i></i><i></i></div>';
+ pop.classList.add('on');requestAnimationFrame(()=>{pop.style.opacity=1;pop.style.transform='none'});popT=setTimeout(()=>{pop.style.opacity=0;pop.style.transform='translateX(24px)';pop.classList.remove('on')},5500)}catch(e){}}
 /* one Audio element per track; paused (never dropped) when the screen changes, so a song always plays out to its end */
 function el(k,loop){let a=AU[k];if(a)return a;const u=urlOf(k);if(!u)return null;a=AU[k]=new Audio(u);a.loop=!!loop;a.preload='auto';a._v=0;a._k=k;a._ann=false;a._t=0;
  if(!loop)a.addEventListener('ended',()=>{delete AU[k];if(menuKey===k)menuKey=null});return a}
 function wanted(){/* 0.02: silent while loading; the music starts when the title says PRESS ANY BUTTON */if(!P.bootDone)return null;if(scr==='game')return(typeof RACE!=='undefined'&&RACE&&RACE.mode==='free')?'menu':null;if(scr==='s8show'){const kd=P.SR&&P.SR.kind;return kd==='brand'?'menu':(P.SR&&(P.SR.rally||P.SR.trk))?'menu':(has('body')?'body':'menu')}return'menu'}
-function tick(){if(pop&&scr!=='menu'&&pop.style.opacity!=='0'){clearTimeout(popT);pop.style.opacity=0;pop.style.transform='translateX(16px)'}const on=P.aud&&P.aud.on()&&!document.hidden,w=on?wanted():null,t=O().master;let key=null;
+function tick(){if(pop&&scr!=='menu'&&pop.style.opacity!=='0'){clearTimeout(popT);pop.style.opacity=0;pop.style.transform='translateX(24px)'}const on=P.aud&&P.aud.on()&&!document.hidden,w=on?wanted():null,t=O().master;let key=null;
  if(w==='menu'){if(!menuKey){if(!deck.length)shuffle(null);menuKey=deck.shift()}key=menuKey}else if(w==='body'||w==='cafe')key=w;
  for(const k in AU){const a=AU[k];if(k!==key){a._v+=(0-a._v)*.22;a.volume=Math.max(0,Math.min(1,a._v));if(a._v<.01&&!a.paused)a.pause()}}
  if(!key)return;const a=el(key,key==='body'||key==='cafe');if(!a)return;
  a._v+=(Math.min(1,t)*(scr==='game'?.4:1)*(performance.now()<(P.duckUntil||0)?.45:1)-a._v)*(performance.now()<(P.duckUntil||0)?.5:.12);/* dips under the menu sound effects */a.volume=Math.max(0,Math.min(1,a._v));
  if(a.paused&&!blockedUntilGesture&&!a._pend){a._pend=1;a.play().then(()=>{a._pend=0;hint(false);if(!a._ann){a._ann=true;popup(key)}}).catch(()=>{a._pend=0;blockedUntilGesture=true;hint(true)})}}
-setInterval(tick,200);
+P.npShow=popup;setInterval(tick,200);
 /* browsers refuse sound until the first click or key press, so start inside that very event and show a small hint until then */
 let hnt=null;function hint(on){try{if(!hnt){hnt=document.createElement('div');hnt.textContent='CLICK OR PRESS ANY KEY FOR MUSIC';hnt.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:14px;white-space:nowrap;z-index:99999;pointer-events:none;color:#eef1ef;font:600 10px/1 system-ui,sans-serif;letter-spacing:.28em;opacity:0;transition:opacity .6s;text-shadow:0 1px 8px #000a';document.body.appendChild(hnt)}hnt.style.opacity=on&&scr!=='game'&&!document.getElementById('ptTitle')?.7:0}catch(e){}}
 const gest=()=>{blockedUntilGesture=false;tick()};for(const ev of['pointerdown','mousedown','keydown','touchstart','click'])addEventListener(ev,gest,true);

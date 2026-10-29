@@ -14,6 +14,8 @@ P.LOG=[
   'The loading screen has the same glossy bars along the top and bottom, with the progress bar and then PRESS ANY BUTTON in the bottom bar. The music waits until PRESS ANY BUTTON shows.',
   'Quickplay has its own page: five cards with thin line icons, the name and one short line each. Hovering the Quickplay card still shows the quick list, and it now stays up while the mouse is near it.',
   'The current car in the top bar brightens on hover like Settings and the update log (its text used to turn black).',
+  'The now playing card is PS3 style: a soft translucent plate under the top bar with a music-note disc, the song name, Now Playing and a small level meter.',
+  'Selected and hovered cards in the garage, Brand Central and track lists no longer have their white outline cut off at the edges.',
   'Fixes: Enter on the main menu no longer skips straight to the old mode cards, the start-line card can no longer stay on screen over a menu, and Track Mode always offers Add track file (the lite file showed an empty screen).']},
  {v:'0.01',d:'Oct 28, 2026',t:'Poly GT 0.01',items:[
   'Poly GT now has real version numbers. This is version 0.01, and every major update adds 0.01. The builds before it are listed below as preview builds.',
