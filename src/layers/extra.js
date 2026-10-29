@@ -56,4 +56,10 @@ P.pxText=(el,str,col)=>{str=String(str||'').toUpperCase();const hud=el.closest&&
  if(!str){el.innerHTML='';return}let cv=el.querySelector('canvas');if(!cv){el.innerHTML='';cv=document.createElement('canvas');cv.style.cssText='image-rendering:pixelated;display:inline-block;filter:drop-shadow(0 2px 0 #000a)';el.appendChild(cv)}
  const n=[...str].length;cv.width=n*6-1;cv.height=7;cv.style.width=(cv.width*sc)+'px';cv.style.height=(7*sc)+'px';const g=cv.getContext('2d');g.fillStyle=col||'#f2c76b';let x=0;
  for(const ch of str){const b=PXF[ch];if(b)b.split(' ').forEach((row,y)=>{for(let i=0;i<5;i++)if(row[i]==='1')g.fillRect(x+i,y,1,1)});x+=6}};
+/* 0.02: race messages in the glossy HUD style: clean type on a small dark glossy plate instead of pixel lettering */
+P.pxText=(el,str,col)=>{str=String(str||'').toUpperCase();if(el._px===str+(col||''))return;el._px=str+(col||'');if(!str){el.innerHTML='';return}
+ const sp=document.createElement('span');sp.className='gxmsg';sp.textContent=str;if(col&&col!=='#f2c76b')sp.style.color=col;el.innerHTML='';el.appendChild(sp)};
+/* 0.02: canvas lettering (maps, elevation strips, signs) in the menus' sans instead of monospace */
+try{const d=Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype,'font'),SANS='"Inter","Segoe UI","Helvetica Neue",Arial,"Liberation Sans",sans-serif';
+ if(d&&d.set)Object.defineProperty(CanvasRenderingContext2D.prototype,'font',{configurable:true,get(){return d.get.call(this)},set(v){d.set.call(this,typeof v==='string'?v.replace(/\bmonospace\b/,SANS):v)}})}catch(e){}
 })();

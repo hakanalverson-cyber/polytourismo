@@ -205,7 +205,7 @@ P.showResults=function(){const Rc=RACE,cfg=Rc.cfg,N=Rc.T.N,humans=Rc.cars.filter
 const SEGS=36;
 const HUDHTML=`<div class="h8top"><div class="h8pos"><b>1</b><i>ST</i><span>/6</span></div><div class="h8plate"><div class="lap"></div><div class="raceTime"></div><div class="bl"></div></div></div>
 <div class="h8mode"></div>
-<div class="h8spd"><div class="gnum"><small>GEAR</small><b>1</b><div class="pips"><i></i><i></i><i></i><i></i></div></div><div class="spdmain"><div class="dg"><b class="rdot"></b><canvas width="17" height="7"></canvas><i>MPH</i></div><div class="segs"></div><div class="sub"><div class="ghint"></div><div class="cond"></div></div></div></div>
+<div class="h8spd"><div class="gnum"><small>GEAR</small><b>1</b><div class="pips"><i></i><i></i><i></i><i></i></div></div><div class="spdmain"><div class="dg"><b class="rdot"></b><canvas width="17" height="7"></canvas><b class="sv">0</b><i>MPH</i></div><div class="segs"></div><div class="sub"><div class="ghint"></div><div class="cond"></div></div></div></div>
 <div class="h8warn raceWarning"></div><div class="h8pop"></div><div class="h8fin"></div>`;
 hudUpdate=()=>{const Rc=RACE,T=Rc.T;
  const order=[...Rc.cars].sort((a,b)=>(b.fin?1e6-b.finT:0)-(a.fin?1e6-a.finT:0)||b.unw-a.unw);
@@ -228,7 +228,7 @@ hudUpdate=()=>{const Rc=RACE,T=Rc.T;
   else if(Rc.mode==='ta'){const last=c.lapT&&c.lapT.length?c.lapT[c.lapT.length-1]:null,g=P.medalTime(Rc.cfg.rev?'r'+Rc.cfg.track:Rc.cfg.track,st,1);md.innerHTML='<div class="cu"><div class="sc"><small>LAST LAP</small><b>'+fmtT(last)+'</b></div><div class="sc"><small>GOLD TIME</small><b>'+fmtT(g)+'</b></div></div>'}
   else md.innerHTML='';
   /* speed + gear */
-  {const cv=q('.dg canvas'),tx=String(kmh).padStart(3,'0');if(cv._t!==tx){cv._t=tx;P.pxDraw(cv,tx,'#ffffff')}}
+  {const sv=q('.dg .sv'),tx=String(kmh);if(sv._t!==tx){sv._t=tx;sv.textContent=tx}}/* 0.02: plain glossy-HUD digits instead of the pixel canvas */
   const sgs=e.querySelectorAll('.segs i'),lit=Math.round(clamp(kmh/maxK,0,1)*SEGS);
   sgs.forEach((x,k)=>{const v=(k+.5)/SEGS*maxK;let zi=0;while(zi<NG-1&&v>=gt[zi])zi++;const zb=Math.min(3,Math.floor(k*4/SEGS));x.className=(k<lit?'on ':'')+'z'+zb+(gx===zi?' cur':'')});
   q('.gnum b').textContent=gx+1;{const pp=q('.pips');if(pp.children.length!==NG){pp.innerHTML='<i></i>'.repeat(NG)}pp.querySelectorAll('i').forEach((x,k)=>x.className=k<=gx?'on':'')}

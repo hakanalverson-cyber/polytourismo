@@ -3,6 +3,14 @@
 'use strict';
 const P=window.PT8;
 P.LOG=[
+ {v:'0.02',d:'Oct 29, 2026',t:'Glossy black UI',items:[
+  'A new look across the whole game: dark glossy bars along the top and bottom of every menu, dark glass panels, light upright type and white as the only accent.',
+  'New main menu. The top bar shows your current car as a garage card, the update log, settings, your credits and the clock. The bottom bar names the selected mode and shows the modes as picture cards; Quickplay\'s modes open upward from its card.',
+  'The menus show the black and white studio photoshoots behind them.',
+  'Cleaner start line: the stage or circuit name, the facts and Start sit in one glossy bar along the bottom, and the scene above stays clear.',
+  'Race HUD restyled to match: glossy plates for position, lap times, gear and speed, clean digits instead of pixel numbers, and race messages on small dark plates.',
+  'Pause, Options, results, the setup screens, the rally dash and the Quickplay cards all use the same style.',
+  'Fixes: Enter on the main menu no longer skips straight to the old mode cards, the start-line card can no longer stay on screen over a menu, and Track Mode always offers Add track file (the lite file showed an empty screen).']},
  {v:'0.01',d:'Oct 28, 2026',t:'Poly GT 0.01',items:[
   'Poly GT now has real version numbers. This is version 0.01, and every major update adds 0.01. The builds before it are listed below as preview builds.',
   'The loading screen and the title screen are now one screen: full HD photoshoot stills pan slowly behind the POLY GT logo, with a progress bar in the menus\' style. When everything has loaded the bar gives way to PRESS ANY BUTTON. After it there are only black fades.',

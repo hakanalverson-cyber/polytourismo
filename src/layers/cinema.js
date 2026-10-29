@@ -141,14 +141,14 @@ const sh0=show;show=function(n){if(ST.on&&SCR.indexOf(n)<0)off();return sh0.appl
 /* a shuffled run of stills, forever */
 function menuScene2(){const pt=photo();let t0=performance.now()/1000,order=[],cur=null,shotT=0,last=-1;
  const DUR=7.4,FADE=.8;
- function next(n){n=n|0;if(!order.length){order=SH.map((_,i)=>i).sort(()=>Math.random()-.5);if(order[0]===last)order.push(order.shift())}
+ function next(n){n=n|0;if(!order.length){/* 0.02: the menus show only the studio sets (black void, white, pale), the backdrop the glossy black bars were made for */order=SH.map((_,i)=>i).filter(i=>['void','white','pale'].includes(SH[i].env));if(!order.length)order=SH.map((_,i)=>i);order.sort(()=>Math.random()-.5);if(order[0]===last)order.push(order.shift())}
   const k=order.shift(),s=SH[k];last=k;if(!pt.set(s)){if(n<SH.length)return next(n+1);cur=null;return}cur=s;shotT=0}
  const self={sc:pt.sc,cam:pt.cam,draw(){draw(pt)},
   tick(time){const now=performance.now()/1000,dt=Math.min(.1,now-t0);t0=now;const W=innerWidth,H=innerHeight;
    if(!cur){next();if(!cur)return}shotT+=dt;const u=cl(shotT/DUR,0,1),e=sm(u),A=cur.a,B=cur.b,c=pt.cam;
    c.position.set(A[0][0]+(B[0][0]-A[0][0])*e,A[0][1]+(B[0][1]-A[0][1])*e,A[0][2]+(B[0][2]-A[0][2])*e);
    c.lookAt(A[1][0]+(B[1][0]-A[1][0])*e,A[1][1]+(B[1][1]-A[1][1])*e,A[1][2]+(B[1][2]-A[1][2])*e);
-   c.fov=cur.fov;c.aspect=W/H;c.updateProjectionMatrix();c.setViewOffset(W,H,-W*.1,0,W,H);
+   c.fov=cur.fov;c.aspect=W/H;c.updateProjectionMatrix();c.setViewOffset(W,H,0,0,W,H);
    pt.fade.material.opacity=shotT<FADE?1-sm(shotT/FADE):shotT>DUR-FADE?sm((shotT-(DUR-FADE))/FADE):0;pt.fade.scale.setScalar(Math.max(1,W/H)*2);
    if(shotT>=DUR)next()}};
  window.__cin={self,pt,SH,go(i){const s=SH[i];pt.set(s);cur=s;shotT=1.2;order=[]}};
