@@ -20,7 +20,7 @@ function popup(k){try{if(scr!=='menu')return;/* only on the main menu (the music
 /* one Audio element per track; paused (never dropped) when the screen changes, so a song always plays out to its end */
 function el(k,loop){let a=AU[k];if(a)return a;const u=urlOf(k);if(!u)return null;a=AU[k]=new Audio(u);a.loop=!!loop;a.preload='auto';a._v=0;a._k=k;a._ann=false;a._t=0;
  if(!loop)a.addEventListener('ended',()=>{delete AU[k];if(menuKey===k)menuKey=null});return a}
-function wanted(){if(scr==='game')return(typeof RACE!=='undefined'&&RACE&&RACE.mode==='free')?'menu':null;if(scr==='s8show'){const kd=P.SR&&P.SR.kind;return kd==='brand'?'menu':(P.SR&&(P.SR.rally||P.SR.trk))?'menu':(has('body')?'body':'menu')}return'menu'}
+function wanted(){/* 0.02: silent while loading; the music starts when the title says PRESS ANY BUTTON */if(!P.bootDone)return null;if(scr==='game')return(typeof RACE!=='undefined'&&RACE&&RACE.mode==='free')?'menu':null;if(scr==='s8show'){const kd=P.SR&&P.SR.kind;return kd==='brand'?'menu':(P.SR&&(P.SR.rally||P.SR.trk))?'menu':(has('body')?'body':'menu')}return'menu'}
 function tick(){if(pop&&scr!=='menu'&&pop.style.opacity!=='0'){clearTimeout(popT);pop.style.opacity=0;pop.style.transform='translateX(16px)'}const on=P.aud&&P.aud.on()&&!document.hidden,w=on?wanted():null,t=O().master;let key=null;
  if(w==='menu'){if(!menuKey){if(!deck.length)shuffle(null);menuKey=deck.shift()}key=menuKey}else if(w==='body'||w==='cafe')key=w;
  for(const k in AU){const a=AU[k];if(k!==key){a._v+=(0-a._v)*.22;a.volume=Math.max(0,Math.min(1,a._v));if(a._v<.01&&!a.paused)a.pause()}}
@@ -36,7 +36,7 @@ tick();
 function init(){if(M)return M;const ac=P.audioReady&&P.audioReady(),nb=P.aud&&P.aud.nb();if(!ac||!nb)return null;
  const wg=ac.createGain();wg.gain.value=0;const wf=ac.createBiquadFilter();wf.type='bandpass';wf.frequency.value=380;wf.Q.value=.45;const ws=ac.createBufferSource();ws.buffer=nb;ws.loop=true;ws.connect(wf);wf.connect(wg);wg.connect(P.aud.mg());ws.start();
  const lfo=ac.createOscillator();lfo.frequency.value=.07;const lg=ac.createGain();lg.gain.value=.01;lfo.connect(lg);lg.connect(wg.gain);lfo.start();M={ac,wg};return M}
-setInterval(()=>{const m=init();if(!m)return;const on=scr!=='game'&&P.aud.on()&&!document.hidden;m.wg.gain.setTargetAtTime(on?.03*O().master:0,m.ac.currentTime,on?1.2:.3)},500);
+setInterval(()=>{const m=init();if(!m)return;const on=!!P.bootDone&&scr!=='game'&&P.aud.on()&&!document.hidden;m.wg.gain.setTargetAtTime(on?.03*O().master:0,m.ac.currentTime,on?1.2:.3)},500);
 const wake=()=>{try{P.audioReady&&P.audioReady()}catch(e){}};addEventListener('pointerdown',wake,true);addEventListener('keydown',wake,true);
 /* countdown: the supplied clip (beeps land at .24 / 1.23 / 2.23 s, the long GO at 3.20 s); the three-then-one synth is the fallback until it has decoded */
 const S=P.aud,AT=[.24,1.23,2.23,3.2];P.cdTick=()=>S.tone(880,880,.16,'sine',1.1);P.cdGo=()=>{S.tone(1760,1760,.55,'sine',1.2);S.tone(880,880,.55,'sine',.35)};

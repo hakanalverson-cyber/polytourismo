@@ -82,15 +82,15 @@ root.innerHTML=`
 </div>
 <div class="foot8"><button class="btn" data-a="back"><span>&lt; Back</span></button><div class="hint8">Arrows / 1-3 select &middot; Enter confirm &middot; Esc back</div><span style="width:90px"></span></div></section>
 
-<section class="v8s" id="s8quick"><div class="hdr"><h2>QUICK<em>PLAY</em></h2><small>CHOOSE HOW YOU WANT TO RACE</small><div class="sp"></div>${crHTML}</div>
+<section class="v8s" id="s8quick"><div class="hdr"><h2>QUICKPLAY</h2><div class="sp"></div>${crHTML}</div>
 <div class="qk">
- <div class="qc" data-m="mp" data-p="1"><b>01</b><div class="ico" data-i="mp"></div><h3>Quick Race</h3><p>You against the field. Pick the track, laps and rivals and go.</p><div class="tg"><i>SOLO</i><i>AI RIVALS</i><i>CREDITS</i></div></div>
- <div class="qc" data-m="ta"><b>02</b><div class="ico" data-i="ta"></div><h3>Time Attack</h3><p>Just you and the clock. Chase gold, silver and bronze medals.</p><div class="tg"><i>SOLO</i><i>MEDALS</i><i>BEST LAP</i></div></div>
- <div class="qc" data-m="elim"><b>03</b><div class="ico" data-i="el"></div><h3>Elimination</h3><p>Every few seconds the last car is out. Stay ahead to survive.</p><div class="tg"><i>AI RIVALS</i><i>SURVIVAL</i></div></div>
- <div class="qc" data-m="cutup"><b>04</b><div class="ico" data-i="cu"></div><h3>Cut-Up</h3><p>Weave through traffic, build a combo and stack up the score.</p><div class="tg"><i>TRAFFIC</i><i>COMBO</i><i>SCORE</i></div></div>
- <div class="qc" data-m="mp" data-p="2"><b>05</b><div class="ico" data-i="mp"></div><h3>Versus</h3><p>Split screen, 2 to 4 drivers on one screen. Settle it on track.</p><div class="tg"><i>2-4 PLAYERS</i><i>SPLIT SCREEN</i></div></div>
+ <div class="qc" data-m="mp" data-p="1"><b>01</b><div class="qi"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 42V7"/><path d="M12 8h24l-4 7 4 7H12"/><path d="M18 8v14M24 8v14M30 8v14M12 15h22" stroke-width="1" opacity=".55"/></svg></div><h3>Quick Race</h3><p>Race the field.</p></div>
+ <div class="qc" data-m="ta"><b>02</b><div class="qi"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="27" r="14"/><path d="M24 27v-8M24 27l6 4"/><path d="M20 7h8M24 7v6M35 14l3-3"/></svg></div><h3>Time Attack</h3><p>Beat the clock.</p></div>
+ <div class="qc" data-m="elim"><b>03</b><div class="qi"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="10" width="8" height="13" rx="2"/><rect x="20" y="10" width="8" height="13" rx="2"/><rect x="31" y="10" width="8" height="13" rx="2" opacity=".35"/><path d="M29 30l12 12M41 30L29 42"/><path d="M9 34h14" opacity=".55"/></svg></div><h3>Elimination</h3><p>Last car is out.</p></div>
+ <div class="qc" data-m="cutup"><b>04</b><div class="qi"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 40c8 0 8-10 16-10s8-12 16-12"/><path d="M34 12l6 6-6 6"/><rect x="11" y="10" width="7" height="12" rx="2" opacity=".55"/><rect x="28" y="30" width="7" height="12" rx="2" opacity=".55"/></svg></div><h3>Cut-Up</h3><p>Weave through traffic.</p></div>
+ <div class="qc" data-m="mp" data-p="2"><b>05</b><div class="qi"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="11" width="16" height="26" rx="2"/><rect x="26" y="11" width="16" height="26" rx="2"/><path d="M14 30v-9M11 24l3-3 3 3M34 30v-9M31 24l3-3 3 3"/></svg></div><h3>Versus</h3><p>Split screen, 2 to 4.</p></div>
 </div>
-<div class="foot8"><button class="btn" data-a="back"><span>&lt; Back</span></button><div class="hint8">Arrows / 1-5 select &middot; Enter confirm &middot; Esc back</div><span style="width:90px"></span></div></section>
+<div class="foot8"><button class="btn" data-a="back"><span>&lt; Back</span></button><div class="hint8">Arrows select &middot; Enter start &middot; Esc back</div><span style="width:90px"></span></div></section>
 
 <section class="v8s" id="s8pick"><div class="hdr"><h2 id="pkTitle"></h2><div class="sp"></div>${crHTML}</div><div class="pkGrid" id="pkGrid"></div>
 <div class="foot8"><button class="btn" data-a="back"><span>&lt; Back</span></button><div class="hint8">Arrows select &middot; Enter next &middot; Esc back</div><button class="btn go" id="pkGo"><span>Next: Setup &gt;</span></button></div></section>
@@ -124,7 +124,7 @@ show=n=>{const was=scr;if(was&&was!==n&&MENUS.includes(n)&&was!=='game'&&was!=='
  if(n==='menu'&&P.menuStats)P.menuStats();
  /* the start-line card belongs to the race: never leave it over a menu */if(n!=='game'&&n!=='pause'&&n!=='ptOptions'){const e=document.getElementById('rlPrep');if(e)e.style.display='none';document.body.classList.remove('rprep')}};
 function refreshMenuCars(){const sv=P.SV();for(let i=0;i<4;i++){const s=sv.sel[i];carChoices[i]=P.modelOf(s.id,s.alt)}}
-const goBack={s8cards:()=>show('menu'),s8quick:()=>show('s8cards'),s8pick:()=>show(ST.ret),s8setup:()=>{if(isRL(ST.mode)&&ST.rstep===2){ST.rstep=1;renderSetup();return}if(ST.fromPick&&ST.mode==='track'){openPick(true);return}show(ST.ret)},s8career:()=>{if(P.frBack&&P.frBack())return;show('s8cards')},s8res:()=>resContinue()};
+const goBack={s8cards:()=>show('menu'),s8quick:()=>show('menu'),s8pick:()=>show(ST.ret),s8setup:()=>{if(isRL(ST.mode)&&ST.rstep===2){ST.rstep=1;renderSetup();return}if(ST.fromPick&&ST.mode==='track'){openPick(true);return}show(ST.ret)},s8career:()=>{if(P.frBack&&P.frBack())return;show('s8cards')},s8res:()=>resContinue()};
 const leaveShow=()=>{const r=SR.ret;if(r==='s8res_back'){renderSetup();show('s8setup');return}show(r);if(r==='s8setup')renderSetup();if(r==='s8career')renderCareer()};
 function fadeTo(fn){const f=$('shFade');f.classList.add('on');setTimeout(()=>{try{fn()}catch(e){console.error('fadeTo',e&&e.stack||e)}setTimeout(()=>f.classList.remove('on'),260)},230)}
 const inGrid=()=>CARDS()&&SR.view==='grid',inCar=()=>CARDS()&&SR.view==='car';
@@ -216,9 +216,11 @@ const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="current
  const focus=i=>{if(i!==mf){mf=i;md=-1;open=false;P.sfx&&P.sfx('move');try{localStorage.setItem('pt-gxf',i)}catch(e){}}paint()};
  const goMenu=m=>{pickMode(m);ST.ret='menu'};
  const subGo=i=>{const u=SUBS[i];P.sfx&&P.sfx('select');open=false;md=-1;paint();if(u.p)ST.players=u.p;goMenu(u.m)};
- const tabGo=i=>{const k=TABS[i].k;focus(i);if(k==='quick'){open=!open;md=open?0:-1;P.sfx&&P.sfx('select');paint();return}P.sfx&&P.sfx('select');if(k==='rally'||k==='track')goMenu(k);else openShow(k,{player:0,cap:null,ret:'menu'})};
- tabs().forEach((t,i)=>{t.onmouseenter=()=>{if(i!==mf)focus(i)};t.onclick=()=>tabGo(i)});
- const leave=e=>{const to=e.relatedTarget;if(to&&(dd.contains(to)||tabs()[0].contains(to)))return;if(open){open=false;md=-1;paint()}};tabs()[0].addEventListener('mouseleave',leave);dd.addEventListener('mouseleave',leave);
+ const tabGo=i=>{const k=TABS[i].k;focus(i);if(k==='quick'){open=false;md=-1;paint();pickMode('quick');return}P.sfx&&P.sfx('select');if(k==='rally'||k==='track')goMenu(k);else openShow(k,{player:0,cap:null,ret:'menu'})};
+ let shut=0;const hold=()=>clearTimeout(shut);
+ tabs().forEach((t,i)=>{t.onmouseenter=()=>{if(i!==mf)focus(i);if(i===0){hold();if(!open){open=true;md=-1;paint()}}};t.onclick=()=>tabGo(i)});
+ /* the list stays up while the mouse is on the card or the list, and for a moment after it leaves both */
+ const leave=e=>{const to=e.relatedTarget;if(to&&(dd.contains(to)||tabs()[0].contains(to)))return;hold();shut=setTimeout(()=>{if(open){open=false;md=-1;paint()}},900)};tabs()[0].addEventListener('mouseleave',leave);dd.addEventListener('mouseleave',leave);dd.addEventListener('mouseenter',hold);
  items().forEach((e,i)=>{e.onmouseenter=()=>{md=i;paint()};e.onclick=()=>subGo(i)});
  $('gxSet').onclick=()=>{P.sfx&&P.sfx('select');bt[1].click()};$('gxLog').onclick=()=>{P.sfx&&P.sfx('select');P.openUpdateLog&&P.openUpdateLog()};$('gxCar').onclick=()=>tabGo(3);
  /* the current car, drawn by the garage's own card renderer on the garage card's tile */

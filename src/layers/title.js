@@ -18,9 +18,9 @@ body.ptTitle #menu{opacity:0!important;pointer-events:none!important}
 #ptTitle.on .sub{opacity:.85}
 #ptTitle .ln{width:0;height:1px;margin-top:3.2vh;background:linear-gradient(90deg,transparent,#e9d9a6,transparent);transition:width 1.4s cubic-bezier(.2,.7,.2,1) 1.2s}
 #ptTitle.on .ln{width:min(34vw,420px)}
-#ptTitle .pr{position:absolute;bottom:15vh;font:700 min(1.7vw,15px)/1 system-ui,sans-serif;letter-spacing:.55em;margin-right:-.55em;opacity:0;color:#fff}
+#ptTitle .pr{position:absolute;bottom:53px;font:700 min(1.7vw,15px)/1 system-ui,sans-serif;letter-spacing:.55em;margin-right:-.55em;opacity:0;color:#fff}
 #ptTitle.on .pr{animation:ptBlink 2.2s ease-in-out 2.2s infinite}
-#ptTitle .vv{position:absolute;right:3vw;bottom:11vh;font:600 10px/1 system-ui,sans-serif;letter-spacing:.3em;opacity:.45}
+#ptTitle .vv{position:absolute;right:28px;bottom:53px;font:600 10px/1 system-ui,sans-serif;letter-spacing:.3em;opacity:.45}
 #ptTitle .bg{position:absolute;inset:0;z-index:-2;overflow:hidden;background:#000}
 #ptTitle .bg div{position:absolute;inset:-2%;background-size:cover;background-position:center;opacity:0;transition:opacity 1.6s ease;will-change:transform,opacity}
 #ptTitle .bg div.on{opacity:1}
