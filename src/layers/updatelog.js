@@ -4,6 +4,7 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.02',d:'Oct 29, 2026',t:'Glossy black UI',items:[
+  'New PS3-style main menu: a big list down the left (Quickplay, Track, Rally, Garage, Brand Central, Settings) with the chrome-blue highlight, the light wave and PS button prompts, and the showroom cars on the right. Up and Down move through it; Right opens the Quickplay modes beside their row.',
   'More options on the race setup now opens the extra race settings and adds driving settings for the race: drift assist, steering speed, chase camera distance and camera shake.',
   'Every button is the same rounded pill shape.',
   'Faster loading: the track and stage pictures are saved after the first start, so later starts load them instead of rendering them again. Quickplay and the race setup no longer draw the 3D showroom hidden behind them.',

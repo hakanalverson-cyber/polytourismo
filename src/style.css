@@ -1502,3 +1502,23 @@ button.gxs{cursor:pointer;transition:background .15s}button.gxs:hover{background
 /* 0.02: every button is the same pill shape */
 .btn,#v8 .btn,.btn.go,#v8 .btn.go,#s8setup.gxOn #suGo,#s8setup.gxOn .foot8 .btn,.foot8 .btn,#s8show .bot .btn,#v8 #s8show .cats button,#pause button,#ptOptions button,#rlPrep .btn,#tut button,#tutOffer button,#resBox button,#s8res button,#ptUpd button,#ptTitle button{border-radius:999px!important}
 #s8setup.gxOn .foot8 .btn[data-a="back"],.foot8 .btn[data-a="back"],#s8show .bot .btn[data-a="back"],#tut button.pri,#tutOffer button.pri,#ptOptions button.sel,.secback{border-radius:999px!important}
+/* 0.02: PS3 racer main menu: a big list down the left with the chrome-blue highlight, the showroom cars on the right */
+#gxBot{top:66px!important;bottom:0!important;left:0!important;right:auto!important;width:46vw!important;height:auto!important;padding:0!important;display:block!important;border-radius:0!important;box-shadow:none!important;background:linear-gradient(90deg,#06080bfa 0%,#090c11f0 55%,#0a0d1200 100%)!important;backdrop-filter:none!important;-webkit-font-smoothing:antialiased}
+#gxBot .gxttl,#gxBot .gxsp{display:none!important}
+#gxBot:after{content:"";position:absolute;left:0;right:0;bottom:30px;height:200px;pointer-events:none;opacity:.7;background:no-repeat center/100% 100% url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 400' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%23cfe6ff' stop-opacity='0'/%3E%3Cstop offset='.5' stop-color='%23cfe6ff'/%3E%3Cstop offset='1' stop-color='%23cfe6ff' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg fill='none' stroke='url(%23g)'%3E%3Cpath d='M0 200C300 110 520 300 800 200S1300 120 1600 210' stroke-width='1'/%3E%3Cpath d='M0 208C300 124 520 290 800 206S1300 132 1600 215' stroke-width='2' opacity='.87'/%3E%3Cpath d='M0 216C300 138 520 280 800 212S1300 144 1600 220' opacity='.74'/%3E%3Cpath d='M0 224C300 152 520 270 800 218S1300 156 1600 225' opacity='.6'/%3E%3Cpath d='M0 232C300 166 520 260 800 224S1300 168 1600 230' opacity='.48'/%3E%3C/g%3E%3Cpath d='M0 220C300 140 520 290 800 215S1300 140 1600 225V400H0z' fill='%23cfe6ff' opacity='.06'/%3E%3C/svg%3E")}
+#gxBot .gxdock{position:absolute;left:6vw;top:clamp(40px,13vh,150px);width:min(32vw,620px);min-width:380px;flex-direction:column;gap:clamp(2px,.6vh,8px)!important}
+#gxBot .gxm{width:100%!important;height:clamp(52px,8.4vh,92px);opacity:1!important;transform:none!important;background:none!important;box-shadow:none!important;border-radius:999px!important;overflow:visible}
+#gxBot .gxm i{display:none!important}
+#gxBot .gxm b{height:100%!important;background:none!important;box-shadow:none!important;border-radius:999px!important;padding:0 clamp(20px,1.6vw,30px)!important;gap:clamp(16px,1.3vw,24px)!important;font:200 clamp(26px,4.1vh,44px) var(--gt)!important;color:#ffffffa8!important;letter-spacing:.01em}
+#gxBot .gxm b .mi{width:clamp(22px,3.2vh,34px)!important;height:clamp(22px,3.2vh,34px)!important;opacity:.7}
+#gxBot .gxm .gxc{margin-left:auto;font:400 clamp(11px,1.3vh,14px) var(--gt);font-style:normal;letter-spacing:.14em;color:#ffffff70}
+#gxBot .gxm:hover b{color:#fff!important}
+#gxBot .gxm.on b{color:#fff!important;font-weight:300!important;background:var(--gxa)!important;box-shadow:inset 0 1px 0 #ffffffa0,inset 0 -1px 0 #0004,0 0 24px #4f7eab90!important;text-shadow:0 1px 1px #0005}
+#gxBot .gxm.on b .mi{opacity:1}#gxBot .gxm.on .gxc{color:#e8f0f7}
+#gxBot .gxds{position:absolute;left:calc(6vw + clamp(20px,1.6vw,30px));bottom:clamp(80px,13vh,140px);font:400 clamp(13px,1.6vh,17px) var(--gt);color:#c9d2d8}
+#gxBot .gxpad{position:absolute;left:calc(6vw + clamp(20px,1.6vw,30px));bottom:clamp(24px,4vh,44px);display:flex;gap:22px;font:400 clamp(13px,1.5vh,16px) var(--gt);color:#e6e9ee}
+#gxBot .gxpad span{display:flex;align-items:center;gap:8px;cursor:pointer}
+#gxBot .gxpad u{text-decoration:none;width:22px;height:22px;border-radius:50%!important;display:grid;place-items:center;font:700 11px Arial,sans-serif;background:radial-gradient(circle at 50% 35%,#3a4048,#121418);box-shadow:inset 0 1px 0 #ffffff40,0 0 0 1px #000}
+#gxBot .gxpad .x{color:#8fb4ff}#gxBot .gxpad .o{color:#ff8a8a}#gxBot .gxpad .t{color:#7fe0b0}
+#gxDrop{z-index:7!important}
+#gxBot{width:max(54vw,640px)!important;background:linear-gradient(90deg,#06080bfa 0%,#080b10f2 58%,#0a0d12b0 78%,#0a0d1200 100%)!important}

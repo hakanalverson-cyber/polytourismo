@@ -203,8 +203,9 @@ const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="current
  const nTrk=()=>D.filter((d,i)=>okTrack('track',i)).length,nStg=()=>(P.STAGES||[]).length,nOwn=()=>{const o=P.SV().owned||{};return Object.keys(o).filter(k=>o[k]>0).length},
   nMk=()=>new Set(CARS.map(c=>P.makerOf?P.makerOf(c):(c.name||'').split(' ')[0])).size;
  const TABS=[{k:'quick',l:'Quickplay',i:'play',img:B64(BB,3),cap:()=>'5 MODES'},{k:'track',l:'Track',i:'track',img:B64(BB,2),cap:()=>{const n=nTrk();return n?n+' CIRCUITS':'ADD A TRACK FILE'}},{k:'rally',l:'Rally',i:'rally',img:B64(BB,1),cap:()=>nStg()+' STAGES'},
-  {k:'garage',l:'Garage',i:'garage',img:B64(PB,7),cap:()=>nOwn()+' / '+CARS.length+' CARS'},{k:'brand',l:'Brand Central',i:'brand',img:B64(PB,5),cap:()=>nMk()+' MAKERS'}];
- P.menuImgs=TABS.map(t=>t.img);
+  {k:'garage',l:'Garage',i:'garage',img:B64(PB,7),cap:()=>nOwn()+' / '+CARS.length+' CARS'},{k:'brand',l:'Brand Central',i:'brand',img:B64(PB,5),cap:()=>nMk()+' MAKERS'},{k:'set',l:'Settings',i:'cog',img:'none',cap:()=>''}];
+ const DESC={quick:'Quick Race, Time Attack, Elimination, Cut-Up and Versus.',track:'Race the real-world circuits.',rally:'Point to point stages against the clock.',garage:'Your cars, paint and tuning.',brand:'New cars from every maker.',set:'Graphics, sound and controls.'};
+ P.menuImgs=TABS.map(t=>t.img).filter(u=>u!=='none');
  const SUBS=[{m:'mp',p:1,n:'Quick Race',i:'race'},{m:'ta',n:'Time Attack',i:'clock'},{m:'elim',n:'Elimination',i:'elim'},{m:'cutup',n:'Cut-Up',i:'cut'},{m:'mp',p:2,n:'Versus',i:'vs'}];
  const sv=(n,x)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square">'+x+'</svg>';
  const IX={play:'<path d="M7 4.5v15l12-7.5z"/>',rally:'<path d="M2 19l7-11 4 6 3-3 5 8z"/>',track:'<path d="M4 20V4h2v2h12l-3 4 3 4H6v6z"/>',race:'<path d="M4 20V4h2v2h12l-3 4 3 4H6v6z"/>',clock:'<circle cx="12" cy="13" r="8"/><path d="M12 13V8M9 3h6"/>',elim:'<circle cx="12" cy="12" r="8"/><path d="M6.5 6.5l11 11"/>',cut:'<path d="M3 17l5-10 4 7 3-4 6 7z"/>',vs:'<rect x="3" y="5" width="8" height="14"/><rect x="13" y="5" width="8" height="14"/>',cog:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',log:'<path d="M5 6h14M5 12h14M5 18h9"/>',garage:'<path d="M3 11l9-6 9 6v9H3z"/>',brand:'<path d="M3 12l9-9h7v7l-9 9z"/><circle cx="15" cy="8" r="1.2"/>'};
@@ -214,19 +215,20 @@ const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="current
   +'<button class="gxs gxib" id="gxLog">'+ic('log')+'<span>Update log</span><em>'+(P.VERSION||'')+'</em></button><button class="gxs gxib" id="gxSet">'+ic('cog')+'<span>Settings</span></button>'
   +'<div class="gxs"><div><small>CREDITS</small><b id="gtBal"></b></div></div><div class="gxs gxclk"><div><small id="gxDate"></small><b id="gxTime"></b></div></div>';
  const bot=document.createElement('div');bot.id='gxBot';bot.className='gxbar';
- bot.innerHTML='<div class="gxttl"><small id="gxCap"></small><b id="gxName"></b></div><div class="gxsp"></div><div class="gxdock" id="gxDock">'+TABS.map((t,i)=>'<button class="gxm" data-i="'+i+'" data-k="'+t.k+'"><i style="background-image:'+t.img+'"></i><b>'+ic(t.i)+'<span>'+t.l+'</span></b></button>').join('')+'</div>';
+ bot.innerHTML='<div class="gxttl"><small id="gxCap"></small><b id="gxName"></b></div><div class="gxsp"></div><div class="gxdock" id="gxDock">'+TABS.map((t,i)=>'<button class="gxm" data-i="'+i+'" data-k="'+t.k+'"><i style="background-image:'+t.img+'"></i><b>'+ic(t.i)+'<span>'+t.l+'</span><em class="gxc"></em></b></button>').join('')+'</div><div class="gxds" id="gxDesc"></div><div class="gxpad"><span data-p="x"><u class="x">&#10005;</u>Select</span><span data-p="o"><u class="o">&#9675;</u>Back</span><span data-p="t"><u class="t">&#9651;</u>Options</span></div>';
  const dd=document.createElement('div');dd.id='gxDrop';
  dd.innerHTML=SUBS.map((u,i)=>'<button class="gxi" data-i="'+i+'">'+ic(u.i)+'<span>'+u.n+'</span></button>').join('');
  menu.append(top,bot,dd);
  let mf=0,md=-1,open=false;try{mf=Math.max(0,Math.min(TABS.length-1,+(localStorage.getItem('pt-gxf')||0)))}catch(e){}
  const tabs=()=>[...bot.querySelectorAll('.gxm')],items=()=>[...dd.children];
- const paint=()=>{tabs().forEach((t,i)=>t.classList.toggle('on',i===mf));const t=TABS[mf];$('gxCap').textContent=t.cap();$('gxName').textContent=t.l;
+ const paint=()=>{tabs().forEach((t,i)=>{t.classList.toggle('on',i===mf);const e=t.querySelector('.gxc');if(e)e.textContent=TABS[i].cap()});const t=TABS[mf];$('gxCap').textContent=t.cap();$('gxName').textContent=t.l;$('gxDesc').textContent=DESC[t.k]||'';
   dd.classList.toggle('on',open&&mf===0);items().forEach((e,i)=>e.classList.toggle('foc',i===md));
-  const r=tabs()[0].getBoundingClientRect();if(r.width){dd.style.left=Math.round(r.left)+'px';dd.style.bottom=Math.round(innerHeight-r.top+12)+'px';dd.style.width=Math.max(190,Math.round(r.width))+'px'}};
+  const r=tabs()[0].getBoundingClientRect();if(r.width){dd.style.left=Math.round(r.right+14)+'px';dd.style.top=Math.round(r.top)+'px';dd.style.bottom='auto';dd.style.width='230px'}};
  const focus=i=>{if(i!==mf){mf=i;md=-1;open=false;P.sfx&&P.sfx('move');try{localStorage.setItem('pt-gxf',i)}catch(e){}}paint()};
  const goMenu=m=>{pickMode(m);ST.ret='menu'};
  const subGo=i=>{const u=SUBS[i];P.sfx&&P.sfx('select');open=false;md=-1;paint();if(u.p)ST.players=u.p;goMenu(u.m)};
- const tabGo=i=>{const k=TABS[i].k;focus(i);if(k==='quick'){open=false;md=-1;paint();pickMode('quick');return}P.sfx&&P.sfx('select');if(k==='rally'||k==='track')goMenu(k);else openShow(k,{player:0,cap:null,ret:'menu'})};
+ const tabGo=i=>{const k=TABS[i].k;focus(i);if(k==='quick'){open=false;md=-1;paint();pickMode('quick');return}P.sfx&&P.sfx('select');if(k==='set'){$('gxSet').click();return}if(k==='rally'||k==='track')goMenu(k);else openShow(k,{player:0,cap:null,ret:'menu'})};
+ bot.querySelector('.gxpad [data-p="x"]').onclick=()=>{if(mf===0&&open&&md>=0)subGo(md);else tabGo(mf)};bot.querySelector('.gxpad [data-p="o"]').onclick=()=>{if(open){open=false;md=-1;paint()}};bot.querySelector('.gxpad [data-p="t"]').onclick=()=>$('gxSet').click();
  let shut=0;const hold=()=>clearTimeout(shut);
  tabs().forEach((t,i)=>{t.onmouseenter=()=>{if(i!==mf)focus(i);if(i===0){hold();if(!open){open=true;md=-1;paint()}}};t.onclick=()=>tabGo(i)});
  /* the list stays up while the mouse is on the card or the list, and for a moment after it leaves both */
@@ -240,11 +242,16 @@ const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="current
  clk();setInterval(clk,15000);
  const m0=P.menuStats;P.menuStats=()=>{m0();const b=$('gtBal');if(b)b.textContent=fmtCr(P.SV().cr);car();paint()};P.menuStats();
  P.menuKey=e=>{const c=e.code,n=TABS.length;
-  if(c==='ArrowRight'||c==='KeyD'){focus((mf+1)%n);return true}
-  if(c==='ArrowLeft'||c==='KeyA'){focus((mf+n-1)%n);return true}
-  /* the Quickplay list opens upward from its card: Up climbs into it, Down comes back out */
-  if(c==='ArrowUp'||c==='KeyW'){if(mf===0){if(!open){open=true;md=SUBS.length-1}else md=Math.max(0,md-1);P.sfx&&P.sfx('move');paint()}return true}
-  if(c==='ArrowDown'||c==='KeyS'){if(mf===0&&open){md++;if(md>=SUBS.length){md=-1;open=false}P.sfx&&P.sfx('move');paint()}return true}
+  /* 0.02: the menu is a vertical list; Right opens the Quickplay modes beside their row, Left closes them */
+  if(open&&mf===0){
+   if(c==='ArrowDown'||c==='KeyS'){md=Math.min(SUBS.length-1,md+1);P.sfx&&P.sfx('move');paint();return true}
+   if(c==='ArrowUp'||c==='KeyW'){md=Math.max(0,md-1);P.sfx&&P.sfx('move');paint();return true}
+   if(c==='ArrowLeft'||c==='KeyA'){open=false;md=-1;P.sfx&&P.sfx('move');paint();return true}
+   if(c==='ArrowRight'||c==='KeyD')return true}
+  if(c==='ArrowDown'||c==='KeyS'){focus((mf+1)%n);return true}
+  if(c==='ArrowUp'||c==='KeyW'){focus((mf+n-1)%n);return true}
+  if((c==='ArrowRight'||c==='KeyD')&&mf===0){open=true;md=0;P.sfx&&P.sfx('move');paint();return true}
+  if(c==='ArrowRight'||c==='ArrowLeft'||c==='KeyD'||c==='KeyA')return true
   if(c==='Escape'||c==='Backspace'){if(open){open=false;md=-1;paint();return true}return false}
   if(c==='Enter'||c==='Space'){if(mf===0&&open&&md>=0)subGo(md);else tabGo(mf);return true}
   return false};
