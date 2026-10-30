@@ -335,13 +335,13 @@ src=src.replace('<title>Poly Tourismo v7</title>','<title>Poly Tourismo</title>'
 import glob as _gb2
 _pb=sorted(_gb2.glob(W+'/assets/bootbg/*.jpg'))
 # 0.02: after the first start the stills are the box art (covers, studio shots, magazine fronts) the game rendered and kept in localStorage,
-# mixed with a few of the location photoshoot stills; entries marked b, / w, carry their own logo (w, = a light picture)
-BOOTBG=('<script>window.PT8_BOOTBG=['+','.join('"'+base64.b64encode(open(f,'rb').read()).decode()+'"' for f in _pb)+'];'
- 'window.PT8_BOXSET=function(A){var L=window.PT8_BOOTBG,ph=L.filter(function(x){return x.charAt(1)!==","&&(window.PT8_SPL||[]).indexOf(x)<0}).sort(function(){return Math.random()-.5}).slice(0,3),o=A.slice();ph.forEach(function(p,k){o.splice(Math.min(o.length,2+k*3),0,p)});L.length=0;o.forEach(function(x){L.push(x)});window.PT8_BOX=1};'
+# (the first start shows the logo on black until they are made); entries marked b, / w, carry their own logo (w, = a light picture)
+BOOTBG=('<script>window.PT8_BOOTBG=[];'
+ 'window.PT8_BOXSET=function(A){var L=window.PT8_BOOTBG;L.length=0;A.forEach(function(x){L.push(x)});window.PT8_BOX=1};'
  'try{var X=JSON.parse(localStorage.getItem("pt8-boxart")||"null");if(X&&X.v==="'+VERSION+'|1"&&X.L&&X.L.length)window.PT8_BOXSET(X.L)}catch(e){}'
  '(function(){var b=document.getElementById("ptBoot"),s=b&&b.querySelector(".bs"),L=window.PT8_BOOTBG,i=Math.random()*L.length|0,P0=0,r=function(){return(Math.random()*3-1.5).toFixed(2)+"%"};'
  'window.PT8_BP=function(f){f=Math.max(P0,Math.min(1,f));P0=f;if(!b)return;var u=b.querySelector(".bt u"),t=b.querySelector(".bl b");if(u)u.style.width=(f*100).toFixed(1)+"%";if(t)t.textContent=Math.round(f*100)+"%"};'
- 'if(!s||!L.length)return;function nx(){if(!b.isConnected)return;i=(i+1)%L.length;var x=L[i],m=x.charAt(1)===","?x.charAt(0):"";if(m)x=x.slice(2);b.classList.toggle("bx",!!m);b.classList.toggle("lt",m==="w");var e=document.createElement("div");e.style.backgroundImage="url(data:image/jpeg;base64,"+x+")";["--x0","--y0"].forEach(function(k){e.style.setProperty(k,r())});s.appendChild(e);void e.offsetWidth;e.className="on";var o=[].slice.call(s.children).filter(function(c){return c!==e});setTimeout(function(){o.forEach(function(c){c.remove()})},1800);window.PT8_BOOTI=i;setTimeout(nx,6500)}nx()})();</script>')
+ 'if(!s)return;function nx(){if(!b.isConnected)return;if(!L.length){setTimeout(nx,300);return}i=(i+1)%L.length;var x=L[i],m=x.charAt(1)===","?x.charAt(0):"";if(m)x=x.slice(2);b.classList.toggle("bx",!!m);b.classList.toggle("lt",m==="w");var e=document.createElement("div");e.style.backgroundImage="url(data:image/jpeg;base64,"+x+")";["--x0","--y0"].forEach(function(k){e.style.setProperty(k,r())});s.appendChild(e);void e.offsetWidth;e.className="on";var o=[].slice.call(s.children).filter(function(c){return c!==e});setTimeout(function(){o.forEach(function(c){c.remove()})},1800);window.PT8_BOOTI=i;setTimeout(nx,6500)}nx()})();</script>')
 # 0.02: PS3-style boot cards over the loading screen: a photosensitive seizure warning, then the autosave notice. CSS keeps the timing
 # (the page is busy reading the file in while they show); a key or click skips the current card (title.js / the onclick below)
 WARN=('<div id="ptWarn" onclick="var w=this;if(w.classList.contains(\'s1\'))w.classList.add(\'s2\');else w.classList.add(\'s1\')"><style>'

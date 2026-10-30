@@ -57,8 +57,7 @@ let SL=[];try{const nm=window.BBG_NAMES||[],bb=typeof BBG_B64!=='undefined'?BBG_
  SL=ph.slice();tr.forEach((t,k)=>SL.splice(Math.min(SL.length,3+k*4),0,t))}catch(e){SL=[]}
 /* the loading screen already shows the logo over the stills: the title then only adds its prompt on top of it, and the hand-picked track
    shots join the loading screen's slideshow */
-const BT=document.getElementById('ptBoot');if(BT){d.classList.add('ov');try{const L=window.PT8_BOOTBG,nm=window.BBG_NAMES||[],bb=typeof BBG_B64!=='undefined'?BBG_B64:[];let ix=PICK.map(k=>nm.indexOf(k)).filter(i=>i>=0);if(!ix.length)ix=[3,2].filter(i=>bb[i]);
- if(!window.PT8_BOX){window.PT8_SPL=ix.map(i=>bb[i]);ix.forEach((i,k)=>L.splice(Math.min(L.length,((window.PT8_BOOTI|0)+3+k*4)%(L.length+1)),0,bb[i]))}}catch(e){}}
+const BT=document.getElementById('ptBoot');if(BT)d.classList.add('ov');
 const bg=d.querySelector('.bg'),cap=d.querySelector('.cap'),tk=d.querySelector('.tk');tk.innerHTML=SL.map(()=>'<i></i>').join('');
 let si=-1,slT=0;const R=()=>(Math.random()*4-2).toFixed(2)+'%';
 function slide(){if(!SL.length||done)return;si=(si+1)%SL.length;const x=SL[si],e=document.createElement('div');e.style.backgroundImage=x.u;e.style.setProperty('--x0',R());e.style.setProperty('--y0',R());e.style.setProperty('--x1',R());e.style.setProperty('--y1',R());
