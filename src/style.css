@@ -1347,3 +1347,93 @@ button.gxs{cursor:pointer;transition:background .15s}button.gxs:hover{background
 #v8 #s8show .gg,#v8 #s8show .mkg{padding:4px}
 #v8 #pkGrid{padding:8px!important;box-sizing:border-box}
 #v8 .evl{padding:4px}
+/* ===== 0.02: race setup, GT5 dark chrome (see gxSetup in ui.js) ===== */
+#s8setup.gxOn .cols{display:none!important}
+#s8setup.gxOn::before{background:linear-gradient(180deg,#0b0d10f2 0%,#191c20eb 60%,#08090bf5 100%)!important}
+#gxSu{position:absolute;left:0;right:0;top:66px;bottom:64px;z-index:2;display:flex;gap:40px;padding:34px 44px 20px;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+#gxSu .gxL{flex:1 1 auto;min-width:0;max-width:760px;display:flex;flex-direction:column}
+#gxSu .gxPrev{position:relative;width:100%;aspect-ratio:16/9;border-radius:8px!important;overflow:hidden;background:#07090c;box-shadow:0 0 0 1px #ffffff40,0 18px 40px #000c;flex:none}
+#gxSu #gxShot{width:100%;height:100%;display:block}
+#gxSu .gxPrev:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,#000b);pointer-events:none}
+#gxSu .gxTn{position:absolute;left:26px;bottom:20px;z-index:1;color:#fff;text-shadow:0 2px 10px #000}
+#gxSu .gxTn small{display:block;font:600 10px var(--gt);letter-spacing:.22em;color:#dfe5e9}
+#gxSu .gxTn b{display:block;font:300 38px/1.1 var(--gt)}
+#gxSu .gxMap{position:absolute;right:14px;top:12px;width:150px;height:94px;z-index:1;border-radius:4px!important;background:#000000a0;box-shadow:0 0 0 1px #ffffff26}
+#gxSu #gxShot.map{background:#07090c}
+#gxSu #gxRefl{width:100%;height:70px;flex:none;border-radius:8px!important;transform:scaleY(-1);opacity:.3;margin-top:4px;-webkit-mask-image:linear-gradient(0deg,#000 0%,transparent 75%);mask-image:linear-gradient(0deg,#000 0%,transparent 75%);object-fit:cover;object-position:bottom}
+#gxSu .gxFacts{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:-50px;position:relative;z-index:1;padding-left:4px}
+#gxSu .gxFacts span{font:400 13px var(--gt);color:#e9ecef}
+#gxSu .gxFacts span+span:before{content:"";display:inline-block;width:4px;height:4px;border-radius:50%!important;background:#ffffff55;margin:0 22px 2px -13px;vertical-align:middle}
+#gxSu .gxMed{margin-top:14px}#gxSu .gxMed .medals{display:flex;gap:8px}#gxSu .gxMed .medals>div{flex:1;padding:8px 10px;border-radius:6px!important;background:#ffffff0d;box-shadow:inset 0 1px 0 #ffffff1a;font:300 15px var(--gt);color:#fff}#gxSu .gxMed .medals b{display:block;font:500 9px var(--gt);letter-spacing:.18em;margin-bottom:3px}
+#gxSu .gxR{flex:0 0 480px;min-width:0;display:flex;flex-direction:column}
+#gxSu .gxOpts{max-height:100%;overflow:auto;padding:10px;border-radius:10px!important;background:linear-gradient(180deg,#2a2e33f5,#16181bf5);box-shadow:inset 0 1px 0 #ffffff30,0 0 0 1px #000,0 18px 40px #000c;scrollbar-width:thin;scrollbar-color:#ffffff30 transparent}
+#gxSu .gxr{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 18px;border-radius:7px!important;font:400 15px var(--gt);color:#c9d2d8;cursor:pointer;user-select:none}
+#gxSu .gxr+.gxr{margin-top:2px}
+#gxSu .gxr .l{flex:none}
+#gxSu .gxr .v{margin-left:auto;display:flex;align-items:center;gap:12px;color:#fff;min-width:0;white-space:nowrap}
+#gxSu .gxr .v em{font-style:normal;overflow:hidden;text-overflow:ellipsis}
+#gxSu .gxr .v i{font-style:normal;font-size:20px;line-height:1;opacity:0;padding:0 4px;transition:opacity .15s}
+#gxSu .gxr.on .v i,#gxSu .gxr:hover .v i{opacity:.75}
+#gxSu .gxr.on{color:#fff;background:linear-gradient(180deg,#8fb4d8 0%,#4f7eab 48%,#33608c 52%,#4a77a3 100%);box-shadow:inset 0 1px 0 #ffffffa0,inset 0 -1px 0 #0004,0 0 16px #4f7eab90;text-shadow:0 1px 1px #0005}
+#gxSu .gxr.sub{min-height:40px;font-size:13px;padding-left:30px}
+#gxSu .gxr.more{margin-top:8px;border-top:1px solid #ffffff12;border-radius:0 0 7px 7px!important;font:600 11px var(--gt);letter-spacing:.14em;text-transform:uppercase;color:#9aa3ab}
+#gxSu .gxr.more.on{border-radius:7px!important;color:#fff}
+#gxSu .gxr.more .v{font:500 11px var(--gt);letter-spacing:.1em}
+#gxSu .gxin input{width:180px;background:#0006!important;border:1px solid #ffffff26!important;border-radius:4px!important;color:#fff!important;font:400 13px var(--gt)!important;padding:6px 9px!important;letter-spacing:.04em!important;text-transform:none!important}
+#s8setup.gxOn #suGo{border-radius:22px!important;padding:12px 44px!important}
+#s8setup.gxOn .foot8 .btn[data-a="back"]{border-radius:16px!important}
+@media(max-width:1100px){#gxSu .gxR{flex-basis:400px}#gxSu{gap:24px;padding:24px 24px 16px}}
+#gxSu .gxPrev:has(#gxShot.map) .gxMap{display:none}
+/* ===================== 0.02: GT5 dark chrome everywhere =====================
+   The race setup's look applied to the whole game: rounded glossy plates, a steel-blue chrome bar for whatever is focused or chosen,
+   white pills for the main action, reflections under the big pictures */
+:root{--gxa:linear-gradient(180deg,#8fb4d8 0%,#4f7eab 48%,#33608c 52%,#4a77a3 100%);--gxaS:inset 0 1px 0 #ffffffa0,inset 0 -1px 0 #0004,0 0 16px #4f7eab90}
+/* buttons: rounded; chosen options in chrome blue; the main action is a white pill */
+.btn,#v8 .btn{border-radius:7px!important}
+.btn.sel,#v8 .btn.sel,.seg .btn.sel{background:var(--gxa)!important;color:#fff!important;text-shadow:0 1px 1px #0005!important;box-shadow:var(--gxaS)!important}
+.btn.go,#v8 .btn.go{border-radius:22px!important}
+.foot8 .btn[data-a="back"],#s8show .bot .btn[data-a="back"]{border-radius:16px!important}
+/* panels and cards */
+.pnl,#v8 .pnl,#s8res .box,#resBox,#pause .w,#ptOptions section,#v8 #s8show .stat,#gxDrop,#tutOffer{border-radius:10px!important}
+.card,.qc,#v8 #s8show .gc,#v8 #s8show .mk,.pk,#v8 .pk,.gxm,.trk,.evc{border-radius:8px!important}
+#v8 #s8show .gc .th,.gxm i{border-radius:5px 5px 0 0!important}
+/* main menu: the chosen mode card gets the chrome caption and a soft blue glow; its reflection shows on the bar */
+.gxm.on{box-shadow:0 0 0 2px #8fb4d8,0 8px 22px #000c,0 0 22px #4f7eab90!important}.gxm.on b{background:var(--gxa)!important;color:#fff!important;text-shadow:0 1px 1px #0005}
+#gxDrop{padding:6px!important}#gxDrop .gxi{border-radius:6px!important}#gxDrop .gxi.foc{background:var(--gxa)!important;color:#fff!important;box-shadow:var(--gxaS)}
+.gxib em{border-radius:9px!important}.gxcard{border-radius:4px!important}
+/* Quickplay page and track cards: chrome focus, mirror reflection under each card */
+#s8quick .qc{-webkit-box-reflect:below 6px linear-gradient(transparent 72%,#ffffff1c)}
+#s8quick .qc:hover,#s8quick .qc.foc{box-shadow:0 0 0 2px #8fb4d8,0 10px 26px #000c,0 0 24px #4f7eab90!important}
+#s8quick .qi{border-radius:6px!important}
+#v8 .pk.sel,#s8pick .pk.sel{outline:0!important;box-shadow:0 0 0 2px #8fb4d8,0 0 22px #4f7eab90!important}
+/* garage and Brand Central */
+#v8 #s8show .gc.sel{box-shadow:0 0 0 2px #8fb4d8,0 8px 22px #000c,0 0 18px #4f7eab90!important}
+#v8 #s8show .gc:hover,#v8 #s8show .mk:hover{box-shadow:inset 0 1px 0 #ffffff26,0 0 0 1px #8fb4d8,0 8px 18px #000a!important}
+#v8 #s8show .gtstrip .gc.sel{box-shadow:0 0 0 2px #8fb4d8,0 8px 22px #000c!important}
+#v8 #s8show .lst .sect{border-radius:7px!important}#v8 #s8show .lst .sect:hover{background:var(--gxa)!important;box-shadow:var(--gxaS)!important}#v8 #s8show .lst .sect:hover b,#v8 #s8show .lst .sect:hover small{color:#fff!important}
+#v8 #s8show .cats button{border-radius:14px!important}#v8 #s8show .cats button:hover{background:var(--gxa);color:#fff;box-shadow:var(--gxaS)}
+#v8 #s8show .stat .gears9>div,#v8 #s8show .stat .fx{border-radius:6px!important}#v8 #s8show .stat .fx{border-radius:10px!important}
+/* pause, options, results */
+#pause button{border-radius:7px!important}#pause button:hover,#pause button:focus{background:var(--gxa)!important;color:#fff!important;box-shadow:var(--gxaS)!important}
+#pause .tb,#ptOptions h2{border-radius:10px 10px 0 0!important}
+#ptOptions button{border-radius:7px!important}#ptOptions button.sel,#ptOptions button:hover{background:var(--gxa)!important;color:#fff!important;box-shadow:var(--gxaS)!important}
+#ptOptions select{border-radius:6px!important}
+#s8res .lbmr.me{background:var(--gxa)!important;border-radius:7px!important;box-shadow:var(--gxaS)}#s8res .lbmr.me *{color:#fff!important}
+/* setup screen hint keys */
+.hint8 u{text-decoration:none;display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;margin:0 6px 0 14px;border-radius:10px!important;background:linear-gradient(180deg,#5a6068,#2c3035);box-shadow:inset 0 1px 0 #ffffff40,0 0 0 1px #000;color:#fff;font-size:10px;letter-spacing:0}
+/* HUD plates and the rally dash: rounded */
+.h8top,.h8spd,.cu,.gxmsg,.h8fin,.h8warn:not(:empty),#rlDash .rd-k{border-radius:8px!important}
+/* update log list */
+.cols .pnl .on,.cols .pnl .sel{border-radius:6px!important}
+/* the start line bar's button */
+#rlPrep .btn.go{border-radius:22px!important}
+/* tutorial */
+#tut{border-radius:10px!important}
+#tut button,#tutOffer button{border-radius:7px!important;background:var(--gxb)!important;border:0!important;box-shadow:inset 0 1px 0 #ffffff2e,0 0 0 1px #000c;color:#e6e9ee!important;font-family:var(--gt)!important}
+#tut button:hover,#tutOffer button:hover{background:var(--gxa)!important;color:#fff!important}
+#tut button.pri,#tutOffer button.pri{background:var(--gxw)!important;color:#111!important;border-radius:16px!important}
+#tut{background:linear-gradient(180deg,#2a2e33f2,#16181bf5)!important;border:0!important;box-shadow:inset 0 1px 0 #ffffff30,0 0 0 1px #000,0 14px 36px #000c!important;font-family:var(--gt)!important;-webkit-font-smoothing:antialiased}
+#tut .th{font:500 10px var(--gt)!important;letter-spacing:.2em!important;color:var(--gxd)!important}#tut .th b{color:#fff!important}
+#tut .th i{background:#ffffff1a!important;border-radius:2px!important}#tut .th i u{background:var(--gxa)!important}
+#tut .tt{font:300 22px var(--gt)!important;color:#fff}#tut.ok .tt{color:#9fd0ff!important}
+#tut .tx{font:400 13px/1.55 var(--gt)!important;color:#c9d2d8!important}

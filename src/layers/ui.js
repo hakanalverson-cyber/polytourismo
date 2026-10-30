@@ -391,6 +391,57 @@ function renderSetup(){const m=ST.mode;$('s8setup').classList.toggle('pkMode',m=
   $('suGo').querySelector('span').textContent=isRL(m)&&!r2?'Next: Car >':'Start';
   if(r2){const wxn=(P.WX[ST.wx||'clear']||{n:'CLEAR'}).n;$('suDrv').insertAdjacentHTML('afterbegin',`<div class="rrecap"><b>${D[ST.track].name}</b><small>${(Math.round(T.L)*(ST.rlaps||1)/1000).toFixed(1)} km &middot; ${m==='track'?ST.laps:(ST.rlaps||1)} lap${(ST.rlaps||1)>1?'s':''} &middot; ${wxn} &middot; ${(P.TOD[effTod()]||{n:''}).n}</small></div>`)}}
  $('suHint').textContent=m==='track'&&trkRace()?'P1 WASD &middot; P2 '+P.p2Name()+' &middot; P3 IJKL &middot; P4 TFGH':m==='track'?'One car on the circuit at a time &middot; pass the controller between runs &middot; fastest total wins':m==='rally'?'One car on the stage at a time &middot; pass the controller between runs &middot; fastest total wins':m==='ta'?'W / S + A / D &middot; Q / E shift (or double-tap W / S)':'P1 WASD &middot; P2 '+P.p2Name()+' &middot; P3 IJKL &middot; P4 TFGH';$('suHint').innerHTML=$('suHint').textContent}
+/* ===== 0.02: race setup, GT5 dark chrome: the track shot large on the left with its reflection under it, and one row per setting on the
+   right. Up / Down pick a row, Left / Right change it, Enter starts. The setup above still builds every option (hidden): each row's arrows
+   press its buttons, so every setting keeps working exactly as before. Rarely used settings fold away under More options ===== */
+const GXS={f:0,more:false,last:null};
+const GX_MORE=['cRev','cStart','cCc','cCpuCar','cGb','cEnd'];
+const GX_ORDER=['cFmt','cLaps','cRL','cIv','cTime','cPl','cCpu','cDif','cTr','cWx','cTod','cDmg'];
+const GX_NAME={cTod:'Time of day',cCpu:'Opponents',cDif:'CPU level',cPl:'Drivers',cRL:'Laps',cIv:'Knockout every',cFmt:'Format',cGb:'Gearbox',cRev:'Direction',cCc:'CPU class',cCpuCar:'CPU cars',cStart:'Start',cWx:'Weather',cDmg:'Damage',cTime:'Clock',cTr:'Traffic',cLaps:'Laps'};
+function gxShot(i){const cv=$('gxShot'),rf=$('gxRefl');if(!cv)return;const g=cv.getContext('2d'),c=P.trackShotCached&&P.trackShotCached(i);
+ if(c){g.drawImage(c,0,0,cv.width,cv.height);cv.classList.remove('map')}else{drawTrack(cv,i,false);cv.classList.add('map');if(P.trackShot)P.trackShot(i).then(v=>{if(v&&ST.track===i&&cv.isConnected)gxShot(i)})}
+ if(rf){const r=rf.getContext('2d');r.clearRect(0,0,rf.width,rf.height);r.drawImage(cv,0,0,rf.width,rf.height)}}
+function gxSetup(){const sec=$('s8setup');if(!sec)return;const m=ST.mode,r2=isRL(m)&&ST.rstep===2;sec.classList.toggle('gxOn',!r2);let box=$('gxSu');
+ if(r2){if(box)box.style.display='none';return}
+ if(!box){box=document.createElement('div');box.id='gxSu';sec.insertBefore(box,sec.querySelector('.foot8'))}box.style.display='';
+ if(GXS.last!==m){GXS.f=0;GXS.more=false;GXS.last=m}
+ const rows=[],src=$('suCfg');
+ /* track: cycled here, except in Track Mode where the circuit was picked on the cards */
+ const tl=D.map((d,i)=>okTrack(m,i)?i:-1).filter(i=>i>=0);
+ rows.push({l:m==='rally'?'Stage':m==='track'?'Circuit':'Track',v:D[ST.track].name,opts:m==='track'?null:tl.length,go:d=>{const k=tl.indexOf(ST.track);ST.track=tl[((k<0?0:k)+d+tl.length)%tl.length];renderSetup()}});
+ const segRow=(id,label)=>{const s=src.querySelector('#'+id);if(!s)return null;const bs=[...s.querySelectorAll('button')];if(!bs.length)return null;const k=Math.max(0,bs.findIndex(b=>b.classList.contains('sel')));
+  return{l:label,v:bs[k].textContent.trim(),opts:bs.length,go:d=>{const n=Math.min(bs.length-1,Math.max(0,k+d));if(n!==k){P.sfx&&P.sfx('move');bs[n].click()}}}};
+ for(const id of GX_ORDER){const r=segRow(id,GX_NAME[id]);if(r)rows.push(r)}
+ /* cars: one row per driver, Enter or a click opens the garage for that driver */
+ const dv=[...$('suDrv').querySelectorAll('.drv')];dv.forEach((e,p)=>{const nm=e.querySelector('b'),gb=e.querySelector(':scope > button');rows.push({l:dv.length>1?'P'+(p+1)+' car':'Car',v:(nm?nm.textContent:'').replace(/^P\d · /,''),car:true,act:()=>gb&&gb.click()})});
+ rows.push({l:'More options',more:true,act:()=>{GXS.more=!GXS.more;P.sfx&&P.sfx('select');gxSetup()}});
+ if(GXS.more){for(const id of GX_MORE){const r=segRow(id,GX_NAME[id]);if(r){r.sub=1;rows.push(r)}}
+  dv.forEach((e,p)=>{const s=e.querySelector('.txs');if(s){const bs=[...s.querySelectorAll('button')],k=Math.max(0,bs.findIndex(b=>b.classList.contains('sel')));rows.push({sub:1,l:(dv.length>1?'P'+(p+1)+' ':'')+'Gearbox',v:bs[k].textContent.trim(),opts:bs.length,go:d=>{const n=Math.min(bs.length-1,Math.max(0,k+d));if(n!==k)bs[n].click()}})}
+   const inp=e.querySelector('input.nm');if(inp)rows.push({sub:1,l:(dv.length>1?'P'+(p+1)+' ':'')+'Name',input:inp})});
+  const kb=[...src.querySelectorAll('.p2kb .kbo')];if(kb.length){const k=Math.max(0,kb.findIndex(b=>b.classList.contains('on')));rows.push({sub:1,l:'P2 keys',v:kb[k].querySelector('b').textContent,opts:kb.length,go:d=>{const n=Math.min(kb.length-1,Math.max(0,k+d));if(n!==k)kb[n].click()}})}}
+ GXS.rows=rows;GXS.f=Math.max(0,Math.min(rows.length-1,GXS.f));
+ const T=tr(ST.track),info=[...$('trkInfo').querySelectorAll('.chip')].map(c=>c.textContent.trim()).filter(Boolean);
+ const ta=$('trkExtra').querySelector('.medals');
+ box.innerHTML=`<div class="gxL"><div class="gxPrev"><canvas id="gxShot" width="800" height="450"></canvas><div class="gxTn"><small>${m==='rally'?'STAGE':m==='track'?'CIRCUIT':'TRACK'}</small><b>${D[ST.track].name}</b></div><canvas class="gxMap" width="240" height="150"></canvas></div><canvas id="gxRefl" width="400" height="225"></canvas>
+  <div class="gxFacts">${info.map(t=>`<span>${t}</span>`).join('')}</div>${ta?'<div class="gxMed">'+ta.outerHTML+'</div>':''}</div>
+  <div class="gxR"><div class="gxOpts">${rows.map((r,i)=>`<div class="gxr${i===GXS.f?' on':''}${r.sub?' sub':''}${r.more?' more':''}" data-i="${i}"><span class="l">${r.l}</span>`+(r.input?'<span class="v gxin"></span>':r.more?`<span class="v">${GXS.more?'Hide':'Show'} &rsaquo;</span>`:r.car?`<span class="v">${r.v} <i>&rsaquo;</i></span>`:`<span class="v">${r.opts>1?'<i data-d="-1">&lsaquo;</i>':''}<em>${r.v}</em>${r.opts>1?'<i data-d="1">&rsaquo;</i>':''}</span>`)+'</div>').join('')}</div></div>`;
+ drawTrack(box.querySelector('.gxMap'),ST.track,false);gxShot(ST.track);
+ box.querySelectorAll('.gxr').forEach(el=>{const i=+el.dataset.i,r=rows[i];
+  if(r.input){const sl=el.querySelector('.gxin');sl.appendChild(r.input)}
+  el.onmouseenter=()=>{GXS.f=i;box.querySelectorAll('.gxr').forEach(x=>x.classList.toggle('on',x===el))};
+  el.onclick=ev=>{const a=ev.target.closest('i[data-d]');if(a&&r.go){r.go(+a.dataset.d);return}if(r.act){r.act();return}if(r.go&&!r.input&&!a)r.go(1)}});
+ const o=box.querySelector('.gxr.on');if(o)o.scrollIntoView({block:'nearest'});
+ $('suHint').innerHTML='<u>&uarr;&darr;</u>Choose<u>&larr;&rarr;</u>Change<u>Enter</u>'+(isRL(m)?'Next':'Start')}
+P.gxSuKey=e=>{if(!GXS.rows||!$('s8setup').classList.contains('gxOn'))return false;if(e.target&&e.target.tagName==='INPUT'){if(e.code==='Enter'||e.code==='Escape'||e.code==='ArrowUp'||e.code==='ArrowDown')e.target.blur();else return true}
+ const c=e.code,n=GXS.rows.length,r=GXS.rows[GXS.f],box=$('gxSu');
+ const paint=()=>{box.querySelectorAll('.gxr').forEach(x=>x.classList.toggle('on',+x.dataset.i===GXS.f));const o=box.querySelector('.gxr.on');if(o)o.scrollIntoView({block:'nearest'})};
+ if(c==='ArrowDown'||c==='KeyS'){GXS.f=(GXS.f+1)%n;P.sfx&&P.sfx('move');paint();e.preventDefault();return true}
+ if(c==='ArrowUp'||c==='KeyW'){GXS.f=(GXS.f+n-1)%n;P.sfx&&P.sfx('move');paint();e.preventDefault();return true}
+ if((c==='ArrowLeft'||c==='KeyA')&&r&&r.go){r.go(-1);e.preventDefault();return true}
+ if((c==='ArrowRight'||c==='KeyD')&&r&&r.go){r.go(1);e.preventDefault();return true}
+ if(c==='Enter'){if(r&&(r.act)){r.act();return true}if(r&&r.input){r.input.focus();return true}$('suGo').click();return true}
+ return false};
+{const rs0=renderSetup;renderSetup=function(){rs0.apply(this,arguments);try{gxSetup()}catch(er){console.error('gxSetup',er)}}}
 /* custom driver names: trimmed, 12 chars, unique across players */
 function cleanName(p,np){const nm=(ST.names||[])[p];let v=(nm||'').replace(/[<>&"]/g,'').trim().slice(0,12);if(!v)return null;for(let q=0;q<p;q++){const o=((ST.names||[])[q]||'').trim().slice(0,12);if(o&&o.toLowerCase()===v.toLowerCase())v=v.slice(0,10)+(p+1)}return v}
 $('suGo').onclick=()=>{if(isRL(ST.mode)&&ST.rstep!==2){P.sfx('select');openShow('garage',{player:0,cap:null,ret:'s8setup',rally:ST.mode==='rally',track:ST.mode==='track',flow:true});return}
@@ -741,7 +792,7 @@ addEventListener('keydown',e=>{
    if(e.code==='ArrowLeft'||e.code==='KeyQ')flipCar(-1);else if(e.code==='ArrowRight'||e.code==='KeyE')flipCar(1);else if(e.code==='Enter')$('shAct').click();return}
   const list=(CARDS()&&SR.order)?SR.order.map(id=>BYID[id]):showList().filter(c=>!SR.sec||SR.cat==='ALL'||(SR.cat==='OWNED'?(P.SV().owned[c.id]||0)>0:((SR.rally||SR.trk)&&SR.kind==='garage'?(SR.trk?c.tdiv:c.rdiv):c.cat)===SR.cat)),i=Math.max(0,list.findIndex(c=>c.id===SR.id));if(!list.length)return;if(e.code==='ArrowDown'){SR.id=list[Math.min(list.length-1,i+1)].id;SR.alt=P.owns(SR.id,SR.alt)?SR.alt:0;renderShow()}else if(e.code==='ArrowUp'){SR.id=list[Math.max(0,i-1)].id;SR.alt=P.owns(SR.id,SR.alt)?SR.alt:0;renderShow()}else if(e.code==='ArrowLeft')SR.vel-=3;else if(e.code==='ArrowRight')SR.vel+=3;else if(e.code==='Enter')$('shAct').click();return}
  if(scr==='s8pick'){const n=PK.list.length;if(!n)return;let k=Math.max(0,PK.list.indexOf(ST.track));if(e.code==='ArrowRight'||e.code==='KeyD')k=(k+1)%n;else if(e.code==='ArrowLeft'||e.code==='KeyA')k=(k+n-1)%n;else if(e.code==='ArrowDown'||e.code==='KeyS')k=Math.min(n-1,k+PK.cols);else if(e.code==='ArrowUp'||e.code==='KeyW')k=Math.max(0,k-PK.cols);else if(e.code==='Enter'){pickNext();return}else return;e.preventDefault();pickSel(PK.list[k],true);return}
- if(scr==='s8setup'&&e.code==='Enter'){$('suGo').click();return}
+ if(scr==='s8setup'){if(P.gxSuKey&&P.gxSuKey(e))return;if(e.code==='Enter'&&!(e.target&&e.target.tagName==='INPUT')){$('suGo').click()}return}
  if(scr==='menu'&&P.menuKey&&P.menuKey(e)){return}
  if(scr==='s8res'&&e.code==='Enter'){resContinue()}});
 

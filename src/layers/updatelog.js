@@ -16,6 +16,8 @@ P.LOG=[
   'The current car in the top bar brightens on hover like Settings and the update log (its text used to turn black).',
   'The now playing card is PS3 style: a soft translucent plate under the top bar with a music-note disc, the song name, Now Playing and a small level meter.',
   'Selected and hovered cards in the garage, Brand Central and track lists no longer have their white outline cut off at the edges.',
+  'GT5 dark chrome: rounded glossy plates, a steel-blue chrome bar on whatever is focused or chosen, white pills for the main action and mirror reflections under the big pictures, on every screen from the loading bar to the pause menu and the tutorial.',
+  'New race setup: the track shot large on the left with its reflection, and one row per setting on the right. Up and Down pick a row, Left and Right change it, Enter starts. Rarely used settings (direction, start, CPU class, CPU cars, gearbox, names, player 2 keys) fold away under More options.',
   'Fixes: Enter on the main menu no longer skips straight to the old mode cards, the start-line card can no longer stay on screen over a menu, and Track Mode always offers Add track file (the lite file showed an empty screen).']},
  {v:'0.01',d:'Oct 28, 2026',t:'Poly GT 0.01',items:[
   'Poly GT now has real version numbers. This is version 0.01, and every major update adds 0.01. The builds before it are listed below as preview builds.',
