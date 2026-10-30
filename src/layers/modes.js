@@ -122,6 +122,8 @@ P.medalFor=(track,car,lap)=>{const ref=P.MEDAL_REF[track];if(!ref||lap==null)ret
 P.medalTime=(track,car,i)=>{const ref=P.MEDAL_REF[track];if(!ref)return null;return ref*Math.pow(BYID.merc.top/car.top,.8)*MEDALS[i].f};
 const PLACE_FRAC=[1,.6,.4,.28,.2,.14,.1,.08];
 P.raceBase=(laps,car)=>Math.round(450*laps*(1+CLS.indexOf(car.cls)*.35));
+/* 0.02: race winnings grow with how long the race takes: about 3k for 1 lap, 17k for 5, on a ~4 km circuit (shorter or longer circuits scale it) */
+P.racePay=(laps,L)=>Math.round(3000*Math.pow(laps,1.077)*Math.min(1.8,Math.max(.6,(L||4000)/4000))/50)*50;
 
 /* ================= career ================= */
 const RANKS=[
@@ -182,7 +184,7 @@ P.showResults=function(){const Rc=RACE,cfg=Rc.cfg,N=Rc.T.N,humans=Rc.cars.filter
    if(c.fin&&(rec.total==null||c.finT<rec.total)){rec.total=c.finT}
    res.rows=[{name:c.ptName,car:BYID[c.carId].name,time:c.fin?c.finT:null,place:1,human:true,col:CS[c.k],best:bl,laps:c.lapT}];
   }else{
-   const base=cfg.ev?cfg.ev.prize:P.raceBase(Rc.mode==='elim'?4:Rc.laps,BYID[humans[0].carId]);
+   const base=cfg.ev?cfg.ev.prize:P.racePay(Rc.mode==='elim'?4:Rc.laps,Rc.T&&Rc.T.L);
    hrows.forEach(r=>{const c=humans.find(h=>h.ptName===r.name),clean=!c.expl;const frac=PLACE_FRAC[Math.min(r.place-1,7)];let cr=Math.round(base*frac*1);
     if(cfg.ev){const done=sv.career.done[cfg.ev.id];const pod=r.place<=3;const first=pod&&!done;
      if(pod){cr=first?Math.round(base*frac+base*.5):Math.round(base*frac*.4)}else cr=Math.round(base*.06);
