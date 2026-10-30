@@ -215,20 +215,20 @@ const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="current
   +'<button class="gxs gxib" id="gxLog">'+ic('log')+'<span>Update log</span><em>'+(P.VERSION||'')+'</em></button><button class="gxs gxib" id="gxSet">'+ic('cog')+'<span>Settings</span></button>'
   +'<div class="gxs"><div><small>CREDITS</small><b id="gtBal"></b></div></div><div class="gxs gxclk"><div><small id="gxDate"></small><b id="gxTime"></b></div></div>';
  const bot=document.createElement('div');bot.id='gxBot';bot.className='gxbar';
- bot.innerHTML='<div class="gxttl"><small id="gxCap"></small><b id="gxName"></b></div><div class="gxsp"></div><div class="gxdock" id="gxDock">'+TABS.map((t,i)=>'<button class="gxm" data-i="'+i+'" data-k="'+t.k+'"><i style="background-image:'+t.img+'"></i><b>'+ic(t.i)+'<span>'+t.l+'</span><em class="gxc"></em></b></button>').join('')+'</div><div class="gxds" id="gxDesc"></div><div class="gxpad"><span data-p="x"><u class="x">&#10005;</u>Select</span><span data-p="o"><u class="o">&#9675;</u>Back</span><span data-p="t"><u class="t">&#9651;</u>Options</span></div>';
+ bot.innerHTML='<div class="gxpf" id="gxPf"><div class="av"></div><div class="pt"><b id="gxPfName"></b><small id="gxPfSub"></small></div></div><div class="gxttl"><small id="gxCap"></small><b id="gxName"></b></div><div class="gxsp"></div><div class="gxdock" id="gxDock">'+TABS.map((t,i)=>'<button class="gxm" data-i="'+i+'" data-k="'+t.k+'"><i style="background-image:'+t.img+'"></i><b>'+ic(t.i)+'<span>'+t.l+'</span><em class="gxc"></em></b></button>').join('')+'</div><div class="gxds" id="gxDesc"></div><div class="gxpad"><span data-p="x"><u class="x">&#10005;</u>Select</span><span data-p="o"><u class="o">&#9675;</u>Back</span><span data-p="t"><u class="t">&#9651;</u>Options</span></div>';
  const dd=document.createElement('div');dd.id='gxDrop';
  dd.innerHTML=SUBS.map((u,i)=>'<button class="gxi" data-i="'+i+'">'+ic(u.i)+'<span>'+u.n+'</span></button>').join('');
- menu.append(top,bot,dd);
+ menu.append(top,bot,dd);{const sh=document.createElement('div');sh.id='gxShade';menu.insertBefore(sh,bot);menu.appendChild(bot.querySelector('.gxpad'))}
  let mf=0,md=-1,open=false;try{mf=Math.max(0,Math.min(TABS.length-1,+(localStorage.getItem('pt-gxf')||0)))}catch(e){}
  const tabs=()=>[...bot.querySelectorAll('.gxm')],items=()=>[...dd.children];
- const paint=()=>{tabs().forEach((t,i)=>{t.classList.toggle('on',i===mf);const e=t.querySelector('.gxc');if(e)e.textContent=TABS[i].cap()});const t=TABS[mf];$('gxCap').textContent=t.cap();$('gxName').textContent=t.l;$('gxDesc').textContent=DESC[t.k]||'';
+ const paint=()=>{tabs().forEach((t,i)=>{t.classList.toggle('on',i===mf);const e=t.querySelector('.gxc');if(e)e.textContent=TABS[i].cap()});const t=TABS[mf];$('gxCap').textContent=t.cap();$('gxName').textContent=t.l;$('gxDesc').textContent=DESC[t.k]||'';try{pfPaint()}catch(e){}
   dd.classList.toggle('on',open&&mf===0);items().forEach((e,i)=>e.classList.toggle('foc',i===md));
-  const r=tabs()[0].getBoundingClientRect();if(r.width){dd.style.left=Math.round(r.right+14)+'px';dd.style.top=Math.round(r.top)+'px';dd.style.bottom='auto';dd.style.width='230px'}};
- const focus=i=>{if(i!==mf){mf=i;md=-1;open=false;P.sfx&&P.sfx('move');try{localStorage.setItem('pt-gxf',i)}catch(e){}}paint()};
+  const r=tabs()[0].getBoundingClientRect();if(r.width){dd.style.left=Math.round(r.left-244)+'px';dd.style.top=Math.round(r.top)+'px';dd.style.bottom='auto';dd.style.width='230px'}};
+ const focus=i=>{pfOn=false;if(i!==mf){mf=i;md=-1;open=false;P.sfx&&P.sfx('move');try{localStorage.setItem('pt-gxf',i)}catch(e){}}paint()};
  const goMenu=m=>{pickMode(m);ST.ret='menu'};
  const subGo=i=>{const u=SUBS[i];P.sfx&&P.sfx('select');open=false;md=-1;paint();if(u.p)ST.players=u.p;goMenu(u.m)};
  const tabGo=i=>{const k=TABS[i].k;focus(i);if(k==='quick'){open=false;md=-1;paint();pickMode('quick');return}P.sfx&&P.sfx('select');if(k==='set'){$('gxSet').click();return}if(k==='rally'||k==='track')goMenu(k);else openShow(k,{player:0,cap:null,ret:'menu'})};
- bot.querySelector('.gxpad [data-p="x"]').onclick=()=>{if(mf===0&&open&&md>=0)subGo(md);else tabGo(mf)};bot.querySelector('.gxpad [data-p="o"]').onclick=()=>{if(open){open=false;md=-1;paint()}};bot.querySelector('.gxpad [data-p="t"]').onclick=()=>$('gxSet').click();
+ menu.querySelector('.gxpad [data-p="x"]').onclick=()=>{if(mf===0&&open&&md>=0)subGo(md);else tabGo(mf)};menu.querySelector('.gxpad [data-p="o"]').onclick=()=>{if(open){open=false;md=-1;paint()}};menu.querySelector('.gxpad [data-p="t"]').onclick=()=>$('gxSet').click();
  let shut=0;const hold=()=>clearTimeout(shut);
  tabs().forEach((t,i)=>{t.onmouseenter=()=>{if(i!==mf)focus(i);if(i===0){hold();if(!open){open=true;md=-1;paint()}}};t.onclick=()=>tabGo(i)});
  /* the list stays up while the mouse is on the card or the list, and for a moment after it leaves both */
@@ -241,13 +241,25 @@ const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="current
  const clk=()=>{const d=new Date();$('gxDate').textContent=d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}).replace(/,/g,'').toUpperCase();$('gxTime').textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
  clk();setInterval(clk,15000);
  const m0=P.menuStats;P.menuStats=()=>{m0();const b=$('gtBal');if(b)b.textContent=fmtCr(P.SV().cr);car();paint()};P.menuStats();
- P.menuKey=e=>{const c=e.code,n=TABS.length;
+ /* 0.02: the profile card: your name (kept in the save file and used as your driver name), credits, wins and current car */
+ let pfOn=false;
+ const pfName=()=>{const v=(P.SV().name||'').trim();return v};
+ const pfPaint=()=>{const sv=P.SV(),nm=pfName(),c=BYID[(sv.sel[0]||{}).id];$('gxPfName').textContent=nm||'Set your name';$('gxPfName').classList.toggle('unset',!nm);
+  const w=(sv.stats&&sv.stats.wins)||0;$('gxPfSub').textContent=fmtCr(sv.cr)+' \u00b7 '+w+(w===1?' win':' wins')+(c?' \u00b7 '+c.name:'');$('gxPf').classList.toggle('on',pfOn)};
+ const pfEdit=()=>{const b=$('gxPfName');if(b.querySelector('input'))return;const i=document.createElement('input');i.maxLength=12;i.spellcheck=false;i.value=pfName();i.placeholder='Your name';b.textContent='';b.appendChild(i);i.focus();i.select();
+  let done=false;const end=ok=>{if(done)return;done=true;if(ok){const v=i.value.replace(/[<>&"]/g,'').trim().slice(0,12);P.SV().name=v;P.save();(ST.names=ST.names||[])[0]=v;P.sfx&&P.sfx('select')}pfPaint()};
+  i.addEventListener('keydown',e=>{e.stopPropagation();if(e.code==='Enter'){e.preventDefault();end(true)}else if(e.code==='Escape'){e.preventDefault();end(false)}});i.addEventListener('blur',()=>end(true))};
+ $('gxPfName').onclick=()=>{pfOn=true;paint();pfEdit()};
+ if(pfName())(ST.names=ST.names||[])[0]=pfName();
+ P.menuKey=e=>{const c=e.code,n=TABS.length;if(e.target&&e.target.tagName==='INPUT')return true;
   /* 0.02: the menu is a vertical list; Right opens the Quickplay modes beside their row, Left closes them */
   if(open&&mf===0){
    if(c==='ArrowDown'||c==='KeyS'){md=Math.min(SUBS.length-1,md+1);P.sfx&&P.sfx('move');paint();return true}
    if(c==='ArrowUp'||c==='KeyW'){md=Math.max(0,md-1);P.sfx&&P.sfx('move');paint();return true}
    if(c==='ArrowLeft'||c==='KeyA'){open=false;md=-1;P.sfx&&P.sfx('move');paint();return true}
    if(c==='ArrowRight'||c==='KeyD')return true}
+  if(pfOn){if(c==='ArrowDown'||c==='KeyS'){pfOn=false;P.sfx&&P.sfx('move');paint();return true}if(c==='Enter'||c==='Space'){pfEdit();return true}return true}
+  if((c==='ArrowUp'||c==='KeyW')&&mf===0){pfOn=true;P.sfx&&P.sfx('move');paint();return true}
   if(c==='ArrowDown'||c==='KeyS'){focus((mf+1)%n);return true}
   if(c==='ArrowUp'||c==='KeyW'){focus((mf+n-1)%n);return true}
   if((c==='ArrowRight'||c==='KeyD')&&mf===0){open=true;md=0;P.sfx&&P.sfx('move');paint();return true}
@@ -400,7 +412,7 @@ function renderSetup(){const m=ST.mode;$('s8setup').classList.toggle('pkMode',m=
  $$('.p2kb .kbo',root).forEach(b=>b.onclick=()=>{P.setP2Keys(b.dataset.k);P.sfx('select');renderSetup()});bind('cLaps','laps',1);bind('cRL','rlaps',1);bind('cIv','iv',1);bind('cWx','wx',0);bind('cEnd','endurS',0);{const e=$('cRev');if(e)$$('button',e).forEach(b=>b.onclick=()=>{ST.rev=b.dataset.v==='1';renderSetup()})}bind('cPl','players',1);bind('cCpu','cpus',1);bind('cDif','diff',1);bind('cCc','cc',0);bind('cTime','time',1);bind('cFmt','trkType',0);bind('cStart','start',0);bind('cCpuCar','cpuCar',0);bind('cTr','traffic',0);bind('cTod','todUser',0);{const e=$('cGb');if(e)$$('button',e).forEach(b=>b.onclick=()=>{for(let p=0;p<4;p++)P.setTX(p,b.dataset.v==='1');P.sfx('select');renderSetup()})}{const e=$('cDmg');if(e)$$('button',e).forEach(b=>b.onclick=()=>{(ST.dmgBy=ST.dmgBy||{})[m]=b.dataset.v;P.sfx('select');renderSetup()})}
  const np=m==='ta'?1:ST.players;let dv='<h4 style="margin:6px 0 8px;font:700 10px var(--mn);letter-spacing:.3em;color:var(--dim)">VEHICLES</h4>';
  for(let p=0;p<np;p++){const s=selCar(p),c=BYID[s.id];dv+=`<div class="drv" style="border-left-color:${['#f1f3f5','#f2c76b','#7fd68a','#ef6a5a'][p]}"><div><b>${np>1?'P'+(p+1)+' &middot; ':''}${c.name}${s.alt?' ALT':''}</b><input class="nm" data-p="${p}" maxlength="12" spellcheck="false" placeholder="Name (P${p+1})" value="${((ST.names||[])[p]||'').replace(/[<>&"]/g,'')}"><small>Class <span class="cls ${c.cls}">${c.cls}</span> &middot; ${c.type}${m==='rally'?' &middot; RALLY SPEC':''}</small><div class="txrow"><small>${c.real||6}-speed</small><span class="seg txs" data-p="${p}">${seg([['0','Manual'],['1','Auto']],P.isAuto({human:true,k:p})?'1':'0')}</span></div><div class="fxrow">${fxChip(m==='rally'?{...c,off:Math.max(c.off,.9)}:c,!!D[ST.track].gravel)}</div></div><span class="lvth" data-id="${s.id}" data-alt="${s.alt?1:0}"></span><button class="btn sm" data-p="${p}"><span>Garage</span></button></div>`}
- $('suDrv').innerHTML=dv;$$('#suDrv .lvth',root).forEach(e=>{const t=P.livThumb&&P.livThumb(e.dataset.id,+e.dataset.alt,84);if(t)e.appendChild(t)});$$('#suDrv input.nm',root).forEach(i=>i.oninput=()=>{(ST.names=ST.names||[])[+i.dataset.p]=i.value});$$('#suDrv .txs',root).forEach(e=>$$('button',e).forEach(b=>b.onclick=()=>{P.setTX(+e.dataset.p,b.dataset.v==='1');P.sfx('select');renderSetup()}));$$('#suDrv .drv > button',root).forEach(b=>b.onclick=()=>openShow('garage',{player:+b.dataset.p,cap:null,ret:'s8setup',rally:ST.mode==='rally',track:ST.mode==='track'}));
+ $('suDrv').innerHTML=dv;$$('#suDrv .lvth',root).forEach(e=>{const t=P.livThumb&&P.livThumb(e.dataset.id,+e.dataset.alt,84);if(t)e.appendChild(t)});$$('#suDrv input.nm',root).forEach(i=>i.oninput=()=>{(ST.names=ST.names||[])[+i.dataset.p]=i.value;if(+i.dataset.p===0){P.SV().name=i.value.replace(/[<>&"]/g,'').trim().slice(0,12);P.save()}});$$('#suDrv .txs',root).forEach(e=>$$('button',e).forEach(b=>b.onclick=()=>{P.setTX(+e.dataset.p,b.dataset.v==='1');P.sfx('select');renderSetup()}));$$('#suDrv .drv > button',root).forEach(b=>b.onclick=()=>openShow('garage',{player:+b.dataset.p,cap:null,ret:'s8setup',rally:ST.mode==='rally',track:ST.mode==='track'}));
 {const sec=$('s8setup'),r2=isRL(m)&&ST.rstep===2;sec.classList.toggle('rs1',isRL(m)&&!r2);sec.classList.toggle('rs2',r2);
   let st=$('suSteps');if(!st){st=document.createElement('div');st.id='suSteps';st.className='steps';$('suTitle').after(st)}
   st.style.display=isRL(m)?'':'none';st.innerHTML=`<i class="${r2?'':'on'}">1 &middot; ${m==='track'?'Circuit':'Stage'}</i><i class="${r2?'on':''}">2 &middot; Car</i>`;
@@ -764,7 +776,7 @@ const secMode=true;let h='',last=null;
  else{const off=(list.find(c=>c.id===car.id)||{off:true}).off;act.classList.toggle('off',off||!altOwn);act.innerHTML='<span>'+(off?'Class cap':altOwn?(SR.flow?(SR.player<ST.players-1?'Next driver >':(SR.trk?'Start race':'Start stage')):'Select'):'Locked')+'</span>'}
  $$('.crv',root).forEach(e=>e.textContent=fmtCr(sv.cr))}
 $('shCars').onclick=()=>$('s8show').classList.toggle('lo');$('shCars').onclick=()=>$('s8show').classList.toggle('lo');$('shPrev').onclick=()=>flipCar(-1);$('shNext').onclick=()=>flipCar(1);
-$('shStat').addEventListener('input',e=>{if(e.target.id==='shNm')(ST.names=ST.names||[])[SR.player]=e.target.value});
+$('shStat').addEventListener('input',e=>{if(e.target.id==='shNm'){(ST.names=ST.names||[])[SR.player]=e.target.value;if(!SR.player){P.SV().name=e.target.value.replace(/[<>&"]/g,'').trim().slice(0,12);P.save()}}});
 $('shAct').onclick=()=>{const car=BYID[SR.id];
  if(SR.kind==='brand'){if(P.buy(car.id,SR.alt)){P.sfx('buy');renderShow();buyShowcase(car)}}
  else{const it=showList().find(c=>c.id===car.id);if(!it||it.off||!P.owns(car.id,SR.alt))return;if(SR.rally){const sv=P.SV();(sv.rsel=sv.rsel||[])[SR.player]={id:car.id,alt:SR.alt?1:0};P.save()}else if(SR.trk){const sv=P.SV();(sv.tsel=sv.tsel||[])[SR.player]={id:car.id,alt:SR.alt?1:0};P.save()}else P.setSel(SR.player,car.id,SR.alt);P.sfx('select');
