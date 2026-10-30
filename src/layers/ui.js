@@ -203,7 +203,7 @@ const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="current
  const nTrk=()=>D.filter((d,i)=>okTrack('track',i)).length,nStg=()=>(P.STAGES||[]).length,nOwn=()=>{const o=P.SV().owned||{};return Object.keys(o).filter(k=>o[k]>0).length},
   nMk=()=>new Set(CARS.map(c=>P.makerOf?P.makerOf(c):(c.name||'').split(' ')[0])).size;
  const TABS=[{k:'quick',l:'Quickplay',i:'play',img:B64(BB,3),cap:()=>'5 MODES'},{k:'track',l:'Track',i:'track',img:B64(BB,2),cap:()=>{const n=nTrk();return n?n+' CIRCUITS':'ADD A TRACK FILE'}},{k:'rally',l:'Rally',i:'rally',img:B64(BB,1),cap:()=>nStg()+' STAGES'},
-  {k:'garage',l:'Garage',i:'garage',img:B64(PB,7),cap:()=>nOwn()+' / '+CARS.length+' CARS'},{k:'brand',l:'Brand Central',i:'brand',img:B64(PB,5),cap:()=>nMk()+' MAKERS'},{k:'set',l:'Settings',i:'cog',img:'none',cap:()=>''}];
+  {k:'garage',l:'Garage',i:'garage',img:B64(PB,7),cap:()=>nOwn()+' / '+CARS.length+' CARS'},{k:'brand',l:'Brand Central',i:'brand',img:B64(PB,5),cap:()=>nMk()+' MAKERS'}];
  const DESC={quick:'Quick Race, Time Attack, Elimination, Cut-Up and Versus.',track:'Race the real-world circuits.',rally:'Point to point stages against the clock.',garage:'Your cars, paint and tuning.',brand:'New cars from every maker.',set:'Graphics, sound and controls.'};
  P.menuImgs=TABS.map(t=>t.img).filter(u=>u!=='none');
  const SUBS=[{m:'mp',p:1,n:'Quick Race',i:'race'},{m:'ta',n:'Time Attack',i:'clock'},{m:'elim',n:'Elimination',i:'elim'},{m:'cutup',n:'Cut-Up',i:'cut'},{m:'mp',p:2,n:'Versus',i:'vs'}];
