@@ -1437,3 +1437,9 @@ button.gxs{cursor:pointer;transition:background .15s}button.gxs:hover{background
 #tut .th i{background:#ffffff1a!important;border-radius:2px!important}#tut .th i u{background:var(--gxa)!important}
 #tut .tt{font:300 22px var(--gt)!important;color:#fff}#tut.ok .tt{color:#9fd0ff!important}
 #tut .tx{font:400 13px/1.55 var(--gt)!important;color:#c9d2d8!important}
+/* 0.02: GT5 corner gauge replaces the speed plate */
+#v8 .h8spd,.h8spd{background:none!important;box-shadow:none!important;padding:0!important;filter:none!important;border:0!important}
+.h8spd .gnum,.h8spd .spdmain{display:none!important}
+.h8spd .gx5{display:block;width:210px;height:140px}
+.h8spd{transform:scale(max(var(--s),.72))!important}
+.h8spd::before{content:'';position:absolute;right:-40px;bottom:-40px;width:320px;height:230px;background:radial-gradient(ellipse 100% 100% at 100% 100%,#000d 0,#000a 42%,#0005 62%,#0000 82%);z-index:-1;pointer-events:none}

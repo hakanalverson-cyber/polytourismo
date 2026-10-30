@@ -205,8 +205,24 @@ P.showResults=function(){const Rc=RACE,cfg=Rc.cfg,N=Rc.T.N,humans=Rc.cars.filter
 const SEGS=36;
 const HUDHTML=`<div class="h8top"><div class="h8pos"><b>1</b><i>ST</i><span>/6</span></div><div class="h8plate"><div class="lap"></div><div class="raceTime"></div><div class="bl"></div></div></div>
 <div class="h8mode"></div>
-<div class="h8spd"><div class="gnum"><small>GEAR</small><b>1</b><div class="pips"><i></i><i></i><i></i><i></i></div></div><div class="spdmain"><div class="dg"><b class="rdot"></b><canvas width="17" height="7"></canvas><b class="sv">0</b><i>MPH</i></div><div class="segs"></div><div class="sub"><div class="ghint"></div><div class="cond"></div></div></div></div>
+<div class="h8spd"><canvas class="gx5" width="480" height="320"></canvas><div class="gnum"><small>GEAR</small><b>1</b><div class="pips"><i></i><i></i><i></i><i></i></div></div><div class="spdmain"><div class="dg"><b class="rdot"></b><canvas width="17" height="7"></canvas><b class="sv">0</b><i>MPH</i></div><div class="segs"></div><div class="sub"><div class="ghint"></div><div class="cond"></div></div></div></div>
 <div class="h8warn raceWarning"></div><div class="h8pop"></div><div class="h8fin"></div>`;
+P.gx5Draw=(cv,o)=>{const g=cv.getContext('2d'),W=cv.width,H=cv.height,k=W/240;g.setTransform(k,0,0,k,0,0);g.clearRect(0,0,240,160);
+ /* the dark backing is a CSS glow anchored to the screen corner (.h8spd::before) */
+ const cx=226,cy=150,R=118,A0=188*Math.PI/180,A1=268*Math.PI/180,RED=.84,ang=u=>A0+(A1-A0)*u;
+ g.lineCap='butt';g.lineWidth=2.5;g.strokeStyle='rgba(255,255,255,.35)';g.beginPath();g.arc(cx,cy,R,A0,ang(RED));g.stroke();
+ g.strokeStyle='#ff3b30';g.beginPath();g.arc(cx,cy,R,ang(RED),A1);g.stroke();
+ const rv=Math.min(1,o.rev);g.lineWidth=7;g.strokeStyle=rv>RED?'#ff3b30':'#fff';g.shadowColor='rgba(0,0,0,.6)';g.shadowBlur=4;g.beginPath();g.arc(cx,cy,R-6,A0,ang(rv));g.stroke();g.shadowBlur=0;
+ g.font='italic 600 13px "Inter","Segoe UI","Helvetica Neue",Arial,sans-serif';g.textAlign='center';g.textBaseline='middle';
+ for(let i=0;i<=32;i++){const u=i/32,a=ang(u),big=i%4===0,red=u>=RED,c=Math.cos(a),s_=Math.sin(a);g.strokeStyle=red?'#ff3b30':'#fff';g.lineWidth=big?2.2:1.2;g.beginPath();g.moveTo(cx+c*(R+3),cy+s_*(R+3));g.lineTo(cx+c*(R+(big?12:7)),cy+s_*(R+(big?12:7)));g.stroke();
+  if(big){g.fillStyle=red?'#ff3b30':'#fff';g.lineWidth=3;g.strokeStyle='rgba(0,0,0,.55)';const t=String(i/4),x=cx+c*(R+23),y=cy+s_*(R+23);g.strokeText(t,x,y);g.fillText(t,x,y)}}
+ g.textAlign='right';g.textBaseline='alphabetic';g.lineWidth=4;g.strokeStyle='rgba(0,0,0,.5)';
+ g.font='italic 700 54px "Inter","Segoe UI","Helvetica Neue",Arial,sans-serif';g.fillStyle='#fff';g.strokeText(String(o.gear),198,104);g.fillText(String(o.gear),198,104);
+ g.font='italic 600 40px "Inter","Segoe UI","Helvetica Neue",Arial,sans-serif';g.strokeText(String(o.kmh),232,148);g.fillText(String(o.kmh),232,148);
+ g.font='italic 500 11px "Inter","Segoe UI","Helvetica Neue",Arial,sans-serif';g.fillStyle='rgba(255,255,255,.75)';g.fillText(o.unit,232,112);
+ /* shift lights: three small bars by the gear, lit when it is time to change up */
+ for(let i=0;i<3;i++){g.fillStyle=o.shift?(i<2?'#fff':'#ff3b30'):'rgba(255,255,255,.18)';g.fillRect(146+i*13,114,10,4)}
+ if(o.tag){g.textAlign='left';g.font='italic 700 13px "Inter","Segoe UI",Arial,sans-serif';g.fillStyle=o.tagCol||'#fff';g.fillText(o.tag,120,148)}};
 hudUpdate=()=>{const Rc=RACE,T=Rc.T;
  const order=[...Rc.cars].sort((a,b)=>(b.fin?1e6-b.finT:0)-(a.fin?1e6-a.finT:0)||b.unw-a.unw);
  Rc.cars.forEach((c,i)=>{if(!c.human)return;const e=$('h'+i);if(!e||!c.rect)return;const r=c.rect,g=c.grp||[c],gi=g.indexOf(c);
@@ -235,6 +251,9 @@ hudUpdate=()=>{const Rc=RACE,T=Rc.T;
   q('.gnum').className='gnum'+(c.gearFlash>0?' fl':'');
   const ceilK=st.top*P.GT(st)[gx].top*((c.mt&&c.mt.top)||1)*2.23694*DK,upN=Rc.state==='race'&&!c.fin&&gx<NG-1&&kmh>=ceilK*.84,dnN=kmh<ceilK*.34;let hint='';if(Rc.state==='race'&&!c.fin){if(upN)hint='SHIFT UP';else if(gx>0&&dnN)hint='SHIFT DOWN'}
   q('.ghint').textContent=hint;
+  /* 0.02: the GT5-style gauge: a thin rev arc round the corner with its numbers outside, the gear inside it, the speed under it */
+  {const cv=q('.gx5'),rv=Math.max(0,Math.min(1.04,.2+.8*kmh/Math.max(1,ceilK))),hm=Rc.cars.filter(h=>h.human).length>1,key=kmh+'|'+gx+'|'+Math.round(rv*200)+'|'+(upN?1:0)+'|'+hm;
+   if(cv&&cv._k!==key){cv._k=key;P.gx5Draw(cv,{rev:rv,kmh,gear:gx+1,shift:upN,unit:P.dialK&&P.dialK()>1.2?'km/h':'mph',tag:hm?'P'+(c.k+1):'',tagCol:hm?CS[c.k]:''})}}
   {const up=upN,rd=q('.rdot');rd.className='rdot'+(up?' on':'');
    const fx=P.surfFx(st,!!Rc.T.d.gravel),cd=q('.cond');cd.innerHTML=(Rc.T.d.gravel?'GRAVEL':'TARMAC')+' <b class="'+(fx.g>=0?'up':'dn')+'">GRIP '+(fx.g>=0?'+':'')+fx.g+'%</b>'+(fx.t<-1||fx.t>1?' <b class="'+(fx.t>=0?'up':'dn')+'">SPD '+(fx.t>=0?'+':'')+fx.t+'%</b>':'')}
   const w=q('.h8warn');w.textContent=c.warnT>0&&c.warn?c.warn:(c.wrong>1?'WRONG WAY':'');

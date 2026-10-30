@@ -4,6 +4,7 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.02',d:'Oct 29, 2026',t:'Glossy black UI',items:[
+  'New race gauge: a thin GT5-style rev arc in the corner with the gear inside it and the speed under it. It is smaller than the old speed plate, sits on a soft dark corner shade so it reads on bright tracks, turns red near the shift point, and in split screen each player gets their own with a P1 to P4 tag.',
   'A new look across the whole game: dark glossy bars along the top and bottom of every menu, dark glass panels, light upright type and white as the only accent.',
   'New main menu. The top bar shows your current car as a garage card, the update log, settings, your credits and the clock. The bottom bar names the selected mode and shows the modes as picture cards; Quickplay\'s modes open upward from its card.',
   'The menus show the black and white studio photoshoots behind them.',
