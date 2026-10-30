@@ -76,8 +76,8 @@ const SC=(()=>{let dbp;const db=()=>dbp||(dbp=new Promise((res,rej)=>{const r=in
  const key=(t,i)=>{const d=D[i];let n=0;try{n=JSON.stringify(d).length}catch(e){}return t+'|r1|'+(P.VERSION||'')+'|'+d.name+'|'+n};
  return{track:async i=>{const k=key('t',i),hit=await get(k);if(hit&&P.trackShotSeed){try{P.trackShotSeed(i,await canvas(hit));return}catch(e){}}
    const cv=await P.trackShot(i);if(cv){const b=await blob(cv);if(b)put(k,b)}},
-  mode:async k=>{const i=P.modeTrack(k),kk=key('m'+k+'.'+JSON.stringify(P.MODE_SCENES[k]),i),hit=await get(kk);if(hit&&P.modeShotSeed){try{P.modeShotSeed(k,await canvas(hit));return}catch(e){}}
-   const cv=await P.modeShot(k);if(cv){const b=await blob(cv);if(b)put(kk,b)}},
+  promo:async k=>{const kk='p|'+P.PROMO_REV+'|'+(P.VERSION||'')+'|'+JSON.stringify(P.PROMO_SCENES[k]),hit=await get(kk);if(hit&&P.promoShotSeed){try{P.promoShotSeed(k,await canvas(hit));return}catch(e){}}
+   const cv=await P.promoShot(k);if(cv){const b=await blob(cv);if(b)put(kk,b)}},
   stage:async i=>{const k=key('s',i),hit=await get(k);if(hit&&hit.m&&P.stageSeed){try{const pois=[];for(const p of hit.p||[])pois.push({n:p.n,c:await canvas(p.b)});P.stageSeed(i,await canvas(hit.m),pois);return}catch(e){}}
    const cv=await P.stageRender(i);if(cv){const m=await blob(cv),p=[];for(const q of cv.pois||[]){const b=await blob(q.c);if(b)p.push({n:q.n,b})}if(m)put(k,{m,p})}}}})();
 window.PT8_BOOT=new Promise(res=>{const run=()=>setTimeout(async()=>{try{const BP=window.PT8_BP||(()=>{});
@@ -85,12 +85,16 @@ window.PT8_BOOT=new Promise(res=>{const run=()=>setTimeout(async()=>{try{const B
   for(const i of(P.STAGES||[]))if(P.stageRender&&typeof D!=='undefined'&&D[i])jobs.push([D[i].name,()=>SC.stage(i)]);
   /* 0.02: the main menu's card pictures and the Quickplay setup previews too, so nothing pops in on the menu after loading */
   for(const u of(P.menuImgs||[])){const m=/^url\((.*)\)$/.exec(u);if(m)jobs.unshift(['MENU',()=>{const im=new Image();im.src=m[1];return im.decode()}])}
-  /* 0.02: the Quickplay mode scenes */if(P.modeShot&&P.MODE_SCENES&&!window.PT8_NOSCENE)P.MODE_SCENES.forEach((x,k)=>jobs.push(['QUICKPLAY',()=>SC.mode(k)]));
+  /* 0.02: the action scenes (promo.js): Quickplay's first, then the main menu's */if(P.promoShot&&!window.PT8_NOSCENE){for(let q=0;q<5;q++)for(const k of P.promoFor(q))jobs.push(['QUICKPLAY',()=>SC.promo(k)]);for(const k of P.promoMenu())jobs.push(['MENU',()=>SC.promo(k)])}
   if(P.quickTracks&&P.trackShot&&!window.PT8_FAST)for(const i of P.quickTracks())if(!isC(i))jobs.push([D[i].name,()=>SC.track(i)]);
   /* 0.02: the box art (title stills and Quickplay covers) goes first, as soon as the car models are in; the title stills are kept for the next start */
+  const sig=(P.VERSION||'')+'|2|'+(P.PROMO_REV||0);let flat=null;
   jobs.unshift(['COVERS',async()=>{for(let n=0;n<120&&!(P.boxReady&&P.boxReady());n++)await new Promise(r=>setTimeout(r,250));if(!P.boxReady||!P.boxReady())return;
-   const sig=(P.VERSION||'')+'|1';let X=null;try{X=JSON.parse(localStorage.getItem('pt8-boxart')||'null')}catch(e){}
-   if(!(X&&X.v===sig&&window.PT8_BOX)){const A=P.titleArts();if(A.length&&window.PT8_BOXSET){window.PT8_BOXSET(A);try{localStorage.setItem('pt8-boxart',JSON.stringify({v:sig,L:A}))}catch(e){}}}}]);
+   let X=null;try{X=JSON.parse(localStorage.getItem('pt8-boxart')||'null')}catch(e){}
+   if(!(X&&X.v===sig&&window.PT8_BOX)){flat=P.titleArts();if(flat.length&&window.PT8_BOXSET)window.PT8_BOXSET(flat)}else flat=null}]);
+  /* then the photos of the art as real things (the magazine, the TV, the game case, the billboard), mixed in between the covers and kept for the next start */
+  if(P.propShot&&!window.PT8_NOSCENE)jobs.push(['COVERS',async()=>{if(!flat)return;const ph=[];for(let k=0;k<P.PROPS.length;k++){const c=await P.propShot(k);if(c)ph.push('b,'+c.toDataURL('image/jpeg',.82).slice(23))}
+   const A=[];for(let i=0;i<Math.max(flat.length,ph.length);i++){if(flat[i])A.push(flat[i]);if(ph[i])A.push(ph[i])}if(A.length&&window.PT8_BOXSET){window.PT8_BOXSET(A);try{localStorage.setItem('pt8-boxart',JSON.stringify({v:sig,L:A}))}catch(e){}}}]);
   BP(.5);for(let k=0;k<jobs.length;k++){await Promise.race([jobs[k][1]().catch(()=>null),new Promise(r=>setTimeout(r,120000))]);BP(.5+.5*(k+1)/jobs.length)}
  }catch(e){console.error('boot warm-up',e)}res()},400);if(document.readyState==='complete')run();else addEventListener('load',run)});
 window.PT8_BOOT.then(()=>{P.bootDone=1});window.PT8_BOOT.then(()=>setTimeout(()=>{d.classList.add('on');if(!BT)slide()},400));

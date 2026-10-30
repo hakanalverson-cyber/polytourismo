@@ -144,10 +144,12 @@ function setFoc(i,hv){const cs=$$('#s8cards .card',root);foc=(i+cs.length)%cs.le
 $$('#s8cards .card',root).forEach((c,k)=>{c.onmouseenter=()=>setFoc(k,1);c.onclick=()=>pickMode(c.dataset.m)});
 let qf=0;const setQf=(i,hv)=>{const cs=$$('#s8quick .qr',root);qf=(i+cs.length)%cs.length;cs.forEach((c,k)=>c.classList.toggle('foc',k===qf));qPrev(cs[qf])};
 /* 0.02: the selected mode's picture is the track it opens on (rendered behind the boot screen), with the menu art as a fallback */
-function qPrev(c){if(!c)return;$('qpName').textContent=c.querySelector('span').textContent;$('qpDesc').textContent=c.dataset.d;
+let qv=0,qT=0;
+function qPrev(c,keep){if(!c)return;clearTimeout(qT);if(!keep)qv=0;$('qpName').textContent=c.querySelector('span').textContent;$('qpDesc').textContent=c.dataset.d;
  const m=c.dataset.m,t=okTrack(m,ST.track)?ST.track:firstTrack(m),cv=$('qpShot'),g=cv.getContext('2d'),rf=$('qpRefl');let sh=P.trackShotCached&&P.trackShotCached(t);
- /* 0.02: the mode's own action scene (cartoon.js), made behind the boot screen */const k0=[...c.parentNode.children].indexOf(c),art=P.modeShotCached&&P.modeShotCached(k0);if(art)sh=art;else if(P.modeShot)P.modeShot(k0).then(v=>{if(v&&qf===k0)qPrev(c)});
- const put=im=>{g.drawImage(im,0,0,cv.width,cv.height);const r=rf.getContext('2d');r.clearRect(0,0,rf.width,rf.height);r.drawImage(cv,0,cv.height*.75,cv.width,cv.height*.25,0,0,rf.width,rf.height)};
+ /* 0.02: the mode's own action scenes (promo.js, made behind the boot screen), shown in turn */const k0=[...c.parentNode.children].indexOf(c),L=P.promoFor?P.promoFor(k0):[],ks=L.length?L[qv%L.length]:-1,art=ks>=0&&P.promoShotCached(ks);
+ if(art)sh=art;else if(ks>=0)P.promoShot(ks).then(v=>{if(v&&qf===k0)qPrev(c,1)});if(L.length>1)qT=setTimeout(()=>{if(scr==='s8quick'&&qf===k0){if(P.promoShotCached(L[(qv+1)%L.length]))qv++;qPrev(c,1)}},6500);
+ const put=im=>{if(keep&&art){let n=0;const f=()=>{if(qf!==k0)return;g.globalAlpha=.16;g.drawImage(im,0,0,cv.width,cv.height);g.globalAlpha=1;if(++n<24)requestAnimationFrame(f);else{g.drawImage(im,0,0,cv.width,cv.height);refl()}};f();return}g.drawImage(im,0,0,cv.width,cv.height);refl()},refl=()=>{const r=rf.getContext('2d');r.clearRect(0,0,rf.width,rf.height);r.drawImage(cv,0,cv.height*.75,cv.width,cv.height*.25,0,0,rf.width,rf.height)};
  if(sh){put(sh);return}const bb=typeof BBG_B64!=='undefined'?BBG_B64:[],k=[...c.parentNode.children].indexOf(c),u=bb[[3,2,1,4,0][k]%Math.max(1,bb.length)];
  if(u){const im=new Image();im.onload=()=>{if(qf===k)put(im)};im.src='data:image/jpeg;base64,'+u}else drawTrack(cv,t,false)}
 function quickPick(c){P.sfx&&P.sfx('select');if(c.dataset.p)ST.players=+c.dataset.p;pickMode(c.dataset.m);ST.ret='s8quick'}
@@ -207,9 +209,9 @@ const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="current
   {k:'garage',l:'Garage',i:'garage',img:B64(PB,7),cap:()=>nOwn()+' / '+CARS.length+' CARS'},{k:'brand',l:'Brand Central',i:'brand',img:B64(PB,5),cap:()=>nMk()+' MAKERS'}];
  const DESC={quick:'Quick Race, Time Attack, Elimination, Cut-Up and Versus.',track:'Race the real-world circuits.',rally:'Point to point stages against the clock.',garage:'Your cars, paint and tuning.',brand:'New cars from every maker.',set:'Graphics, sound and controls.'};
  P.menuImgs=TABS.map(t=>t.img).filter(u=>u!=='none');
- /* 0.02: the menu background is the Quickplay action scenes, slowly drifting and crossfading behind the glass panel (no showroom) */
- {const bg=document.createElement('div');bg.id='gxBg';menu.insertBefore(bg,menu.firstChild);let n=Math.random()*5|0,t=0;
-  const step=()=>{clearTimeout(t);t=setTimeout(step,7000);if(scr!=='menu')return;const cs=(P.MODE_SCENES||[]).map((x,k)=>P.modeShotCached&&P.modeShotCached(k)).filter(Boolean);if(!cs.length)return;
+ /* 0.02: the menu background is the main menu's own action scenes (promo.js), slowly drifting and crossfading behind the glass panel (no showroom) */
+ {const bg=document.createElement('div');bg.id='gxBg';menu.insertBefore(bg,menu.firstChild);let n=Math.random()*12|0,t=0;
+  const step=()=>{clearTimeout(t);t=setTimeout(step,7000);if(scr!=='menu')return;const cs=(P.promoMenu?P.promoMenu():[]).map(k=>P.promoShotCached(k)).filter(Boolean);if(!cs.length)return;
    n=(n+1)%cs.length;const c=document.createElement('canvas'),src=cs[n];c.width=src.width;c.height=src.height;c.getContext('2d').drawImage(src,0,0);bg.appendChild(c);void c.offsetWidth;c.className='on';
    const old=[...bg.children].filter(x=>x!==c);setTimeout(()=>old.forEach(x=>x.remove()),1600);if(!menu.classList.contains('gxBgOn')){menu.classList.add('gxBgOn');for(const e of menu.children){if(e===bg)continue;const st=getComputedStyle(e);if(st.position==='static')e.style.position='relative';if(!(+st.zIndex>0))e.style.zIndex=1}}};
   P.menuBg=step;setTimeout(step,50)}
@@ -701,7 +703,7 @@ P.boxArt=(id,st,W,H,o={})=>{const key=[id,st,W,H,o.v,o.t,o.s,o.safe,o.cap].join(
  g.drawImage(BX.domElement,0,0);
  if(st==='s'){const v=g.createRadialGradient(W/2,H*.55,H*.35,W/2,H*.55,W*.75);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.6)');g.fillStyle=v;g.fillRect(0,0,W,H)}
  if(st==='s'&&o.cap){const nm=((BYID[id]||{}).name||'').toUpperCase();g.fillStyle='rgba(255,255,255,.85)';g.font='300 '+Math.round(30*u)+'px '+FN;ls(Math.round(4*u)+'px');g.fillText(nm,Sx+56*u,T+86*u);g.font='600 '+Math.round(13*u)+'px '+FN;g.fillStyle='rgba(255,255,255,.5)';g.fillText('PHOTO STUDIO  \u00b7  POLY GT',Sx+58*u,T+114*u);ls('0px')}
- if(st==='m'){const nm=(BYID[id]||{}).name||'';g.fillStyle='#16191d';g.font='600 '+Math.round(16*u)+'px '+FN;ls(Math.round(5*u)+'px');g.fillText('ISSUE 02  \u00b7  VERSION 0.02',Sx+52*u,H-Bm-170*u);ls('0px');
+ if(st==='m'){const nm=(BYID[id]||{}).name||'';g.fillStyle='#16191d';g.font='600 '+Math.round(16*u)+'px '+FN;ls(Math.round(5*u)+'px');g.fillText('THE DRIVING MAGAZINE',Sx+52*u,H-Bm-170*u);ls('0px');
   let nf=54*u;g.font='italic 800 '+Math.round(nf)+'px '+FN;while(nf>28*u&&g.measureText(nm.toUpperCase()).width>W*.4){nf-=2*u;g.font='italic 800 '+Math.round(nf)+'px '+FN}g.fillText(nm.toUpperCase(),Sx+48*u,H-Bm-112*u);g.font='400 '+Math.round(22*u)+'px '+FN;g.fillStyle='#5b6570';g.fillText(o.s||'Tested on track, in the garage and on the stages',Sx+52*u,H-Bm-76*u);
   g.fillStyle='#d2202f';g.fillRect(W-Sx-210*u,T+72*u,160*u,48*u);g.fillStyle='#fff';g.font='800 '+Math.round(22*u)+'px '+FN;g.textAlign='center';g.fillText('131 CARS',W-Sx-130*u,T+105*u);g.textAlign='left'}
  if(o.t&&(st==='d'||st==='w')){const [a,b]=o.t,fs=Math.round(86*u);
@@ -712,8 +714,8 @@ P.boxArt=(id,st,W,H,o={})=>{const key=[id,st,W,H,o.v,o.t,o.s,o.safe,o.cap].join(
   g.fillStyle=st==='d'?'#fff':'#16191d';g.font='italic 800 '+fs+'px '+FN;g.fillText(a,x0,y0);g.font='italic 200 '+fs+'px '+FN;g.fillText(b,x0+wa,y0);
   if(o.s){g.font='500 '+Math.round(17*u)+'px '+FN;ls(Math.round(6*u)+'px');g.fillStyle=st==='d'?'#c9d8ee':'#5b6570';g.textAlign=st==='d'?'left':'right';g.fillText(o.s.toUpperCase(),st==='d'?x0:W-Sx-60*u,y0+36*u);g.textAlign='left'}ls('0px');g.shadowBlur=0}
  BXC.set(key,cv);return cv};
-/* the title's stills: covers, studio shots and magazine fronts, mixed with the location photoshoot stills by the boot screen */
-const BXT=[['c34','d',{t:['POLY','GT'],s:'Version 0.02'}],['c123','s',{cap:1}],['c27','m',{s:'The mid-engine legend, driven flat out'}],['c86','w',{t:['POLY','GT'],s:'Version 0.02'}],['gtr','s',{cap:1}],['ferr','d',{t:['POLY','GT'],s:'Grand Tour'}],['c42','m',{s:'Twelve cylinders, one test day'}]];
+/* the title's stills: covers and studio shots; title.js puts the photos of the magazine, TV, game case and billboard (promo.js) in between */
+const BXT=[['c34','d',{t:['POLY','GT'],s:'Version 0.02'}],['c123','s',{cap:1}],['c86','w',{t:['POLY','GT'],s:'Version 0.02'}],['gtr','s',{cap:1}],['ferr','d',{t:['POLY','GT'],s:'Grand Tour'}]];
 P.boxReady=()=>typeof CAR_MODELS!=='undefined'&&BXT.every(j=>CAR_MODELS[P.modelOf(j[0],0)]);
 P.titleArts=()=>BXT.map(([id,st,o])=>{const c=P.boxArt(id,st,1600,900,Object.assign({v:'ti',safe:1},o));return c?(st==='w'||st==='m'?'w,':'b,')+c.toDataURL('image/jpeg',.86).slice(23):null}).filter(Boolean);
 function resLayout(){const b=document.getElementById('resBox');if(!b||b.querySelector('.rsgrid')||!b.querySelector('.lb,.lbsolo'))return;
