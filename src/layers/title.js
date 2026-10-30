@@ -76,7 +76,7 @@ const SC=(()=>{let dbp;const db=()=>dbp||(dbp=new Promise((res,rej)=>{const r=in
  const key=(t,i)=>{const d=D[i];let n=0;try{n=JSON.stringify(d).length}catch(e){}return t+'|r1|'+(P.VERSION||'')+'|'+d.name+'|'+n};
  return{track:async i=>{const k=key('t',i),hit=await get(k);if(hit&&P.trackShotSeed){try{P.trackShotSeed(i,await canvas(hit));return}catch(e){}}
    const cv=await P.trackShot(i);if(cv){const b=await blob(cv);if(b)put(k,b)}},
-  mode:async k=>{const i=P.modeTrack(k),kk=key('m'+k+'.'+JSON.stringify(P.MODE_SCENES[k]).length,i),hit=await get(kk);if(hit&&P.modeShotSeed){try{P.modeShotSeed(k,await canvas(hit));return}catch(e){}}
+  mode:async k=>{const i=P.modeTrack(k),kk=key('m'+k+'.'+JSON.stringify(P.MODE_SCENES[k]),i),hit=await get(kk);if(hit&&P.modeShotSeed){try{P.modeShotSeed(k,await canvas(hit));return}catch(e){}}
    const cv=await P.modeShot(k);if(cv){const b=await blob(cv);if(b)put(kk,b)}},
   stage:async i=>{const k=key('s',i),hit=await get(k);if(hit&&hit.m&&P.stageSeed){try{const pois=[];for(const p of hit.p||[])pois.push({n:p.n,c:await canvas(p.b)});P.stageSeed(i,await canvas(hit.m),pois);return}catch(e){}}
    const cv=await P.stageRender(i);if(cv){const m=await blob(cv),p=[];for(const q of cv.pois||[]){const b=await blob(q.c);if(b)p.push({n:q.n,b})}if(m)put(k,{m,p})}}}})();

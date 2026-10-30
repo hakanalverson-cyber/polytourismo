@@ -4,7 +4,7 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.02',d:'Oct 29, 2026',t:'Glossy black UI',items:[
-  'Quickplay mode pictures are action shots on the tracks: a pack of four for Quick Race, one car alone for Time Attack, the last car fading out for Elimination, a car weaving through traffic for Cut-Up and two cars side by side for Versus. The main menu background slowly cycles through them behind the glass panel.',
+  'Quickplay mode pictures are action shots on the tracks, from different angles: a low chase behind the pack for Quick Race, a side tracking shot for Time Attack, head-on with the last car fading out for Elimination, a high shot over the traffic for Cut-Up and two cars side by side in a street for Versus. The cars are sharp over a motion-blurred background, and their wheels point straight ahead. The main menu background slowly cycles through these and three more (a low front three-quarter, a side shot and a night chase) behind the glass panel.',
   'Box art instead of in-game photos: the loading and title screens show game covers (deep blue or white), grey photo-studio shots and magazine fronts of the cars, with no in-game photos left. The covers are made on the first start and kept for later starts.',
   'The first time the menu comes up the game asks "What is your name?" (only once). Quickplay opens its page straight away, without a drop-down.',
   'PS3-style boot: a photosensitive seizure warning and an autosave notice come up over the loading screen (any key skips them), and a small spinning icon shows in the corner whenever the game saves.',
