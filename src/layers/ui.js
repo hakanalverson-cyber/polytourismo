@@ -146,8 +146,7 @@ let qf=0;const setQf=(i,hv)=>{const cs=$$('#s8quick .qr',root);qf=(i+cs.length)%
 /* 0.02: the selected mode's picture is the track it opens on (rendered behind the boot screen), with the menu art as a fallback */
 function qPrev(c){if(!c)return;$('qpName').textContent=c.querySelector('span').textContent;$('qpDesc').textContent=c.dataset.d;
  const m=c.dataset.m,t=okTrack(m,ST.track)?ST.track:firstTrack(m),cv=$('qpShot'),g=cv.getContext('2d'),rf=$('qpRefl');let sh=P.trackShotCached&&P.trackShotCached(t);
- /* the cover is made at the picture's own shape so nothing is cropped */const k0=[...c.parentNode.children].indexOf(c),ar=cv.clientWidth?cv.clientHeight/cv.clientWidth:.5625,ch=Math.round(1280*Math.min(.9,Math.max(.4,ar))),art=P.quickArt&&P.quickArt(k0,c.dataset.d,ch);cv.parentNode.classList.toggle('bx',!!art);
- if(art){sh=art;if(cv.height!==ch)cv.height=ch}else if(cv.height!==720)cv.height=720;
+ /* 0.02: the mode's own action scene (cartoon.js), made behind the boot screen */const k0=[...c.parentNode.children].indexOf(c),art=P.modeShotCached&&P.modeShotCached(k0);if(art)sh=art;else if(P.modeShot)P.modeShot(k0).then(v=>{if(v&&qf===k0)qPrev(c)});
  const put=im=>{g.drawImage(im,0,0,cv.width,cv.height);const r=rf.getContext('2d');r.clearRect(0,0,rf.width,rf.height);r.drawImage(cv,0,cv.height*.75,cv.width,cv.height*.25,0,0,rf.width,rf.height)};
  if(sh){put(sh);return}const bb=typeof BBG_B64!=='undefined'?BBG_B64:[],k=[...c.parentNode.children].indexOf(c),u=bb[[3,2,1,4,0][k]%Math.max(1,bb.length)];
  if(u){const im=new Image();im.onload=()=>{if(qf===k)put(im)};im.src='data:image/jpeg;base64,'+u}else drawTrack(cv,t,false)}
@@ -208,6 +207,12 @@ const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="current
   {k:'garage',l:'Garage',i:'garage',img:B64(PB,7),cap:()=>nOwn()+' / '+CARS.length+' CARS'},{k:'brand',l:'Brand Central',i:'brand',img:B64(PB,5),cap:()=>nMk()+' MAKERS'}];
  const DESC={quick:'Quick Race, Time Attack, Elimination, Cut-Up and Versus.',track:'Race the real-world circuits.',rally:'Point to point stages against the clock.',garage:'Your cars, paint and tuning.',brand:'New cars from every maker.',set:'Graphics, sound and controls.'};
  P.menuImgs=TABS.map(t=>t.img).filter(u=>u!=='none');
+ /* 0.02: the menu background is the Quickplay action scenes, slowly drifting and crossfading behind the glass panel (no showroom) */
+ {const bg=document.createElement('div');bg.id='gxBg';menu.insertBefore(bg,menu.firstChild);let n=Math.random()*5|0,t=0;
+  const step=()=>{clearTimeout(t);t=setTimeout(step,7000);if(scr!=='menu')return;const cs=(P.MODE_SCENES||[]).map((x,k)=>P.modeShotCached&&P.modeShotCached(k)).filter(Boolean);if(!cs.length)return;
+   n=(n+1)%cs.length;const c=document.createElement('canvas'),src=cs[n];c.width=src.width;c.height=src.height;c.getContext('2d').drawImage(src,0,0);bg.appendChild(c);void c.offsetWidth;c.className='on';
+   const old=[...bg.children].filter(x=>x!==c);setTimeout(()=>old.forEach(x=>x.remove()),1600);if(!menu.classList.contains('gxBgOn')){menu.classList.add('gxBgOn');for(const e of menu.children){if(e===bg)continue;const st=getComputedStyle(e);if(st.position==='static')e.style.position='relative';if(!(+st.zIndex>0))e.style.zIndex=1}}};
+  P.menuBg=step;setTimeout(step,50)}
  const SUBS=[{m:'mp',p:1,n:'Quick Race',i:'race'},{m:'ta',n:'Time Attack',i:'clock'},{m:'elim',n:'Elimination',i:'elim'},{m:'cutup',n:'Cut-Up',i:'cut'},{m:'mp',p:2,n:'Versus',i:'vs'}];
  const sv=(n,x)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square">'+x+'</svg>';
  const IX={play:'<path d="M7 4.5v15l12-7.5z"/>',rally:'<path d="M2 19l7-11 4 6 3-3 5 8z"/>',track:'<path d="M4 20V4h2v2h12l-3 4 3 4H6v6z"/>',race:'<path d="M4 20V4h2v2h12l-3 4 3 4H6v6z"/>',clock:'<circle cx="12" cy="13" r="8"/><path d="M12 13V8M9 3h6"/>',elim:'<circle cx="12" cy="12" r="8"/><path d="M6.5 6.5l11 11"/>',cut:'<path d="M3 17l5-10 4 7 3-4 6 7z"/>',vs:'<rect x="3" y="5" width="8" height="14"/><rect x="13" y="5" width="8" height="14"/>',cog:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',log:'<path d="M5 6h14M5 12h14M5 18h9"/>',garage:'<path d="M3 11l9-6 9 6v9H3z"/>',brand:'<path d="M3 12l9-9h7v7l-9 9z"/><circle cx="15" cy="8" r="1.2"/>'};
@@ -711,9 +716,6 @@ P.boxArt=(id,st,W,H,o={})=>{const key=[id,st,W,H,o.v,o.t,o.s,o.safe,o.cap].join(
 const BXT=[['c34','d',{t:['POLY','GT'],s:'Version 0.02'}],['c123','s',{cap:1}],['c27','m',{s:'The mid-engine legend, driven flat out'}],['c86','w',{t:['POLY','GT'],s:'Version 0.02'}],['gtr','s',{cap:1}],['ferr','d',{t:['POLY','GT'],s:'Grand Tour'}],['c42','m',{s:'Twelve cylinders, one test day'}]];
 P.boxReady=()=>typeof CAR_MODELS!=='undefined'&&BXT.every(j=>CAR_MODELS[P.modelOf(j[0],0)]);
 P.titleArts=()=>BXT.map(([id,st,o])=>{const c=P.boxArt(id,st,1600,900,Object.assign({v:'ti',safe:1},o));return c?(st==='w'||st==='m'?'w,':'b,')+c.toDataURL('image/jpeg',.86).slice(23):null}).filter(Boolean);
-/* Quickplay: one cover per mode, in the row order */
-const BXQ=[['gtr','d','Quick','Race'],['c27','w','Time','Attack'],['c34','d','Elimination',''],['c86','w','Cut-Up',''],['ferr','d','Versus','']];
-P.quickArt=(k,sub,h)=>{const j=BXQ[k];return j?P.boxArt(j[0],j[1],1280,h||720,{v:'cl',t:[j[2],j[3]],s:sub}):null};
 function resLayout(){const b=document.getElementById('resBox');if(!b||b.querySelector('.rsgrid')||!b.querySelector('.lb,.lbsolo'))return;
  const kids=[...b.children],btn=kids[kids.length-1],pay=kids.find(e=>e.querySelector&&e.querySelector('.pay')),left=kids.filter(e=>e!==btn&&e!==pay);
  /* the car shown is the winner's (the first across the line; your own in a solo run) */
@@ -890,7 +892,7 @@ frame=function(n){requestAnimationFrame(frame);const dt=Math.min(.05,Math.max(0,
  if(RACE&&(scr==='game'||scr==='pause'||scr==='s8res')){if(!paused)step(dt);drawRace(dt);if(scr==='game')hudUpdate()}
  else if(scr==='s8show'){/* Brand Central's maker list covers the studio with its stills: don't render the studio behind it */if(!inGrid()&&!$('s8show').classList.contains('mkl'))drawShow(dt)}
  /* 0.02: Quickplay and the race setup cover the whole screen with a solid backdrop: nothing is drawn behind them */
- else if(scr==='s8quick'||(scr==='s8setup'&&$('s8setup').classList.contains('gxOn'))){}
+ else if(scr==='s8quick'||(scr==='s8setup'&&$('s8setup').classList.contains('gxOn'))||(scr==='menu'&&$('menu').classList.contains('gxBgOn'))){}
  else if(scr==='menu'||scr==='s8cards'||scr==='s8quick'||scr==='s8pick'||scr==='s8setup'||scr==='s8career'||scr==='s8res'){MS=MS||menuScene();MS.tick(Math.max(0,T0));R.setScissorTest(false);R.setViewport(0,0,R.domElement.width,R.domElement.height);MS.draw?MS.draw():R.render(MS.sc,MS.cam)}};
 /* pause menu */
 (function(){const b=$('pause').querySelector('.b'),opt=[...b.querySelectorAll('button')].pop();b.innerHTML='<button id="pRes">Resume</button><button id="pRst">Restart</button><button id="pQuit">Quit to menu</button>';b.appendChild(opt);opt.textContent='Options';

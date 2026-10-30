@@ -4,7 +4,8 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.02',d:'Oct 29, 2026',t:'Glossy black UI',items:[
-  'Box art instead of in-game photos: the loading and title screens show game covers (deep blue or white), grey photo-studio shots and magazine fronts of the cars, with no in-game photos left. Each Quickplay mode has its own cover. The covers are made on the first start and kept for later starts.',
+  'Quickplay mode pictures are action shots on the tracks: a pack of four for Quick Race, one car alone for Time Attack, the last car fading out for Elimination, a car weaving through traffic for Cut-Up and two cars side by side for Versus. The main menu background slowly cycles through them behind the glass panel.',
+  'Box art instead of in-game photos: the loading and title screens show game covers (deep blue or white), grey photo-studio shots and magazine fronts of the cars, with no in-game photos left. The covers are made on the first start and kept for later starts.',
   'The first time the menu comes up the game asks "What is your name?" (only once). Quickplay opens its page straight away, without a drop-down.',
   'PS3-style boot: a photosensitive seizure warning and an autosave notice come up over the loading screen (any key skips them), and a small spinning icon shows in the corner whenever the game saves.',
   'New PS3-style main menu: a tilted glass panel on the right with your profile card on top (name, credits, wins and current car), the chrome-blue highlight and keyboard hints centred under it, and the showroom cars on the left. Click your name, or go up to it and press Enter, to change it: it is saved and used as your driver name.',

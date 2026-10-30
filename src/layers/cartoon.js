@@ -103,6 +103,47 @@ P.trackShotCached=idx=>SHOT[idx]&&SHOT[idx]._v||null;
 /* a shot saved from an earlier session (title.js keeps them in IndexedDB) */
 P.trackShotSeed=(idx,cv)=>{const pr=Promise.resolve(cv);pr._v=cv;SHOT[idx]=pr};
 {const ts=P.trackShot;P.trackShot=idx=>{const pr=ts(idx);pr.then(v=>{if(v&&SHOT[idx])SHOT[idx]._v=v});return pr}}
+/* 0.02: Quickplay mode scenes: the cars acting out each mode on a real track, from a low trackside camera in front of them, with a zoom
+   blur around the lead car (an action photo, like the old box covers). Each scene is made once and kept (title.js stores it in IndexedDB) */
+const MSH={};let msR=null;
+P.MODE_SCENES=[
+ {cars:[['gtr',7,-1.4],['c78',10.5,1.7],['c86',15,-1.2],['c34',19.5,1.6]],cam:[.3,.5],look:11,trk:0,fov:30},
+ {cars:[['c27',6.5,.5]],cam:[-1.6,.45],look:7,trk:1,fov:30},
+ {cars:[['c34',7,-1.4],['c46',10.5,1.6],['c15',14.5,-1.1],['c8',17,0,.3]],cam:[.2,.55],look:11,trk:7,fov:30},
+ {cars:[['c86',6.5,.9],['c26',5,-2.3],['c50',13,1.9],['c28',17,-1.9]],cam:[-.4,.5],look:9,trk:3,fov:32},
+ {cars:[['ferr',6,-1.7],['c42',6.4,1.7]],cam:[0,.4],look:7,trk:8,fov:38,pair:1}];
+P.modeShotCached=k=>MSH[k]&&MSH[k]._v||null;
+P.modeShotSeed=(k,cv)=>{const pr=Promise.resolve(cv);pr._v=cv;MSH[k]=pr};
+P.modeTrack=k=>{const q=P.quickTracks?P.quickTracks():[0];return q[(P.MODE_SCENES[k].trk||0)%q.length]};
+P.modeShot=k=>MSH[k]||(MSH[k]=new Promise(res=>setTimeout(async()=>{let sc=null;const W=1280,H=720,cars=[];try{
+ const S=P.MODE_SCENES[k],idx=P.modeTrack(k),def=Object.assign({},D[idx]),T=sampleTrack(def);sc=buildWorld(T);
+ const ims=[];sc.traverse(o=>{const m=o.material;if(m&&m.map&&m.map.image)ims.push(m.map.image)});
+ for(let t=0;t<60&&ims.some(im=>!(im.complete&&im.naturalWidth));t++)await new Promise(r=>setTimeout(r,50));
+ const N=T.N,ang=i=>{let d=T.psi[(i+1)%N]-T.psi[i];return Math.abs(Math.atan2(Math.sin(d),Math.cos(d)))};
+ /* the straights: the quietest stretches of road, a different one for each scene */
+ const span=Math.round(45/T.sp),sc_=[];for(let i=0;i<N;i+=4){let s=0;for(let j=-span;j<=span;j++)s+=ang((i+j+N)%N);sc_.push([s,i])}sc_.sort((a,b)=>a[0]-b[0]);
+ const pick=[];for(const [,i] of sc_){if(pick.every(p=>Math.min(Math.abs(p-i),N-Math.abs(p-i))>span*2))pick.push(i);if(pick.length>4)break}
+ const a=pick[k%pick.length],at=d=>(a-Math.round(d/T.sp)+N*4)%N,pos=(j,l,h)=>new THREE.Vector3(T.x[j]+Math.cos(T.psi[j])*l,T.y[j]+h,T.z[j]-Math.sin(T.psi[j])*l);
+ let hero=null;
+ for(const [id,d,l,fade] of S.cars){const src=CAR_MODELS[P.modelOf(id,0)];if(!src)continue;const j=at(d),lw=Math.max(-T.hw[j]+1.3,Math.min(T.hw[j]-1.3,l));
+  const model=src.clone(true),g=new THREE.Group(),c=new THREE.Group(),ctd=new THREE.Group();ctd.add(model);c.add(ctd);g.add(c);ctd.updateMatrixWorld(true);
+  const bb=new THREE.Box3().setFromObject(model),sz=bb.getSize(new THREE.Vector3()),ct=bb.getCenter(new THREE.Vector3()),s=(src.userData.gl?src.userData.gl*1.093:4.7)/Math.max(sz.x,sz.z,.001);
+  ctd.position.set(-ct.x,-bb.min.y,-ct.z);c.scale.setScalar(s);c.rotation.y=(sz.x>sz.z?Math.PI/2:0)+Math.PI;g.position.copy(pos(j,lw,0));g.rotation.set(0,T.psi[j],0,'YXZ');
+  if(fade)model.traverse(o=>{if(o.isMesh)o.material=(Array.isArray(o.material)?o.material:[o.material]).map(m=>{const q=m.clone();q.transparent=true;q.opacity=fade;q.depthWrite=false;return q})});
+  sc.add(g);cars.push(g);if(!hero)hero=g}
+ const S2=S.pair&&cars[1];
+ const cam=new THREE.PerspectiveCamera(S.fov||34,W/H,.3,9000),cj=(a+Math.round(2/T.sp))%N;cam.position.copy(pos(cj,S.cam[0],S.cam[1]));cam.lookAt(pos(at(S.look),0,1));cam.updateMatrixWorld();
+ if(!msR){msR=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});msR.outputEncoding=THREE.sRGBEncoding;msR.toneMapping=THREE.ACESFilmicToneMapping;msR.toneMappingExposure=1.08;msR.setPixelRatio(1)}
+ msR.setSize(W,H,false);if(sc.fog&&sc.fog.far)sc.fog.far=Math.max(sc.fog.far,2400);msR.render(sc,cam);
+ const raw=document.createElement('canvas');raw.width=W;raw.height=H;{const rx=raw.getContext('2d');rx.filter='saturate(1.45) contrast(1.12)';/* punchier colour, like a cover shot */rx.drawImage(msR.domElement,0,0)}
+ /* zoom blur out from the lead car, which stays sharp */
+ let fx=W/2,fy=H*.55;if(hero){const v=new THREE.Vector3(0,1,0).applyMatrix4(hero.matrixWorld);if(S2)v.add(new THREE.Vector3(0,1,0).applyMatrix4(S2.matrixWorld)).multiplyScalar(.5);v.project(cam);fx=(v.x+1)/2*W;fy=(1-v.y)/2*H}
+ const out=document.createElement('canvas');out.width=W;out.height=H;const g=out.getContext('2d');for(let i=0;i<12;i++){const s=1+.07*i/12;g.globalAlpha=1/(i+1);g.setTransform(s,0,0,s,fx*(1-s),fy*(1-s));g.drawImage(raw,0,0)}
+ g.setTransform(1,0,0,1,0,0);g.globalAlpha=1;const m=document.createElement('canvas');m.width=W;m.height=H;const mg=m.getContext('2d');mg.drawImage(raw,0,0);mg.globalCompositeOperation='destination-in';
+ const rg=mg.createRadialGradient(fx,fy,H*(S2?.3:.12),fx,fy,H*(S2?.8:.62));rg.addColorStop(0,'#000');rg.addColorStop(1,'rgba(0,0,0,0)');mg.fillStyle=rg;mg.fillRect(0,0,W,H);g.drawImage(m,0,0);res(out)}
+ catch(e){console.error('mode shot',e);delete MSH[k];res(null)}
+ finally{if(sc){cars.forEach(c=>sc.remove(c));/* the car models are shared with the garage: only the track is disposed */try{disposeWorld(sc)}catch(e){}}}},30)));
+{const ms=P.modeShot;P.modeShot=k=>{const pr=ms(k);pr.then(v=>{if(v&&MSH[k])MSH[k]._v=v});return pr}}
 /* the bought models are built at their real size, which dwarfs our cars: on these tracks the cars are drawn bigger (carScale), and the
    chase camera, wall contact and car-to-car contact grow with them. Physics speeds are unchanged. */
 const K=()=>{const R=typeof RACE!=="undefined"?RACE:null,d=R&&R.T&&R.T.d;return d&&d.cartoon&&d.cartoon.carScale||1};

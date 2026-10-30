@@ -6661,8 +6661,13 @@ body.gxAsking #tutOffer{display:none!important}
 #menu>.gxpad{right:auto!important;bottom:auto!important;justify-content:center;gap:24px}
 #menu>.gxpad u{width:auto!important;min-width:22px;height:22px;padding:0 7px;box-sizing:border-box;border-radius:6px!important;font:600 11px var(--gt)!important;color:#e6e9ee!important;background:linear-gradient(180deg,#3a4048,#1a1d22)!important;box-shadow:inset 0 1px 0 #ffffff40,0 0 0 1px #000,0 2px 0 #000!important}
 
-/* 0.02: Quickplay box art carries its own title */
-#gxQp .qpv.bx .qtn{display:none}
+/* 0.02: main menu background: the Quickplay action scenes */
+#gxBg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;background:#0b0d10}
+#gxBg canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.08);transition:opacity 1.4s ease}
+#gxBg canvas.on{opacity:1;animation:gxBgKB 9s linear forwards}
+#gxBg:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 35%,rgba(0,0,0,.55) 75%),linear-gradient(0deg,rgba(0,0,0,.55),transparent 30%)}
+@keyframes gxBgKB{from{transform:scale(1.08)}to{transform:scale(1)}}
+#tutOffer{bottom:40px!important}/* clear of the key hints under the menu panel */
 </style><script>
 /* ===== Poly GT v8 layer: core (economy, gears, AI, race flow, modes) ===== */
 (function v8core(){
@@ -11325,6 +11330,47 @@ P.trackShotCached=idx=>SHOT[idx]&&SHOT[idx]._v||null;
 /* a shot saved from an earlier session (title.js keeps them in IndexedDB) */
 P.trackShotSeed=(idx,cv)=>{const pr=Promise.resolve(cv);pr._v=cv;SHOT[idx]=pr};
 {const ts=P.trackShot;P.trackShot=idx=>{const pr=ts(idx);pr.then(v=>{if(v&&SHOT[idx])SHOT[idx]._v=v});return pr}}
+/* 0.02: Quickplay mode scenes: the cars acting out each mode on a real track, from a low trackside camera in front of them, with a zoom
+   blur around the lead car (an action photo, like the old box covers). Each scene is made once and kept (title.js stores it in IndexedDB) */
+const MSH={};let msR=null;
+P.MODE_SCENES=[
+ {cars:[['gtr',7,-1.4],['c78',10.5,1.7],['c86',15,-1.2],['c34',19.5,1.6]],cam:[.3,.5],look:11,trk:0,fov:30},
+ {cars:[['c27',6.5,.5]],cam:[-1.6,.45],look:7,trk:1,fov:30},
+ {cars:[['c34',7,-1.4],['c46',10.5,1.6],['c15',14.5,-1.1],['c8',17,0,.3]],cam:[.2,.55],look:11,trk:7,fov:30},
+ {cars:[['c86',6.5,.9],['c26',5,-2.3],['c50',13,1.9],['c28',17,-1.9]],cam:[-.4,.5],look:9,trk:3,fov:32},
+ {cars:[['ferr',6,-1.7],['c42',6.4,1.7]],cam:[0,.4],look:7,trk:8,fov:38,pair:1}];
+P.modeShotCached=k=>MSH[k]&&MSH[k]._v||null;
+P.modeShotSeed=(k,cv)=>{const pr=Promise.resolve(cv);pr._v=cv;MSH[k]=pr};
+P.modeTrack=k=>{const q=P.quickTracks?P.quickTracks():[0];return q[(P.MODE_SCENES[k].trk||0)%q.length]};
+P.modeShot=k=>MSH[k]||(MSH[k]=new Promise(res=>setTimeout(async()=>{let sc=null;const W=1280,H=720,cars=[];try{
+ const S=P.MODE_SCENES[k],idx=P.modeTrack(k),def=Object.assign({},D[idx]),T=sampleTrack(def);sc=buildWorld(T);
+ const ims=[];sc.traverse(o=>{const m=o.material;if(m&&m.map&&m.map.image)ims.push(m.map.image)});
+ for(let t=0;t<60&&ims.some(im=>!(im.complete&&im.naturalWidth));t++)await new Promise(r=>setTimeout(r,50));
+ const N=T.N,ang=i=>{let d=T.psi[(i+1)%N]-T.psi[i];return Math.abs(Math.atan2(Math.sin(d),Math.cos(d)))};
+ /* the straights: the quietest stretches of road, a different one for each scene */
+ const span=Math.round(45/T.sp),sc_=[];for(let i=0;i<N;i+=4){let s=0;for(let j=-span;j<=span;j++)s+=ang((i+j+N)%N);sc_.push([s,i])}sc_.sort((a,b)=>a[0]-b[0]);
+ const pick=[];for(const [,i] of sc_){if(pick.every(p=>Math.min(Math.abs(p-i),N-Math.abs(p-i))>span*2))pick.push(i);if(pick.length>4)break}
+ const a=pick[k%pick.length],at=d=>(a-Math.round(d/T.sp)+N*4)%N,pos=(j,l,h)=>new THREE.Vector3(T.x[j]+Math.cos(T.psi[j])*l,T.y[j]+h,T.z[j]-Math.sin(T.psi[j])*l);
+ let hero=null;
+ for(const [id,d,l,fade] of S.cars){const src=CAR_MODELS[P.modelOf(id,0)];if(!src)continue;const j=at(d),lw=Math.max(-T.hw[j]+1.3,Math.min(T.hw[j]-1.3,l));
+  const model=src.clone(true),g=new THREE.Group(),c=new THREE.Group(),ctd=new THREE.Group();ctd.add(model);c.add(ctd);g.add(c);ctd.updateMatrixWorld(true);
+  const bb=new THREE.Box3().setFromObject(model),sz=bb.getSize(new THREE.Vector3()),ct=bb.getCenter(new THREE.Vector3()),s=(src.userData.gl?src.userData.gl*1.093:4.7)/Math.max(sz.x,sz.z,.001);
+  ctd.position.set(-ct.x,-bb.min.y,-ct.z);c.scale.setScalar(s);c.rotation.y=(sz.x>sz.z?Math.PI/2:0)+Math.PI;g.position.copy(pos(j,lw,0));g.rotation.set(0,T.psi[j],0,'YXZ');
+  if(fade)model.traverse(o=>{if(o.isMesh)o.material=(Array.isArray(o.material)?o.material:[o.material]).map(m=>{const q=m.clone();q.transparent=true;q.opacity=fade;q.depthWrite=false;return q})});
+  sc.add(g);cars.push(g);if(!hero)hero=g}
+ const S2=S.pair&&cars[1];
+ const cam=new THREE.PerspectiveCamera(S.fov||34,W/H,.3,9000),cj=(a+Math.round(2/T.sp))%N;cam.position.copy(pos(cj,S.cam[0],S.cam[1]));cam.lookAt(pos(at(S.look),0,1));cam.updateMatrixWorld();
+ if(!msR){msR=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});msR.outputEncoding=THREE.sRGBEncoding;msR.toneMapping=THREE.ACESFilmicToneMapping;msR.toneMappingExposure=1.08;msR.setPixelRatio(1)}
+ msR.setSize(W,H,false);if(sc.fog&&sc.fog.far)sc.fog.far=Math.max(sc.fog.far,2400);msR.render(sc,cam);
+ const raw=document.createElement('canvas');raw.width=W;raw.height=H;{const rx=raw.getContext('2d');rx.filter='saturate(1.45) contrast(1.12)';/* punchier colour, like a cover shot */rx.drawImage(msR.domElement,0,0)}
+ /* zoom blur out from the lead car, which stays sharp */
+ let fx=W/2,fy=H*.55;if(hero){const v=new THREE.Vector3(0,1,0).applyMatrix4(hero.matrixWorld);if(S2)v.add(new THREE.Vector3(0,1,0).applyMatrix4(S2.matrixWorld)).multiplyScalar(.5);v.project(cam);fx=(v.x+1)/2*W;fy=(1-v.y)/2*H}
+ const out=document.createElement('canvas');out.width=W;out.height=H;const g=out.getContext('2d');for(let i=0;i<12;i++){const s=1+.07*i/12;g.globalAlpha=1/(i+1);g.setTransform(s,0,0,s,fx*(1-s),fy*(1-s));g.drawImage(raw,0,0)}
+ g.setTransform(1,0,0,1,0,0);g.globalAlpha=1;const m=document.createElement('canvas');m.width=W;m.height=H;const mg=m.getContext('2d');mg.drawImage(raw,0,0);mg.globalCompositeOperation='destination-in';
+ const rg=mg.createRadialGradient(fx,fy,H*(S2?.3:.12),fx,fy,H*(S2?.8:.62));rg.addColorStop(0,'#000');rg.addColorStop(1,'rgba(0,0,0,0)');mg.fillStyle=rg;mg.fillRect(0,0,W,H);g.drawImage(m,0,0);res(out)}
+ catch(e){console.error('mode shot',e);delete MSH[k];res(null)}
+ finally{if(sc){cars.forEach(c=>sc.remove(c));/* the car models are shared with the garage: only the track is disposed */try{disposeWorld(sc)}catch(e){}}}},30)));
+{const ms=P.modeShot;P.modeShot=k=>{const pr=ms(k);pr.then(v=>{if(v&&MSH[k])MSH[k]._v=v});return pr}}
 /* the bought models are built at their real size, which dwarfs our cars: on these tracks the cars are drawn bigger (carScale), and the
    chase camera, wall contact and car-to-car contact grow with them. Physics speeds are unchanged. */
 const K=()=>{const R=typeof RACE!=="undefined"?RACE:null,d=R&&R.T&&R.T.d;return d&&d.cartoon&&d.cartoon.carScale||1};
@@ -11760,7 +11806,8 @@ window.__optAction=k=>{if(k==='@tutorial')P.startTutorial()};
 const P=window.PT8;
 P.LOG=[
  {v:'0.02',d:'Oct 29, 2026',t:'Glossy black UI',items:[
-  'Box art instead of in-game photos: the loading and title screens show game covers (deep blue or white), grey photo-studio shots and magazine fronts of the cars, with no in-game photos left. Each Quickplay mode has its own cover. The covers are made on the first start and kept for later starts.',
+  'Quickplay mode pictures are action shots on the tracks: a pack of four for Quick Race, one car alone for Time Attack, the last car fading out for Elimination, a car weaving through traffic for Cut-Up and two cars side by side for Versus. The main menu background slowly cycles through them behind the glass panel.',
+  'Box art instead of in-game photos: the loading and title screens show game covers (deep blue or white), grey photo-studio shots and magazine fronts of the cars, with no in-game photos left. The covers are made on the first start and kept for later starts.',
   'The first time the menu comes up the game asks "What is your name?" (only once). Quickplay opens its page straight away, without a drop-down.',
   'PS3-style boot: a photosensitive seizure warning and an autosave notice come up over the loading screen (any key skips them), and a small spinning icon shows in the corner whenever the game saves.',
   'New PS3-style main menu: a tilted glass panel on the right with your profile card on top (name, credits, wins and current car), the chrome-blue highlight and keyboard hints centred under it, and the showroom cars on the left. Click your name, or go up to it and press Enter, to change it: it is saved and used as your driver name.',
@@ -12286,8 +12333,7 @@ let qf=0;const setQf=(i,hv)=>{const cs=$$('#s8quick .qr',root);qf=(i+cs.length)%
 /* 0.02: the selected mode's picture is the track it opens on (rendered behind the boot screen), with the menu art as a fallback */
 function qPrev(c){if(!c)return;$('qpName').textContent=c.querySelector('span').textContent;$('qpDesc').textContent=c.dataset.d;
  const m=c.dataset.m,t=okTrack(m,ST.track)?ST.track:firstTrack(m),cv=$('qpShot'),g=cv.getContext('2d'),rf=$('qpRefl');let sh=P.trackShotCached&&P.trackShotCached(t);
- /* the cover is made at the picture's own shape so nothing is cropped */const k0=[...c.parentNode.children].indexOf(c),ar=cv.clientWidth?cv.clientHeight/cv.clientWidth:.5625,ch=Math.round(1280*Math.min(.9,Math.max(.4,ar))),art=P.quickArt&&P.quickArt(k0,c.dataset.d,ch);cv.parentNode.classList.toggle('bx',!!art);
- if(art){sh=art;if(cv.height!==ch)cv.height=ch}else if(cv.height!==720)cv.height=720;
+ /* 0.02: the mode's own action scene (cartoon.js), made behind the boot screen */const k0=[...c.parentNode.children].indexOf(c),art=P.modeShotCached&&P.modeShotCached(k0);if(art)sh=art;else if(P.modeShot)P.modeShot(k0).then(v=>{if(v&&qf===k0)qPrev(c)});
  const put=im=>{g.drawImage(im,0,0,cv.width,cv.height);const r=rf.getContext('2d');r.clearRect(0,0,rf.width,rf.height);r.drawImage(cv,0,cv.height*.75,cv.width,cv.height*.25,0,0,rf.width,rf.height)};
  if(sh){put(sh);return}const bb=typeof BBG_B64!=='undefined'?BBG_B64:[],k=[...c.parentNode.children].indexOf(c),u=bb[[3,2,1,4,0][k]%Math.max(1,bb.length)];
  if(u){const im=new Image();im.onload=()=>{if(qf===k)put(im)};im.src='data:image/jpeg;base64,'+u}else drawTrack(cv,t,false)}
@@ -12348,6 +12394,12 @@ const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="current
   {k:'garage',l:'Garage',i:'garage',img:B64(PB,7),cap:()=>nOwn()+' / '+CARS.length+' CARS'},{k:'brand',l:'Brand Central',i:'brand',img:B64(PB,5),cap:()=>nMk()+' MAKERS'}];
  const DESC={quick:'Quick Race, Time Attack, Elimination, Cut-Up and Versus.',track:'Race the real-world circuits.',rally:'Point to point stages against the clock.',garage:'Your cars, paint and tuning.',brand:'New cars from every maker.',set:'Graphics, sound and controls.'};
  P.menuImgs=TABS.map(t=>t.img).filter(u=>u!=='none');
+ /* 0.02: the menu background is the Quickplay action scenes, slowly drifting and crossfading behind the glass panel (no showroom) */
+ {const bg=document.createElement('div');bg.id='gxBg';menu.insertBefore(bg,menu.firstChild);let n=Math.random()*5|0,t=0;
+  const step=()=>{clearTimeout(t);t=setTimeout(step,7000);if(scr!=='menu')return;const cs=(P.MODE_SCENES||[]).map((x,k)=>P.modeShotCached&&P.modeShotCached(k)).filter(Boolean);if(!cs.length)return;
+   n=(n+1)%cs.length;const c=document.createElement('canvas'),src=cs[n];c.width=src.width;c.height=src.height;c.getContext('2d').drawImage(src,0,0);bg.appendChild(c);void c.offsetWidth;c.className='on';
+   const old=[...bg.children].filter(x=>x!==c);setTimeout(()=>old.forEach(x=>x.remove()),1600);if(!menu.classList.contains('gxBgOn')){menu.classList.add('gxBgOn');for(const e of menu.children){if(e===bg)continue;const st=getComputedStyle(e);if(st.position==='static')e.style.position='relative';if(!(+st.zIndex>0))e.style.zIndex=1}}};
+  P.menuBg=step;setTimeout(step,50)}
  const SUBS=[{m:'mp',p:1,n:'Quick Race',i:'race'},{m:'ta',n:'Time Attack',i:'clock'},{m:'elim',n:'Elimination',i:'elim'},{m:'cutup',n:'Cut-Up',i:'cut'},{m:'mp',p:2,n:'Versus',i:'vs'}];
  const sv=(n,x)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square">'+x+'</svg>';
  const IX={play:'<path d="M7 4.5v15l12-7.5z"/>',rally:'<path d="M2 19l7-11 4 6 3-3 5 8z"/>',track:'<path d="M4 20V4h2v2h12l-3 4 3 4H6v6z"/>',race:'<path d="M4 20V4h2v2h12l-3 4 3 4H6v6z"/>',clock:'<circle cx="12" cy="13" r="8"/><path d="M12 13V8M9 3h6"/>',elim:'<circle cx="12" cy="12" r="8"/><path d="M6.5 6.5l11 11"/>',cut:'<path d="M3 17l5-10 4 7 3-4 6 7z"/>',vs:'<rect x="3" y="5" width="8" height="14"/><rect x="13" y="5" width="8" height="14"/>',cog:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',log:'<path d="M5 6h14M5 12h14M5 18h9"/>',garage:'<path d="M3 11l9-6 9 6v9H3z"/>',brand:'<path d="M3 12l9-9h7v7l-9 9z"/><circle cx="15" cy="8" r="1.2"/>'};
@@ -12851,9 +12903,6 @@ P.boxArt=(id,st,W,H,o={})=>{const key=[id,st,W,H,o.v,o.t,o.s,o.safe,o.cap].join(
 const BXT=[['c34','d',{t:['POLY','GT'],s:'Version 0.02'}],['c123','s',{cap:1}],['c27','m',{s:'The mid-engine legend, driven flat out'}],['c86','w',{t:['POLY','GT'],s:'Version 0.02'}],['gtr','s',{cap:1}],['ferr','d',{t:['POLY','GT'],s:'Grand Tour'}],['c42','m',{s:'Twelve cylinders, one test day'}]];
 P.boxReady=()=>typeof CAR_MODELS!=='undefined'&&BXT.every(j=>CAR_MODELS[P.modelOf(j[0],0)]);
 P.titleArts=()=>BXT.map(([id,st,o])=>{const c=P.boxArt(id,st,1600,900,Object.assign({v:'ti',safe:1},o));return c?(st==='w'||st==='m'?'w,':'b,')+c.toDataURL('image/jpeg',.86).slice(23):null}).filter(Boolean);
-/* Quickplay: one cover per mode, in the row order */
-const BXQ=[['gtr','d','Quick','Race'],['c27','w','Time','Attack'],['c34','d','Elimination',''],['c86','w','Cut-Up',''],['ferr','d','Versus','']];
-P.quickArt=(k,sub,h)=>{const j=BXQ[k];return j?P.boxArt(j[0],j[1],1280,h||720,{v:'cl',t:[j[2],j[3]],s:sub}):null};
 function resLayout(){const b=document.getElementById('resBox');if(!b||b.querySelector('.rsgrid')||!b.querySelector('.lb,.lbsolo'))return;
  const kids=[...b.children],btn=kids[kids.length-1],pay=kids.find(e=>e.querySelector&&e.querySelector('.pay')),left=kids.filter(e=>e!==btn&&e!==pay);
  /* the car shown is the winner's (the first across the line; your own in a solo run) */
@@ -13030,7 +13079,7 @@ frame=function(n){requestAnimationFrame(frame);const dt=Math.min(.05,Math.max(0,
  if(RACE&&(scr==='game'||scr==='pause'||scr==='s8res')){if(!paused)step(dt);drawRace(dt);if(scr==='game')hudUpdate()}
  else if(scr==='s8show'){/* Brand Central's maker list covers the studio with its stills: don't render the studio behind it */if(!inGrid()&&!$('s8show').classList.contains('mkl'))drawShow(dt)}
  /* 0.02: Quickplay and the race setup cover the whole screen with a solid backdrop: nothing is drawn behind them */
- else if(scr==='s8quick'||(scr==='s8setup'&&$('s8setup').classList.contains('gxOn'))){}
+ else if(scr==='s8quick'||(scr==='s8setup'&&$('s8setup').classList.contains('gxOn'))||(scr==='menu'&&$('menu').classList.contains('gxBgOn'))){}
  else if(scr==='menu'||scr==='s8cards'||scr==='s8quick'||scr==='s8pick'||scr==='s8setup'||scr==='s8career'||scr==='s8res'){MS=MS||menuScene();MS.tick(Math.max(0,T0));R.setScissorTest(false);R.setViewport(0,0,R.domElement.width,R.domElement.height);MS.draw?MS.draw():R.render(MS.sc,MS.cam)}};
 /* pause menu */
 (function(){const b=$('pause').querySelector('.b'),opt=[...b.querySelectorAll('button')].pop();b.innerHTML='<button id="pRes">Resume</button><button id="pRst">Restart</button><button id="pQuit">Quit to menu</button>';b.appendChild(opt);opt.textContent='Options';
@@ -15099,6 +15148,8 @@ const SC=(()=>{let dbp;const db=()=>dbp||(dbp=new Promise((res,rej)=>{const r=in
  const key=(t,i)=>{const d=D[i];let n=0;try{n=JSON.stringify(d).length}catch(e){}return t+'|r1|'+(P.VERSION||'')+'|'+d.name+'|'+n};
  return{track:async i=>{const k=key('t',i),hit=await get(k);if(hit&&P.trackShotSeed){try{P.trackShotSeed(i,await canvas(hit));return}catch(e){}}
    const cv=await P.trackShot(i);if(cv){const b=await blob(cv);if(b)put(k,b)}},
+  mode:async k=>{const i=P.modeTrack(k),kk=key('m'+k+'.'+JSON.stringify(P.MODE_SCENES[k]).length,i),hit=await get(kk);if(hit&&P.modeShotSeed){try{P.modeShotSeed(k,await canvas(hit));return}catch(e){}}
+   const cv=await P.modeShot(k);if(cv){const b=await blob(cv);if(b)put(kk,b)}},
   stage:async i=>{const k=key('s',i),hit=await get(k);if(hit&&hit.m&&P.stageSeed){try{const pois=[];for(const p of hit.p||[])pois.push({n:p.n,c:await canvas(p.b)});P.stageSeed(i,await canvas(hit.m),pois);return}catch(e){}}
    const cv=await P.stageRender(i);if(cv){const m=await blob(cv),p=[];for(const q of cv.pois||[]){const b=await blob(q.c);if(b)p.push({n:q.n,b})}if(m)put(k,{m,p})}}}})();
 window.PT8_BOOT=new Promise(res=>{const run=()=>setTimeout(async()=>{try{const BP=window.PT8_BP||(()=>{});
@@ -15106,6 +15157,7 @@ window.PT8_BOOT=new Promise(res=>{const run=()=>setTimeout(async()=>{try{const B
   for(const i of(P.STAGES||[]))if(P.stageRender&&typeof D!=='undefined'&&D[i])jobs.push([D[i].name,()=>SC.stage(i)]);
   /* 0.02: the main menu's card pictures and the Quickplay setup previews too, so nothing pops in on the menu after loading */
   for(const u of(P.menuImgs||[])){const m=/^url\((.*)\)$/.exec(u);if(m)jobs.unshift(['MENU',()=>{const im=new Image();im.src=m[1];return im.decode()}])}
+  /* 0.02: the Quickplay mode scenes */if(P.modeShot&&P.MODE_SCENES&&!window.PT8_NOSCENE)P.MODE_SCENES.forEach((x,k)=>jobs.push(['QUICKPLAY',()=>SC.mode(k)]));
   if(P.quickTracks&&P.trackShot&&!window.PT8_FAST)for(const i of P.quickTracks())if(!isC(i))jobs.push([D[i].name,()=>SC.track(i)]);
   /* 0.02: the box art (title stills and Quickplay covers) goes first, as soon as the car models are in; the title stills are kept for the next start */
   jobs.unshift(['COVERS',async()=>{for(let n=0;n<120&&!(P.boxReady&&P.boxReady());n++)await new Promise(r=>setTimeout(r,250));if(!P.boxReady||!P.boxReady())return;
