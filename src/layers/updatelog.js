@@ -4,6 +4,8 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.02',d:'Oct 29, 2026',t:'Glossy black UI',items:[
+  'Quickplay is now a GT5-style list like the setup screen: the modes as rows on the left, and a big picture of the track the selected mode opens on beside them.',
+  'The loading screen now also renders the main menu pictures and every Quickplay track preview, so nothing loads in after the menu appears.',
   'Race winnings now grow with race length: a 1 lap win pays about 3,000 Cr. and a 5 lap win about 17,000 Cr. on a normal sized circuit. Short circuits pay a little less per lap and long ones more.',
   'Race setup screen fills big screens properly: both columns are centred and grow with the window, the showroom no longer shows through behind them, and every value lines up on the right.',
   'New race gauge: a thin GT5-style rev arc in the corner with the gear inside it and the speed under it. It is smaller than the old speed plate, sits on a soft dark corner shade so it reads on bright tracks, turns red near the shift point, and in split screen each player gets their own with a P1 to P4 tag.',

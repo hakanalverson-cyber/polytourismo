@@ -6555,6 +6555,26 @@ button.gxs{cursor:pointer;transition:background .15s}button.gxs:hover{background
 #gxSu{justify-content:center;align-items:center;gap:clamp(24px,2.6vw,56px)}
 #gxSu .gxL{flex:0 1 min(1040px,52vw);max-width:none}
 #gxSu .gxR{flex:0 0 clamp(400px,27vw,540px);max-height:100%}
+/* 0.02: Quickplay as a GT5 list: mode rows on the left like the setup screen, the selected mode's picture on the right */
+#s8quick::before{background:radial-gradient(ellipse 80% 60% at 50% 38%,#23272c 0%,#121417 60%,#08090b 100%)!important;opacity:1!important}
+#gxQp{position:absolute;left:0;right:0;top:66px;bottom:64px;z-index:2;display:flex;justify-content:center;align-items:center;gap:clamp(24px,2.6vw,56px);padding:30px 44px;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+#gxQp .qkL{flex:0 0 clamp(360px,24vw,480px);padding:10px;border-radius:10px!important;background:linear-gradient(180deg,#2a2e33f5,#16181bf5);box-shadow:inset 0 1px 0 #ffffff30,0 0 0 1px #000,0 18px 40px #000c}
+#gxQp .qr{display:flex;align-items:center;gap:14px;height:56px;padding:0 18px;border-radius:7px!important;color:#c9d2d8;font:400 16px var(--gt);cursor:pointer;user-select:none}
+#gxQp .qr+.qr{margin-top:2px}
+#gxQp .qr svg{width:24px;height:24px;flex:none;opacity:.8}
+#gxQp .qr em{margin-left:auto;font:400 12px var(--gt);font-style:normal;color:#9aa3ab;white-space:nowrap}
+#gxQp .qr.foc{color:#fff;background:var(--gxa);box-shadow:inset 0 1px 0 #ffffffa0,inset 0 -1px 0 #0004,0 0 16px #4f7eab90;text-shadow:0 1px 1px #0005}
+#gxQp .qr.foc em{color:#e8f0f7}#gxQp .qr.foc svg{opacity:1}
+#gxQp .qP{flex:0 1 min(1040px,50vw);display:flex;flex-direction:column;min-width:0}
+#gxQp .qpv{position:relative;aspect-ratio:16/9;border-radius:8px!important;overflow:hidden;background:#07090c;box-shadow:0 0 0 1px #ffffff40,0 18px 40px #000c}
+#gxQp #qpShot{width:100%;height:100%;display:block}
+#gxQp .qpv:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,#000c);pointer-events:none}
+#gxQp .qtn{position:absolute;left:26px;bottom:22px;z-index:1;color:#fff;text-shadow:0 2px 10px #000}
+#gxQp .qtn small{display:block;font:600 10px var(--gt);letter-spacing:.22em;color:#dfe5e9}
+#gxQp .qtn b{display:block;font:300 38px/1.1 var(--gt)}
+#gxQp .qtn p{margin:6px 0 0;font:400 14px var(--gt);color:#dfe5e9}
+#gxQp #qpRefl{width:100%;height:60px;margin-top:4px;border-radius:8px!important;transform:scaleY(-1);opacity:.25;-webkit-mask-image:linear-gradient(0deg,#000,transparent 75%);mask-image:linear-gradient(0deg,#000,transparent 75%)}
+@media(max-width:820px){#gxQp{flex-direction:column;overflow:auto}#gxQp .qkL,#gxQp .qP{flex:none;width:100%}}
 </style><script>
 /* ===== Poly GT v8 layer: core (economy, gears, AI, race flow, modes) ===== */
 (function v8core(){
@@ -11650,6 +11670,8 @@ window.__optAction=k=>{if(k==='@tutorial')P.startTutorial()};
 const P=window.PT8;
 P.LOG=[
  {v:'0.02',d:'Oct 29, 2026',t:'Glossy black UI',items:[
+  'Quickplay is now a GT5-style list like the setup screen: the modes as rows on the left, and a big picture of the track the selected mode opens on beside them.',
+  'The loading screen now also renders the main menu pictures and every Quickplay track preview, so nothing loads in after the menu appears.',
   'Race winnings now grow with race length: a 1 lap win pays about 3,000 Cr. and a 5 lap win about 17,000 Cr. on a normal sized circuit. Short circuits pay a little less per lap and long ones more.',
   'Race setup screen fills big screens properly: both columns are centred and grow with the window, the showroom no longer shows through behind them, and every value lines up on the right.',
   'New race gauge: a thin GT5-style rev arc in the corner with the gear inside it and the speed under it. It is smaller than the old speed plate, sits on a soft dark corner shade so it reads on bright tracks, turns red near the shift point, and in split screen each player gets their own with a P1 to P4 tag.',
@@ -12103,12 +12125,13 @@ root.innerHTML=`
 <div class="foot8"><button class="btn" data-a="back"><span>&lt; Back</span></button><div class="hint8">Arrows / 1-3 select &middot; Enter confirm &middot; Esc back</div><span style="width:90px"></span></div></section>
 
 <section class="v8s" id="s8quick"><div class="hdr"><h2>QUICKPLAY</h2><div class="sp"></div>${crHTML}</div>
-<div class="qk">
- <div class="qc" data-m="mp" data-p="1"><b>01</b><div class="qi"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 42V7"/><path d="M12 8h24l-4 7 4 7H12"/><path d="M18 8v14M24 8v14M30 8v14M12 15h22" stroke-width="1" opacity=".55"/></svg></div><h3>Quick Race</h3><p>Race the field.</p></div>
- <div class="qc" data-m="ta"><b>02</b><div class="qi"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="27" r="14"/><path d="M24 27v-8M24 27l6 4"/><path d="M20 7h8M24 7v6M35 14l3-3"/></svg></div><h3>Time Attack</h3><p>Beat the clock.</p></div>
- <div class="qc" data-m="elim"><b>03</b><div class="qi"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="10" width="8" height="13" rx="2"/><rect x="20" y="10" width="8" height="13" rx="2"/><rect x="31" y="10" width="8" height="13" rx="2" opacity=".35"/><path d="M29 30l12 12M41 30L29 42"/><path d="M9 34h14" opacity=".55"/></svg></div><h3>Elimination</h3><p>Last car is out.</p></div>
- <div class="qc" data-m="cutup"><b>04</b><div class="qi"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 40c8 0 8-10 16-10s8-12 16-12"/><path d="M34 12l6 6-6 6"/><rect x="11" y="10" width="7" height="12" rx="2" opacity=".55"/><rect x="28" y="30" width="7" height="12" rx="2" opacity=".55"/></svg></div><h3>Cut-Up</h3><p>Weave through traffic.</p></div>
- <div class="qc" data-m="mp" data-p="2"><b>05</b><div class="qi"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="11" width="16" height="26" rx="2"/><rect x="26" y="11" width="16" height="26" rx="2"/><path d="M14 30v-9M11 24l3-3 3 3M34 30v-9M31 24l3-3 3 3"/></svg></div><h3>Versus</h3><p>Split screen, 2 to 4.</p></div>
+<div id="gxQp"><div class="qkL">
+ <div class="qr" data-m="mp" data-p="1" data-d="Race the field over a few laps."><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 42V7"/><path d="M12 8h24l-4 7 4 7H12"/><path d="M18 8v14M24 8v14M30 8v14M12 15h22" stroke-width="1" opacity=".55"/></svg><span>Quick Race</span><em>1 player</em></div>
+ <div class="qr" data-m="ta" data-d="Just you and the clock. Set a lap time."><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="27" r="14"/><path d="M24 27v-8M24 27l6 4"/><path d="M20 7h8M24 7v6M35 14l3-3"/></svg><span>Time Attack</span><em>Solo</em></div>
+ <div class="qr" data-m="elim" data-d="The last car at the end of each lap is out."><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="10" width="8" height="13" rx="2"/><rect x="20" y="10" width="8" height="13" rx="2"/><rect x="31" y="10" width="8" height="13" rx="2" opacity=".35"/><path d="M29 30l12 12M41 30L29 42"/><path d="M9 34h14" opacity=".55"/></svg><span>Elimination</span><em>1 player</em></div>
+ <div class="qr" data-m="cutup" data-d="Weave through traffic for points."><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 40c8 0 8-10 16-10s8-12 16-12"/><path d="M34 12l6 6-6 6"/><rect x="11" y="10" width="7" height="12" rx="2" opacity=".55"/><rect x="28" y="30" width="7" height="12" rx="2" opacity=".55"/></svg><span>Cut-Up</span><em>Traffic</em></div>
+ <div class="qr" data-m="mp" data-p="2" data-d="Split screen against friends."><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="11" width="16" height="26" rx="2"/><rect x="26" y="11" width="16" height="26" rx="2"/><path d="M14 30v-9M11 24l3-3 3 3M34 30v-9M31 24l3-3 3 3"/></svg><span>Versus</span><em>2 to 4 players</em></div>
+</div><div class="qP"><div class="qpv"><canvas id="qpShot" width="800" height="450"></canvas><div class="qtn"><small>QUICKPLAY</small><b id="qpName"></b><p id="qpDesc"></p></div></div><canvas id="qpRefl" width="400" height="60"></canvas></div>
 </div>
 <div class="foot8"><button class="btn" data-a="back"><span>&lt; Back</span></button><div class="hint8">Arrows select &middot; Enter start &middot; Esc back</div><span style="width:90px"></span></div></section>
 
@@ -12161,10 +12184,18 @@ let foc=0;
 let kbMode=false;addEventListener('keydown',()=>{kbMode=true},true);addEventListener('mousemove',()=>{if(kbMode){kbMode=false;$$('.card.foc,.qc.foc',root).forEach(c=>c.classList.remove('foc'))}},true);
 function setFoc(i,hv){const cs=$$('#s8cards .card',root);foc=(i+cs.length)%cs.length;cs.forEach((c,k)=>c.classList.toggle('foc',(kbMode||hv)&&k===foc))}
 $$('#s8cards .card',root).forEach((c,k)=>{c.onmouseenter=()=>setFoc(k,1);c.onclick=()=>pickMode(c.dataset.m)});
-let qf=0;const setQf=(i,hv)=>{const cs=$$('#s8quick .qc',root);qf=(i+cs.length)%cs.length;cs.forEach((c,k)=>c.classList.toggle('foc',(kbMode||hv)&&k===qf))};
+let qf=0;const setQf=(i,hv)=>{const cs=$$('#s8quick .qr',root);qf=(i+cs.length)%cs.length;cs.forEach((c,k)=>c.classList.toggle('foc',k===qf));qPrev(cs[qf])};
+/* 0.02: the selected mode's picture is the track it opens on (rendered behind the boot screen), with the menu art as a fallback */
+function qPrev(c){if(!c)return;$('qpName').textContent=c.querySelector('span').textContent;$('qpDesc').textContent=c.dataset.d;
+ const m=c.dataset.m,t=okTrack(m,ST.track)?ST.track:firstTrack(m),cv=$('qpShot'),g=cv.getContext('2d'),sh=P.trackShotCached&&P.trackShotCached(t),rf=$('qpRefl');
+ const put=im=>{g.drawImage(im,0,0,cv.width,cv.height);const r=rf.getContext('2d');r.clearRect(0,0,rf.width,rf.height);r.drawImage(cv,0,cv.height*.75,cv.width,cv.height*.25,0,0,rf.width,rf.height)};
+ if(sh){put(sh);return}const bb=typeof BBG_B64!=='undefined'?BBG_B64:[],k=[...c.parentNode.children].indexOf(c),u=bb[[3,2,1,4,0][k]%Math.max(1,bb.length)];
+ if(u){const im=new Image();im.onload=()=>{if(qf===k)put(im)};im.src='data:image/jpeg;base64,'+u}else drawTrack(cv,t,false)}
 function quickPick(c){P.sfx&&P.sfx('select');if(c.dataset.p)ST.players=+c.dataset.p;pickMode(c.dataset.m);ST.ret='s8quick'}
-$$('#s8quick .qc',root).forEach((c,k)=>{c.onmouseenter=()=>setQf(k,1);c.onclick=()=>quickPick(c)});
-const barnIcon=d=>{const b=P.BARNS&&P.BARNS[d.name];if(!b||d.gravel)return '';const f=P.barnFound&&P.barnFound(b.car);return `<span class="bnh ${f?'got':''}" title="${f?'Barn find collected':'Barn find hidden here'}"><svg viewBox="0 0 16 16" width="15" height="15" shape-rendering="crispEdges"><path d="M8 1.5 1.5 7.5h2V14h3.6v-3.8h1.8V14h3.6V7.5h2z" fill="currentColor"/></svg></span>`};const isStg=i=>P.STAGES.indexOf(i)>=0,isTrk=i=>(P.TRK_TRACKS||[]).indexOf(i)>=0,gone=i=>!!D[i]&&(!!D[i].ring||(D[i].ra||D[i].imola||D[i].packOnly)&&!D[i].cartoon)/* the old hand-built Road Atlanta and Imola are gone: these slots only show a loaded track file; the Nordschleife was swapped for the Nürburgring GP model (round 17) */,okTrack=(m,i)=>gone(i)?false:m==='rally'?isStg(i):m==='track'?isTrk(i):!isStg(i)&&!isTrk(i)/* circuits are Track-mode exclusives */,firstTrack=m=>m==='rally'?P.STAGES[0]:m==='track'?(P.TRK_TRACKS.find(i=>!gone(i))??P.TRK_TRACKS[0]):0,isRL=m=>m==='rally'||(m==='track'&&ST.trkType==='tt');/* a Track race picks cars on the setup page, like Quick Play */
+$$('#s8quick .qr',root).forEach((c,k)=>{c.onmouseenter=()=>setQf(k,1);c.onclick=()=>quickPick(c)});
+const barnIcon=d=>{const b=P.BARNS&&P.BARNS[d.name];if(!b||d.gravel)return '';const f=P.barnFound&&P.barnFound(b.car);return `<span class="bnh ${f?'got':''}" title="${f?'Barn find collected':'Barn find hidden here'}"><svg viewBox="0 0 16 16" width="15" height="15" shape-rendering="crispEdges"><path d="M8 1.5 1.5 7.5h2V14h3.6v-3.8h1.8V14h3.6V7.5h2z" fill="currentColor"/></svg></span>`};const isStg=i=>P.STAGES.indexOf(i)>=0,isTrk=i=>(P.TRK_TRACKS||[]).indexOf(i)>=0,gone=i=>!!D[i]&&(!!D[i].ring||(D[i].ra||D[i].imola||D[i].packOnly)&&!D[i].cartoon)/* the old hand-built Road Atlanta and Imola are gone: these slots only show a loaded track file; the Nordschleife was swapped for the Nürburgring GP model (round 17) */,okTrack=(m,i)=>gone(i)?false:m==='rally'?isStg(i):m==='track'?isTrk(i):!isStg(i)&&!isTrk(i)/* circuits are Track-mode exclusives */,firstTrack=m=>m==='rally'?P.STAGES[0]:m==='track'?(P.TRK_TRACKS.find(i=>!gone(i))??P.TRK_TRACKS[0]):0,isRL=m=>m==='rally'||(m==='track'&&ST.trkType==='tt');
+/* the Quickplay tracks, so the boot screen can render their setup previews up front */
+P.quickTracks=()=>D.map((d,i)=>okTrack('mp',i)?i:-1).filter(i=>i>=0);/* a Track race picks cars on the setup page, like Quick Play */
 function pickMode(m){if(m==='quick'){P.sfx&&P.sfx('select');show('s8quick');setQf(0)}else{ST.mode=m;P._to=m==='track';P._ro=m==='rally';if(isRL(m)||m==='track')ST.rstep=1;if(!okTrack(m,ST.track))ST.track=firstTrack(m);ST.ret='s8cards';if(m==='rally'&&P.rallyIntro){ST.fromPick=false;P.rallyIntro(()=>{renderSetup();show('s8setup');if(P.prewarmStages)setTimeout(P.prewarmStages,1500)},ST.track)}else if(m==='track')openPick();else{ST.fromPick=false;renderSetup();show('s8setup')}}}
 /* ================= TRACK PICK (Track Mode step 1): big cards with a trackside shot of a corner of each circuit, then the setup screen with room
    for the options. The shots (P.trackShot, cartoon.js) are made once per session behind a black loading fade */
@@ -12215,6 +12246,7 @@ const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="current
   nMk=()=>new Set(CARS.map(c=>P.makerOf?P.makerOf(c):(c.name||'').split(' ')[0])).size;
  const TABS=[{k:'quick',l:'Quickplay',i:'play',img:B64(BB,3),cap:()=>'5 MODES'},{k:'track',l:'Track',i:'track',img:B64(BB,2),cap:()=>{const n=nTrk();return n?n+' CIRCUITS':'ADD A TRACK FILE'}},{k:'rally',l:'Rally',i:'rally',img:B64(BB,1),cap:()=>nStg()+' STAGES'},
   {k:'garage',l:'Garage',i:'garage',img:B64(PB,7),cap:()=>nOwn()+' / '+CARS.length+' CARS'},{k:'brand',l:'Brand Central',i:'brand',img:B64(PB,5),cap:()=>nMk()+' MAKERS'}];
+ P.menuImgs=TABS.map(t=>t.img);
  const SUBS=[{m:'mp',p:1,n:'Quick Race',i:'race'},{m:'ta',n:'Time Attack',i:'clock'},{m:'elim',n:'Elimination',i:'elim'},{m:'cutup',n:'Cut-Up',i:'cut'},{m:'mp',p:2,n:'Versus',i:'vs'}];
  const sv=(n,x)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square">'+x+'</svg>';
  const IX={play:'<path d="M7 4.5v15l12-7.5z"/>',rally:'<path d="M2 19l7-11 4 6 3-3 5 8z"/>',track:'<path d="M4 20V4h2v2h12l-3 4 3 4H6v6z"/>',race:'<path d="M4 20V4h2v2h12l-3 4 3 4H6v6z"/>',clock:'<circle cx="12" cy="13" r="8"/><path d="M12 13V8M9 3h6"/>',elim:'<circle cx="12" cy="12" r="8"/><path d="M6.5 6.5l11 11"/>',cut:'<path d="M3 17l5-10 4 7 3-4 6 7z"/>',vs:'<rect x="3" y="5" width="8" height="14"/><rect x="13" y="5" width="8" height="14"/>',cog:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',log:'<path d="M5 6h14M5 12h14M5 18h9"/>',garage:'<path d="M3 11l9-6 9 6v9H3z"/>',brand:'<path d="M3 12l9-9h7v7l-9 9z"/><circle cx="15" cy="8" r="1.2"/>'};
@@ -12805,7 +12837,7 @@ function resContinue(){const cfg=RES&&RES.cfg;P.cleanupRace();if(cfg&&cfg.ev){if
 let cheatBuf='';
 addEventListener('keydown',e=>{
  if(scr==='s8cards'){const cs=$$('#s8cards .card',root);if(e.code==='ArrowRight'||e.code==='KeyD'||e.code==='ArrowDown')setFoc(foc+1);else if(e.code==='ArrowLeft'||e.code==='KeyA'||e.code==='ArrowUp')setFoc(foc-1);else if(/^Digit[1-3]$/.test(e.code)&&cs[+e.code[5]-1])pickMode(cs[+e.code[5]-1].dataset.m);else if(e.code==='Enter'||e.code==='Space')pickMode(cs[foc].dataset.m);return}
- if(scr==='s8quick'){const cs=$$('#s8quick .qc',root);if(e.code==='ArrowRight'||e.code==='KeyD'||e.code==='ArrowDown')setQf(qf+1);else if(e.code==='ArrowLeft'||e.code==='KeyA'||e.code==='ArrowUp')setQf(qf-1);else if(/^Digit[1-5]$/.test(e.code)&&cs[+e.code[5]-1])quickPick(cs[+e.code[5]-1]);else if(e.code==='Enter'||e.code==='Space')quickPick(cs[qf]);return}
+ if(scr==='s8quick'){const cs=$$('#s8quick .qr',root);if(e.code==='ArrowRight'||e.code==='KeyD'||e.code==='ArrowDown')setQf(qf+1);else if(e.code==='ArrowLeft'||e.code==='KeyA'||e.code==='ArrowUp')setQf(qf-1);else if(/^Digit[1-5]$/.test(e.code)&&cs[+e.code[5]-1])quickPick(cs[+e.code[5]-1]);else if(e.code==='Enter'||e.code==='Space')quickPick(cs[qf]);return}
  if(scr==='s8show'){if(e.target&&e.target.tagName==='INPUT')return;if(SR.kind==='brand'){cheatBuf=(cheatBuf+(e.key.length===1?e.key.toLowerCase():'')).slice(-13);if(cheatBuf.endsWith('hakannowant')){cheatBuf='';const sv=P.SV();sv.owned={merc:1};sv.sel=sv.sel.map(()=>({id:'merc',alt:0}));P.save();SR.id='merc';SR.alt=0;renderShow();return}
   if(cheatBuf.endsWith('hakanwantsall')){cheatBuf='';const sv=P.SV();CARS.forEach(c=>{sv.owned[c.id]=3});P.save();renderShow();return}}
   if(CARDS()){if(inGrid()){if(e.code==='ArrowLeft'||e.code==='ArrowUp'){e.preventDefault();gridMove(-1)}else if(e.code==='ArrowRight'||e.code==='ArrowDown'){e.preventDefault();gridMove(1)}else if(e.code==='Enter'){if((P.SV().owned[SR.id]||0)>0)openCar(SR.id)}return}
@@ -14882,6 +14914,9 @@ d.querySelector('.st').textContent='VERSION '+(P.VERSION||'0.01');
 window.PT8_BOOT=new Promise(res=>{const run=()=>setTimeout(async()=>{try{const BP=window.PT8_BP||(()=>{});
   const jobs=[];const isC=i=>typeof D!=='undefined'&&D[i]&&D[i].cartoon;for(const i of(P.TRK_TRACKS||[]))if(isC(i)&&P.trackShot)jobs.push([D[i].name,()=>P.trackShot(i)]);
   for(const i of(P.STAGES||[]))if(P.stageRender&&typeof D!=='undefined'&&D[i])jobs.push([D[i].name,()=>P.stageRender(i)]);
+  /* 0.02: the main menu's card pictures and the Quickplay setup previews too, so nothing pops in on the menu after loading */
+  for(const u of(P.menuImgs||[])){const m=/^url\((.*)\)$/.exec(u);if(m)jobs.unshift(['MENU',()=>{const im=new Image();im.src=m[1];return im.decode()}])}
+  if(P.quickTracks&&P.trackShot)for(const i of P.quickTracks())if(!isC(i))jobs.push([D[i].name,()=>P.trackShot(i)]);
   BP(.5);for(let k=0;k<jobs.length;k++){await Promise.race([jobs[k][1]().catch(()=>null),new Promise(r=>setTimeout(r,120000))]);BP(.5+.5*(k+1)/jobs.length)}
  }catch(e){console.error('boot warm-up',e)}res()},400);if(document.readyState==='complete')run();else addEventListener('load',run)});
 window.PT8_BOOT.then(()=>{P.bootDone=1});window.PT8_BOOT.then(()=>setTimeout(()=>{d.classList.add('on');if(!BT)slide()},400));
