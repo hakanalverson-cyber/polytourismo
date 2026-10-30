@@ -4,7 +4,9 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.02',d:'Oct 29, 2026',t:'Glossy black UI',items:[
-  'New PS3-style main menu: a tilted glass panel on the right with your profile card on top (name, credits, wins and current car), the chrome-blue highlight and PS button prompts, and the showroom cars on the left. Click your name, or go up to it and press Enter, to change it: it is saved and used as your driver name.',
+  'The first time the menu comes up the game asks "What is your name?" (only once). Quickplay opens its page straight away, without a drop-down.',
+  'PS3-style boot: a photosensitive seizure warning and an autosave notice come up over the loading screen (any key skips them), and a small spinning icon shows in the corner whenever the game saves.',
+  'New PS3-style main menu: a tilted glass panel on the right with your profile card on top (name, credits, wins and current car), the chrome-blue highlight and keyboard hints centred under it, and the showroom cars on the left. Click your name, or go up to it and press Enter, to change it: it is saved and used as your driver name.',
   'More options on the race setup now opens the extra race settings and adds driving settings for the race: drift assist, steering speed, chase camera distance and camera shake.',
   'Every button is the same rounded pill shape.',
   'Faster loading: the track and stage pictures are saved after the first start, so later starts load them instead of rendering them again. Quickplay and the race setup no longer draw the 3D showroom hidden behind them.',

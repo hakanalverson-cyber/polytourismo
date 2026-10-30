@@ -314,7 +314,7 @@ VERSION=open(W+'/VERSION').read().strip()
 # menus' style. The stills are inlined right after it so they show while the rest of the file is still arriving. When loading is done the
 # bar gives way to the title's PRESS ANY BUTTON on the same screen (title.js lays its prompt over this backdrop instead of its own).
 _FN='"Inter","SF Pro Display","Segoe UI","Helvetica Neue",Arial,"Liberation Sans",sans-serif'
-BOOT_CSS=('<style id="ptBootCss">html,body{background:#000!important}body>*:not(#ptBoot){visibility:hidden!important}#ptBoot{z-index:2147483647}</style>'
+BOOT_CSS=('<style id="ptBootCss">html,body{background:#000!important}body>*:not(#ptBoot):not(#ptWarn){visibility:hidden!important}#ptBoot{z-index:2147483647}</style>'
  '<style id="ptBootSt">#ptBoot{position:fixed;inset:0;z-index:99989;background:#000;overflow:hidden;visibility:visible!important;transition:opacity 1s ease;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#f3f5f4;font-family:'+_FN+';pointer-events:none}'
  '#ptBoot .bs{position:absolute;inset:0;overflow:hidden}#ptBoot .bs div{position:absolute;inset:-1%;background-size:cover;background-position:center;opacity:0;transition:opacity 1.6s ease;will-change:transform,opacity;animation:ptbk 8s linear forwards}#ptBoot .bs div.on{opacity:1}'
  '#ptBoot .bv{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(0,0,0,.3) 0%,rgba(0,0,0,.55) 55%,rgba(0,0,0,.9) 100%),linear-gradient(0deg,rgba(0,0,0,.6),transparent 35%,transparent 70%,rgba(0,0,0,.4))}'
@@ -337,7 +337,25 @@ BOOTBG=('<script>window.PT8_BOOTBG=['+','.join('"'+base64.b64encode(open(f,'rb')
  '(function(){var b=document.getElementById("ptBoot"),s=b&&b.querySelector(".bs"),L=window.PT8_BOOTBG,i=Math.random()*L.length|0,P0=0,r=function(){return(Math.random()*3-1.5).toFixed(2)+"%"};'
  'window.PT8_BP=function(f){f=Math.max(P0,Math.min(1,f));P0=f;if(!b)return;var u=b.querySelector(".bt u"),t=b.querySelector(".bl b");if(u)u.style.width=(f*100).toFixed(1)+"%";if(t)t.textContent=Math.round(f*100)+"%"};'
  'if(!s||!L.length)return;function nx(){if(!b.isConnected)return;i=(i+1)%L.length;var e=document.createElement("div");e.style.backgroundImage="url(data:image/jpeg;base64,"+L[i]+")";["--x0","--y0"].forEach(function(k){e.style.setProperty(k,r())});s.appendChild(e);void e.offsetWidth;e.className="on";var o=[].slice.call(s.children).filter(function(c){return c!==e});setTimeout(function(){o.forEach(function(c){c.remove()})},1800);window.PT8_BOOTI=i;setTimeout(nx,6500)}nx()})();</script>')
-src=src.replace('<body>','<body><div id="ptBoot"><div class="bs"></div><div class="bv"></div><div class="gt"><b>POLY <i>GT</i></b></div><div class="gb"></div><div class="lg">POLY<i>GT</i></div><div class="st">VERSION '+VERSION+'</div><div class="ln"></div><div class="bp"><div class="bl"><span>LOADING</span><b>0%</b></div><div class="bt"><u></u></div></div></div>'+BOOTBG,1)
+# 0.02: PS3-style boot cards over the loading screen: a photosensitive seizure warning, then the autosave notice. CSS keeps the timing
+# (the page is busy reading the file in while they show); a key or click skips the current card (title.js / the onclick below)
+WARN=('<div id="ptWarn" onclick="var w=this;if(w.classList.contains(\'s1\'))w.classList.add(\'s2\');else w.classList.add(\'s1\')"><style>'
+ '#ptWarn{position:fixed;inset:0;z-index:99995;background:#000;color:#e9ecef;font-family:'+_FN+';-webkit-font-smoothing:antialiased;cursor:default;animation:pwOut .6s ease 9.4s forwards}'
+ '#ptWarn>div{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;opacity:0}'
+ '#ptWarn .w1{animation:pwIn .6s ease .2s forwards,pwOut .5s ease 5.6s forwards}#ptWarn .w2{animation:pwIn .6s ease 6.1s forwards}'
+ '#ptWarn.s1 .w1{animation:pwOut .3s ease forwards}#ptWarn.s1 .w2{animation:pwIn .4s ease .3s forwards}#ptWarn.s1{animation:pwOut .6s ease 3.6s forwards}'
+ '#ptWarn.s2{animation:pwOut .4s ease forwards}'
+ '#ptWarn h1{margin:0 0 3.4vh;font:600 min(2.4vw,24px)/1.2 '+_FN+';letter-spacing:.32em;color:#fff}'
+ '#ptWarn h1:before,#ptWarn h1:after{content:"";display:inline-block;width:min(6vw,70px);height:1px;background:#ffffff60;vertical-align:middle;margin:0 1.4em .2em}'
+ '#ptWarn p{max-width:min(78vw,820px);margin:0 0 1.6vh;font:400 min(1.7vw,16px)/1.75 '+_FN+';color:#c9d2d8}'
+ '#ptWarn .sv{width:56px;height:56px;margin-bottom:3vh;position:relative;animation:pwSpin 1.4s steps(12) infinite}'
+ '#ptWarn .sv i{position:absolute;left:25px;top:0;width:6px;height:14px;border-radius:3px;background:#fff;transform-origin:3px 28px}'
+ '@keyframes pwIn{to{opacity:1}}@keyframes pwOut{to{opacity:0;visibility:hidden}}@keyframes pwSpin{to{transform:rotate(360deg)}}</style>'
+ '<div class="w1"><h1>WARNING</h1><p>A very small percentage of people may experience a seizure when exposed to certain visual images, including flashing lights or patterns that may appear in video games. Even people with no history of seizures or epilepsy may have an undiagnosed condition that can cause these seizures while playing.</p>'
+ '<p>If you experience lightheadedness, altered vision, eye or face twitching, jerking or shaking of arms or legs, disorientation, confusion or a momentary loss of awareness, stop playing immediately and consult a doctor.</p></div>'
+ '<div class="w2"><div class="sv">'+''.join('<i style="transform:rotate(%ddeg);opacity:%.2f"></i>'%(k*30,.15+.85*k/11) for k in range(12))+'</div>'
+ '<p>This game saves your progress automatically.<br>Please do not close the game while this icon is displayed.</p></div></div>')
+src=src.replace('<body>','<body>'+WARN+'<div id="ptBoot"><div class="bs"></div><div class="bv"></div><div class="gt"><b>POLY <i>GT</i></b></div><div class="gb"></div><div class="lg">POLY<i>GT</i></div><div class="st">VERSION '+VERSION+'</div><div class="ln"></div><div class="bp"><div class="bl"><span>LOADING</span><b>0%</b></div><div class="bt"><u></u></div></div></div>'+BOOTBG,1)
 # when the warm-up is done: unhide the page and drop the loading screen under the title (or fade it out if there is no title)
 BOOT_JS='<script>(function(){var fin=0;function done(){if(fin)return;fin=1;var b=document.getElementById("ptBoot"),c=document.getElementById("ptBootCss");if(window.PT8_BP)PT8_BP(1);if(c)c.remove();if(!b)return;b.classList.add("rdy");if(!document.getElementById("ptTitle")){b.style.opacity=0;setTimeout(function(){b.remove()},1050)}}function go(){var w=window.PT8_BOOT;(w&&w.then?w:Promise.resolve()).then(function(){requestAnimationFrame(function(){requestAnimationFrame(function(){setTimeout(done,350)})})})}if(document.readyState==="complete")go();else addEventListener("load",go);setTimeout(done,900000)})();</script>'
 GLTF='<script>'+open(W+'/assets/GLTFLoader.r128.js').read()+'</script>'

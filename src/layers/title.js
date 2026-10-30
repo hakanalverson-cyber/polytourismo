@@ -89,10 +89,17 @@ window.PT8_BOOT=new Promise(res=>{const run=()=>setTimeout(async()=>{try{const B
  }catch(e){console.error('boot warm-up',e)}res()},400);if(document.readyState==='complete')run();else addEventListener('load',run)});
 window.PT8_BOOT.then(()=>{P.bootDone=1});window.PT8_BOOT.then(()=>setTimeout(()=>{d.classList.add('on');if(!BT)slide()},400));
 let done=false;
-function go(e){if(done||!P.bootDone)return;done=true;const bt=document.getElementById('ptBoot');if(bt){bt.style.opacity=0;setTimeout(()=>bt.remove(),1050)}if(e){try{e.preventDefault();e.stopImmediatePropagation()}catch(x){}}
+function go(e){/* the boot warning cards take the first presses: each one skips a card */{const w=document.getElementById('ptWarn');if(w&&getComputedStyle(w).visibility!=='hidden'&&getComputedStyle(w).opacity>.05){w.classList.add(w.classList.contains('s1')?'s2':'s1');if(e){try{e.preventDefault();e.stopImmediatePropagation()}catch(x){}}return}}
+ if(done||!P.bootDone)return;done=true;const bt=document.getElementById('ptBoot');if(bt){bt.style.opacity=0;setTimeout(()=>bt.remove(),1050)}if(e){try{e.preventDefault();e.stopImmediatePropagation()}catch(x){}}
  try{P.audioReady&&P.audioReady();P.sfx&&P.sfx('select')}catch(x){}
  clearTimeout(slT);d.classList.add('out');document.body.classList.remove('ptTitle');setTimeout(()=>d.remove(),1100);for(const ev of EV)removeEventListener(ev,go,true);clearInterval(gp)}
 const EV=['keydown','pointerdown','mousedown','touchstart','click'];for(const ev of EV)addEventListener(ev,go,true);
 /* game pads count as buttons too */
 const gp=setInterval(()=>{try{for(const g of(navigator.getGamepads?navigator.getGamepads():[]))if(g&&g.buttons.some(b=>b.pressed))go()}catch(x){}},150);
 })();
+
+/* 0.02: the PS3-style saving icon: a small spinning ring in the corner for a moment whenever the save file is written */
+(function(){const P=window.PT8;const st=document.createElement('style');st.textContent='#ptSaving{position:fixed;right:26px;bottom:84px;z-index:99980;width:30px;height:30px;opacity:0;transition:opacity .35s;pointer-events:none;animation:psSpin 1.2s steps(12) infinite;filter:drop-shadow(0 1px 3px #000)}#ptSaving.on{opacity:.9}#ptSaving i{position:absolute;left:13px;top:0;width:4px;height:8px;border-radius:2px;background:#fff;transform-origin:2px 15px}@keyframes psSpin{to{transform:rotate(360deg)}}';document.head.appendChild(st);
+ const el=document.createElement('div');el.id='ptSaving';el.innerHTML=Array.from({length:12},(_,k)=>'<i style="transform:rotate('+k*30+'deg);opacity:'+(.15+.85*k/11).toFixed(2)+'"></i>').join('');document.body.appendChild(el);
+ let t=0;const show=()=>{if(!P.bootDone)return;el.classList.add('on');clearTimeout(t);t=setTimeout(()=>el.classList.remove('on'),1400)};
+ try{const si=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){const r=si.apply(this,arguments);if(k==='pt8-save')show();return r}}catch(e){}})();

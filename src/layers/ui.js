@@ -215,20 +215,20 @@ const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="current
   +'<button class="gxs gxib" id="gxLog">'+ic('log')+'<span>Update log</span><em>'+(P.VERSION||'')+'</em></button><button class="gxs gxib" id="gxSet">'+ic('cog')+'<span>Settings</span></button>'
   +'<div class="gxs"><div><small>CREDITS</small><b id="gtBal"></b></div></div><div class="gxs gxclk"><div><small id="gxDate"></small><b id="gxTime"></b></div></div>';
  const bot=document.createElement('div');bot.id='gxBot';bot.className='gxbar';
- bot.innerHTML='<div class="gxpf" id="gxPf"><div class="av"></div><div class="pt"><b id="gxPfName"></b><small id="gxPfSub"></small></div></div><div class="gxttl"><small id="gxCap"></small><b id="gxName"></b></div><div class="gxsp"></div><div class="gxdock" id="gxDock">'+TABS.map((t,i)=>'<button class="gxm" data-i="'+i+'" data-k="'+t.k+'"><i style="background-image:'+t.img+'"></i><b>'+ic(t.i)+'<span>'+t.l+'</span><em class="gxc"></em></b></button>').join('')+'</div><div class="gxds" id="gxDesc"></div><div class="gxpad"><span data-p="x"><u class="x">&#10005;</u>Select</span><span data-p="o"><u class="o">&#9675;</u>Back</span><span data-p="t"><u class="t">&#9651;</u>Options</span></div>';
+ bot.innerHTML='<div class="gxpf" id="gxPf"><div class="av"></div><div class="pt"><b id="gxPfName"></b><small id="gxPfSub"></small></div></div><div class="gxttl"><small id="gxCap"></small><b id="gxName"></b></div><div class="gxsp"></div><div class="gxdock" id="gxDock">'+TABS.map((t,i)=>'<button class="gxm" data-i="'+i+'" data-k="'+t.k+'"><i style="background-image:'+t.img+'"></i><b>'+ic(t.i)+'<span>'+t.l+'</span><em class="gxc"></em></b></button>').join('')+'</div><div class="gxds" id="gxDesc"></div><div class="gxpad"><span data-p="m"><u>&uarr;&darr;</u>Choose</span><span data-p="x"><u>Enter</u>Select</span><span data-p="o"><u>Esc</u>Back</span></div>';
  const dd=document.createElement('div');dd.id='gxDrop';
  dd.innerHTML=SUBS.map((u,i)=>'<button class="gxi" data-i="'+i+'">'+ic(u.i)+'<span>'+u.n+'</span></button>').join('');
  menu.append(top,bot,dd);{const sh=document.createElement('div');sh.id='gxShade';menu.insertBefore(sh,bot);menu.appendChild(bot.querySelector('.gxpad'))}
  let mf=0,md=-1,open=false;try{mf=Math.max(0,Math.min(TABS.length-1,+(localStorage.getItem('pt-gxf')||0)))}catch(e){}
  const tabs=()=>[...bot.querySelectorAll('.gxm')],items=()=>[...dd.children];
  const paint=()=>{tabs().forEach((t,i)=>{t.classList.toggle('on',i===mf);const e=t.querySelector('.gxc');if(e)e.textContent=TABS[i].cap()});const t=TABS[mf];$('gxCap').textContent=t.cap();$('gxName').textContent=t.l;$('gxDesc').textContent=DESC[t.k]||'';try{pfPaint()}catch(e){}
-  dd.classList.toggle('on',open&&mf===0);items().forEach((e,i)=>e.classList.toggle('foc',i===md));
+  dd.classList.toggle('on',false);{const pd=menu.querySelector('.gxpad'),b=bot.getBoundingClientRect();if(pd&&b.width){pd.style.left=Math.round(b.left)+'px';pd.style.width=Math.round(b.width)+'px';pd.style.top=Math.round(b.bottom+22)+'px'}}/* 0.02: no Quickplay drop-down: the row opens the Quickplay page */items().forEach((e,i)=>e.classList.toggle('foc',i===md));
   const r=tabs()[0].getBoundingClientRect();if(r.width){dd.style.left=Math.round(r.left-244)+'px';dd.style.top=Math.round(r.top)+'px';dd.style.bottom='auto';dd.style.width='230px'}};
  const focus=i=>{pfOn=false;if(i!==mf){mf=i;md=-1;open=false;P.sfx&&P.sfx('move');try{localStorage.setItem('pt-gxf',i)}catch(e){}}paint()};
  const goMenu=m=>{pickMode(m);ST.ret='menu'};
  const subGo=i=>{const u=SUBS[i];P.sfx&&P.sfx('select');open=false;md=-1;paint();if(u.p)ST.players=u.p;goMenu(u.m)};
  const tabGo=i=>{const k=TABS[i].k;focus(i);if(k==='quick'){open=false;md=-1;paint();pickMode('quick');return}P.sfx&&P.sfx('select');if(k==='set'){$('gxSet').click();return}if(k==='rally'||k==='track')goMenu(k);else openShow(k,{player:0,cap:null,ret:'menu'})};
- menu.querySelector('.gxpad [data-p="x"]').onclick=()=>{if(mf===0&&open&&md>=0)subGo(md);else tabGo(mf)};menu.querySelector('.gxpad [data-p="o"]').onclick=()=>{if(open){open=false;md=-1;paint()}};menu.querySelector('.gxpad [data-p="t"]').onclick=()=>$('gxSet').click();
+ menu.querySelector('.gxpad [data-p="x"]').onclick=()=>{if(mf===0&&open&&md>=0)subGo(md);else tabGo(mf)};menu.querySelector('.gxpad [data-p="o"]').onclick=()=>{if(open){open=false;md=-1;paint()}};
  let shut=0;const hold=()=>clearTimeout(shut);
  tabs().forEach((t,i)=>{t.onmouseenter=()=>{if(i!==mf)focus(i);if(i===0){hold();if(!open){open=true;md=-1;paint()}}};t.onclick=()=>tabGo(i)});
  /* the list stays up while the mouse is on the card or the list, and for a moment after it leaves both */
@@ -250,6 +250,12 @@ const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="current
   let done=false;const end=ok=>{if(done)return;done=true;if(ok){const v=i.value.replace(/[<>&"]/g,'').trim().slice(0,12);P.SV().name=v;P.save();(ST.names=ST.names||[])[0]=v;P.sfx&&P.sfx('select')}pfPaint()};
   i.addEventListener('keydown',e=>{e.stopPropagation();if(e.code==='Enter'){e.preventDefault();end(true)}else if(e.code==='Escape'){e.preventDefault();end(false)}});i.addEventListener('blur',()=>end(true))};
  $('gxPfName').onclick=()=>{pfOn=true;paint();pfEdit()};
+ /* 0.02: asked once, the first time the menu comes up: "What is your name?" (kept in the save file; it never asks again) */
+ const askName=()=>{const sv=P.SV();if(sv.name||sv.askedName)return;sv.askedName=1;P.save();document.body.classList.add('gxAsking');
+  const o=document.createElement('div');o.id='gxAsk';o.innerHTML='<div class="bx"><h2>What is your name?</h2><input maxlength="12" spellcheck="false" placeholder="Your name"><div class="bt"><button class="btn go"><span>OK</span></button></div></div>';document.body.appendChild(o);
+  const i=o.querySelector('input'),ok=()=>{const v=i.value.replace(/[<>&"]/g,'').trim().slice(0,12);if(v){P.SV().name=v;P.save();(ST.names=ST.names||[])[0]=v}P.sfx&&P.sfx('select');o.classList.add('out');document.body.classList.remove('gxAsking');setTimeout(()=>o.remove(),400);pfPaint()};
+  i.addEventListener('keydown',e=>{e.stopPropagation();if(e.code==='Enter'){e.preventDefault();ok()}});o.querySelector('button').onclick=ok;requestAnimationFrame(()=>{o.classList.add('on');i.focus()})};
+ {const iv=setInterval(()=>{if(scr==='menu'&&P.bootDone&&!document.body.classList.contains('ptTitle')){clearInterval(iv);setTimeout(()=>{if(scr==='menu')askName()},900)}},500)}
  if(pfName())(ST.names=ST.names||[])[0]=pfName();
  P.menuKey=e=>{const c=e.code,n=TABS.length;if(e.target&&e.target.tagName==='INPUT')return true;
   /* 0.02: the menu is a vertical list; Right opens the Quickplay modes beside their row, Left closes them */
@@ -262,7 +268,6 @@ const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="current
   if((c==='ArrowUp'||c==='KeyW')&&mf===0){pfOn=true;P.sfx&&P.sfx('move');paint();return true}
   if(c==='ArrowDown'||c==='KeyS'){focus((mf+1)%n);return true}
   if(c==='ArrowUp'||c==='KeyW'){focus((mf+n-1)%n);return true}
-  if((c==='ArrowRight'||c==='KeyD')&&mf===0){open=true;md=0;P.sfx&&P.sfx('move');paint();return true}
   if(c==='ArrowRight'||c==='ArrowLeft'||c==='KeyD'||c==='KeyA')return true
   if(c==='Escape'||c==='Backspace'){if(open){open=false;md=-1;paint();return true}return false}
   if(c==='Enter'||c==='Space'){if(mf===0&&open&&md>=0)subGo(md);else tabGo(mf);return true}
