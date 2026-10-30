@@ -68,12 +68,23 @@ function slide(){if(!SL.length||done)return;si=(si+1)%SL.length;const x=SL[si],e
 d.querySelector('.st').textContent='VERSION '+(P.VERSION||'0.01');
 /* everything that would otherwise load later (the Track Mode circuit shots and the rally stage renders) is made now, behind the boot
    screen with a progress bar; the title comes in when it is done */
+/* 0.02: the boot pictures are kept in IndexedDB, so only the first start (or a changed track) renders them; later starts just load them */
+const SC=(()=>{let dbp;const db=()=>dbp||(dbp=new Promise((res,rej)=>{const r=indexedDB.open('polygt-shots',1);r.onupgradeneeded=()=>r.result.createObjectStore('s');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}));
+ const get=k=>db().then(d=>new Promise(res=>{const q=d.transaction('s').objectStore('s').get(k);q.onsuccess=()=>res(q.result||null);q.onerror=()=>res(null)})).catch(()=>null);
+ const put=(k,v)=>db().then(d=>new Promise(res=>{const t=d.transaction('s','readwrite');t.objectStore('s').put(v,k);t.oncomplete=res;t.onerror=res;t.onabort=res})).catch(()=>{});
+ const blob=cv=>new Promise(r=>{try{cv.toBlob(b=>r(b),'image/jpeg',.9)}catch(e){r(null)}});
+ const canvas=async b=>{const im=await createImageBitmap(b),c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);return c};
+ const key=(t,i)=>{const d=D[i];let n=0;try{n=JSON.stringify(d).length}catch(e){}return t+'|r1|'+(P.VERSION||'')+'|'+d.name+'|'+n};
+ return{track:async i=>{const k=key('t',i),hit=await get(k);if(hit&&P.trackShotSeed){try{P.trackShotSeed(i,await canvas(hit));return}catch(e){}}
+   const cv=await P.trackShot(i);if(cv){const b=await blob(cv);if(b)put(k,b)}},
+  stage:async i=>{const k=key('s',i),hit=await get(k);if(hit&&hit.m&&P.stageSeed){try{const pois=[];for(const p of hit.p||[])pois.push({n:p.n,c:await canvas(p.b)});P.stageSeed(i,await canvas(hit.m),pois);return}catch(e){}}
+   const cv=await P.stageRender(i);if(cv){const m=await blob(cv),p=[];for(const q of cv.pois||[]){const b=await blob(q.c);if(b)p.push({n:q.n,b})}if(m)put(k,{m,p})}}}})();
 window.PT8_BOOT=new Promise(res=>{const run=()=>setTimeout(async()=>{try{const BP=window.PT8_BP||(()=>{});
-  const jobs=[];const isC=i=>typeof D!=='undefined'&&D[i]&&D[i].cartoon;for(const i of(P.TRK_TRACKS||[]))if(isC(i)&&P.trackShot)jobs.push([D[i].name,()=>P.trackShot(i)]);
-  for(const i of(P.STAGES||[]))if(P.stageRender&&typeof D!=='undefined'&&D[i])jobs.push([D[i].name,()=>P.stageRender(i)]);
+  const jobs=[];const isC=i=>typeof D!=='undefined'&&D[i]&&D[i].cartoon;for(const i of(P.TRK_TRACKS||[]))if(isC(i)&&P.trackShot)jobs.push([D[i].name,()=>SC.track(i)]);
+  for(const i of(P.STAGES||[]))if(P.stageRender&&typeof D!=='undefined'&&D[i])jobs.push([D[i].name,()=>SC.stage(i)]);
   /* 0.02: the main menu's card pictures and the Quickplay setup previews too, so nothing pops in on the menu after loading */
   for(const u of(P.menuImgs||[])){const m=/^url\((.*)\)$/.exec(u);if(m)jobs.unshift(['MENU',()=>{const im=new Image();im.src=m[1];return im.decode()}])}
-  if(P.quickTracks&&P.trackShot&&!window.PT8_FAST)for(const i of P.quickTracks())if(!isC(i))jobs.push([D[i].name,()=>P.trackShot(i)]);
+  if(P.quickTracks&&P.trackShot&&!window.PT8_FAST)for(const i of P.quickTracks())if(!isC(i))jobs.push([D[i].name,()=>SC.track(i)]);
   BP(.5);for(let k=0;k<jobs.length;k++){await Promise.race([jobs[k][1]().catch(()=>null),new Promise(r=>setTimeout(r,120000))]);BP(.5+.5*(k+1)/jobs.length)}
  }catch(e){console.error('boot warm-up',e)}res()},400);if(document.readyState==='complete')run();else addEventListener('load',run)});
 window.PT8_BOOT.then(()=>{P.bootDone=1});window.PT8_BOOT.then(()=>setTimeout(()=>{d.classList.add('on');if(!BT)slide()},400));

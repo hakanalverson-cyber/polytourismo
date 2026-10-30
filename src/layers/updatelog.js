@@ -4,6 +4,9 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.02',d:'Oct 29, 2026',t:'Glossy black UI',items:[
+  'More options on the race setup now opens the extra race settings and adds driving settings for the race: drift assist, steering speed, chase camera distance and camera shake.',
+  'Every button is the same rounded pill shape.',
+  'Faster loading: the track and stage pictures are saved after the first start, so later starts load them instead of rendering them again. Quickplay and the race setup no longer draw the 3D showroom hidden behind them.',
   'Quickplay and race setup fill the screen: the list and the picture run the full height between the bars, and rows, text and pictures grow with the window.',
   'Quickplay is now a GT5-style list like the setup screen: the modes as rows on the left, and a big picture of the track the selected mode opens on beside them.',
   'The loading screen now also renders the main menu pictures and every Quickplay track preview, so nothing loads in after the menu appears.',

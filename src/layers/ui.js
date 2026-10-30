@@ -406,6 +406,7 @@ function renderSetup(){const m=ST.mode;$('s8setup').classList.toggle('pkMode',m=
    press its buttons, so every setting keeps working exactly as before. Rarely used settings fold away under More options ===== */
 const GXS={f:0,more:false,last:null};
 const GX_MORE=['cRev','cStart','cCc','cCpuCar','cGb','cEnd'];
+const GX_DRIVE=[['driftAssist','Drift assist',[[0,'Off'],[.35,'Low'],[.7,'Normal'],[1,'Full']]],['steering','Steering',[[.85,'Slow'],[1,'Normal'],[1.2,'Quick']]],['cameraDistance','Chase camera',[[.9,'Close'],[1,'Normal'],[1.2,'Far']]],['shake','Camera shake',[[true,'On'],[false,'Off']]]];
 const GX_ORDER=['cFmt','cLaps','cRL','cIv','cTime','cPl','cCpu','cDif','cTr','cWx','cTod','cDmg'];
 const GX_NAME={cTod:'Time of day',cCpu:'Opponents',cDif:'CPU level',cPl:'Drivers',cRL:'Laps',cIv:'Knockout every',cFmt:'Format',cGb:'Gearbox',cRev:'Direction',cCc:'CPU class',cCpuCar:'CPU cars',cStart:'Start',cWx:'Weather',cDmg:'Damage',cTime:'Clock',cTr:'Traffic',cLaps:'Laps'};
 function gxShot(i){const cv=$('gxShot'),rf=$('gxRefl');if(!cv)return;const g=cv.getContext('2d'),c=P.trackShotCached&&P.trackShotCached(i);
@@ -424,17 +425,20 @@ function gxSetup(){const sec=$('s8setup');if(!sec)return;const m=ST.mode,r2=isRL
  for(const id of GX_ORDER){const r=segRow(id,GX_NAME[id]);if(r)rows.push(r)}
  /* cars: one row per driver, Enter or a click opens the garage for that driver */
  const dv=[...$('suDrv').querySelectorAll('.drv')];dv.forEach((e,p)=>{const nm=e.querySelector('b'),gb=e.querySelector(':scope > button');rows.push({l:dv.length>1?'P'+(p+1)+' car':'Car',v:(nm?nm.textContent:'').replace(/^P\d · /,''),car:true,act:()=>gb&&gb.click()})});
- rows.push({l:'More options',more:true,act:()=>{GXS.more=!GXS.more;P.sfx&&P.sfx('select');gxSetup()}});
+ rows.push({l:'More options',more:true,act:()=>{GXS.more=!GXS.more;P.sfx&&P.sfx('select');gxSetup();if(GXS.more){const f=$('gxSu').querySelector('.gxr.gxx');if(f)f.scrollIntoView({block:'nearest',behavior:'smooth'})}}});
  if(GXS.more){for(const id of GX_MORE){const r=segRow(id,GX_NAME[id]);if(r){r.sub=1;rows.push(r)}}
-  dv.forEach((e,p)=>{const s=e.querySelector('.txs');if(s){const bs=[...s.querySelectorAll('button')],k=Math.max(0,bs.findIndex(b=>b.classList.contains('sel')));rows.push({sub:1,l:(dv.length>1?'P'+(p+1)+' ':'')+'Gearbox',v:bs[k].textContent.trim(),opts:bs.length,go:d=>{const n=Math.min(bs.length-1,Math.max(0,k+d));if(n!==k)bs[n].click()}})}
+  dv.forEach((e,p)=>{const s=src.querySelector('#cGb')?null:e.querySelector('.txs');if(s){const bs=[...s.querySelectorAll('button')],k=Math.max(0,bs.findIndex(b=>b.classList.contains('sel')));rows.push({sub:1,l:(dv.length>1?'P'+(p+1)+' ':'')+'Gearbox',v:bs[k].textContent.trim(),opts:bs.length,go:d=>{const n=Math.min(bs.length-1,Math.max(0,k+d));if(n!==k)bs[n].click()}})}
    const inp=e.querySelector('input.nm');if(inp)rows.push({sub:1,l:(dv.length>1?'P'+(p+1)+' ':'')+'Name',input:inp})});
+  /* driving settings from the options menu, set right here for this race (and kept, like the options menu) */
+  const O=window.PTO;if(O){for(const [k,l,vs] of GX_DRIVE){let i=vs.findIndex(v=>v[0]===O[k]);if(i<0){i=0;let bd=1e9;vs.forEach((v,j)=>{const d=Math.abs(+v[0]-+O[k]);if(d<bd){bd=d;i=j}})}
+   rows.push({sub:1,l,v:vs[i][1],opts:vs.length,go:d=>{const n=Math.min(vs.length-1,Math.max(0,i+d));if(n!==i){O[k]=vs[n][0];try{localStorage.setItem('pt7-options',JSON.stringify(O))}catch(e){}P.sfx&&P.sfx('move');gxSetup()}}})}}
   const kb=[...src.querySelectorAll('.p2kb .kbo')];if(kb.length){const k=Math.max(0,kb.findIndex(b=>b.classList.contains('on')));rows.push({sub:1,l:'P2 keys',v:kb[k].querySelector('b').textContent,opts:kb.length,go:d=>{const n=Math.min(kb.length-1,Math.max(0,k+d));if(n!==k)kb[n].click()}})}}
  GXS.rows=rows;GXS.f=Math.max(0,Math.min(rows.length-1,GXS.f));
  const T=tr(ST.track),info=[...$('trkInfo').querySelectorAll('.chip')].map(c=>c.textContent.trim()).filter(Boolean);
  const ta=$('trkExtra').querySelector('.medals');
  box.innerHTML=`<div class="gxL"><div class="gxPrev"><canvas id="gxShot" width="800" height="450"></canvas><div class="gxTn"><small>${m==='rally'?'STAGE':m==='track'?'CIRCUIT':'TRACK'}</small><b>${D[ST.track].name}</b></div><canvas class="gxMap" width="240" height="150"></canvas></div><canvas id="gxRefl" width="400" height="225"></canvas>
   <div class="gxFacts">${info.map(t=>`<span>${t}</span>`).join('')}</div>${ta?'<div class="gxMed">'+ta.outerHTML+'</div>':''}</div>
-  <div class="gxR"><div class="gxOpts">${rows.map((r,i)=>`<div class="gxr${i===GXS.f?' on':''}${r.sub?' sub':''}${r.more?' more':''}" data-i="${i}"><span class="l">${r.l}</span>`+(r.input?'<span class="v gxin"></span>':r.more?`<span class="v">${GXS.more?'Hide':'Show'} &rsaquo;</span>`:r.car?`<span class="v"><i class="x">&lsaquo;</i><em>${r.v}</em><i>&rsaquo;</i></span>`:`<span class="v">${r.opts>1?'<i data-d="-1">&lsaquo;</i>':'<i class="x">&lsaquo;</i>'}<em>${r.v}</em>${r.opts>1?'<i data-d="1">&rsaquo;</i>':'<i class="x">&rsaquo;</i>'}</span>`)+'</div>').join('')}</div></div>`;
+  <div class="gxR"><div class="gxOpts">${rows.map((r,i)=>`<div class="gxr${i===GXS.f?' on':''}${r.sub?' gxx':''}${r.more?' more':''}" data-i="${i}"><span class="l">${r.l}</span>`+(r.input?'<span class="v gxin"></span>':r.more?`<span class="v">${GXS.more?'Hide':'Show'} &rsaquo;</span>`:r.car?`<span class="v"><i class="x">&lsaquo;</i><em>${r.v}</em><i>&rsaquo;</i></span>`:`<span class="v">${r.opts>1?'<i data-d="-1">&lsaquo;</i>':'<i class="x">&lsaquo;</i>'}<em>${r.v}</em>${r.opts>1?'<i data-d="1">&rsaquo;</i>':'<i class="x">&rsaquo;</i>'}</span>`)+'</div>').join('')}</div></div>`;
  drawTrack(box.querySelector('.gxMap'),ST.track,false);gxShot(ST.track);
  box.querySelectorAll('.gxr').forEach(el=>{const i=+el.dataset.i,r=rows[i];
   if(r.input){const sl=el.querySelector('.gxin');sl.appendChild(r.input)}
@@ -810,6 +814,8 @@ addEventListener('keydown',e=>{
 frame=function(n){requestAnimationFrame(frame);const dt=Math.min(.05,Math.max(0,(n-last)/1000));last=n;dtf=dt;T0+=dt;
  if(RACE&&(scr==='game'||scr==='pause'||scr==='s8res')){if(!paused)step(dt);drawRace(dt);if(scr==='game')hudUpdate()}
  else if(scr==='s8show'){/* Brand Central's maker list covers the studio with its stills: don't render the studio behind it */if(!inGrid()&&!$('s8show').classList.contains('mkl'))drawShow(dt)}
+ /* 0.02: Quickplay and the race setup cover the whole screen with a solid backdrop: nothing is drawn behind them */
+ else if(scr==='s8quick'||(scr==='s8setup'&&$('s8setup').classList.contains('gxOn'))){}
  else if(scr==='menu'||scr==='s8cards'||scr==='s8quick'||scr==='s8pick'||scr==='s8setup'||scr==='s8career'||scr==='s8res'){MS=MS||menuScene();MS.tick(Math.max(0,T0));R.setScissorTest(false);R.setViewport(0,0,R.domElement.width,R.domElement.height);MS.draw?MS.draw():R.render(MS.sc,MS.cam)}};
 /* pause menu */
 (function(){const b=$('pause').querySelector('.b'),opt=[...b.querySelectorAll('button')].pop();b.innerHTML='<button id="pRes">Resume</button><button id="pRst">Restart</button><button id="pQuit">Quit to menu</button>';b.appendChild(opt);opt.textContent='Options';

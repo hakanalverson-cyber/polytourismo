@@ -386,6 +386,7 @@ P.poiStrip=(idx,host)=>{host.innerHTML='';P.stageRender(idx).then(img=>{if(!img|
 
 P.prewarmStages=()=>P.STAGES.reduce((p,i)=>p.then(()=>P.stageRender(i)).then(()=>new Promise(r=>setTimeout(r,700))),Promise.resolve());
 P.stageCached=idx=>RC[idx]||null;
+P.stageSeed=(idx,cv,pois)=>{cv.pois=pois;RC[idx]=cv};
 P.stageRender=idx=>{if(RC[idx])return Promise.resolve(RC[idx]);
  return new Promise(res=>setTimeout(()=>{let sc=null;try{
   const def=Object.assign({},D[idx]);if(def.look!=null)def.id=def.look;const T=sampleTrack(def);sc=buildWorld(T);const pois=poiShots(sc,T);sc.fog=null;

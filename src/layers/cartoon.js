@@ -100,6 +100,8 @@ P.trackShot=idx=>SHOT[idx]||(SHOT[idx]=new Promise(res=>setTimeout(async()=>{let
  catch(e){console.error('track shot',e);delete SHOT[idx];res(null)}
  finally{if(sc){if(grp&&grp.parent)grp.parent.remove(grp);try{disposeWorld(sc)}catch(e){}}}},30)));
 P.trackShotCached=idx=>SHOT[idx]&&SHOT[idx]._v||null;
+/* a shot saved from an earlier session (title.js keeps them in IndexedDB) */
+P.trackShotSeed=(idx,cv)=>{const pr=Promise.resolve(cv);pr._v=cv;SHOT[idx]=pr};
 {const ts=P.trackShot;P.trackShot=idx=>{const pr=ts(idx);pr.then(v=>{if(v&&SHOT[idx])SHOT[idx]._v=v});return pr}}
 /* the bought models are built at their real size, which dwarfs our cars: on these tracks the cars are drawn bigger (carScale), and the
    chase camera, wall contact and car-to-car contact grow with them. Physics speeds are unchanged. */

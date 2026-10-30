@@ -6481,7 +6481,7 @@ button.gxs{cursor:pointer;transition:background .15s}button.gxs:hover{background
 #gxSu .gxr .v i{font-style:normal;font-size:20px;line-height:1;opacity:0;padding:0 4px;transition:opacity .15s}
 #gxSu .gxr.on .v i,#gxSu .gxr:hover .v i{opacity:.75}
 #gxSu .gxr.on{color:#fff;background:linear-gradient(180deg,#8fb4d8 0%,#4f7eab 48%,#33608c 52%,#4a77a3 100%);box-shadow:inset 0 1px 0 #ffffffa0,inset 0 -1px 0 #0004,0 0 16px #4f7eab90;text-shadow:0 1px 1px #0005}
-#gxSu .gxr.sub{min-height:40px;font-size:13px;padding-left:30px}
+#gxSu .gxr.gxx{min-height:40px;font-size:13px;padding-left:30px}
 #gxSu .gxr.more{margin-top:8px;border-top:1px solid #ffffff12;border-radius:0 0 7px 7px!important;font:600 11px var(--gt);letter-spacing:.14em;text-transform:uppercase;color:#9aa3ab}
 #gxSu .gxr.more.on{border-radius:7px!important;color:#fff}
 #gxSu .gxr.more .v{font:500 11px var(--gt);letter-spacing:.1em}
@@ -6596,12 +6596,18 @@ button.gxs{cursor:pointer;transition:background .15s}button.gxs:hover{background
 #gxSu .gxR{flex:0 0 clamp(380px,30vw,640px)!important;max-height:none!important}
 #gxSu .gxOpts{flex:1 1 auto;display:flex;flex-direction:column;box-sizing:border-box;min-height:0}
 #gxSu .gxr{flex:1 0 auto;min-height:clamp(42px,5.4vh,64px);max-height:82px;font-size:clamp(15px,1.9vh,21px);padding:0 clamp(18px,1.3vw,26px)}
-#gxSu .gxr.sub{min-height:clamp(38px,4.4vh,52px);font-size:clamp(13px,1.6vh,18px)}
+#gxSu .gxr.gxx{min-height:clamp(38px,4.4vh,52px);font-size:clamp(13px,1.6vh,18px)}
 #gxSu .gxr.more{flex:0 0 auto;min-height:clamp(40px,4.6vh,54px);font-size:clamp(11px,1.3vh,14px)}
 #gxSu .gxr .v i{font-size:clamp(20px,2.4vh,28px)}
 #gxQp .qkL{align-self:center;justify-content:flex-start}
 #gxQp .qr{flex:none;height:clamp(54px,9.6vh,108px);max-height:none}
 #gxSu #gxShot.map{object-fit:contain}
+/* More options open: the rows tighten up so the extra settings fit, and the list scrolls when they still don't */
+#gxSu .gxOpts:has(.gxr.gxx) .gxr{flex:0 0 auto;min-height:clamp(38px,4.3vh,52px)}
+#gxSu .gxOpts:has(.gxr.gxx) .gxr.gxx{min-height:clamp(34px,3.8vh,46px)}
+/* 0.02: every button is the same pill shape */
+.btn,#v8 .btn,.btn.go,#v8 .btn.go,#s8setup.gxOn #suGo,#s8setup.gxOn .foot8 .btn,.foot8 .btn,#s8show .bot .btn,#v8 #s8show .cats button,#pause button,#ptOptions button,#rlPrep .btn,#tut button,#tutOffer button,#resBox button,#s8res button,#ptUpd button,#ptTitle button{border-radius:999px!important}
+#s8setup.gxOn .foot8 .btn[data-a="back"],.foot8 .btn[data-a="back"],#s8show .bot .btn[data-a="back"],#tut button.pri,#tutOffer button.pri,#ptOptions button.sel,.secback{border-radius:999px!important}
 </style><script>
 /* ===== Poly GT v8 layer: core (economy, gears, AI, race flow, modes) ===== */
 (function v8core(){
@@ -11261,6 +11267,8 @@ P.trackShot=idx=>SHOT[idx]||(SHOT[idx]=new Promise(res=>setTimeout(async()=>{let
  catch(e){console.error('track shot',e);delete SHOT[idx];res(null)}
  finally{if(sc){if(grp&&grp.parent)grp.parent.remove(grp);try{disposeWorld(sc)}catch(e){}}}},30)));
 P.trackShotCached=idx=>SHOT[idx]&&SHOT[idx]._v||null;
+/* a shot saved from an earlier session (title.js keeps them in IndexedDB) */
+P.trackShotSeed=(idx,cv)=>{const pr=Promise.resolve(cv);pr._v=cv;SHOT[idx]=pr};
 {const ts=P.trackShot;P.trackShot=idx=>{const pr=ts(idx);pr.then(v=>{if(v&&SHOT[idx])SHOT[idx]._v=v});return pr}}
 /* the bought models are built at their real size, which dwarfs our cars: on these tracks the cars are drawn bigger (carScale), and the
    chase camera, wall contact and car-to-car contact grow with them. Physics speeds are unchanged. */
@@ -11697,6 +11705,9 @@ window.__optAction=k=>{if(k==='@tutorial')P.startTutorial()};
 const P=window.PT8;
 P.LOG=[
  {v:'0.02',d:'Oct 29, 2026',t:'Glossy black UI',items:[
+  'More options on the race setup now opens the extra race settings and adds driving settings for the race: drift assist, steering speed, chase camera distance and camera shake.',
+  'Every button is the same rounded pill shape.',
+  'Faster loading: the track and stage pictures are saved after the first start, so later starts load them instead of rendering them again. Quickplay and the race setup no longer draw the 3D showroom hidden behind them.',
   'Quickplay and race setup fill the screen: the list and the picture run the full height between the bars, and rows, text and pictures grow with the window.',
   'Quickplay is now a GT5-style list like the setup screen: the modes as rows on the left, and a big picture of the track the selected mode opens on beside them.',
   'The loading screen now also renders the main menu pictures and every Quickplay track preview, so nothing loads in after the menu appears.',
@@ -12476,6 +12487,7 @@ function renderSetup(){const m=ST.mode;$('s8setup').classList.toggle('pkMode',m=
    press its buttons, so every setting keeps working exactly as before. Rarely used settings fold away under More options ===== */
 const GXS={f:0,more:false,last:null};
 const GX_MORE=['cRev','cStart','cCc','cCpuCar','cGb','cEnd'];
+const GX_DRIVE=[['driftAssist','Drift assist',[[0,'Off'],[.35,'Low'],[.7,'Normal'],[1,'Full']]],['steering','Steering',[[.85,'Slow'],[1,'Normal'],[1.2,'Quick']]],['cameraDistance','Chase camera',[[.9,'Close'],[1,'Normal'],[1.2,'Far']]],['shake','Camera shake',[[true,'On'],[false,'Off']]]];
 const GX_ORDER=['cFmt','cLaps','cRL','cIv','cTime','cPl','cCpu','cDif','cTr','cWx','cTod','cDmg'];
 const GX_NAME={cTod:'Time of day',cCpu:'Opponents',cDif:'CPU level',cPl:'Drivers',cRL:'Laps',cIv:'Knockout every',cFmt:'Format',cGb:'Gearbox',cRev:'Direction',cCc:'CPU class',cCpuCar:'CPU cars',cStart:'Start',cWx:'Weather',cDmg:'Damage',cTime:'Clock',cTr:'Traffic',cLaps:'Laps'};
 function gxShot(i){const cv=$('gxShot'),rf=$('gxRefl');if(!cv)return;const g=cv.getContext('2d'),c=P.trackShotCached&&P.trackShotCached(i);
@@ -12494,17 +12506,20 @@ function gxSetup(){const sec=$('s8setup');if(!sec)return;const m=ST.mode,r2=isRL
  for(const id of GX_ORDER){const r=segRow(id,GX_NAME[id]);if(r)rows.push(r)}
  /* cars: one row per driver, Enter or a click opens the garage for that driver */
  const dv=[...$('suDrv').querySelectorAll('.drv')];dv.forEach((e,p)=>{const nm=e.querySelector('b'),gb=e.querySelector(':scope > button');rows.push({l:dv.length>1?'P'+(p+1)+' car':'Car',v:(nm?nm.textContent:'').replace(/^P\d · /,''),car:true,act:()=>gb&&gb.click()})});
- rows.push({l:'More options',more:true,act:()=>{GXS.more=!GXS.more;P.sfx&&P.sfx('select');gxSetup()}});
+ rows.push({l:'More options',more:true,act:()=>{GXS.more=!GXS.more;P.sfx&&P.sfx('select');gxSetup();if(GXS.more){const f=$('gxSu').querySelector('.gxr.gxx');if(f)f.scrollIntoView({block:'nearest',behavior:'smooth'})}}});
  if(GXS.more){for(const id of GX_MORE){const r=segRow(id,GX_NAME[id]);if(r){r.sub=1;rows.push(r)}}
-  dv.forEach((e,p)=>{const s=e.querySelector('.txs');if(s){const bs=[...s.querySelectorAll('button')],k=Math.max(0,bs.findIndex(b=>b.classList.contains('sel')));rows.push({sub:1,l:(dv.length>1?'P'+(p+1)+' ':'')+'Gearbox',v:bs[k].textContent.trim(),opts:bs.length,go:d=>{const n=Math.min(bs.length-1,Math.max(0,k+d));if(n!==k)bs[n].click()}})}
+  dv.forEach((e,p)=>{const s=src.querySelector('#cGb')?null:e.querySelector('.txs');if(s){const bs=[...s.querySelectorAll('button')],k=Math.max(0,bs.findIndex(b=>b.classList.contains('sel')));rows.push({sub:1,l:(dv.length>1?'P'+(p+1)+' ':'')+'Gearbox',v:bs[k].textContent.trim(),opts:bs.length,go:d=>{const n=Math.min(bs.length-1,Math.max(0,k+d));if(n!==k)bs[n].click()}})}
    const inp=e.querySelector('input.nm');if(inp)rows.push({sub:1,l:(dv.length>1?'P'+(p+1)+' ':'')+'Name',input:inp})});
+  /* driving settings from the options menu, set right here for this race (and kept, like the options menu) */
+  const O=window.PTO;if(O){for(const [k,l,vs] of GX_DRIVE){let i=vs.findIndex(v=>v[0]===O[k]);if(i<0){i=0;let bd=1e9;vs.forEach((v,j)=>{const d=Math.abs(+v[0]-+O[k]);if(d<bd){bd=d;i=j}})}
+   rows.push({sub:1,l,v:vs[i][1],opts:vs.length,go:d=>{const n=Math.min(vs.length-1,Math.max(0,i+d));if(n!==i){O[k]=vs[n][0];try{localStorage.setItem('pt7-options',JSON.stringify(O))}catch(e){}P.sfx&&P.sfx('move');gxSetup()}}})}}
   const kb=[...src.querySelectorAll('.p2kb .kbo')];if(kb.length){const k=Math.max(0,kb.findIndex(b=>b.classList.contains('on')));rows.push({sub:1,l:'P2 keys',v:kb[k].querySelector('b').textContent,opts:kb.length,go:d=>{const n=Math.min(kb.length-1,Math.max(0,k+d));if(n!==k)kb[n].click()}})}}
  GXS.rows=rows;GXS.f=Math.max(0,Math.min(rows.length-1,GXS.f));
  const T=tr(ST.track),info=[...$('trkInfo').querySelectorAll('.chip')].map(c=>c.textContent.trim()).filter(Boolean);
  const ta=$('trkExtra').querySelector('.medals');
  box.innerHTML=`<div class="gxL"><div class="gxPrev"><canvas id="gxShot" width="800" height="450"></canvas><div class="gxTn"><small>${m==='rally'?'STAGE':m==='track'?'CIRCUIT':'TRACK'}</small><b>${D[ST.track].name}</b></div><canvas class="gxMap" width="240" height="150"></canvas></div><canvas id="gxRefl" width="400" height="225"></canvas>
   <div class="gxFacts">${info.map(t=>`<span>${t}</span>`).join('')}</div>${ta?'<div class="gxMed">'+ta.outerHTML+'</div>':''}</div>
-  <div class="gxR"><div class="gxOpts">${rows.map((r,i)=>`<div class="gxr${i===GXS.f?' on':''}${r.sub?' sub':''}${r.more?' more':''}" data-i="${i}"><span class="l">${r.l}</span>`+(r.input?'<span class="v gxin"></span>':r.more?`<span class="v">${GXS.more?'Hide':'Show'} &rsaquo;</span>`:r.car?`<span class="v"><i class="x">&lsaquo;</i><em>${r.v}</em><i>&rsaquo;</i></span>`:`<span class="v">${r.opts>1?'<i data-d="-1">&lsaquo;</i>':'<i class="x">&lsaquo;</i>'}<em>${r.v}</em>${r.opts>1?'<i data-d="1">&rsaquo;</i>':'<i class="x">&rsaquo;</i>'}</span>`)+'</div>').join('')}</div></div>`;
+  <div class="gxR"><div class="gxOpts">${rows.map((r,i)=>`<div class="gxr${i===GXS.f?' on':''}${r.sub?' gxx':''}${r.more?' more':''}" data-i="${i}"><span class="l">${r.l}</span>`+(r.input?'<span class="v gxin"></span>':r.more?`<span class="v">${GXS.more?'Hide':'Show'} &rsaquo;</span>`:r.car?`<span class="v"><i class="x">&lsaquo;</i><em>${r.v}</em><i>&rsaquo;</i></span>`:`<span class="v">${r.opts>1?'<i data-d="-1">&lsaquo;</i>':'<i class="x">&lsaquo;</i>'}<em>${r.v}</em>${r.opts>1?'<i data-d="1">&rsaquo;</i>':'<i class="x">&rsaquo;</i>'}</span>`)+'</div>').join('')}</div></div>`;
  drawTrack(box.querySelector('.gxMap'),ST.track,false);gxShot(ST.track);
  box.querySelectorAll('.gxr').forEach(el=>{const i=+el.dataset.i,r=rows[i];
   if(r.input){const sl=el.querySelector('.gxin');sl.appendChild(r.input)}
@@ -12880,6 +12895,8 @@ addEventListener('keydown',e=>{
 frame=function(n){requestAnimationFrame(frame);const dt=Math.min(.05,Math.max(0,(n-last)/1000));last=n;dtf=dt;T0+=dt;
  if(RACE&&(scr==='game'||scr==='pause'||scr==='s8res')){if(!paused)step(dt);drawRace(dt);if(scr==='game')hudUpdate()}
  else if(scr==='s8show'){/* Brand Central's maker list covers the studio with its stills: don't render the studio behind it */if(!inGrid()&&!$('s8show').classList.contains('mkl'))drawShow(dt)}
+ /* 0.02: Quickplay and the race setup cover the whole screen with a solid backdrop: nothing is drawn behind them */
+ else if(scr==='s8quick'||(scr==='s8setup'&&$('s8setup').classList.contains('gxOn'))){}
  else if(scr==='menu'||scr==='s8cards'||scr==='s8quick'||scr==='s8pick'||scr==='s8setup'||scr==='s8career'||scr==='s8res'){MS=MS||menuScene();MS.tick(Math.max(0,T0));R.setScissorTest(false);R.setViewport(0,0,R.domElement.width,R.domElement.height);MS.draw?MS.draw():R.render(MS.sc,MS.cam)}};
 /* pause menu */
 (function(){const b=$('pause').querySelector('.b'),opt=[...b.querySelectorAll('button')].pop();b.innerHTML='<button id="pRes">Resume</button><button id="pRst">Restart</button><button id="pQuit">Quit to menu</button>';b.appendChild(opt);opt.textContent='Options';
@@ -13453,6 +13470,7 @@ P.poiStrip=(idx,host)=>{host.innerHTML='';P.stageRender(idx).then(img=>{if(!img|
 
 P.prewarmStages=()=>P.STAGES.reduce((p,i)=>p.then(()=>P.stageRender(i)).then(()=>new Promise(r=>setTimeout(r,700))),Promise.resolve());
 P.stageCached=idx=>RC[idx]||null;
+P.stageSeed=(idx,cv,pois)=>{cv.pois=pois;RC[idx]=cv};
 P.stageRender=idx=>{if(RC[idx])return Promise.resolve(RC[idx]);
  return new Promise(res=>setTimeout(()=>{let sc=null;try{
   const def=Object.assign({},D[idx]);if(def.look!=null)def.id=def.look;const T=sampleTrack(def);sc=buildWorld(T);const pois=poiShots(sc,T);sc.fog=null;
@@ -14939,12 +14957,23 @@ function slide(){if(!SL.length||done)return;si=(si+1)%SL.length;const x=SL[si],e
 d.querySelector('.st').textContent='VERSION '+(P.VERSION||'0.01');
 /* everything that would otherwise load later (the Track Mode circuit shots and the rally stage renders) is made now, behind the boot
    screen with a progress bar; the title comes in when it is done */
+/* 0.02: the boot pictures are kept in IndexedDB, so only the first start (or a changed track) renders them; later starts just load them */
+const SC=(()=>{let dbp;const db=()=>dbp||(dbp=new Promise((res,rej)=>{const r=indexedDB.open('polygt-shots',1);r.onupgradeneeded=()=>r.result.createObjectStore('s');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}));
+ const get=k=>db().then(d=>new Promise(res=>{const q=d.transaction('s').objectStore('s').get(k);q.onsuccess=()=>res(q.result||null);q.onerror=()=>res(null)})).catch(()=>null);
+ const put=(k,v)=>db().then(d=>new Promise(res=>{const t=d.transaction('s','readwrite');t.objectStore('s').put(v,k);t.oncomplete=res;t.onerror=res;t.onabort=res})).catch(()=>{});
+ const blob=cv=>new Promise(r=>{try{cv.toBlob(b=>r(b),'image/jpeg',.9)}catch(e){r(null)}});
+ const canvas=async b=>{const im=await createImageBitmap(b),c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);return c};
+ const key=(t,i)=>{const d=D[i];let n=0;try{n=JSON.stringify(d).length}catch(e){}return t+'|r1|'+(P.VERSION||'')+'|'+d.name+'|'+n};
+ return{track:async i=>{const k=key('t',i),hit=await get(k);if(hit&&P.trackShotSeed){try{P.trackShotSeed(i,await canvas(hit));return}catch(e){}}
+   const cv=await P.trackShot(i);if(cv){const b=await blob(cv);if(b)put(k,b)}},
+  stage:async i=>{const k=key('s',i),hit=await get(k);if(hit&&hit.m&&P.stageSeed){try{const pois=[];for(const p of hit.p||[])pois.push({n:p.n,c:await canvas(p.b)});P.stageSeed(i,await canvas(hit.m),pois);return}catch(e){}}
+   const cv=await P.stageRender(i);if(cv){const m=await blob(cv),p=[];for(const q of cv.pois||[]){const b=await blob(q.c);if(b)p.push({n:q.n,b})}if(m)put(k,{m,p})}}}})();
 window.PT8_BOOT=new Promise(res=>{const run=()=>setTimeout(async()=>{try{const BP=window.PT8_BP||(()=>{});
-  const jobs=[];const isC=i=>typeof D!=='undefined'&&D[i]&&D[i].cartoon;for(const i of(P.TRK_TRACKS||[]))if(isC(i)&&P.trackShot)jobs.push([D[i].name,()=>P.trackShot(i)]);
-  for(const i of(P.STAGES||[]))if(P.stageRender&&typeof D!=='undefined'&&D[i])jobs.push([D[i].name,()=>P.stageRender(i)]);
+  const jobs=[];const isC=i=>typeof D!=='undefined'&&D[i]&&D[i].cartoon;for(const i of(P.TRK_TRACKS||[]))if(isC(i)&&P.trackShot)jobs.push([D[i].name,()=>SC.track(i)]);
+  for(const i of(P.STAGES||[]))if(P.stageRender&&typeof D!=='undefined'&&D[i])jobs.push([D[i].name,()=>SC.stage(i)]);
   /* 0.02: the main menu's card pictures and the Quickplay setup previews too, so nothing pops in on the menu after loading */
   for(const u of(P.menuImgs||[])){const m=/^url\((.*)\)$/.exec(u);if(m)jobs.unshift(['MENU',()=>{const im=new Image();im.src=m[1];return im.decode()}])}
-  if(P.quickTracks&&P.trackShot&&!window.PT8_FAST)for(const i of P.quickTracks())if(!isC(i))jobs.push([D[i].name,()=>P.trackShot(i)]);
+  if(P.quickTracks&&P.trackShot&&!window.PT8_FAST)for(const i of P.quickTracks())if(!isC(i))jobs.push([D[i].name,()=>SC.track(i)]);
   BP(.5);for(let k=0;k<jobs.length;k++){await Promise.race([jobs[k][1]().catch(()=>null),new Promise(r=>setTimeout(r,120000))]);BP(.5+.5*(k+1)/jobs.length)}
  }catch(e){console.error('boot warm-up',e)}res()},400);if(document.readyState==='complete')run();else addEventListener('load',run)});
 window.PT8_BOOT.then(()=>{P.bootDone=1});window.PT8_BOOT.then(()=>setTimeout(()=>{d.classList.add('on');if(!BT)slide()},400));
