@@ -4,6 +4,7 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.02',d:'Oct 29, 2026',t:'Glossy black UI',items:[
+  'Quickplay and race setup fill the screen: the list and the picture run the full height between the bars, and rows, text and pictures grow with the window.',
   'Quickplay is now a GT5-style list like the setup screen: the modes as rows on the left, and a big picture of the track the selected mode opens on beside them.',
   'The loading screen now also renders the main menu pictures and every Quickplay track preview, so nothing loads in after the menu appears.',
   'Race winnings now grow with race length: a 1 lap win pays about 3,000 Cr. and a 5 lap win about 17,000 Cr. on a normal sized circuit. Short circuits pay a little less per lap and long ones more.',
