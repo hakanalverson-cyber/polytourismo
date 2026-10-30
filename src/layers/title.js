@@ -58,7 +58,7 @@ let SL=[];try{const nm=window.BBG_NAMES||[],bb=typeof BBG_B64!=='undefined'?BBG_
 /* the loading screen already shows the logo over the stills: the title then only adds its prompt on top of it, and the hand-picked track
    shots join the loading screen's slideshow */
 const BT=document.getElementById('ptBoot');if(BT){d.classList.add('ov');try{const L=window.PT8_BOOTBG,nm=window.BBG_NAMES||[],bb=typeof BBG_B64!=='undefined'?BBG_B64:[];let ix=PICK.map(k=>nm.indexOf(k)).filter(i=>i>=0);if(!ix.length)ix=[3,2].filter(i=>bb[i]);
- ix.forEach((i,k)=>L.splice(Math.min(L.length,((window.PT8_BOOTI|0)+3+k*4)%(L.length+1)),0,bb[i]))}catch(e){}}
+ if(!window.PT8_BOX){window.PT8_SPL=ix.map(i=>bb[i]);ix.forEach((i,k)=>L.splice(Math.min(L.length,((window.PT8_BOOTI|0)+3+k*4)%(L.length+1)),0,bb[i]))}}catch(e){}}
 const bg=d.querySelector('.bg'),cap=d.querySelector('.cap'),tk=d.querySelector('.tk');tk.innerHTML=SL.map(()=>'<i></i>').join('');
 let si=-1,slT=0;const R=()=>(Math.random()*4-2).toFixed(2)+'%';
 function slide(){if(!SL.length||done)return;si=(si+1)%SL.length;const x=SL[si],e=document.createElement('div');e.style.backgroundImage=x.u;e.style.setProperty('--x0',R());e.style.setProperty('--y0',R());e.style.setProperty('--x1',R());e.style.setProperty('--y1',R());
@@ -85,6 +85,10 @@ window.PT8_BOOT=new Promise(res=>{const run=()=>setTimeout(async()=>{try{const B
   /* 0.02: the main menu's card pictures and the Quickplay setup previews too, so nothing pops in on the menu after loading */
   for(const u of(P.menuImgs||[])){const m=/^url\((.*)\)$/.exec(u);if(m)jobs.unshift(['MENU',()=>{const im=new Image();im.src=m[1];return im.decode()}])}
   if(P.quickTracks&&P.trackShot&&!window.PT8_FAST)for(const i of P.quickTracks())if(!isC(i))jobs.push([D[i].name,()=>SC.track(i)]);
+  /* 0.02: the box art (title stills and Quickplay covers) goes first, as soon as the car models are in; the title stills are kept for the next start */
+  jobs.unshift(['COVERS',async()=>{for(let n=0;n<120&&!(P.boxReady&&P.boxReady());n++)await new Promise(r=>setTimeout(r,250));if(!P.boxReady||!P.boxReady())return;
+   const sig=(P.VERSION||'')+'|1';let X=null;try{X=JSON.parse(localStorage.getItem('pt8-boxart')||'null')}catch(e){}
+   if(!(X&&X.v===sig&&window.PT8_BOX)){const A=P.titleArts();if(A.length&&window.PT8_BOXSET){window.PT8_BOXSET(A);try{localStorage.setItem('pt8-boxart',JSON.stringify({v:sig,L:A}))}catch(e){}}}}]);
   BP(.5);for(let k=0;k<jobs.length;k++){await Promise.race([jobs[k][1]().catch(()=>null),new Promise(r=>setTimeout(r,120000))]);BP(.5+.5*(k+1)/jobs.length)}
  }catch(e){console.error('boot warm-up',e)}res()},400);if(document.readyState==='complete')run();else addEventListener('load',run)});
 window.PT8_BOOT.then(()=>{P.bootDone=1});window.PT8_BOOT.then(()=>setTimeout(()=>{d.classList.add('on');if(!BT)slide()},400));

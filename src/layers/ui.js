@@ -89,7 +89,7 @@ root.innerHTML=`
  <div class="qr" data-m="elim" data-d="The last car at the end of each lap is out."><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="10" width="8" height="13" rx="2"/><rect x="20" y="10" width="8" height="13" rx="2"/><rect x="31" y="10" width="8" height="13" rx="2" opacity=".35"/><path d="M29 30l12 12M41 30L29 42"/><path d="M9 34h14" opacity=".55"/></svg><span>Elimination</span><em>1 player</em></div>
  <div class="qr" data-m="cutup" data-d="Weave through traffic for points."><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 40c8 0 8-10 16-10s8-12 16-12"/><path d="M34 12l6 6-6 6"/><rect x="11" y="10" width="7" height="12" rx="2" opacity=".55"/><rect x="28" y="30" width="7" height="12" rx="2" opacity=".55"/></svg><span>Cut-Up</span><em>Traffic</em></div>
  <div class="qr" data-m="mp" data-p="2" data-d="Split screen against friends."><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="11" width="16" height="26" rx="2"/><rect x="26" y="11" width="16" height="26" rx="2"/><path d="M14 30v-9M11 24l3-3 3 3M34 30v-9M31 24l3-3 3 3"/></svg><span>Versus</span><em>2 to 4 players</em></div>
-</div><div class="qP"><div class="qpv"><canvas id="qpShot" width="800" height="450"></canvas><div class="qtn"><small>QUICKPLAY</small><b id="qpName"></b><p id="qpDesc"></p></div></div><canvas id="qpRefl" width="400" height="60"></canvas></div>
+</div><div class="qP"><div class="qpv"><canvas id="qpShot" width="1280" height="720"></canvas><div class="qtn"><small>QUICKPLAY</small><b id="qpName"></b><p id="qpDesc"></p></div></div><canvas id="qpRefl" width="400" height="60"></canvas></div>
 </div>
 <div class="foot8"><button class="btn" data-a="back"><span>&lt; Back</span></button><div class="hint8">Arrows select &middot; Enter start &middot; Esc back</div><span style="width:90px"></span></div></section>
 
@@ -145,7 +145,9 @@ $$('#s8cards .card',root).forEach((c,k)=>{c.onmouseenter=()=>setFoc(k,1);c.oncli
 let qf=0;const setQf=(i,hv)=>{const cs=$$('#s8quick .qr',root);qf=(i+cs.length)%cs.length;cs.forEach((c,k)=>c.classList.toggle('foc',k===qf));qPrev(cs[qf])};
 /* 0.02: the selected mode's picture is the track it opens on (rendered behind the boot screen), with the menu art as a fallback */
 function qPrev(c){if(!c)return;$('qpName').textContent=c.querySelector('span').textContent;$('qpDesc').textContent=c.dataset.d;
- const m=c.dataset.m,t=okTrack(m,ST.track)?ST.track:firstTrack(m),cv=$('qpShot'),g=cv.getContext('2d'),sh=P.trackShotCached&&P.trackShotCached(t),rf=$('qpRefl');
+ const m=c.dataset.m,t=okTrack(m,ST.track)?ST.track:firstTrack(m),cv=$('qpShot'),g=cv.getContext('2d'),rf=$('qpRefl');let sh=P.trackShotCached&&P.trackShotCached(t);
+ /* the cover is made at the picture's own shape so nothing is cropped */const k0=[...c.parentNode.children].indexOf(c),ar=cv.clientWidth?cv.clientHeight/cv.clientWidth:.5625,ch=Math.round(1280*Math.min(.9,Math.max(.4,ar))),art=P.quickArt&&P.quickArt(k0,c.dataset.d,ch);cv.parentNode.classList.toggle('bx',!!art);
+ if(art){sh=art;if(cv.height!==ch)cv.height=ch}else if(cv.height!==720)cv.height=720;
  const put=im=>{g.drawImage(im,0,0,cv.width,cv.height);const r=rf.getContext('2d');r.clearRect(0,0,rf.width,rf.height);r.drawImage(cv,0,cv.height*.75,cv.width,cv.height*.25,0,0,rf.width,rf.height)};
  if(sh){put(sh);return}const bb=typeof BBG_B64!=='undefined'?BBG_B64:[],k=[...c.parentNode.children].indexOf(c),u=bb[[3,2,1,4,0][k]%Math.max(1,bb.length)];
  if(u){const im=new Image();im.onload=()=>{if(qf===k)put(im)};im.src='data:image/jpeg;base64,'+u}else drawTrack(cv,t,false)}
@@ -663,6 +665,55 @@ function carBig(id){if(TBC.has(id))return TBC.get(id);const W=720,H=430;
  const bb=new THREE.Box3().setFromObject(model),sz=bb.getSize(new THREE.Vector3()),ct=bb.getCenter(new THREE.Vector3()),k=(src.userData.gl?src.userData.gl*1.093:4.7)/Math.max(sz.x,sz.z,.001);
  ctd.position.set(-ct.x,-bb.min.y,-ct.z);car_.scale.setScalar(k);car_.rotation.y=(sz.x>sz.z?Math.PI/2:0)+Math.PI;TB.sc.add(car_);
  TB.r.render(TB.sc,TB.cam);const cv=document.createElement('canvas');cv.width=W;cv.height=H;cv.getContext('2d').drawImage(TB.r.domElement,0,0);TB.sc.remove(car_);TBC.set(id,cv);return cv}
+/* 0.02: box art, like a game cover: a studio render of one car on a clean backdrop (deep blue or white) with the title set in the corner.
+   The title screen's stills and the Quickplay mode pictures use it; the current-car thumbnails stay transparent */
+let BX=null;const BXC=new Map();
+const BXL={d:{L:[[0x9cc8ff,1.6,[-3,4,-6]],[0xffffff,.55,[6,3,6]]],sky:0x5f86c8,gnd:0x050a18,hemi:.5,exp:1},w:{L:[[0xffffff,1.3,[5,8,7]],[0xffffff,.6,[-6,3,-5]]],sky:0xffffff,gnd:0xb0b6bc,hemi:1.2,exp:1.2},
+ s:{L:[[0xffffff,1.25,[4,6,8]],[0xc8d4e0,.9,[-5,3,-6]]],sky:0xd8dde2,gnd:0x30353b,hemi:.75,exp:1.05},m:{L:[[0xffffff,1.3,[5,8,7]],[0xffe8d0,.5,[-6,3,-5]]],sky:0xffffff,gnd:0xb8b2a8,hemi:1.15,exp:1.15}};
+/* camera framings: cl = a tight three-quarter crop (Quickplay), ti = the whole car low in the frame under the title logo */
+const BXV={d:{cl:{fov:28,cam:[3.3,.55,3.4],look:[.6,.42,.2]},ti:{fov:22,cam:[6.4,.75,7.4],look:[-2.1,.95,0],yaw:.15}},w:{cl:{fov:30,cam:[2.8,1.5,4.8],look:[-.6,1.1,0],yaw:-.3},ti:{fov:24,cam:[5.8,2.2,8.6],look:[1.2,.75,0],yaw:-.35}},
+ s:{ti:{fov:28,cam:[-6.4,.5,4.6],look:[.2,.75,.3]}},m:{ti:{fov:18,cam:[9.4,1.8,12.6],look:[-3.8,.95,-.8],yaw:-.25}}};BXV.s.cl=BXV.s.ti;BXV.m.cl=BXV.m.ti;
+P.boxArt=(id,st,W,H,o={})=>{const key=[id,st,W,H,o.v,o.t,o.s,o.safe,o.cap].join('|');if(BXC.has(key))return BXC.get(key);
+ const src=typeof CAR_MODELS!=='undefined'&&CAR_MODELS[P.modelOf(id,0)];if(!src)return null;
+ if(!BX){BX=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});BX.setPixelRatio(1);BX.outputEncoding=THREE.sRGBEncoding;BX.toneMapping=THREE.ACESFilmicToneMapping;BX.setClearColor(0,0)}
+ const Lt=BXL[st],V=BXV[st][o.v||'cl'],sc=new THREE.Scene();BX.setSize(W,H,false);BX.toneMappingExposure=Lt.exp;sc.add(new THREE.HemisphereLight(Lt.sky,Lt.gnd,Lt.hemi));
+ for(const l of Lt.L){const d=new THREE.DirectionalLight(l[0],l[1]);d.position.set(...l[2]);sc.add(d)}
+ const model=src.clone(true),car=new THREE.Group(),ctd=new THREE.Group();ctd.add(model);car.add(ctd);ctd.updateMatrixWorld(true);
+ const bb=new THREE.Box3().setFromObject(model),sz=bb.getSize(new THREE.Vector3()),ct=bb.getCenter(new THREE.Vector3()),k=(src.userData.gl?src.userData.gl*1.093:4.7)/Math.max(sz.x,sz.z,.001);
+ ctd.position.set(-ct.x,-bb.min.y,-ct.z);car.scale.setScalar(k);car.rotation.y=(sz.x>sz.z?Math.PI/2:0)+Math.PI+(V.yaw||0);sc.add(car);
+ const sh=document.createElement('canvas');sh.width=sh.height=128;{const g=sh.getContext('2d'),gr=g.createRadialGradient(64,64,4,64,64,64);gr.addColorStop(0,'rgba(0,0,0,.55)');gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(0,0,128,128)}
+ const tx=new THREE.CanvasTexture(sh),pl=new THREE.Mesh(new THREE.PlaneGeometry(3.4,6.4),new THREE.MeshBasicMaterial({map:tx,transparent:true,depthWrite:false}));pl.rotation.x=-Math.PI/2;pl.rotation.z=car.rotation.y;pl.position.y=.01;sc.add(pl);
+ const cam=new THREE.PerspectiveCamera(V.fov,W/H,.1,100);cam.position.set(...V.cam);cam.lookAt(...V.look);BX.render(sc,cam);pl.geometry.dispose();pl.material.dispose();tx.dispose();
+ const cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');let gr;
+ if(st==='d'){gr=g.createRadialGradient(W*.3,H*.4,0,W*.3,H*.4,Math.hypot(W,H)*.72);gr.addColorStop(0,'#1c3f86');gr.addColorStop(.45,'#0b1d48');gr.addColorStop(1,'#040a1a')}
+ else if(st==='w'){gr=g.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#ffffff');gr.addColorStop(.6,'#f1f3f5');gr.addColorStop(1,'#dfe3e7')}
+ else if(st==='s'){gr=g.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#16191d');gr.addColorStop(.5,'#4a5058');gr.addColorStop(.66,'#5a6068');gr.addColorStop(.69,'#33373c');gr.addColorStop(1,'#1d2024')}
+ else{gr=g.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#f2f0ec');gr.addColorStop(1,'#e2dfd8')}
+ g.fillStyle=gr;g.fillRect(0,0,W,H);const u=Math.min(W/1280,H/720),FN=getComputedStyle(document.body).getPropertyValue('--gt')||'sans-serif',ls=v=>{try{g.letterSpacing=v}catch(e){}},T=o.safe?H*.1:0,Bm=o.safe?H*.17:0,Sx=o.safe?W*.05:0/* the boot screen's bars cover the top and bottom */;
+ if(st==='s'){/* studio haze: soft smoke behind the car, a dark vignette, a hard floor line */let sd=7;const rnd=()=>(sd=sd*16807%2147483647)/2147483647;
+  for(let i=0;i<46;i++){const x=W*rnd(),y=H*(.15+.55*rnd()),r=W*(.06+.16*rnd()),h=g.createRadialGradient(x,y,0,x,y,r);h.addColorStop(0,'rgba(190,200,210,.10)');h.addColorStop(1,'rgba(190,200,210,0)');g.fillStyle=h;g.fillRect(x-r,y-r,2*r,2*r)}}
+ if(st==='m'){/* magazine: the masthead sits behind the car */g.fillStyle='#d2202f';g.fillRect(Sx+48*u,T+40*u,W-2*Sx-96*u,10*u);g.font='italic 900 '+Math.round((o.safe?200:250)*u)+'px '+FN;ls(Math.round(-8*u)+'px');g.fillStyle='#16191d';g.textBaseline='top';g.fillText('POLY GT',Sx+40*u,T+62*u);g.textBaseline='alphabetic';ls('0px')}
+ g.drawImage(BX.domElement,0,0);
+ if(st==='s'){const v=g.createRadialGradient(W/2,H*.55,H*.35,W/2,H*.55,W*.75);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.6)');g.fillStyle=v;g.fillRect(0,0,W,H)}
+ if(st==='s'&&o.cap){const nm=((BYID[id]||{}).name||'').toUpperCase();g.fillStyle='rgba(255,255,255,.85)';g.font='300 '+Math.round(30*u)+'px '+FN;ls(Math.round(4*u)+'px');g.fillText(nm,Sx+56*u,T+86*u);g.font='600 '+Math.round(13*u)+'px '+FN;g.fillStyle='rgba(255,255,255,.5)';g.fillText('PHOTO STUDIO  \u00b7  POLY GT',Sx+58*u,T+114*u);ls('0px')}
+ if(st==='m'){const nm=(BYID[id]||{}).name||'';g.fillStyle='#16191d';g.font='600 '+Math.round(16*u)+'px '+FN;ls(Math.round(5*u)+'px');g.fillText('ISSUE 02  \u00b7  VERSION 0.02',Sx+52*u,H-Bm-170*u);ls('0px');
+  let nf=54*u;g.font='italic 800 '+Math.round(nf)+'px '+FN;while(nf>28*u&&g.measureText(nm.toUpperCase()).width>W*.4){nf-=2*u;g.font='italic 800 '+Math.round(nf)+'px '+FN}g.fillText(nm.toUpperCase(),Sx+48*u,H-Bm-112*u);g.font='400 '+Math.round(22*u)+'px '+FN;g.fillStyle='#5b6570';g.fillText(o.s||'Tested on track, in the garage and on the stages',Sx+52*u,H-Bm-76*u);
+  g.fillStyle='#d2202f';g.fillRect(W-Sx-210*u,T+72*u,160*u,48*u);g.fillStyle='#fff';g.font='800 '+Math.round(22*u)+'px '+FN;g.textAlign='center';g.fillText('131 CARS',W-Sx-130*u,T+105*u);g.textAlign='left'}
+ if(o.t&&(st==='d'||st==='w')){const [a,b]=o.t,fs=Math.round(86*u);
+  g.textBaseline='alphabetic';g.font='italic 800 '+fs+'px '+FN;ls('0px');const wa=g.measureText(b?a+' ':a).width;g.font='italic 200 '+fs+'px '+FN;const wb=g.measureText(b).width;
+  const x0=st==='d'?Sx+60*u:W-Sx-60*u-wa-wb,y0=st==='d'?H-Bm-92*u:T+150*u;
+  if(st==='d'){g.shadowColor='rgba(0,0,0,.75)';g.shadowBlur=24*u;const bg=g.createLinearGradient(x0,0,x0+90*u,0);bg.addColorStop(0,'#fff');bg.addColorStop(1,'#8fb4d8');g.fillStyle=bg;g.fillRect(x0,y0-fs*.9-26*u,90*u,5*u)}
+  else{const sw=150*u,sy=y0-fs*.9-34*u,sx=W-Sx-60*u-sw;g.fillStyle='#1b3f8f';g.fillRect(sx,sy,sw*.4,14*u);g.fillStyle='#d2202f';g.fillRect(sx+sw*.4,sy,sw*.3,14*u);g.fillStyle='#9aa3ab';g.fillRect(sx+sw*.7,sy,sw*.3,14*u)}
+  g.fillStyle=st==='d'?'#fff':'#16191d';g.font='italic 800 '+fs+'px '+FN;g.fillText(a,x0,y0);g.font='italic 200 '+fs+'px '+FN;g.fillText(b,x0+wa,y0);
+  if(o.s){g.font='500 '+Math.round(17*u)+'px '+FN;ls(Math.round(6*u)+'px');g.fillStyle=st==='d'?'#c9d8ee':'#5b6570';g.textAlign=st==='d'?'left':'right';g.fillText(o.s.toUpperCase(),st==='d'?x0:W-Sx-60*u,y0+36*u);g.textAlign='left'}ls('0px');g.shadowBlur=0}
+ BXC.set(key,cv);return cv};
+/* the title's stills: covers, studio shots and magazine fronts, mixed with the location photoshoot stills by the boot screen */
+const BXT=[['c34','d',{t:['POLY','GT'],s:'Version 0.02'}],['c123','s',{cap:1}],['c27','m',{s:'The mid-engine legend, driven flat out'}],['c86','w',{t:['POLY','GT'],s:'Version 0.02'}],['gtr','s',{cap:1}],['ferr','d',{t:['POLY','GT'],s:'Grand Tour'}],['c42','m',{s:'Twelve cylinders, one test day'}]];
+P.boxReady=()=>typeof CAR_MODELS!=='undefined'&&BXT.every(j=>CAR_MODELS[P.modelOf(j[0],0)]);
+P.titleArts=()=>BXT.map(([id,st,o])=>{const c=P.boxArt(id,st,1600,900,Object.assign({v:'ti',safe:1},o));return c?(st==='w'||st==='m'?'w,':'b,')+c.toDataURL('image/jpeg',.86).slice(23):null}).filter(Boolean);
+/* Quickplay: one cover per mode, in the row order */
+const BXQ=[['gtr','d','Quick','Race'],['c27','w','Time','Attack'],['c34','d','Elimination',''],['c86','w','Cut-Up',''],['ferr','d','Versus','']];
+P.quickArt=(k,sub,h)=>{const j=BXQ[k];return j?P.boxArt(j[0],j[1],1280,h||720,{v:'cl',t:[j[2],j[3]],s:sub}):null};
 function resLayout(){const b=document.getElementById('resBox');if(!b||b.querySelector('.rsgrid')||!b.querySelector('.lb,.lbsolo'))return;
  const kids=[...b.children],btn=kids[kids.length-1],pay=kids.find(e=>e.querySelector&&e.querySelector('.pay')),left=kids.filter(e=>e!==btn&&e!==pay);
  /* the car shown is the winner's (the first across the line; your own in a solo run) */
