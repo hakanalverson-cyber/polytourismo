@@ -282,6 +282,7 @@ if os.environ.get('PACKS'):
   _bb+=['"'+base64.b64encode(open(f,'rb').read()).decode()+'"' for f in _bf];_bn+=[os.path.basename(f)[:-4] for f in _bf]
 BBG='<script>const BBG_B64=['+','.join(_bb)+'];window.BBG_NAMES='+_js.dumps(_bn)+';</script>'
 HPACK='<script>const HPACK_B64="'+b64('harbor_pack.glb.gz')+'";</script>'
+PHOTO='<script>const PHOTO_B64={'+','.join('%s:"%s"'%(n,b64('photo/%s.glb.gz'%n)) for n in ('room','ps1','city'))+'};</script>'
 MUS=''.join('<script type="text/plain" id="mus_%s">%s</script>'%(k,base64.b64encode(open(W+('/assets/music_lite/' if (os.environ.get('LITE') or DRIVE) and f!='gt_countdown' else '/assets/music/')+f+'.mp3','rb').read()).decode()) for k,f in ([('baby','baby_so_free'),('glass','glasstress'),('nocomm','no_comm'),('cd','gt_countdown')] if (os.environ.get('LITE') or DRIVE) else [('baby','baby_so_free'),('supreme','supreme_moment'),('space','space'),('glass','glasstress'),('body','body_and_mind'),('nocomm','no_comm'),('cd','gt_countdown'),('lizzie','lizzie')]))
 # the songs Hakan added later (kept in project files, not in the public repo): full builds only
 if os.environ.get('PACKS'):
@@ -365,7 +366,7 @@ src=src.replace('<body>','<body>'+WARN+'<div id="ptBoot"><div class="bs"></div><
 BOOT_JS='<script>(function(){var fin=0;function done(){if(fin)return;fin=1;var b=document.getElementById("ptBoot"),c=document.getElementById("ptBootCss");if(window.PT8_BP)PT8_BP(1);if(c)c.remove();if(!b)return;b.classList.add("rdy");if(!document.getElementById("ptTitle")){b.style.opacity=0;setTimeout(function(){b.remove()},1050)}}function go(){var w=window.PT8_BOOT;(w&&w.then?w:Promise.resolve()).then(function(){requestAnimationFrame(function(){requestAnimationFrame(function(){setTimeout(done,350)})})})}if(document.readyState==="complete")go();else addEventListener("load",go);setTimeout(done,900000)})();</script>'
 GLTF='<script>'+open(W+'/assets/GLTFLoader.r128.js').read()+'</script>'
 # the first half of the bar follows the file as it is read in (a marker after each big block), the second half the warm-up in title.js
-_pcs=[('<script>window.PT8_DRIVE=1</script>' if DRIVE else ''),GLTF,ANIM,BLD,FRM,CARS10,HPACK,BBG,PREV,UIFX,MUS,'<style id="v8css">'+css+'</style><script>\n'+'\n'.join(parts)+'\n</script>']
+_pcs=[('<script>window.PT8_DRIVE=1</script>' if DRIVE else ''),GLTF,ANIM,BLD,FRM,CARS10,HPACK,PHOTO,BBG,PREV,UIFX,MUS,'<style id="v8css">'+css+'</style><script>\n'+'\n'.join(parts)+'\n</script>']
 i=src.rindex('</body>') if '</body>' in src else len(src)
 _tot=i+sum(len(x) for x in _pcs);_c=i;add=''
 for _x in _pcs:

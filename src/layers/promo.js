@@ -237,7 +237,7 @@ P.PROMO_SCENES=[
  {rd:{A:7,L:420,cA:25,cL:700},env:'fields',cars:[['c123',0,-1.3],['c27',6,1.4]],cam:[5,2.6,9],look:[0,1,-3],fov:30,blur:'zoom',amt:.035},
  {rd:{G:-.04,cA:-25,cL:420},env:'fjord',cars:[['gtr',0,-.8]],cam:[3.5,1.5,8.5],look:[0,1,-4],fov:30,blur:'zoom',amt:.04}];
 P.promoFor=q=>P.PROMO_SCENES.map((s,k)=>s.q===q?k:-1).filter(k=>k>=0);
-P.promoMenu=()=>P.PROMO_SCENES.map((s,k)=>s.q===undefined?k:-1).filter(k=>k>=0);
+
 const PS={};
 P.promoShotCached=k=>PS[k]&&PS[k]._v||null;
 P.promoShotSeed=(k,cv)=>{const pr=Promise.resolve(cv);pr._v=cv;PS[k]=pr};
@@ -333,75 +333,6 @@ const PROPS=[
   const t=toy('c27',.14);if(t){t.position.set(.23,0,.12);t.rotation.y=-2.2;sc.add(t)}
   const cam=new THREE.PerspectiveCamera(30,W/H,.01,20);cam.position.set(.02,.66,.5);cam.lookAt(.02,0,-.02);
   return finish(render(sc,cam,W,H,1.05),W,H,{dof:5,band:[.3,.82],grade:'saturate(1.1) contrast(1.05)',vig:.5})}},
- /* the game running on a TV in a dark living room: the screen lights the room */
- {n:'tv',shots:[0],async make(S){const W=1920,H=1080,sc=new THREE.Scene();sc.add(new THREE.HemisphereLight(0x8090c0,0x20180f,.22));
-  const fl=new THREE.Mesh(new THREE.PlaneGeometry(10,10),new THREE.MeshStandardMaterial({map:wood(7,['#4a3424','#3e2a1c','#523a28'],8),roughness:.4}));fl.material.map.wrapS=fl.material.map.wrapT=THREE.RepeatWrapping;fl.material.map.repeat.set(4,4);fl.rotation.x=-Math.PI/2;fl.receiveShadow=true;sc.add(fl);
-  const wl=new THREE.Mesh(new THREE.PlaneGeometry(10,4),new THREE.MeshStandardMaterial({color:0x2c3442,roughness:.95}));wl.position.set(0,2,-.4);wl.receiveShadow=true;sc.add(wl);
-  const cab=box(2.2,.46,.42,new THREE.MeshStandardMaterial({map:wood(8,['#2a1e16','#30231a'],2),roughness:.5}));cab.position.set(0,.23,-.18);shadowy(cab);sc.add(cab);
-  for(const sx of [-.55,.55]){const d=box(.98,.36,.005,new THREE.MeshStandardMaterial({color:0x1a1410,roughness:.4}));d.position.set(sx,.23,.031);sc.add(d)}
-  const blk=new THREE.MeshStandardMaterial({color:0x0a0b0d,roughness:.25,metalness:.4}),tvW=1.42,tvH=.81;
-  const bz=box(tvW,tvH,.05,blk);bz.position.set(0,.5+.12+tvH/2,-.16);shadowy(bz);sc.add(bz);const nk=box(.08,.14,.04,blk);nk.position.set(0,.53,-.17);sc.add(nk);const bs=box(.42,.015,.2,blk);bs.position.set(0,.468,-.16);shadowy(bs);sc.add(bs);
-  const st=tex(S[0]),scr=new THREE.Mesh(new THREE.PlaneGeometry(tvW-.03,tvH-.03),new THREE.MeshBasicMaterial({map:st,toneMapped:false}));scr.position.set(0,bz.position.y,-.134);sc.add(scr);
-  const gl=new THREE.PointLight(0x9ab0ff,1.6,5,2);gl.position.set(0,1.0,.7);sc.add(gl);const gl2=new THREE.PointLight(0xffb070,.8,4,2);gl2.position.set(0,.95,.2);sc.add(gl2);
-  const lmp=new THREE.Group(),pm=new THREE.MeshStandardMaterial({color:0x111214,roughness:.4,metalness:.6}),pole=box(.025,1.5,.025,pm);pole.position.y=.75;lmp.add(pole);const bs2=new THREE.Mesh(new THREE.CylinderGeometry(.15,.17,.025,32),pm);bs2.position.y=.012;lmp.add(bs2);
-  const sh=new THREE.Mesh(new THREE.CylinderGeometry(.16,.22,.3,32,1,true),new THREE.MeshStandardMaterial({color:0xfff0d8,emissive:0xffc880,emissiveIntensity:.9,side:THREE.DoubleSide,roughness:.9}));sh.position.y=1.55;lmp.add(sh);
-  const ll=new THREE.PointLight(0xffc27a,1.8,6,2);ll.position.y=1.5;ll.castShadow=true;ll.shadow.mapSize.set(1024,1024);ll.shadow.bias=-.002;lmp.add(ll);shadowy(lmp);sh.castShadow=false;lmp.position.set(-1.55,0,-.05);sc.add(lmp);
-  const cons=box(.36,.06,.28,new THREE.MeshStandardMaterial({color:0x0c0d10,roughness:.15,metalness:.3}));cons.position.set(.66,.49,-.12);shadowy(cons);sc.add(cons);const led=box(.3,.006,.004,new THREE.MeshBasicMaterial({color:0x3ab0ff}));led.position.set(.66,.48,.022);sc.add(led);
-  const p=pad();p.position.set(-.55,.46,-.02);p.rotation.y=.35;sc.add(p);const pl=plant(.9);pl.position.set(1.55,0,-.1);sc.add(pl);
-  for(const sx of [-1.25,1.2]){const sp=box(.2,.95,.24,new THREE.MeshStandardMaterial({color:0x15161a,roughness:.6}));sp.position.set(sx,.475,-.2);shadowy(sp);sc.add(sp);const cn=new THREE.Mesh(new THREE.CircleGeometry(.07,24),new THREE.MeshStandardMaterial({color:0x222428,roughness:.9}));cn.position.set(sx,.62,-.079);sc.add(cn)}
-  const fr=box(.6,.42,.03,new THREE.MeshStandardMaterial({color:0x1a1a1c,roughness:.5}));fr.position.set(-.95,1.7,-.385);sc.add(fr);const art=new THREE.Mesh(new THREE.PlaneGeometry(.5,.32),new THREE.MeshStandardMaterial({map:tex(S[1]||S[0]),roughness:.6}));art.position.set(-.95,1.7,-.368);sc.add(art);
-  const cam=new THREE.PerspectiveCamera(36,W/H,.05,30);cam.position.set(.55,1.02,2.55);cam.lookAt(.05,.92,-.2);
-  const glow=render(sc,cam,W,H,1.1);const g=glow.getContext('2d');/* the screen's bloom */const v=new V3(0,bz.position.y,-.13).project(cam),cx=(v.x+1)/2*W,cy=(1-v.y)/2*H;g.globalCompositeOperation='lighter';const q=g.createRadialGradient(cx,cy,W*.08,cx,cy,W*.45);q.addColorStop(0,'rgba(110,130,200,.18)');q.addColorStop(1,'rgba(110,130,200,0)');g.fillStyle=q;g.fillRect(0,0,W,H);g.globalCompositeOperation='source-over';
-  return finish(glow,W,H,{dof:4,band:[.25,.8],grade:'saturate(1.08) contrast(1.06)',vig:.55})},shots2:[13]},
- /* the game case on a shelf of games, leaning on the spines */
- {n:'case',shots:[16],async make(S){const W=1920,H=1080,sc=new THREE.Scene();propLights(sc,{hemi:[0xfff2e2,0x3a3028,.5],sun:[0xfff0dc,1.7,[.6,1.1,1]],sh:.6});
-  const wl=new THREE.Mesh(new THREE.PlaneGeometry(4,2),new THREE.MeshStandardMaterial({color:0x6e665e,roughness:.95}));wl.position.set(0,.5,-.14);wl.receiveShadow=true;sc.add(wl);
-  const sf=box(1.6,.03,.3,new THREE.MeshStandardMaterial({map:wood(11,['#c8a070','#bc9464','#d0aa7a'],3),roughness:.6}));sf.position.set(0,-.015,0);shadowy(sf);sc.add(sf);
-  const cm=caseCover(S[0],{fx:.5}),cw=.135,ch=.19,cd=.014,cl=new THREE.MeshStandardMaterial({color:0x111216,roughness:.3}),sp=spine(1,'#0c0d10','POLY GT');
-  const hero=new THREE.Mesh(new THREE.BoxGeometry(cw,ch,cd),[cl,new THREE.MeshStandardMaterial({map:sp,roughness:.3}),cl,cl,new THREE.MeshStandardMaterial({map:tex(cm),roughness:.22,metalness:.05}),cl]);hero.castShadow=hero.receiveShadow=true;
-  hero.position.set(.02,ch/2*Math.cos(.14)+.002,-.06+.03);hero.rotation.set(-.14,-.22,0);sc.add(hero);
-  const C=['#0c0d10','#1b3f8f','#f0f2f4','#d2202f','#16191d','#3a3f4a','#0c0d10','#e8b030','#1d5fd0','#f0f2f4','#2a2d34','#0c0d10','#7a1a22','#16191d'],r=rng(4);
-  let x=-.3;C.forEach((c,i)=>{const t=cd+(r()<.2?.006:0),m=new THREE.Mesh(new THREE.BoxGeometry(t,ch,cw),[new THREE.MeshStandardMaterial({color:c,roughness:.35}),cl,cl,cl,new THREE.MeshStandardMaterial({map:spine(i+3,c,'',c==='#f0f2f4'||c==='#e8b030'),roughness:.35}),cl]);
-   m.position.set(x+t/2,ch/2,-.07);m.castShadow=m.receiveShadow=true;sc.add(m);x+=t+.0015});
-  const t=toy('gtr',.11);if(t){t.position.set(.19,0,0);t.rotation.y=-.75;sc.add(t)}const pl=plant(.16);pl.position.set(.3,0,-.06);sc.add(pl);
-  const cam=new THREE.PerspectiveCamera(30,W/H,.01,10);cam.position.set(.0,.15,.6);cam.lookAt(0,.085,-.04);
-  return finish(render(sc,cam,W,H,1.05),W,H,{dof:5,band:[.22,.86],grade:'saturate(1.08) contrast(1.04)',vig:.45})}},
- /* a billboard over a city road at night, a car going by underneath */
- {n:'board',shots:[4],async make(S){const W=1920,H=1080,E=ENV.rush,o=envScene(E,77),sc=o.sc;
-  const bc=cnv(1600,900),g=bc.getContext('2d'),FN=FNT();crop(g,S[0],0,0,1600,900);let q=g.createLinearGradient(0,0,900,0);q.addColorStop(0,'rgba(0,0,0,.7)');q.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=q;g.fillRect(0,0,1600,900);
-  g.fillStyle='#fff';g.font='italic 800 190px '+FN;g.fillText('POLY',70,640);const w=g.measureText('POLY ').width;g.font='italic 200 190px '+FN;g.fillText('GT',70+w,640);g.fillStyle='#d2202f';g.fillRect(76,420,150,10);g.font='600 44px '+FN;sp_(g,'14px');g.fillStyle='#fff';g.fillText('OUT NOW',80,730);sp_(g,'0px');
-  const bm=new THREE.MeshStandardMaterial({color:0x2a2c32,roughness:.6,metalness:.5}),bb=new THREE.Group(),pn=new THREE.Mesh(new THREE.PlaneGeometry(16,9),new THREE.MeshBasicMaterial({map:tex(bc),toneMapped:false}));pn.position.y=14.5;bb.add(pn);
-  const fr=box(16.8,9.8,.5,bm);fr.position.set(0,14.5,-.3);bb.add(fr);const pole=box(.9,10,.9,bm);pole.position.set(0,5,-.6);bb.add(pole);const cat=box(16.8,.3,1.4,bm);cat.position.set(0,9.6,.5);bb.add(cat);
-  for(let i=0;i<4;i++){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(),color:0xfff0d0,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));sp.scale.set(4,4,1);sp.position.set(-6+i*4,9.9,1);bb.add(sp)}
-  shadowy(bb);pn.castShadow=false;bb.position.set(-20,0,-42);bb.rotation.y=.45;sc.add(bb);
-  const c=car('c27');if(c){c.position.set(1.8,0,-8);sc.add(c)}
-  const cam=new THREE.PerspectiveCamera(40,W/H,.3,2400);cam.position.set(5.2,1.1,4);cam.lookAt(-7,7,-34);cam.updateMatrixWorld();o.sun.target.position.copy(o.RL.at(0,0,-4));o.sun.position.add(o.sun.target.position);
-  const r=rdr(W*SS,H*SS);r.toneMappingExposure=1.15;const dv=cam.getWorldDirection(new V3()).setY(0).normalize(),hz=cam.position.clone().addScaledVector(dv,2000).setY(0).project(cam),hy=Math.max(0,Math.min(H,(1-hz.y)/2*H));
-  r.setClearColor(0,0);r.render(sc,cam);const full=cnv(W,H),fg=full.getContext('2d');fg.drawImage(paintSky(W,H,hy,E),0,0);fg.drawImage(r.domElement,0,0,W,H);
-  const v=new V3(0,14.5,0).applyMatrix4(pn.matrixWorld).project(cam),bx=(v.x+1)/2*W,by=(1-v.y)/2*H;fg.globalCompositeOperation='lighter';const gq=fg.createRadialGradient(bx,by,W*.05,bx,by,W*.4);gq.addColorStop(0,'rgba(255,190,150,.16)');gq.addColorStop(1,'rgba(255,190,150,0)');fg.fillStyle=gq;fg.fillRect(0,0,W,H);fg.globalCompositeOperation='source-over';
-  if(c)sc.remove(c);return finish(full,W,H,{dof:0,band:[0,1],grade:'saturate(1.15) contrast(1.06)',vig:.4})}},
- /* a poster of the game on a garage wall over the workbench: a helmet, a toolbox, a stack of tyres */
- {n:'garage',shots:[18],async make(S){const W=1920,H=1080,sc=new THREE.Scene();propLights(sc,{hemi:[0xe8eef8,0x302820,.45],sun:[0xfff0e0,1.6,[-.8,1.6,1.4]],sh:1.6});
-  const cc=cnv(512,512),cg=cc.getContext('2d'),r=rng(21);cg.fillStyle='#5a5c60';cg.fillRect(0,0,512,512);for(let i=0;i<9000;i++){cg.fillStyle=r()<.5?'rgba(0,0,0,.07)':'rgba(255,255,255,.05)';cg.fillRect(r()*512,r()*512,1+r()*3,1+r()*3)}
-  cg.fillStyle='rgba(0,0,0,.25)';for(let y=0;y<512;y+=128)cg.fillRect(0,y,512,2);for(let x=0;x<512;x+=256)cg.fillRect(x,0,2,512);
-  const wl=new THREE.Mesh(new THREE.PlaneGeometry(6,3),new THREE.MeshStandardMaterial({map:tex(cc,[5,2.5]),roughness:.95}));wl.position.set(0,1.5,-.3);wl.receiveShadow=true;sc.add(wl);
-  const fl=new THREE.Mesh(new THREE.PlaneGeometry(6,4),new THREE.MeshStandardMaterial({color:0x4a4c50,roughness:.7}));fl.rotation.x=-Math.PI/2;fl.receiveShadow=true;sc.add(fl);
-  const pc=cnv(840,1188),g=pc.getContext('2d'),FN=FNT();crop(g,S[0],0,0,840,1188,.42);let q=g.createLinearGradient(0,700,0,1188);q.addColorStop(0,'rgba(0,0,0,0)');q.addColorStop(1,'rgba(0,0,0,.8)');g.fillStyle=q;g.fillRect(0,700,840,488);
-  g.fillStyle='#fff';g.font='italic 800 150px '+FN;g.fillText('POLY',48,1040);const w=g.measureText('POLY ').width;g.font='italic 200 150px '+FN;g.fillText('GT',48+w,1040);g.fillStyle='#d2202f';g.fillRect(52,880,130,8);g.font='600 26px '+FN;sp_(g,'10px');g.fillStyle='rgba(255,255,255,.85)';g.fillText('GRAND TOUR',54,1098);sp_(g,'0px');
-  const po=new THREE.Mesh(new THREE.PlaneGeometry(.84,1.188),new THREE.MeshStandardMaterial({map:tex(pc),roughness:.55}));po.position.set(-.25,1.62,-.295);po.rotation.z=.015;po.receiveShadow=true;sc.add(po);
-  for(const [x,y] of [[-.62,2.17],[.12,2.18],[-.62,1.06],[.12,1.07]]){const t=box(.07,.025,.002,new THREE.MeshStandardMaterial({color:0xd8d0b0,roughness:.8,transparent:true,opacity:.85}));t.position.set(x,y,-.292);t.rotation.z=(x<0?1:-1)*(y>2?.7:-.7);sc.add(t)}
-  const top=box(2.4,.05,.62,new THREE.MeshStandardMaterial({map:wood(31,['#8a6a48','#7e6040','#94724e'],4),roughness:.6}));top.position.set(0,.9,0);shadowy(top);sc.add(top);
-  const met=new THREE.MeshStandardMaterial({color:0x2a2c30,roughness:.5,metalness:.6});for(const x of [-1.15,1.15])for(const z of [-.27,.27]){const l=box(.05,.88,.05,met);l.position.set(x,.44,z);shadowy(l);sc.add(l)}
-  const tb=new THREE.Group(),red=new THREE.MeshStandardMaterial({color:0x8a1018,roughness:.35,metalness:.3});const tbb=box(.5,.24,.24,red);tbb.position.y=.12;tb.add(tbb);const tbl=box(.52,.04,.26,red);tbl.position.y=.26;tb.add(tbl);const hd=box(.22,.03,.03,met);hd.position.y=.3;tb.add(hd);shadowy(tb);tb.position.set(.62,.925,-.08);tb.rotation.y=-.12;sc.add(tb);
-  const hm=new THREE.Group(),sh=new THREE.Mesh(new THREE.SphereGeometry(.15,40,28),new THREE.MeshStandardMaterial({color:0xf2f2f0,roughness:.2,metalness:.1}));sh.scale.set(1,.95,1.15);sh.position.y=.15;hm.add(sh);
-  const vs=new THREE.Mesh(new THREE.SphereGeometry(.152,40,16,-.9,1.8,1.25,.55),new THREE.MeshStandardMaterial({color:0x101216,roughness:.05,metalness:.6}));vs.scale.set(1,.95,1.15);vs.position.y=.15;vs.rotation.y=Math.PI/2;hm.add(vs);
-  const st=new THREE.Mesh(new THREE.SphereGeometry(.1525,40,28,0,TAU,0,Math.PI/2),new THREE.MeshStandardMaterial({color:0xd2202f,roughness:.25}));st.scale.set(.25,.955,1.155);st.position.y=.15;hm.add(st);
-  shadowy(hm);hm.position.set(-.6,.925,.02);hm.rotation.y=-.5;sc.add(hm);
-  const tm=new THREE.MeshStandardMaterial({color:0x17181b,roughness:.85});for(let i=0;i<3;i++){const t=new THREE.Mesh(new THREE.TorusGeometry(.3,.11,16,40),tm);t.rotation.x=Math.PI/2;t.position.set(1.65,.11+i*.22,.1);shadowy(t);sc.add(t)}
-  const toyC=toy('c34',.16);if(toyC){toyC.position.set(.12,.925,.12);toyC.rotation.y=2.6;sc.add(toyC)}
-  const lt=box(1.2,.04,.1,new THREE.MeshBasicMaterial({color:0xf4f8ff}));lt.position.set(0,2.95,.4);sc.add(lt);
-  const cam=new THREE.PerspectiveCamera(36,W/H,.05,20);cam.position.set(.3,1.62,3.7);cam.lookAt(.05,1.5,-.2);
-  return finish(render(sc,cam,W,H,1.05),W,H,{dof:4,band:[.12,.9],grade:'saturate(1.06) contrast(1.05)',vig:.5})}},
  /* a magazine rack: every issue of the magazine, face out */
  {n:'rack',shots:[12,2,16,13,10,19],async make(S){const W=1920,H=1080,sc=new THREE.Scene();propLights(sc,{hemi:[0xfff4e8,0x40362c,.6],sun:[0xfff2e0,1.5,[.6,1.4,1.2]],sh:1});
   const wl=new THREE.Mesh(new THREE.PlaneGeometry(4,3),new THREE.MeshStandardMaterial({color:0x2c2f36,roughness:.9}));wl.position.set(0,1,-.2);wl.receiveShadow=true;sc.add(wl);
@@ -411,11 +342,78 @@ const PROPS=[
   for(let row=0;row<2;row++){const y=.42+row*.36,bk=box(1.3,.02,.12,shelf);bk.position.set(0,y-.01,-.08);shadowy(bk);sc.add(bk);const lip=box(1.3,.05,.01,shelf);lip.position.set(0,y+.015,-.025);shadowy(lip);sc.add(lip);
    for(let i=0;i<3;i++){const n=row*3+i,cv=magCover(S[n%S.length],{head:H6[n][0],sub:H6[n][1],k1:['TESTED','ROAD TRIP','NIGHT DRIVE','GROUP TEST','PASSES','SHOOTOUT'][n],k2:'',seed:n+3}),t=tex(cv),p=paperM();
     const m=new THREE.Mesh(new THREE.BoxGeometry(.21,.28,.004),[p,p,p,p,new THREE.MeshStandardMaterial({map:t,roughness:.3,metalness:.05}),p]);m.position.set(-.4+i*.4,y+.14,-.06);m.rotation.x=-.16;m.castShadow=m.receiveShadow=true;sc.add(m)}}
-  const cam=new THREE.PerspectiveCamera(30,W/H,.05,20);cam.position.set(.5,.92,1.05);cam.lookAt(-.02,.76,-.06);
-  return finish(render(sc,cam,W,H,1.05),W,H,{dof:4,band:[.15,.88],grade:'saturate(1.08) contrast(1.05)',vig:.5})}}];
+  const cam=new THREE.PerspectiveCamera(30,W/H,.05,20);cam.position.set(.35,.95,1.9);cam.lookAt(0,.72,-.06);
+  return finish(render(sc,cam,W,H,1.05),W,H,{dof:4,band:[.15,.88],grade:'saturate(1.08) contrast(1.05)',vig:.5})}},
+ /* the game on a CRT in a 90s bedroom at night, the console on the carpet in front of it (models: the room and console packs, restyled) */
+ {n:'room',shots:[0,12],glb:1,async make(S){const W=1920,H=1080,sc=new THREE.Scene(),G=window.PT8_GLB;sc.add(new THREE.HemisphereLight(0x8a96c8,0x2a2018,.32));
+  const fl=new THREE.Mesh(new THREE.PlaneGeometry(8,8),mat({color:0x3a4256,roughness:1}));fl.rotation.x=-Math.PI/2;fl.receiveShadow=true;sc.add(fl);
+  const rug=new THREE.Mesh(new THREE.CircleGeometry(1.1,7),mat({color:0x8a2a30,roughness:1}));rug.rotation.x=-Math.PI/2;rug.position.set(.1,.004,.55);rug.scale.set(1.3,1,1);rug.receiveShadow=true;sc.add(rug);
+  const wm=mat({color:0x4e6a6e,roughness:1}),bw=new THREE.Mesh(new THREE.PlaneGeometry(8,3),wm);bw.position.set(0,1.5,-1.1);bw.receiveShadow=true;sc.add(bw);const lw=new THREE.Mesh(new THREE.PlaneGeometry(6,3),wm);lw.rotation.y=Math.PI/2;lw.position.set(-2.3,1.5,1);lw.receiveShadow=true;sc.add(lw);
+  const sk=box(8,.1,.02,mat({color:0xe8e2d4}));sk.position.set(0,.05,-1.09);sc.add(sk);
+  const parts=P.splitParts((()=>{let m;G.room.traverse(o=>{if(o.isMesh)m=o});return m})());const part=(i,s)=>{const m=parts[i].clone();m.geometry=parts[i].geometry.clone();const bb=m.geometry.boundingBox,c=bb.getCenter(new V3());m.geometry.translate(-c.x,-bb.min.y,-c.z);m.scale.setScalar(s);P.lowPoly(m);shadowy(m);return m};
+  /* the TV stand, the CRT on it, the console and pad on the carpet */
+  const st=box(1.2,.5,.48,mat({color:0x2a2420,roughness:.7}));st.position.set(0,.25,-.82);shadowy(st);sc.add(st);for(const x of [-.3,.3]){const d=box(.56,.4,.01,mat({color:0x3a302a}));d.position.set(x,.25,-.575);sc.add(d)}
+  const tv=part(1,.42);tv.position.set(-.05,.5,-.84);sc.add(tv);const tb=new THREE.Box3().setFromObject(tv),tw=tb.max.x-tb.min.x,th=tb.max.y-tb.min.y;
+  const scr=new THREE.Mesh(new THREE.PlaneGeometry(tw*.6,th*.62),new THREE.MeshBasicMaterial({map:tex(S[0]),toneMapped:false}));scr.position.set(tb.min.x+tw*(.08+.3),tb.min.y+th*.5,tb.max.z+.004);sc.add(scr);
+  const wr=part(14,.5);wr.position.set(-1.7,0,-.82);sc.add(wr);const cr=part(16,.45);cr.position.set(1.45,0,-.8);sc.add(cr);const bk=part(17,.45);bk.position.set(1.45,.68,-.84);sc.add(bk);
+  const ck=part(6,.4);ck.position.set(.95,1.7,-1.09);sc.add(ck);
+  const ps=G.ps1.clone(true);ps.traverse(o=>{if(o.isMesh&&/^Plane/i.test(o.name))o.visible=false});P.lowPoly(ps);const pb=new THREE.Box3();ps.traverse(o=>{if(o.isMesh&&o.visible)pb.expandByObject(o)});
+  const pg=new THREE.Group();ps.position.sub(pb.getCenter(new V3())).setY(-pb.min.y);pg.add(ps);pg.scale.setScalar(.3/(pb.max.x-pb.min.x));pg.position.set(.15,0,.15);pg.rotation.y=-.35;shadowy(pg);sc.add(pg);
+  /* a poster of the game over the bed side */const pc=cnv(840,1188),g=pc.getContext('2d'),FN=FNT();crop(g,S[1],0,0,840,1188,.5);g.fillStyle='rgba(0,0,0,.45)';g.fillRect(0,880,840,308);g.fillStyle='#fff';g.font='italic 800 150px '+FN;g.fillText('POLY',48,1060);const w=g.measureText('POLY ').width;g.font='italic 200 150px '+FN;g.fillText('GT',48+w,1060);
+  const po=new THREE.Mesh(new THREE.PlaneGeometry(.56,.79),mat({map:tex(pc),flatShading:false,roughness:.6}));po.position.set(-.62,1.55,-1.095);po.rotation.z=.02;sc.add(po);
+  const tvl=new THREE.PointLight(0x9ab4ff,1.5,4.5,2);tvl.position.set(0,1,.2);sc.add(tvl);
+  const lamp=new THREE.PointLight(0xffb070,1.4,6,2);lamp.position.set(1.9,1.4,.6);lamp.castShadow=true;lamp.shadow.mapSize.set(2048,2048);lamp.shadow.bias=-.002;sc.add(lamp);
+  const cam=new THREE.PerspectiveCamera(42,W/H,.05,30);cam.position.set(.2,1.15,3.3);cam.lookAt(-.1,.7,-.7);
+  const out=render(sc,cam,W,H,1.15),g2=out.getContext('2d'),v=scr.position.clone().project(cam),cx=(v.x+1)/2*W,cy=(1-v.y)/2*H;g2.globalCompositeOperation='lighter';const q=g2.createRadialGradient(cx,cy,W*.04,cx,cy,W*.38);q.addColorStop(0,'rgba(110,140,220,.2)');q.addColorStop(1,'rgba(110,140,220,0)');g2.fillStyle=q;g2.fillRect(0,0,W,H);g2.globalCompositeOperation='source-over';
+  return finish(out,W,H,{dof:3,band:[.2,.85],grade:'saturate(1.1) contrast(1.06)',vig:.55})}},
+ /* the Italian hill town at golden hour: a car parked in the lane, the game's poster on a wall (model: the town pack, restyled) */
+ {n:'town',shots:[4],glb:1,async make(S){const W=1920,H=1080,sc=new THREE.Scene(),G=window.PT8_GLB;sc.fog=new THREE.Fog(0xf0c8a0,60,400);propLights(sc,{hemi:[0xffe0c0,0x504030,.6],sun:[0xffc890,2,[-40,30,25]],sh:30});
+  const t=G.city.clone(true);t.scale.setScalar(.01);t.traverse(o=>{if(o.isMesh&&/Boom|Grass|grass|klimop|ivy|plant|decal|debris|elektr|vlagg|opacities|stokjes|walley/.test(o.name))o.visible=false});P.lowPoly(t);shadowy(t);sc.add(t);
+  window.PT8_TOWN=t;const cam=new THREE.PerspectiveCamera(40,W/H,.1,800);const V=window.PT8_TOWNV||P.TOWN_VIEWS[0];cam.position.set(...V.cam);cam.lookAt(...V.look);
+  if(V.car){const c=car(V.car[0]);if(c){c.position.set(V.car[1],V.car[2],V.car[3]);c.rotation.y=V.car[4];sc.add(c)}}
+  const sky=cnv(W,H),sg=sky.getContext('2d'),q=sg.createLinearGradient(0,0,0,H);q.addColorStop(0,'#5a7ab8');q.addColorStop(.6,'#f2b48a');q.addColorStop(1,'#ffd8a8');sg.fillStyle=q;sg.fillRect(0,0,W,H);
+  const r=rdr(W*SS,H*SS);r.toneMappingExposure=1.05;r.setClearColor(0,0);r.render(sc,cam);const full=cnv(W,H),fg=full.getContext('2d');fg.drawImage(sky,0,0);fg.drawImage(r.domElement,0,0,W,H);
+  return finish(full,W,H,{dof:2,band:[.1,.95],grade:'saturate(1.12) contrast(1.05)',vig:.4})}}];
 
-P.PROPS=PROPS.map(p=>p.n);
+
+/* the bought prop models (the 90s room pack, the console, the Italian town) come packed into the build; P.photoReady() resolves with
+   window.PT8_GLB = {room, ps1, city} once they are parsed */
+window.PT8_GLB=window.PT8_GLB||null;
+P.photoReady=()=>P._pr||(P._pr=(async()=>{if(window.PT8_GLB)return window.PT8_GLB;if(typeof PHOTO_B64==='undefined'||!THREE.GLTFLoader)return null;const out={};
+ for(const n of ['room','ps1','city']){const raw=atob(PHOTO_B64[n]),u=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)u[i]=raw.charCodeAt(i);
+  const ab=await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+  const cib=window.createImageBitmap;window.createImageBitmap=undefined;/* textures through <img>, not blob fetches that some hosts block */
+  try{out[n]=await new Promise((res,rej)=>new THREE.GLTFLoader().parse(ab,'',g=>res(g.scene),rej))}finally{window.createImageBitmap=cib}}
+ return window.PT8_GLB=out})().catch(e=>{console.warn('photo models',e);return null}));
+/* the bought prop models restyled to match the cars: no photo textures, one flat colour per face (sampled from the face's patch of its
+   texture), flat shading */
+const PIXC=new Map();function pix(img){if(PIXC.has(img))return PIXC.get(img);const w=img.width,h=img.height,c=cnv(w,h),g=c.getContext('2d');g.drawImage(img,0,0);const d={w,h,a:g.getImageData(0,0,w,h).data};PIXC.set(img,d);return d}
+P.lowPoly=(root,o)=>{o=o||{};root.traverse(m=>{if(!m.isMesh||m.userData.lp)return;m.userData.lp=1;const src=Array.isArray(m.material)?m.material[0]:m.material,map=src.map,base=src.color?src.color.clone():new THREE.Color(1,1,1);
+ let g=m.geometry.index?m.geometry.toNonIndexed():m.geometry.clone();const pa=g.attributes.position,uv=g.attributes.uv,n=pa.count,col=new Float32Array(n*3),P_=map&&map.image?pix(map.image):null,tmp=new THREE.Color();
+ const smp=(u,v)=>{if(!P_)return [1,1,1];u=u-Math.floor(u);v=v-Math.floor(v);const x=Math.min(P_.w-1,u*P_.w|0),y=Math.min(P_.h-1,(map.flipY?1-v:v)*P_.h|0),k=(y*P_.w+x)*4;return [P_.a[k]/255,P_.a[k+1]/255,P_.a[k+2]/255]};
+ for(let t=0;t<n;t+=3){let r=0,gg=0,b=0,c=0;if(uv){for(const w of [[1/3,1/3,1/3],[.6,.2,.2],[.2,.6,.2],[.2,.2,.6],[.45,.45,.1],[.1,.45,.45],[.45,.1,.45]]){const u=uv.getX(t)*w[0]+uv.getX(t+1)*w[1]+uv.getX(t+2)*w[2],v=uv.getY(t)*w[0]+uv.getY(t+1)*w[1]+uv.getY(t+2)*w[2],s=smp(u,v);r+=s[0];gg+=s[1];b+=s[2];c++}}else{r=gg=b=c=1}
+  /* colours from the texture are sRGB: into linear for the material */tmp.setRGB(r/c,gg/c,b/c);if(P_)tmp.convertSRGBToLinear();tmp.multiply(base);for(let j=0;j<3;j++){col[(t+j)*3]=tmp.r;col[(t+j)*3+1]=tmp.g;col[(t+j)*3+2]=tmp.b}}
+ g.setAttribute('color',new THREE.BufferAttribute(col,3));g.deleteAttribute('uv');g.computeVertexNormals();m.geometry=g;
+ m.material=new THREE.MeshStandardMaterial({vertexColors:true,flatShading:true,roughness:o.rough??.7,metalness:0,side:src.side,transparent:false})})};
+/* a prop pack that comes as one merged mesh (the 90s room): split it into its separate pieces (connected by shared corners), each its own
+   mesh in world units, so the pieces can be placed one by one */
+P.splitParts=(mesh,minTris)=>{{let r=mesh;while(r.parent)r=r.parent;r.updateMatrixWorld(true)}const g0=mesh.geometry.index?mesh.geometry:null,g=g0||mesh.geometry,pa=g.attributes.position,ix=g.index?g.index.array:null,nT=(ix?ix.length:pa.count)/3,vi=k=>ix?ix[k]:k;
+ const key=i=>Math.round(pa.getX(i)*1e4)+','+Math.round(pa.getY(i)*1e4)+','+Math.round(pa.getZ(i)*1e4),id=new Map(),rep=new Int32Array(pa.count);for(let i=0;i<pa.count;i++){const k=key(i);if(!id.has(k))id.set(k,i);rep[i]=id.get(k)}
+ const par=new Int32Array(pa.count).map((_,i)=>i),f=x=>{while(par[x]!==x){par[x]=par[par[x]];x=par[x]}return x};
+ for(let t=0;t<nT;t++){const a=f(rep[vi(t*3)]),b=f(rep[vi(t*3+1)]),c=f(rep[vi(t*3+2)]);par[b]=a;par[f(c)]=f(a)}
+ const groups=new Map();for(let t=0;t<nT;t++){const r=f(rep[vi(t*3)]);(groups.get(r)||groups.set(r,[]).get(r)).push(t)}
+ const out=[];for(const tris of groups.values()){if(tris.length<(minTris||1))continue;const map=new Map(),idx=[],ng=new THREE.BufferGeometry();
+  for(const t of tris)for(let j=0;j<3;j++){const v=vi(t*3+j);if(!map.has(v))map.set(v,map.size);idx.push(map.get(v))}
+  for(const nm in g.attributes){const at=g.attributes[nm],n=at.itemSize,arr=new Float32Array(map.size*n);for(const [v,k] of map)for(let c=0;c<n;c++)arr[k*n+c]=at.array[v*n+c]??at.getComponent?.(v,c);ng.setAttribute(nm,new THREE.BufferAttribute(arr,n,at.normalized))}
+  ng.setIndex(idx);ng.applyMatrix4(mesh.matrixWorld);ng.computeBoundingBox();const m=new THREE.Mesh(ng,mesh.material);out.push(m)}
+ /* pieces whose boxes overlap a lot are one object (a guitar's strings, a TV's knobs): merged back by box overlap */
+ return out.sort((a,b)=>a.geometry.boundingBox.min.x-b.geometry.boundingBox.min.x)};
+/* views of the Italian town: camera, look-at point and the car parked in its lane [id, x, y, z, heading] */
+P.TOWN_VIEWS=[{cam:[-10,5.4,11],look:[-5,4.2,-1],car:['c27',-7,3.3,2.5,2.6]},{cam:[-13,5.2,7],look:[-6,4.2,0],car:['c34',-7.5,3.3,1.5,.9]},{cam:[-2,4.4,12],look:[-6,4,3],car:['c46',-5,3.3,6,2.2]}];
+const TS={};P.townShotCached=i=>TS[i]&&TS[i]._v||null;P.townShotSeed=(i,cv)=>{const pr=Promise.resolve(cv);pr._v=cv;TS[i]=pr};
+P.townShot=i=>TS[i]||(TS[i]=(async()=>{try{if(!await P.photoReady())return null;window.PT8_TOWNV=P.TOWN_VIEWS[i];const cv=await PROPS.find(p=>p.n==='town').make([]);TS[i]._v=cv;return cv}catch(e){console.error('town shot',e);delete TS[i];return null}})());
+P.PROPS=PROPS.map(p=>p.n);P._PROPS=PROPS;
 const PP={};
-P.propShot=k=>PP[k]||(PP[k]=(async()=>{const p=PROPS[k];try{const S=[];for(const i of p.shots)S.push(await P.promoShot(i));if(S.some(x=>!x))return null;if(p.shots2)for(const i of p.shots2)S.push(await P.promoShot(i));
+P.propShot=k=>PP[k]||(PP[k]=(async()=>{const p=PROPS[k];try{if(p.glb&&!await P.photoReady())return null;const S=[];for(const i of p.shots)S.push(await P.promoShot(i));if(S.some(x=>!x))return null;if(p.shots2)for(const i of p.shots2)S.push(await P.promoShot(i));
  return await new Promise((res,rej)=>setTimeout(()=>{p.make(S).then(res,rej)},30))}catch(e){console.error('prop shot',p.n,e);delete PP[k];return null}})());
 })();

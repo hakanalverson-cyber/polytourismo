@@ -95,14 +95,78 @@ P.trackShot=idx=>SHOT[idx]||(SHOT[idx]=new Promise(res=>setTimeout(async()=>{let
   if(!grp){ok=true;break}let clear=true;for(const q of [a,b,(a-Math.round(back/2)+N)%N]){const to=new V(T.x[q],T.y[q]+1.2*k,T.z[q]),dir=to.clone().sub(cam.position),dl=dir.length();rc.set(cam.position,dir.normalize());rc.far=dl-3*k;if(rc.intersectObject(grp,true).length){clear=false;break}}
   if(clear){ok=true;break}}
  if(!shR){shR=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});shR.outputEncoding=THREE.sRGBEncoding;shR.toneMapping=THREE.ACESFilmicToneMapping;shR.toneMappingExposure=1.05;shR.setPixelRatio(1)}
- shR.setSize(800,450,false);if(sc.fog&&sc.fog.far)sc.fog.far=Math.max(sc.fog.far,2400);shR.render(sc,cam);
- const out=document.createElement('canvas');out.width=800;out.height=450;out.getContext('2d').drawImage(shR.domElement,0,0);res(out)}
+ /* full HD, rendered half as big again and scaled down, so the previews stay sharp at any size */shR.setSize(2880,1620,false);if(sc.fog&&sc.fog.far)sc.fog.far=Math.max(sc.fog.far,2400);shR.render(sc,cam);
+ const out=document.createElement('canvas');out.width=1920;out.height=1080;const og=out.getContext('2d');og.imageSmoothingQuality='high';og.drawImage(shR.domElement,0,0,1920,1080);res(out)}
  catch(e){console.error('track shot',e);delete SHOT[idx];res(null)}
  finally{if(sc){if(grp&&grp.parent)grp.parent.remove(grp);try{disposeWorld(sc)}catch(e){}}}},30)));
 P.trackShotCached=idx=>SHOT[idx]&&SHOT[idx]._v||null;
 /* a shot saved from an earlier session (title.js keeps them in IndexedDB) */
 P.trackShotSeed=(idx,cv)=>{const pr=Promise.resolve(cv);pr._v=cv;SHOT[idx]=pr};
 {const ts=P.trackShot;P.trackShot=idx=>{const pr=ts(idx);pr.then(v=>{if(v&&SHOT[idx])SHOT[idx]._v=v});return pr}}
+/* 0.02: Quickplay mode scenes (and the main menu background): the cars acting out each mode on a real track, shot like a racing game's
+   promo stills: low chase, side tracking, head-on, high and low three-quarter shots. The background gets the motion blur (a zoom out
+   of the lead car, or a pan for the side shots) and the cars are drawn sharp on top. Each scene is made once and kept (title.js stores
+   it in IndexedDB). cars: [id, metres behind the anchor (negative = ahead), metres to the side, opacity]; cam/look: [ahead, side, up]
+   from the anchor; out:1 puts the camera on the outside of the corner */
+const MNS={};let mnR=null;
+P.MENU_SCENES=[
+ /* the main menu's own scenes on the game's real tracks. Cars are kept whole in the frame and near its middle (the framing step below);
+    only the wide shots (w:1) show a car small or let one run off the edge */
+ {cars:[['c79',0,-.8],['c102',5.5,1.2]],cam:[6.5,3.6,.5],look:[-1,0,.9],fov:30,blur:'zoom',amt:.045,trk:2},
+ {cars:[['c46',0,0]],cam:[-.6,7.5,.6],look:[-.6,0,.65],fov:34,blur:'pan',amt:.06,trk:7},
+ {cars:[['c8',0,-1.3],['c34',5,1.4]],cam:[-12,2.4,.9],look:[1,0,1],fov:30,blur:'zoom',amt:.045,trk:3},
+ {cars:[['c13',0,0]],cam:[7,3.4,.5],look:[0,0,.8],fov:30,blur:'zoom',amt:.04,trk:5},
+ {cars:[['c33',0,-1],['c30',6,1.4]],cam:[-16,-1,1.2],look:[0,0,1],fov:30,blur:'zoom',amt:.04,trk:1},
+ {cars:[['c110',0,0]],cam:[-.8,-7,.55],look:[-.8,0,.7],fov:34,blur:'pan',amt:.05,trk:8},
+ {cars:[['c128',0,-1.4],['c20',3,1.5]],cam:[10,5,4],look:[-1,0,.8],fov:30,blur:'zoom',amt:.035,trk:4}];
+P.MENU_N=P.MENU_SCENES.length;
+P.menuShotCached=k=>MNS[k]&&MNS[k]._v||null;
+P.menuShotSeed=(k,cv)=>{const pr=Promise.resolve(cv);pr._v=cv;MNS[k]=pr};
+P.menuTrack=k=>{const q=P.quickTracks?P.quickTracks():[0];return q[(P.MENU_SCENES[k].trk||0)%q.length]};
+/* the car models come with their front wheels steered (about 25 degrees): for a car at speed they are turned back straight */
+const straightWheels=m=>P.straightWheels&&P.straightWheels(m);
+P.menuShot=k=>MNS[k]||(MNS[k]=new Promise(res=>setTimeout(async()=>{let sc=null;const W=1920,H=1080,SSm=1.5,cars=[];try{
+ const S=P.MENU_SCENES[k],idx=P.menuTrack(k),def=Object.assign({},D[idx]),T=sampleTrack(def);sc=buildWorld(T);
+ const ims=[];sc.traverse(o=>{const m=o.material;if(m&&m.map&&m.map.image)ims.push(m.map.image)});
+ for(let t=0;t<60&&ims.some(im=>!(im.complete&&im.naturalWidth));t++)await new Promise(r=>setTimeout(r,50));
+ const N=T.N,ang=i=>{let d=T.psi[(i+1)%N]-T.psi[i];return Math.atan2(Math.sin(d),Math.cos(d))};
+ /* the anchor: the quietest stretch of road (a different one for each scene), or for a corner shot the sharpest bend */
+ const span=Math.round(45/T.sp),sc_=[];for(let i=0;i<N;i+=4){let s=0,c=0;for(let j=-span;j<=span;j++){const q=ang((i+j+N)%N);s+=Math.abs(q);if(Math.abs(j)<span/3)c+=q}sc_.push([S.corner?-Math.abs(c):s,i,c])}sc_.sort((a,b)=>a[0]-b[0]);
+ const pick=[];for(const e of sc_){if(pick.every(p=>Math.min(Math.abs(p[1]-e[1]),N-Math.abs(p[1]-e[1]))>span*2))pick.push(e);if(pick.length>4)break}
+ const A=pick[(S.corner?0:k)%pick.length],a=A[1],sg=S.out?-(Math.sign(A[2])||1):1,at=d=>(a-Math.round(d/T.sp)+N*4)%N,pos=(j,l,h)=>new THREE.Vector3(T.x[j]+Math.cos(T.psi[j])*l,T.y[j]+h,T.z[j]-Math.sin(T.psi[j])*l);
+ const p0=pos(a,0,0),fw=pos((a+1)%N,0,0).sub(pos((a-1+N)%N,0,0)).setY(0).normalize(),rt=new THREE.Vector3(Math.cos(T.psi[a]),0,-Math.sin(T.psi[a])),rel=([f,l,h])=>p0.clone().addScaledVector(fw,f).addScaledVector(rt,l*sg).add(new THREE.Vector3(0,h,0));
+ let hero=null;
+ for(const [id,d,l,fade] of S.cars){const src=CAR_MODELS[P.modelOf(id,0)];if(!src)continue;const j=at(d),lw=Math.max(-T.hw[j]+1.3,Math.min(T.hw[j]-1.3,l));
+  const model=src.clone(true);straightWheels(model);const g=new THREE.Group(),c=new THREE.Group(),ctd=new THREE.Group();ctd.add(model);c.add(ctd);g.add(c);ctd.updateMatrixWorld(true);
+  const bb=new THREE.Box3().setFromObject(model),sz=bb.getSize(new THREE.Vector3()),ct=bb.getCenter(new THREE.Vector3()),s=(src.userData.gl?src.userData.gl*1.093:4.7)/Math.max(sz.x,sz.z,.001);
+  ctd.position.set(-ct.x,-bb.min.y,-ct.z);c.scale.setScalar(s);c.rotation.y=(sz.x>sz.z?Math.PI/2:0)+Math.PI;g.position.copy(pos(j,lw,0));g.rotation.set(0,T.psi[j],0,'YXZ');
+  if(fade)model.traverse(o=>{if(!o.isMesh)return;const f=m=>{const q=m.clone();q.transparent=true;q.opacity=fade;q.depthWrite=false;return q};o.material=Array.isArray(o.material)?o.material.map(f):f(o.material)});
+  g.userData.f=fade;/* a soft contact shadow under the car */{const sh=document.createElement('canvas');sh.width=sh.height=128;const q=sh.getContext('2d'),gr=q.createRadialGradient(64,64,6,64,64,64);gr.addColorStop(0,'rgba(0,0,0,.6)');gr.addColorStop(1,'rgba(0,0,0,0)');q.fillStyle=gr;q.fillRect(0,0,128,128);
+   const cs=new THREE.Mesh(new THREE.PlaneGeometry(2.8,5.8),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(sh),transparent:true,depthWrite:false,opacity:fade?fade*.6:.85}));cs.rotation.x=-Math.PI/2;cs.position.y=.04;g.add(cs)}
+  sc.add(g);cars.push(g);if(!hero)hero=g}
+ const S2=S.pair&&cars[1];
+ const cam=new THREE.PerspectiveCamera(S.fov||34,W/H,.3,9000);cam.position.copy(rel(S.cam));cam.lookAt(rel(S.look));cam.updateMatrixWorld();
+ /* framing: the whole group of cars stays inside the picture and sits a little left of its middle (the menu's panel is on the right).
+    Only wide shots (w:1) are left as they are */
+ if(!S.w){const pts=[];cars.forEach(c=>{if(c.userData.f)return;const q=new THREE.Box3().setFromObject(c);for(let i=0;i<8;i++)pts.push(new THREE.Vector3(i&1?q.max.x:q.min.x,i&2?q.max.y:q.min.y,i&4?q.max.z:q.min.z))});
+  const span=()=>{let a=9,z=-9;for(const p of pts){const v=p.clone().project(cam);a=Math.min(a,(v.x+1)/2);z=Math.max(z,(v.x+1)/2)}return [a,z]};let [a,z]=span(),n=0;
+  while(pts.length&&z-a>.74&&n++<14){cam.fov*=1.07;cam.updateProjectionMatrix();[a,z]=span()}
+  if(pts.length){cam.setViewOffset(W,H,((a+z)/2-.42)*W,0,W,H);cam.updateMatrixWorld()}}
+ if(!mnR){mnR=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});mnR.outputEncoding=THREE.sRGBEncoding;mnR.toneMapping=THREE.ACESFilmicToneMapping;mnR.toneMappingExposure=1.08;mnR.setPixelRatio(1)}
+ mnR.setSize(W*SSm,H*SSm,false);if(sc.fog&&sc.fog.far)sc.fog.far=Math.max(sc.fog.far,2400);mnR.setClearColor(0,1);mnR.render(sc,cam);
+ const GR='saturate(1.45) contrast(1.12)'/* punchier colour, like a cover shot */,raw=document.createElement('canvas');raw.width=W;raw.height=H;{const rx=raw.getContext('2d');rx.filter=GR;rx.drawImage(mnR.domElement,0,0,W,H)}
+ /* the cars alone, on a clear background, to go over the blurred picture */
+ const hid=[];sc.traverse(o=>{if(o===sc||o.isLight||cars.includes(o))return;let p=o.parent,inCar=false;while(p){if(cars.includes(p)){inCar=true;break}p=p.parent}if(inCar)return;
+  if(o.isMesh||o.isPoints||o.isLine||o.isSprite||o.isInstancedMesh){if(o.visible){o.visible=false;hid.push(o)}}});
+ const bgk=sc.background;sc.background=null;mnR.setClearColor(0,0);mnR.render(sc,cam);sc.background=bgk;hid.forEach(o=>o.visible=true);
+ const carL=document.createElement('canvas');carL.width=W;carL.height=H;{const cx=carL.getContext('2d');cx.filter=GR;cx.drawImage(mnR.domElement,0,0,W,H)}
+ let fx=W/2,fy=H*.55;if(hero){const v=new THREE.Vector3(0,1,0).applyMatrix4(hero.matrixWorld);if(S2)v.add(new THREE.Vector3(0,1,0).applyMatrix4(S2.matrixWorld)).multiplyScalar(.5);v.project(cam);fx=(v.x+1)/2*W;fy=(1-v.y)/2*H}
+ const out=document.createElement('canvas');out.width=W;out.height=H;const g=out.getContext('2d'),amt=S.amt||.05;
+ for(let i=0;i<14;i++){g.globalAlpha=1/(i+1);if(S.blur==='pan'){const dx=(i/13-.5)*amt*W;g.setTransform(1,0,0,1,dx,0)}else{const s=1+amt*i/13;g.setTransform(s,0,0,s,fx*(1-s),fy*(1-s))}g.drawImage(raw,0,0)}
+ g.setTransform(1,0,0,1,0,0);g.globalAlpha=1;g.drawImage(carL,0,0);res(out)}
+ catch(e){console.error('mode shot',e);delete MNS[k];res(null)}
+ finally{if(sc){cars.forEach(c=>sc.remove(c));/* the car models are shared with the garage: only the track is disposed */try{disposeWorld(sc)}catch(e){}}}},30)));
+{const ms=P.menuShot;P.menuShot=k=>{const pr=ms(k);pr.then(v=>{if(v&&MNS[k])MNS[k]._v=v});return pr}}
 /* the bought models are built at their real size, which dwarfs our cars: on these tracks the cars are drawn bigger (carScale), and the
    chase camera, wall contact and car-to-car contact grow with them. Physics speeds are unchanged. */
 const K=()=>{const R=typeof RACE!=="undefined"?RACE:null,d=R&&R.T&&R.T.d;return d&&d.cartoon&&d.cartoon.carScale||1};

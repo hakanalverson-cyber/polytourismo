@@ -73,9 +73,13 @@ const SC=(()=>{let dbp;const db=()=>dbp||(dbp=new Promise((res,rej)=>{const r=in
  const put=(k,v)=>db().then(d=>new Promise(res=>{const t=d.transaction('s','readwrite');t.objectStore('s').put(v,k);t.oncomplete=res;t.onerror=res;t.onabort=res})).catch(()=>{});
  const blob=cv=>new Promise(r=>{try{cv.toBlob(b=>r(b),'image/jpeg',.94)}catch(e){r(null)}});
  const canvas=async b=>{const im=await createImageBitmap(b),c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);return c};
- const key=(t,i)=>{const d=D[i];let n=0;try{n=JSON.stringify(d).length}catch(e){}return t+'|r1|'+(P.VERSION||'')+'|'+d.name+'|'+n};
+ const key=(t,i)=>{const d=D[i];let n=0;try{n=JSON.stringify(d).length}catch(e){}return t+'|r2|'+(P.VERSION||'')+'|'+d.name+'|'+n};
  return{track:async i=>{const k=key('t',i),hit=await get(k);if(hit&&P.trackShotSeed){try{P.trackShotSeed(i,await canvas(hit));return}catch(e){}}
    const cv=await P.trackShot(i);if(cv){const b=await blob(cv);if(b)put(k,b)}},
+  menu:async k=>{const kk='mn|'+P.PROMO_REV+'|'+(P.VERSION||'')+'|'+JSON.stringify(P.MENU_SCENES[k]),i=P.menuTrack(k),kk2=key(kk,i),hit=await get(kk2);if(hit&&P.menuShotSeed){try{P.menuShotSeed(k,await canvas(hit));return}catch(e){}}
+   const cv=await P.menuShot(k);if(cv){const b=await blob(cv);if(b)put(kk2,b)}},
+  town:async k=>{const kk='tw|'+P.PROMO_REV+'|'+(P.VERSION||'')+'|'+k,hit=await get(kk);if(hit&&P.townShotSeed){try{P.townShotSeed(k,await canvas(hit));return}catch(e){}}
+   const cv=await P.townShot(k);if(cv){const b=await blob(cv);if(b)put(kk,b)}},
   promo:async k=>{const kk='p|'+P.PROMO_REV+'|'+(P.VERSION||'')+'|'+JSON.stringify(P.PROMO_SCENES[k]),hit=await get(kk);if(hit&&P.promoShotSeed){try{P.promoShotSeed(k,await canvas(hit));return}catch(e){}}
    const cv=await P.promoShot(k);if(cv){const b=await blob(cv);if(b)put(kk,b)}},
   stage:async i=>{const k=key('s',i),hit=await get(k);if(hit&&hit.m&&P.stageSeed){try{const pois=[];for(const p of hit.p||[])pois.push({n:p.n,c:await canvas(p.b)});P.stageSeed(i,await canvas(hit.m),pois);return}catch(e){}}
@@ -85,7 +89,8 @@ window.PT8_BOOT=new Promise(res=>{const run=()=>setTimeout(async()=>{try{const B
   for(const i of(P.STAGES||[]))if(P.stageRender&&typeof D!=='undefined'&&D[i])jobs.push([D[i].name,()=>SC.stage(i)]);
   /* 0.02: the main menu's card pictures and the Quickplay setup previews too, so nothing pops in on the menu after loading */
   for(const u of(P.menuImgs||[])){const m=/^url\((.*)\)$/.exec(u);if(m)jobs.unshift(['MENU',()=>{const im=new Image();im.src=m[1];return im.decode()}])}
-  /* 0.02: the action scenes (promo.js): Quickplay's first, then the main menu's */if(P.promoShot&&!window.PT8_NOSCENE){for(let q=0;q<5;q++)for(const k of P.promoFor(q))jobs.push(['QUICKPLAY',()=>SC.promo(k)]);for(const k of P.promoMenu())jobs.push(['MENU',()=>SC.promo(k)])}
+  /* 0.02: the action scenes (promo.js): Quickplay's first, then the main menu's */if(P.promoShot&&!window.PT8_NOSCENE){for(let q=0;q<5;q++)for(const k of P.promoFor(q))jobs.push(['QUICKPLAY',()=>SC.promo(k)]);}
+  if(P.menuShot&&!window.PT8_NOSCENE){P.MENU_SCENES.forEach((x,k)=>jobs.push(['MENU',()=>SC.menu(k)]));if(P.townShot)P.TOWN_VIEWS.forEach((x,k)=>jobs.push(['MENU',()=>SC.town(k)]))}
   if(P.quickTracks&&P.trackShot&&!window.PT8_FAST)for(const i of P.quickTracks())if(!isC(i))jobs.push([D[i].name,()=>SC.track(i)]);
   /* 0.02: the loading screen's pictures go first, as soon as the car models are in: photos of the game as real things (a magazine on a
      table, the TV, the game case, a billboard, a garage poster, a magazine rack; promo.js), kept in IndexedDB for the next start */
