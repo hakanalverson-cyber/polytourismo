@@ -146,12 +146,12 @@ P.menuShot=k=>MNS[k]||(MNS[k]=new Promise(res=>setTimeout(async()=>{let sc=null;
   sc.add(g);cars.push(g);if(!hero)hero=g}
  const S2=S.pair&&cars[1];
  const cam=new THREE.PerspectiveCamera(S.fov||34,W/H,.3,9000);cam.position.copy(rel(S.cam));cam.lookAt(rel(S.look));cam.updateMatrixWorld();
- /* framing: the whole group of cars stays inside the picture and sits a little left of its middle (the menu's panel is on the right).
-    Only wide shots (w:1) are left as they are */
+ /* framing: the whole group of cars is brought to the middle of the free space left of the menu's panel (a third of the way across, a little below the middle:
+    the panel starts about two thirds across) and kept inside it, so nothing clips. Only wide shots (w:1) are left as they are */
  if(!S.w){const pts=[];cars.forEach(c=>{if(c.userData.f)return;const q=new THREE.Box3().setFromObject(c);for(let i=0;i<8;i++)pts.push(new THREE.Vector3(i&1?q.max.x:q.min.x,i&2?q.max.y:q.min.y,i&4?q.max.z:q.min.z))});
-  const span=()=>{let a=9,z=-9;for(const p of pts){const v=p.clone().project(cam);a=Math.min(a,(v.x+1)/2);z=Math.max(z,(v.x+1)/2)}return [a,z]};let [a,z]=span(),n=0;
-  while(pts.length&&z-a>.74&&n++<14){cam.fov*=1.07;cam.updateProjectionMatrix();[a,z]=span()}
-  if(pts.length){cam.setViewOffset(W,H,((a+z)/2-.42)*W,0,W,H);cam.updateMatrixWorld()}}
+  const span=()=>{let a=9,z=-9,b=9,t=-9;for(const p of pts){const v=p.clone().project(cam);a=Math.min(a,(v.x+1)/2);z=Math.max(z,(v.x+1)/2);b=Math.min(b,(1-v.y)/2);t=Math.max(t,(1-v.y)/2)}return [a,z,b,t]};let [a,z,b,t]=span(),n=0;
+  while(pts.length&&(z-a>.56||t-b>.6)&&n++<20){cam.fov*=1.06;cam.updateProjectionMatrix();[a,z,b,t]=span()}
+  if(pts.length){const oy=Math.max(-.16,Math.min(.16,(b+t)/2-.53));cam.setViewOffset(W,H,((a+z)/2-.33)*W,oy*H,W,H);cam.updateMatrixWorld()}}
  if(!mnR){mnR=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});mnR.outputEncoding=THREE.sRGBEncoding;mnR.toneMapping=THREE.ACESFilmicToneMapping;mnR.toneMappingExposure=1.08;mnR.setPixelRatio(1)}
  mnR.setSize(W*SSm,H*SSm,false);if(sc.fog&&sc.fog.far)sc.fog.far=Math.max(sc.fog.far,2400);mnR.setClearColor(0,1);mnR.render(sc,cam);
  const GR='saturate(1.45) contrast(1.12)'/* punchier colour, like a cover shot */,raw=document.createElement('canvas');raw.width=W;raw.height=H;{const rx=raw.getContext('2d');rx.filter=GR;rx.drawImage(mnR.domElement,0,0,W,H)}

@@ -77,7 +77,7 @@ function makeHeight(E,seed){const f=noise2(seed),edge=E.edge||10;
  return (x,z)=>{const d=Math.abs(x)-edge;if(d<0)return -.02;if(E.sea&&Math.sign(x)===E.sea)return d<6?-d*.02:-.12-(d-6)*.05;
   const near=(E.hill||8)*sstep(0,45,d)*(f(x/70+3,z/70)*1.2-.15),far=(E.mount||0)*sstep(120,700,d+Math.max(0,-z-200)*.5)*Math.pow(f(x/260+9,z/260),1.6)*1.6;return Math.max(-.02,near+far)}}
 function terrain(E,hAt,seed,RL){const geo=new THREE.PlaneGeometry(2400,2400,200,200);geo.rotateX(-Math.PI/2);geo.translate(0,0,-900);const pa=geo.attributes.position,col=[],f=noise2(seed+5);
- const C=E.tc.map(c=>new THREE.Color(c)),snow=new THREE.Color(E.snow||'#ffffff'),sand=new THREE.Color(E.sand||'#e6d3a3'),q=new THREE.Color();
+ const Lz=c=>E.lin?c.convertSRGBToLinear():c,C=E.tc.map(c=>Lz(new THREE.Color(c))),snow=Lz(new THREE.Color(E.snow||'#ffffff')),sand=Lz(new THREE.Color(E.sand||'#e6d3a3')),q=new THREE.Color();
  for(let i=0;i<pa.count;i++){const x=pa.getX(i),z=pa.getZ(i),h=hAt(x,z);pa.setY(i,h+RL.wy(x,z));pa.setX(i,x+RL.cx(z));const n=f(x/30,z/30);
   q.copy(C[0]).lerp(C[1],Math.min(1,n*1.3));if(h>(E.rockH||40))q.lerp(C[2],Math.min(1,(h-(E.rockH||40))/30));if(E.snowH&&h>E.snowH+f(x/40,z/40)*30)q.copy(snow);
   if(E.sea&&Math.sign(x)===E.sea&&Math.abs(x)-(E.edge||10)<14)q.copy(sand);col.push(q.r,q.g,q.b)}
@@ -127,6 +127,8 @@ const ENV={
   light:[0xffcf94,1.7,[-40,9,-10]],hemi:[0xffdcb0,0x4a4a3a,.65],fogN:140,fogF:1600,props:'forest'},
  autumn:{sky:['#4a72b0','#88aedb','#d6e2ee','#eef1f2'],fog:'#e7e4dc',sun:[.65,.4,.016,'#fffaf0'],clouds:CU('#ffffff','#c8cdd4',10),road:'#3e3e44',tc:['#8a7a3a','#a06a2e','#6a5a48'],hill:20,mount:150,rockH:55,lanes:[256],
   light:[0xfff0dc,1.6,[30,30,20]],hemi:[0xe8eef8,0x5a4a3a,.75],fogN:150,fogF:1700,props:'autumn'},
+ riviera:{sky:['#2566c2','#5a9fe2','#aad2f0','#f8e9d2'],fog:'#f2e2cb',clouds:CU('#ffffff','#c9d3de',6),road:'#3f4148',tc:['#4f8a34','#5c9a38','#8d7d5f'],hill:6,mount:22,rockH:36,sea:1,seaC:0x0b4f8c,seaR:.6,seaM:.04,lanes:[256],
+  light:[0xffe2bc,1.55,[-26,24,36]],hemi:[0xcfe2ff,0x7d6a4c,.7],fogN:220,fogF:2400,props:'riviera',town:3.2,townY:.66,tx:480,tz:800,hillH:16},
  dawn:{sky:['#3a5aa0','#a07ab0','#f2a2a8','#ffd2bc'],fog:'#f6c8b8',sun:[.62,.02,.026,'#ffe2cc'],sunCore:'#fff6ee',clouds:CU('#ffe0e6','#b07a9a',6),streaks:6,streakC:'#ffc0c0',road:'#3d3c44',tc:['#5a7a4a','#6f8a5a','#8a7a6a'],hill:10,mount:100,rockH:45,sea:1,lanes:[256],
   light:[0xffd2c0,1.5,[10,6,-40]],hemi:[0xffd8e0,0x40405a,.7],fogN:140,fogF:1600,props:'coast'},
  moon:{sky:['#02040a','#08122a','#16264a','#2a3a5e'],fog:'#24304c',stars:1,moon:[.25,.5,.02],road:'#22232a',tc:['#2a2420','#3a2e26','#1e1a18'],hill:6,mount:140,rockH:25,lanes:[256],
@@ -155,6 +157,41 @@ const ENV={
   light:[0xf4f0ea,1.3,[20,30,-20]],hemi:[0xd0dcea,0x40484e,.85],fogN:170,fogF:1900,props:'alpine'},
  storm:{sky:['#3a4048','#596068','#7c848c','#9aa2a8'],fog:'#8e969c',clouds:CU('#9aa2aa','#4a5058',14),cloudA:.85,road:'#2a2c30',tc:['#3f5a38','#4f6a44','#5a5e62'],hill:14,mount:120,rockH:50,lanes:[256],wet:1,
   light:[0xd8e0e8,.9,[10,40,10]],hemi:[0xb0b8c0,0x30343a,.9],fogN:80,fogF:900,props:'forest'}};
+/* the island's village (0.02): pastel houses with terracotta roofs stacked up the slope, boats on the water, umbrella pines and cypresses between them. The houses are merged into one flat-shaded
+   mesh (the same low-poly look as the cars) and stand on the real hill surface (ray cast), so none floats or sinks */
+function village(sc,E,r,hill,cx0,cz0,mR,capY,seaY){
+ const lc=h=>{const c=new THREE.Color(h);return E.lin?c.convertSRGBToLinear():c},
+  WALL=['#ebc27f','#e0b090','#e8a483','#d98c62','#f1dfae','#ecd292','#e8b9a8','#cbd8c8','#e3c19f'].map(lc),ROOF=['#b84a2e','#c45c36','#a94229','#bb5632'].map(lc),WIN=lc('#2e3b47'),DOOR=lc('#5a3a26'),
+  HULL=['#f4f1ea','#e8ecef','#2c5f9e','#c8402e','#f1d27a'].map(lc),DECK=lc('#d9c9a6'),
+  PS=[],CS=[],tri=(a,b,c,k)=>{for(const v of [a,b,c]){PS.push(v[0],v[1],v[2]);CS.push(k.r,k.g,k.b)}},quad=(a,b,c,d,k)=>{tri(a,b,c,k);tri(a,c,d,k)};
+ hill.updateMatrixWorld(true);const rc=new THREE.Raycaster(),dn=new THREE.Vector3(0,-1,0),org=new THREE.Vector3(),gy=(x,z)=>{org.set(x,capY+150,z);rc.set(org,dn);const h=rc.intersectObject(hill,false)[0];return h?h.point.y:-1e3};
+ /* a box on the ground plane, rotated about y (local +z is the front) */
+ const bx=(x,y,z,w,h,d,ry,k)=>{const co=Math.cos(ry),si=Math.sin(ry),L=(a,b,c)=>[x+a*co+c*si,y+b,z-a*si+c*co],hw=w/2,hd=d/2;
+  quad(L(-hw,0,-hd),L(hw,0,-hd),L(hw,h,-hd),L(-hw,h,-hd),k);quad(L(hw,0,-hd),L(hw,0,hd),L(hw,h,hd),L(hw,h,-hd),k);quad(L(hw,0,hd),L(-hw,0,hd),L(-hw,h,hd),L(hw,h,hd),k);quad(L(-hw,0,hd),L(-hw,0,-hd),L(-hw,h,-hd),L(-hw,h,hd),k);quad(L(-hw,h,-hd),L(hw,h,-hd),L(hw,h,hd),L(-hw,h,hd),k)};
+ const house=(x,y,z,w,d,fl,ry,wc,rf)=>{const h=fl*3.1,co=Math.cos(ry),si=Math.sin(ry),L=(a,b,c)=>[x+a*co+c*si,y+b,z-a*si+c*co],hw=w/2,hd=d/2,o=.5,rh=Math.min(w,d)*.3+.9;
+  quad(L(-hw,-3.5,-hd),L(hw,-3.5,-hd),L(hw,h,-hd),L(-hw,h,-hd),wc);quad(L(hw,-3.5,-hd),L(hw,-3.5,hd),L(hw,h,hd),L(hw,h,-hd),wc);quad(L(hw,-3.5,hd),L(-hw,-3.5,hd),L(-hw,h,hd),L(hw,h,hd),wc);quad(L(-hw,-3.5,hd),L(-hw,-3.5,-hd),L(-hw,h,-hd),L(-hw,h,hd),wc);
+  tri(L(-hw,h,-hd),L(-hw,h,hd),L(-hw,h+rh,0),wc);tri(L(hw,h,hd),L(hw,h,-hd),L(hw,h+rh,0),wc);
+  quad(L(-hw-o,h-.25,hd+o),L(hw+o,h-.25,hd+o),L(hw+o,h+rh,0),L(-hw-o,h+rh,0),rf);quad(L(hw+o,h-.25,-hd-o),L(-hw-o,h-.25,-hd-o),L(-hw-o,h+rh,0),L(hw+o,h+rh,0),rf);
+  const nc=Math.max(2,Math.round(w/3.4)),zf=hd+.22;
+  for(let f=0;f<fl;f++)for(let i=0;i<nc;i++){const lx=-hw+(i+.5)*w/nc,ly=f*3.1+1.9;
+   if(f===0&&i===(nc>>1)){quad(L(lx-.6,0,zf),L(lx+.6,0,zf),L(lx+.6,2.3,zf),L(lx-.6,2.3,zf),DOOR);continue}
+   quad(L(lx-.5,ly-.8,zf),L(lx+.5,ly-.8,zf),L(lx+.5,ly+.8,zf),L(lx-.5,ly+.8,zf),WIN)}};
+ const occ=[],free=(x,z,q)=>{for(const o of occ)if(Math.hypot(o[0]-x,o[1]-z)<o[2]+q)return false;return true};
+ for(const f of [1.13,1.25,1.37]){const rr=mR*f,n=Math.floor(TAU*rr/15);
+  for(let i=0;i<n;i++){if(r()<.18)continue;const a=(i+.5*(f>1.2?1:0)+(r()-.5)*.4)/n*TAU,x=cx0+Math.cos(a)*rr,z=cz0+Math.sin(a)*rr,y=gy(x,z);
+   if(y<seaY+1.4||y>capY-1.2)continue;const w=8+r()*7,d=7+r()*4;if(!free(x,z,Math.max(w,d)*.55))continue;occ.push([x,z,Math.max(w,d)*.55]);
+   house(x,y,z,w,d,2+(r()*3|0),Math.PI/2-a+(r()-.5)*.18,WALL[r()*WALL.length|0],ROOF[r()*ROOF.length|0])}}
+ /* boats at anchor off the shore */
+ for(let i=0,n=0;i<160&&n<18;i++){const a=r()*TAU,rr=mR*(1.34+r()*.55),x=cx0+Math.cos(a)*rr,z=cz0+Math.sin(a)*rr,y=gy(x,z);if(y>seaY-2.2||y<-60||!free(x,z,5))continue;occ.push([x,z,5]);n++;
+  const ry=r()*TAU,hc=HULL[r()*HULL.length|0],sy=seaY+.05;bx(x,sy-.4,z,2.6,1.5,7.5,ry,hc);bx(x,sy+1.1,z,2.0,.2,5.2,ry,DECK);bx(x,sy+1.3,z-.8*0,1.8,1.5,2.6,ry,hc)}
+ const tm=new THREE.MeshStandardMaterial({color:lc('#6b4a2c'),roughness:1,flatShading:true}),pm=new THREE.MeshStandardMaterial({color:lc('#3f7440'),roughness:1,flatShading:true}),om=new THREE.MeshStandardMaterial({color:lc('#6f8a52'),roughness:1,flatShading:true}),cm=new THREE.MeshStandardMaterial({color:lc('#2c5a34'),roughness:1,flatShading:true});
+ const ico=GEO.ico||(GEO.ico=new THREE.IcosahedronGeometry(1,0)),cyl=GEO.trk||(GEO.trk=new THREE.CylinderGeometry(.3,.5,1,5)),cone=GEO.cyp||(GEO.cyp=new THREE.ConeGeometry(.9,1,6));
+ for(let i=0,n=0;i<400&&n<120;i++){const a=r()*TAU,rr=mR*(1.07+r()*.42),x=cx0+Math.cos(a)*rr,z=cz0+Math.sin(a)*rr,y=gy(x,z);if(y<seaY+.9||y>capY-.6||!free(x,z,2.4))continue;occ.push([x,z,2.4]);n++;const k=r();
+  if(k<.34){const h=5+r()*3,c=new THREE.Mesh(cyl,tm);c.scale.set(1,h,1);c.position.set(x,y+h/2-.4,z);sc.add(c);const q=new THREE.Mesh(ico,pm),R=3+r()*1.6;q.scale.set(R,R*.42,R);q.position.set(x,y+h,z);q.rotation.y=r()*3;sc.add(q)}
+  else if(k<.62){const h=8+r()*9,c=new THREE.Mesh(cone,cm);c.scale.set(1.1,h,1.1);c.position.set(x,y+h/2-.4,z);sc.add(c)}
+  else{const R=1.2+r()*1.3,q=new THREE.Mesh(ico,om);q.scale.set(R,R*.8,R);q.position.set(x,y+R*.5,z);q.rotation.y=r()*3;sc.add(q)}}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(PS,3));g.setAttribute('color',new THREE.Float32BufferAttribute(CS,3));g.computeVertexNormals();
+ sc.add(new THREE.Mesh(g,new THREE.MeshStandardMaterial({vertexColors:true,flatShading:true,roughness:.92,side:THREE.DoubleSide})))}
 function scenery(sc,E,hAt,seed,RL){const r=rng(seed||11),L=E.props,side=()=>r()<.5?-1:1,
  add=(o,x,z,s,fol)=>{o.position.y+=hAt(x,z)+RL.wy(x,z);o.position.x=x+RL.cx(z);o.position.z=z;if(fol)RL.orient(o,z,fol!==2);if(s)o.scale.multiplyScalar(s);shadowy(o);sc.add(o);return o},
  okSide=x=>!(E.sea&&Math.sign(x)===E.sea);
@@ -169,9 +206,21 @@ function scenery(sc,E,hAt,seed,RL){const r=rng(seed||11),L=E.props,side=()=>r()<
   const gan=new THREE.Group(),gm=mat({color:0x2a2e36});for(const x of [-10,10]){const p=box(.6,8,.6,gm);p.position.set(x,4,0);gan.add(p)}const tb=box(21,1.6,.8,new THREE.MeshStandardMaterial({map:adBoard(1,1),roughness:.5}));tb.position.y=8;gan.add(tb);add(gan,0,-70,0,2);
   if(E.night)for(let z=-500;z<40;z+=40)for(const sx of [-1,1]){const l=lamp(grey,lampE,1);if(sx<0)l.rotation.y=Math.PI;add(l,sx*10.6,z,0,2)}
   trees(160,40,140,-800,0)}
- if(L==='coast'){rail(E.sea*8.4);trees(80,11,70,-700,30,'palm');for(let i=0;i<40;i++)add(palm(mat({color:0x2f8a3a}),mat({color:0x8a6a45}),6+r()*5,r),E.sea*(11+r()*9),-r()*400+30);
-  for(let i=0;i<7;i++){const k=peak(mat({color:0x4f7a4a}),mat({color:0x6f9a5a}),40+r()*70,r);k.position.y=-2;add(k,E.sea*(300+r()*700),-200-r()*900)}for(let i=0;i<20;i++){const x=-E.sea*(12+r()*50);add(rock(mat({color:0x8a7a62}),1+r()*3,r),x,-r()*600)}
+ if(L==='coast'||L==='riviera'){rail(E.sea*8.4);trees(80,11,70,-700,30,'palm');for(let i=0;i<40;i++)add(palm(mat({color:0x2f8a3a}),mat({color:0x8a6a45}),6+r()*5,r),E.sea*(11+r()*9),-r()*400+30);
+  if(L==='coast')for(let i=0;i<7;i++){const k=peak(mat({color:0x4f7a4a}),mat({color:0x6f9a5a}),40+r()*70,r);k.position.y=-2;add(k,E.sea*(300+r()*700),-200-r()*900)}for(let i=0;i<20;i++){const x=-E.sea*(12+r()*50);add(rock(mat({color:0x8a7a62}),1+r()*3,r),x,-r()*600)}
   for(let i=0;i<6;i++){const y=box(2.6,.8,6,mat({color:0xffffff}));const xx=E.sea*(120+r()*400);y.position.y=-.2;add(y,xx,-200-r()*800)}}
+ /* the Italian hill town (the bought model, restyled) on a hill of its own across the bay: the cut edge of the model is buried in the hill, so it stands in the scenery like a real place */
+ if(L==='riviera'&&window.PT8_GLB&&window.PT8_GLB.city){const G=window.PT8_GLB,TS=E.town||2.4,TY=E.townY||.8,tx=E.sea*(E.tx||260),tz=-(E.tz||350),gy=-.35,HILL=E.hillH||14,px=tx+RL.cx(tz);
+  if(!G.city.userData.lpd){P.lowPoly(G.city);G.city.userData.lpd=1}
+  const t=G.city.clone(true);t.scale.set(.01*TS,.01*TS*TY,.01*TS);t.traverse(o=>{if(o.isMesh&&(/Boom|Grass|grass|klimop|ivy|plant|decal|debris|elektr|vlagg|opacities|stokjes|walley|Plane0|Object0/.test(o.name)||(o.material&&o.material.transparent)))o.visible=false});
+  t.position.set(px,gy+HILL-3.3*TS*TY,tz);sc.add(t);
+  const capY=t.position.y+3.1*TS*TY,mR=23*TS,H0=HILL+46,cx0=px-1*TS,cz0=tz-7*TS,cg=new THREE.CylinderGeometry(mR,mR*2.7,H0,20,3),pa=cg.attributes.position,cols=[],gc=new THREE.Color(E.tc[1]).convertSRGBToLinear(),rc=new THREE.Color(E.tc[2]).convertSRGBToLinear(),qc=new THREE.Color();
+  for(let i=0;i<pa.count;i++){const x=pa.getX(i),z=pa.getZ(i),y=pa.getY(i),a=Math.atan2(z,x),k=1+.09*Math.sin(a*3+1.3)+.05*Math.sin(a*7+.4),dep=Math.max(0,(H0/2-y)/H0);pa.setX(i,x*(1+(k-1)*Math.min(1,dep*5+.3)));pa.setZ(i,z*(1+(k-1)*Math.min(1,dep*5+.3)));pa.setY(i,y+(dep>.05?Math.sin(a*5+y)*dep*4:0));
+   qc.copy(gc).lerp(rc,Math.min(1,dep*3.2+(Math.sin(a*9+y*.3)*.5+.5)*.12));cols.push(qc.r,qc.g,qc.b)}
+  cg.setAttribute('color',new THREE.Float32BufferAttribute(cols,3));cg.computeVertexNormals();const hill=new THREE.Mesh(cg,new THREE.MeshStandardMaterial({vertexColors:true,flatShading:true,roughness:1}));hill.position.set(cx0,capY-H0/2,cz0);hill.receiveShadow=true;sc.add(hill);
+  /* cypresses along the hill's rim */
+  const cy_=mat({color:new THREE.Color(0x2c5a34).convertSRGBToLinear()});for(let i=0;i<46;i++){const a=r()*TAU,rr=mR*(.78+r()*.75),y=capY-Math.max(0,rr-mR)*H0/(mR*1.7*.97),h=7+r()*9,c=new THREE.Mesh(GEO.cyp||(GEO.cyp=new THREE.ConeGeometry(.9,1,6)),cy_);c.scale.set(1,h,1);c.position.set(cx0+Math.cos(a)*rr,y+h/2,cz0+Math.sin(a)*rr);sc.add(c)}
+  village(sc,E,r,hill,cx0,cz0,mR,capY,-.35)}
  if(L==='desert'){const rk=[0xb86a3a,0xc67a45,0xa0522d];for(let i=0;i<36;i++){const m=mesa(mat({color:rk[i%3]}),18+r()*40,30+r()*90,18+r()*40);add(m,side()*(50+r()*350),-80-r()*900)}
   for(let i=0;i<80;i++)add(rock(mat({color:rk[i%3]}),.5+r()*2.2,r),side()*(10+r()*50),-r()*500+20);
   for(let i=0;i<50;i++){const c=new THREE.Group(),m=mat({color:0x4f7a3a}),b=new THREE.Mesh(new THREE.CylinderGeometry(.3,.35,3.4,7),m);b.position.y=1.7;c.add(b);for(const sx of [-1,1]){const a=new THREE.Mesh(new THREE.CylinderGeometry(.18,.2,1.3,6),m);a.position.set(sx*.55,2+r(),0);c.add(a)}add(c,side()*(11+r()*60),-r()*500+20)}
@@ -201,12 +250,12 @@ function envScene(E,seed,rd){const RL=roadLine(rd,E);const sc=new THREE.Scene(),
  sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);const sc_=sun.shadow.camera;sc_.left=-40;sc_.right=40;sc_.top=40;sc_.bottom=-40;sc_.near=1;sc_.far=260;sun.shadow.bias=-.0004;sc.add(sun);sc.add(sun.target);
  const hAt=makeHeight(E,seed);const road=ribbon(16,.02,RL,new THREE.MeshStandardMaterial({map:asphalt(E),roughness:E.wet?.45:.9,metalness:E.wet?.12:0}));sc.add(road);
  sc.add(ribbon(22,0,RL,mat({color:new THREE.Color(E.tc[0]).multiplyScalar(.8),flatShading:false})));
- sc.add(terrain(E,hAt,seed,RL));if(E.sea){const sea=new THREE.Mesh(new THREE.PlaneGeometry(4000,4000),new THREE.MeshStandardMaterial({color:E.seaC||0x2a86c0,roughness:.2,metalness:.35}));sea.rotation.x=-Math.PI/2;sea.position.set(E.sea*2010,-.35,-900);sc.add(sea)}
+ sc.add(terrain(E,hAt,seed,RL));if(E.sea){const sea=new THREE.Mesh(new THREE.PlaneGeometry(4000,4000),new THREE.MeshStandardMaterial({color:E.seaC||0x2a86c0,roughness:E.seaR??.2,metalness:E.seaM??.35}));sea.rotation.x=-Math.PI/2;sea.position.set(E.sea*2010,-.35,-900);sc.add(sea)}
  scenery(sc,E,hAt,seed,RL);return {sc,sun,RL,road}}
 
 /* the scenes: cars [id, metres behind the lead (negative = ahead), metres to the side, opacity]; cam/look [side, up, ahead]; rd: the road's climbs and bends (roadLine).
    q: the Quickplay mode it belongs to (its place in the list); two each, shown in turn. The rest are the main menu's, never shown in Quickplay */
-P.PROMO_REV=4;
+P.PROMO_REV=6;
 P.PROMO_SCENES=[
  /* Quick Race: the pack into the first corner */
  {q:0,rd:{A:5,L:360,cA:18,cL:520},env:'dusk',cars:[['gtr',9,1.4],['c78',4.5,-1.5],['c86',0,1.3],['c34',-4.5,-1.2]],cam:[-1,1,-19],look:[0,1.2,0],fov:28,blur:'zoom',amt:.045},
@@ -322,6 +371,82 @@ function plant(h){const g=new THREE.Group(),pot=new THREE.Mesh(new THREE.Cylinde
  const lm=mat({color:0x2f6a3a}),r=rng(h*1000);for(let i=0;i<14;i++){const l=new THREE.Mesh(GEO.lf||(GEO.lf=new THREE.ConeGeometry(.08,1,4)),lm);const a=i/14*TAU,t=.25+r()*.5;l.scale.set(h*.5,h*(.55+r()*.4),h*.25);l.position.set(Math.cos(a)*h*.05,h*.28+l.scale.y*.45,Math.sin(a)*h*.05);l.rotation.set(Math.sin(a)*t,0,-Math.cos(a)*t);g.add(l)}return shadowy(g)}
 function render(sc,cam,W,H,exp,bg){const r=rdr(W*SS,H*SS);r.toneMappingExposure=exp||1;r.setClearColor(bg??0,1);r.render(sc,cam);const c=cnv(W,H),g=c.getContext('2d');g.imageSmoothingQuality='high';g.drawImage(r.domElement,0,0,W,H);return c}
 function free(sc){sc.traverse(x=>{if(x.userData.car)return;if(x.geometry&&!Object.values(GEO).includes(x.geometry)&&x.userData.own)x.geometry.dispose()})}
+/* ---- the photoshoot renderer (0.02): the scene is rendered in HDR together with its depth, then one pass over the picture does what a lens does: a real depth of
+   field (a disc of taps, bright spots turn into bokeh, near things blur over far ones), a glow round the brightest parts, tone mapping, a grade (warm highlights,
+   cool shadows), a vignette and a little film grain. The cars stay crisp: only what is off the focus plane softens ---- */
+const PV='varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}';
+const PF=`precision highp float;
+uniform sampler2D tColor,tDepth;uniform vec2 uRes;
+uniform float uNear,uFar,uFocus,uAp,uMaxCoc,uExp,uBloom,uBoke,uVig,uGrain,uSat,uCon,uSharp,uSeed,uDbg,uLine,uTol;
+uniform vec3 uHi,uLo;varying vec2 vUv;
+float vz(float d){float n=d*2.-1.;return 2.*uNear*uFar/(uFar+uNear-n*(uFar-uNear));}
+float coc(float z){return min(uMaxCoc,uAp*max(0.,abs(1.-uFocus/z)-uTol));}
+float hsh(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}
+vec3 aces(vec3 c){c*=uExp/.6;const mat3 I=mat3(.59719,.07600,.02840,.35458,.90834,.13383,.04823,.01566,.83777);const mat3 O=mat3(1.60475,-.10208,-.00327,-.53108,1.10813,-.07276,-.07367,-.00605,1.07602);
+ c=I*c;vec3 a=c*(c+.0245786)-.000090537,b=c*(.983729*c+.4329510)+.238081;return clamp(O*(a/b),0.,1.);}
+void main(){
+ vec2 px=1./uRes;float z0=vz(texture2D(tDepth,vUv).x),c0=coc(z0);float rot=hsh(gl_FragCoord.xy+uSeed)*6.2832;float R=c0;
+ for(int k=0;k<8;k++){float a=float(k)*.7854+rot;vec2 uv=vUv+vec2(cos(a),sin(a))*uMaxCoc*.7*px;float zs=vz(texture2D(tDepth,uv).x);if(zs<z0)R=max(R,coc(zs)*.85);}
+ if(uDbg>.5){gl_FragColor=vec4(uDbg<1.5?vec3(z0/40.):vec3(c0/uMaxCoc),1.);return;}
+ vec3 col=texture2D(tColor,vUv).rgb;
+ if(R>.6){vec3 acc=col;float ws=1.;
+  float lb=clamp(log2(max(1.,R*.2)),0.,.9);for(int i=0;i<64;i++){float fi=float(i)+.5;float r=sqrt(fi/64.)*R;float a=fi*2.39996+rot;float t=fi/32.-1.;vec2 uv=vUv+mix(vec2(cos(a),sin(a))*r,vec2(t*R,0.),uLine)*px;r=mix(r,abs(t)*R,uLine);
+   float zs=vz(texture2D(tDepth,uv).x),cs=coc(zs),ce=zs>z0?min(cs,c0):cs;float w=clamp(ce-r+1.,0.,1.);
+   if(w>0.){vec3 s=texture2D(tColor,uv,lb).rgb;w*=1.+min(dot(s,vec3(.3,.59,.11)),24.)*uBoke;acc+=s*w;ws+=w;}}
+  col=acc/ws;}
+ vec3 bl=vec3(0.);for(int k=0;k<5;k++){vec3 s=texture2D(tColor,vUv,3.4+float(k)*.9).rgb;float ls=dot(s,vec3(.3,.59,.11));bl+=s*max(ls-.9,0.)/max(ls,.001);}col+=bl*uBloom*.2;
+ col+=(col-texture2D(tColor,vUv,1.7).rgb)*uSharp*(1.-smoothstep(0.,3.,c0));col=max(col,0.);
+ col=pow(aces(col),vec3(1./2.2));float l=dot(col,vec3(.299,.587,.114));col=mix(vec3(l),col,uSat);col*=mix(uLo,uHi,smoothstep(.1,.9,l));col=mix(col,col*col*(3.-2.*col),uCon);
+ vec2 q=(vUv-.5)*vec2(uRes.x/uRes.y,1.);col*=1.-uVig*smoothstep(.3,1.05,length(q)*1.15);
+ col+=(hsh(gl_FragCoord.xy*1.37+uSeed*3.1)-.5)*uGrain*(1.-.5*l);gl_FragColor=vec4(clamp(col,0.,1.),1.);}`;
+let PRT=null,PMAT=null,PSC=null,PCAM=null;
+/* o: focus (metres from the camera to the sharp plane), ap (how fast it softens away from it, in pixels at 1080p), exp, bloom, hi/lo (warm highlights / cool shadows),
+   sat, con, vig, grain, ss (render size multiplier), seed */
+function shoot(sc,cam,W,H,o){o=o||{};const S=o.ss||Math.min(2,Math.sqrt(6.2e6/(W*H))),r=rdr(W,H),w=W*S|0,h=H*S|0,k=W/1080;
+ if(!PRT||PRT.width!==w||PRT.height!==h){if(PRT){PRT.depthTexture.dispose();PRT.dispose()}
+  PRT=new THREE.WebGLRenderTarget(w,h,{type:THREE.HalfFloatType,format:THREE.RGBAFormat,minFilter:THREE.LinearMipmapLinearFilter,magFilter:THREE.LinearFilter,generateMipmaps:true,depthBuffer:true,stencilBuffer:false});
+  PRT.depthTexture=new THREE.DepthTexture(w,h,THREE.UnsignedIntType)}
+ if(!PMAT){PMAT=new THREE.ShaderMaterial({vertexShader:PV,fragmentShader:PF,depthTest:false,depthWrite:false,uniforms:{tColor:{value:null},tDepth:{value:null},uRes:{value:new THREE.Vector2()},uNear:{value:.1},uFar:{value:1e3},uFocus:{value:10},uAp:{value:30},uMaxCoc:{value:28},uExp:{value:1},uBloom:{value:.5},uBoke:{value:.25},uVig:{value:.35},uGrain:{value:.04},uSat:{value:1.05},uCon:{value:.25},uSharp:{value:.5},uSeed:{value:0},uDbg:{value:0},uLine:{value:0},uTol:{value:0},uHi:{value:new THREE.Vector3(1,1,1)},uLo:{value:new THREE.Vector3(1,1,1)}}});
+  PSC=new THREE.Scene();const m=new THREE.Mesh(new THREE.PlaneGeometry(2,2),PMAT);m.frustumCulled=false;PSC.add(m);PCAM=new THREE.Camera()}
+ const tm=r.toneMapping;r.toneMapping=THREE.NoToneMapping;r.setRenderTarget(PRT);r.setClearColor(0,1);r.clear();r.render(sc,cam);r.setRenderTarget(null);r.toneMapping=tm;
+ const u=PMAT.uniforms;u.tColor.value=PRT.texture;u.tDepth.value=PRT.depthTexture;u.uRes.value.set(W,H);u.uNear.value=cam.near;u.uFar.value=cam.far;u.uFocus.value=o.focus||10;u.uAp.value=(o.ap??30)*k;u.uMaxCoc.value=(o.maxCoc??24)*k;
+ u.uExp.value=o.exp??1;u.uBloom.value=o.bloom??.5;u.uBoke.value=o.boke??.25;u.uVig.value=o.vig??.35;u.uGrain.value=o.grain??.035;u.uSat.value=o.sat??1.05;u.uCon.value=o.con??.25;u.uSharp.value=o.sharp??.5;u.uSeed.value=o.seed??7;u.uDbg.value=o.dbg||0;u.uLine.value=o.line?1:0;u.uTol.value=o.tol||0;
+ u.uHi.value.set(...(o.hi||[1,1,1]));u.uLo.value.set(...(o.lo||[1,1,1]));
+ r.setClearColor(0,1);r.render(PSC,PCAM);const c=cnv(W,H);c.getContext('2d').drawImage(r.domElement,0,0);return c}
+P.shoot=shoot;const finish2=c=>c;
+/* a lens shift that brings an object (the car) to a fraction of the picture: cx across (a third: the menu's panel is on the right), cy down, widening the lens if it would be wider than span */
+function centre(cam,obj,W,H,cx,cy,span){obj.updateMatrixWorld(true);const pts=[];obj.traverse(m=>{if(!m.isMesh||m.userData.contact||m.visible===false)return;const pa=m.geometry.attributes.position,st=Math.max(1,Math.ceil(pa.count/400));for(let i=0;i<pa.count;i+=st)pts.push(new V3().fromBufferAttribute(pa,i).applyMatrix4(m.matrixWorld))});
+ const sp=()=>{let a=9,z=-9,b=9,e=-9;for(const p of pts){const v=p.clone().project(cam);a=Math.min(a,(v.x+1)/2);z=Math.max(z,(v.x+1)/2);b=Math.min(b,(1-v.y)/2);e=Math.max(e,(1-v.y)/2)}return [a,z,b,e]};
+ let [a,z,b,e]=sp(),n=0;const sw=span||.5;while((Math.abs((z-a)/sw-1)>.035||(e-b)>.62)&&n++<40){const q=Math.max(.85,Math.min(1.18,Math.max((z-a)/sw,(e-b)/.62>1?(e-b)/.62:0)));cam.fov=Math.max(10,Math.min(60,cam.fov*q));cam.updateProjectionMatrix();[a,z,b,e]=sp()}
+ cam.setViewOffset(W,H,((a+z)/2-cx)*W,Math.max(-.2,Math.min(.2,(b+e)/2-(cy??.53)))*H,W,H);cam.updateMatrixWorld()}
+/* the car's paint gets a clear-coat look (glossy, reflecting the scene's sky); each shot gets its own copies of the materials */
+function glossy(g,k,env){g.traverse(o=>{if(!o.isMesh||o.userData.contact)return;const f=m=>{if(!m.isMeshStandardMaterial)return m;const q=m.clone();if(!q.map){q.roughness=.26;q.metalness=.55}else{q.roughness=Math.min(q.roughness,.5);q.metalness=Math.max(q.metalness,.2)}q.envMapIntensity=k||1.25;if(env)q.envMap=env;return q};o.material=Array.isArray(o.material)?o.material.map(f):f(o.material)})}
+/* a small sky-and-ground scene turned into a reflection map */
+function envMapFor(top,mid,hor,sun,sunC){const r=rdr(64,64),pm=new THREE.PMREMGenerator(r),s=new THREE.Scene(),d=skyDome({top,mid,hor,sun,sunC,glow:1.3,gnd:new THREE.Color(hor).multiplyScalar(.5)});d.scale.setScalar(.03);s.add(d);const rt=pm.fromScene(s,0,.1,100);pm.dispose();return rt.texture}
+/* the distance (along the view) to the first surface of an object that the camera sees at its middle: that is where the lens focuses, not the middle of the car */
+function focusZ(cam,obj){cam.updateMatrixWorld(true);obj.updateMatrixWorld(true);const bb=new THREE.Box3().setFromObject(obj),c=bb.getCenter(new V3()),rc=new THREE.Raycaster(),dir=c.clone().sub(cam.position).normalize();rc.set(cam.position,dir);
+ const h=rc.intersectObject(obj,true)[0],pt=h?h.point:c;return -pt.clone().applyMatrix4(cam.matrixWorldInverse).z}
+/* ---- location pieces for the shoots: a sky dome with the sun in it, the sea with the sun's glitter path, ridges of hills fading into the haze ---- */
+const lin=h=>new THREE.Color(h).convertSRGBToLinear();
+function skyDome(o){const m=new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,fog:false,uniforms:{top:{value:lin(o.top)},mid:{value:lin(o.mid)},hor:{value:lin(o.hor)},sunC:{value:lin(o.sunC||0xfff0d0)},sun:{value:new V3(...o.sun).normalize()},k:{value:o.glow??1},gnd:{value:o.gnd?lin(o.gnd.getHex?o.gnd.getHex():o.gnd):lin(o.hor)}},
+ vertexShader:'varying vec3 vD;void main(){vD=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+ fragmentShader:'varying vec3 vD;uniform vec3 top,mid,hor,sunC,sun,gnd;uniform float k;void main(){vec3 d=normalize(vD);float h=max(d.y,0.);vec3 c=mix(hor,mid,smoothstep(0.,.16,h));c=mix(c,top,smoothstep(.1,.75,h));c=mix(c,gnd,smoothstep(0.,.25,-d.y));float s=max(dot(d,sun),0.);c+=sunC*(pow(s,5.)*.22*k+pow(s,48.)*.7*k+pow(s,2400.)*60.);gl_FragColor=linearToOutputTexel(vec4(c,1.));}'});
+ const mesh=new THREE.Mesh(new THREE.SphereGeometry(1500,40,20),m);mesh.frustumCulled=false;mesh.renderOrder=-10;return mesh}
+/* the sea: a flat plane that takes the scene's fog, with a bright path of glitter on it towards the sun (additive) */
+function seaPlane(o){const g=new THREE.Group(),m=new THREE.MeshBasicMaterial({color:lin(o.col)});const p=new THREE.Mesh(new THREE.PlaneGeometry(6000,6000),m);p.rotation.x=-Math.PI/2;p.position.y=o.y;g.add(p);
+ const c=cnv(64,512),q=c.getContext('2d'),gr=q.createLinearGradient(0,0,0,512);gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.5,'rgba(255,255,255,.9)');gr.addColorStop(1,'rgba(255,255,255,0)');q.fillStyle=gr;q.fillRect(0,0,64,512);
+ const cl=q.createLinearGradient(0,0,64,0);cl.addColorStop(0,'rgba(0,0,0,1)');cl.addColorStop(.5,'rgba(0,0,0,0)');cl.addColorStop(1,'rgba(0,0,0,1)');q.globalCompositeOperation='destination-out';q.fillStyle=cl;q.fillRect(0,0,64,512);
+ const gl=new THREE.Mesh(new THREE.PlaneGeometry(o.gw||160,o.gl||1400),new THREE.MeshBasicMaterial({map:tex(c),color:lin(o.glit||0xffd9a0),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:o.ga??.9}));
+ gl.rotation.x=-Math.PI/2;gl.rotation.z=Math.atan2(o.sun[0],o.sun[2])*-1+Math.PI;gl.position.set(o.sun[0]*0,o.y+.05,0);
+ /* the path starts under the camera and runs out towards the sun */const dx=o.sun[0],dz=o.sun[2],L=Math.hypot(dx,dz)||1;gl.position.set(dx/L*(o.gl||1400)/2,o.y+.05,dz/L*(o.gl||1400)/2);gl.rotation.set(-Math.PI/2,0,0);gl.rotation.order='YXZ';gl.rotation.y=Math.atan2(dx,dz);
+ g.add(gl);return g}
+/* ridges of hills: dark shapes along an arc of the horizon, each one hazier than the one before it (the fog does the haze) */
+function ridges(o){const g=new THREE.Group(),r=rng(o.seed||3);
+ for(const L of o.layers){const N=90,vs=[],ix=[],a0=L.a0,a1=L.a1,ph=[r()*6,r()*6,r()*6];
+  for(let i=0;i<=N;i++){const t=i/N,a=a0+(a1-a0)*t,h=L.h*(.55+.3*Math.sin(t*L.f+ph[0])+.22*Math.sin(t*L.f*2.3+ph[1])+.1*Math.sin(t*L.f*5.1+ph[2]))*Math.min(1,Math.min(t,1-t)*8+.15);
+   const x=Math.sin(a)*L.r,z=-Math.cos(a)*L.r;vs.push(x,o.y,z,x,o.y+Math.max(2,h),z);if(i<N){const b=i*2;ix.push(b,b+1,b+2,b+1,b+3,b+2)}}
+  const ge=new THREE.BufferGeometry();ge.setAttribute('position',new THREE.Float32BufferAttribute(vs,3));ge.setIndex(ix);const m=new THREE.Mesh(ge,new THREE.MeshBasicMaterial({color:lin(L.col),side:THREE.DoubleSide}));m.frustumCulled=false;g.add(m)}
+ return g}
 const PROPS=[
  /* the magazine on a café table, a second issue under it, coffee, keys and a die-cast model */
  {n:'mag',shots:[12,2],async make(S){const W=1920,H=1080,sc=new THREE.Scene();propLights(sc,{hemi:[0xfff2e0,0x403020,.55],sun:[0xffe2bc,2.2,[-.9,1.6,.5]],sh:.5});
@@ -332,7 +457,7 @@ const PROPS=[
   const mg=mug(0xf2efe8);mg.position.set(.22,0,-.12);sc.add(mg);const k=keys();k.position.set(-.2,0,.15);k.rotation.y=.9;sc.add(k);
   const t=toy('c27',.14);if(t){t.position.set(.23,0,.12);t.rotation.y=-2.2;sc.add(t)}
   const cam=new THREE.PerspectiveCamera(30,W/H,.01,20);cam.position.set(.02,.66,.5);cam.lookAt(.02,0,-.02);
-  return finish(render(sc,cam,W,H,1.05),W,H,{dof:5,band:[.3,.82],grade:'saturate(1.1) contrast(1.05)',vig:.5})}},
+  return shoot(sc,cam,W,H,{focus:.84,ap:15,maxCoc:24,tol:.015,exp:1.05,bloom:.3,boke:.08,sharp:.45,hi:[1.05,1,.94],lo:[.95,.99,1.05],sat:1.1,con:.18,vig:.42,grain:.025,seed:4})}},
  /* a magazine rack: every issue of the magazine, face out */
  {n:'rack',shots:[12,2,16,13,10,19],async make(S){const W=1920,H=1080,sc=new THREE.Scene();propLights(sc,{hemi:[0xfff4e8,0x40362c,.6],sun:[0xfff2e0,1.5,[.6,1.4,1.2]],sh:1});
   const wl=new THREE.Mesh(new THREE.PlaneGeometry(4,3),new THREE.MeshStandardMaterial({color:0x2c2f36,roughness:.9}));wl.position.set(0,1,-.2);wl.receiveShadow=true;sc.add(wl);
@@ -343,7 +468,7 @@ const PROPS=[
    for(let i=0;i<3;i++){const n=row*3+i,cv=magCover(S[n%S.length],{head:H6[n][0],sub:H6[n][1],k1:['TESTED','ROAD TRIP','NIGHT DRIVE','GROUP TEST','PASSES','SHOOTOUT'][n],k2:'',seed:n+3}),t=tex(cv),p=paperM();
     const m=new THREE.Mesh(new THREE.BoxGeometry(.21,.28,.004),[p,p,p,p,new THREE.MeshStandardMaterial({map:t,roughness:.3,metalness:.05}),p]);m.position.set(-.4+i*.4,y+.14,-.06);m.rotation.x=-.16;m.castShadow=m.receiveShadow=true;sc.add(m)}}
   const cam=new THREE.PerspectiveCamera(30,W/H,.05,20);cam.position.set(.35,.95,1.9);cam.lookAt(0,.72,-.06);
-  return finish(render(sc,cam,W,H,1.05),W,H,{dof:4,band:[.15,.88],grade:'saturate(1.08) contrast(1.05)',vig:.5})}},
+  return shoot(sc,cam,W,H,{focus:2.05,ap:8,maxCoc:14,tol:.02,exp:1.05,bloom:.3,boke:.06,sharp:.45,hi:[1.04,1,.95],lo:[.96,.99,1.04],sat:1.08,con:.18,vig:.42,grain:.025,seed:5})}},
  /* the game on a CRT in a 90s bedroom at night, the console on the carpet in front of it (models: the room and console packs, restyled) */
  {n:'room',shots:[0,12],glb:1,async make(S){const W=1920,H=1080,sc=new THREE.Scene(),G=window.PT8_GLB;sc.add(new THREE.HemisphereLight(0x8a96c8,0x2a2018,.32));
   const fl=new THREE.Mesh(new THREE.PlaneGeometry(8,8),mat({color:0x3a4256,roughness:1}));fl.rotation.x=-Math.PI/2;fl.receiveShadow=true;sc.add(fl);
@@ -364,16 +489,8 @@ const PROPS=[
   const tvl=new THREE.PointLight(0x9ab4ff,1.5,4.5,2);tvl.position.set(0,1,.2);sc.add(tvl);
   const lamp=new THREE.PointLight(0xffb070,1.4,6,2);lamp.position.set(1.9,1.4,.6);lamp.castShadow=true;lamp.shadow.mapSize.set(2048,2048);lamp.shadow.bias=-.002;sc.add(lamp);
   const cam=new THREE.PerspectiveCamera(42,W/H,.05,30);cam.position.set(.2,1.15,3.3);cam.lookAt(-.1,.7,-.7);
-  const out=render(sc,cam,W,H,1.15),g2=out.getContext('2d'),v=scr.position.clone().project(cam),cx=(v.x+1)/2*W,cy=(1-v.y)/2*H;g2.globalCompositeOperation='lighter';const q=g2.createRadialGradient(cx,cy,W*.04,cx,cy,W*.38);q.addColorStop(0,'rgba(110,140,220,.2)');q.addColorStop(1,'rgba(110,140,220,0)');g2.fillStyle=q;g2.fillRect(0,0,W,H);g2.globalCompositeOperation='source-over';
-  return finish(out,W,H,{dof:3,band:[.2,.85],grade:'saturate(1.1) contrast(1.06)',vig:.55})}},
- /* the Italian hill town at golden hour: a car parked in the lane, the game's poster on a wall (model: the town pack, restyled) */
- {n:'town',shots:[4],glb:1,async make(S){const W=1920,H=1080,sc=new THREE.Scene(),G=window.PT8_GLB;sc.fog=new THREE.Fog(0xf0c8a0,60,400);propLights(sc,{hemi:[0xffe0c0,0x504030,.6],sun:[0xffc890,2,[-40,30,25]],sh:30});
-  const t=G.city.clone(true);t.scale.setScalar(.01);t.traverse(o=>{if(o.isMesh&&/Boom|Grass|grass|klimop|ivy|plant|decal|debris|elektr|vlagg|opacities|stokjes|walley/.test(o.name))o.visible=false});P.lowPoly(t);shadowy(t);sc.add(t);
-  window.PT8_TOWN=t;const cam=new THREE.PerspectiveCamera(40,W/H,.1,800);const V=window.PT8_TOWNV||P.TOWN_VIEWS[0];cam.position.set(...V.cam);cam.lookAt(...V.look);
-  if(V.car){const c=car(V.car[0]);if(c){c.position.set(V.car[1],V.car[2],V.car[3]);c.rotation.y=V.car[4];sc.add(c)}}
-  const sky=cnv(W,H),sg=sky.getContext('2d'),q=sg.createLinearGradient(0,0,0,H);q.addColorStop(0,'#5a7ab8');q.addColorStop(.6,'#f2b48a');q.addColorStop(1,'#ffd8a8');sg.fillStyle=q;sg.fillRect(0,0,W,H);
-  const r=rdr(W*SS,H*SS);r.toneMappingExposure=1.05;r.setClearColor(0,0);r.render(sc,cam);const full=cnv(W,H),fg=full.getContext('2d');fg.drawImage(sky,0,0);fg.drawImage(r.domElement,0,0,W,H);
-  return finish(full,W,H,{dof:2,band:[.1,.95],grade:'saturate(1.12) contrast(1.05)',vig:.4})}}];
+  const out=shoot(sc,cam,W,H,{focus:3.9,ap:9,maxCoc:16,tol:.03,exp:1.15,bloom:.5,boke:.1,sharp:.4,hi:[1.03,1,.96],lo:[.95,.99,1.06],sat:1.1,con:.2,vig:.5,grain:.03,seed:6}),g2=out.getContext('2d'),v=scr.position.clone().project(cam),cx=(v.x+1)/2*W,cy=(1-v.y)/2*H;g2.globalCompositeOperation='lighter';const q=g2.createRadialGradient(cx,cy,W*.04,cx,cy,W*.38);q.addColorStop(0,'rgba(110,140,220,.2)');q.addColorStop(1,'rgba(110,140,220,0)');g2.fillStyle=q;g2.fillRect(0,0,W,H);g2.globalCompositeOperation='source-over';
+  return out}}];
 
 
 /* the bought prop models (the 90s room pack, the console, the Italian town) come packed into the build; P.photoReady() resolves with
@@ -408,12 +525,50 @@ P.splitParts=(mesh,minTris)=>{{let r=mesh;while(r.parent)r=r.parent;r.updateMatr
   ng.setIndex(idx);ng.applyMatrix4(mesh.matrixWorld);ng.computeBoundingBox();const m=new THREE.Mesh(ng,mesh.material);out.push(m)}
  /* pieces whose boxes overlap a lot are one object (a guitar's strings, a TV's knobs): merged back by box overlap */
  return out.sort((a,b)=>a.geometry.boundingBox.min.x-b.geometry.boundingBox.min.x)};
-/* views of the Italian town: camera, look-at point and the car parked in its lane [id, x, y, z, heading] */
-P.TOWN_VIEWS=[{cam:[-10,5.4,11],look:[-5,4.2,-1],car:['c27',-7,3.3,2.5,2.6]},{cam:[-13,5.2,7],look:[-6,4.2,0],car:['c34',-7.5,3.3,1.5,.9]},{cam:[-2,4.4,12],look:[-6,4,3],car:['c46',-5,3.3,6,2.2]}];
-const TS={};P.townShotCached=i=>TS[i]&&TS[i]._v||null;P.townShotSeed=(i,cv)=>{const pr=Promise.resolve(cv);pr._v=cv;TS[i]=pr};
-P.townShot=i=>TS[i]||(TS[i]=(async()=>{try{if(!await P.photoReady())return null;window.PT8_TOWNV=P.TOWN_VIEWS[i];const cv=await PROPS.find(p=>p.n==='town').make([]);TS[i]._v=cv;return cv}catch(e){console.error('town shot',e);delete TS[i];return null}})());
 P.PROPS=PROPS.map(p=>p.n);P._PROPS=PROPS;
 const PP={};
 P.propShot=k=>PP[k]||(PP[k]=(async()=>{const p=PROPS[k];try{if(p.glb&&!await P.photoReady())return null;const S=[];for(const i of p.shots)S.push(await P.promoShot(i));if(S.some(x=>!x))return null;if(p.shots2)for(const i of p.shots2)S.push(await P.promoShot(i));
  return await new Promise((res,rej)=>setTimeout(()=>{p.make(S).then(res,rej)},30))}catch(e){console.error('prop shot',p.n,e);delete PP[k];return null}})());
+
+/* ---- location photoshoots (0.02): a car on the hand-built roads and scenery, shot like a magazine feature: low angle, long lens, glossy paint, real depth of field.
+   car [id, metres along the road, metres to the side, turn]; cam / look [side, up, ahead] in the road's frame; fov; cx puts the car that far across the picture ---- */
+P.SHOOTS=[
+ {env:'coast',rd:{A:4,L:240,ph:1,base:6,cA:10,cL:600},car:['c27',0,.6,.35],cam:[5.4,.5,8.2],look:[0,.8,0]},
+ {env:'alpine',rd:{G:-.06,cA:22,cL:350},car:['c79',0,-.5,-.3],cam:[7.4,.55,1.6],look:[0,.75,0],line:1},
+ {env:'golden',rd:{A:6,L:300,cA:20,cL:500},car:['c8',0,.2,.4],cam:[-5.2,.5,8.2],look:[0,.8,0]},
+ {env:'autumn',rd:{A:5,L:260,ph:2,cA:-18,cL:400},car:['c13',0,-.3,-.4],cam:[4.6,.7,-8],look:[0,.8,0]},
+ {env:'dawn',rd:{A:5,L:300,base:8},car:['c33',0,.4,.3],cam:[-5.4,.5,8.4],look:[0,.8,0]},
+ {env:'snow',rd:{G:.05,cA:20,cL:400},car:['c102',0,0,-.4],cam:[5.4,.55,8.4],look:[0,.8,0]},
+ {env:'tropic',rd:{A:3,L:250,base:5},car:['c42',0,.4,.4],cam:[-7.4,.5,1.4],look:[0,.7,0],line:1},
+ {env:'fjord',rd:{G:-.04,cA:-25,cL:420},car:['gtr',0,-.3,.4],cam:[5.6,.55,8.6],look:[0,.8,0]},
+ {env:'desert',rd:{A:3,L:200,G:-.03},car:['c34',0,.2,-.4],cam:[-4.4,.65,-8],look:[0,.8,0]},
+ {env:'redrock',rd:{A:8,L:500,cA:25,cL:600},car:['c64',0,0,.35],cam:[5.4,.5,8.4],look:[0,.8,0]},
+ {env:'harbour',car:['c46',0,.3,-.4],cam:[7.4,.55,1.2],look:[0,.7,0],line:1},
+ {env:'storm',rd:{A:5,L:280,cA:-20,cL:450},car:['c21',0,0,.4],cam:[-5.4,.5,8.4],look:[0,.8,0]},
+ {env:'fields',rd:{A:7,L:420,cA:25,cL:700},car:['c123',0,-.2,.4],cam:[5.2,.6,-8],look:[0,.8,0]},
+ {env:'dusk',rd:{A:5,L:360,cA:18,cL:520},car:['gtr',0,.3,-.35],cam:[-5.4,.5,8.4],look:[0,.8,0]},
+ {env:'city',rd:{G:-.02},car:['c128',0,0,.4],cam:[5.4,.6,8.8],look:[0,.9,0]},
+ {env:'moon',rd:{A:4,L:340,cA:15,cL:500},car:['c110',0,0,-.4],cam:[-7.4,.55,1.4],look:[0,.7,0],line:1},
+ /* the hill town across the bay */
+ {env:'riviera',rd:{A:3,L:260,ph:1,base:4,cA:8,cL:600},car:['c27',0,.6,.35],cam:[-10.4,1,17.2],look:[0,.8,0],town:1,tpos:[300,480],tscale:3.2},
+ {env:'riviera',rd:{A:3,L:260,ph:1,base:4,cA:8,cL:600},car:['c8',0,-.3,.4],cam:[9.6,1.2,-17.2],look:[0,.8,0],town:1,span:.3,tpos:[450,780],tscale:3.4},
+ {env:'riviera',rd:{A:3,L:260,ph:1,base:4,cA:8,cL:600},car:['c42',0,.4,.3],cam:[-14.8,1,2.8],look:[0,.7,0],line:1,town:1,tpos:[700,200],tscale:3.2}];
+/* the framings: for the loading screen (the car low and in the middle, the logo up in the sky) and for the main menu (the car in the free space on the left, clear of the panel).
+   P.LOAD_LOC are the shoots baked into the loading screen (tools/bake), P.MENU_LOC the ones the main menu shows */
+const FRAME={l:{cx:.5,cy:.66,span:.46},m:{cx:.33,cy:.56,span:.5}};
+P.LOAD_LOC=[16,17,4,6,2,10,13,9,11,14,12,3];P.MENU_LOC=[16,4,2,17,3,12,0,7,1,18];
+const LS={},lk=(k,m)=>k+(m||'l');P.locShotCached=(k,m)=>LS[lk(k,m)]&&LS[lk(k,m)]._v||null;P.locShotSeed=(k,m,cv)=>{const pr=Promise.resolve(cv);pr._v=cv;LS[lk(k,m)]=pr};
+function locRender(S,k,m){const F=FRAME[m||'l'],W=window.PT8_LOCW||1920,H=Math.round(W*9/16),E=Object.assign({lin:1},ENV[S.env],S.tpos?{tx:S.tpos[0]*(m==='m'?1.2:1),tz:S.tpos[1]*(m==='m'?1.2:1)}:null,S.tscale?{town:S.tscale}:null),o=envScene(E,S.seed??k*31+7,S.rd),sc=o.sc,RL=o.RL,fl=S.look[2]>S.cam[2]+.5?-1:1,g=car(S.car[0]);if(!g)return null;
+ g.position.copy(RL.at(S.car[2]*fl,0,-S.car[1]*fl));g.rotation.y=fl>0?0:Math.PI;RL.orient(g,-S.car[1]*fl);if(fl<0)g.rotation.x=-g.rotation.x;g.rotateY((S.car[3]||0)*fl);sc.add(g);g.updateMatrixWorld(true);
+ const cam=new THREE.PerspectiveCamera(S.fov||24,W/H,.3,2400);cam.position.copy(RL.at(S.cam[0]*fl,S.cam[1],S.cam[2]*fl));cam.lookAt(RL.at(S.look[0]*fl,S.look[1],S.look[2]*fl));cam.updateMatrixWorld();
+ centre(cam,g,W,H,S.cx??F.cx,S.cy??F.cy,S.span?S.span*F.span/FRAME.l.span:F.span);
+ sc.fog.near*=S.fogN??2.6;sc.fog.far*=S.fogF??2.3;
+ const sd=new V3(...E.light[2]).normalize();o.sun.target.position.copy(RL.at(0,0,-S.car[1]*fl));o.sun.position.copy(sd).multiplyScalar(80).add(o.sun.target.position);
+ o.sun.shadow.mapSize.set(4096,4096);const sh=o.sun.shadow.camera;sh.left=sh.bottom=-24;sh.right=sh.top=24;sh.updateProjectionMatrix();
+ const dv=cam.getWorldDirection(new V3()).setY(0).normalize(),hz=cam.position.clone().addScaledVector(dv,2000).setY(0).project(cam),hy=Math.max(0,Math.min(H,(1-hz.y)/2*H));
+ sc.background=tex(paintSky(W,H,hy,E));
+ const sk=E.sky;glossy(g,S.gloss,envMapFor(sk[0],sk[sk.length>>1],sk[sk.length-1],[sd.x,sd.y,sd.z],E.sun?E.sun[3]:'#fff0d0'));
+ return finish2(shoot(sc,cam,W,H,{focus:focusZ(cam,g),ap:S.ap??(S.line?6:2),maxCoc:S.maxCoc??(S.line?9:5),boke:S.boke??.05,sharp:S.sharp??.35,line:S.line,tol:S.tol??(S.line?.12:0),exp:S.exp??(E.night?1.2:1.05),bloom:S.bloom??.28,hi:S.hi||[1.04,1,.94],lo:S.lo||[.95,.99,1.05],sat:S.sat??1.08,con:S.con??.14,vig:S.vig??.34,grain:S.grain??.025,seed:k+3,dbg:window.PT8_DBG||0}))}
+P.locShot=(k,m)=>{const q=lk(k,m);return LS[q]||(LS[q]=new Promise(async res=>{if(P.SHOOTS[k].town)await P.photoReady();setTimeout(()=>{try{const c=locRender(P.SHOOTS[k],k,m);if(c)LS[q]._v=c;else delete LS[q];res(c)}catch(e){console.error('loc shot',e);delete LS[q];res(null)}},30)}))};
+P._pk={car,rdr,cnv,tex,mat,box,shadowy,propLights,envScene,paintSky,ENV,render,finish,shoot,skyDome,seaPlane,ridges,toy,lin,centre,glossy,envMapFor,focusZ,locRender};
 })();

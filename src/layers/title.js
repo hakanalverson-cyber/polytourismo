@@ -20,7 +20,7 @@ body.ptTitle #menu{opacity:0!important;pointer-events:none!important}
 #ptTitle.on .ln{width:min(34vw,420px)}
 #ptTitle .pr{position:absolute;bottom:53px;font:700 min(1.7vw,15px)/1 system-ui,sans-serif;letter-spacing:.55em;margin-right:-.55em;opacity:0;color:#fff}
 #ptTitle.on .pr{animation:ptBlink 2.2s ease-in-out 2.2s infinite}
-#ptTitle .vv{position:absolute;right:28px;bottom:53px;font:600 10px/1 system-ui,sans-serif;letter-spacing:.3em;opacity:.45}
+#ptTitle .vv{position:absolute;right:28px;bottom:53px;font:600 10px/1 system-ui,sans-serif;letter-spacing:.3em;opacity:0;transition:opacity 1s ease .4s}#ptTitle.on .vv{opacity:.45}
 #ptTitle .bg{position:absolute;inset:0;z-index:-2;overflow:hidden;background:#000}
 #ptTitle .bg div{position:absolute;inset:-2%;background-size:cover;background-position:center;opacity:0;transition:opacity 1.6s ease;will-change:transform,opacity}
 #ptTitle .bg div.on{opacity:1}
@@ -65,47 +65,50 @@ function slide(){if(!SL.length||done)return;si=(si+1)%SL.length;const x=SL[si],e
  cap.classList.remove('on');setTimeout(()=>{cap.innerHTML=x.n?'<b>'+x.n+'</b>NOW SHOWING':'';cap.classList.toggle('on',!!x.n)},500);
  [...tk.children].forEach((t,k)=>t.classList.toggle('on',k===si));slT=setTimeout(slide,6500)}
 d.querySelector('.st').textContent='VERSION '+(P.VERSION||'0.01');
-/* everything that would otherwise load later (the Track Mode circuit shots and the rally stage renders) is made now, behind the boot
-   screen with a progress bar; the title comes in when it is done */
-/* 0.02: the boot pictures are kept in IndexedDB, so only the first start (or a changed track) renders them; later starts just load them */
+/* 0.02: the loading screen waits only for what is already kept: every picture that has to be rendered (the first start after an update) is queued and made behind the
+   title instead, the scenes the menu shows first. The pictures are kept in IndexedDB, so later starts just load them */
 const SC=(()=>{let dbp;const db=()=>dbp||(dbp=new Promise((res,rej)=>{const r=indexedDB.open('polygt-shots',1);r.onupgradeneeded=()=>r.result.createObjectStore('s');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}));
  const get=k=>db().then(d=>new Promise(res=>{const q=d.transaction('s').objectStore('s').get(k);q.onsuccess=()=>res(q.result||null);q.onerror=()=>res(null)})).catch(()=>null);
  const put=(k,v)=>db().then(d=>new Promise(res=>{const t=d.transaction('s','readwrite');t.objectStore('s').put(v,k);t.oncomplete=res;t.onerror=res;t.onabort=res})).catch(()=>{});
  const blob=cv=>new Promise(r=>{try{cv.toBlob(b=>r(b),'image/jpeg',.94)}catch(e){r(null)}});
  const canvas=async b=>{const im=await createImageBitmap(b),c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);return c};
  const key=(t,i)=>{const d=D[i];let n=0;try{n=JSON.stringify(d).length}catch(e){}return t+'|r2|'+(P.VERSION||'')+'|'+d.name+'|'+n};
- return{track:async i=>{const k=key('t',i),hit=await get(k);if(hit&&P.trackShotSeed){try{P.trackShotSeed(i,await canvas(hit));return}catch(e){}}
-   const cv=await P.trackShot(i);if(cv){const b=await blob(cv);if(b)put(k,b)}},
-  menu:async k=>{const kk='mn|'+P.PROMO_REV+'|'+(P.VERSION||'')+'|'+JSON.stringify(P.MENU_SCENES[k]),i=P.menuTrack(k),kk2=key(kk,i),hit=await get(kk2);if(hit&&P.menuShotSeed){try{P.menuShotSeed(k,await canvas(hit));return}catch(e){}}
-   const cv=await P.menuShot(k);if(cv){const b=await blob(cv);if(b)put(kk2,b)}},
-  town:async k=>{const kk='tw|'+P.PROMO_REV+'|'+(P.VERSION||'')+'|'+k,hit=await get(kk);if(hit&&P.townShotSeed){try{P.townShotSeed(k,await canvas(hit));return}catch(e){}}
-   const cv=await P.townShot(k);if(cv){const b=await blob(cv);if(b)put(kk,b)}},
-  promo:async k=>{const kk='p|'+P.PROMO_REV+'|'+(P.VERSION||'')+'|'+JSON.stringify(P.PROMO_SCENES[k]),hit=await get(kk);if(hit&&P.promoShotSeed){try{P.promoShotSeed(k,await canvas(hit));return}catch(e){}}
-   const cv=await P.promoShot(k);if(cv){const b=await blob(cv);if(b)put(kk,b)}},
-  stage:async i=>{const k=key('s',i),hit=await get(k);if(hit&&hit.m&&P.stageSeed){try{const pois=[];for(const p of hit.p||[])pois.push({n:p.n,c:await canvas(p.b)});P.stageSeed(i,await canvas(hit.m),pois);return}catch(e){}}
-   const cv=await P.stageRender(i);if(cv){const m=await blob(cv),p=[];for(const q of cv.pois||[]){const b=await blob(q.c);if(b)p.push({n:q.n,b})}if(m)put(k,{m,p})}},get,put}})();
+ /* each one answers true when the picture is in (loaded from the kept copy, or rendered), false when it is not kept and co (cache only) is set */
+ return{track:async(i,co)=>{const k=key('t',i),hit=await get(k);if(hit&&P.trackShotSeed){try{P.trackShotSeed(i,await canvas(hit));return true}catch(e){}}if(co)return false;
+   const cv=await P.trackShot(i);if(cv){const b=await blob(cv);if(b)put(k,b)}return true},
+  menu:async(k,co)=>{const kk='mn|'+P.PROMO_REV+'|'+(P.VERSION||'')+'|'+JSON.stringify(P.MENU_SCENES[k]),i=P.menuTrack(k),kk2=key(kk,i),hit=await get(kk2);if(hit&&P.menuShotSeed){try{P.menuShotSeed(k,await canvas(hit));return true}catch(e){}}if(co)return false;
+   const cv=await P.menuShot(k);if(cv){const b=await blob(cv);if(b)put(kk2,b)}return true},
+  loc:async(k,co)=>{const kk='lc|'+P.PROMO_REV+'|'+(P.VERSION||'')+'|'+k+'|m',hit=await get(kk);if(hit&&P.locShotSeed){try{P.locShotSeed(k,'m',await canvas(hit));return true}catch(e){}}if(co)return false;
+   const cv=await P.locShot(k,'m');if(cv){const b=await blob(cv);if(b)put(kk,b)}return true},
+  promo:async(k,co)=>{const kk='p|'+P.PROMO_REV+'|'+(P.VERSION||'')+'|'+JSON.stringify(P.PROMO_SCENES[k]),hit=await get(kk);if(hit&&P.promoShotSeed){try{P.promoShotSeed(k,await canvas(hit));return true}catch(e){}}if(co)return false;
+   const cv=await P.promoShot(k);if(cv){const b=await blob(cv);if(b)put(kk,b)}return true},
+  stage:async(i,co)=>{const k=key('s',i),hit=await get(k);if(hit&&hit.m&&P.stageSeed){try{const pois=[];for(const p of hit.p||[])pois.push({n:p.n,c:await canvas(p.b)});P.stageSeed(i,await canvas(hit.m),pois);return true}catch(e){}}if(co)return false;
+   const cv=await P.stageRender(i);if(cv){const m=await blob(cv),p=[];for(const q of cv.pois||[]){const b=await blob(q.c);if(b)p.push({n:q.n,b})}if(m)put(k,{m,p})}return true},get,put}})();
+const REST=[];
 window.PT8_BOOT=new Promise(res=>{const run=()=>setTimeout(async()=>{try{const BP=window.PT8_BP||(()=>{});
-  const jobs=[];const isC=i=>typeof D!=='undefined'&&D[i]&&D[i].cartoon;for(const i of(P.TRK_TRACKS||[]))if(isC(i)&&P.trackShot)jobs.push([D[i].name,()=>SC.track(i)]);
-  for(const i of(P.STAGES||[]))if(P.stageRender&&typeof D!=='undefined'&&D[i])jobs.push([D[i].name,()=>SC.stage(i)]);
-  /* 0.02: the main menu's card pictures and the Quickplay setup previews too, so nothing pops in on the menu after loading */
-  for(const u of(P.menuImgs||[])){const m=/^url\((.*)\)$/.exec(u);if(m)jobs.unshift(['MENU',()=>{const im=new Image();im.src=m[1];return im.decode()}])}
-  /* 0.02: the action scenes (promo.js): Quickplay's first, then the main menu's */if(P.promoShot&&!window.PT8_NOSCENE){for(let q=0;q<5;q++)for(const k of P.promoFor(q))jobs.push(['QUICKPLAY',()=>SC.promo(k)]);}
-  if(P.menuShot&&!window.PT8_NOSCENE){P.MENU_SCENES.forEach((x,k)=>jobs.push(['MENU',()=>SC.menu(k)]));if(P.townShot)P.TOWN_VIEWS.forEach((x,k)=>jobs.push(['MENU',()=>SC.town(k)]))}
-  if(P.quickTracks&&P.trackShot&&!window.PT8_FAST)for(const i of P.quickTracks())if(!isC(i))jobs.push([D[i].name,()=>SC.track(i)]);
-  /* 0.02: the loading screen's pictures go first, as soon as the car models are in: photos of the game as real things (a magazine on a
-     table, the TV, the game case, a billboard, a garage poster, a magazine rack; promo.js), kept in IndexedDB for the next start */
-  const sig=(P.VERSION||'')+'|3|'+(P.PROMO_REV||0);
-  if(P.propShot&&!window.PT8_NOSCENE)jobs.unshift(['COVERS',async()=>{try{localStorage.removeItem('pt8-boxart')}catch(e){}
-   const X=await SC.get('boxart');if(X&&X.v===sig&&X.L&&X.L.length){if(!window.PT8_BOX&&window.PT8_BOXSET)window.PT8_BOXSET(X.L);return}
-   for(let n=0;n<120&&!(P.boxReady&&P.boxReady());n++)await new Promise(r=>setTimeout(r,250));
-   const A=[];for(let k=0;k<P.PROPS.length;k++){const c=await P.propShot(k);if(c){A.push('b,'+c.toDataURL('image/jpeg',.93).slice(23));if(window.PT8_BOXSET)window.PT8_BOXSET(A.slice())}}
-   if(A.length===P.PROPS.length)await SC.put('boxart',{v:sig,L:A})}]);
-  BP(.5);for(let k=0;k<jobs.length;k++){await Promise.race([jobs[k][1]().catch(()=>null),new Promise(r=>setTimeout(r,120000))]);BP(.5+.5*(k+1)/jobs.length)}
- }catch(e){console.error('boot warm-up',e)}res()},400);if(document.readyState==='complete')run();else addEventListener('load',run)});
+  const J=[],job=(pri,label,fn)=>J.push([pri,label,fn]);const isC=i=>typeof D!=='undefined'&&D[i]&&D[i].cartoon;
+  /* the order the pictures are needed in once the menu is up: the main menu's own scenes first, then the circuit select, then Quickplay, the stages, the rest */
+  if(P.menuShot&&!window.PT8_NOSCENE){P.MENU_SCENES.forEach((x,k)=>job(1,'MENU',co=>SC.menu(k,co)));if(P.locShot)P.MENU_LOC.forEach((k,i)=>job(i<4?1:2,'MENU',co=>SC.loc(k,co)))}
+  for(const i of(P.TRK_TRACKS||[]))if(isC(i)&&P.trackShot)job(2,D[i].name,co=>SC.track(i,co));
+  if(P.promoShot&&!window.PT8_NOSCENE){for(let q=0;q<5;q++)for(const k of P.promoFor(q))job(3,'QUICKPLAY',co=>SC.promo(k,co))}
+  for(const i of(P.STAGES||[]))if(P.stageRender&&typeof D!=='undefined'&&D[i])job(4,D[i].name,co=>SC.stage(i,co));
+  if(P.quickTracks&&P.trackShot&&!window.PT8_FAST)for(const i of P.quickTracks())if(!isC(i))job(5,D[i].name,co=>SC.track(i,co));
+  /* the card pictures of the main menu and the Quickplay setup previews are decoded now, so nothing pops in on the menu after loading */
+  for(const u of(P.menuImgs||[])){const m=/^url\((.*)\)$/.exec(u);if(m)job(0,'MENU',()=>{const im=new Image();im.src=m[1];return im.decode().then(()=>true)})}
+  /* loading the kept pictures: four at a time; the ones that are not kept wait in REST */
+  J.sort((a,b)=>a[0]-b[0]);BP(.5);let n=0,ix=0;
+  const worker=async()=>{while(ix<J.length){const j=J[ix++];let ok=false;try{ok=await Promise.race([j[2](true),new Promise(r=>setTimeout(()=>r(false),20000))])}catch(e){}if(!ok)REST.push(j);BP(.5+.5*(++n)/J.length)}};
+  await Promise.all([worker(),worker(),worker(),worker()]);
+ }catch(e){console.error('boot warm-up',e)}res();
+ /* behind the title: the pictures that had to be rendered, one at a time, never while a race is running */
+ setTimeout(async()=>{REST.sort((a,b)=>a[0]-b[0]);const sl=ms=>new Promise(r=>setTimeout(r,ms));
+  for(const j of REST){while(typeof scr!=='undefined'&&(scr==='game'||scr==='pause'))await sl(1500);try{await Promise.race([j[2](false),sl(120000)])}catch(e){console.error('picture',j[1],e)}await sl(120)}P.picsDone=1},1200)},400);if(document.readyState==='complete')run();else addEventListener('load',run)});
 window.PT8_BOOT.then(()=>{P.bootDone=1});window.PT8_BOOT.then(()=>setTimeout(()=>{d.classList.add('on');if(!BT)slide()},400));
 let done=false;
 function go(e){/* the boot warning cards take the first presses: each one skips a card */{const w=document.getElementById('ptWarn');if(w&&getComputedStyle(w).visibility!=='hidden'&&getComputedStyle(w).opacity>.05){w.classList.add(w.classList.contains('s1')?'s2':'s1');if(e){try{e.preventDefault();e.stopImmediatePropagation()}catch(x){}}return}}
  if(done||!P.bootDone)return;done=true;const bt=document.getElementById('ptBoot');if(bt){bt.style.opacity=0;setTimeout(()=>bt.remove(),1050)}if(e){try{e.preventDefault();e.stopImmediatePropagation()}catch(x){}}
+ /* the menu keeps the title's photo behind it until its own first picture is ready (the very first start has to make them), so the backdrop never goes dark in between */
+ try{const L=window.PT8_BOOTBG,x=L&&L[window.PT8_BOOTI];if(x&&x.charAt(0)==='u'&&x.charAt(1)===','){const im=new Image();im.onload=()=>{P.bootCv=im};im.src='data:image/jpeg;base64,'+x.slice(2)}}catch(x){}
  try{P.audioReady&&P.audioReady();P.sfx&&P.sfx('select')}catch(x){}
  clearTimeout(slT);d.classList.add('out');document.body.classList.remove('ptTitle');setTimeout(()=>d.remove(),1100);for(const ev of EV)removeEventListener(ev,go,true);clearInterval(gp)}
 const EV=['keydown','pointerdown','mousedown','touchstart','click'];for(const ev of EV)addEventListener(ev,go,true);

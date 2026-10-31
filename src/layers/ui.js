@@ -119,6 +119,7 @@ const WP=document.createElement('div');WP.id='ptWipe';document.body.appendChild(
 const MENUS=['menu','s8cards','s8quick','s8pick','s8setup','s8career','s8show','s8res'];let wipeT=0;
 function wipe(){try{WP.classList.remove('go');void WP.offsetWidth;WP.classList.add('go');clearTimeout(wipeT);wipeT=setTimeout(()=>WP.classList.remove('go'),600)}catch(e){}}
 show=n=>{const was=scr;if(was&&was!==n&&MENUS.includes(n)&&was!=='game'&&was!=='pause')wipe();rawShow(n);if(was!==n&&['s8cards','s8quick','s8pick','s8setup','s8career','s8show'].includes(n)){const e=$(n);e.classList.add('enter');clearTimeout(e._en);e._en=setTimeout(()=>e.classList.remove('enter'),900)}if(was!==n&&P.sfx&&['s8cards','s8quick','s8pick','s8setup','s8career','s8show','s8res','menu'].includes(n))P.sfx('whoosh');for(const id of SCREENS)$(id).classList.toggle('on',id===n);
+ {const b=$('v8Bg');if(b){const on=['s8cards','s8pick','s8career','s8setup'].includes(n),was=b.classList.contains('on');b.classList.toggle('on',on);if(on&&!was&&P.v8Bg){b.textContent='';P.v8Bg()}}}
  $$('.crv',root).forEach(e=>e.textContent=fmtCr(P.SV().cr));
  if(was==='s8show'&&n!=='s8show')studioOff();
  if(['menu','s8cards','s8quick','s8pick','s8setup','s8career','s8res'].includes(n))refreshMenuCars();
@@ -177,7 +178,7 @@ function openPick(back){const m=ST.mode;if(!okTrack(m,ST.track))ST.track=firstTr
  setTimeout(next,380)}
 function pkThumb(cv,i){const c=P.trackShotCached&&P.trackShotCached(i),g=cv.getContext('2d');if(c){const W=cv.width,H=cv.height,s=Math.max(W/c.width,H/c.height),w=c.width*s,h=c.height*s;g.drawImage(c,(W-w)/2,(H-h)/2,w,h)}else drawTrack(cv,i,false)}
 function renderPick(){const m=ST.mode;$('pkTitle').innerHTML='<em>TRACK</em> SELECT CIRCUIT';
- const g=$('pkGrid');g.innerHTML=PK.list.map(i=>{const d=D[i],T=tr(i);return `<div class="pk${i===ST.track?' sel':''}" data-i="${i}"><canvas width="960" height="540"></canvas><div class="pkI"><b>${d.name}</b><small>${P.TRACK_INFO[i].s} &middot; ${(T.L/1000).toFixed(1)} km${d.cartoon?' &middot; 3D model':''}</small></div>${barnIcon(d)}${isStg(i)||isTrk(i)?'<em class="pkNew">NEW</em>':''}</div>`}).join('')
+ const g=$('pkGrid');g.innerHTML=PK.list.map(i=>{const d=D[i],T=tr(i);return `<div class="pk${i===ST.track?' sel':''}" data-i="${i}"><canvas width="960" height="600"></canvas><div class="pkI"><b>${d.name}</b><small>${P.TRACK_INFO[i].s} &middot; ${(T.L/1000).toFixed(1)} km${d.cartoon?' &middot; 3D model':''}</small></div>${barnIcon(d)}${isStg(i)||isTrk(i)?'<em class="pkNew">NEW</em>':''}</div>`}).join('')
   +(m==='track'&&P.loadTrackFile?`<div class="pk pkAdd" id="pkAdd"><div class="pkPlus">+</div><div class="pkI"><b>Add track file</b><small id="pkAddMsg">Load a .ptrack file</small></div><input type="file" accept=".ptrack,.json,.gz" style="display:none"></div>`:'');
  $$('#pkGrid .pk',root).forEach(e=>{if(e.id==='pkAdd')return;const i=+e.dataset.i;pkThumb(e.querySelector('canvas'),i);if(!(P.trackShotCached&&P.trackShotCached(i))&&P.trackShot)P.trackShot(i).then(c=>{if(c&&e.isConnected){delete PK.fail[i];pkThumb(e.querySelector('canvas'),i)}});/* a slow shot swaps in when it is ready */e.onclick=()=>pickSel(i);e.ondblclick=()=>{pickSel(i);pickNext()}});
  {const a=$('pkAdd');if(a){const inp=a.querySelector('input'),msg=a.querySelector('#pkAddMsg');a.onclick=e=>{if(e.target!==inp)inp.click()};
@@ -210,12 +211,23 @@ const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="current
  const DESC={quick:'Quick Race, Time Attack, Elimination, Cut-Up and Versus.',track:'Race the real-world circuits.',rally:'Point to point stages against the clock.',garage:'Your cars, paint and tuning.',brand:'New cars from every maker.',set:'Graphics, sound and controls.'};
  P.menuImgs=TABS.map(t=>t.img).filter(u=>u!=='none');
  /* 0.02: the menu background is the main menu's own action scenes (promo.js), slowly drifting and crossfading behind the glass panel (no showroom) */
+ /* the stills the menus use (the main menu's own scenes on the real tracks and the Italian town); each one is drawn into a fresh canvas that fades in over the last.
+    The first one of a screen appears at once (no fade from black) */
+ const stills=()=>{const a=(P.MENU_SCENES||[]).map((x,k)=>P.menuShotCached&&P.menuShotCached(k)).filter(Boolean),b=(P.MENU_LOC||[]).map(k=>P.locShotCached&&P.locShotCached(k,'m')).filter(Boolean),o=[];for(let i=0;i<Math.max(a.length,b.length);i++){if(a[i])o.push(a[i]);if(b[i])o.push(b[i])}return o};
+ /* until the first real picture exists the backdrop is the title's photo (title.js); it is swapped for a real one the moment one is ready */
+ const stillTo=(bg,src)=>{const c=document.createElement('canvas');c.width=src.width;c.height=src.height;c.getContext('2d').drawImage(src,0,0);if(!bg.children.length)c.style.transition='none';bg.appendChild(c);void c.offsetWidth;c.className='on';
+  const old=[...bg.children].filter(x=>x!==c);setTimeout(()=>old.forEach(x=>x.remove()),1600)};
+ const nextStill=(bg,n)=>{const cs=stills();if(cs.length){bg.dataset.ph='';return{n:(n+1)%cs.length,src:cs[(n+1)%cs.length]}}if(P.bootCv&&!bg.children.length){bg.dataset.ph='1';return{n,src:P.bootCv}}return null};
  {const bg=document.createElement('div');bg.id='gxBg';menu.insertBefore(bg,menu.firstChild);let n=Math.random()*8|0,t=0;
-  /* until the first scene is up it checks every 300 ms (the screen behind the title would otherwise show the old menu art for a moment) */
-  const step=()=>{clearTimeout(t);t=setTimeout(step,menu.classList.contains('gxBgOn')?7000:300);if(scr!=='menu')return;const cs=[...(P.MENU_SCENES||[]).map((x,k)=>P.menuShotCached&&P.menuShotCached(k)),...(P.TOWN_VIEWS||[]).map((x,k)=>P.townShotCached&&P.townShotCached(k))].filter(Boolean);if(!cs.length)return;
-   n=(n+1)%cs.length;const c=document.createElement('canvas'),src=cs[n];c.width=src.width;c.height=src.height;c.getContext('2d').drawImage(src,0,0);bg.appendChild(c);void c.offsetWidth;c.className='on';
-   const old=[...bg.children].filter(x=>x!==c);setTimeout(()=>old.forEach(x=>x.remove()),1600);if(!menu.classList.contains('gxBgOn')){clearTimeout(t);t=setTimeout(step,7000);menu.classList.add('gxBgOn');for(const e of menu.children){if(e===bg)continue;const st=getComputedStyle(e);if(st.position==='static')e.style.position='relative';if(!(+st.zIndex>0))e.style.zIndex=1}}};
+  /* until a real picture is up it checks every 300 ms (nothing else is drawn behind the menu: the studio render that used to sit here is gone) */
+  const step=()=>{clearTimeout(t);const x=scr==='menu'?nextStill(bg,n):null;
+   if(x){n=x.n;stillTo(bg,x.src);if(!menu.classList.contains('gxBgOn')){menu.classList.add('gxBgOn');for(const e of menu.children){if(e===bg)continue;const st=getComputedStyle(e);if(st.position==='static')e.style.position='relative';if(!(+st.zIndex>0))e.style.zIndex=1}}}
+   t=setTimeout(step,bg.children.length&&bg.dataset.ph!=='1'?7000:300)};
   P.menuBg=step;setTimeout(step,50)}
+ /* the screens without a backdrop of their own (modes, circuit select, race office, the rally car step) sit on the same stills, dimmed under the glass */
+ {const bg=document.createElement('div');bg.id='v8Bg';root.insertBefore(bg,root.firstChild);let n=Math.random()*8|0,t=0;
+  const step=()=>{clearTimeout(t);const x=bg.classList.contains('on')?nextStill(bg,n):null;if(x){n=x.n;stillTo(bg,x.src)}t=setTimeout(step,bg.children.length&&bg.dataset.ph!=='1'?9000:500)};
+  P.v8Bg=step}
  const SUBS=[{m:'mp',p:1,n:'Quick Race',i:'race'},{m:'ta',n:'Time Attack',i:'clock'},{m:'elim',n:'Elimination',i:'elim'},{m:'cutup',n:'Cut-Up',i:'cut'},{m:'mp',p:2,n:'Versus',i:'vs'}];
  const sv=(n,x)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square">'+x+'</svg>';
  const IX={play:'<path d="M7 4.5v15l12-7.5z"/>',rally:'<path d="M2 19l7-11 4 6 3-3 5 8z"/>',track:'<path d="M4 20V4h2v2h12l-3 4 3 4H6v6z"/>',race:'<path d="M4 20V4h2v2h12l-3 4 3 4H6v6z"/>',clock:'<circle cx="12" cy="13" r="8"/><path d="M12 13V8M9 3h6"/>',elim:'<circle cx="12" cy="12" r="8"/><path d="M6.5 6.5l11 11"/>',cut:'<path d="M3 17l5-10 4 7 3-4 6 7z"/>',vs:'<rect x="3" y="5" width="8" height="14"/><rect x="13" y="5" width="8" height="14"/>',cog:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',log:'<path d="M5 6h14M5 12h14M5 18h9"/>',garage:'<path d="M3 11l9-6 9 6v9H3z"/>',brand:'<path d="M3 12l9-9h7v7l-9 9z"/><circle cx="15" cy="8" r="1.2"/>'};
@@ -891,12 +903,14 @@ addEventListener('keydown',e=>{
  if(scr==='s8res'&&e.code==='Enter'){resContinue()}});
 
 /* ================= frame loop ================= */
+const MENU_BG=['menu','s8cards','s8quick','s8pick','s8setup','s8career','s8res'];let CVH=false;
 frame=function(n){requestAnimationFrame(frame);const dt=Math.min(.05,Math.max(0,(n-last)/1000));last=n;dtf=dt;T0+=dt;
+ {const mn=MENU_BG.includes(scr)&&!(RACE&&scr==='s8res');if(mn!==CVH){CVH=mn;R.domElement.style.visibility=mn?'hidden':''}}
  if(RACE&&(scr==='game'||scr==='pause'||scr==='s8res')){if(!paused)step(dt);drawRace(dt);if(scr==='game')hudUpdate()}
  else if(scr==='s8show'){/* Brand Central's maker list covers the studio with its stills: don't render the studio behind it */if(!inGrid()&&!$('s8show').classList.contains('mkl'))drawShow(dt)}
- /* 0.02: Quickplay and the race setup cover the whole screen with a solid backdrop: nothing is drawn behind them */
- else if(scr==='s8quick'||(scr==='s8setup'&&$('s8setup').classList.contains('gxOn'))||(scr==='menu'&&$('menu').classList.contains('gxBgOn'))){}
- else if(scr==='menu'||scr==='s8cards'||scr==='s8quick'||scr==='s8pick'||scr==='s8setup'||scr==='s8career'||scr==='s8res'){MS=MS||menuScene();MS.tick(Math.max(0,T0));R.setScissorTest(false);R.setViewport(0,0,R.domElement.width,R.domElement.height);MS.draw?MS.draw():R.render(MS.sc,MS.cam)}};
+ /* 0.02: no studio render behind any menu screen: the main menu, Quickplay and the race setup bring their own stills, the cards, circuit select and race office
+    sit on the same stills (#v8Bg). The canvas is hidden there, so an old frame can never show through while a screen fades in */
+ else if(MENU_BG.includes(scr)){}};
 /* pause menu */
 (function(){const b=$('pause').querySelector('.b'),opt=[...b.querySelectorAll('button')].pop();b.innerHTML='<button id="pRes">Resume</button><button id="pRst">Restart</button><button id="pQuit">Quit to menu</button>';b.appendChild(opt);opt.textContent='Options';
  $('pRes').onclick=()=>resume();$('pRst').onclick=()=>{startRace()};$('pQuit').onclick=()=>{const r=RACE_RET();P.cleanupRace();show(r);if(r==='s8setup')renderSetup();if(r==='s8career')renderCareer()};

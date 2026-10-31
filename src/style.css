@@ -1562,3 +1562,23 @@ body.gxAsking #tutOffer{display:none!important}
 #gxBg:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 35%,rgba(0,0,0,.55) 75%),linear-gradient(0deg,rgba(0,0,0,.55),transparent 30%)}
 @keyframes gxBgKB{from{transform:scale(1.08)}to{transform:scale(1)}}
 #tutOffer{bottom:40px!important}/* clear of the key hints under the menu panel */
+
+/* 0.02: no studio render behind the menu screens: the cards, circuit select and race office sit on the main menu's stills, dimmed under the glass */
+#v8Bg{position:absolute;inset:0;z-index:0;display:none;overflow:hidden;background:#0b0d10;pointer-events:none}
+#v8Bg.on{display:block}
+#v8Bg canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.08);transition:opacity 1.4s ease}
+#v8Bg canvas.on{opacity:1;animation:gxBgKB 12s linear forwards}
+#v8Bg:after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 46%,rgba(0,0,0,.1),rgba(0,0,0,.5) 100%)}
+#s8cards::before,#s8pick::before,#s8career::before{background:linear-gradient(180deg,#07090cb8 0%,#07090c80 40%,#07090cc4 100%)}
+/* 0.02: circuit select: four big cards across (the old six small ones are gone), the add-a-file card a slim bar under them */
+#s8pick .pkGrid{grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(12px,1.2vw,24px);top:12.5vh;bottom:10.5vh;padding:6px 8px 14px 6px}
+@media (max-width:1000px){#s8pick .pkGrid{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}}
+#s8pick .pk canvas{aspect-ratio:16/10}
+#s8pick .pkI{padding:38px 18px 13px}
+#s8pick .pkI b{font-size:clamp(13px,.98vw,20px)}
+#s8pick .pkI small{font-size:clamp(9px,.64vw,12px);letter-spacing:.2em}
+#s8pick .pkNew{top:12px;left:13px;padding:4px 8px;font-size:clamp(9px,.64vw,12px)}
+#s8pick .pk .bnh{top:11px;right:13px}
+#s8pick .pkAdd{grid-column:1/-1;aspect-ratio:auto;height:clamp(54px,7vh,76px);flex-direction:row;justify-content:flex-start;gap:20px;padding:0 24px}
+#s8pick .pkAdd .pkPlus{margin:0;font-size:36px}
+#s8pick .pkAdd .pkI{position:static;padding:0;background:none}
