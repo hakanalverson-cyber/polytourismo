@@ -78,14 +78,25 @@ plan(D,E){
   for(const[a,b,rot]of[[-6,PS/2+11,PI/2],[-4,-PS/2-11,-PI/2]]){const p=L(a,b),m=P.FM.get(heroN);if(!m)continue;const s=1.0,ry=pry+rot+(FRONT[heroN]||0)+(a<0?0:0);
    if(tryHouse(heroN,s,1,p[0],p[1],ry,{rise:4.2})){model(heroN,p[0],p[1],ry,s,{tint:WASH[(r()*WASH.length)|0],v:(r()-.5)*.1,skirt:[.6,.52,.42]});occ.rect(p[0],p[1],m.size[0]*s/2,m.size[2]*s/2,ry,2.5,1)}}
   cypress(...L(PS/2-2,PS/2-3));cypress(...L(PS/2-2,-PS/2+3));
+  /* terraces: houses side by side along each street, fronts to the road, same set-back, so the street reads as a street */
+  let nt=0;for(const rd of E.ROADS){if(/^(crinale|passo)/.test(rd.id)&&rd.hw<6)continue;let cum=0,nxt=r()*6;
+   for(let i=1;i<rd.n-1;i++){cum+=Math.hypot(rd.x[i]-rd.x[i-1],rd.z[i]-rd.z[i-1]);if(cum<nxt)continue;
+    const dc=Math.hypot(rd.x[i]-cx,rd.z[i]-cz);if(dc>rad*.92||dc<PS*.9)continue;
+    const tx=rd.x[i+1]-rd.x[i-1],tz=rd.z[i+1]-rd.z[i-1],tl=Math.hypot(tx,tz)||1,ux2=tx/tl,uz2=tz/tl;
+    for(const sd of[1,-1]){if(r()<.12)continue;const k=pickW(HOUSES.filter(h=>h[0]!=='md_shop_c'||dc<rad*.6),r),n0=k[0],m=P.FM.get(n0);if(!m)continue;
+     const sc=k[1]*(.92+r()*.14),tall=k[3]*(.95+r()*.25),hw=m.size[0]*sc/2,hd=m.size[2]*sc/2,off=rd.hw+4.2+hd;
+     const nx2=uz2*sd,nz2=-ux2*sd,x=rd.x[i]+nx2*off,z=rd.z[i]+nz2*off,ry=Math.atan2(-nx2,-nz2)+(FRONT[n0]||0);
+     if(G.sd(x,z)<(o.minSd||40)||slope(x,z,7)>.5)continue;
+     const fp=tryHouse(n0,sc,tall,x,z,ry);if(!fp)continue;model(n0,x,z,ry,sc,{sy:tall,tint:WASH[(r()*WASH.length)|0],v:(r()-.5)*.1,skirt:[.6,.52,.42]});nt++;nxt=cum+hw*2+.6}
+    if(nxt<cum)nxt=cum+8}}
   /* houses: candidates in rings round the piazza, nearest first */
   const cands=[];const step=8.2;for(let gz=-rad;gz<=rad;gz+=step)for(let gx=-rad;gx<=rad;gx+=step){const x=pcx+gx+(r()-.5)*5,z=pcz+gz+(r()-.5)*5,d=Math.hypot(x-pcx,z-pcz);if(d<PS*.62||d>rad)continue;cands.push({x,z,d:d+r()*rad*.18})}
   cands.sort((a,b)=>a.d-b.d);let n=0;const maxN=o.max||90;
-  for(const c of cands){if(n>=maxN)break;const d=Math.hypot(c.x-pcx,c.z-pcz);if(r()>.94*sm(rad,rad*.22,d)+.02)continue;
+  for(const c of cands){if(n>=maxN)break;const d=Math.hypot(c.x-pcx,c.z-pcz);if(r()>(d<PS*1.5?.94:.5)*sm(rad,rad*.22,d)+.02)continue;
    const sd=G.sd(c.x,c.z);if(sd<(o.minSd||40))continue;if(occ.at(c.x,c.z))continue;const sl=slope(c.x,c.z,7);if(sl>.62)continue;
    /* front faces the piazza near it, the road further out, otherwise downhill */
    const g=grad(c.x,c.z,8),gl=Math.hypot(g[0],g[1]);let fx,fz;
-   if(d<PS*1.4){fx=pcx-c.x;fz=pcz-c.z}else if(gl>.12){fx=-g[0];fz=-g[1]}else{const q=nearRoad(E.ROADS,c.x,c.z,80);if(q){fx=q.x-c.x;fz=q.z-c.z}else{fx=pcx-c.x;fz=pcz-c.z}}
+   if(d<PS*1.4){fx=pcx-c.x;fz=pcz-c.z;{const q=Math.round((Math.atan2(fx,fz)-pry)/(PI/2))*(PI/2)+pry;fx=Math.sin(q);fz=Math.cos(q)}}else if(gl>.12){fx=-g[0];fz=-g[1]}else{const q=nearRoad(E.ROADS,c.x,c.z,80);if(q){fx=q.x-c.x;fz=q.z-c.z}else{fx=pcx-c.x;fz=pcz-c.z}}
    const fl=Math.hypot(fx,fz)||1;fx/=fl;fz/=fl;
    const q=(o.sea&&sd<o.sea)?[...(o.seaHouses||HOUSES)]:HOUSES,k=pickW(q,r),n0=k[0],s=k[1]*(.9+r()*.22),tall=k[3]*(.95+r()*.3);
    const ry=Math.atan2(fx,fz)+(FRONT[n0]||0);

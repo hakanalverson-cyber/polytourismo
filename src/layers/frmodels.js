@@ -37,11 +37,16 @@ FM.q=n=>{const k='q_'+n;if(M[k])return M[k];const TD=window.PT8_TREES,d=TD&&TD[n
  for(let i=0;i<q.length;i++){const v=q[i]/16000;Pf[i]=v;const a=i%3;if(v<mn[a])mn[a]=v;if(v>mx[a])mx[a]=v}
  for(let t=0;t<ci.length;t++){const c=pal[ci[t]];for(let v=0;v<3;v++){const o=t*9+v*3;Cf[o]=c.r;Cf[o+1]=c.g;Cf[o+2]=c.b}}
  return M[k]={P:Pf,C:Cf,n:nv,min:mn,size:[mx[0]-mn[0],mx[1]-mn[1],mx[2]-mn[2]]}};
-FM.get=n=>M[n]||(n.slice(0,2)==='l_'?FM.lib(n.slice(2)):n.slice(0,2)==='h_'?FM.hp(n.slice(2)):n.slice(0,2)==='q_'?FM.q(n.slice(2)):null);
+/* a coarse copy for far chunks (name + '~lo'): vertices clustered on a grid about a sixth of the model's size, flat colours kept */
+FM.lod=(n,div)=>{const k=n+'~lo';if(M[k])return M[k];const b=FM.get(n);if(!b)return null;const P0=b.P,C0=b.C,nv=b.n,mn=b.min,cell=Math.max(b.size[0],b.size[1],b.size[2])/(div||6),cl=new Map(),kk=[];
+ for(let i=0;i<nv;i++){const q=Math.round((P0[i*3]-mn[0])/cell)+','+Math.round((P0[i*3+1]-mn[1])/cell)+','+Math.round((P0[i*3+2]-mn[2])/cell);kk.push(q);let c=cl.get(q);if(!c)cl.set(q,c={x:0,y:0,z:0,n:0});c.x+=P0[i*3];c.y+=P0[i*3+1];c.z+=P0[i*3+2];c.n++}
+ const o=[],oc=[];for(let t=0;t+2<nv;t+=3){const a=cl.get(kk[t]),c1=cl.get(kk[t+1]),c2=cl.get(kk[t+2]);if(a===c1||c1===c2||a===c2)continue;for(let v=0;v<3;v++){const q=cl.get(kk[t+v]),i=t+v;o.push(q.x/q.n,q.y/q.n,q.z/q.n);oc.push(C0[i*3],C0[i*3+1],C0[i*3+2])}}
+ return M[k]={P:new Float32Array(o),C:new Float32Array(oc),n:o.length/3,min:mn,size:b.size}};
+FM.get=n=>M[n]||(n.slice(-3)==='~lo'?FM.lod(n.slice(0,-3)):n.slice(0,2)==='l_'?FM.lib(n.slice(2)):n.slice(0,2)==='h_'?FM.hp(n.slice(2)):n.slice(0,2)==='q_'?FM.q(n.slice(2)):null);
 /* append a model to a GB builder: x,y,z = base centre, s = uniform scale, ry = yaw (same convention as GB.box) */
-FM.put=(G,n,x,y,z,s,ry,o)=>{const m=FM.get(n);if(!m)return false;o=o||{};const c=Math.cos(ry||0),sn=Math.sin(ry||0),sx=s,sy=s*(o.sy||1),t=o.tint||null,mn=m.min,cx=(mn[0]+m.size[0]/2),cz=(mn[2]+m.size[2]/2),by=o.noGround?0:mn[1],v=o.v||0,pos=G.pos,col=G.col,Pf=m.P,Cf=m.C;
+FM.put=(G,n,x,y,z,s,ry,o)=>{const m=FM.get(n);if(!m)return false;o=o||{};const c=Math.cos(ry||0),sn=Math.sin(ry||0),sx=s,sy=s*(o.sy||1),t=o.tint||null,mn=m.min,cx=(mn[0]+m.size[0]/2),cz=(mn[2]+m.size[2]/2),by=o.noGround?0:mn[1],v=o.v||0,pos=G.pos,col=G.col,Pf=m.P,Cf=m.C,sw=G.sw,swk=o.sway&&sw?m.size[1]*sy*.03/(m.size[1]*m.size[1]||1):0;
  for(let i=0,e=m.n;i<e;i++){const px=(Pf[i*3]-cx)*sx,py=(Pf[i*3+1]-by)*sy,pz=(Pf[i*3+2]-cz)*sx;pos.push(x+px*c+pz*sn,y+py,z-px*sn+pz*c);
-  let r=Cf[i*3],g=Cf[i*3+1],b=Cf[i*3+2];if(t){r*=t[0];g*=t[1];b*=t[2]}if(v){r*=1+v;g*=1+v;b*=1+v}col.push(r,g,b)}return true};
+  let r=Cf[i*3],g=Cf[i*3+1],b=Cf[i*3+2];if(t){r*=t[0];g*=t[1];b*=t[2]}if(v){r*=1+v;g*=1+v;b*=1+v}col.push(r,g,b);if(sw){const h=Math.max(0,Pf[i*3+1]-by);sw.push(swk*h*h)}}return true};
 FM.size=n=>{const m=FM.get(n);return m?m.size:[1,1,1]};
 /* stand-alone mesh (garage furniture, showcase pieces) */
 let LM=null;

@@ -8,6 +8,7 @@ P.LOG=[
   'Four towns, Porto, Borgo, Rocco and Cala. Each is built round a paved square with a bell tower, a statue, cafe parasols, a gelato cart and street lamps, with pedestrians strolling, and hill-town houses packed round it with their fronts to the square. Cypress lines the roads in, and olive groves, pine woods and boulders fill the slopes.',
   'All the models are open-source or supplied packs, re-coloured into one Mediterranean palette (plaster walls, terracotta roofs, teal shutters, pale limestone) so the houses, rocks, road works, lamps and trees look like one world. The supplied Italian town pieces, rocks and traffic props are only in the full build.',
   'The ground is painted from height and slope: beach sand, farm-plot fields, dry grass, scrub, olive groves, pine woods and bare limestone. The sea is a shader with depth colour, foam along the shore, sun glitter and a sky reflection that deepens toward the horizon.',
+  'Towns are tidier: houses stand side by side along the streets with their fronts to the road and the same set-back, the piazza houses square up to the piazza, the garage is a proper plastered building with a glass front instead of a grey box, and the car meet lot is warm stone instead of grey tarmac.',
   'Roads that meet at a junction now share one height and get a round patch of tarmac, so junctions are clean instead of torn, short duplicate roads are gone, and the road into Rocco no longer kinks.'
  ]},
  {v:'0.02',d:'Oct 29, 2026',t:'Glossy black UI',items:[
