@@ -243,7 +243,7 @@ src=rep(src,"let bi=c.idx,bd=1e9;for(let k=-6;k<=30;k++){","let bi=c.idx,bd=1e9;
 src=rep(src,"c.wrong=hd<-3&&live?c.wrong+dt:0;","c.wrong=!T.free&&hd<-3&&live?c.wrong+dt:0;")
 src=rep(src,"if(live&&(c.y<T.y[c.idx]-12||Math.abs(c.roll)>.68","if(live&&((!T.free&&c.y<T.y[c.idx]-12)||Math.abs(c.roll)>.68")
 src=rep(src," if(!live)return;\n const sf=T.surf(c.x,c.z,c.y);"," if(!live||T.free)return;\n const sf=T.surf(c.x,c.z,c.y);")
-parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','frmodels','frdress','frtown','frworld','freeroam','cars10','audio','modes','tracks','hpack','tracks2','extra','race2','elim','tod','bridge','props','bld','stages','trees_q','propkit','scenery','ra_data','tracks3','imola_data','tracks4','ring_data','ring_forest','tracks5','tracks6','cartoon','logos','weather','ambience','menuaudio','tutorial','updatelog','hud2','shade','ui','promo','cinema','rally','trackmode','realspeed','barn','animals','franimals','frlife','clean','solid','damage','grip','airline','ride','snap','perf','econ','frhud','title','brandbg','uifx','fade','arcade','drivelab']  if os.path.exists(f'{SRC}/layers/{n}.js')]
+parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','frmodels','frdress','frtown','frisland','frisdress','frworld','frwater','freeroam','cars10','audio','modes','tracks','hpack','tracks2','extra','race2','elim','tod','bridge','props','bld','stages','trees_q','propkit','scenery','ra_data','tracks3','imola_data','tracks4','ring_data','ring_forest','tracks5','tracks6','cartoon','logos','weather','ambience','menuaudio','tutorial','updatelog','hud2','shade','ui','promo','cinema','rally','trackmode','realspeed','barn','animals','franimals','frlife','clean','solid','damage','grip','airline','ride','snap','perf','econ','frhud','title','brandbg','uifx','fade','arcade','drivelab']  if os.path.exists(f'{SRC}/layers/{n}.js')]
 # track files (bought cartoon models of Imola / Road Atlanta, made by tools/cartoon_track, kept out of the public repo in project files).
 # PACKS=1 builds them in (Artifact, full build); otherwise players load them with "+ Add track file" so the lite file stays small.
 # DRIVE=1: the Drive Lab test build (src/layers/drivelab.js): lite assets plus only the packs named in DRIVE_TRACKS (default the Nurburgring)
@@ -261,6 +261,12 @@ b64=lambda f:base64.b64encode(open(W+'/assets/'+f,'rb').read()).decode()
 ANIM='<script>const ANIM_B64="'+b64('animals.bin')+'",ANIM_META='+open(W+'/assets/animals.json').read()+';</script>'
 BLD='<script>const BLD_B64="'+b64('bld.bin')+'",BLD_META='+open(W+'/assets/bld.json').read()+';</script>'
 FRM='<script>const FRM_B64="'+b64('frm.bin')+'",FRM_META='+open(W+'/assets/frm.json').read()+';</script>'
+# island kit: the CC0 buildings and trees re-coloured to the Mediterranean palette (tools/models/restyle.py)
+FRI='<script>const FRI_B64="'+b64('fri.bin')+'",FRI_META='+open(W+'/assets/fri.json').read()+';</script>'
+# supplied packs (Italian city scene, rocks, road-works props) converted by tools/models/convert.py, kept in project files: PACKS builds only
+FRP=''
+if (os.environ.get('PACKS') or os.environ.get('FRP')) and os.path.exists('/mnt/project-files/poly-gt/packs/island.bin'):
+  FRP='<script>const FRP_B64="'+base64.b64encode(open('/mnt/project-files/poly-gt/packs/island.bin','rb').read()).decode()+'",FRP_META='+open('/mnt/project-files/poly-gt/packs/island.json').read()+';</script>'
 #FAC='<script>const FAC_B64="'+b64('factory.bin')+'",FACS_B64="'+b64('factory_shell.glb.gz')+'";</script>'
 import glob as _g,gzip as _gz,re as _re,json as _js
 _rev={}
@@ -369,7 +375,7 @@ src=src.replace('<body>','<body>'+WARN+'<div id="ptBoot"><div class="bs"></div><
 BOOT_JS='<script>(function(){var fin=0;function done(){if(fin)return;fin=1;var b=document.getElementById("ptBoot"),c=document.getElementById("ptBootCss");if(window.PT8_BP)PT8_BP(1);if(c)c.remove();if(!b)return;b.classList.add("rdy");if(!document.getElementById("ptTitle")){b.style.opacity=0;setTimeout(function(){b.remove()},1050)}}function go(){var w=window.PT8_BOOT;(w&&w.then?w:Promise.resolve()).then(function(){requestAnimationFrame(function(){requestAnimationFrame(function(){setTimeout(done,350)})})})}if(document.readyState==="complete")go();else addEventListener("load",go);setTimeout(done,900000)})();</script>'
 GLTF='<script>'+open(W+'/assets/GLTFLoader.r128.js').read()+'</script>'
 # the first half of the bar follows the file as it is read in (a marker after each big block), the second half the warm-up in title.js
-_pcs=[('<script>window.PT8_DRIVE=1</script>' if DRIVE else ''),GLTF,ANIM,BLD,FRM,CARS10,HPACK,PHOTO,BBG,PREV,UIFX,MUS,'<style id="v8css">'+css+'</style><script>\n'+'\n'.join(parts)+'\n</script>']
+_pcs=[('<script>window.PT8_DRIVE=1</script>' if DRIVE else ''),GLTF,ANIM,BLD,FRM,FRI,FRP,CARS10,HPACK,PHOTO,BBG,PREV,UIFX,MUS,'<style id="v8css">'+css+'</style><script>\n'+'\n'.join(parts)+'\n</script>']
 i=src.rindex('</body>') if '</body>' in src else len(src)
 _tot=i+sum(len(x) for x in _pcs);_c=i;add=''
 for _x in _pcs:

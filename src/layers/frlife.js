@@ -10,7 +10,7 @@ function carMesh(id){const idx=P.modelOf(id,0),src=typeof CAR_MODELS!=='undefine
  ctd.position.set(-ct.x,-bb.min.y,-ct.z);car.scale.setScalar(k);car.rotation.y=(sz.x>sz.z?PI/2:0);const o=new THREE.Group();o.add(car);
  o.traverse(m=>{if(m.isMesh){m.castShadow=false;m.receiveShadow=false;m.userData.shared=true}});return o}
 /* ---------- traffic ---------- */
-function roadsFor(F){const out=[];for(const r of F.ROADS){if(r.lane||r.mat)continue;if(r.id==='summit'||r.id==='air'||r.id==='drift'||r.id==='meet')continue;out.push(r)}return out}
+function roadsFor(F){const out=[];for(const r of F.ROADS){if(r.lane||r.mat)continue;if(r.type==='street'||r.noTraffic)continue;out.push(r)}return out}
 function initTraffic(F,sc){const L={cars:[],roads:roadsFor(F),grp:new THREE.Group()};sc.add(L.grp);
  const ids=CIV.filter(i=>P.BYID&&P.BYID[i]);for(let k=0;k<16;k++){const id=ids[(Math.random()*ids.length)|0],m=carMesh(id);if(!m)continue;m.visible=false;L.grp.add(m);L.cars.push({m,r:null,t:0,dir:1,v:0,vt:12,lane:1,hit:0,on:false,x:0,z:0,yaw:0,id})}
  return L}
@@ -44,23 +44,17 @@ function initPeds(F,sc){const N=44,L={n:N,p:[],legL:null,legR:null,body:null,hea
  const cols=[0xd44a3a,0x3a78d4,0x3ab06a,0xe6c23a,0x8a4ad4,0xe8e8ea,0x333a44,0xe07a30],c=new THREE.Color();
  for(let i=0;i<N;i++){const p={x:0,z:0,dx:1,dz:0,on:false,ph:Math.random()*6,sp:1.1+Math.random()*.6,col:cols[(Math.random()*cols.length)|0]};L.p.push(p);c.setHex(p.col);L.body.setColorAt(i,c);L.armL.setColorAt(i,c);L.armR.setColorAt(i,c)}
  L.body.instanceColor.needsUpdate=true;L.armL.instanceColor.needsUpdate=true;L.armR.instanceColor.needsUpdate=true;L.dm=new THREE.Object3D();return L}
-function pedSpawn(L,F,c,p){/* a spot on a sidewalk near the player */
- const TX0=F.TX0,TZ0=F.TZ0,TB=F.TB;for(let k=0;k<12;k++){const along=Math.random()<.5,ang=Math.random()*TAU,rad=30+Math.random()*110;let x=c.x+Math.cos(ang)*rad,z=c.z+Math.sin(ang)*rad;
-  if(!F.inTown(x,z,-20))continue;
-  if(along){/* walk along an east-west street */const j=Math.round((z-TZ0)/TB),sd=Math.random()<.5?-1:1;z=TZ0+TB*j+sd*6.8;if(j<0||j>F.TNZ)continue;p.dx=Math.random()<.5?1:-1;p.dz=0}
-  else{const i=Math.round((x-TX0)/TB),sd=Math.random()<.5?-1:1;x=TX0+TB*i+sd*6.8;if(i<0||i>F.TNX)continue;p.dx=0;p.dz=Math.random()<.5?1:-1}
-  p.x=x;p.z=z;p.on=true;return}
+/* pedestrians walk the footpath lines the town planner publishes (P.FRD.walks: polylines of [x,z]) */
+function walkPos(w,s){const cum=w.cum;let lo=0,hi=w.length-1;while(hi-lo>1){const m=(lo+hi)>>1;if(cum[m]<=s)lo=m;else hi=m}const a=w[lo],b=w[hi],f=Math.min(1,Math.max(0,(s-cum[lo])/((cum[hi]-cum[lo])||1)));return[a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f,b[0]-a[0],b[1]-a[1]]}
+function pedSpawn(L,F,c,p){const WK=(P.FRD&&P.FRD.walks)||[];if(!WK.length){p.on=false;return}
+ for(let k=0;k<16;k++){const w=WK[(Math.random()*WK.length)|0];if(!w.cum){w.cum=[0];for(let i=1;i<w.length;i++)w.cum.push(w.cum[i-1]+Math.hypot(w[i][0]-w[i-1][0],w[i][1]-w[i-1][1]))}
+  const len=w.cum[w.length-1];if(len<6)continue;const s=Math.random()*len,q=walkPos(w,s),d=Math.hypot(q[0]-c.x,q[1]-c.z);if(d<35||d>170)continue;
+  p.w=w;p.len=len;p.s=s;p.dir=Math.random()<.5?1:-1;p.x=q[0];p.z=q[1];const l=Math.hypot(q[2],q[3])||1;p.dx=q[2]/l*p.dir;p.dz=q[3]/l*p.dir;p.on=true;return}
  p.on=false}
-function tickPeds(L,F,c,dt,t){const dm=L.dm,TX0=F.TX0,TZ0=F.TZ0,TB=F.TB;
- for(let i=0;i<L.n;i++){const p=L.p[i];if(!p.on||Math.hypot(p.x-c.x,p.z-c.z)>190||!F.inTown(p.x,p.z,-8)){pedSpawn(L,F,c,p)}
-  if(p.on){/* keep to the sidewalk line; cross the street at intersections now and then */
-   p.x+=p.dx*p.sp*dt;p.z+=p.dz*p.sp*dt;
-   const lx=(p.x-TX0)/TB,lz=(p.z-TZ0)/TB;
-   if(p.dx!==0){const nz=Math.round(lz);const off=(p.z-TZ0-TB*nz);if(Math.abs(off)>5.2&&Math.abs(off)<8.5&&Math.abs(((p.x-TX0)/TB)%1)>.9)p.z+=0;}
-   const ix=Math.abs(lx-Math.round(lx))*TB,iz=Math.abs(lz-Math.round(lz))*TB;
-   if(ix<7.6&&iz<7.6&&!p.turned){p.turned=true;if(Math.random()<.45){const a=p.dx,b=p.dz;p.dx=b*(Math.random()<.5?1:-1);p.dz=a*(Math.random()<.5?1:-1);if(p.dx!==0){p.z=TZ0+TB*Math.round(lz)+(Math.random()<.5?-1:1)*6.8}else{p.x=TX0+TB*Math.round(lx)+(Math.random()<.5?-1:1)*6.8}}}
-   if(ix>10||iz>10)p.turned=false;
-   p.ph+=dt*p.sp*5.2}
+function tickPeds(L,F,c,dt,t){const dm=L.dm;
+ for(let i=0;i<L.n;i++){const p=L.p[i];if(p.on&&Math.hypot(p.x-c.x,p.z-c.z)>200)p.on=false;if(!p.on)pedSpawn(L,F,c,p);
+  if(p.on){p.s+=p.dir*p.sp*dt;if(p.s<0||p.s>p.len){p.dir=-p.dir;p.s=Math.min(p.len,Math.max(0,p.s))}
+   const q=walkPos(p.w,p.s),l=Math.hypot(q[2],q[3])||1;p.x=q[0];p.z=q[1];p.dx=q[2]/l*p.dir;p.dz=q[3]/l*p.dir;p.ph+=dt*p.sp*5.2}
   const y=p.on?F.Hf(p.x,p.z)+.16:-999,yaw=Math.atan2(p.dx,p.dz),sw=Math.sin(p.ph)*.6;
   const set=(m,ox,oy,oz,rx)=>{dm.position.set(p.x+Math.cos(yaw)*ox,y+oy,p.z-Math.sin(yaw)*ox);dm.rotation.set(rx||0,yaw,0);dm.scale.setScalar(p.on?1:0.0001);dm.updateMatrix();m.setMatrixAt(i,dm.matrix)};
   set(L.body,0,0,0,0);set(L.head,0,0,0,0);set(L.legL,.11,.86,0,sw);set(L.legR,-.11,.86,0,-sw);set(L.armL,.33,1.46,0,-sw);set(L.armR,-.33,1.46,0,sw)}

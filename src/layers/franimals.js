@@ -6,7 +6,7 @@ const H2=(a,b)=>{let h=Math.imul(a|0,374761393)^Math.imul(b|0,668265263);h=Math.
 const SETS=[[['Cow',4]],[['Cow',3],['Bull',1]],[['Horse',3]],[['WhiteHorse',2],['Horse',2]],[['Alpaca',4]],[['Donkey',3]],[['Deer',3]],[['Stag',2],['Deer',2]]];
 function plan(F){const D=P.FRD,hs=[],W=F.W;
  for(const f of (D&&D.farms)||[]){hs.push({x:f.x-f.fx*58,z:f.z-f.fz*58,set:[['Cow',3],['Horse',2]],home:12});hs.push({x:f.x+f.fz*-70+f.fx*10,z:f.z+f.fx*70+f.fz*10,set:[['Cow',3]],home:12})}
- let n=0;for(let k=0;k<4000&&n<16;k++){const x=500+H2(k,7)*5700,z=420+H2(k,19)*3800,h=F.Hf(x,z);if(h<6||h>70||F.inTown(x,z,260))continue;const gi=Math.round(z/F.CELL)*(F.WX/F.CELL+1)+Math.round(x/F.CELL);if(W.Z[gi]||W.dd[gi]<45)continue;
+ let n=0;for(let k=0;k<6000&&n<14;k++){const x=300+H2(k,7)*6100,z=300+H2(k,19)*4100,h=F.Hf(x,z);if(h<6||h>110||F.inTown(x,z,260)||F.G.sd(x,z)<90)continue;const gi=Math.round(z/F.CELL)*(F.WX/F.CELL+1)+Math.round(x/F.CELL);if(W.Z[gi]||W.dd[gi]<45)continue;
   const sl=Math.max(Math.abs(F.Hf(x+14,z)-h),Math.abs(F.Hf(x,z+14)-h));if(sl>1.6)continue;if(hs.some(q=>Math.hypot(q.x-x,q.z-z)<420))continue;
   hs.push({x,z,set:SETS[(H2(k,3)*SETS.length)|0],home:14});n++}
  return hs}

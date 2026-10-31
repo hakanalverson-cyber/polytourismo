@@ -19,79 +19,8 @@ D.fit=function(n,W,H,maxD){const m=FM().get(n);if(!m)return{s:1,sy:1};const z=m.
 /* the game's own cars, parked */
 D.cars=['c26','c50','c67','c91','c5','c28','c32','c39','c57','c12','c18','c22','c25','c40','c41','c48','c55','c58','c62','c83','c96','c101','c111','c114','c117','c121','c19','c31','c54','c64','lr','ford','ster','merc','must','urus','c93'];
 D.lamp=function(ctx,x,z,ry){const y=ctx.gy(x,z),c=Math.cos(ry||0),s=Math.sin(ry||0);ctx.G.box(x,y,z,.22,6.2,.22,[.25,.26,.3]);ctx.G.box(x+c*.8,y+6.1,z-s*.8,1.8,.18,.28,[.25,.26,.3],ry||0);ctx.N.box(x+c*1.45,y+5.9,z-s*1.45,.8,.16,.45,[1.6,1.5,1.1],ry||0);ctx.pt(x,z,.4)};
-/* ---------- planning (runs once, before the road raster is built) ---------- */
-D.plan=function(E){if(D.planned)return D;D.planned=true;
- const {ROADS,fullH,sd,W,dense,lane,inTown,PLAT,rng,fbm,H2}=E,R=rng(90210);
- const rd={};for(const r of ROADS)rd[r.id]=r;
- const dn={};const dp=id=>dn[id]||(dn[id]=dense(rd[id]||ROADS.find(r=>r.id===id)));
- const near=(x,z,skip)=>{let best=1e9,bi=null;for(const r of ROADS){if(skip&&skip(r))continue;const d=dp(r.id);for(let i=0;i<d.length;i+=2){const dd=Math.hypot(d[i][0]-x,d[i][1]-z);if(dd<best){best=dd;bi=[r,i,d]}}}return{d:best,r:bi&&bi[0],i:bi&&bi[1],pts:bi&&bi[2]}};
- const flat=(x,z,rad)=>{let lo=1e9,hi=-1e9;for(const[a,b]of[[0,0],[1,0],[-1,0],[0,1],[0,-1],[.7,.7],[-.7,.7],[.7,-.7],[-.7,-.7]]){const h=fullH(x+a*rad,z+b*rad);lo=Math.min(lo,h);hi=Math.max(hi,h)}return hi-lo};
- const okLand=(x,z,mn)=>sd(W.land,x,z)>(mn||120)&&sd(W.lake,x,z)<-40;
- const nearPlat=(x,z,m)=>PLAT.some(p=>Math.abs(x-p.x)<p.w/2+(m||60)&&Math.abs(z-p.z)<p.d/2+(m||60));
- const taken=[];const free=(x,z,r)=>{for(const t of taken)if(Math.hypot(t[0]-x,t[1]-z)<t[2]+r)return false;return true};
- const add=(t,x,z,o)=>{D.items.push(Object.assign({t,x,z},o))};
- const roadSet=['loop','cn','cs','lake','cw'];
- /* roadside villages */
- const vc=[];for(const id of roadSet){const d=dp(id),r=rd[id];for(let i=12;i<d.length-12;i+=14){const p=d[i];vc.push({x:p[0],z:p[1],i,id,r,d})}}
- for(let k=vc.length-1;k>0;k--){const j=Math.floor(R()*(k+1));[vc[k],vc[j]]=[vc[j],vc[k]]}
- const villages=[];
- for(const c of vc){if(villages.length>=8)break;if(!okLand(c.x,c.z,160)||inTown(c.x,c.z,320)||nearPlat(c.x,c.z,120))continue;const h=fullH(c.x,c.z);if(h<8||h>62||flat(c.x,c.z,60)>3.4)continue;
-  if(villages.some(v=>Math.hypot(v.x-c.x,v.z-c.z)<780))continue;villages.push(c)}
- const hp=[['b_ResidentBuilding_01',10,7.5],['b_ResidentBuilding_03',12,7.5],['b_ResidentBuilding_05',13,8],['b_ResidentBuilding_06',15,7],['b_ResidentBuilding_04',13,9.5],['building-small-a',11,8],['building-small-d',11,8.5],['building-small-a',12,7.5],['building-small-d',12,8],['b_ResidentBuilding_02',9,9]];
- const tints=[[1,1,1],[1.08,.96,.9],[.9,1.02,1.08],[1.05,1.05,.88],[.95,.9,1.05],[1.08,1,.95]];
- villages.forEach((v,vi)=>{const d=v.d,hw=v.r.hw,n=3+(R()*2|0);let cnt=0;
-  const tan=(i)=>{const a=d[Math.max(0,i-3)],b=d[Math.min(d.length-1,i+3)],L=Math.hypot(b[0]-a[0],b[1]-a[1])||1;return[(b[0]-a[0])/L,(b[1]-a[1])/L]};
-  for(const side of[-1,1])for(let k=-n;k<=n;k++){const idx=cl(v.i+Math.round((k*26+(R()-.5)*8)/6)*1,2,d.length-3),p=d[idx],t=tan(idx),nx=t[1]*side,nz=-t[0]*side,lat=hw+12+R()*6;
-   const x=p[0]+nx*lat,z=p[1]+nz*lat;if(!okLand(x,z,70)||fullH(x,z)<6||flat(x,z,9)>3.2)continue;if(near(x,z,r=>r.id===v.id).d<hw+14)continue;if(!free(x,z,11))continue;
-   const pk=hp[(R()*hp.length)|0],ft=D.fit(pk[0],pk[1]*(.92+R()*.2),pk[2]*(.9+R()*.25),14);
-   add('house',x,z,{n:pk[0],ry:Math.atan2(-nx,-nz),s:ft.s,sy:ft.sy,tint:tints[(R()*tints.length)|0],lat:lat});add('yard',x,z,{ry:Math.atan2(-nx,-nz),w:pk[1]});taken.push([x,z,9]);cnt++;
-   if(R()<.55){const tx=x-nx*(-9)-t[0]*10,tz=z-nz*(-9)-t[1]*10;if(free(tx,tz,3)&&fullH(tx,tz)>3)add('tree',tx,tz,{s:1+R()*.5,k:R()});}}
-  /* street lamps + plaza */
-  for(let k=-n;k<=n;k+=2){const idx=cl(v.i+k*5,2,d.length-3),p=d[idx],t=tan(idx);add('lamp',p[0]+t[1]*(hw+2.5),p[1]-t[0]*(hw+2.5),{ry:Math.atan2(-t[1],t[0])})}
-  if(cnt<3)return;add('sign',v.x,v.z,{txt:['OAKFIELD','PINE HOLLOW','STONEBRIDGE','MILLBROOK','HARBOR END','REDWOOD','CALDER'][vi%7],x2:null});
-  const p0=d[v.i],t0=tan(v.i);const sx=p0[0]+t0[1]*(hw+22),sz=p0[1]-t0[0]*(hw+22);if(free(sx,sz,10)&&near(sx,sz,r=>r.id===v.id).d>hw+16){add('m',sx,sz,{n:'pavement-fountain',s:9,ry:0,solid:true,noSkirt:true,v:.0});taken.push([sx,sz,10])}
-  v.done=true});
- /* farms with a dirt lane each */
- const farms=[];const cand=[];for(let x=420;x<6300;x+=150)for(let z=360;z<4300;z+=150){const jx=x+(H2(x,z)-.5)*120,jz=z+(H2(z,x)-.5)*120;cand.push([jx,jz])}
- for(let k=cand.length-1;k>0;k--){const j=Math.floor(R()*(k+1));[cand[k],cand[j]]=[cand[j],cand[k]]}
- for(const [x,z] of cand){if(farms.length>=6)break;if(!okLand(x,z,200)||inTown(x,z,320)||nearPlat(x,z,150))continue;const h=fullH(x,z);if(h<6||h>46||flat(x,z,55)>2.2)continue;
-  const nr=near(x,z,r=>r.id[0]==='t'&&r.id.length<=3);if(nr.d<90||nr.d>260)continue;if(villages.some(v=>Math.hypot(v.x-x,v.z-z)<420)||farms.some(f=>Math.hypot(f.x-x,f.z-z)<700))continue;
-  const p=nr.pts[nr.i],fx=(p[0]-x)/nr.d,fz=(p[1]-z)/nr.d;/* front faces the road */
-  farms.push({x,z,fx,fz,p,r:nr.r})}
- farms.forEach((f,k)=>{const ex=f.x+f.fx*26,ez=f.z+f.fz*26;lane(`ln${k}`,[[f.p[0],f.p[1]],[(f.p[0]+ex)/2+(R()-.5)*18,(f.p[1]+ez)/2+(R()-.5)*18],[ex,ez]],3.6);
-  const ry=Math.atan2(f.fx,f.fz),ux=f.fz,uz=-f.fx;/* u = right-hand axis */
-  const at=(u,v)=>[f.x+ux*u+f.fx*v,f.z+uz*u+f.fz*v];
-  const place=(nm,u,v,s,o)=>{const q=at(u,v);add('m',q[0],q[1],Object.assign({n:nm,ry,s},o||{}))};
-  place('b_FarmerHouse',-15,4,1.4);place('b_Barn_02',14,-5,1.4);place('b_Silo_01',26,-9,2.2);place('b_Silo_02',30,-2,2.4);place('b_ChickenCoop',-5,-11,.95);
-  place('b_Haystack_04',-25,-8,1.5,{solid:false});place('b_Haystack_01',-29,-14,1.4,{solid:false});place('b_Well_02',2,13,1.2,{solid:false});
-  {const A=at(-34,19),B=at(-6,19),C=at(6,19),Dd=at(34,19);add('fence',A[0],A[1],{x2:B[0],z2:B[1],h:1.3,k:'rail'});add('fence',C[0],C[1],{x2:Dd[0],z2:Dd[1],h:1.3,k:'rail'});const E=at(-34,19),F2=at(-34,-30),G2=at(34,19),H3=at(34,-30);add('fence',E[0],E[1],{x2:F2[0],z2:F2[1],h:1.3,k:'rail'});add('fence',G2[0],G2[1],{x2:H3[0],z2:H3[1],h:1.3,k:'rail'});const I=at(-34,-30),J=at(34,-30);add('fence',I[0],I[1],{x2:J[0],z2:J[1],h:1.3,k:'rail'})}
-  {const tr=at(-6,6);add('car',tr[0],tr[1],{ry:ry+PI/2*.2});const dp=at(-6,-1);add('dirt',dp[0],dp[1],{w:30,d:44,ry,mid:[-8,-2]})}
-  /* crop plots behind the barn */
-  const tiles=['b_FarmLand_02','b_FarmLand_03','b_FarmLand_04','b_FarmLand_05','b_FarmLand_07','b_FarmLand_09','b_FarmLand_10','b_FarmLand_06','b_FarmLand_08'];
-  for(let a=-1;a<=1;a++)for(let b=0;b<3;b++){const q=at(a*21,-44-b*21);if(!okLand(q[0],q[1],50))continue;add('tile',q[0],q[1],{n:tiles[(a+1+b*3+k*2)%tiles.length],ry:ry+(((a+b)&1)?PI/2:0),s:4.2})}
-  taken.push([f.x,f.z,70]);
-  for(let i=0;i<8;i++){const q=at(-40+R()*80,26+R()*20),fh=fullH(q[0],q[1]);if(fh>4)add('tree',q[0],q[1],{s:1+R()*.6,k:R()})}});
- D.villages=villages;D.farms=farms;
- /* wind farm on the hills */
- const hc=[];for(let x=500;x<6200;x+=120)for(let z=450;z<4200;z+=120){const h=fullH(x,z);if(h>20&&h<130&&okLand(x,z,150)&&!nearPlat(x,z,200)&&!inTown(x,z,300))hc.push([x,z,h])}
- for(let k=hc.length-1;k>0;k--){const j=Math.floor(R()*(k+1));[hc[k],hc[j]]=[hc[j],hc[k]]}
- const turb=[];for(const c of hc){if(turb.length>=9)break;if(near(c[0],c[1]).d<100||flat(c[0],c[1],30)>8)continue;if(turb.some(t=>Math.hypot(t[0]-c[0],t[1]-c[1])<300)||villages.some(v=>Math.hypot(v.x-c[0],v.z-c[1])<300))continue;if(Math.hypot(c[0]-4650,c[1]-1512)<260)continue;turb.push(c);add('turbine',c[0],c[1],{ry:R()*6.28})}
- /* roadside: stores, billboards, poles */
- let ns=0;for(const id of['cn','cs','loop']){const d=dp(id),r=rd[id];for(let i=40;i<d.length-40;i+=36){if(ns>=4)break;const p=d[i],a=d[i-3],b=d[i+3],L=Math.hypot(b[0]-a[0],b[1]-a[1])||1,tx=(b[0]-a[0])/L,tz=(b[1]-a[1])/L,side=R()<.5?-1:1,nx=tz*side,nz=-tx*side,x=p[0]+nx*(r.hw+20),z=p[1]+nz*(r.hw+20);
-   if(R()>.25||!okLand(x,z,150)||inTown(x,z,300)||fullH(x,z)<5||flat(x,z,14)>2||!free(x,z,24)||near(x,z,q=>q.id===id).d<r.hw+18)continue;
-   add('store',x,z,{ry:Math.atan2(-nx,-nz),txt:['ROADSIDE DINER','FUEL & FOOD','GENERAL STORE','TRUCK STOP'][ns%4],nx,nz});taken.push([x,z,22]);ns++}}
- for(const id of['loop','cn','cs','cw']){const d=dp(id),r=rd[id];for(let i=60;i<d.length-60;i+=170+(R()*60|0)){const p=d[i],a=d[i-3],b=d[i+3],L=Math.hypot(b[0]-a[0],b[1]-a[1])||1,tx=(b[0]-a[0])/L,tz=(b[1]-a[1])/L,side=R()<.5?-1:1,nx=tz*side,nz=-tx*side,x=p[0]+nx*(r.hw+9),z=p[1]+nz*(r.hw+9);
-   if(!okLand(x,z,100)||inTown(x,z,300)||nearPlat(x,z,40)||!free(x,z,8)||near(x,z,q=>q.id===id).d<r.hw+7||fullH(x,z)<3)continue;add('bb',x,z,{n:['l_bbA','l_bbB','l_bbC'][(R()*3)|0],ry:Math.atan2(-nx,-nz),s:1.35});taken.push([x,z,8])}}
- for(const id of['cn','cs','lake','mtn','cw']){const d=dp(id),r=rd[id];for(let i=10;i<d.length-10;i+=11){const p=d[i],a=d[i-3],b=d[i+3],L=Math.hypot(b[0]-a[0],b[1]-a[1])||1,tx=(b[0]-a[0])/L,tz=(b[1]-a[1])/L,x=p[0]+tz*(r.hw+4),z=p[1]-tx*(r.hw+4);
-   if(inTown(x,z,100)||fullH(x,z)<2.6||!okLand(x,z,40)||villages.some(v=>Math.hypot(v.x-x,v.z-z)<130))continue;add('pole',x,z,{ry:Math.atan2(tz,-tx)})}}
- /* lakeside camp */
- {const d=dp('lake'),mid=d[Math.floor(d.length*.45)],t=d[Math.floor(d.length*.45)+4],L=Math.hypot(t[0]-mid[0],t[1]-mid[1])||1,tx=(t[0]-mid[0])/L,tz=(t[1]-mid[1])/L;
-  for(const side of[-1,1]){const x=mid[0]+tz*side*38,z=mid[1]-tx*side*38;if(okLand(x,z,60)&&fullH(x,z)>3.5&&flat(x,z,14)<2.4&&near(x,z,r=>r.id==='lake').d>26){add('camp',x,z,{ry:Math.atan2(-tz*side,tx*side)});taken.push([x,z,30]);break}}}
- /* south-coast harbour */
- {const d=dp('cs'),i=Math.floor(d.length*.45),p=d[i],a=d[i-3],b=d[i+3],L=Math.hypot(b[0]-a[0],b[1]-a[1])||1,nx=(b[1]-a[1])/L,nz=-(b[0]-a[0])/L;let sx=nx,sz=nz;if(sd(W.land,p[0]+sx*60,p[1]+sz*60)>sd(W.land,p[0]-sx*60,p[1]-sz*60)){sx=-sx;sz=-sz}
-  let x=p[0],z=p[1];for(let s=0;s<700;s+=8){x=p[0]+sx*s;z=p[1]+sz*s;if(sd(W.land,x,z)<30)break}
-  add('harbor',x,z,{ry:Math.atan2(sx,sz)})}
- return D};
+/* ---------- planning (runs once per world, after the roads and stops exist): the island dressing is planned in frisdress.js ---------- */
+D.plan=function(E){if(D.planned)return D;D.planned=true;D.items=[];if(P.FRDI&&P.FRDI.plan)P.FRDI.plan(D,E);return D};
 /* ---------- chunk assembly ---------- */
 D.index=function(CH){D.by.clear();for(const it of D.items){const k=Math.floor(it.x/CH)+','+Math.floor(it.z/CH);let a=D.by.get(k);if(!a)D.by.set(k,a=[]);a.push(it)}};
 const TINT0=[1,1,1];
@@ -103,7 +32,7 @@ D.chunk=function(ctx,cx,cz){const a=D.by.get(cx+','+cz);if(!a)return;const F=P.F
   case'fence':if(P.FRT)P.FRT.fence(ctx,x,z,it.x2,it.z2,it.h||1.2,it.k||'rail',it.solid);break;
   case'yard':if(P.FRT)P.FRT.yard(ctx,x,z,it.ry,it.w);break;
   case'dirt':if(P.FRT)P.FRT.dirtPatch(ctx,x,z,it.ry,it.w,it.d);break;
-  case'm':D.mput(ctx,it.n,x,z,it.ry,it.s,{solid:it.solid!==false,noSkirt:it.noSkirt,fp:it.fp,tint:it.tint,v:it.v==null?0:it.v});if(it.fence)ctx.pt(x,z,.7);break;
+  case'm':D.mput(ctx,it.n,x,z,it.ry,it.s,{solid:it.solid!==false,noSkirt:it.noSkirt,fp:it.fp,tint:it.tint,sy:it.sy,skirt:it.skirt,v:it.v==null?0:it.v});if(it.fence)ctx.pt(x,z,.7);if(it.pt)ctx.pt(x,z,it.pt);break;
   case'tile':{const q=fm.size(it.n),y=ctx.gy(x,z);fm.put(ctx.G,it.n,x,y-.38*it.s*.5,z,it.s,it.ry,{});break}
   case'tree':ctx.tree(x,z,it.s||1,it.k);break;
   case'lamp':D.lamp(ctx,x,z,it.ry);break;

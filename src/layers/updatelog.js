@@ -3,6 +3,13 @@
 'use strict';
 const P=window.PT8;
 P.LOG=[
+ {v:'0.02',d:'Oct 31, 2026',t:'Riviera island',items:[
+  'Free Roam now takes place on the Riviera, a Mediterranean island about 5 km across that you can drive end to end: a coast road that loops the whole shore, a mountain pass that winds up through hairpins to a summit square with a stone parapet and a statue looking over the sea, and ridge roads branching off it. The island is generated from a seed, so it is the same every time.',
+  'Four towns, Porto, Borgo, Rocco and Cala. Each is built round a paved square with a bell tower, a statue, cafe parasols, a gelato cart and street lamps, with pedestrians strolling, and hill-town houses packed round it with their fronts to the square. Cypress lines the roads in, and olive groves, pine woods and boulders fill the slopes.',
+  'All the models are open-source or supplied packs, re-coloured into one Mediterranean palette (plaster walls, terracotta roofs, teal shutters, pale limestone) so the houses, rocks, road works, lamps and trees look like one world. The supplied Italian town pieces, rocks and traffic props are only in the full build.',
+  'The ground is painted from height and slope: beach sand, farm-plot fields, dry grass, scrub, olive groves, pine woods and bare limestone. The sea is a shader with depth colour, foam along the shore, sun glitter and a sky reflection that deepens toward the horizon.',
+  'Roads that meet at a junction now share one height and get a round patch of tarmac, so junctions are clean instead of torn, short duplicate roads are gone, and the road into Rocco no longer kinks.'
+ ]},
  {v:'0.02',d:'Oct 29, 2026',t:'Glossy black UI',items:[
   'The old studio car renders are gone from every menu: the mode cards, circuit select and race office now sit on the same stills as the main menu, dimmed under the glass, and nothing can flash up while the menu fades in after the loading screen.',
   'Circuit select shows four big cards across with a wider picture, and the add-a-track-file card is a slim bar under them.',

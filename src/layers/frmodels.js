@@ -2,10 +2,12 @@
 (function frmodels(){
 'use strict';
 const P=window.PT8,M={},FM={M};
-/* Kenney kits: positions int16 /1000, colours uint8, triangle soup */
-if(typeof FRM_B64!=='undefined'){
- const raw=atob(FRM_B64),u8=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)u8[i]=raw.charCodeAt(i);
- for(const m of FRM_META){const nv=m.nv,pp=new Int16Array(u8.buffer.slice(m.off,m.off+nv*6)),cc=u8.subarray(m.off+nv*6,m.off+nv*9),Pf=new Float32Array(nv*3),Cf=new Float32Array(nv*3);
+/* triangle-soup blobs: positions int16 /1000, colours uint8 (painted sRGB). FRM = Kenney kits, FRI = the island kit
+   (the CC0 buildings and trees re-coloured to the Mediterranean palette), FRP = the bought / supplied packs converted
+   by tools/models/convert.py (Italian city scene, rocks, road-works props; full builds only) */
+for(const bb of[typeof FRM_B64!=='undefined'?[FRM_B64,FRM_META]:null,typeof FRI_B64!=='undefined'?[FRI_B64,FRI_META]:null,typeof FRP_B64!=='undefined'?[FRP_B64,FRP_META]:null]){
+ if(!bb)continue;const raw=atob(bb[0]),u8=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)u8[i]=raw.charCodeAt(i);
+ for(const m of bb[1]){const nv=m.nv,pp=new Int16Array(u8.buffer.slice(m.off,m.off+nv*6)),cc=u8.subarray(m.off+nv*6,m.off+nv*9),Pf=new Float32Array(nv*3),Cf=new Float32Array(nv*3);
   for(let i=0;i<nv*3;i++){Pf[i]=pp[i]*.001;Cf[i]=Math.pow(cc[i]/255,2.1)}
   M[m.n]={P:Pf,C:Cf,n:nv,min:m.min,size:m.size}}}
 /* pandazole buildings / trees (already in the page for the track maps) */
@@ -29,7 +31,13 @@ FM.hp=n=>{const k='h_'+n;if(M[k])return M[k];const H=P.HP;if(!H||!H.ready||!H.de
    if(tx&&uv){let u=uv.getX(i),v=uv.getY(i);u-=Math.floor(u);v-=Math.floor(v);const x=Math.min(tx.w-1,Math.floor(u*tx.w)),y=Math.min(tx.h-1,Math.floor((map.flipY?1-v:v)*tx.h)),o=(y*tx.w+x)*4;r=Math.pow(tx.d[o]/255,2.1);gg=Math.pow(tx.d[o+1]/255,2.1);b=Math.pow(tx.d[o+2]/255,2.1)}
    Ca.push(r*mc.r,gg*mc.g,b*mc.b)}}
  return M[k]={P:new Float32Array(Pa),C:new Float32Array(Ca),n:Pa.length/3,min:[d.min.x,d.min.y,d.min.z],size:[d.max.x-d.min.x,d.max.y-d.min.y,d.max.z-d.min.z]}};
-FM.get=n=>M[n]||(n.slice(0,2)==='l_'?FM.lib(n.slice(2)):n.slice(0,2)==='h_'?FM.hp(n.slice(2)):null);
+/* Quaternius nature models (CC0, baked in trees_q.js: 1 unit tall, one palette index per triangle) */
+FM.q=n=>{const k='q_'+n;if(M[k])return M[k];const TD=window.PT8_TREES,d=TD&&TD[n];if(!d)return null;const dec=t=>{const b=atob(t),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u};
+ const q=new Int16Array(dec(d.p).buffer),ci=dec(d.c),pal=d.pal.map(h=>new THREE.Color(h)),nv=q.length/3,Pf=new Float32Array(q.length),Cf=new Float32Array(q.length);let mn=[1e9,1e9,1e9],mx=[-1e9,-1e9,-1e9];
+ for(let i=0;i<q.length;i++){const v=q[i]/16000;Pf[i]=v;const a=i%3;if(v<mn[a])mn[a]=v;if(v>mx[a])mx[a]=v}
+ for(let t=0;t<ci.length;t++){const c=pal[ci[t]];for(let v=0;v<3;v++){const o=t*9+v*3;Cf[o]=c.r;Cf[o+1]=c.g;Cf[o+2]=c.b}}
+ return M[k]={P:Pf,C:Cf,n:nv,min:mn,size:[mx[0]-mn[0],mx[1]-mn[1],mx[2]-mn[2]]}};
+FM.get=n=>M[n]||(n.slice(0,2)==='l_'?FM.lib(n.slice(2)):n.slice(0,2)==='h_'?FM.hp(n.slice(2)):n.slice(0,2)==='q_'?FM.q(n.slice(2)):null);
 /* append a model to a GB builder: x,y,z = base centre, s = uniform scale, ry = yaw (same convention as GB.box) */
 FM.put=(G,n,x,y,z,s,ry,o)=>{const m=FM.get(n);if(!m)return false;o=o||{};const c=Math.cos(ry||0),sn=Math.sin(ry||0),sx=s,sy=s*(o.sy||1),t=o.tint||null,mn=m.min,cx=(mn[0]+m.size[0]/2),cz=(mn[2]+m.size[2]/2),by=o.noGround?0:mn[1],v=o.v||0,pos=G.pos,col=G.col,Pf=m.P,Cf=m.C;
  for(let i=0,e=m.n;i<e;i++){const px=(Pf[i*3]-cx)*sx,py=(Pf[i*3+1]-by)*sy,pz=(Pf[i*3+2]-cz)*sx;pos.push(x+px*c+pz*sn,y+py,z-px*sn+pz*c);
