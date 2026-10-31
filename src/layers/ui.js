@@ -206,9 +206,9 @@ const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="current
  const B64=(L,i)=>L&&L[i]?'url(data:image/jpeg;base64,'+L[i]+')':'none',BB=typeof BBG_B64!=='undefined'?BBG_B64:[],PB=[];
  const nTrk=()=>D.filter((d,i)=>okTrack('track',i)).length,nStg=()=>(P.STAGES||[]).length,nOwn=()=>{const o=P.SV().owned||{};return Object.keys(o).filter(k=>o[k]>0).length},
   nMk=()=>new Set(CARS.map(c=>P.makerOf?P.makerOf(c):(c.name||'').split(' ')[0])).size;
- const TABS=[{k:'quick',l:'Quickplay',i:'play',img:B64(BB,3),cap:()=>'5 MODES'},{k:'track',l:'Track',i:'track',img:B64(BB,2),cap:()=>{const n=nTrk();return n?n+' CIRCUITS':'ADD A TRACK FILE'}},{k:'rally',l:'Rally',i:'rally',img:B64(BB,1),cap:()=>nStg()+' STAGES'},
+ const TABS=[{k:'free',l:'Free Roam',i:'rally',img:B64(BB,1),cap:()=>'THE RIVIERA'},{k:'quick',l:'Quickplay',i:'play',img:B64(BB,3),cap:()=>'5 MODES'},{k:'track',l:'Track',i:'track',img:B64(BB,2),cap:()=>{const n=nTrk();return n?n+' CIRCUITS':'ADD A TRACK FILE'}},{k:'rally',l:'Rally',i:'rally',img:B64(BB,1),cap:()=>nStg()+' STAGES'},
   {k:'garage',l:'Garage',i:'garage',img:B64(PB,7),cap:()=>nOwn()+' / '+CARS.length+' CARS'},{k:'brand',l:'Brand Central',i:'brand',img:B64(PB,5),cap:()=>nMk()+' MAKERS'}];
- const DESC={quick:'Quick Race, Time Attack, Elimination, Cut-Up and Versus.',track:'Race the real-world circuits.',rally:'Point to point stages against the clock.',garage:'Your cars, paint and tuning.',brand:'New cars from every maker.',set:'Graphics, sound and controls.'};
+ const DESC={free:'Drive the Riviera island: coast road, mountain pass and four towns.',quick:'Quick Race, Time Attack, Elimination, Cut-Up and Versus.',track:'Race the real-world circuits.',rally:'Point to point stages against the clock.',garage:'Your cars, paint and tuning.',brand:'New cars from every maker.',set:'Graphics, sound and controls.'};
  P.menuImgs=TABS.map(t=>t.img).filter(u=>u!=='none');
  /* 0.02: the menu background is the main menu's own action scenes (promo.js), slowly drifting and crossfading behind the glass panel (no showroom) */
  /* the stills the menus use (the main menu's own scenes on the real tracks and the Italian town); each one is drawn into a fresh canvas that fades in over the last.
@@ -241,7 +241,7 @@ const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="current
  const dd=document.createElement('div');dd.id='gxDrop';
  dd.innerHTML=SUBS.map((u,i)=>'<button class="gxi" data-i="'+i+'">'+ic(u.i)+'<span>'+u.n+'</span></button>').join('');
  menu.append(top,bot,dd);{const sh=document.createElement('div');sh.id='gxShade';menu.insertBefore(sh,bot);menu.appendChild(bot.querySelector('.gxpad'))}
- let mf=0,md=-1,open=false;try{mf=Math.max(0,Math.min(TABS.length-1,+(localStorage.getItem('pt-gxf')||0)))}catch(e){}
+ const QI=1;let mf=0,md=-1,open=false;try{mf=Math.max(0,Math.min(TABS.length-1,+(localStorage.getItem('pt-gxf')||0)))}catch(e){}
  const tabs=()=>[...bot.querySelectorAll('.gxm')],items=()=>[...dd.children];
  const paint=()=>{tabs().forEach((t,i)=>{t.classList.toggle('on',i===mf);const e=t.querySelector('.gxc');if(e)e.textContent=TABS[i].cap()});const t=TABS[mf];$('gxCap').textContent=t.cap();$('gxName').textContent=t.l;$('gxDesc').textContent=DESC[t.k]||'';try{pfPaint()}catch(e){}
   dd.classList.toggle('on',false);{const pd=menu.querySelector('.gxpad'),b=bot.getBoundingClientRect();if(pd&&b.width){pd.style.left=Math.round(b.left)+'px';pd.style.width=Math.round(b.width)+'px';pd.style.top=Math.round(b.bottom+22)+'px'}}/* 0.02: no Quickplay drop-down: the row opens the Quickplay page */items().forEach((e,i)=>e.classList.toggle('foc',i===md));
@@ -249,8 +249,8 @@ const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="current
  const focus=i=>{pfOn=false;if(i!==mf){mf=i;md=-1;open=false;P.sfx&&P.sfx('move');try{localStorage.setItem('pt-gxf',i)}catch(e){}}paint()};
  const goMenu=m=>{pickMode(m);ST.ret='menu'};
  const subGo=i=>{const u=SUBS[i];P.sfx&&P.sfx('select');open=false;md=-1;paint();if(u.p)ST.players=u.p;goMenu(u.m)};
- const tabGo=i=>{const k=TABS[i].k;focus(i);if(k==='quick'){open=false;md=-1;paint();pickMode('quick');return}P.sfx&&P.sfx('select');if(k==='set'){$('gxSet').click();return}if(k==='rally'||k==='track')goMenu(k);else openShow(k,{player:0,cap:null,ret:'menu'})};
- menu.querySelector('.gxpad [data-p="x"]').onclick=()=>{if(mf===0&&open&&md>=0)subGo(md);else tabGo(mf)};menu.querySelector('.gxpad [data-p="o"]').onclick=()=>{if(open){open=false;md=-1;paint()}};
+ const tabGo=i=>{const k=TABS[i].k;focus(i);if(k==='quick'){open=false;md=-1;paint();pickMode('quick');return}P.sfx&&P.sfx('select');if(k==='free'){if(P.freeEnter)P.freeEnter();return}if(k==='set'){$('gxSet').click();return}if(k==='rally'||k==='track')goMenu(k);else openShow(k,{player:0,cap:null,ret:'menu'})};
+ menu.querySelector('.gxpad [data-p="x"]').onclick=()=>{if(mf===QI&&open&&md>=0)subGo(md);else tabGo(mf)};menu.querySelector('.gxpad [data-p="o"]').onclick=()=>{if(open){open=false;md=-1;paint()}};
  let shut=0;const hold=()=>clearTimeout(shut);
  tabs().forEach((t,i)=>{t.onmouseenter=()=>{if(i!==mf)focus(i);if(i===0){hold();if(!open){open=true;md=-1;paint()}}};t.onclick=()=>tabGo(i)});
  /* the list stays up while the mouse is on the card or the list, and for a moment after it leaves both */
@@ -281,7 +281,7 @@ const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="current
  if(pfName())(ST.names=ST.names||[])[0]=pfName();
  P.menuKey=e=>{const c=e.code,n=TABS.length;if(e.target&&e.target.tagName==='INPUT')return true;
   /* 0.02: the menu is a vertical list; Right opens the Quickplay modes beside their row, Left closes them */
-  if(open&&mf===0){
+  if(open&&mf===QI){
    if(c==='ArrowDown'||c==='KeyS'){md=Math.min(SUBS.length-1,md+1);P.sfx&&P.sfx('move');paint();return true}
    if(c==='ArrowUp'||c==='KeyW'){md=Math.max(0,md-1);P.sfx&&P.sfx('move');paint();return true}
    if(c==='ArrowLeft'||c==='KeyA'){open=false;md=-1;P.sfx&&P.sfx('move');paint();return true}
@@ -292,7 +292,7 @@ const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="current
   if(c==='ArrowUp'||c==='KeyW'){focus((mf+n-1)%n);return true}
   if(c==='ArrowRight'||c==='ArrowLeft'||c==='KeyD'||c==='KeyA')return true
   if(c==='Escape'||c==='Backspace'){if(open){open=false;md=-1;paint();return true}return false}
-  if(c==='Enter'||c==='Space'){if(mf===0&&open&&md>=0)subGo(md);else tabGo(mf);return true}
+  if(c==='Enter'||c==='Space'){if(mf===QI&&open&&md>=0)subGo(md);else tabGo(mf);return true}
   return false};
  paint();addEventListener('resize',paint)})();
 
