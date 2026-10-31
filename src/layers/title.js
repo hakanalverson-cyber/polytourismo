@@ -71,7 +71,7 @@ d.querySelector('.st').textContent='VERSION '+(P.VERSION||'0.01');
 const SC=(()=>{let dbp;const db=()=>dbp||(dbp=new Promise((res,rej)=>{const r=indexedDB.open('polygt-shots',1);r.onupgradeneeded=()=>r.result.createObjectStore('s');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}));
  const get=k=>db().then(d=>new Promise(res=>{const q=d.transaction('s').objectStore('s').get(k);q.onsuccess=()=>res(q.result||null);q.onerror=()=>res(null)})).catch(()=>null);
  const put=(k,v)=>db().then(d=>new Promise(res=>{const t=d.transaction('s','readwrite');t.objectStore('s').put(v,k);t.oncomplete=res;t.onerror=res;t.onabort=res})).catch(()=>{});
- const blob=cv=>new Promise(r=>{try{cv.toBlob(b=>r(b),'image/jpeg',.9)}catch(e){r(null)}});
+ const blob=cv=>new Promise(r=>{try{cv.toBlob(b=>r(b),'image/jpeg',.94)}catch(e){r(null)}});
  const canvas=async b=>{const im=await createImageBitmap(b),c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);return c};
  const key=(t,i)=>{const d=D[i];let n=0;try{n=JSON.stringify(d).length}catch(e){}return t+'|r1|'+(P.VERSION||'')+'|'+d.name+'|'+n};
  return{track:async i=>{const k=key('t',i),hit=await get(k);if(hit&&P.trackShotSeed){try{P.trackShotSeed(i,await canvas(hit));return}catch(e){}}
@@ -79,7 +79,7 @@ const SC=(()=>{let dbp;const db=()=>dbp||(dbp=new Promise((res,rej)=>{const r=in
   promo:async k=>{const kk='p|'+P.PROMO_REV+'|'+(P.VERSION||'')+'|'+JSON.stringify(P.PROMO_SCENES[k]),hit=await get(kk);if(hit&&P.promoShotSeed){try{P.promoShotSeed(k,await canvas(hit));return}catch(e){}}
    const cv=await P.promoShot(k);if(cv){const b=await blob(cv);if(b)put(kk,b)}},
   stage:async i=>{const k=key('s',i),hit=await get(k);if(hit&&hit.m&&P.stageSeed){try{const pois=[];for(const p of hit.p||[])pois.push({n:p.n,c:await canvas(p.b)});P.stageSeed(i,await canvas(hit.m),pois);return}catch(e){}}
-   const cv=await P.stageRender(i);if(cv){const m=await blob(cv),p=[];for(const q of cv.pois||[]){const b=await blob(q.c);if(b)p.push({n:q.n,b})}if(m)put(k,{m,p})}}}})();
+   const cv=await P.stageRender(i);if(cv){const m=await blob(cv),p=[];for(const q of cv.pois||[]){const b=await blob(q.c);if(b)p.push({n:q.n,b})}if(m)put(k,{m,p})}},get,put}})();
 window.PT8_BOOT=new Promise(res=>{const run=()=>setTimeout(async()=>{try{const BP=window.PT8_BP||(()=>{});
   const jobs=[];const isC=i=>typeof D!=='undefined'&&D[i]&&D[i].cartoon;for(const i of(P.TRK_TRACKS||[]))if(isC(i)&&P.trackShot)jobs.push([D[i].name,()=>SC.track(i)]);
   for(const i of(P.STAGES||[]))if(P.stageRender&&typeof D!=='undefined'&&D[i])jobs.push([D[i].name,()=>SC.stage(i)]);
@@ -87,14 +87,14 @@ window.PT8_BOOT=new Promise(res=>{const run=()=>setTimeout(async()=>{try{const B
   for(const u of(P.menuImgs||[])){const m=/^url\((.*)\)$/.exec(u);if(m)jobs.unshift(['MENU',()=>{const im=new Image();im.src=m[1];return im.decode()}])}
   /* 0.02: the action scenes (promo.js): Quickplay's first, then the main menu's */if(P.promoShot&&!window.PT8_NOSCENE){for(let q=0;q<5;q++)for(const k of P.promoFor(q))jobs.push(['QUICKPLAY',()=>SC.promo(k)]);for(const k of P.promoMenu())jobs.push(['MENU',()=>SC.promo(k)])}
   if(P.quickTracks&&P.trackShot&&!window.PT8_FAST)for(const i of P.quickTracks())if(!isC(i))jobs.push([D[i].name,()=>SC.track(i)]);
-  /* 0.02: the box art (title stills and Quickplay covers) goes first, as soon as the car models are in; the title stills are kept for the next start */
-  const sig=(P.VERSION||'')+'|2|'+(P.PROMO_REV||0);let flat=null;
-  jobs.unshift(['COVERS',async()=>{for(let n=0;n<120&&!(P.boxReady&&P.boxReady());n++)await new Promise(r=>setTimeout(r,250));if(!P.boxReady||!P.boxReady())return;
-   let X=null;try{X=JSON.parse(localStorage.getItem('pt8-boxart')||'null')}catch(e){}
-   if(!(X&&X.v===sig&&window.PT8_BOX)){flat=P.titleArts();if(flat.length&&window.PT8_BOXSET)window.PT8_BOXSET(flat)}else flat=null}]);
-  /* then the photos of the art as real things (the magazine, the TV, the game case, the billboard), mixed in between the covers and kept for the next start */
-  if(P.propShot&&!window.PT8_NOSCENE)jobs.push(['COVERS',async()=>{if(!flat)return;const ph=[];for(let k=0;k<P.PROPS.length;k++){const c=await P.propShot(k);if(c)ph.push('b,'+c.toDataURL('image/jpeg',.82).slice(23))}
-   const A=[];for(let i=0;i<Math.max(flat.length,ph.length);i++){if(flat[i])A.push(flat[i]);if(ph[i])A.push(ph[i])}if(A.length&&window.PT8_BOXSET){window.PT8_BOXSET(A);try{localStorage.setItem('pt8-boxart',JSON.stringify({v:sig,L:A}))}catch(e){}}}]);
+  /* 0.02: the loading screen's pictures go first, as soon as the car models are in: photos of the game as real things (a magazine on a
+     table, the TV, the game case, a billboard, a garage poster, a magazine rack; promo.js), kept in IndexedDB for the next start */
+  const sig=(P.VERSION||'')+'|3|'+(P.PROMO_REV||0);
+  if(P.propShot&&!window.PT8_NOSCENE)jobs.unshift(['COVERS',async()=>{try{localStorage.removeItem('pt8-boxart')}catch(e){}
+   const X=await SC.get('boxart');if(X&&X.v===sig&&X.L&&X.L.length){if(!window.PT8_BOX&&window.PT8_BOXSET)window.PT8_BOXSET(X.L);return}
+   for(let n=0;n<120&&!(P.boxReady&&P.boxReady());n++)await new Promise(r=>setTimeout(r,250));
+   const A=[];for(let k=0;k<P.PROPS.length;k++){const c=await P.propShot(k);if(c){A.push('b,'+c.toDataURL('image/jpeg',.93).slice(23));if(window.PT8_BOXSET)window.PT8_BOXSET(A.slice())}}
+   if(A.length===P.PROPS.length)await SC.put('boxart',{v:sig,L:A})}]);
   BP(.5);for(let k=0;k<jobs.length;k++){await Promise.race([jobs[k][1]().catch(()=>null),new Promise(r=>setTimeout(r,120000))]);BP(.5+.5*(k+1)/jobs.length)}
  }catch(e){console.error('boot warm-up',e)}res()},400);if(document.readyState==='complete')run();else addEventListener('load',run)});
 window.PT8_BOOT.then(()=>{P.bootDone=1});window.PT8_BOOT.then(()=>setTimeout(()=>{d.classList.add('on');if(!BT)slide()},400));
