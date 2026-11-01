@@ -26,6 +26,15 @@ if os.path.exists(D+'/site.json'):
     print('props off the garage lot',int(gone.sum()))
     P,C,K,O,X,R,cen,U,TI=P[~gone],C[~gone],K[~gone],O[~gone],X[~gone],R[~gone],cen[~gone],U[~gone],TI[~gone]
 sys.path.insert(0,__file__.rsplit('/',1)[0]); from close import close
+from scipy import ndimage
+# GENB=x,z,r: buildings inside the circle become our own generated buildings (K=6)
+GCOL={}
+if os.environ.get('GENB'):
+    from genb import gen
+    _gx,_gz,_gr=[float(v) for v in os.environ['GENB'].split(',')]
+    gP,gO,_inr,GCOL=gen(P,O,K,_gx,_gz,_gr)
+    kp=~_inr;P,C,K,O,X,R,cen,U,TI=P[kp],C[kp],K[kp],O[kp],X[kp],R[kp],cen[kp],U[kp],TI[kp]
+    n=len(gP);P=np.concatenate([P,gP]);C=np.concatenate([C,np.zeros((n,3),np.float32)]);K=np.concatenate([K,np.full(n,6,K.dtype)]);O=np.concatenate([O,gO]);X=np.concatenate([X,np.zeros(n,bool)]);R=np.concatenate([R,np.zeros(n,bool)]);U=np.concatenate([U,np.zeros((n,3,2),np.float32)]);TI=np.concatenate([TI,np.full(n,-1,TI.dtype)]);cen=P.mean(1)
 nP,nO=close(P,O,K)
 import os
 if os.path.exists(D+'/extra.npz'):
@@ -131,6 +140,58 @@ for _i,_l in enumerate(_nb):
         _d=_pts[_i,1]-RDP[_l,2]
         if ((_d>.5)&(_d<3.5)).any():_bad[_i]=True  # kerbs and pavements (<0.5 m) stay
 _bf=_bad.reshape(-1,4).any(1);dropg[_tf[_bf]]=True;print('terrain faces over roads dropped',int(_bf.sum()))
+# GENB streets: clear the old street clutter in the region, keep guard rails by the roads; street trees and lamps in rhythm
+LAMPC=None
+if os.environ.get('GENB'):
+    _kdr=cKDTree(RDP[:,:2]);inreg=np.hypot(cen[:,0]-_gx,cen[:,2]-_gz)<_gr
+    _d,_ii=_kdr.query(cen[:,[0,2]],distance_upper_bound=3.)
+    nearroad=(_d<3.)&(np.abs(cen[:,1]-RDP[np.minimum(_ii,len(RDP)-1),2])<3.5)
+    # walls by the road stay only when low (curbs, rails); tall concrete blocks go
+    _ry=RDP[np.minimum(_ii,len(RDP)-1),2];_top=np.full(O.max()+1 if len(O) else 1,-1e9);np.maximum.at(_top,O,np.where(inreg&(K==2)&(_d<3.),P[:,:,1].max(1)-_ry,-1e9))
+    nearroad&=_top[O]<1.4
+    clut=inreg&((K==3)|((K==2)&~nearroad));dropg|=clut;print('street clutter removed',int(clut.sum()))
+    # building raster of our generated buildings (1 m) so nothing is placed inside them
+    _b6=P[K==6].reshape(-1,3);BM=np.zeros((int(2*_gr)+40,int(2*_gr)+40),bool);_ox,_oz=_gx-_gr-20,_gz-_gr-20
+    for _t in P[(K==6)&(ny<.3)]:
+        for _w in np.linspace(0,1,12):
+            _p=_t[0]+(_t[1]-_t[0])*_w;_i=int(_p[0]-_ox);_j=int(_p[2]-_oz)
+            if 0<=_i<BM.shape[1] and 0<=_j<BM.shape[0]:BM[_j,_i]=True
+    BM=ndimage.binary_fill_holes(ndimage.binary_closing(BM,iterations=2));BM=ndimage.binary_dilation(BM,iterations=2)
+    def _free(x,z):
+        i=int(x-_ox);j=int(z-_oz)
+        if not(0<=i<BM.shape[1] and 0<=j<BM.shape[0]) or BM[j,i]:return False
+        return _kdr.query([x,z])[0]>1.6
+    STREE=[];LP=[]
+    for _r in _RJ:
+        _x=np.array(_r['x']);_z=np.array(_r['z']);_y=np.array(_r['y'])
+        if len(_x)<2 or np.hypot(_x-_gx,_z-_gz).min()>_gr:continue
+        _L=np.hypot(np.diff(_x),np.diff(_z));_c=np.r_[0,np.cumsum(_L)]
+        for _k,_t in enumerate(np.arange(6,_c[-1]-6,14.)):
+            xi=np.interp(_t,_c,_x);zi=np.interp(_t,_c,_z);yi=np.interp(_t,_c,_y)
+            if np.hypot(xi-_gx,zi-_gz)>_gr:continue
+            _t2=min(_t+1,_c[-1]);dx=np.interp(_t2,_c,_x)-np.interp(_t2-1,_c,_x);dz=np.interp(_t2,_c,_z)-np.interp(_t2-1,_c,_z);l=np.hypot(dx,dz)+1e-9;nx,nz=-dz/l,dx/l
+            for sd in(-1,1):
+                ox_=xi+nx*sd*(_r['hw']+2.6);oz_=zi+nz*sd*(_r['hw']+2.6)
+                if _k%2==0 and _free(ox_,oz_):STREE.append([float(ox_),float(yi),float(oz_)])
+                lx=xi+nx*sd*(_r['hw']+1.1);lz=zi+nz*sd*(_r['hw']+1.1)
+                if _k%2==(0 if sd<0 else 1) and _free(lx,lz):LP.append([lx,yi+.15,lz,-nx*sd,-nz*sd])
+    json.dump(STREE,open(D+'/street_trees.json','w'));print('street trees',len(STREE),'lamps',len(LP))
+    # lamps: pole, arm over the road, head (our own simple model)
+    def _box(c,hw_,hh,hd,ux,uz):
+        vx,vz=-uz,ux;out=[]
+        cs=[[c[0]+ux*a*hw_+vx*b*hd,c[1]+e*hh,c[2]+uz*a*hw_+vz*b*hd] for a in(-1,1) for b in(-1,1) for e in(-1,1)]
+        F=[(0,1,3,2),(4,6,7,5),(0,4,5,1),(2,3,7,6),(0,2,6,4),(1,5,7,3)]
+        for f in F:out+=[[cs[f[0]],cs[f[1]],cs[f[2]]],[cs[f[0]],cs[f[2]],cs[f[3]]]]
+        return out
+    lP=[];lO=[]
+    for x,y,z,ux,uz in LP:
+        for tri in _box([x,y+3.6,z],.12,3.6,.12,ux,uz):lP.append(tri);lO.append(9100000)
+        for tri in _box([x+ux*.9,y+7.1,z+uz*.9],.9,.07,.07,ux,uz):lP.append(tri);lO.append(9100000)
+        for tri in _box([x+ux*1.7,y+6.95,z+uz*1.7],.35,.1,.18,ux,uz):lP.append(tri);lO.append(9100001)
+    if lP:
+        n=len(lP);lP=np.array(lP,np.float64);P=np.concatenate([P,lP]);C=np.concatenate([C,np.zeros((n,3),np.float32)]);K=np.concatenate([K,np.full(n,7,K.dtype)]);O=np.concatenate([O,np.array(lO)]);X=np.concatenate([X,np.zeros(n,bool)]);R=np.concatenate([R,np.zeros(n,bool)]);U=np.concatenate([U,np.zeros((n,3,2),np.float32)]);TI=np.concatenate([TI,np.full(n,-1,TI.dtype)]);cen=P.mean(1)
+        _nr=np.cross(lP[:,1]-lP[:,0],lP[:,2]-lP[:,0]);_nl=np.linalg.norm(_nr,axis=1)+1e-9;nl=np.concatenate([nl,_nl]);ny=np.concatenate([ny,np.abs(_nr[:,1])/_nl]);oi=np.concatenate([oi,np.zeros(n,oi.dtype)]);dropg=np.concatenate([dropg,np.zeros(n,bool)])
+        LAMPC=True
 kk=~dropg
 P,C,K,O,X,R,cen,nl,ny,oi,U,TI=P[kk],C[kk],K[kk],O[kk],X[kk],R[kk],cen[kk],nl[kk],ny[kk],oi[kk],U[kk],TI[kk]
 # road surfaces: every flat ground face on a traced road at road height joins the road category, so it is decimated on its own
@@ -250,12 +311,29 @@ if ROO and need.any():
     U[idx,:,0]=uu;U[idx,:,1]=vv;TI[idx]=np.array([ROO[i][0] for i in f_]);print('plain roofs given roof textures',len(idx))
 # textured faces far out of the int16 uv range: shift by whole tiles
 big=np.abs(U).max((1,2))>30;U[big]-=np.floor(U[big].min(1,keepdims=True))
+# generated buildings: their own clean colours (walls / roof)
+if LAMPC:
+    _l7=np.flatnonzero(K==7);C[_l7]=np.where((O[_l7]==9100001)[:,None],np.array([.95,.93,.86],np.float32),np.array([.23,.25,.28],np.float32))
+if GCOL:
+    g6=np.flatnonzero(K==6);C[g6]=np.array([GCOL[o-o%4][o%4] for o in O[g6]])
 # palette: k-means 192 on a sample
 from scipy.cluster.vq import kmeans2
-rng=np.random.default_rng(1); smp=C[rng.choice(len(C),200000,replace=False)]
+rng=np.random.default_rng(1); _ns=np.flatnonzero(K<6); smp=C[_ns[rng.choice(len(_ns),200000,replace=False)]]
 pal,_=kmeans2(smp.astype(np.float64),192,minit='++',seed=3,iter=12)
 pal=np.clip(pal,0,1)
+if GCOL:
+    _gc=[np.unique(np.array([v[r] for v in GCOL.values()]),axis=0) for r in range(4)];_all=np.concatenate(_gc+[np.array([[.95,.93,.86],[.23,.25,.28]],np.float32)]);pal[-len(_all):]=_all
+    _o=len(pal)-len(_all);GROLE={}
+    for r,g_ in enumerate(_gc):
+        for i in range(len(g_)):GROLE[_o]=r;_o+=1
 tree=cKDTree(pal); _,ci=tree.query(C); ci=ci.astype(np.uint8)
+if GCOL:  # generated faces index their own role colours exactly (never a look-alike k-means entry, which would lose the windows)
+    _base=len(pal)-len(_all);_offs=np.cumsum([0]+[len(g_) for g_ in _gc])
+    for r in range(4):
+        sel=np.flatnonzero((K==6)&(O%4==r))
+        if len(sel):_,j=cKDTree(_gc[r]).query(C[sel]);ci[sel]=(_base+_offs[r]+j).astype(np.uint8)
+if LAMPC:
+    _l7=np.flatnonzero(K==7);ci[_l7]=np.where(O[_l7]==9100001,len(pal)-2,len(pal)-1).astype(np.uint8)
 # tiles: per tile and category, one mesh per texture (kept as is: decimating would tear the uv layout) + one plain mesh (decimated)
 ti=(cen[:,0]//TILE).astype(int); tj=(cen[:,2]//TILE).astype(int); NT=WXZ//TILE
 gid=np.where(TI>=0,TI,65535).astype(np.int64)
@@ -301,7 +379,7 @@ urb_off=len(blob); blob+=np.round(URB*255).astype(np.uint8).tobytes()
 # land mask (cells with real ground or road under them): the sea is drawn only off it, so sunken roads are not flooded
 known_off=len(blob); blob+=ndimage.binary_dilation(known,iterations=1).astype(np.uint8).tobytes()
 while len(blob)%4: blob+=b'\0'
-json.dump({'fac':[[int(f[0]),round(float(f[1]),2),round(float(f[2]),2)] for f in FAC],'roo':[[int(f[0]),round(float(f[1]),2)] for f in ROO],'tex':[[round(float(v),6) for v in ATL['r'][n][:4]] for n in TNAME],'texc':[ATL['r'][n][4] for n in TNAME],'texv':[round(float(v),3) for v in TEXV],'gc':GC,'gn':int(GN),'goff':ground_off,'uoff':urb_off,'koff':known_off,'gscale':8,'tile':TILE,'w':WXZ,'shift':[SX,SZ],'pal':[[round(float(c),4) for c in p] for p in pal],'m':meta},open(OUT+'.json','w'),separators=(',',':'))
+json.dump({'fac':[[int(f[0]),round(float(f[1]),2),round(float(f[2]),2)] for f in FAC],'roo':[[int(f[0]),round(float(f[1]),2)] for f in ROO],'tex':[[round(float(v),6) for v in ATL['r'][n][:4]] for n in TNAME],'texc':[ATL['r'][n][4] for n in TNAME],'grole':{str(k):v for k,v in (GROLE.items() if GCOL else [])},'texv':[round(float(v),3) for v in TEXV],'gc':GC,'gn':int(GN),'goff':ground_off,'uoff':urb_off,'koff':known_off,'gscale':8,'tile':TILE,'w':WXZ,'shift':[SX,SZ],'pal':[[round(float(c),4) for c in p] for p in pal],'m':meta},open(OUT+'.json','w'),separators=(',',':'))
 open(OUT+'.bin','wb').write(blob)
 # preview soup
 pos=[];col=[]

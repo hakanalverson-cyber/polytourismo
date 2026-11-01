@@ -17,6 +17,13 @@ T=np.concatenate(T);TT=np.concatenate(TT)
 cx=(T[:,4]+T[:,7])/2+SX;cz=(T[:,6]+T[:,9])/2+SZ;by=T[:,5];th=T[:,8]-T[:,5]
 ok=(th>1.2)&(th<60)&(cx>0)&(cz>0)&(cx<10240)&(cz<10240)
 trees=np.stack([cx,by,cz,th,TT],1)[ok]
+# GENB: the region's trees are our street trees (regular rows), not the scattered originals
+import os as _o2,json as _j2
+if _o2.environ.get('GENB') and _o2.path.exists(EX+'/street_trees.json'):
+    _gx,_gz,_gr=[float(v) for v in _o2.environ['GENB'].split(',')]
+    trees=trees[np.hypot(trees[:,0]-_gx,trees[:,2]-_gz)>_gr]
+    st=np.array(_j2.load(open(EX+'/street_trees.json')),np.float64).reshape(-1,3)
+    if len(st):trees=np.concatenate([trees,np.stack([st[:,0],st[:,1],st[:,2],np.full(len(st),7.5),np.ones(len(st))],1)])
 # thin trees standing within 1.5 m of each other (tree lines are stacks of cards)
 q=np.round(trees[:,[0,2]]/3).astype(np.int64);_,u=np.unique(q[:,0]*100000+q[:,1],return_index=True);trees=trees[np.sort(u)]
 # surfaces of the finished meshes (terrain + roads, 2 m): trees snap onto them, so none float or sink
@@ -43,7 +50,8 @@ for tile,cat,tx,tz,nv,nf,off,tid_ in meta['m']:
 ti=np.clip((trees[:,0]/2).astype(int),0,RN-1);tj=np.clip((trees[:,2]/2).astype(int),0,RN-1)
 # no trees on roads (4 m margin, joined roads too) or inside buildings
 NTm=np.unpackbits(np.load(PK+'_notree.npy'))[:RN*RN].reshape(RN,RN).astype(bool)
-keep=~NTm[tj,ti];print('trees removed from roads / buildings',int((~keep).sum()));trees=trees[keep];ti=ti[keep];tj=tj[keep]
+_st=(trees[:,3]==7.5)&(trees[:,4]==1)&bool(_o2.environ.get('GENB'))  # our street trees stand on the sidewalk on purpose
+keep=~NTm[tj,ti]|_st;print('trees removed from roads / buildings',int((~keep).sum()));trees=trees[keep];ti=ti[keep];tj=tj[keep]
 sv=SURF[tj,ti];fv=np.array([Hf(x,z) for x,z in zip(trees[:,0],trees[:,2])])
 sy=np.where((sv>-1e8)&(sv<=trees[:,1]+2.5),sv,np.where(sv>-1e8,trees[:,1],fv))
 sy=np.where(sv<-1e8,np.maximum(fv,-50),sy)

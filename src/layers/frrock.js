@@ -108,14 +108,18 @@ let DOMT=null;function domTex(){if(DOMT)return DOMT;const cnt=[{},{},{},{},{},{}
  const lum=t=>{const c=J.texc&&J.texc[t];return c?(c[0]+c[1]+c[2])/3:.3},plain=t=>{const c=J.texc&&J.texc[t];if(!c)return true;const mx=Math.max(c[0],c[1],c[2]),mn=Math.min(c[0],c[1],c[2]);return (mx-mn)/Math.max(mx,.001)<.15&&lum(t)>.2&&lum(t)<.75&&(!J.texv||J.texv[t]<.1)};
  DOMT=cnt.map((c,cat)=>{let b=-1,n=0;for(const k in c)if(c[k]>n&&(cat===0||plain(+k))&&(cat!==5||lum(+k)<.36)){n=c[k];b=+k}return b>=0?J.tex[b]:null});return DOMT}
 function buildTile(k,lod){const M=F.mats(),group=new THREE.Group(),tx=(k%NT)*TILE,tz=Math.floor(k/NT)*TILE;group.userData.chunk=k;group.userData.lod=lod|0;group.userData.cars=[];
- const l=RK.tiles.get(k)||[],pos=[],col=[],posR=[],colR=[],posW=[],colW=[],uvW=[],segs=[],posT=[],uvT=[],rcT=[],posTR=[],uvTR=[],rcTR=[];let nT=0;
+ const l=RK.tiles.get(k)||[],pos=[],col=[],posR=[],colR=[],posW=[],colW=[],uvW=[],segs=[],posT=[],uvT=[],rcT=[],posTR=[],uvTR=[],rcTR=[],GW=[[[],[],[]],[[],[],[]],[[],[],[]],[[],[],[]]];let nT=0;
  for(const e of l){if(e.cat===4)continue;const a=meshArrays(e),V=a.V,I=a.idx,fc=a.fc,UV=a.UV,rc=UV?J.tex[e.tid]:null;nT+=e.nf;
   for(let f=0;f<e.nf;f++){const i0=I[f*3]*3,i1=I[f*3+1]*3,i2=I[f*3+2]*3,c=RK.pal[fc[f]];
    /* original textures: one atlas, each vertex carries its texture's rect (the shader tiles inside it) */
    if(UV){const P_=e.cat===5?posTR:posT,U_=e.cat===5?uvTR:uvT,C_=e.cat===5?rcTR:rcT;for(const i of[I[f*3],I[f*3+1],I[f*3+2]]){P_.push(V[i*3],V[i*3+1],V[i*3+2]);U_.push(UV[i*2],UV[i*2+1]);C_.push(rc[0],rc[1],rc[2],rc[3])}}
    else{const ux=V[i1]-V[i0],uy=V[i1+1]-V[i0+1],uz=V[i1+2]-V[i0+2],vx=V[i2]-V[i0],vy=V[i2+1]-V[i0+1],vz=V[i2+2]-V[i0+2],nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx,nl=Math.hypot(nx,ny,nz)||1;
     /* no texture of its own: borrow one (facade / roof for buildings, the category's usual one otherwise), planar UVs */
-    let done=false;{const D=domTex(),vert=Math.abs(ny)/nl<.3;let rc=null,su=0,sv=0,mode=0;
+    let done=false;
+    /* our buildings: walls get a window style (from the wall colour), the street band a shopfront, trims and roofs stay plain */
+    if(e.cat===6&&Math.abs(ny)/nl<.3&&J.grole){const role=J.grole[fc[f]];if(role===0||role===2){const st=role===2?3:fc[f]%3,A=GW[st],ax_=-nz/nl,az_=nx/nl,al=Math.hypot(ax_,az_)||1,ym=Math.min(V[i0+1],V[i1+1],V[i2+1]),FW=role===2?8:6,FH=role===2?4.8:3.4;
+      for(const i of[i0,i1,i2]){A[0].push(V[i],V[i+1],V[i+2]);A[1].push(c[0],c[1],c[2]);A[2].push((V[i]*ax_/al+V[i+2]*az_/al)/FW,(V[i+1]-ym)/FH)}done=true}}
+    if(!done&&e.cat!==6){const D=domTex(),vert=Math.abs(ny)/nl<.3;let rc=null,su=0,sv=0,mode=0;
      if(e.cat===1&&J.fac&&J.fac.length&&vert){const fq=J.fac[(Math.abs((e.off|0)*7+(e.tile|0)*3)>>3)%Math.min(6,J.fac.length)];rc=J.tex[fq[0]];su=fq[1];sv=fq[2];mode=1}
      else if(e.cat===1&&J.roo&&J.roo.length){rc=J.tex[J.roo[0][0]];su=sv=J.roo[0][1];mode=2}
      else if(D[e.cat]&&e.cat!==1){rc=(e.cat===0&&vert&&D[2])?D[2]:D[e.cat];su=sv=(e.cat===0||e.cat===5)?8:2.5;mode=vert?3:2}
@@ -135,6 +139,8 @@ function buildTile(k,lod){const M=F.mats(),group=new THREE.Group(),tx=(k%NT)*TIL
    if(Math.max(d1,d2,d3)<.16)continue;segs.push(p[0],p[1],q[0],q[1],y0,y1)}}
  for(const[P_,U_,C_,road] of[[posT,uvT,rcT,0],[posTR,uvTR,rcTR,1]]){if(!P_.length)continue;const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P_,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(U_,2));g.setAttribute('arect',new THREE.Float32BufferAttribute(C_,4));g.computeVertexNormals();g.computeBoundingSphere();
   const m=new THREE.Mesh(g,road?amats().road:amats().base);m.userData.fogCull=true;m.receiveShadow=!lod;m.userData.kind=road?'road':'city';group.add(m)}
+ GW.forEach((A,st)=>{if(!A[0].length)return;const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(A[0],3));g.setAttribute('color',new THREE.Float32BufferAttribute(A[1],3));g.setAttribute('uv',new THREE.Float32BufferAttribute(A[2],2));g.computeVertexNormals();g.computeBoundingSphere();
+  const m=new THREE.Mesh(g,st===3?gmats().shop:gmats().w[st]);m.userData.fogCull=true;m.receiveShadow=!lod;m.userData.kind='city';group.add(m)});
  if(posR.length){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(posR,3));g.setAttribute('color',new THREE.Float32BufferAttribute(colR,3));g.computeVertexNormals();g.computeBoundingSphere();
   const m=new THREE.Mesh(g,rmats().road);m.userData.fogCull=true;m.receiveShadow=!lod;m.userData.kind='road';group.add(m)}
  if(posW.length){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(posW,3));g.setAttribute('color',new THREE.Float32BufferAttribute(colW,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uvW,2));g.computeVertexNormals();g.computeBoundingSphere();
@@ -206,6 +212,18 @@ function rmats(){if(RM)return RM;const M=F.mats();
  const t=new THREE.CanvasTexture(cv);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.encoding=THREE.sRGBEncoding;t.anisotropy=4;t.minFilter=THREE.LinearMipmapLinearFilter;t.magFilter=THREE.LinearFilter;
  const mk=o=>{const m=new THREE.MeshStandardMaterial(Object.assign({roughness:.9,metalness:0,vertexColors:true,side:THREE.DoubleSide},o));if(typeof styleMaterial==='function')styleMaterial(m);return m};
  RM={road:mk({color:0x909090,flatShading:true,polygonOffset:true,polygonOffsetFactor:-1.5,polygonOffsetUnits:-3}),wall:mk({color:0x9a9a9a,map:t,roughness:.82})};return RM}
+/* ---------- our own buildings (cat 6): window textures in the game's clean style, one floor per tile; a shop band at street level ---------- */
+let GM=null;function gmats(){if(GM)return GM;
+ const cvs=(fn)=>{const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');fn(x);const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.encoding=THREE.sRGBEncoding;t.anisotropy=8;t.minFilter=THREE.LinearMipmapLinearFilter;return t};
+ const glass=(x,X,Y,w,h,a,b)=>{const g=x.createLinearGradient(X,Y,X+w*.4,Y+h);g.addColorStop(0,a);g.addColorStop(1,b);x.fillStyle=g;x.fillRect(X,Y,w,h)};
+ const W=[
+  cvs(x=>{x.fillStyle='#f4f2ee';x.fillRect(0,0,128,128);for(const X of[16,80]){x.fillStyle='#ffffff';x.fillRect(X-4,30,40,62);glass(x,X,34,32,54,'#8ea6bd','#4b6178');x.fillStyle='#ffffff';x.fillRect(X+14,34,3,54);x.fillStyle='#d9d5cc';x.fillRect(X-6,92,44,6)}x.fillStyle='rgba(0,0,0,.06)';x.fillRect(0,122,128,6)}),
+  cvs(x=>{x.fillStyle='#f4f2ee';x.fillRect(0,0,128,128);glass(x,0,28,128,66,'#9ab3c9','#526c86');x.fillStyle='#3d4752';for(let X=0;X<128;X+=32)x.fillRect(X,28,3,66);x.fillRect(0,26,128,3);x.fillRect(0,93,128,3)}),
+  cvs(x=>{x.fillStyle='#f4f2ee';x.fillRect(0,0,128,128);for(const X of[22,86]){x.fillStyle='rgba(0,0,0,.12)';x.fillRect(X-6,14,32,6);glass(x,X,22,20,76,'#6f8296','#38475a');x.fillStyle='#f4f2ee';x.fillRect(X,58,20,3)}x.fillStyle='rgba(0,0,0,.10)';x.fillRect(0,116,128,12)})];
+ const SH=cvs(x=>{x.fillStyle='#e9e4da';x.fillRect(0,0,128,128);x.fillStyle='#2f3338';x.fillRect(0,18,128,6);x.fillRect(0,124,128,4);glass(x,6,30,74,90,'#c7d8e4','#7d97ab');x.fillStyle='#2f3338';x.fillRect(42,30,3,90);x.fillRect(90,30,30,94);glass(x,94,36,22,84,'#a9bccb','#6b8295');
+  for(let i=0;i<8;i++){x.fillStyle=i%2?'#f2efe8':'#c4483e';x.fillRect(i*16,0,16,16)}});
+ const mk=(t,vc)=>{const m=new THREE.MeshStandardMaterial({map:t,vertexColors:vc,roughness:.85,metalness:0,side:THREE.DoubleSide});if(typeof styleMaterial==='function')styleMaterial(m);return m};
+ GM={w:W.map(t=>mk(t,true)),shop:mk(SH,false)};return GM}
 /* ---------- the garage (Hakan's building, in the map's flat style) ---------- */
 function garageMesh(){const G=J.garage;if(!G)return null;if(W.garage)return W.garage;
  /* outside it is just another city block (Hakan): a box with one of the city's own facade textures and a roof texture,
