@@ -113,6 +113,24 @@ for k in range(3):
     ok_&=(ry>vx[:,1]-.15)&(ry<vx[:,1]+.9)
 dropg=np.zeros(len(P),bool);dropg[cand[ok_]]=True
 print('grass faces under roads dropped',int(dropg.sum()))
+# road points every ~2 m across the full width of every traced road (each level keeps its own height)
+_RJ=json.load(open(OUT+'_roads.json'));_rp=[]
+for _r in _RJ:
+    _x=np.array(_r['x']);_z=np.array(_r['z']);_y=np.array(_r['y']);_n=len(_x)
+    if _n<2:continue
+    _L=np.hypot(np.diff(_x),np.diff(_z));_c=np.r_[0,np.cumsum(_L)];_t=np.arange(0,_c[-1]+.01,2.)
+    _xi=np.interp(_t,_c,_x);_zi=np.interp(_t,_c,_z);_yi=np.interp(_t,_c,_y);_dx=np.gradient(_xi);_dz=np.gradient(_zi);_l=np.hypot(_dx,_dz)+1e-9;_nx=-_dz/_l;_nz=_dx/_l
+    for _o in np.arange(-max(_r['hw']-1.2,0),max(_r['hw']-1.2,0)+.01,2.):_rp.append(np.stack([_xi+_nx*_o,_zi+_nz*_o,_yi],1))
+RDP=np.concatenate(_rp);print('road check points',len(RDP))
+# ground in the way: terrain faces (not road, not bridges) lying just above a road -> dropped (the fill ground below is kept under the road)
+_kd=cKDTree(RDP[:,:2]);_tf=np.flatnonzero((K==0)&~R&~dropg&(ny>.3))
+_pts=np.concatenate([cen[_tf][:,None,:],P[_tf]],1).reshape(-1,3);_nb=_kd.query_ball_point(_pts[:,[0,2]],1.1)
+_bad=np.zeros(len(_pts),bool)
+for _i,_l in enumerate(_nb):
+    if _l:
+        _d=_pts[_i,1]-RDP[_l,2]
+        if ((_d>.5)&(_d<3.5)).any():_bad[_i]=True  # kerbs and pavements (<0.5 m) stay
+_bf=_bad.reshape(-1,4).any(1);dropg[_tf[_bf]]=True;print('terrain faces over roads dropped',int(_bf.sum()))
 kk=~dropg
 P,C,K,O,X,R,cen,nl,ny,oi,U,TI=P[kk],C[kk],K[kk],O[kk],X[kk],R[kk],cen[kk],nl[kk],ny[kk],oi[kk],U[kk],TI[kk]
 # road surfaces: every flat ground face on a traced road at road height joins the road category, so it is decimated on its own
@@ -160,6 +178,13 @@ d=dist*GC; sea=-7.0
 t=np.clip((d-140)/360,0,1); t=t*t*(3-2*t)
 Hf=Hf*(1-t)+sea*t
 Hf=np.where(known,Hn-0.6,Hf-0.25)
+# the fill never rises above a road: every grid vertex around a road point sits 0.4 m under it
+_gi=np.floor(RDP[:,0]/GC).astype(int);_gj=np.floor(RDP[:,2]/GC).astype(int);_c0=int((Hf>-1e8).sum())
+_before=Hf.copy()
+for _a in (0,1):
+    for _b in (0,1):
+        _ii=np.clip(_gi+_a,0,GN-1);_jj=np.clip(_gj+_b,0,GN-1);np.minimum.at(Hf,(_jj,_ii),RDP[:,2]-.4)
+print('fill vertices lowered under roads',int((Hf<_before-.01).sum()))
 print('fill grid',GN,'known',known.mean())
 # urban index: how built-up the ground around each cell is (buildings, roads); the fill and plain terrain turn to pavement there
 occ=np.zeros((GN,GN));bi_=np.clip(np.round(cen[:,0]/GC).astype(int),0,GN-1);bj_=np.clip(np.round(cen[:,2]/GC).astype(int),0,GN-1)
