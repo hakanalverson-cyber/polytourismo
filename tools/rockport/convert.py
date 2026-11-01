@@ -143,12 +143,14 @@ _bf=_bad.reshape(-1,4).any(1);dropg[_tf[_bf]]=True;print('terrain faces over roa
 # GENB streets: clear the old street clutter in the region, keep guard rails by the roads; street trees and lamps in rhythm
 LAMPC=None
 if os.environ.get('GENB'):
-    _kdr=cKDTree(RDP[:,:2]);inreg=np.hypot(cen[:,0]-_gx,cen[:,2]-_gz)<_gr
+    _rng_=np.random.default_rng(5);_kdr=cKDTree(RDP[:,:2]);inreg=np.hypot(cen[:,0]-_gx,cen[:,2]-_gz)<_gr
     _d,_ii=_kdr.query(cen[:,[0,2]],distance_upper_bound=3.)
     nearroad=(_d<3.)&(np.abs(cen[:,1]-RDP[np.minimum(_ii,len(RDP)-1),2])<3.5)
     # walls by the road stay only when low (curbs, rails); tall concrete blocks go
-    _ry=RDP[np.minimum(_ii,len(RDP)-1),2];_top=np.full(O.max()+1 if len(O) else 1,-1e9);np.maximum.at(_top,O,np.where(inreg&(K==2)&(_d<3.),P[:,:,1].max(1)-_ry,-1e9))
-    nearroad&=_top[O]<1.4
+    # walls in the region stay only when they are low rails by the road (own height under 1.4 m); retaining and planter walls go
+    _top=np.full(O.max()+1,-1e9);_bot=np.full(O.max()+1,1e9);_w2=inreg&(K==2)
+    np.maximum.at(_top,O[_w2],P[_w2,:,1].max(1));np.minimum.at(_bot,O[_w2],P[_w2,:,1].min(1))
+    nearroad&=(_top[O]-_bot[O])<1.4
     clut=inreg&((K==3)|((K==2)&~nearroad));dropg|=clut;print('street clutter removed',int(clut.sum()))
     # building raster of our generated buildings (1 m) so nothing is placed inside them
     _b6=P[K==6].reshape(-1,3);BM=np.zeros((int(2*_gr)+40,int(2*_gr)+40),bool);_ox,_oz=_gx-_gr-20,_gz-_gr-20
@@ -157,9 +159,28 @@ if os.environ.get('GENB'):
             _p=_t[0]+(_t[1]-_t[0])*_w;_i=int(_p[0]-_ox);_j=int(_p[2]-_oz)
             if 0<=_i<BM.shape[1] and 0<=_j<BM.shape[0]:BM[_j,_i]=True
     BM=ndimage.binary_fill_holes(ndimage.binary_closing(BM,iterations=2));BM=ndimage.binary_dilation(BM,iterations=2)
+    # every road's centre line, sampled each metre with its half width: a spot is free only if it is clear of all of them
+    _cp=[];_ch=[]
+    for _r in _RJ:
+        _x=np.array(_r['x']);_z=np.array(_r['z'])
+        if len(_x)<2 or np.hypot(_x-_gx,_z-_gz).min()>_gr+60:continue
+        _c=np.r_[0,np.cumsum(np.hypot(np.diff(_x),np.diff(_z)))];_t=np.arange(0,_c[-1],1.)
+        _cp.append(np.stack([np.interp(_t,_c,_x),np.interp(_t,_c,_z)],1));_ch.append(np.full(len(_t),_r['hw']))
+    _cp=np.concatenate(_cp);_ch=np.concatenate(_ch);_kc=cKDTree(_cp);_hwmax=_ch.max()
+    # 0.5 m raster of the real road surfaces (flat road faces, the asphalt as drawn), so nothing stands on the tarmac itself
+    RS=np.zeros((BM.shape[0]*2,BM.shape[1]*2),bool);_rf=np.flatnonzero((K==5)&(ny>.85)&inreg)
+    for _t in P[_rf]:
+        _a=_rng_.random((40,1));_b=_rng_.random((40,1));_f=(_a+_b)>1;_a[_f]=1-_a[_f];_b[_f]=1-_b[_f]
+        _q=_t[0]+(_t[1]-_t[0])*_a+(_t[2]-_t[0])*_b;_i=((_q[:,0]-_ox)*2).astype(int);_j=((_q[:,2]-_oz)*2).astype(int);_k=(_i>=0)&(_j>=0)&(_i<RS.shape[1])&(_j<RS.shape[0]);RS[_j[_k],_i[_k]]=True
+    RS=ndimage.binary_closing(RS,iterations=2)
+    print('road surface cells',int(RS.sum()))
     def _free(x,z):
+        _i=int((x-_ox)*2);_j=int((z-_oz)*2)
+        if 0<=_i<RS.shape[1] and 0<=_j<RS.shape[0] and RS[max(_j-1,0):_j+2,max(_i-1,0):_i+2].any():return False
         i=int(x-_ox);j=int(z-_oz)
         if not(0<=i<BM.shape[1] and 0<=j<BM.shape[0]) or BM[j,i]:return False
+        for q in _kc.query_ball_point([x,z],_hwmax+1.):
+            if np.hypot(_cp[q,0]-x,_cp[q,1]-z)<_ch[q]+.8:return False   # never on any road (lanes, medians, junctions)
         return _kdr.query([x,z])[0]>1.6
     STREE=[];LP=[]
     for _r in _RJ:
@@ -249,7 +270,7 @@ print('fill vertices lowered under roads',int((Hf<_before-.01).sum()))
 print('fill grid',GN,'known',known.mean())
 # urban index: how built-up the ground around each cell is (buildings, roads); the fill and plain terrain turn to pavement there
 occ=np.zeros((GN,GN));bi_=np.clip(np.round(cen[:,0]/GC).astype(int),0,GN-1);bj_=np.clip(np.round(cen[:,2]/GC).astype(int),0,GN-1)
-np.maximum.at(occ,(bj_[K==1],bi_[K==1]),1.);np.maximum.at(occ,(bj_[R],bi_[R]),.5)
+np.maximum.at(occ,(bj_[(K==1)|(K==6)],bi_[(K==1)|(K==6)]),1.);np.maximum.at(occ,(bj_[R],bi_[R]),.5)
 URB=np.clip(ndimage.gaussian_filter(occ,2.2)*3.2-.25,0,1)
 # panorama cards inside the city (they stand across streets): keep only the ones far out from the real ground
 fi=np.clip(np.round(cen[:,0]/GC).astype(int),0,GN-1);fj=np.clip(np.round(cen[:,2]/GC).astype(int),0,GN-1)
@@ -379,7 +400,7 @@ urb_off=len(blob); blob+=np.round(URB*255).astype(np.uint8).tobytes()
 # land mask (cells with real ground or road under them): the sea is drawn only off it, so sunken roads are not flooded
 known_off=len(blob); blob+=ndimage.binary_dilation(known,iterations=1).astype(np.uint8).tobytes()
 while len(blob)%4: blob+=b'\0'
-json.dump({'fac':[[int(f[0]),round(float(f[1]),2),round(float(f[2]),2)] for f in FAC],'roo':[[int(f[0]),round(float(f[1]),2)] for f in ROO],'tex':[[round(float(v),6) for v in ATL['r'][n][:4]] for n in TNAME],'texc':[ATL['r'][n][4] for n in TNAME],'grole':{str(k):v for k,v in (GROLE.items() if GCOL else [])},'texv':[round(float(v),3) for v in TEXV],'gc':GC,'gn':int(GN),'goff':ground_off,'uoff':urb_off,'koff':known_off,'gscale':8,'tile':TILE,'w':WXZ,'shift':[SX,SZ],'pal':[[round(float(c),4) for c in p] for p in pal],'m':meta},open(OUT+'.json','w'),separators=(',',':'))
+json.dump({'fac':[[int(f[0]),round(float(f[1]),2),round(float(f[2]),2)] for f in FAC],'roo':[[int(f[0]),round(float(f[1]),2)] for f in ROO],'tex':[[round(float(v),6) for v in ATL['r'][n][:4]] for n in TNAME],'texc':[ATL['r'][n][4] for n in TNAME],'grole':{str(k):v for k,v in (GROLE.items() if GCOL else [])},'texv':[round(float(v),3) for v in TEXV],'gc':GC,'gn':int(GN),'goff':ground_off,'uoff':urb_off,'koff':known_off,'genb':([float(v) for v in os.environ['GENB'].split(',')] if os.environ.get('GENB') else None),'gscale':8,'tile':TILE,'w':WXZ,'shift':[SX,SZ],'pal':[[round(float(c),4) for c in p] for p in pal],'m':meta},open(OUT+'.json','w'),separators=(',',':'))
 open(OUT+'.bin','wb').write(blob)
 # preview soup
 pos=[];col=[]

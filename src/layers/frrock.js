@@ -108,7 +108,7 @@ let DOMT=null;function domTex(){if(DOMT)return DOMT;const cnt=[{},{},{},{},{},{}
  const lum=t=>{const c=J.texc&&J.texc[t];return c?(c[0]+c[1]+c[2])/3:.3},plain=t=>{const c=J.texc&&J.texc[t];if(!c)return true;const mx=Math.max(c[0],c[1],c[2]),mn=Math.min(c[0],c[1],c[2]);return (mx-mn)/Math.max(mx,.001)<.15&&lum(t)>.2&&lum(t)<.75&&(!J.texv||J.texv[t]<.1)};
  DOMT=cnt.map((c,cat)=>{let b=-1,n=0;for(const k in c)if(c[k]>n&&(cat===0||plain(+k))&&(cat!==5||lum(+k)<.36)){n=c[k];b=+k}return b>=0?J.tex[b]:null});return DOMT}
 function buildTile(k,lod){const M=F.mats(),group=new THREE.Group(),tx=(k%NT)*TILE,tz=Math.floor(k/NT)*TILE;group.userData.chunk=k;group.userData.lod=lod|0;group.userData.cars=[];
- const l=RK.tiles.get(k)||[],pos=[],col=[],posR=[],colR=[],posW=[],colW=[],uvW=[],segs=[],posT=[],uvT=[],rcT=[],posTR=[],uvTR=[],rcTR=[],GW=[[[],[],[]],[[],[],[]],[[],[],[]],[[],[],[]]];let nT=0;
+ const l=RK.tiles.get(k)||[],pos=[],col=[],posR=[],colR=[],posW=[],colW=[],uvW=[],segs=[],posT=[],uvT=[],rcT=[],posTR=[],uvTR=[],rcTR=[],GW=[0,1,2,3,4,5,6].map(()=>[[],[],[]]);let nT=0;
  for(const e of l){if(e.cat===4)continue;const a=meshArrays(e),V=a.V,I=a.idx,fc=a.fc,UV=a.UV,rc=UV?J.tex[e.tid]:null;nT+=e.nf;
   for(let f=0;f<e.nf;f++){const i0=I[f*3]*3,i1=I[f*3+1]*3,i2=I[f*3+2]*3,c=RK.pal[fc[f]];
    /* original textures: one atlas, each vertex carries its texture's rect (the shader tiles inside it) */
@@ -117,7 +117,7 @@ function buildTile(k,lod){const M=F.mats(),group=new THREE.Group(),tx=(k%NT)*TIL
     /* no texture of its own: borrow one (facade / roof for buildings, the category's usual one otherwise), planar UVs */
     let done=false;
     /* our buildings: walls get a window style (from the wall colour), the street band a shopfront, trims and roofs stay plain */
-    if(e.cat===6&&Math.abs(ny)/nl<.3&&J.grole){const role=J.grole[fc[f]];if(role===0||role===2){const st=role===2?3:fc[f]%3,A=GW[st],ax_=-nz/nl,az_=nx/nl,al=Math.hypot(ax_,az_)||1,ym=Math.min(V[i0+1],V[i1+1],V[i2+1]),FW=role===2?8:6,FH=role===2?4.8:3.4;
+    if(e.cat===6&&Math.abs(ny)/nl<.3&&J.grole){const role=J.grole[fc[f]];if(role===0||role===2){const st=role===2?3+fc[f]%4:fc[f]%3,A=GW[st],ax_=-nz/nl,az_=nx/nl,al=Math.hypot(ax_,az_)||1,ym=Math.min(V[i0+1],V[i1+1],V[i2+1]),FW=role===2?8:6,FH=role===2?4.8:3.4;
       for(const i of[i0,i1,i2]){A[0].push(V[i],V[i+1],V[i+2]);A[1].push(c[0],c[1],c[2]);A[2].push((V[i]*ax_/al+V[i+2]*az_/al)/FW,(V[i+1]-ym)/FH)}done=true}}
     if(!done&&e.cat!==6){const D=domTex(),vert=Math.abs(ny)/nl<.3;let rc=null,su=0,sv=0,mode=0;
      if(e.cat===1&&J.fac&&J.fac.length&&vert){const fq=J.fac[(Math.abs((e.off|0)*7+(e.tile|0)*3)>>3)%Math.min(6,J.fac.length)];rc=J.tex[fq[0]];su=fq[1];sv=fq[2];mode=1}
@@ -140,7 +140,7 @@ function buildTile(k,lod){const M=F.mats(),group=new THREE.Group(),tx=(k%NT)*TIL
  for(const[P_,U_,C_,road] of[[posT,uvT,rcT,0],[posTR,uvTR,rcTR,1]]){if(!P_.length)continue;const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P_,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(U_,2));g.setAttribute('arect',new THREE.Float32BufferAttribute(C_,4));g.computeVertexNormals();g.computeBoundingSphere();
   const m=new THREE.Mesh(g,road?amats().road:amats().base);m.userData.fogCull=true;m.receiveShadow=!lod;m.userData.kind=road?'road':'city';group.add(m)}
  GW.forEach((A,st)=>{if(!A[0].length)return;const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(A[0],3));g.setAttribute('color',new THREE.Float32BufferAttribute(A[1],3));g.setAttribute('uv',new THREE.Float32BufferAttribute(A[2],2));g.computeVertexNormals();g.computeBoundingSphere();
-  const m=new THREE.Mesh(g,st===3?gmats().shop:gmats().w[st]);m.userData.fogCull=true;m.receiveShadow=!lod;m.userData.kind='city';group.add(m)});
+  const m=new THREE.Mesh(g,st>=3?gmats().shop[st-3]:gmats().w[st]);m.userData.fogCull=true;m.receiveShadow=!lod;m.userData.kind='city';group.add(m)});
  if(posR.length){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(posR,3));g.setAttribute('color',new THREE.Float32BufferAttribute(colR,3));g.computeVertexNormals();g.computeBoundingSphere();
   const m=new THREE.Mesh(g,rmats().road);m.userData.fogCull=true;m.receiveShadow=!lod;m.userData.kind='road';group.add(m)}
  if(posW.length){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(posW,3));g.setAttribute('color',new THREE.Float32BufferAttribute(colW,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uvW,2));g.computeVertexNormals();g.computeBoundingSphere();
@@ -151,7 +151,13 @@ function buildTile(k,lod){const M=F.mats(),group=new THREE.Group(),tx=(k%NT)*TIL
  {const n=TILE/GC+1,p=new Float32Array(n*n*3),c=new Float32Array(n*n*3),idx=[];let hmax=-1e9;const gi0=tx/GC,gj0=tz/GC;
   for(let j=0;j<n;j++)for(let i=0;i<n;i++){const gi=Math.min(gi0+i,GN-1),gj=Math.min(gj0+j,GN-1),h=W.HR[gj*GN+gi],v=(j*n+i)*3,x=tx+i*GC,z=tz+j*GC;if(h>hmax)hmax=h;
    const sl=Math.hypot(W.HR[gj*GN+Math.min(gi+1,GN-1)]-W.HR[gj*GN+Math.max(gi-1,0)],W.HR[Math.min(gj+1,GN-1)*GN+gi]-W.HR[Math.max(gj-1,0)*GN+gi])/(2*GC),cl=groundCol(h,sl,x,z);p[v]=x;p[v+1]=h;p[v+2]=z;c[v]=cl[0];c[v+1]=cl[1];c[v+2]=cl[2]}
-  if(hmax>-6){for(let j=0;j<n-1;j++)for(let i=0;i<n-1;i++){const a=j*n+i,b=a+1,cc_=a+n,d=cc_+1;if((i+j)&1)idx.push(a,cc_,b,b,cc_,d);else idx.push(a,cc_,d,a,d,b)}
+  /* in the rebuilt area the built-up lots are paved plazas (concrete), the rest stays grass */
+  const UR=J.genb&&J.uoff?(W.URB||(W.URB=new Uint8Array(BUF,J.uoff,GN*GN))):null,pv=[];
+  const paved=(i,j)=>{if(!UR)return false;const x=tx+(i+.5)*GC,z=tz+(j+.5)*GC;if(Math.hypot(x-J.genb[0],z-J.genb[1])>J.genb[2])return false;return UR[Math.min(gj0+j,GN-1)*GN+Math.min(gi0+i,GN-1)]>110};
+  if(hmax>-6){for(let j=0;j<n-1;j++)for(let i=0;i<n-1;i++){const a=j*n+i,b=a+1,cc_=a+n,d=cc_+1,L=paved(i,j)?pv:idx;if((i+j)&1)L.push(a,cc_,b,b,cc_,d);else L.push(a,cc_,d,a,d,b)}
+   const D2=domTex()[2];if(pv.length&&D2){const g=new THREE.BufferGeometry(),uv=new Float32Array(n*n*2),rc=new Float32Array(n*n*4),cc=new Float32Array(n*n*3);for(let q=0;q<n*n;q++){uv[q*2]=p[q*3]/4;uv[q*2+1]=p[q*3+2]/4;rc.set(D2,q*4);cc[q*3]=.93;cc[q*3+1]=.91;cc[q*3+2]=.87}
+    g.setAttribute('position',new THREE.BufferAttribute(p,3));g.setAttribute('color',new THREE.BufferAttribute(cc,3));g.setAttribute('uv',new THREE.BufferAttribute(uv,2));g.setAttribute('arect',new THREE.BufferAttribute(rc,4));g.setIndex(pv);g.computeVertexNormals();g.computeBoundingSphere();
+    const m=new THREE.Mesh(g,amats().terr);m.userData.fogCull=true;m.receiveShadow=true;group.add(m)}else if(pv.length)idx.push(...pv)
    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(p,3));g.setAttribute('color',new THREE.BufferAttribute(c,3));g.setIndex(idx);g.computeVertexNormals();g.computeBoundingSphere();
    /* the fill ground wears the map's own grass texture, lightly tinted by our sand / rock / grass colour */
    const GT=domTex()[0];let gm=M.terrain;if(GT){const uv=new Float32Array(n*n*2),rc=new Float32Array(n*n*4);for(let q=0;q<n*n;q++){uv[q*2]=p[q*3]/8;uv[q*2+1]=p[q*3+2]/8;rc.set(GT,q*4);
@@ -220,10 +226,10 @@ let GM=null;function gmats(){if(GM)return GM;
   cvs(x=>{x.fillStyle='#f4f2ee';x.fillRect(0,0,128,128);for(const X of[16,80]){x.fillStyle='#ffffff';x.fillRect(X-4,30,40,62);glass(x,X,34,32,54,'#8ea6bd','#4b6178');x.fillStyle='#ffffff';x.fillRect(X+14,34,3,54);x.fillStyle='#d9d5cc';x.fillRect(X-6,92,44,6)}x.fillStyle='rgba(0,0,0,.06)';x.fillRect(0,122,128,6)}),
   cvs(x=>{x.fillStyle='#f4f2ee';x.fillRect(0,0,128,128);glass(x,0,28,128,66,'#9ab3c9','#526c86');x.fillStyle='#3d4752';for(let X=0;X<128;X+=32)x.fillRect(X,28,3,66);x.fillRect(0,26,128,3);x.fillRect(0,93,128,3)}),
   cvs(x=>{x.fillStyle='#f4f2ee';x.fillRect(0,0,128,128);for(const X of[22,86]){x.fillStyle='rgba(0,0,0,.12)';x.fillRect(X-6,14,32,6);glass(x,X,22,20,76,'#6f8296','#38475a');x.fillStyle='#f4f2ee';x.fillRect(X,58,20,3)}x.fillStyle='rgba(0,0,0,.10)';x.fillRect(0,116,128,12)})];
- const SH=cvs(x=>{x.fillStyle='#e9e4da';x.fillRect(0,0,128,128);x.fillStyle='#2f3338';x.fillRect(0,18,128,6);x.fillRect(0,124,128,4);glass(x,6,30,74,90,'#c7d8e4','#7d97ab');x.fillStyle='#2f3338';x.fillRect(42,30,3,90);x.fillRect(90,30,30,94);glass(x,94,36,22,84,'#a9bccb','#6b8295');
-  for(let i=0;i<8;i++){x.fillStyle=i%2?'#f2efe8':'#c4483e';x.fillRect(i*16,0,16,16)}});
+ const SH=['#4d7a63','#3a5878','#8c4a40','#b89448'].map(aw=>cvs(x=>{x.fillStyle='#e9e4da';x.fillRect(0,0,128,128);x.fillStyle='#2f3338';x.fillRect(0,18,128,6);x.fillRect(0,124,128,4);glass(x,6,30,74,90,'#c7d8e4','#7d97ab');x.fillStyle='#2f3338';x.fillRect(42,30,3,90);x.fillRect(90,30,30,94);glass(x,94,36,22,84,'#a9bccb','#6b8295');
+  for(let i=0;i<8;i++){x.fillStyle=i%2?'#f2efe8':aw;x.fillRect(i*16,0,16,16)}}));
  const mk=(t,vc)=>{const m=new THREE.MeshStandardMaterial({map:t,vertexColors:vc,roughness:.85,metalness:0,side:THREE.DoubleSide});if(typeof styleMaterial==='function')styleMaterial(m);return m};
- GM={w:W.map(t=>mk(t,true)),shop:mk(SH,false)};return GM}
+ GM={w:W.map(t=>mk(t,true)),shop:SH.map(t=>mk(t,false))};return GM}
 /* ---------- the garage (Hakan's building, in the map's flat style) ---------- */
 function garageMesh(){const G=J.garage;if(!G)return null;if(W.garage)return W.garage;
  /* outside it is just another city block (Hakan): a box with one of the city's own facade textures and a roof texture,
