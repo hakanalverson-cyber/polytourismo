@@ -29,6 +29,13 @@ Artifact publish $A/index.html with url=<artifact url> and files d00.txt..d11.tx
 SendUserFile both outputs
 ```
 
+## Free Roam on Rockport (Nov 1)
+Hakan supplied 13 Rockport GLB parts (NFS Most Wanted map rips, EA-derived: never commit them or the pack). Pipeline in `tools/rockport/` (run from a scratch dir):
+`extract.py <tools> pN.glb ex/pN.npz` per part (drops barriers/chevrons/signs/props/people/sky/reflections, caps open roofs, samples one flat colour per face) ->
+`convert.py ex pack/rockport` (closes open-backed buildings via close.py, palettes, 8 m ground fill + urban pavement grid, 256 m tiles, pyfqmr decimation, 192-colour palette) ->
+`gprev.py` (preview soup) -> `mapshot.js` (top-down map, needs the preview page) -> `roads.py ex pack/rockport` (road graph from the road mask) -> `pack.py pack/rockport ex out.frr`.
+Pack lives at `/mnt/project-files/poly-gt/packs/rockport.frr` (~13 MB gz); build.py embeds it as FRR_B64 in PACKS / FRP / FRR builds. `src/layers/frrock.js` swaps P.FRW to the Rockport world (multi-level driving surfaces from the road/terrain meshes, wall segments from vertical faces, game trees at the original tree spots, map picture), no people/animals. Traffic is deferred (needs lane directions). Lite with Rockport: `LITE=1 FRP=1 python3 build.py out.html` (~47 MB).
+
 ## Architecture
 - `build.py`: base HTML (`base/`) + exact-string `rep()` patches + concatenated layers `src/layers/*.js` (list near line 209) + `src/style.css` (appended; later rules win, many `!important`).
 - Layers wrap base globals and share state on `window.PT8` (P). 1 game unit = 1 metre.

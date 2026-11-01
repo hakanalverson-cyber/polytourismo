@@ -43,7 +43,10 @@ function toast(txt,col,amt){ensureUI();const d=document.createElement('div');d.s
  const t=$q('frToast');t.appendChild(d);while(t.children.length>4)t.removeChild(t.firstChild);setTimeout(()=>d.remove(),3500)}
 function pay(n,why,col){if(n<=0)return;P.earn(n);toast(why,col,n);if(P.sfx)try{P.sfx('select')}catch(e){}}
 /* ================= world map (hill-shaded raster) ================= */
-function makeMap(){if(mapCv)return mapCv;const MW=1120,MH=Math.round(MW*F.WZ/F.WX),k=F.WX/MW,cv=document.createElement('canvas');cv.width=MW;cv.height=MH;const g=cv.getContext('2d'),im=g.createImageData(MW,MH),d=im.data,W=F.W,GXm=F.WX/F.CELL+1;
+function makeMap(){if(mapCv)return mapCv;const MW=1120,MH=Math.round(MW*F.WZ/F.WX),k=F.WX/MW,cv=document.createElement('canvas');cv.width=MW;cv.height=MH;const g=cv.getContext('2d');
+ /* a map with its own top-down picture (the Rockport pack) */
+ if(F.mapImg&&F.mapImg.complete&&F.mapImg.naturalWidth){g.drawImage(F.mapImg,0,0,MW,MH);mapCv=cv;cv._k=k;return cv}
+ const im=g.createImageData(MW,MH),d=im.data,W=F.W,GXm=F.WX/F.CELL+1;
  for(let j=0;j<MH;j++)for(let i=0;i<MW;i++){const x=i*k,z=j*k,h=F.Hf(x,z),sh=(F.Hf(x+9,z+9)-F.Hf(x-9,z-9))*.03,o=(j*MW+i)*4;let r,gg,b;
   if(h<0){const t=clampf(-h/46,0,1);r=88-t*66;gg=186-t*118;b=198-t*88}
   else{const zn=W.Z[Math.round(z/F.CELL)*GXm+Math.round(x/F.CELL)];
@@ -106,7 +109,7 @@ function mkPlayer(T,sel,from){const car=BYID[sel.id]||BYID.merc,k=0;while(COLS.l
  if(c.tune){const f=P.tuneFx(c.tune,false);c.cs=Object.assign({},car,{top:car.top*f.top,acc:car.acc*f.acc,grip:car.grip*f.grip,brk:car.brk*f.brk})}
  c.loan=false;c.pnum=1;c.ptName='P1';c.slot=0;const s=from||F.SPAWN;c.x=s.x;c.z=s.z;c.y=F.Hf(s.x,s.z)+1.2;c.yaw=s.yaw;c.cy=s.yaw;c.camY=c.y+1;c.idx=2;c.unw=0;c.lapT=[];c.lapStart=0;c.curLap=0;
  if(from&&from.keep){c.vx=from.vx||0;c.vz=from.vz||0}return c}
-function freeLaunch(cfg){ensureUI();cfg=Object.assign({mode:'free',track:0,laps:1e9,humans:[],ai:[]},cfg);const sel=P.SV().sel[0]||{id:'merc',alt:0};cfg.humans=[{id:sel.id,alt:sel.alt}];P.lastCfg=cfg;P.cleanupRace();
+function freeLaunch(cfg){if(P.FRR&&P.FRR.gate&&P.FRR.gate(()=>freeLaunch(cfg)))return;ensureUI();cfg=Object.assign({mode:'free',track:0,laps:1e9,humans:[],ai:[]},cfg);const sel=P.SV().sel[0]||{id:'merc',alt:0};cfg.humans=[{id:sel.id,alt:sel.alt}];P.lastCfg=cfg;P.cleanupRace();
  F.build();const T=F.makeT(),sc=new THREE.Scene();FS=sc;FX=[];sc.fog=new THREE.Fog(0xcfe3f2,300,3100);
  const sky=ctex(2,64,(x,w,h)=>{const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,'#3a74c8');g.addColorStop(.42,'#9cc4ec');g.addColorStop(.5,'#cfe3f2');g.addColorStop(1,'#cfe3f2');x.fillStyle=g;x.fillRect(0,0,w,h)});
  const dome=new THREE.Mesh(new THREE.SphereGeometry(1500,16,12),new THREE.MeshBasicMaterial({map:sky,side:THREE.BackSide,fog:false,depthWrite:false}));dome.rotation.x=0;dome.renderOrder=-20;sc.add(dome);const clouds=makeClouds();sc.add(clouds);
