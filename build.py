@@ -272,6 +272,9 @@ if (os.environ.get('PACKS') or os.environ.get('FRP')) and os.path.exists('/mnt/p
 FRR=''
 if (os.environ.get('PACKS') or os.environ.get('FRP') or os.environ.get('FRR')) and os.path.exists('/mnt/project-files/poly-gt/packs/rockport.frr'):
   FRR='<script>const FRR_B64="'+base64.b64encode(open('/mnt/project-files/poly-gt/packs/rockport.frr','rb').read()).decode()+'";</script>'
+# Hakan's garage interior model (project files only, never in the repo): the free-roam home garage studio
+if FRR and os.path.exists('/mnt/project-files/poly-gt/packs/edge_garage.glb'):
+  FRR+='<script>const GARAGE_GLB_B64="'+base64.b64encode(open('/mnt/project-files/poly-gt/packs/edge_garage.glb','rb').read()).decode()+'";</script>'
 #FAC='<script>const FAC_B64="'+b64('factory.bin')+'",FACS_B64="'+b64('factory_shell.glb.gz')+'";</script>'
 import glob as _g,gzip as _gz,re as _re,json as _js
 _rev={}

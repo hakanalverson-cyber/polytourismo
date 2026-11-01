@@ -159,7 +159,7 @@ function gasUp(){const c=RACE.cars[0],cost=150;if(FR.fuel>0){toast('PREMIUM FUEL
  FR.fuel=600;FR.baseCs=c.cs;c.cs=Object.assign({},c.cs,{acc:c.cs.acc*1.07,top:c.cs.top*1.025});toast('PREMIUM FUEL: +7% PICKUP, +2.5% TOP SPEED FOR 10 MIN','#ff6a4d');
  if(P.puff)for(let i=0;i<10;i++)P.puff(c.x,c.y+.5,c.z,(Math.random()-.5)*3,1+Math.random()*2,(Math.random()-.5)*3,[.9,.9,.92],1.2,.9,.4,0)}
 function fuelEnd(){const c=RACE.cars[0];if(FR.baseCs){c.cs=FR.baseCs;FR.baseCs=null}FR.fuel=0}
-const ACT={garage:()=>openShowFrom('garage',true),brand:()=>openShowFrom('brand',false),tune:()=>openShowFrom('garage',false),office:openOffice,job:takeJob,gas:gasUp};
+const ACT={garage:()=>openShowFrom('garage',true),brand:()=>openShowFrom('brand',false),tune:()=>openShowFrom('garage',false),office:openOffice,job:takeJob,gas:gasUp};P.frAct=k=>ACT[k]&&ACT[k]();
 const LABEL={garage:'YOUR GARAGE',brand:'BRAND CENTRAL',tune:'TUNE SHOP',office:'RACE OFFICE',job:'TAKE A DELIVERY JOB',gas:'PREMIUM FUEL  (150 Cr.)'};
 addEventListener('keydown',e=>{if(!(FR&&RACE&&RACE.mode==='free')||e.repeat)return;
  if(scr==='game'||FR.mapOpen){if(e.code==='KeyM'){e.preventDefault();toggleMap();return}if(FR.mapOpen&&e.code==='Escape'){e.preventDefault();e.stopImmediatePropagation();toggleMap(false);return}}
@@ -354,9 +354,21 @@ function homeGarage(S){if(HOME)return HOME;const g=new THREE.Group(),PI=Math.PI;
   try{const tmp=new THREE.Scene();tmp.background=new THREE.Color(0x0a0a0c);const em=(w,h,x,y,z,c,rx)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:c,side:THREE.DoubleSide}));m.position.set(x,y,z);m.rotation.x=rx||0;tmp.add(m)};
    for(let k=-2;k<=2;k++)em(.3,6,k*2.2,6,0,0x8a96a8,Math.PI/2);em(10,3,0,3,-8,0x2a3140);em(6,2.5,-8,3,0,0x3a2a1a);
    const pm=new THREE.PMREMGenerator(R);HOME_ENV=pm.fromScene(tmp,.04).texture;pm.dispose()}catch(e){console.warn('garage env',e)}
+  /* Hakan's garage model (project files only, built in with the Rockport pack) replaces the hand-made warehouse when present */
+  if(typeof GARAGE_GLB_B64!=='undefined'&&THREE.GLTFLoader){try{const bin=atob(GARAGE_GLB_B64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+   new THREE.GLTFLoader().parse(u.buffer,'',gl=>{const o=gl.scene;o.position.set(0,0,-2);
+    o.traverse(m=>{if(!m.isMesh||!m.material)return;const mn=m.material.name||'';if(/occluder/i.test(mn)){m.visible=false;return}
+     if(/godrays/i.test(mn)){m.material.transparent=true;m.material.blending=THREE.AdditiveBlending;m.material.depthWrite=false;m.material.opacity=.5;return}
+     m.receiveShadow=true;m.castShadow=false;m.material.envMapIntensity=.25;m.material.side=THREE.DoubleSide});
+    g.children.slice().forEach(c=>{c.visible=false});
+    const L=new THREE.Group();L.add(new THREE.HemisphereLight(0xe4ebf5,0x3a342e,.6));
+    const ks=(x,y,z,tx,tz,i,ang,sh)=>{const l=new THREE.SpotLight(0xfff2e0,i,34,ang,.7,1.2);l.position.set(x,y,z);l.target.position.set(tx,0,tz);L.add(l,l.target);if(sh){l.castShadow=true;l.shadow.mapSize.set(1024,1024);l.shadow.bias=-.0005;l.shadow.radius=4;l.shadow.camera.near=1.5;l.shadow.camera.far=20}return l};
+    ks(-1.2,7,0,0,-2.6,1.5,.6,true);ks(4,6.5,-6,0,-6,.8,.8,false);ks(-4,6.5,4,0,3,.6,.8,false);
+    const d=new THREE.DirectionalLight(0xdfe8ff,.5);d.position.set(3,8,-10);L.add(d);
+    g.add(o,L);g.userData.glb=1},e=>console.warn('garage glb',e))}catch(e){console.warn('garage glb',e)}}
   g.visible=false;S.sc.add(g);return HOME=g}
 P.studioDress=(S,SR)=>{if(!S)return;const home=!!(SR&&SR.home&&SR.kind==='garage'&&FR);if(S.wall){S.wall.visible=!home;if(S.dark)S.dark.visible=!home;if(S.ring)S.ring.visible=!home}
- const g=home?homeGarage(S):HOME;if(g)g.visible=home;if(S.floor){S.floor.visible=!home;S.floor.material.color.setHex(0x16191f)}S.sc.background.setHex(home?0x0e0d0c:0x0b0d11);P.homeCamOn=home;if(S.turn){S.turn.scale.setScalar(home?.78:1);S.turn.position.z=home?-2.6:0;if(S.mir){if(home){if(S.mir.parent!==S.turn)S.turn.add(S.mir)}else if(S.mir.parent)S.mir.parent.remove(S.mir)}}S.sc.environment=home?HOME_ENV:null;S.turn&&S.turn.children.forEach(o=>{if(o.geometry&&o.geometry.type==='RingGeometry')o.visible=!home});S.sc.traverse(o=>{if(o.isSpotLight){if(o.userData.i0==null)o.userData.i0=o.intensity;o.intensity=o.userData.i0*(home?.45:1)}});if(S.cam&&S.cam.fov!==(home?36:30)){S.cam.fov=home?36:30;S.cam.updateProjectionMatrix()}};
+ const g=home?homeGarage(S):HOME;if(g)g.visible=home;if(S.floor){S.floor.visible=!home;S.floor.material.color.setHex(0x16191f)}S.sc.background.setHex(home?0x0e0d0c:0x0b0d11);P.homeCamOn=home;if(S.turn){S.turn.scale.setScalar(home?(HOME&&HOME.userData.glb?1:.78):1);S.turn.position.z=home?-2.6:0;if(S.mir){if(home){if(S.mir.parent!==S.turn)S.turn.add(S.mir)}else if(S.mir.parent)S.mir.parent.remove(S.mir)}}S.sc.environment=home?HOME_ENV:null;S.turn&&S.turn.children.forEach(o=>{if(o.geometry&&o.geometry.type==='RingGeometry')o.visible=!home});const glb=home&&HOME&&HOME.userData.glb;if(S._glbL!==glb){S._glbL=glb;S.sc.children.forEach(o=>{if(o.isLight&&o!==HOME){if(o.userData.v0==null)o.userData.v0=o.visible;o.visible=glb?false:o.userData.v0}})}S.sc.traverse(o=>{if(o.isSpotLight){if(o.userData.i0==null)o.userData.i0=o.intensity;o.intensity=o.userData.i0*(home?.45:1)}});if(S.cam&&S.cam.fov!==(home?36:30)){S.cam.fov=home?36:30;S.cam.updateProjectionMatrix()}};
 P.homeCam=t=>({p:[2.6+Math.sin(t*.13)*.4,.62+Math.sin(t*.21)*.04,6.4+Math.cos(t*.11)*.25],l:[-.2,.55,-3]});
 P.FRdebug=()=>FR;P.homeGroup=()=>HOME;
 })();
