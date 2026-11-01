@@ -135,7 +135,7 @@ function freeLaunch(cfg){if(P.FRR&&P.FRR.gate&&P.FRR.gate(()=>freeLaunch(cfg)))r
  if(P.setupDust)P.setupDust(RACE);makeWp();
  paused=false;document.body.classList.add('fr');show('game');$q('res')&&$q('res').classList.remove('on');$q('cd').textContent='';$q('fade').style.opacity=0;if(typeof rs==='function')rs();
  if(typeof down!=='undefined')down.clear();setTimeout(()=>toast('FREE ROAM',F.POIBY.garage.col),400)}
-P.freeLaunch=freeLaunch;P.frState=()=>FR;P.frFast=p=>fastTravel(p);
+P.freeLaunch=freeLaunch;P.frToast=(t,c)=>toast(t,c);P.frState=()=>FR;P.frFast=p=>fastTravel(p);
 const L0=P.launch;P.launch=cfg=>{if(cfg&&cfg.mode==='free')return freeLaunch(cfg);document.body.classList.remove('fr');return L0(cfg)};
 {const cr=P.cleanupRace;P.cleanupRace=function(){if(FR){try{FR.W.dispose()}catch(e){}if(typeof cam!=='undefined'){cam.far=2500;cam.updateProjectionMatrix()}}FR=null;document.body.classList.remove('fr');if($q('frMap'))$q('frMap').style.display='none';return cr.apply(this,arguments)}}
 P.freeEnter=at=>{ensureUI();const sv=SVfr();fade(()=>{freeLaunch({at:at||null})},null,1100)};
@@ -359,7 +359,7 @@ function homeGarage(S){if(HOME)return HOME;const g=new THREE.Group(),PI=Math.PI;
    new THREE.GLTFLoader().parse(u.buffer,'',gl=>{const o=gl.scene;o.position.set(0,0,-2);
     o.traverse(m=>{if(!m.isMesh||!m.material)return;const mn=m.material.name||'';if(/occluder/i.test(mn)){m.visible=false;return}
      if(/godrays/i.test(mn)){m.material.transparent=true;m.material.blending=THREE.AdditiveBlending;m.material.depthWrite=false;m.material.opacity=.5;return}
-     m.receiveShadow=true;m.castShadow=false;m.material.envMapIntensity=.25;m.material.side=THREE.DoubleSide});
+     m.receiveShadow=true;m.castShadow=false;m.material.envMapIntensity=.25;m.material.side=THREE.DoubleSide;if(P.lookPatch)P.lookPatch(m.material)});P.homeGLB=o;if(P.rockLook&&P.LOOK)setTimeout(()=>P.rockLook(P.LOOK.n),0);
     g.children.slice().forEach(c=>{c.visible=false});
     const L=new THREE.Group();L.add(new THREE.HemisphereLight(0xe4ebf5,0x3a342e,.6));
     const ks=(x,y,z,tx,tz,i,ang,sh)=>{const l=new THREE.SpotLight(0xfff2e0,i,34,ang,.7,1.2);l.position.set(x,y,z);l.target.position.set(tx,0,tz);L.add(l,l.target);if(sh){l.castShadow=true;l.shadow.mapSize.set(1024,1024);l.shadow.bias=-.0005;l.shadow.radius=4;l.shadow.camera.near=1.5;l.shadow.camera.far=20}return l};

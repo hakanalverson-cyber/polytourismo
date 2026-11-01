@@ -99,6 +99,10 @@ function farMesh(){if(W.far)return W.far;const FS=4,st=GC*FS,n=Math.floor((GN-1)
  const m=new THREE.Mesh(g,F.mats().terrain);m.frustumCulled=false;return W.far=m}
 /* ---------- tile builder: city meshes (flat face colours), its patch of fill ground, trees, wall segments ---------- */
 const TREES=[['q_pine1','q_pine2','q_pine3','q_pine4'],['q_oak3','q_oak4','q_oak5'],['q_bush1','q_bush2']];
+/* the original texture most used by each category: the faces the converter left without one (flat colours) get it, so our
+   old flat colours no longer sit next to the original textures */
+let DOMT=null;function domTex(){if(DOMT)return DOMT;const cnt=[{},{},{},{},{},{}];for(const l of RK.tiles.values())for(const e of l)if(e.tid>=0&&e.cat<6)cnt[e.cat][e.tid]=(cnt[e.cat][e.tid]||0)+e.nf;
+ DOMT=cnt.map(c=>{let b=-1,n=0;for(const k in c)if(c[k]>n){n=c[k];b=+k}return b>=0?J.tex[b]:null});return DOMT}
 function buildTile(k,lod){const M=F.mats(),group=new THREE.Group(),tx=(k%NT)*TILE,tz=Math.floor(k/NT)*TILE;group.userData.chunk=k;group.userData.lod=lod|0;group.userData.cars=[];
  const l=RK.tiles.get(k)||[],pos=[],col=[],posR=[],colR=[],posW=[],colW=[],uvW=[],segs=[],posT=[],uvT=[],rcT=[],posTR=[],uvTR=[],rcTR=[];let nT=0;
  for(const e of l){if(e.cat===4)continue;const a=meshArrays(e),V=a.V,I=a.idx,fc=a.fc,UV=a.UV,rc=UV?J.tex[e.tid]:null;nT+=e.nf;
@@ -106,8 +110,16 @@ function buildTile(k,lod){const M=F.mats(),group=new THREE.Group(),tx=(k%NT)*TIL
    /* original textures: one atlas, each vertex carries its texture's rect (the shader tiles inside it) */
    if(UV){const P_=e.cat===5?posTR:posT,U_=e.cat===5?uvTR:uvT,C_=e.cat===5?rcTR:rcT;for(const i of[I[f*3],I[f*3+1],I[f*3+2]]){P_.push(V[i*3],V[i*3+1],V[i*3+2]);U_.push(UV[i*2],UV[i*2+1]);C_.push(rc[0],rc[1],rc[2],rc[3])}}
    else{const ux=V[i1]-V[i0],uy=V[i1+1]-V[i0+1],uz=V[i1+2]-V[i0+2],vx=V[i2]-V[i0],vy=V[i2+1]-V[i0+1],vz=V[i2+2]-V[i0+2],nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx,nl=Math.hypot(nx,ny,nz)||1;
+    /* no texture of its own: borrow one (facade / roof for buildings, the category's usual one otherwise), planar UVs */
+    let done=false;{const D=domTex(),vert=Math.abs(ny)/nl<.3;let rc=null,su=0,sv=0,mode=0;
+     if(e.cat===1&&J.fac&&J.fac.length&&vert){const fq=J.fac[(Math.abs((e.off|0)*7+(e.tile|0)*3)>>3)%Math.min(6,J.fac.length)];rc=J.tex[fq[0]];su=fq[1];sv=fq[2];mode=1}
+     else if(e.cat===1&&J.roo&&J.roo.length){rc=J.tex[J.roo[0][0]];su=sv=J.roo[0][1];mode=2}
+     else if(D[e.cat]&&e.cat!==1){rc=D[e.cat];su=sv=(e.cat===0||e.cat===5)?8:2.5;mode=vert?3:2}
+     if(rc){const P_=e.cat===5?posTR:posT,U_=e.cat===5?uvTR:uvT,C_=e.cat===5?rcTR:rcT,ax_=-nz/nl,az_=nx/nl,al=Math.hypot(ax_,az_)||1;
+      for(const i of[i0,i1,i2]){P_.push(V[i],V[i+1],V[i+2]);let u,v;if(mode===2){u=V[i]/su;v=V[i+2]/sv}else{u=(V[i]*ax_/al+V[i+2]*az_/al)/su;v=1-V[i+1]/sv}U_.push(u,v);C_.push(rc[0],rc[1],rc[2],rc[3])}
+      done=true}}
     /* roads in their own mesh (drawn over anything coplanar: no grass flicker through the asphalt); building walls get windows */
-    if(e.cat===5){posR.push(V[i0],V[i0+1],V[i0+2],V[i1],V[i1+1],V[i1+2],V[i2],V[i2+1],V[i2+2]);colR.push(c[0],c[1],c[2],c[0],c[1],c[2],c[0],c[1],c[2])}
+    if(done){}else if(e.cat===5){posR.push(V[i0],V[i0+1],V[i0+2],V[i1],V[i1+1],V[i1+2],V[i2],V[i2+1],V[i2+2]);colR.push(c[0],c[1],c[2],c[0],c[1],c[2],c[0],c[1],c[2])}
     else if(e.cat===1&&Math.abs(ny)/nl<.3){const tx_=-nz/nl,tz_=nx/nl,tl=Math.hypot(tx_,tz_)||1,ax_=tx_/tl,az_=tz_/tl;
      for(const i of[i0,i1,i2]){posW.push(V[i],V[i+1],V[i+2]);colW.push(c[0],c[1],c[2]);uvW.push((V[i]*ax_+V[i+2]*az_)/WINW,V[i+1]/WINH)}}
     else{pos.push(V[i0],V[i0+1],V[i0+2],V[i1],V[i1+1],V[i1+2],V[i2],V[i2+1],V[i2+2]);col.push(c[0],c[1],c[2],c[0],c[1],c[2],c[0],c[1],c[2])}}
@@ -131,7 +143,11 @@ function buildTile(k,lod){const M=F.mats(),group=new THREE.Group(),tx=(k%NT)*TIL
    const sl=Math.hypot(W.HR[gj*GN+Math.min(gi+1,GN-1)]-W.HR[gj*GN+Math.max(gi-1,0)],W.HR[Math.min(gj+1,GN-1)*GN+gi]-W.HR[Math.max(gj-1,0)*GN+gi])/(2*GC),cl=groundCol(h,sl,x,z);p[v]=x;p[v+1]=h;p[v+2]=z;c[v]=cl[0];c[v+1]=cl[1];c[v+2]=cl[2]}
   if(hmax>-6){for(let j=0;j<n-1;j++)for(let i=0;i<n-1;i++){const a=j*n+i,b=a+1,cc_=a+n,d=cc_+1;if((i+j)&1)idx.push(a,cc_,b,b,cc_,d);else idx.push(a,cc_,d,a,d,b)}
    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(p,3));g.setAttribute('color',new THREE.BufferAttribute(c,3));g.setIndex(idx);g.computeVertexNormals();g.computeBoundingSphere();
-   const m=new THREE.Mesh(g,M.terrain);m.userData.fogCull=true;m.receiveShadow=true;group.add(m)}}
+   /* the fill ground wears the map's own grass texture, lightly tinted by our sand / rock / grass colour */
+   const GT=domTex()[0];let gm=M.terrain;if(GT){const uv=new Float32Array(n*n*2),rc=new Float32Array(n*n*4);for(let q=0;q<n*n;q++){uv[q*2]=p[q*3]/8;uv[q*2+1]=p[q*3+2]/8;rc.set(GT,q*4);
+     const mn=(c[q*3]+c[q*3+1]+c[q*3+2])/3||1;for(let k2=0;k2<3;k2++)c[q*3+k2]=1+(c[q*3+k2]/mn-1)*.35}
+    g.setAttribute('uv',new THREE.BufferAttribute(uv,2));g.setAttribute('arect',new THREE.BufferAttribute(rc,4));gm=amats().terr}
+   const m=new THREE.Mesh(g,gm);m.userData.fogCull=true;m.receiveShadow=true;group.add(m)}}
  /* trees: the game's own low-poly models at the original tree spots */
  const tl=RK.trees.get(k),pts=[];if(tl&&P.FM){const G={pos:[],col:[],sw:[]},fm=P.FM,hs=(i)=>{const q=Math.sin(i*12.9898)*43758.5453;return q-Math.floor(q)};
   for(const t of tl){const r=hs(t[5]),names=TREES[t[4]]||TREES[1],n=names[(r*names.length)|0],sz=fm.size(n)[1]||1,h=Math.min(t[3],t[4]===2?3:t[4]===0?22:16);if(lod&&r<.35)continue;
@@ -141,15 +157,42 @@ function buildTile(k,lod){const M=F.mats(),group=new THREE.Group(),tx=(k%NT)*TIL
  group.userData.wsegs=new Float32Array(segs);group.userData.tpts=new Float32Array(pts);group.userData.tris=nT;return group}
 /* ---------- Rockport materials: roads drawn on top of coplanar ground, building walls with a mip-mapped window texture ---------- */
 const WINW=12.8,WINH=14;let RM=null,AM=null;
+/* ---------- looks: one colour grade shared by the map and the home garage (Hakan picks one; L key cycles in free roam) ---------- */
+const LOOK=P.LOOK||(P.LOOK={u:{value:0},b:{value:0},n:0});
+const LOOK_GLSL='uniform float uLook;uniform float uLookB;\nvec3 lkS(vec3 c){return pow(max(c,vec3(0.)),vec3(1./2.2));}\nfloat lkL(vec3 s){return dot(s,vec3(.299,.587,.114));}\n'+
+ 'vec3 lkGrade(vec3 c,vec3 cb){if(uLook<.5)return c;vec3 s=lkS(c);float l=lkL(s);\n'+
+ 'if(uLook<1.5){s=mix(vec3(l),s,1.4)*1.15+.04;}\n'+
+ 'else if(uLook<2.5){s=mix(vec3(l),s,1.6);s=(s-.5)*1.1+.5;s=s*1.15+.06;}\n'+
+ /* clean: colour from a heavily blurred copy (no grime), the pattern (windows, bricks, lines) kept as light/dark only */
+ 'else{vec3 b=lkS(cb);float d=clamp(l-lkL(b),-.3,.3);float bl=lkL(b);b=mix(vec3(bl),b,1.8)*1.22+.07;s=b+d*.5;}\n'+
+ 'return pow(clamp(s,0.,1.),vec3(2.2));}\n';
+/* patch any standard material (the garage model): grade after the texture, blur the texture in the clean look */
+P.lookPatch=m=>{if(!m||m.userData.lk)return;m.userData.lk=1;const ob=m.onBeforeCompile;m.onBeforeCompile=(sh,r)=>{if(ob)ob(sh,r);sh.uniforms.uLook=LOOK.u;sh.uniforms.uLookB=LOOK.b;
+  sh.fragmentShader=sh.fragmentShader.replace('#include <map_pars_fragment>','#include <map_pars_fragment>\n'+LOOK_GLSL)
+   .replace('#include <map_fragment>','vec3 lkB=diffuseColor.rgb;\n#ifdef USE_MAP\nvec4 texelColor=texture2D(map,vUv,uLookB);texelColor=mapTexelToLinear(texelColor);lkB*=mapTexelToLinear(texture2D(map,vUv,4.5)).rgb;diffuseColor*=texelColor;\n#endif\ndiffuseColor.rgb=lkGrade(diffuseColor.rgb,lkB);')};
+ const ok=m.customProgramCacheKey?m.customProgramCacheKey.bind(m):()=>'';m.customProgramCacheKey=()=>ok()+'|lk';m.needsUpdate=true};
+const LOOKS=[
+ {name:'Original, overcast',sky:['#7d8a96','#aeb7bd','#bfc6ca'],fog:0xb4bcc0,hemi:[0xcdd5dc,0x4f4c44,.85],sun:[0xe9e4da,.55],flat:false},
+ {name:'Graded, sunny',sky:['#5f93d6','#b9d3ec','#d6e3ee'],fog:0xd3dfe9,hemi:[0xe3ecf4,0x6c7262,1.0],sun:[0xfff0d6,.95],flat:false},
+ {name:'Soft painted',sky:['#6f9fdc','#c3d8ec','#dde6ee'],fog:0xd6e1ea,hemi:[0xe6eef5,0x6c7262,1.0],sun:[0xfff0d6,.95],flat:true},
+ {name:'Clean poly',sky:['#93aecb','#c9d3dd','#d5dce3'],fog:0xd0d8e0,hemi:[0xe8eef4,0x707866,1.1],sun:[0xfff3dc,1.0],flat:true}];
+P.rockLook=n=>{n=((n|0)%LOOKS.length+LOOKS.length)%LOOKS.length;const L=LOOKS[n];LOOK.n=n;LOOK.u.value=n;LOOK.b.value=n===2?1.6:0;
+ const mats=[];if(AM)mats.push(AM.base,AM.road,AM.terr);const H=P.homeGLB;if(H)H.traverse(o=>{if(o.isMesh&&o.material&&o.material.userData.lk)mats.push(o.material)});
+ for(const m of mats){if(m&&m.flatShading!==L.flat){m.flatShading=L.flat;m.needsUpdate=true}}
+ const sc=typeof RACE!=='undefined'&&RACE&&RACE.mode==='free'&&RACE.scene;if(sc){if(sc.fog)sc.fog.color.setHex(L.fog);
+  sc.children.forEach(o=>{if(o.isHemisphereLight){o.color.setHex(L.hemi[0]);o.groundColor.setHex(L.hemi[1]);o.intensity=L.hemi[2]}else if(o.isDirectionalLight){o.color.setHex(L.sun[0]);o.intensity=L.sun[1]}
+   else if(o.isMesh&&o.material&&o.material.side===THREE.BackSide&&o.material.map){const c=document.createElement('canvas');c.width=2;c.height=64;const x=c.getContext('2d'),g=x.createLinearGradient(0,0,0,64);g.addColorStop(0,L.sky[0]);g.addColorStop(.45,L.sky[1]);g.addColorStop(.5,L.sky[2]);g.addColorStop(1,L.sky[2]);x.fillStyle=g;x.fillRect(0,0,2,64);const t=new THREE.CanvasTexture(c);t.encoding=o.material.map.encoding;o.material.map=t;o.material.needsUpdate=true}})}
+ return L.name};
+addEventListener('keydown',e=>{if(e.code==='KeyL'&&!e.repeat&&typeof RACE!=='undefined'&&RACE&&RACE.mode==='free'&&on&&!(document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName))){const nm=P.rockLook(LOOK.n+1);if(P.frToast)P.frToast('Look: '+nm,'#9cc4ec')}});
 /* the original Rockport textures: one atlas; uv is tiled inside each texture's rect, mip level from the unwrapped uv so the
    tile seams stay clean */
 function amats(){if(AM)return AM;const t=new THREE.Texture(J.atlasImg);t.flipY=false;t.encoding=THREE.sRGBEncoding;t.anisotropy=8;t.minFilter=THREE.LinearMipmapLinearFilter;t.magFilter=THREE.LinearFilter;t.wrapS=t.wrapT=THREE.ClampToEdgeWrapping;t.needsUpdate=true;
  const mk=o=>{const m=new THREE.MeshStandardMaterial(Object.assign({map:t,roughness:.92,metalness:0,side:THREE.DoubleSide},o));
   m.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <uv_pars_vertex>','#include <uv_pars_vertex>\nattribute vec4 arect;varying vec4 vRect;').replace('#include <uv_vertex>','#include <uv_vertex>\nvRect=arect;');
    sh.fragmentShader=sh.fragmentShader.replace('#include <map_pars_fragment>','#include <map_pars_fragment>\nvarying vec4 vRect;')
-    .replace('#include <map_fragment>','vec2 aUv=vRect.xy+fract(vUv)*vRect.zw;\n#if __VERSION__>=300\nvec4 texelColor=textureGrad(map,aUv,dFdx(vUv)*vRect.zw,dFdy(vUv)*vRect.zw);\n#else\nvec4 texelColor=texture2D(map,aUv);\n#endif\ntexelColor=mapTexelToLinear(texelColor);diffuseColor*=texelColor;')};
-  m.customProgramCacheKey=()=>'rockatlas'+(o.polygonOffset?1:0);return m};
- AM={base:mk({}),road:mk({polygonOffset:true,polygonOffsetFactor:-1.5,polygonOffsetUnits:-3})};return AM}
+    .replace('#include <map_fragment>','vec2 aUv=vRect.xy+fract(vUv)*vRect.zw;\n#if __VERSION__>=300\nvec4 texelColor=textureGrad(map,aUv,dFdx(vUv)*vRect.zw*exp2(uLookB),dFdy(vUv)*vRect.zw*exp2(uLookB));\n#else\nvec4 texelColor=texture2D(map,aUv);\n#endif\ntexelColor=mapTexelToLinear(texelColor);vec3 lkB=diffuseColor.rgb;\n#if __VERSION__>=300\nlkB*=mapTexelToLinear(textureGrad(map,vRect.xy+fract(vUv)*vRect.zw,dFdx(vUv)*vRect.zw*8.,dFdy(vUv)*vRect.zw*8.)).rgb;\n#else\nlkB*=texelColor.rgb;\n#endif\ndiffuseColor*=texelColor;diffuseColor.rgb=lkGrade(diffuseColor.rgb,lkB);').replace('#include <map_pars_fragment>','#include <map_pars_fragment>\n'+LOOK_GLSL);sh.uniforms.uLook=LOOK.u;sh.uniforms.uLookB=LOOK.b};
+  m.customProgramCacheKey=()=>'rockatlas'+(o.polygonOffset?1:0)+(o.vertexColors?'v':'');return m};
+ AM={base:mk({}),road:mk({polygonOffset:true,polygonOffsetFactor:-1.5,polygonOffsetUnits:-3}),terr:mk({vertexColors:true})};return AM}
 function rmats(){if(RM)return RM;const M=F.mats();
  const cv=document.createElement('canvas');cv.width=cv.height=128;const x=cv.getContext('2d');x.fillStyle='#e4e2dc';x.fillRect(0,0,128,128);
  let sd=7;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647};
