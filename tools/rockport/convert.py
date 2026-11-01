@@ -3,7 +3,7 @@ import sys,numpy as np,pyfqmr,time,json,struct
 from scipy.spatial import cKDTree
 D,OUT=sys.argv[1],sys.argv[2]
 SX,SZ=2200.,6900.; TILE=256; WXZ=10240
-RAT={0:.45,1:.6,2:.3,3:.45,4:.5,5:.65}
+RAT={0:.5,1:.6,2:.6,3:.8,4:.5,5:.7}
 AGG={0:6,1:4,2:6,3:5,4:6,5:5}
 P=[];C=[];K=[];O=[];X=[];R=[]
 for i in range(1,14):
@@ -13,45 +13,114 @@ P[:,:,0]+=SX;P[:,:,2]+=SZ
 cen=P.mean(1); ok=(cen[:,0]>0)&(cen[:,0]<WXZ)&(cen[:,2]>0)&(cen[:,2]<WXZ)&(cen[:,1]>-60)&(cen[:,1]<900)
 P,C,K,O,X,R,cen=P[ok],C[ok],K[ok],O[ok],X[ok],R[ok],cen[ok]
 print('faces',len(P))
+# the garage lot (pack.py writes it): props, fences and barriers on it or across its drive go
+import os
+if os.path.exists(D+'/site.json'):
+    st_=json.load(open(D+'/site.json'));c_,s_=np.cos(st_['ry']),np.sin(st_['ry']);dx_=cen[:,0]-st_['x'];dz_=cen[:,2]-st_['z']
+    lx_=dx_*c_-dz_*s_;lz_=dx_*s_+dz_*c_;x0,x1,z0,z1=st_['rect']
+    gone=((K==2)|(K==3))&(lx_>x0)&(lx_<x1)&(lz_>z0)&(lz_<z1)&(cen[:,1]>-60)
+    print('props off the garage lot',int(gone.sum()))
+    P,C,K,O,X,R,cen=P[~gone],C[~gone],K[~gone],O[~gone],X[~gone],R[~gone],cen[~gone]
 sys.path.insert(0,__file__.rsplit('/',1)[0]); from close import close
 nP,nO=close(P,O,K)
+import os
+if os.path.exists(D+'/extra.npz'):
+    xe=np.load(D+'/extra.npz')['P'].astype(np.float64);ne=len(xe)
+    P=np.concatenate([P,xe]);C=np.concatenate([C,np.tile(np.array([[.25,.26,.29]],np.float32),(ne,1))]);K=np.concatenate([K,np.zeros(ne,K.dtype)]);O=np.concatenate([O,np.full(ne,9999999,np.int64)]);X=np.concatenate([X,np.ones(ne,bool)]);R=np.concatenate([R,np.ones(ne,bool)]);cen=P.mean(1)
+    print('joined road tris',ne)
 if len(nP):
     n=len(nP);P=np.concatenate([P,nP]);C=np.concatenate([C,np.zeros((n,3,3) if C.ndim==3 else (n,3),np.float32)]);K=np.concatenate([K,np.ones(n,K.dtype)]);O=np.concatenate([O,nO]);X=np.concatenate([X,np.zeros(n,bool)]);R=np.concatenate([R,np.zeros(n,bool)]);cen=P.mean(1)
 nrm=np.cross(P[:,1]-P[:,0],P[:,2]-P[:,0]); nl=np.linalg.norm(nrm,axis=1)+1e-9; ny=np.abs(nrm[:,1])/nl
 def hx(h): return np.array([(h>>16&255)/255,(h>>8&255)/255,(h&255)/255],np.float32)
 H=lambda o,s: ((o*2654435761+s*40503)%1000003)/1000003.
-TALL=np.array([hx(c) for c in [0x7f9fb8,0x5f9ea0,0xd8b98a,0xeeeeea,0x56677a,0x9a7b5a,0xb9c7d3,0x8a6f9e]])
-MID=np.array([hx(c) for c in [0xb5573f,0xcf7a45,0xf0e0bd,0x9db08c,0xe0ac45,0x9cc3d9,0xe6a6a2,0xc9c2b4,0x7b8fa6]])
-LOW=np.array([hx(c) for c in [0xf2d77a,0xa8d8b9,0xf29e7e,0x8ec3e6,0xf4f0e6,0xc6acd9,0xcf5a52,0xe9c08f]])
-ROOF=np.array([hx(c) for c in [0x4a4f57,0xb5583a,0x5f9b84,0x51627a,0x6d5345,0x8e3b30,0x3f4a3c]])
-CONC=np.array([hx(c) for c in [0xc9c6bd,0xb3aea3,0xd9d3c3,0x9c9a95,0xa58d6c]])
-# object heights (building class)
+# ---- colours: realistic, slightly gritty tones (Hakan: "not every building pastel... on the more realistic side, just not flat colours")
+WALLP=np.array([hx(c) for c in [0x8e4a3a,0x6b3a2e,0xa45c42,0xc2a77f,0xd6c7a6,0xb5b2aa,0x7d7b77,0xe2ded5,0x5d7486,0x4f7a7a,0x7a5a3f,0xd9c48a,0x55606b,0x8c977a,0xb06a48,0x9a9fa6,0x3f4b57,0xcbb89a]])
+ROOF=np.array([hx(c) for c in [0x3d3f42,0x4b4a47,0x6e6a62,0x4a4f57,0x8e4b35,0x5c4a3e,0x5e8a78,0x8d8a83,0x2f3236]])
+CONC=np.array([hx(c) for c in [0xa9a59b,0x948f86,0xbab3a3,0x85827c,0x9a8a70]])
 uo,oi=np.unique(O,return_inverse=True)
 ymn=np.full(len(uo),1e9);ymx=np.full(len(uo),-1e9);np.minimum.at(ymn,oi,P[:,:,1].min(1));np.maximum.at(ymx,oi,P[:,:,1].max(1));oh_=(ymx-ymn)[oi]
 u=~X
 oh=H(O,1); oh2=H(O,7)
 pick=lambda pal,h:pal[(h*len(pal)).astype(int)%len(pal)]
-cB=np.where((oh_>35)[:,None],pick(TALL,oh),np.where((oh_>12)[:,None],pick(MID,oh),pick(LOW,oh)))
-cR=pick(ROOF,oh2)
 roof=ny>.7
-# buildings: walls from the class palette (textured walls keep a little of their texture), roofs from the roof palette
-gC=C.mean(1,keepdims=True);Ctex=np.clip(gC+(C-gC)*1.6,0,1)
-bwall=np.where(u[:,None],cB,cB*.6+Ctex*.4)
-bcol=np.where(roof[:,None],np.where(u[:,None],cR,cR*.55+Ctex*.45),bwall)
-other=np.where(u[:,None],pick(CONC,oh2),Ctex)
+gC=C.mean(1,keepdims=True);Ctex=np.clip(gC+(C-gC)*1.35,0,1)
+# per object: mean colour of its textured faces (walls only for buildings)
+def omean(m):
+    s=np.zeros((len(uo),3));n=np.zeros(len(uo));np.add.at(s,oi[m],C[m]);np.add.at(n,oi[m],1);return s/np.maximum(n,1)[:,None],n
+wm,wn=omean((K==1)&X&~roof)
+# building wall colour: the object's own colour pulled onto the nearest realistic tone; objects with no texture pick one
+d=((wm[:,None,:]-WALLP[None])**2).sum(-1);near=WALLP[d.argmin(1)]
+hp=pick(WALLP,H(uo,1))
+obj_wall=np.where((wn>0)[:,None],near*.6+wm*.4,hp)
+# a little per-face life from the texture brightness (not flat), kept coherent per building
+lum=C.mean(1);ol=np.zeros(len(uo));np.add.at(ol,oi[(K==1)&X],lum[(K==1)&X]);ol/=np.maximum(np.bincount(oi[(K==1)&X],minlength=len(uo)),1)
+var=np.where(X&(K==1),np.clip((lum-ol[oi])*.35,-.07,.07),0)[:,None]
+bwall=np.clip(obj_wall[oi]*(1+var*2.2),0,1)
+cR=pick(ROOF,oh2)
+bcol=np.where(roof[:,None],np.where(u[:,None],cR,cR*.7+Ctex*.3),bwall)
+# props / walls / fences: every object snapped to its own 3 main colours so it reads as one thing, contrast lifted
+from scipy.cluster.vq import kmeans2 as _km
+other=np.where(u[:,None],pick(CONC,oh2),Ctex).astype(np.float64)
+pm=np.flatnonzero(((K==2)|(K==3))&X)
+if len(pm):
+    po=oi[pm];order_=np.argsort(po,kind='stable');pm=pm[order_];po=po[order_];cut=np.flatnonzero(np.diff(po))+1
+    for g in np.split(pm,cut):
+        cg=other[g]
+        if len(g)>=12:
+            try:
+                cent,lab=_km(cg,3,minit='++',seed=1,iter=6);cg=cent[lab]
+            except Exception: pass
+        m_=cg.mean(0);cg=np.clip(m_+(cg-m_)*1.25,0,1)
+        other[g]=cg
 cu=np.where((K==1)[:,None],bcol,other)
 # terrain / panorama hills: grass to olive by height, rock when steep
 h=cen[:,1]; t=np.clip(h/400,0,1)[:,None]
-hill=hx(0x6d9a45)*(1-t)+hx(0x8a8f55)*t; rock=hx(0x8f8676)
+hill=hx(0x5f8a3e)*(1-t)+hx(0x7d8450)*t; rock=hx(0x857c6c)
 hill=np.where((ny<.6)[:,None],rock,hill)
 C=np.where(((K==0)|(K==4))[:,None]&u[:,None],hill,cu)
-PAVE=np.array([hx(x) for x in [0xbdb6a8,0xaea89c,0xc8c0ae,0xa29d93]])
+PAVE=np.array([hx(x) for x in [0xa8a296,0x9b968b,0xb3ab9a,0x8f8a82]])
 C=np.where((K==4)[:,None],np.clip(C,0,1)*.35+hill*.65,C)
-# terrain textures: lift the greens so parks read as parks
-tg=(K==0)&X; C=np.where(tg[:,None],np.clip(Ctex**.85*1.08,0,1),C)
-# roads: their own category (physics + map), asphalt kept a touch darker and neutral
+# terrain textures: keep them, greens a touch richer
+tg=(K==0)&X; C=np.where(tg[:,None],np.clip(Ctex**.92*1.04,0,1),C)
+# grass: realistic, a bit muted and darker (not lime), with broad patches so fields are never one flat colour
+FB=lambda c:(.5*np.sin(c[:,0]*.021+1.3)*np.sin(c[:,2]*.017+.4)+.3*np.sin(c[:,0]*.057+c[:,2]*.043)+.2*np.sin(c[:,0]*.11-c[:,2]*.13))
+fb=FB(cen)[:,None]
+gd=((K==0)|(K==4))&(C[:,1]>C[:,0]*1.02)&(C[:,1]>C[:,2]*1.1)
+Lg=C.mean(1,keepdims=True);gq=np.clip((Lg+(C-Lg)*.72)*.84*(1+.08*fb)+np.array([.012,.004,-.01],np.float32),0,1)
+C=np.where(gd[:,None],gq,C)
+# props / walls: nothing pitch black (unlit textures read as holes)
+lp=C.mean(1);dk=((K==2)|(K==3))&(lp<.13);C=np.where(dk[:,None],np.clip(C*(.13/np.maximum(lp,.02))[:,None],0,1),C)
+# roads: their own category (physics + map), asphalt a touch darker and neutral
 K=np.where(R,5,K)
-asph=hx(0x40434c); C=np.where((K==5)[:,None]&(ny>.6)[:,None],asph*.7+np.clip(C,0,1)*.3,C)
+asph=hx(0x3e4148); C=np.where((K==5)[:,None]&(ny>.6)[:,None],asph*.72+np.clip(C,0,1)*.28,C)
+# grass under the road: terrain faces lying just under a road surface show through it (z-fighting) -> drop them
+v_=C.max(1);s_=(C.max(1)-C.min(1))/np.maximum(v_,1e-3)
+isr=((K==5)|((K==0)&X&(s_<.18)&(v_>.15)&(v_<.55)))&(ny>.8)
+RCl=2;RNl=WXZ//RCl
+RY=np.full((RNl,RNl),-1e9,np.float32)
+rt=P[isr];_rng=np.random.default_rng(9);ar_=nl[isr]*.5;ns_=np.clip((ar_/1.).astype(int),1,3000);rp_=np.repeat(np.arange(len(rt)),ns_)
+aa=_rng.random(len(rp_));bb_=_rng.random(len(rp_));ff=aa+bb_>1;aa[ff]=1-aa[ff];bb_[ff]=1-bb_[ff]
+pp=np.concatenate([rt[rp_,0]+(rt[rp_,1]-rt[rp_,0])*aa[:,None]+(rt[rp_,2]-rt[rp_,0])*bb_[:,None],rt.reshape(-1,3)])
+np.maximum.at(RY,(np.clip((pp[:,2]/RCl).astype(int),0,RNl-1),np.clip((pp[:,0]/RCl).astype(int),0,RNl-1)),pp[:,1].astype(np.float32))
+cand=np.flatnonzero((K==0)&~isr&(ny>.5)&(C[:,1]>C[:,0]*1.02)&(C[:,1]>C[:,2]*1.1))  # only grass: never road decks next to a barrier top
+ok_=np.ones(len(cand),bool)
+for k in range(3):
+    vx=P[cand,k];ry=RY[np.clip((vx[:,2]/RCl).astype(int),0,RNl-1),np.clip((vx[:,0]/RCl).astype(int),0,RNl-1)]
+    ok_&=(ry>vx[:,1]-.15)&(ry<vx[:,1]+.9)
+dropg=np.zeros(len(P),bool);dropg[cand[ok_]]=True
+print('grass faces under roads dropped',int(dropg.sum()))
+kk=~dropg
+P,C,K,O,X,R,cen,nl,ny,oi=P[kk],C[kk],K[kk],O[kk],X[kk],R[kk],cen[kk],nl[kk],ny[kk],oi[kk]
+# road surfaces: every flat ground face on a traced road at road height joins the road category, so it is decimated on its own
+# (no big triangles mixing grass into the asphalt) and gets one neutral asphalt with only a faint texture life
+RM_=np.unpackbits(np.load(OUT+'_roadmask.npy'))[:5120*5120].reshape(5120,5120).astype(bool)
+cj_=np.clip((cen[:,2]/2).astype(int),0,5119);ci_=np.clip((cen[:,0]/2).astype(int),0,5119);ryc=RY[cj_,ci_]
+onr=(K==0)&(ny>.8)&RM_[cj_,ci_]&(ryc>-1e8)&(np.abs(cen[:,1]-ryc)<1.0)
+print('ground faces turned road',int(onr.sum()))
+K=np.where(onr,5,K)
+rf=(K==5)&(ny>.6);lt=C.mean(1);lm=np.median(lt[rf]) if rf.any() else .3
+rv=np.clip((lt-lm)*.3,-.05,.05)+.025*FB(cen)
+C=np.where(rf[:,None],np.clip(asph[None]*(1+rv)[:,None],0,1),C)
 # ---- ground fill: 8 m grid under everything; lowest up-facing terrain/road surface per cell, holes filled from the nearest known ground, sloping to the sea far away
 from scipy import ndimage
 GC=8; GN=WXZ//GC+1
@@ -105,7 +174,7 @@ for s,e in zip(starts,ends):
     src_c=tri.mean(1); src_ci=ci[idx]
     n=len(F)
     if n>80:
-        sm=pyfqmr.Simplify(); sm.setMesh(V,F); sm.simplify_mesh(target_count=max(40,int(n*RAT[cat])),aggressiveness=AGG[cat],preserve_border=cat not in (2,3),verbose=False)
+        sm=pyfqmr.Simplify(); sm.setMesh(V,F); sm.simplify_mesh(target_count=max(40,int(n*RAT[cat])),aggressiveness=AGG[cat],preserve_border=True,verbose=False)
         V,F,_=sm.getMesh()
     if len(F)==0: continue
     fc=V[F].mean(1); _,nn=cKDTree(src_c).query(fc); fcol=src_ci[nn]

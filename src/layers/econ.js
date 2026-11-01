@@ -34,8 +34,8 @@ P.tuneCost=(id,alt,k,v)=>{const d=P.TUNE.find(x=>x.k===k);if(!d)return 0;let cur
  while(cur!==to){const nx=cur+(to>cur?1:-1);if(Math.abs(nx)>Math.abs(cur))cost+=b*Math.abs(nx);cur=nx}return cost};
 {const ts0=P.tuneSet;P.tuneSet=(id,alt,k,v)=>{const cost=P.tuneCost(id,alt,k,v);if(cost>0&&!P.spend(cost)){P._tuneMsg='Not enough credits ('+cost.toLocaleString()+' needed)';return false}P._tuneMsg=cost>0?'-'+cost.toLocaleString()+' cr':'';ts0(id,alt,k,v);return true}}
 
-/* 6) 3-2-1 countdown when resuming from pause */
-{const rs0=resume;let tok=0;
+/* 6) 3-2-1 countdown when resuming from pause: removed (Hakan, Nov 1): resume is instant again */
+if(false){const rs0=resume;let tok=0;
  const el=()=>{let e=document.getElementById('ptCD');if(!e){e=document.createElement('div');e.id='ptCD';e.style.cssText='position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;pointer-events:none;font:900 italic min(34vh,260px)/1 var(--mn,monospace);color:#fff;text-shadow:0 6px 40px #000c,0 0 8px #000;letter-spacing:.04em';document.body.appendChild(e)}return e};
  resume=function(){if(tok)return;if(RACE&&RACE.state==='count'){down.clear();show('game');return rs0.apply(this,arguments)}const my=++tok,e=el();paused=true;down.clear();show('game');
   const show1=n=>{if(my!==tok)return;if(scr!=='game'){e.style.display='none';tok=0;return}e.textContent=n;e.style.display='flex';e.style.animation='none';void e.offsetWidth;e.style.animation='ptCD .9s ease-out both'};
