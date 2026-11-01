@@ -213,6 +213,9 @@ GARAGE.update(off=toff+len(extra),nv=len(GV),nf=len(GF));extra+=GV.astype(np.flo
 while (toff+len(extra))%4:extra+=b'\0'
 GARAGE['coff']=toff+len(extra);extra+=GCOL.astype(np.uint8).tobytes()
 atlasurl='data:image/webp;base64,'+base64.b64encode(open(PK.rsplit('/',1)[0]+'/atlas.webp','rb').read()).decode()
+import os as _os
+_as=PK.rsplit('/',1)[0]+'/atlas_style.webp'
+if _os.path.exists(_as):meta=dict(meta,atlasS='data:image/webp;base64,'+base64.b64encode(open(_as,'rb').read()).decode())
 J=dict(meta,atlas=atlasurl,garage=GARAGE,trees=dict(off=toff,n=len(trees)),roads=rj,pois=pois,spawn=spawn,run=run,map=mapurl)
 js=json.dumps(J,separators=(',',':')).encode()
 raw=struct.pack('<I',len(js))+js+blob+extra

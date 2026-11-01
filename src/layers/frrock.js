@@ -17,7 +17,8 @@ async function decode(){const raw=atob(FRR_B64),u8=new Uint8Array(raw.length);fo
  let out;if(typeof DecompressionStream!=='undefined'){const ds=new DecompressionStream('gzip'),s=new Blob([u8]).stream().pipeThrough(ds);out=new Uint8Array(await new Response(s).arrayBuffer())}else throw new Error('no gzip');
  const jl=new DataView(out.buffer).getUint32(0,true);J=JSON.parse(new TextDecoder().decode(out.subarray(4,4+jl)));BUF=out.buffer.slice(4+jl);
  if(J.map){const im=new Image();im.src=J.map;try{await im.decode()}catch(e){}J.mapImg=im}
- if(J.atlas){const im=new Image();im.src=J.atlas;try{await im.decode()}catch(e){}J.atlasImg=im}return J}
+ if(J.atlas){const im=new Image();im.src=J.atlas;try{await im.decode()}catch(e){}J.atlasImg=im}
+ if(J.atlasS){const im=new Image();im.src=J.atlasS;try{await im.decode()}catch(e){}J.atlasSImg=im}return J}
 P.FRR={ready:false,p:null};
 P.FRR.load=()=>P.FRR.p||(P.FRR.p=decode().then(j=>{P.FRR.ready=true;return j}).catch(e=>{console.warn('rockport pack',e);P.FRR.fail=true}));
 setTimeout(()=>P.FRR.load(),4000);
@@ -159,7 +160,7 @@ function buildTile(k,lod){const M=F.mats(),group=new THREE.Group(),tx=(k%NT)*TIL
    const m=new THREE.Mesh(g,M.props);m.userData.fogCull=true;m.castShadow=!lod;m.receiveShadow=!lod;m.userData.kind='trees';group.add(m)}}
  group.userData.wsegs=new Float32Array(segs);group.userData.tpts=new Float32Array(pts);group.userData.tris=nT;return group}
 /* ---------- Rockport materials: roads drawn on top of coplanar ground, building walls with a mip-mapped window texture ---------- */
-const WINW=12.8,WINH=14;let RM=null,AM=null;
+const WINW=12.8,WINH=14;let RM=null,AM=null,AT=null;
 /* ---------- looks: one colour grade shared by the map and the home garage (Hakan picks one; L key cycles in free roam) ---------- */
 const LOOK=P.LOOK||(P.LOOK={u:{value:0},b:{value:0},n:0});
 const LOOK_GLSL='uniform float uLook;uniform float uLookB;\nvec3 lkS(vec3 c){return pow(max(c,vec3(0.)),vec3(1./2.2));}\nfloat lkL(vec3 s){return dot(s,vec3(.299,.587,.114));}\n'+
@@ -178,8 +179,10 @@ const LOOKS=[
  {name:'Original, overcast',sky:['#7d8a96','#aeb7bd','#bfc6ca'],fog:0xb4bcc0,hemi:[0xcdd5dc,0x4f4c44,.85],sun:[0xe9e4da,.55],flat:false},
  {name:'Graded, sunny',sky:['#5f93d6','#b9d3ec','#d6e3ee'],fog:0xd3dfe9,hemi:[0xe3ecf4,0x6c7262,1.0],sun:[0xfff0d6,.95],flat:false},
  {name:'Soft painted',sky:['#6f9fdc','#c3d8ec','#dde6ee'],fog:0xd6e1ea,hemi:[0xe6eef5,0x6c7262,1.0],sun:[0xfff0d6,.95],flat:true},
+ {name:'Poly style',sky:['#4f86d6','#b9d6f0','#d6e6f2'],fog:0xd3e2ee,hemi:[0xe8f0f6,0x6c7a5e,1.1],sun:[0xfff1d6,1.0],flat:true,own:true},
  {name:'Clean poly',sky:['#93aecb','#c9d3dd','#d5dce3'],fog:0xd0d8e0,hemi:[0xe8eef4,0x707866,1.1],sun:[0xfff3dc,1.0],flat:true}];
-P.rockLook=n=>{n=((n|0)%LOOKS.length+LOOKS.length)%LOOKS.length;const L=LOOKS[n];LOOK.n=n;LOOK.u.value=n;LOOK.b.value=n===2?1.6:0;
+P.rockLook=n=>{n=((n|0)%LOOKS.length+LOOKS.length)%LOOKS.length;const L=LOOKS[n];LOOK.n=n;LOOK.u.value=L.own?0:n>3?3:n;
+ if(AT&&J.atlasSImg){const im=L.own?J.atlasSImg:J.atlasImg;if(AT.image!==im){AT.image=im;AT.needsUpdate=true}}LOOK.b.value=n===2?1.6:0;
  const mats=[];if(AM)mats.push(AM.base,AM.road,AM.terr);const H=P.homeGLB;if(H)H.traverse(o=>{if(o.isMesh&&o.material&&o.material.userData.lk)mats.push(o.material)});
  for(const m of mats){if(m&&m.flatShading!==L.flat){m.flatShading=L.flat;m.needsUpdate=true}}
  const sc=typeof RACE!=='undefined'&&RACE&&RACE.mode==='free'&&RACE.scene;if(sc){if(sc.fog)sc.fog.color.setHex(L.fog);
@@ -189,7 +192,7 @@ P.rockLook=n=>{n=((n|0)%LOOKS.length+LOOKS.length)%LOOKS.length;const L=LOOKS[n]
 addEventListener('keydown',e=>{if(e.code==='KeyL'&&!e.repeat&&typeof RACE!=='undefined'&&RACE&&RACE.mode==='free'&&on&&!(document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName))){const nm=P.rockLook(LOOK.n+1);if(P.frToast)P.frToast('Look: '+nm,'#9cc4ec')}});
 /* the original Rockport textures: one atlas; uv is tiled inside each texture's rect, mip level from the unwrapped uv so the
    tile seams stay clean */
-function amats(){if(AM)return AM;const t=new THREE.Texture(J.atlasImg);t.flipY=false;t.encoding=THREE.sRGBEncoding;t.anisotropy=8;t.minFilter=THREE.LinearMipmapLinearFilter;t.magFilter=THREE.LinearFilter;t.wrapS=t.wrapT=THREE.ClampToEdgeWrapping;t.needsUpdate=true;
+function amats(){if(AM)return AM;const t=new THREE.Texture(J.atlasImg);AT=t;t.flipY=false;t.encoding=THREE.sRGBEncoding;t.anisotropy=8;t.minFilter=THREE.LinearMipmapLinearFilter;t.magFilter=THREE.LinearFilter;t.wrapS=t.wrapT=THREE.ClampToEdgeWrapping;t.needsUpdate=true;
  const mk=o=>{const m=new THREE.MeshStandardMaterial(Object.assign({map:t,roughness:.92,metalness:0,side:THREE.DoubleSide},o));
   m.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <uv_pars_vertex>','#include <uv_pars_vertex>\nattribute vec4 arect;varying vec4 vRect;').replace('#include <uv_vertex>','#include <uv_vertex>\nvRect=arect;');
    sh.fragmentShader=sh.fragmentShader.replace('#include <map_pars_fragment>','#include <map_pars_fragment>\nvarying vec4 vRect;')

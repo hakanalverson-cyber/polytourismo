@@ -66,7 +66,10 @@ def close(P, O, K):
                     j = k + 1
                     while j < n - 1 and not (cov[j] and cov[j + 1]): j += 1
                     a, b = pts[k], pts[j]
-                    if np.linalg.norm(b - a) > .6:
+                    # only fill gaps between walls that are there (both ends next to an existing wall, at most 25 m): long
+                    # walls along the hull ran across forecourts and pavements as odd slabs
+                    ok_ends = k > 0 and cov[k] and j < n - 1 and cov[j] if wk is not None else False
+                    if np.linalg.norm(b - a) > .6 and np.linalg.norm(b - a) < 25 and (ok_ends or capit):
                         nb = vk.query_ball_point((a + b) / 2, r=max(5., np.linalg.norm(b - a) / 2 + 2))
                         h = min(Vc[nb, 1].max() if nb else H, H) if len(nb) else H
                         h = H if capit else max(h, ymn + 3)
