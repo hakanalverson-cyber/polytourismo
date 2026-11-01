@@ -22,10 +22,10 @@ q=np.round(trees[:,[0,2]]/3).astype(np.int64);_,u=np.unique(q[:,0]*100000+q[:,1]
 # surfaces of the finished meshes (terrain + roads, 2 m): trees snap onto them, so none float or sink
 RN=5120;SURF=np.full((RN,RN),-1e9,np.float32);TALLV=[];WALL=np.zeros((RN,RN),bool)
 _rg=np.random.default_rng(3)
-for tile,cat,tx,tz,nv,nf,off in meta['m']:
+for tile,cat,tx,tz,nv,nf,off,tid_ in meta['m']:
     if cat not in (0,1,2,3,5):continue
     q16=np.frombuffer(blob,np.int16,nv*3,off).reshape(-1,3).astype(np.float64);V=np.stack([tx+q16[:,0]/64,q16[:,1]/32,tz+q16[:,2]/64],1)
-    I=np.frombuffer(blob,np.uint16,nf*3,off+nv*6).reshape(-1,3).astype(np.int64);Tt=V[I]
+    I=np.frombuffer(blob,np.uint16,nf*3,off+nv*(10 if tid_>=0 else 6)).reshape(-1,3).astype(np.int64);Tt=V[I]
     if cat==1:
         TALLV.append(V);continue
     if cat in (2,3):
@@ -212,7 +212,8 @@ while (toff+len(extra))%4:extra+=b'\0'
 GARAGE.update(off=toff+len(extra),nv=len(GV),nf=len(GF));extra+=GV.astype(np.float32).tobytes()+GF.astype(np.uint16).tobytes()
 while (toff+len(extra))%4:extra+=b'\0'
 GARAGE['coff']=toff+len(extra);extra+=GCOL.astype(np.uint8).tobytes()
-J=dict(meta,garage=GARAGE,trees=dict(off=toff,n=len(trees)),roads=rj,pois=pois,spawn=spawn,run=run,map=mapurl)
+atlasurl='data:image/webp;base64,'+base64.b64encode(open(PK.rsplit('/',1)[0]+'/atlas.webp','rb').read()).decode()
+J=dict(meta,atlas=atlasurl,garage=GARAGE,trees=dict(off=toff,n=len(trees)),roads=rj,pois=pois,spawn=spawn,run=run,map=mapurl)
 js=json.dumps(J,separators=(',',':')).encode()
 raw=struct.pack('<I',len(js))+js+blob+extra
 open(OUT,'wb').write(gzip.compress(raw,9))

@@ -5,13 +5,14 @@ D,OUT=sys.argv[1],sys.argv[2]
 SX,SZ=2200.,6900.; TILE=256; WXZ=10240
 RAT={0:.5,1:.6,2:.6,3:.8,4:.5,5:.7}
 AGG={0:6,1:4,2:6,3:5,4:6,5:5}
-P=[];C=[];K=[];O=[];X=[];R=[]
+P=[];C=[];K=[];O=[];X=[];R=[];U=[];TI=[]
+ATL=json.load(open(OUT.rsplit('/',1)[0]+'/atlas.json'));TNAME=sorted(ATL['r']);TIDX={n:i for i,n in enumerate(TNAME)}
 for i in range(1,14):
-    z=np.load(f'{D}/p{i}.npz'); P.append(z['P']);C.append(z['C']);K.append(z['K']);O.append(z['O'].astype(np.int64)+i*100000);X.append(z['X']);R.append(z['R'])
-P=np.concatenate(P).astype(np.float64);C=np.concatenate(C).astype(np.float32)/255;K=np.concatenate(K);O=np.concatenate(O);X=np.concatenate(X);R=np.concatenate(R)
+    z=np.load(f'{D}/p{i}.npz'); P.append(z['P']);C.append(z['C']);K.append(z['K']);O.append(z['O'].astype(np.int64)+i*100000);X.append(z['X']);R.append(z['R']);U.append(z['U']);_m=np.array([TIDX[n] for n in z['TN']]+[-1],np.int32);TI.append(_m[np.where(z['TI']>=0,z['TI'],len(z['TN']))])
+P=np.concatenate(P).astype(np.float64);C=np.concatenate(C).astype(np.float32)/255;K=np.concatenate(K);O=np.concatenate(O);X=np.concatenate(X);R=np.concatenate(R);U=np.concatenate(U).astype(np.float32);TI=np.concatenate(TI)
 P[:,:,0]+=SX;P[:,:,2]+=SZ
 cen=P.mean(1); ok=(cen[:,0]>0)&(cen[:,0]<WXZ)&(cen[:,2]>0)&(cen[:,2]<WXZ)&(cen[:,1]>-60)&(cen[:,1]<900)
-P,C,K,O,X,R,cen=P[ok],C[ok],K[ok],O[ok],X[ok],R[ok],cen[ok]
+P,C,K,O,X,R,cen,U,TI=P[ok],C[ok],K[ok],O[ok],X[ok],R[ok],cen[ok],U[ok],TI[ok]
 print('faces',len(P))
 # the garage lot (pack.py writes it): props, fences and barriers on it or across its drive go
 import os
@@ -20,16 +21,16 @@ if os.path.exists(D+'/site.json'):
     lx_=dx_*c_-dz_*s_;lz_=dx_*s_+dz_*c_;x0,x1,z0,z1=st_['rect']
     gone=((K==2)|(K==3))&(lx_>x0)&(lx_<x1)&(lz_>z0)&(lz_<z1)&(cen[:,1]>-60)
     print('props off the garage lot',int(gone.sum()))
-    P,C,K,O,X,R,cen=P[~gone],C[~gone],K[~gone],O[~gone],X[~gone],R[~gone],cen[~gone]
+    P,C,K,O,X,R,cen,U,TI=P[~gone],C[~gone],K[~gone],O[~gone],X[~gone],R[~gone],cen[~gone],U[~gone],TI[~gone]
 sys.path.insert(0,__file__.rsplit('/',1)[0]); from close import close
 nP,nO=close(P,O,K)
 import os
 if os.path.exists(D+'/extra.npz'):
     xe=np.load(D+'/extra.npz')['P'].astype(np.float64);ne=len(xe)
-    P=np.concatenate([P,xe]);C=np.concatenate([C,np.tile(np.array([[.25,.26,.29]],np.float32),(ne,1))]);K=np.concatenate([K,np.zeros(ne,K.dtype)]);O=np.concatenate([O,np.full(ne,9999999,np.int64)]);X=np.concatenate([X,np.ones(ne,bool)]);R=np.concatenate([R,np.ones(ne,bool)]);cen=P.mean(1)
+    P=np.concatenate([P,xe]);C=np.concatenate([C,np.tile(np.array([[.25,.26,.29]],np.float32),(ne,1))]);K=np.concatenate([K,np.zeros(ne,K.dtype)]);O=np.concatenate([O,np.full(ne,9999999,np.int64)]);X=np.concatenate([X,np.ones(ne,bool)]);R=np.concatenate([R,np.ones(ne,bool)]);U=np.concatenate([U,np.zeros((ne,3,2),np.float32)]);TI=np.concatenate([TI,np.full(ne,-1,np.int32)]);cen=P.mean(1)
     print('joined road tris',ne)
 if len(nP):
-    n=len(nP);P=np.concatenate([P,nP]);C=np.concatenate([C,np.zeros((n,3,3) if C.ndim==3 else (n,3),np.float32)]);K=np.concatenate([K,np.ones(n,K.dtype)]);O=np.concatenate([O,nO]);X=np.concatenate([X,np.zeros(n,bool)]);R=np.concatenate([R,np.zeros(n,bool)]);cen=P.mean(1)
+    n=len(nP);P=np.concatenate([P,nP]);C=np.concatenate([C,np.zeros((n,3,3) if C.ndim==3 else (n,3),np.float32)]);K=np.concatenate([K,np.ones(n,K.dtype)]);O=np.concatenate([O,nO]);X=np.concatenate([X,np.zeros(n,bool)]);R=np.concatenate([R,np.zeros(n,bool)]);U=np.concatenate([U,np.zeros((n,3,2),np.float32)]);TI=np.concatenate([TI,np.full(n,-1,np.int32)]);cen=P.mean(1)
 nrm=np.cross(P[:,1]-P[:,0],P[:,2]-P[:,0]); nl=np.linalg.norm(nrm,axis=1)+1e-9; ny=np.abs(nrm[:,1])/nl
 def hx(h): return np.array([(h>>16&255)/255,(h>>8&255)/255,(h&255)/255],np.float32)
 H=lambda o,s: ((o*2654435761+s*40503)%1000003)/1000003.
@@ -110,7 +111,7 @@ for k in range(3):
 dropg=np.zeros(len(P),bool);dropg[cand[ok_]]=True
 print('grass faces under roads dropped',int(dropg.sum()))
 kk=~dropg
-P,C,K,O,X,R,cen,nl,ny,oi=P[kk],C[kk],K[kk],O[kk],X[kk],R[kk],cen[kk],nl[kk],ny[kk],oi[kk]
+P,C,K,O,X,R,cen,nl,ny,oi,U,TI=P[kk],C[kk],K[kk],O[kk],X[kk],R[kk],cen[kk],nl[kk],ny[kk],oi[kk],U[kk],TI[kk]
 # road surfaces: every flat ground face on a traced road at road height joins the road category, so it is decimated on its own
 # (no big triangles mixing grass into the asphalt) and gets one neutral asphalt with only a faint texture life
 RM_=np.unpackbits(np.load(OUT+'_roadmask.npy'))[:5120*5120].reshape(5120,5120).astype(bool)
@@ -153,22 +154,76 @@ fi=np.clip(np.round(cen[:,0]/GC).astype(int),0,GN-1);fj=np.clip(np.round(cen[:,2
 km=~((K==4)&((dist[fj,fi]*GC<700)|(ymn[oi]>30)))
 print('panorama faces dropped',int((~km).sum()))
 uf=URB[fj,fi][:,None]*(((K==0)&~X&(ny>.6)))[:,None];C=C*(1-uf)+pick(PAVE,H(O,3))*uf
-P,C,K,O,X,R,cen,nl,ny=P[km],C[km],K[km],O[km],X[km],R[km],cen[km],nl[km],ny[km]
+P,C,K,O,X,R,cen,nl,ny,U,TI,oi=P[km],C[km],K[km],O[km],X[km],R[km],cen[km],nl[km],ny[km],U[km],TI[km],oi[km]
+# plain building faces (the rip lost their textures; plus the walls and caps close.py added): real Rockport facade and roof
+# textures, planar mapped at the scale the city uses them, so their windows match the textured buildings around them
+vert=ny<.3
+def scale(sel,horiz):
+    T=P[sel];UU=U[sel];out=[]
+    for a_,b_ in((0,1),(1,2),(2,0)):
+        dw=T[:,b_]-T[:,a_];du=np.abs(UU[:,b_]-UU[:,a_])
+        if horiz:
+            hh=np.hypot(dw[:,0],dw[:,2]);m=(np.abs(dw[:,1])<.05*hh+.01)&(du[:,0]>.05)&(hh>.5);out.append(hh[m]/du[m,0])
+            vv=np.abs(dw[:,1]);m=(hh<.05*vv+.01)&(du[:,1]>.05)&(vv>.5);out.append(-vv[m]/du[m,1])
+        else:
+            hh=np.hypot(dw[:,0],dw[:,2]);m=(du.max(1)>.05)&(hh>.5);out.append(hh[m]/np.hypot(du[m,0],du[m,1]))
+    o=np.concatenate(out) if out else np.zeros(0)
+    if horiz:
+        mu=np.median(o[o>0]) if (o>0).sum()>5 else 0;mv=np.median(-o[o<0]) if (o<0).sum()>5 else 0;return mu,mv
+    return (np.median(o) if len(o)>5 else 0),0
+def cands(sel,horiz,n):
+    t=TI[sel];ar=nl[sel]*.5;tot=np.bincount(t,weights=ar,minlength=len(TNAME));out=[]
+    for tid in np.argsort(-tot)[:n*3]:
+        if tot[tid]<=0:break
+        mu,mv=scale(sel&(TI==tid),horiz)
+        if horiz and not(2<mu<40 and 2<mv<40):continue
+        if not horiz and not(.5<mu<40):continue
+        out.append((tid,mu,mv,tot[tid]))
+        if len(out)>=n:break
+    return out
+FAC=cands((K==1)&vert&(TI>=0),True,24);ROO=cands((K==1)&(ny>.7)&(TI>=0),False,8)
+print('facade textures',len(FAC),'roof textures',len(ROO))
+need=(K==1)&(TI<0)
+if FAC and need.any():
+    w_=np.array([f[3] for f in FAC]);w_=np.cumsum(w_/w_.sum());pk=np.searchsorted(w_,H(uo,11)*.999)
+    yb=ymn[oi]
+    fw=need&vert;idx=np.flatnonzero(fw);f_=pk[oi[idx]]
+    T=P[idx];nn=np.cross(T[:,1]-T[:,0],T[:,2]-T[:,0]);ax=-nn[:,2];az=nn[:,0];l_=np.hypot(ax,az)+1e-9;ax/=l_;az/=l_
+    mu=np.array([FAC[i][1] for i in f_]);mv=np.array([FAC[i][2] for i in f_])
+    uu=(T[:,:,0]*ax[:,None]+T[:,:,2]*az[:,None])/mu[:,None];vv=1-(T[:,:,1]-yb[idx][:,None])/mv[:,None]
+    uu-=np.floor(uu.min(1))[:,None];vv-=np.floor(vv.min(1))[:,None]
+    U[idx,:,0]=uu;U[idx,:,1]=vv;TI[idx]=np.array([FAC[i][0] for i in f_])
+    print('plain walls given facade textures',len(idx))
+if ROO and need.any():
+    rr=need&~vert&(TI<0);idx=np.flatnonzero(rr);rk=(H(uo,13)*len(ROO)).astype(int)%len(ROO);f_=rk[oi[idx]]
+    mr=np.array([ROO[i][1] for i in f_]);T=P[idx];uu=T[:,:,0]/mr[:,None];vv=T[:,:,2]/mr[:,None]
+    uu-=np.floor(uu.min(1))[:,None];vv-=np.floor(vv.min(1))[:,None]
+    U[idx,:,0]=uu;U[idx,:,1]=vv;TI[idx]=np.array([ROO[i][0] for i in f_]);print('plain roofs given roof textures',len(idx))
+# textured faces far out of the int16 uv range: shift by whole tiles
+big=np.abs(U).max((1,2))>30;U[big]-=np.floor(U[big].min(1,keepdims=True))
 # palette: k-means 192 on a sample
 from scipy.cluster.vq import kmeans2
 rng=np.random.default_rng(1); smp=C[rng.choice(len(C),200000,replace=False)]
 pal,_=kmeans2(smp.astype(np.float64),192,minit='++',seed=3,iter=12)
 pal=np.clip(pal,0,1)
 tree=cKDTree(pal); _,ci=tree.query(C); ci=ci.astype(np.uint8)
-# tiles
+# tiles: per tile and category, one mesh per texture (kept as is: decimating would tear the uv layout) + one plain mesh (decimated)
 ti=(cen[:,0]//TILE).astype(int); tj=(cen[:,2]//TILE).astype(int); NT=WXZ//TILE
-key=(tj*NT+ti)*8+K.astype(np.int64)
+gid=np.where(TI>=0,TI,65535).astype(np.int64)
+key=((tj*NT+ti)*8+K.astype(np.int64))*65536+gid
 order=np.argsort(key,kind='stable'); ks=key[order]
 bounds=np.flatnonzero(np.diff(ks))+1; starts=np.r_[0,bounds]; ends=np.r_[bounds,len(ks)]
 meshes=[]; tot=0; t0=time.time()
 for s,e in zip(starts,ends):
-    idx=order[s:e]; k=int(ks[s]); cat=k%8; tile=k//8; tx,tz=(tile%NT)*TILE,(tile//NT)*TILE
-    tri=P[idx]; q=np.round(tri.reshape(-1,3)*50).astype(np.int64)
+    idx=order[s:e]; k=int(ks[s]); g=k%65536; k//=65536; cat=k%8; tile=k//8; tx,tz=(tile%NT)*TILE,(tile//NT)*TILE
+    tri=P[idx]
+    if g!=65535:
+        q=np.concatenate([np.round(tri.reshape(-1,3)*50),np.round(U[idx].reshape(-1,2)*1024)],1).astype(np.int64)
+        uq,inv=np.unique(q,axis=0,return_inverse=True); inv=inv.ravel(); V=uq[:,:3]/50.; UV=uq[:,3:5]/1024.; F=inv.reshape(-1,3)
+        good=(F[:,0]!=F[:,1])&(F[:,1]!=F[:,2])&(F[:,0]!=F[:,2]);F=F[good];fcol=ci[idx][good]
+        if len(F)==0:continue
+        meshes.append((tile,cat,tx,tz,V.astype(np.float32),F.astype(np.uint32),fcol,int(g),UV.astype(np.float32)));tot+=len(F);continue
+    q=np.round(tri.reshape(-1,3)*50).astype(np.int64)
     uq,inv=np.unique(q,axis=0,return_inverse=True); V=uq/50.; F=inv.reshape(-1,3)
     F=F[(F[:,0]!=F[:,1])&(F[:,1]!=F[:,2])&(F[:,0]!=F[:,2])]
     src_c=tri.mean(1); src_ci=ci[idx]
@@ -178,25 +233,27 @@ for s,e in zip(starts,ends):
         V,F,_=sm.getMesh()
     if len(F)==0: continue
     fc=V[F].mean(1); _,nn=cKDTree(src_c).query(fc); fcol=src_ci[nn]
-    meshes.append((tile,cat,tx,tz,V.astype(np.float32),F.astype(np.uint32),fcol)); tot+=len(F)
-print('meshes',len(meshes),'tris',tot,'secs',round(time.time()-t0))
-# pack: header json + binary. positions int16 (x,z rel tile in 1/64 m; y in 1/32 m), indices uint16, colour per face uint8
+    meshes.append((tile,cat,tx,tz,V.astype(np.float32),F.astype(np.uint32),fcol,-1,None)); tot+=len(F)
+print('meshes',len(meshes),'tris',tot,'textured',sum(len(m[5]) for m in meshes if m[7]>=0),'secs',round(time.time()-t0))
+# pack: header json + binary. positions int16 (x,z rel tile in 1/64 m; y in 1/32 m), [uv int16 in 1/1024], indices uint16, colour per face uint8
 blob=bytearray(); meta=[]
-for tile,cat,tx,tz,V,F,fc in meshes:
+for tile,cat,tx,tz,V,F,fc,tid,UV in meshes:
     if len(V)>65535: raise SystemExit('too many verts')
     qv=np.empty((len(V),3),np.int16); qv[:,0]=np.clip(np.round((V[:,0]-tx)*64),-32768,32767); qv[:,1]=np.clip(np.round(V[:,1]*32),-32768,32767); qv[:,2]=np.clip(np.round((V[:,2]-tz)*64),-32768,32767)
-    o=len(blob); blob+=qv.tobytes(); blob+=F.astype(np.uint16).tobytes();
+    o=len(blob); blob+=qv.tobytes()
+    if tid>=0: blob+=np.clip(np.round(UV*1024),-32768,32767).astype(np.int16).tobytes()
+    blob+=F.astype(np.uint16).tobytes();
     if len(blob)%2: blob+=b'\0'
     blob+=fc.astype(np.uint8).tobytes()
     while len(blob)%4: blob+=b'\0'
-    meta.append([int(tile),int(cat),int(tx),int(tz),len(V),len(F),o])
+    meta.append([int(tile),int(cat),int(tx),int(tz),len(V),len(F),o,int(tid)])
 Hq=np.clip(np.round(Hf*8),-32768,32767).astype(np.int16); ground_off=len(blob); blob+=Hq.tobytes()
 urb_off=len(blob); blob+=np.round(URB*255).astype(np.uint8).tobytes()
 while len(blob)%4: blob+=b'\0'
-json.dump({'gc':GC,'gn':int(GN),'goff':ground_off,'uoff':urb_off,'gscale':8,'tile':TILE,'w':WXZ,'shift':[SX,SZ],'pal':[[round(float(c),4) for c in p] for p in pal],'m':meta},open(OUT+'.json','w'),separators=(',',':'))
+json.dump({'fac':[[int(f[0]),round(float(f[1]),2),round(float(f[2]),2)] for f in FAC],'roo':[[int(f[0]),round(float(f[1]),2)] for f in ROO],'tex':[[round(float(v),6) for v in ATL['r'][n][:4]] for n in TNAME],'texc':[ATL['r'][n][4] for n in TNAME],'gc':GC,'gn':int(GN),'goff':ground_off,'uoff':urb_off,'gscale':8,'tile':TILE,'w':WXZ,'shift':[SX,SZ],'pal':[[round(float(c),4) for c in p] for p in pal],'m':meta},open(OUT+'.json','w'),separators=(',',':'))
 open(OUT+'.bin','wb').write(blob)
 # preview soup
 pos=[];col=[]
-for tile,cat,tx,tz,V,F,fc in meshes: pos.append(V[F].reshape(-1,3)); col.append(np.repeat((pal[fc]*255).astype(np.uint8),3,0))
+for tile,cat,tx,tz,V,F,fc,tid,UV in meshes: pos.append(V[F].reshape(-1,3)); col.append(np.repeat((pal[fc]*255).astype(np.uint8),3,0))
 np.concatenate(pos).astype(np.float32).tofile(OUT+'_prev.pos'); np.concatenate(col).tofile(OUT+'_prev.col')
 print('bin MB',len(blob)/1e6)
