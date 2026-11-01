@@ -7,7 +7,7 @@ const VS=`varying vec3 vW;
 void main(){vec4 wp=modelMatrix*vec4(position,1.);vW=wp.xyz;vec4 mvPosition=viewMatrix*wp;gl_Position=projectionMatrix*mvPosition;
 #include <fog_vertex>
 }`;
-const FS=`uniform float uTime,uDepthMax;uniform vec3 uSun,uSky,uZenith,uShallow,uMid,uDeep,uGrid;uniform sampler2D uDepth;
+const FS=`uniform float uTime,uDepthMax,uDry;uniform vec3 uSun,uSky,uZenith,uShallow,uMid,uDeep,uGrid;uniform sampler2D uDepth;
 varying vec3 vW;
 #include <common>
 #include <fog_pars_fragment>
@@ -16,6 +16,7 @@ float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h21(i
 void main(){
  vec2 uv=(vW.xz/uGrid.x+.5)/uGrid.yz;
  float dep=texture2D(uDepth,uv).r*uDepthMax;
+ if(uDry>.5&&dep<.05)discard;
  vec3 V=normalize(cameraPosition-vW);float dist=length(cameraPosition-vW);
  vec2 p=vW.xz;float t=uTime;
  /* slope field of a few travelling swells and a drifting chop */
@@ -46,10 +47,10 @@ void main(){
 const lin=h=>new THREE.Color(h).convertSRGBToLinear();
 function make(F){
  const W=F.W,GX=F.WX/F.CELL+1,GZ=F.WZ/F.CELL+1,DM=40,data=new Uint8Array(GX*GZ);
- for(let k=0;k<GX*GZ;k++){const h=W.HR[k];data[k]=h>=0?0:Math.min(255,Math.round(-h/DM*255))}
+ const HS=W.HRW||W.HR;for(let k=0;k<GX*GZ;k++){const h=HS[k];data[k]=h>=0?0:Math.min(255,Math.round(-h/DM*255))}
  const tex=new THREE.DataTexture(data,GX,GZ,THREE.LuminanceFormat,THREE.UnsignedByteType);tex.minFilter=tex.magFilter=THREE.LinearFilter;tex.wrapS=tex.wrapT=THREE.ClampToEdgeWrapping;tex.generateMipmaps=false;tex.needsUpdate=true;
  const u=Object.assign(THREE.UniformsUtils.clone(THREE.UniformsLib.fog),{uTime:{value:0},uDepthMax:{value:DM},uSun:{value:new THREE.Vector3(-.45,.78,.42).normalize()},uSky:{value:lin(0xcfe3f2)},uZenith:{value:lin(0x5f95d8)},
-  uShallow:{value:lin(0x6fe3d2)},uMid:{value:lin(0x1fa3c4)},uDeep:{value:lin(0x0e4c85)},uGrid:{value:new THREE.Vector3(F.CELL,GX,GZ)},uDepth:{value:tex}});
+  uShallow:{value:lin(0x6fe3d2)},uMid:{value:lin(0x1fa3c4)},uDeep:{value:lin(0x0e4c85)},uGrid:{value:new THREE.Vector3(F.CELL,GX,GZ)},uDepth:{value:tex},uDry:{value:W.HRW?1:0}});
  const m=new THREE.ShaderMaterial({uniforms:u,vertexShader:VS,fragmentShader:FS,transparent:true,depthWrite:false,fog:true});
  const mesh=new THREE.Mesh(new THREE.PlaneGeometry(40000,40000),m);mesh.rotation.x=-Math.PI/2;mesh.position.y=-.05;mesh.frustumCulled=false;mesh.renderOrder=2;mesh.userData.tex=tex;return mesh}
 P.FRWater={make};

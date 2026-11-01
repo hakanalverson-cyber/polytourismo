@@ -7,6 +7,9 @@ RAT={0:.5,1:.6,2:.6,3:.8,4:.5,5:.7}
 AGG={0:6,1:4,2:6,3:5,4:6,5:5}
 P=[];C=[];K=[];O=[];X=[];R=[];U=[];TI=[]
 ATL=json.load(open(OUT.rsplit('/',1)[0]+'/atlas.json'));TNAME=sorted(ATL['r']);TIDX={n:i for i,n in enumerate(TNAME)}
+# pattern strength of each texture (luminance spread): plain surfaces only borrow plain textures, never signs or chevrons
+from PIL import Image as _I
+TEXV=np.array([float(np.asarray(_I.open(D+'/tex/'+n).convert('L').resize((32,32)),np.float32).std()/255) for n in TNAME])
 for i in range(1,14):
     z=np.load(f'{D}/p{i}.npz'); P.append(z['P']);C.append(z['C']);K.append(z['K']);O.append(z['O'].astype(np.int64)+i*100000);X.append(z['X']);R.append(z['R']);U.append(z['U']);_m=np.array([TIDX[n] for n in z['TN']]+[-1],np.int32);TI.append(_m[np.where(z['TI']>=0,z['TI'],len(z['TN']))])
 P=np.concatenate(P).astype(np.float64);C=np.concatenate(C).astype(np.float32)/255;K=np.concatenate(K);O=np.concatenate(O);X=np.concatenate(X);R=np.concatenate(R);U=np.concatenate(U).astype(np.float32);TI=np.concatenate(TI)
@@ -125,7 +128,7 @@ C=np.where(rf[:,None],np.clip(asph[None]*(1+rv)[:,None],0,1),C)
 # ---- ground fill: 8 m grid under everything; lowest up-facing terrain/road surface per cell, holes filled from the nearest known ground, sloping to the sea far away
 from scipy import ndimage
 GC=8; GN=WXZ//GC+1
-up=((K==0)|(K==5))&(ny>.5)
+up=(K==0)&(ny>.5)&~R
 tri=P[up]; area=nl[up]*.5; ns=np.clip((area/24).astype(int),1,400)
 rep=np.repeat(np.arange(len(tri)),ns); r1=rng_=np.random.default_rng(5)
 a=r1.random(len(rep)); b=r1.random(len(rep)); f=a+b>1; a[f]=1-a[f]; b[f]=1-b[f]
@@ -133,6 +136,19 @@ pts=tri[rep,0]+(tri[rep,1]-tri[rep,0])*a[:,None]+(tri[rep,2]-tri[rep,0])*b[:,Non
 pts=np.concatenate([pts,tri.reshape(-1,3)])
 gi=np.clip(np.round(pts[:,0]/GC).astype(int),0,GN-1); gj=np.clip(np.round(pts[:,2]/GC).astype(int),0,GN-1)
 HG=np.full((GN,GN),1e9); np.minimum.at(HG,(gj,gi),pts[:,1])
+# road surfaces on their own grid: used only where they are lower than the ground around them (roads in cuts, roads with no
+# terrain under them at ground level); raised decks with nothing under them no longer pull the fill up into spikes
+upr=((K==5)|R)&(ny>.5);trr=P[upr];arr=nl[upr]*.5;nsr=np.clip((arr/24).astype(int),1,400);repr_=np.repeat(np.arange(len(trr)),nsr)
+a=r1.random(len(repr_)); b=r1.random(len(repr_)); f=a+b>1; a[f]=1-a[f]; b[f]=1-b[f]
+pr=np.concatenate([trr[repr_,0]+(trr[repr_,1]-trr[repr_,0])*a[:,None]+(trr[repr_,2]-trr[repr_,0])*b[:,None],trr.reshape(-1,3)])
+HRd=np.full((GN,GN),1e9);np.minimum.at(HRd,(np.clip(np.round(pr[:,2]/GC).astype(int),0,GN-1),np.clip(np.round(pr[:,0]/GC).astype(int),0,GN-1)),pr[:,1])
+knownT=HG<1e8
+dT,(ijT,iiT)=ndimage.distance_transform_edt(~knownT,return_indices=True);HT=HG[ijT,iiT].copy()
+for it in range(40):
+    HT=np.where(knownT,HG[ijT,iiT],ndimage.uniform_filter(HT,5,mode='nearest'))
+HG=np.where(HRd<1e8,np.minimum(HRd,HT),HG)
+# no cell above its neighbours: a cell whose only sample was a ramp side or a wall top made a spike
+HG=np.where(HG<1e8,ndimage.minimum_filter(np.where(HG<1e8,HG,1e9),3,mode='nearest'),HG)
 known=HG<1e8
 dist,(ij,ii)=ndimage.distance_transform_edt(~known,return_indices=True)
 Hn=HG[ij,ii]
@@ -151,7 +167,7 @@ np.maximum.at(occ,(bj_[K==1],bi_[K==1]),1.);np.maximum.at(occ,(bj_[R],bi_[R]),.5
 URB=np.clip(ndimage.gaussian_filter(occ,2.2)*3.2-.25,0,1)
 # panorama cards inside the city (they stand across streets): keep only the ones far out from the real ground
 fi=np.clip(np.round(cen[:,0]/GC).astype(int),0,GN-1);fj=np.clip(np.round(cen[:,2]/GC).astype(int),0,GN-1)
-km=~((K==4)&((dist[fj,fi]*GC<700)|(ymn[oi]>30)))
+km=~((K==4)&((dist[fj,fi]*GC<1500)|(ymn[oi]>30)))
 print('panorama faces dropped',int((~km).sum()))
 uf=URB[fj,fi][:,None]*(((K==0)&~X&(ny>.6)))[:,None];C=C*(1-uf)+pick(PAVE,H(O,3))*uf
 P,C,K,O,X,R,cen,nl,ny,U,TI,oi=P[km],C[km],K[km],O[km],X[km],R[km],cen[km],nl[km],ny[km],U[km],TI[km],oi[km]
@@ -195,6 +211,14 @@ if FAC and need.any():
     U[idx,:,0]=uu;U[idx,:,1]=vv;TI[idx]=np.array([FAC[i][0] for i in f_])
     print('plain walls given facade textures',len(idx))
 if ROO and need.any():
+    low=need&~vert&(TI<0)&(cen[:,1]<ymx[oi]-1.5)
+    ct=TI[((K==2)|(K==3))&(TI>=0)];
+    if len(ct) and low.any():
+        cnt_=np.bincount(ct);tc_=np.array([ATL['r'][n][4] for n in TNAME]);sat_=(tc_.max(1)-tc_.min(1))/np.maximum(tc_.max(1),1e-3);lm_=tc_.mean(1)
+        cnt_=np.where((TEXV[:len(cnt_)]<.1)&(sat_[:len(cnt_)]<.15)&(lm_[:len(cnt_)]>.25)&(lm_[:len(cnt_)]<.75),cnt_,0);cid=cnt_.argmax()  # plain concrete, never a sign or chevron texture
+        cm,_=scale(((K==2)|(K==3))&(TI==cid),False);cm=cm if cm>.5 else 4.
+        idx=np.flatnonzero(low);T=P[idx];uu=T[:,:,0]/cm;vv=T[:,:,2]/cm;uu-=np.floor(uu.min(1))[:,None];vv-=np.floor(vv.min(1))[:,None]
+        U[idx,:,0]=uu;U[idx,:,1]=vv;TI[idx]=cid;print('ceilings given concrete',len(idx))
     rr=need&~vert&(TI<0);idx=np.flatnonzero(rr);rk=(H(uo,13)*len(ROO)).astype(int)%len(ROO);f_=rk[oi[idx]]
     mr=np.array([ROO[i][1] for i in f_]);T=P[idx];uu=T[:,:,0]/mr[:,None];vv=T[:,:,2]/mr[:,None]
     uu-=np.floor(uu.min(1))[:,None];vv-=np.floor(vv.min(1))[:,None]
@@ -228,7 +252,7 @@ for s,e in zip(starts,ends):
     F=F[(F[:,0]!=F[:,1])&(F[:,1]!=F[:,2])&(F[:,0]!=F[:,2])]
     src_c=tri.mean(1); src_ci=ci[idx]
     n=len(F)
-    if n>80:
+    if n>80 and False:
         sm=pyfqmr.Simplify(); sm.setMesh(V,F); sm.simplify_mesh(target_count=max(40,int(n*RAT[cat])),aggressiveness=AGG[cat],preserve_border=True,verbose=False)
         V,F,_=sm.getMesh()
     if len(F)==0: continue
@@ -249,8 +273,10 @@ for tile,cat,tx,tz,V,F,fc,tid,UV in meshes:
     meta.append([int(tile),int(cat),int(tx),int(tz),len(V),len(F),o,int(tid)])
 Hq=np.clip(np.round(Hf*8),-32768,32767).astype(np.int16); ground_off=len(blob); blob+=Hq.tobytes()
 urb_off=len(blob); blob+=np.round(URB*255).astype(np.uint8).tobytes()
+# land mask (cells with real ground or road under them): the sea is drawn only off it, so sunken roads are not flooded
+known_off=len(blob); blob+=ndimage.binary_dilation(known,iterations=1).astype(np.uint8).tobytes()
 while len(blob)%4: blob+=b'\0'
-json.dump({'fac':[[int(f[0]),round(float(f[1]),2),round(float(f[2]),2)] for f in FAC],'roo':[[int(f[0]),round(float(f[1]),2)] for f in ROO],'tex':[[round(float(v),6) for v in ATL['r'][n][:4]] for n in TNAME],'texc':[ATL['r'][n][4] for n in TNAME],'gc':GC,'gn':int(GN),'goff':ground_off,'uoff':urb_off,'gscale':8,'tile':TILE,'w':WXZ,'shift':[SX,SZ],'pal':[[round(float(c),4) for c in p] for p in pal],'m':meta},open(OUT+'.json','w'),separators=(',',':'))
+json.dump({'fac':[[int(f[0]),round(float(f[1]),2),round(float(f[2]),2)] for f in FAC],'roo':[[int(f[0]),round(float(f[1]),2)] for f in ROO],'tex':[[round(float(v),6) for v in ATL['r'][n][:4]] for n in TNAME],'texc':[ATL['r'][n][4] for n in TNAME],'texv':[round(float(v),3) for v in TEXV],'gc':GC,'gn':int(GN),'goff':ground_off,'uoff':urb_off,'koff':known_off,'gscale':8,'tile':TILE,'w':WXZ,'shift':[SX,SZ],'pal':[[round(float(c),4) for c in p] for p in pal],'m':meta},open(OUT+'.json','w'),separators=(',',':'))
 open(OUT+'.bin','wb').write(blob)
 # preview soup
 pos=[];col=[]

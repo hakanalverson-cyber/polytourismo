@@ -28,6 +28,8 @@ const TILE=256,WX=10240,GC=8,GN=WX/GC+1,NT=WX/TILE;
 function buildRock(){if(W)return W;const t0=performance.now();
  const G16=new Int16Array(BUF,J.goff,J.gn*J.gn),HR=new Float32Array(J.gn*J.gn);for(let i=0;i<HR.length;i++)HR[i]=G16[i]/J.gscale;
  W={HR,Z:new Uint8Array(J.gn*J.gn),dd:new Float32Array(J.gn*J.gn).fill(1e4),junc:[],rock:1};
+ /* the sea only where the map has no ground of its own (sunken roads below sea level stay dry) */
+ if(J.koff!=null){const KM=new Uint8Array(BUF,J.koff,J.gn*J.gn),HW=new Float32Array(HR);for(let i=0;i<HW.length;i++)if(KM[i])HW[i]=Math.max(HW[i],3);W.HRW=HW}
  const pal=J.pal.map(c=>[cc(c[0]),cc(c[1]),cc(c[2])]);
  const tiles=new Map();for(const m of J.m){const e={tile:m[0],cat:m[1],tx:m[2],tz:m[3],nv:m[4],nf:m[5],off:m[6],tid:m.length>7?m[7]:-1};let l=tiles.get(e.tile);if(!l)tiles.set(e.tile,l=[]);l.push(e)}
  /* trees: int16 x*2, y*8, z*2, h*16 then a type byte each */
@@ -102,7 +104,8 @@ const TREES=[['q_pine1','q_pine2','q_pine3','q_pine4'],['q_oak3','q_oak4','q_oak
 /* the original texture most used by each category: the faces the converter left without one (flat colours) get it, so our
    old flat colours no longer sit next to the original textures */
 let DOMT=null;function domTex(){if(DOMT)return DOMT;const cnt=[{},{},{},{},{},{}];for(const l of RK.tiles.values())for(const e of l)if(e.tid>=0&&e.cat<6)cnt[e.cat][e.tid]=(cnt[e.cat][e.tid]||0)+e.nf;
- DOMT=cnt.map(c=>{let b=-1,n=0;for(const k in c)if(c[k]>n){n=c[k];b=+k}return b>=0?J.tex[b]:null});return DOMT}
+ const lum=t=>{const c=J.texc&&J.texc[t];return c?(c[0]+c[1]+c[2])/3:.3},plain=t=>{const c=J.texc&&J.texc[t];if(!c)return true;const mx=Math.max(c[0],c[1],c[2]),mn=Math.min(c[0],c[1],c[2]);return (mx-mn)/Math.max(mx,.001)<.15&&lum(t)>.2&&lum(t)<.75&&(!J.texv||J.texv[t]<.1)};
+ DOMT=cnt.map((c,cat)=>{let b=-1,n=0;for(const k in c)if(c[k]>n&&(cat===0||plain(+k))&&(cat!==5||lum(+k)<.36)){n=c[k];b=+k}return b>=0?J.tex[b]:null});return DOMT}
 function buildTile(k,lod){const M=F.mats(),group=new THREE.Group(),tx=(k%NT)*TILE,tz=Math.floor(k/NT)*TILE;group.userData.chunk=k;group.userData.lod=lod|0;group.userData.cars=[];
  const l=RK.tiles.get(k)||[],pos=[],col=[],posR=[],colR=[],posW=[],colW=[],uvW=[],segs=[],posT=[],uvT=[],rcT=[],posTR=[],uvTR=[],rcTR=[];let nT=0;
  for(const e of l){if(e.cat===4)continue;const a=meshArrays(e),V=a.V,I=a.idx,fc=a.fc,UV=a.UV,rc=UV?J.tex[e.tid]:null;nT+=e.nf;
@@ -114,7 +117,7 @@ function buildTile(k,lod){const M=F.mats(),group=new THREE.Group(),tx=(k%NT)*TIL
     let done=false;{const D=domTex(),vert=Math.abs(ny)/nl<.3;let rc=null,su=0,sv=0,mode=0;
      if(e.cat===1&&J.fac&&J.fac.length&&vert){const fq=J.fac[(Math.abs((e.off|0)*7+(e.tile|0)*3)>>3)%Math.min(6,J.fac.length)];rc=J.tex[fq[0]];su=fq[1];sv=fq[2];mode=1}
      else if(e.cat===1&&J.roo&&J.roo.length){rc=J.tex[J.roo[0][0]];su=sv=J.roo[0][1];mode=2}
-     else if(D[e.cat]&&e.cat!==1){rc=D[e.cat];su=sv=(e.cat===0||e.cat===5)?8:2.5;mode=vert?3:2}
+     else if(D[e.cat]&&e.cat!==1){rc=(e.cat===0&&vert&&D[2])?D[2]:D[e.cat];su=sv=(e.cat===0||e.cat===5)?8:2.5;mode=vert?3:2}
      if(rc){const P_=e.cat===5?posTR:posT,U_=e.cat===5?uvTR:uvT,C_=e.cat===5?rcTR:rcT,ax_=-nz/nl,az_=nx/nl,al=Math.hypot(ax_,az_)||1;
       for(const i of[i0,i1,i2]){P_.push(V[i],V[i+1],V[i+2]);let u,v;if(mode===2){u=V[i]/su;v=V[i+2]/sv}else{u=(V[i]*ax_/al+V[i+2]*az_/al)/su;v=1-V[i+1]/sv}U_.push(u,v);C_.push(rc[0],rc[1],rc[2],rc[3])}
       done=true}}

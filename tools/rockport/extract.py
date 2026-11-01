@@ -74,7 +74,7 @@ for mi,M,lab in glb.walk(j):
         ext=0
         for pr in j['meshes'][mi]['primitives']:
             a=j['accessors'][pr['attributes']['POSITION']]; e=(np.array(a['max'])-np.array(a['min']))*np.cbrt(abs(np.linalg.det(M[:3,:3]))); ext=max(ext,e.max())
-        if ext<4: drops['smallXO']=drops.get('smallXO',0)+1; continue
+        if ext<1.2: drops['smallXO']=drops.get('smallXO',0)+1; continue
     for pr in j['meshes'][mi]['primitives']:
         if pr.get('mode',4)!=4 or 'indices' not in pr: continue
         p=glb.acc(j,b,pr['attributes']['POSITION']).astype(np.float64); w=((p@M[:3,:3].T)+M[:3,3]).astype(np.float32)
