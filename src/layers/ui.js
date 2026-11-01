@@ -206,7 +206,7 @@ const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="current
  const B64=(L,i)=>L&&L[i]?'url(data:image/jpeg;base64,'+L[i]+')':'none',BB=typeof BBG_B64!=='undefined'?BBG_B64:[],PB=[];
  const nTrk=()=>D.filter((d,i)=>okTrack('track',i)).length,nStg=()=>(P.STAGES||[]).length,nOwn=()=>{const o=P.SV().owned||{};return Object.keys(o).filter(k=>o[k]>0).length},
   nMk=()=>new Set(CARS.map(c=>P.makerOf?P.makerOf(c):(c.name||'').split(' ')[0])).size;
- const TABS=[{k:'free',l:'Free Roam',i:'rally',img:B64(BB,1),cap:()=>'THE RIVIERA'},{k:'quick',l:'Quickplay',i:'play',img:B64(BB,3),cap:()=>'5 MODES'},{k:'track',l:'Track',i:'track',img:B64(BB,2),cap:()=>{const n=nTrk();return n?n+' CIRCUITS':'ADD A TRACK FILE'}},{k:'rally',l:'Rally',i:'rally',img:B64(BB,1),cap:()=>nStg()+' STAGES'},
+ const TABS=[/* Free Roam is vaulted for now (code kept; re-add {k:'free',l:'Free Roam',...} here to bring it back) */{k:'quick',l:'Quickplay',i:'play',img:B64(BB,3),cap:()=>'5 MODES'},{k:'track',l:'Track',i:'track',img:B64(BB,2),cap:()=>{const n=nTrk();return n?n+' CIRCUITS':'ADD A TRACK FILE'}},{k:'rally',l:'Rally',i:'rally',img:B64(BB,1),cap:()=>nStg()+' STAGES'},
   {k:'garage',l:'Garage',i:'garage',img:B64(PB,7),cap:()=>nOwn()+' / '+CARS.length+' CARS'},{k:'brand',l:'Brand Central',i:'brand',img:B64(PB,5),cap:()=>nMk()+' MAKERS'}];
  const DESC={free:'Drive the Riviera island: coast road, mountain pass and four towns.',quick:'Quick Race, Time Attack, Elimination, Cut-Up and Versus.',track:'Race the real-world circuits.',rally:'Point to point stages against the clock.',garage:'Your cars, paint and tuning.',brand:'New cars from every maker.',set:'Graphics, sound and controls.'};
  P.menuImgs=TABS.map(t=>t.img).filter(u=>u!=='none');
@@ -241,7 +241,7 @@ const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="current
  const dd=document.createElement('div');dd.id='gxDrop';
  dd.innerHTML=SUBS.map((u,i)=>'<button class="gxi" data-i="'+i+'">'+ic(u.i)+'<span>'+u.n+'</span></button>').join('');
  menu.append(top,bot,dd);{const sh=document.createElement('div');sh.id='gxShade';menu.insertBefore(sh,bot);menu.appendChild(bot.querySelector('.gxpad'))}
- const QI=1;let mf=0,md=-1,open=false;try{mf=Math.max(0,Math.min(TABS.length-1,+(localStorage.getItem('pt-gxf')||0)))}catch(e){}
+ const QI=0;let mf=0,md=-1,open=false;try{mf=Math.max(0,Math.min(TABS.length-1,+(localStorage.getItem('pt-gxf')||0)))}catch(e){}
  const tabs=()=>[...bot.querySelectorAll('.gxm')],items=()=>[...dd.children];
  const paint=()=>{tabs().forEach((t,i)=>{t.classList.toggle('on',i===mf);const e=t.querySelector('.gxc');if(e)e.textContent=TABS[i].cap()});const t=TABS[mf];$('gxCap').textContent=t.cap();$('gxName').textContent=t.l;$('gxDesc').textContent=DESC[t.k]||'';try{pfPaint()}catch(e){}
   dd.classList.toggle('on',false);{const pd=menu.querySelector('.gxpad'),b=bot.getBoundingClientRect();if(pd&&b.width){pd.style.left=Math.round(b.left)+'px';pd.style.width=Math.round(b.width)+'px';pd.style.top=Math.round(b.bottom+22)+'px'}}/* 0.02: no Quickplay drop-down: the row opens the Quickplay page */items().forEach((e,i)=>e.classList.toggle('foc',i===md));
