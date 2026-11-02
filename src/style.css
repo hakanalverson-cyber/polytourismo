@@ -1658,3 +1658,11 @@ body.gxAsking #tutOffer{display:none!important}
 #gxSu.g2 .gxHero.cars .gxSide .st{gap:clamp(6px,1.4vh,14px) 16px;font:300 clamp(14px,2.2vh,24px) var(--gt);color:#e9ecef;letter-spacing:.06em}
 #gxSu.g2 .gxHero.cars .gxSide .st em{font:200 clamp(20px,3.6vh,40px) var(--gt)}
 #gxSu.g2 .gxHero.cars .gxSide .st u{height:6px}
+/* round 27: the x sits in the frame's corner, the same distance from the top and the side */
+#gxSu.g2 .gxCard.pf{position:relative}
+#gxSu.g2 .gxCard.pf .gxRm{position:absolute;top:10px;right:10px;margin:0}
+/* the player being edited: their car glows in their colour, then fades */
+#gxSu.g2 #gxHi{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;opacity:0;filter:drop-shadow(0 0 3px var(--pc)) drop-shadow(0 0 14px var(--pc)) brightness(1.12)}
+#gxSu.g2 #gxHi.on{animation:gxHi 4s ease forwards}
+@keyframes gxHi{0%{opacity:0}8%{opacity:1}65%{opacity:1}100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){#gxSu.g2 #gxHi.on{animation:none;opacity:0}}

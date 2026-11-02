@@ -6765,6 +6765,14 @@ body.gxAsking #tutOffer{display:none!important}
 #gxSu.g2 .gxHero.cars .gxSide .st{gap:clamp(6px,1.4vh,14px) 16px;font:300 clamp(14px,2.2vh,24px) var(--gt);color:#e9ecef;letter-spacing:.06em}
 #gxSu.g2 .gxHero.cars .gxSide .st em{font:200 clamp(20px,3.6vh,40px) var(--gt)}
 #gxSu.g2 .gxHero.cars .gxSide .st u{height:6px}
+/* round 27: the x sits in the frame's corner, the same distance from the top and the side */
+#gxSu.g2 .gxCard.pf{position:relative}
+#gxSu.g2 .gxCard.pf .gxRm{position:absolute;top:10px;right:10px;margin:0}
+/* the player being edited: their car glows in their colour, then fades */
+#gxSu.g2 #gxHi{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;opacity:0;filter:drop-shadow(0 0 3px var(--pc)) drop-shadow(0 0 14px var(--pc)) brightness(1.12)}
+#gxSu.g2 #gxHi.on{animation:gxHi 4s ease forwards}
+@keyframes gxHi{0%{opacity:0}8%{opacity:1}65%{opacity:1}100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){#gxSu.g2 #gxHi.on{animation:none;opacity:0}}
 
 :root{--gt:"PT Inter","Inter","Segoe UI","Helvetica Neue",Arial,sans-serif!important;--mn:var(--gt)!important;--hd:var(--gt)!important}
 *:not(svg):not(svg *){font-family:var(--gt)!important}
@@ -12387,6 +12395,7 @@ window.__optAction=k=>{if(k==='@tutorial')P.startTutorial()};
 const P=window.PT8;
 P.LOG=[
  {v:'0.03',d:'Nov 2, 2026',t:'Highway Cut-Up on bikes',items:[
+  'Car select: the car of the player you are setting up glows in their colour, then fades after a few seconds. The cars line up with the car name.',
   'Car select: the preview camera stays fixed, so a big car looks big and a small one small. A player\'s frame appears only once they are added.',
   'New setup screen: you no longer pick the number of drivers first. On the car step, Add player (next to the car, or in the next empty frame) brings in the next player, and their car, name, gearbox and keys open in their own frame of a 2 x 2 grid. The x on a frame removes that player.',
   'Track Mode handling is 5% down: your car has 5% less grip on circuits, so it turns in less sharply and slides sooner.',
@@ -13392,11 +13401,13 @@ const carList=p=>{const m=ST.mode,sv=P.SV(),own=P.ownedList?P.ownedList():[];let
  if(m==='track'&&P.TRACK_CARS)L=P.TRACK_CARS.map(id=>BYID[id]).filter(Boolean).concat(own.filter(c=>!P.TRACK_CARS.includes(c.id)));return L};
 const setCar=(p,id,alt)=>{const m=ST.mode,sv=P.SV();if(m==='rally'){sv.rsel=sv.rsel||[];sv.rsel[p]={id,alt}}else if(m==='track'){sv.tsel=sv.tsel||[];sv.tsel[p]={id,alt}}else P.setSel(p,id,alt);try{P.save()}catch(e){}};
 /* every player's car on show: one alone, then a staggered row as players are added (the camera pulls back to fit) */
-const carShot=(cv,list,reg)=>{if(!P.C10)return;const key='cars|'+list.map(s=>s.id+'.'+s.alt).join('|')+(reg?'|'+reg.join(','):'');
- P.objShot(cv,key,()=>{const g=new THREE.Group();list.forEach((s,i)=>{const c=BYID[s.id];const src=c&&P.C10.model(c.k10,s.alt);if(!src)return;const m=src.clone(true);
+/* only: draw just that player's car, framed exactly as in the full picture (same reference box and ground height), for the highlight */
+const CARY0={};
+const carShot=(cv,list,reg,only)=>{if(!P.C10)return;const lk=list.map(s=>s.id+'.'+s.alt).join('|'),key='cars|'+lk+(reg?'|'+reg.join(','):'')+(only!=null?'|only'+only:'');
+ P.objShot(cv,key,()=>{const g=new THREE.Group();list.forEach((s,i)=>{if(only!=null&&i!==only)return;const c=BYID[s.id];const src=c&&P.C10.model(c.k10,s.alt);if(!src)return;const m=src.clone(true);
   const n=list.length,col=i-(n-1)/2;m.position.set(col*3.1,0,-Math.abs(col)*1.6+(n>1?.8:0));g.add(m)});return g},{yaw:-2.2,fy:list.length>1?2.3:2.0,fx:list.length>1?.95:.9,off:list.length>1?.08:.12,up:.12,reg,clear:true,ref:(bx,yaw)=>{const n=list.length,b=new THREE.Box3(),v=new THREE.Vector3(),ax=new THREE.Vector3(0,1,0);
   for(let i=0;i<n;i++){const col=i-(n-1)/2,px=col*3.1,pz=-Math.abs(col)*1.6+(n>1?.8:0);for(const sx of[-.975,.975])for(const sz of[-2.35,2.35])for(const sy of[0,1.45]){v.set(px+sx,sy,pz+sz).applyAxisAngle(ax,yaw);b.expandByPoint(v)}}
-  b.min.y=bx.min.y;b.max.y=bx.min.y+1.45;return b}})};
+  const y0=only!=null&&CARY0[lk]!=null?CARY0[lk]:bx.min.y;if(only==null)CARY0[lk]=y0;b.min.y=y0;b.max.y=y0+1.45;return b}})};
 /* round 25 (Hakan): no player count up front. The car step is a 2 x 2 grid of player frames: P1 is always there, "Add player" (next to
    the car, or the next empty frame) brings the next player in and their settings open in that frame; the x on a frame takes them out */
 const PCOLS=['#f1f3f5','#f2c76b','#7fd68a','#ef6a5a'],MAXP=4;
@@ -13408,6 +13419,12 @@ function removePlayer(p){if(p<1||p>=ST.players)return;const n=ST.players;ST.name
  for(let q=p;q<n-1;q++){const s=selCar(q+1);setCar(q,s.id,s.alt);ST.names[q]=ST.names[q+1]||'';P.setTX(q,P.isAuto({human:true,k:q+1}))}ST.names[n-1]='';
  ST.players=n-1;GXS.cf=Math.min(GXS.cf||0,ST.players-1);GXS.fp=GXS.cf;P.sfx&&P.sfx('back');renderSetup()}
 P.addPlayer=addPlayer;P.removePlayer=removePlayer;
+/* round 27: the cars sit level with the car name, whatever the picture's height (the region keeps one size, so the camera stays anchored) */
+const carReg=box=>{try{const h=box.querySelector('.gxHero'),t=h.querySelector('.gxTn b'),hr=h.getBoundingClientRect(),tr_=t.getBoundingClientRect();if(!hr.height)return[.04,.88,-.6,.6];
+ let yc=1-2*((tr_.top+tr_.height/2-hr.top)/hr.height);yc=Math.max(-.33,Math.min(.33,yc));yc=Math.round(yc*50)/50;return[.04,.88,yc-.62,yc+.62]}catch(e){return[.04,.88,-.6,.6]}};
+/* the player being edited: their car glows in their colour, then fades after a few seconds; any change or typing for them lights it again */
+function gxHiPulse(){const h=document.getElementById('gxHi');if(!h)return;h.classList.remove('on');void h.offsetWidth;h.classList.add('on')}
+P.gxHiPulse=gxHiPulse;
 function gxCarStep(box){const m=ST.mode,multi=multiOK(m);if(!multi)ST.players=1;const np=multi?Math.max(1,Math.min(MAXP,ST.players)):1,rows=[];GXS.cf=Math.min(GXS.cf||0,np-1);
  const dv=[...$('suDrv').querySelectorAll('.drv')];
  for(let p=0;p<np;p++){const s=selCar(p),c=BYID[s.id],L=carList(p),grp=multi?p:0;
@@ -13427,7 +13444,8 @@ function gxCarStep(box){const m=ST.mode,multi=multiOK(m);if(!multi)ST.players=1;
  gxRender(box,{kind:(np>1?'Player '+(fi+1)+' &middot; ':'')+'Class '+c.cls,name:c.name+(s.alt?' <small style="font-size:.4em;opacity:.7">ALT</small>':''),facts:[c.type||''],side,rows,side:'',
   tnBtn:multi&&np<MAXP?`<button class="gxAdd"><b>+</b> Add player</button>`:'',onAdd:addPlayer,
   grid:multi,cols:PCOLS,rm:multi?(p,go)=>{if(go){removePlayer(p);return}return p>0&&p<np}:null,
-  heroCls:'cars',groups:multi?[0,1,2,3].map(nm):['Car','Driver','More'],shot:cv=>carShot(cv,Array.from({length:np},(_,p)=>selCar(p)),[.04,.88,-.9,.8]),go:'Start'});/* grid: the cars sit between the name (left) and the stats (right) */
+  heroCls:'cars',groups:multi?[0,1,2,3].map(nm):['Car','Driver','More'],shot:cv=>{const L=Array.from({length:np},(_,p)=>selCar(p)),rg=carReg(box);carShot(cv,L,rg);if(np>1){const hc=document.createElement('canvas');hc.id='gxHi';hc.style.setProperty('--pc',PCOLS[fi]);cv.after(hc);carShot(hc,L,rg,fi);gxHiPulse()}},go:'Start'});/* grid: the cars sit between the name (left) and the stats (right) */
+ box.querySelectorAll('.gxCard.pf input').forEach(i=>{i.addEventListener('input',gxHiPulse);i.addEventListener('focus',gxHiPulse)});
  if(multi)$('suHint').innerHTML='<u>&uarr;&darr;</u>Choose<u>&larr;&rarr;</u>Change'+(np<MAXP?'<u>+</u>Add player':'')+(np>1?'<u>Del</u>Remove':'')+'<u>Enter</u>Start';
  box.querySelectorAll('.gxr').forEach(el=>{const r=rows[+el.dataset.i];if(r&&r.pl!=null)el.addEventListener('mouseenter',()=>{if(GXS.cf!==r.pl){GXS.cf=r.pl;GXS.f=+el.dataset.i;renderSetup()}})})}
 P.gxRender=o=>{const sec=$('s8setup');sec.classList.add('gxOn');let box=$('gxSu');if(!box){box=document.createElement('div');box.id='gxSu';sec.insertBefore(box,sec.querySelector('.foot8'))}box.style.display='';gxRender(box,o)};

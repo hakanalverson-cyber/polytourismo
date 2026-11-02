@@ -1,0 +1,4 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",2500],
+["js","(()=>{try{PT8.SV().name='Hakan';PT8.save()}catch(e){};document.querySelectorAll('button').forEach(b=>{if(b.textContent.trim()==='OK'&&b.offsetParent)b.click()});const u=PT8.ui;u.ST.mode='mp';u.ST.players=1;u.renderSetup();show('s8setup');document.getElementById('suGo').click();return 1})()"],["wait",2500],["shot","p1"],
+["js","(()=>{PT8.addPlayer();PT8.addPlayer();return PT8.ui.ST.players})()"],["wait",900],["shot","p3hi"],["wait",4500],["shot","p3fade"],
+["js","(()=>{PT8.addPlayer();return PT8.ui.ST.players})()"],["wait",900],["shot","p4hi"]]
