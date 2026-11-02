@@ -22,7 +22,6 @@ const TRICKS=[
  {id:'standup',n:'Stand-Up Wheelie',k:'wheelie',stand:1,pps:190,min:3,max:55,d:'A wheelie standing on the pegs. Narrower balance than the sit-down one, more points.'},
  {id:'twelve',n:'12 O’Clock',k:'wheelie',twelve:1,pps:300,min:3,max:40,d:'Take a wheelie past 70°, nearly straight up. Points only count while you are past the line.'},
  {id:'nohands',n:'No-Hander',k:'balance',pps:150,min:10,max:80,d:'Let go of the bars and ride on. Steer against the wobble with A / D. Lean too far and you are down.'},
- {id:'superman',n:'Superman',k:'balance',pps:230,min:14,max:70,wob:1.35,d:'Stretch out flat behind the bars, legs off the back. Bigger wobble, bigger score.'},
  {id:'burnout',n:'Burnout',k:'burnout',pps:110,min:0,max:4,d:'Stop, tap the trick key and hold the throttle: the front brake holds the bike while the rear spins up smoke.'}];
 BK.TRICKS=TRICKS;
 const TBY={};TRICKS.forEach((t,i)=>{TBY[t.id]=t;t.i=i});
@@ -70,7 +69,7 @@ const PCOL=['#5aa9ff','#ff6a5a'];
 function newPlayer(k,sel){const d=BK.byId(sel.id),m=BK.makeBike(d.id,BK.paintOf(d,sel.paint),Object.assign({},RIDER_COL[k],{who:sel.who==null?k:sel.who}));BK.riderLayer(m.rider,k);
  const st=d.stats||{top:200,acc:.8,hnd:.8,trk:.8};
  return{k,d,m,sel,vmax:st.top/3.6,acc:3.2+st.acc*5.4,hnd:st.hnd,trk:st.trk,s:40+k*0,d_:RD.laneD(2+k)*1-0,dd:0,psi:0,v:0,lean:0,steer:0,stv:0,pitch:0,pv:0,
-  th:0,br:0,st:0,score:0,mult:1,comboT:0,chain:0,best:0,bestCombo:0,top:0,near:0,splits:0,tricks:0,wipes:0,dist:0,bestTrick:null,
+  th:0,br:0,st:0,score:0,mult:1,comboT:0,chain:0,chainPts:0,sk:[],skV:0,skEnd:null,best:0,bestCombo:0,top:0,near:0,splits:0,tricks:0,wipes:0,dist:0,bestTrick:null,
   equip:sel.trick||'wheelie',menu:false,menuSel:0,trk_:null,cam:0,wipe:null,ghost:0,pose:null,eng:null,popQ:[],gear:1,rpm:0,bal:0,balV:0,smoke:0,trickPts:0,scrape:0,lastTrick:-9}}
 const START_S=60;
 function startRun(o){/* o: {players:[{id,paint,trick}], clock, traffic, tod} */
@@ -185,6 +184,7 @@ const seg=(r,a,b)=>{const x=cl((r-a)/(b-a),0,1);return x*x*(3-2*x)};
 /* Nov 2: the Seat Stand and the hand drag are switched off for now (they still look wrong). Their pose code stays: set HAND_DRAG and
    put the Seat Stand back in TRICKS to bring them back */
 const HAND_DRAG=false;
+const SHOVE_T=.6;/* one shove, wind-up to recovery (s) */
 const TRATE={wheelie:3.2,stoppie:3.4,standup:2.6,twelve:2.2,nohands:2.2,superman:1.7,seatstand:1.4,burnout:3};/* blend speed (1/s): big body moves take longer */
 function trickPose(p,id,u,r){const b=basePose(p),I=p.m.I,seat=I.seat,SY=seatFit(I,p.m).hy-.1,g=I.grip;r=r==null?u:r;
  const hand=(t,v)=>v<.02?null:[lp(g[0],t[0],v),lp(g[1],t[1],v),lp(g[2],t[2],v)],both=(t,v)=>{const h=hand(t,v);return h?[h,h.slice()]:null};
@@ -221,9 +221,17 @@ function poseRiderFor(p,dt){const t=p.trk_;
  if(p.trk_&&p.trk_.k==='balance'){/* balance tricks: the arms and body work against the wobble */ps.side-=(p.bal||0)*.6;if(ps.hands)ps.hands=ps.hands.map((h,i)=>[h[0],h[1]+(i?-1:1)*(p.bal||0)*.5,h[2]])}
  ps.knee=p.lean;
  /* reach out: shove the other rider (one hand off the bar, arm out towards them) */
- p.shv=lp(p.shv||0,p.shoveT>0?1:0,cl(dt*8,0,1));if(p.shoveT>0)p.shoveT-=dt;
+ if(p.shoveT>0)p.shoveT-=dt;
  const S=p.m.I.seat,hy=seatFit(p.m.I,p.m).hy;
- if(p.shv>.05){const s_=p.shoveSide>0?1:0,hs=ps.hands?ps.hands.slice():[null,null];hs[s_]=[.45+.4*p.shv,hy+.5,S[2]+.35];ps.hands=hs;ps.side+=(p.shoveSide>0?-1:1)*.12*p.shv}
+ if(p.shoveT>0||p.shE<SHOVE_T){/* a shove in three beats: wind up (arm drawn back, body away), the push (arm drives out at the other
+   rider's shoulder, body and head turn into it), then back to the grip */const e=p.shE=BK._shAt!=null?BK._shAt:Math.min(SHOVE_T,(p.shE||0)+dt),/* _shAt: test hook, holds a beat for a screenshot */side=p.shoveSide||1,s_=side>0?1:0,sg=s_?-1:1,g=p.m.I.grip;
+  const wind=seg(e,0,.12)*(1-seg(e,.12,.2)),ext=seg(e,.12,.22)*(1-seg(e,.36,.58));
+  const o=B.pl[1-p.k];let tgt=[.75,hy+.5,S[2]+.3];if(o&&o.m){p.m.g.updateMatrixWorld(true);o.m.g.updateMatrixWorld(true);const w=new THREE.Vector3(0,1.2,.05);o.m.inner.localToWorld(w);p.m.inner.worldToLocal(w);tgt=[cl(w.x*sg,.35,1.0),cl(w.y,hy+.3,hy+.7),cl(w.z,S[2]-.1,S[2]+.6)]}
+  const hs=ps.hands?ps.hands.slice():[null,null],back=[g[0]+.12,g[1]+.18,g[2]-.28];
+  if(wind+ext>.02){const k1=wind,k2=ext;hs[s_]=[0,1,2].map(j=>g[j]+(back[j]-g[j])*k1+(tgt[j]-g[j])*k2);ps.hands=hs;ps.reach=s_;ps.reachMax=.12}
+  ps.side+=side*(.22*ext-.1*wind);ps.turn=(ps.turn||0)-side*(.45*ext+.15*wind);ps.lean+=.08*ext;ps.hip=ps.hip.slice();ps.hip[0]-=side*.06*ext}
+ /* on the receiving end: the bike is knocked sideways and the body lags behind it, then rights itself */
+ if(p.jolt>0){p.jolt=Math.max(0,p.jolt-dt*1.8);const j=Math.sin(Math.min(1,p.jolt)*Math.PI)*p.jolt;ps.side-=(p.joltSide||1)*.35*j;ps.turn=(ps.turn||0)+(p.joltSide||1)*.25*j;ps.look=(ps.look||0)+.1*j}
  /* deep wheelie: one hand goes down to the road behind */
  p.dg=lp(p.dg||0,p.drag?1:0,cl(dt*6,0,1));
  if(p.dg>.05){/* the hand-drag pose (from a real one): bike near vertical, the rider sat low on the tail with the legs along the bike,
@@ -301,7 +309,7 @@ function beginTrick(p,t){p.trk_=t;p.tt=0;p.trickPts=0;p.bal=(Math.random()-.5)*.
  if(t.k==='stoppie'){p.pv=Math.min(p.pv,-.6)}sfx.trick(t.i);pop(p,t.n.toUpperCase(),'#ffffff',.8,'t')}
 function endTrick(p,clean){const t=p.trk_;if(!t)return;p.trk_=null;p.trOn=false;const pts=Math.round(p.trickPts);
  if(clean&&pts>20&&p.tt>.6){const bonus=Math.round(pts*.25*p.mult);p.score+=bonus;p.tricks++;bumpChain(p,1);if(!p.bestTrick||pts+bonus>p.bestTrick.pts)p.bestTrick={n:t.n,pts:pts+bonus};
-  pop(p,t.n.toUpperCase()+'  '+p.tt.toFixed(1)+'s  +'+fmtN(pts+bonus),'#bfe0a8',1.6);sfx.land()}
+  skill(p,t.n.toUpperCase(),pts+bonus);sfx.land()}
  p.lastTrick=B.t}
 function trickStep(p,dt,I){const t=p.trk_;
  /* pitch dynamics: gravity pulls the bike back to both wheels below the balance point and over it above; throttle lifts, rear brake drops */
@@ -349,8 +357,13 @@ function walls(p,dt){const ex=B.road.exitNear(p.s+250),x=ex>-1e8&&p.s>ex-230&&p.
  if(ex>-1e8&&p.s>ex&&p.s<ex+3&&p.d_>RD.SHO-.28&&p.ghost<=0)wipeout(p,'HIT THE CUSHION')}
 
 /* ---------------- scoring ---------------- */
+/* the skill chain (Forza style): every move that keeps the chain alive is listed with its points, repeats stack (NEAR MISS x3),
+   and the chain total is banked when the timer runs out or lost in a wipeout */
+let SKID=0;function skill(p,n,pts,side){const top=p.sk[0];if(top&&top.n===n&&B.t-top.t<3){top.c++;top.pts+=pts;top.t=B.t;top.id=++SKID}else{p.sk.unshift({n,c:1,pts,t:B.t,id:++SKID});if(p.sk.length>4)p.sk.length=4}
+ p.chainPts+=pts;p.skV++;p.skEnd=null;if(side){const h=hudOf(p),f=h&&h.querySelector('.nf.'+(side>0?'r':'l'));if(f){f.classList.remove('on');void f.offsetWidth;f.classList.add('on')}}}
+function endChain(p,ok){if(p.chain>0&&p.chainPts>0)p.skEnd={ok,pts:Math.round(p.chainPts),m:p.mult,t:B.t};p.chain=0;p.mult=1;p.comboT=0;p.chainPts=0;p.sk=[];p.skV++}
 function bumpChain(p,n){p.chain+=n;p.mult=Math.min(10,1+Math.floor(p.chain/2));p.comboT=4;if(p.mult>p.bestCombo)p.bestCombo=p.mult}
-function scoreStep(p,dt){if(p.wipe)return;p.comboT-=dt;if(p.comboT<=0&&p.chain>0){if(p.mult>1)pop(p,'COMBO x'+p.mult+' BANKED','#9fc3e6',1.2);p.chain=0;p.mult=1}
+function scoreStep(p,dt){if(p.wipe)return;p.comboT-=dt;if(p.comboT<=0&&p.chain>0)endChain(p,true);
  /* near misses and lane splits: pass a vehicle within 1.3 m */
  const pv=p.v*Math.cos(p.psi);
  for(const v of B.tr){if(v.side<0||v.ramp!=null||v.hit>0)continue;const ds=v.s-p.s;if(Math.abs(ds)>v.L/2+3){v['ps'+p.k]=Math.sign(ds);continue}
@@ -359,7 +372,7 @@ function scoreStep(p,dt){if(p.wipe)return;p.comboT-=dt;if(p.comboT<=0&&p.chain>0
    const close=gap<.6,base=close?260:150,pts=Math.round(base*(1+(p.v-16)/30)*p.mult);p.score+=pts;p.near++;bumpChain(p,1);
    /* a split: vehicles both sides at once */
    const other=B.tr.find(u=>u!==v&&u.side>0&&Math.abs(u.s-p.s)<u.L/2+2&&Math.sign(u.d-p.d_)!==Math.sign(v.d-p.d_)&&Math.abs(u.d-p.d_)<u.W/2+1.6);
-   if(other){p.splits++;bumpChain(p,1);pop(p,'LANE SPLIT +'+fmtN(pts*2),'#ffd36a',1.4);p.score+=pts}else pop(p,(close?'CLOSE CALL':'NEAR MISS')+' +'+fmtN(pts),close?'#ffd36a':'#ffffff',1.1);sfx.near()}
+   const sd=Math.sign(v.d-p.d_)||1;if(other){p.splits++;bumpChain(p,1);p.score+=pts;skill(p,'LANE SPLIT',pts*2,sd)}else skill(p,close?'CLOSE CALL':'NEAR MISS',pts,sd);sfx.near()}
   v['ps'+p.k]=now}}
 function collide(p){if(p.wipe||p.ghost>0)return;const pd=p.d_,hw=.36+Math.abs(Math.sin(p.psi))*.9;
  for(const v of B.tr){if(v.side<0||v.ramp!=null)continue;const ds=p.s-v.s;if(Math.abs(ds)>v.L/2+1.1)continue;const dd=pd-v.d;if(Math.abs(dd)>v.W/2+hw)continue;
@@ -373,8 +386,8 @@ function collide(p){if(p.wipe||p.ghost>0)return;const pd=p.d_,hw=.36+Math.abs(Ma
 /* rider against rider (two players): the same box logic as traffic, but both bikes give way; a hard rear-end or a fast swipe drops whoever caused it */
 function collideRiders(){const P=B.pl;if(P.length<2)return;const a=P[0],b=P[1];if(a.wipe||b.wipe||a.ghost>0||b.ghost>0)return;
  {/* close alongside: whoever is not mid-trick reaches out and shoves; the push only moves you apart */
-  const ds0=b.s-a.s,dd0=b.d_-a.d_;if(Math.abs(ds0)<1.3&&Math.abs(dd0)<1.7&&Math.abs(dd0)>.5){for(const [q,o] of[[a,b],[b,a]]){if(q.trk_||q.shoveCD>0)continue;q.shoveT=.55;q.shoveCD=1.6;q.shoveSide=(o.d_>q.d_)?1:-1}}
-  for(const q of P){q.shoveCD=Math.max(0,(q.shoveCD||0)-1/60);if(q.shoveT>.15&&q.shv>.6){const o=q===a?b:a,dir=Math.sign(o.d_-q.d_)||1;o.d_+=dir*.9/60;q.d_-=dir*.35/60;o.lv=(o.lv||0)+dir*.4/60*20}}}
+  const ds0=b.s-a.s,dd0=b.d_-a.d_;if(Math.abs(ds0)<1.3&&Math.abs(dd0)<1.7&&Math.abs(dd0)>.5){for(const [q,o] of[[a,b],[b,a]]){if(q.trk_||q.shoveCD>0)continue;q.shoveT=SHOVE_T;q.shE=0;q.shoveHit=0;q.shoveCD=1.6;q.shoveSide=(o.d_>q.d_)?1:-1}}
+  for(const q of P){q.shoveCD=Math.max(0,(q.shoveCD||0)-1/60);const e=q.shE||0;if(q.shoveT>0&&e>.14&&e<.34){const o=q===a?b:a,dir=Math.sign(o.d_-q.d_)||1;o.d_+=dir*1.2/60;q.d_-=dir*.35/60;o.lv=(o.lv||0)+dir*.4/60*20;if(!q.shoveHit){q.shoveHit=1;o.jolt=1;o.joltSide=dir;sfx.scrape()}}}}
  const ds=b.s-a.s,dd=b.d_-a.d_,LS=2.05,LD=.62+(Math.abs(Math.sin(a.psi))+Math.abs(Math.sin(b.psi)))*.45;if(Math.abs(ds)>LS||Math.abs(dd)>LD)return;
  const ox=LS-Math.abs(ds),oy=LD-Math.abs(dd);const va=a.v*Math.cos(a.psi),vb=b.v*Math.cos(b.psi),la=a.v*Math.sin(a.psi),lb=b.v*Math.sin(b.psi);
  if(ox<oy){const back=ds>0?a:b,front=ds>0?b:a,close=(ds>0?va-vb:vb-va);
@@ -390,7 +403,7 @@ function hitVeh(v,p){v.hit=4.5;v.haz=1;v.sig=0;v.chg=null;v.spin=(Math.random()-
 /* ---------------- wipeouts ---------------- */
 function wipeout(p,why){if(p.wipe)return;if(p.trk_)p.trk_=null;p.trOn=false;p.trQ=null;
  const m=p.m,R_=m.rider,vf=p.v,ps=p.psi;p.wipes++;
- const lost=Math.round(p.score*0);if(p.chain>0)pop(p,'COMBO LOST','#ef6a5a',1.3);p.chain=0;p.mult=1;p.comboT=0;
+ endChain(p,false);
  /* the rider leaves the bike: move the rider group into the scene at the same place */
  m.g.updateMatrixWorld(true);const wpos=new THREE.Vector3(),wq=new THREE.Quaternion();R_.g.getWorldPosition(wpos);R_.g.getWorldQuaternion(wq);
  const rg=R_.g;m.inner.remove(rg);B.sc.add(rg);rg.position.copy(wpos);rg.quaternion.copy(wq);
@@ -531,6 +544,9 @@ const CSS=`
 #bkHud .tm.low b{color:#ef6a5a}
 #bkHud .cd{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);font-size:110px;font-weight:200;letter-spacing:.05em;text-shadow:0 4px 30px #000b;opacity:0}
 #bkHud .cd.on{animation:bkCd .9s forwards}@keyframes bkCd{0%{opacity:0;transform:translate(-50%,-50%) scale(1.4)}20%{opacity:1;transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0}}
+#bkHud .bm{display:block!important;opacity:0;transition:opacity .25s}#bkHud .bm.on{opacity:1}
+#bkHud .tg{transition:opacity .25s,translate .25s}#bkHud .tg.off{opacity:0;translate:-12px 0}
+#bkPause{animation:bkPzB .2s ease-out;transition:opacity .16s}#bkPause.out{opacity:0}@keyframes bkPzB{0%{opacity:0}100%{opacity:1}}#bkPause .mid{animation:bkPz .22s ease-out}@keyframes bkPz{0%{opacity:0;transform:scale(.97)}100%{opacity:1;transform:none}}
 #bkHud .bkfade{position:absolute;inset:0;background:#000;opacity:0;transition:opacity .35s}
 #bkHud .mn{left:18px;top:50%;transform:translateY(-50%);width:min(300px,46%);padding:0;overflow:hidden;display:none}
 #bkHud .mn h4{margin:0;padding:12px 16px 10px;font-size:11px;font-weight:500;letter-spacing:.28em;color:#c9d2d8;border-bottom:1px solid #ffffff14;display:flex;justify-content:space-between}
@@ -547,10 +563,27 @@ const CSS=`
 #bkHud .cb small{display:block;font:600 9px var(--gt);letter-spacing:.24em;color:var(--gxd,#9aa3ab)}
 #bkHud .cb .sc{padding:8px 16px 9px;min-width:118px}#bkHud .cb .sc b{display:block;font:300 28px var(--gt);font-variant-numeric:tabular-nums;line-height:1.1;letter-spacing:.01em}
 #bkHud .cb .sc em{display:block;margin-top:2px;font:500 9px var(--gt);font-style:normal;letter-spacing:.18em;color:var(--gxd,#9aa3ab)}
-#bkHud .cb .cm{min-width:70px;padding:8px 14px 9px;border-left:1px solid #ffffff14;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:.45;transition:opacity .25s,background .25s}
-#bkHud .cb .cm b{font:400 26px var(--gt);line-height:1.1}#bkHud .cb .cm i{display:block;width:46px;height:3px;margin-top:4px;border-radius:2px;background:#ffffff1c;overflow:hidden}#bkHud .cb .cm u{display:block;height:100%;width:0;background:#fff;transition:width .2s linear}
-#bkHud .cb .cm.on{opacity:1;background:linear-gradient(180deg,#8fb4d8 0%,#4f7eab 48%,#33608c 52%,#4a77a3 100%);box-shadow:inset 0 1px 0 #ffffff80}#bkHud .cb .cm.on small{color:#e6eef6}
-#bkHud .cb .cm.bump b{animation:bkBump .35s ease-out}@keyframes bkBump{0%{transform:scale(1.45)}100%{transform:none}}
+@keyframes bkBump{0%{transform:scale(1.45)}100%{transform:none}}
+/* skill chain, top centre: multiplier badge, chain total, the time left to keep it, and the moves in it (newest on top) */
+#bkHud .sk{position:absolute;left:50%;top:12px;transform:translateX(-50%) scale(var(--s));transform-origin:center top;min-width:250px;transition:opacity .25s;opacity:0}
+#bkHud .sk.live,#bkHud .sk.end{opacity:1}
+#bkHud .sk .skh{display:flex;align-items:stretch;background:var(--gx);border-radius:8px 8px 0 0;box-shadow:var(--gxhi),0 0 0 1px #000c,0 4px 14px #0009;overflow:hidden}
+#bkHud .sk .skm{min-width:62px;display:flex;align-items:center;justify-content:center;font:500 26px var(--gt);color:#fff;background:linear-gradient(180deg,#8fb4d8 0%,#4f7eab 48%,#33608c 52%,#4a77a3 100%);box-shadow:inset 0 1px 0 #ffffff80}
+#bkHud .sk .skm.bump{animation:bkBump .35s ease-out}
+#bkHud .sk .skt{flex:1;padding:7px 16px 8px;text-align:right}#bkHud .sk .skt small{display:block;font:600 9px var(--gt);letter-spacing:.24em;color:var(--gxd,#9aa3ab)}
+#bkHud .sk .skt b{display:block;font:300 26px var(--gt);font-variant-numeric:tabular-nums;line-height:1.1;color:#fff}
+#bkHud .sk .skb{display:block;height:3px;background:#0009;border-radius:0 0 3px 3px;overflow:hidden;box-shadow:0 0 0 1px #000c}#bkHud .sk .skb u{display:block;height:100%;width:0;background:linear-gradient(90deg,#8fb4d8,#fff);transition:width .2s linear}
+#bkHud .sk ul{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:4px}
+#bkHud .sk li{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:4px 12px;border-radius:6px;background:var(--gx);box-shadow:var(--gxhi),0 0 0 1px #000c;font:500 11px var(--gt);letter-spacing:.14em;color:#c9d2d8;opacity:.8}
+#bkHud .sk li b{font-weight:500;color:#fff;font-variant-numeric:tabular-nums}#bkHud .sk li em{font-style:normal;color:#8fb4d8;margin-left:4px}
+#bkHud .sk li.new{opacity:1;color:#fff;animation:bkSk .3s ease-out}@keyframes bkSk{0%{transform:translateY(-6px) scale(1.04);opacity:0}100%{transform:none;opacity:1}}
+#bkHud .sk li:nth-child(3){opacity:.55}#bkHud .sk li:nth-child(4){opacity:.35}
+#bkHud .sk.end .skb,#bkHud .sk.end ul{display:none}#bkHud .sk.end .skh{border-radius:8px}
+#bkHud .sk.end.ok .skt b{color:#bfe0a8}#bkHud .sk.end.no .skm{display:none}#bkHud .sk.end.no .skt{text-align:center}#bkHud .sk.end.no .skt b{color:#ef6a5a}
+#bkHud .sk.end{animation:bkSkEnd 2s forwards}@keyframes bkSkEnd{0%{transform:translateX(-50%) scale(calc(var(--s) * 1.06))}12%{transform:translateX(-50%) scale(var(--s))}75%{opacity:1}100%{opacity:0;transform:translateX(-50%) scale(var(--s))}}
+/* near miss: a cool flash along the edge the car went past */
+#bkHud .nf{position:absolute;top:0;bottom:0;width:18%;opacity:0;pointer-events:none}#bkHud .nf.l{left:0;background:linear-gradient(90deg,#8fb4d866,#8fb4d800)}#bkHud .nf.r{right:0;background:linear-gradient(270deg,#8fb4d866,#8fb4d800)}
+#bkHud .nf.on{animation:bkNf .5s ease-out}@keyframes bkNf{0%{opacity:1}100%{opacity:0}}
 #bkHud .hint.pz{left:auto;right:18px;bottom:auto;top:14px}
 #bkHud .hint{left:18px;bottom:18px;padding:7px 12px;font-size:10px;letter-spacing:.16em;color:#c9d2d8;display:flex;gap:12px}
 #bkHud .hint kbd{background:#ffffff22;border-radius:4px;padding:1px 6px;font:500 10px var(--gt);color:#fff;margin-right:5px}
@@ -588,7 +621,9 @@ const SAME_CSS=`
 function buildHud(){ensureCss();let h=$i('bkHud');if(!h){h=document.createElement('div');h.id='bkHud';document.body.appendChild(h)}h.style.display='block';const n=B.pl.length;
  h.innerHTML=B.pl.map((p,i)=>`<div class="pv hud${n>1?' two':''}" data-p="${i}" style="left:${n>1?i*50:0}%;width:${n>1?50:100}%;--pc:${PCOL[i]};--s:${Math.max(.46,Math.min(1.15,innerWidth/n/860,innerHeight/580)).toFixed(3)}">
  <div class="h8top"><div class="h8plate">${n>1?'<div class="tag" style="color:'+PCOL[i]+'">P'+(i+1)+'</div>':''}<div class="lap">HIGHWAY CUT-UP</div><div class="raceTime">${B.clock?'':'FREE RIDE'}</div><div class="bl" style="display:none"></div></div></div>
- <div class="pl cb"><div class="sc"><small>SCORE</small><b>0</b><em>BEST ${fmtN(SV().best||0)}</em></div><div class="cm"><small>COMBO</small><b>x1</b><i><u></u></i></div></div>
+ <div class="pl cb"><div class="sc"><small>SCORE</small><b>0</b><em>BEST ${fmtN(SV().best||0)}</em></div></div>
+ <div class="sk"><div class="skh"><div class="skm">x1</div><div class="skt"><small>SKILL CHAIN</small><b>0</b></div></div><i class="skb"><u></u></i><ul></ul></div>
+ <div class="nf l"></div><div class="nf r"></div>
  <div class="h8spd"><canvas class="gx5" width="480" height="320"></canvas></div>
  <div class="pl hint"><span><kbd>${KEYS[i].mn}</kbd>GUIDE</span></div>
  <div class="pl bm"><i></i><u></u></div>
@@ -603,31 +638,36 @@ function showCount(n){const c=$i('bkHud')&&$i('bkHud').querySelector('.cd');if(!
 function hudStep(){if(!B)return;const h=$i('bkHud');if(!h)return;
  for(const p of B.pl){const e=hudOf(p);if(!e)continue;const q=s=>e.querySelector(s);
   /* the same HUD pieces as the car modes: time plate, score / combo strip, GT-style gauge */
-  {const sc=fmtN(Math.round(p.score)),b=q('.cb .sc b');if(b._t!==sc){b._t=sc;b.textContent=sc}const cm=q('.cb .cm'),on=p.mult>1;if(cm._on!==on){cm._on=on;cm.classList.toggle('on',on)}
-   const mt='x'+p.mult;if(cm._t!==mt){cm._t=mt;cm.querySelector('b').textContent=mt;if(p.mult>1){cm.classList.remove('bump');void cm.offsetWidth;cm.classList.add('bump')}}
-   const w=p.chain>0?Math.round(cl(p.comboT/4,0,1)*100):0;if(cm._w!==w){cm._w=w;cm.querySelector('u').style.width=w+'%'}}
+  {const sc=fmtN(Math.round(p.score)),b=q('.cb .sc b');if(b._t!==sc){b._t=sc;b.textContent=sc}}
+  {/* skill chain: live while a chain runs, then BANKED / CHAIN LOST for a moment */const k=q('.sk'),end=p.skEnd&&B.t-p.skEnd.t<2?p.skEnd:null,st=p.chain>0?'live':end?(end.ok?'end ok':'end no'):'off';
+   if(k._s!==st){k._s=st;k.className='sk '+st}
+   if(st==='live'){const m='x'+p.mult,mm=k.querySelector('.skm');if(mm._t!==m){mm._t=m;mm.textContent=m;mm.classList.remove('bump');void mm.offsetWidth;mm.classList.add('bump')}
+    const tt=fmtN(Math.round(p.chainPts)),tb=k.querySelector('.skt b');if(tb._t!==tt){tb._t=tt;tb.textContent=tt}k.querySelector('.skt small').textContent='SKILL CHAIN';
+    const w=Math.round(cl(p.comboT/4,0,1)*100),u=k.querySelector('.skb u');if(u._w!==w){u._w=w;u.style.width=w+'%'}
+    if(k._v!==p.skV){k._v=p.skV;const top=p.sk[0]&&p.sk[0].id;k.querySelector('ul').innerHTML=p.sk.map(e=>`<li class="${e.id===top?'new':''}"><span>${e.n}${e.c>1?` <em>x${e.c}</em>`:''}</span><b>+${fmtN(Math.round(e.pts))}</b></li>`).join('')}}
+   else if(end&&k._e!==end){k._e=end;k.querySelector('.skm').textContent=end.ok?'x'+end.m:'';k.querySelector('.skt small').textContent=end.ok?'CHAIN BANKED':'CHAIN LOST';k.querySelector('.skt b').textContent=(end.ok?'+':'')+fmtN(end.pts);k.querySelector('ul').innerHTML='';k._v=-1}}
   if(B.clock){const l=Math.max(0,B.left),tt=Math.floor(l/60)+':'+String(Math.floor(l%60)).padStart(2,'0'),rt=q('.raceTime');if(rt._t!==tt){rt._t=tt;rt.textContent=tt}rt.style.color=l<15?'#ff6b5e':''}
   {const cv=q('.gx5'),v=Math.round(spd(p.wipe?0:p.v)),rv=cl(p.rpm||0,0,1.04),up=!p.wipe&&rv>.9,key=v+'|'+p.gear+'|'+Math.round(rv*200)+'|'+up;
    if(cv._k!==key){cv._k=key;P.gx5Draw(cv,{rev:rv,kmh:v,gear:p.gear,shift:up,unit:kmh()?'km/h':'mph',tag:B.pl.length>1?'P'+(p.k+1):'',tagCol:PCOL[p.k]})}}
   if(!p.gT||B.t-p.gT>.2){p.gT=B.t;guidePaint(p)}
   const bm=q('.bm'),T=p.trk_;
-  if(T&&(T.k==='balance')){bm.style.display='block';bm.className='pl bm';bm.querySelector('u').style.left=(50+cl(p.bal,-1,1)*50)+'%';bm.querySelector('u').style.bottom=''}
-  else if(T&&(T.k==='wheelie'||T.k==='stoppie')||p.pitch>.05||p.pitch<-.05){bm.style.display='block';bm.className='pl bm v';const u=bm.querySelector('u');u.style.left='';const lim=p.pitch<0?1.15:(T&&T.twelve?1.62:1.45);u.style.bottom=(cl(Math.abs(p.pitch)/lim,0,1)*100)+'%'}
-  else bm.style.display='none';
+  /* the meter fades in and out (never pops) */if(T&&(T.k==='balance')){bm.className='pl bm on';bm.querySelector('u').style.left=(50+cl(p.bal,-1,1)*50)+'%';bm.querySelector('u').style.bottom=''}
+  else if(T&&(T.k==='wheelie'||T.k==='stoppie')||p.pitch>.05||p.pitch<-.05){bm.className='pl bm v on';const u=bm.querySelector('u');u.style.left='';const lim=p.pitch<0?1.15:(T&&T.twelve?1.62:1.45);u.style.bottom=(cl(Math.abs(p.pitch)/lim,0,1)*100)+'%'}
+  else bm.classList.remove('on');
 }
 }
-function guidePaint(p){const e=hudOf(p);if(!e)return;const g=e.querySelector('.tg');if(!g)return;g.style.display=p.guide===false?'none':'';
+function guidePaint(p){const e=hudOf(p);if(!e)return;const g=e.querySelector('.tg');if(!g)return;g.classList.toggle('off',p.guide===false);
  g.querySelectorAll('li').forEach(x=>{const t=TBY[x.dataset.t];x.classList.toggle('on',!!(p.trk_&&p.trk_.id===t.id));x.classList.toggle('off',!canStart(p,t))})}
 function runKey(code){if(B.paused){pauseKey(code);return}
  for(const p of B.pl){const k=p.k;
-  if(isKey(k,'m',code)){p.guide=!p.guide;guidePaint(p);continue}
+  if(isKey(k,'m',code)){p.guide=p.guide===false;/* starts shown (undefined), so the first press hides it */guidePaint(p);continue}
 }}
 
 /* ---------------- pause ---------------- */
 function onEsc(){if(scr==='bike'&&B){if(B.state==='done')return;setPause(!B.paused)}else if(scr==='bikeprep'){leavePrep()}else if(scr==='bikeres'){resAct('menu')}}
 function setPause(on){if(!B)return;B.paused=on;let e=$i('bkPause');if(!e){e=document.createElement('div');e.id='bkPause';e.className='s';document.body.appendChild(e)}
  if(on){for(const p of B.pl)if(p.eng)p.eng.set(0,0,0,false);e.innerHTML=`<div class="mid w"><div class="tb">Paused</div><div class="b"><button data-a="res">Resume</button><button data-a="rst">Restart</button><button data-a="prep">Change bikes</button><button data-a="quit">Quit to menu</button></div></div>`;
-  e.style.display='flex';e.querySelectorAll('button').forEach((b,i)=>{b.onmouseenter=()=>{B&&(B.psel=i);paintPause()};b.onclick=()=>pauseAct(b.dataset.a)});B.psel=0;paintPause();sfx.ui('select')}else{e.style.display='none'}}
+  e.classList.remove('out');clearTimeout(e._h);e.style.display='flex';e.querySelectorAll('button').forEach((b,i)=>{b.onmouseenter=()=>{B&&(B.psel=i);paintPause()};b.onclick=()=>pauseAct(b.dataset.a)});B.psel=0;paintPause();sfx.ui('select')}else{/* fade out, then hide */e.classList.add('out');clearTimeout(e._h);e._h=setTimeout(()=>{e.style.display='none';e.classList.remove('out')},170)}}
 function paintPause(){const e=$i('bkPause');if(!e||!B)return;const bs=e.querySelectorAll('button');if(bs[B.psel])bs[B.psel].focus()}
 function pauseKey(code){const n=4;if(code==='KeyW'||code==='ArrowUp'){B.psel=(B.psel+n-1)%n;paintPause();sfx.ui('move')}else if(code==='KeyS'||code==='ArrowDown'){B.psel=(B.psel+1)%n;paintPause();sfx.ui('move')}
  else if(code==='Enter'||code==='Space'){pauseAct(['res','rst','prep','quit'][B.psel])}}
@@ -731,6 +771,6 @@ const f0=frame;frame=function(n){if(scr==='bike'||(scr==='bikeres'&&B)){requestA
 /* leaving through some other path (menu shortcut, options): tidy up */
 {const sh0=show;show=n=>{sh0(n);if(n!=='bike'&&n!=='bikeres'&&n!=='pause'&&n!=='ptOptions'&&B&&n!=='bikeprep'){endRun()}if(n!=='s8setup'&&PR&&n!=='bike'&&n!=='ptOptions'){stopPrep()}if(n!=='bike'&&n!=='bikeprep'&&n!=='bikeres')document.body.classList.remove('bkOn');
   for(const id of['bkHud'])if($i(id)&&n!=='bike'&&n!=='bikeres')$i(id).style.display='none';if(n!=='bikeres'&&$i('bkRes'))$i('bkRes').style.display='none'}}
-BK.debug=()=>({B,PR});BK._wipe=(p,why)=>wipeout(p,why||"TEST");
+BK.debug=()=>({B,PR});BK._wipe=(p,why)=>wipeout(p,why||"TEST");BK._skill=(p,n,pts,side)=>{bumpChain(p,1);p.score+=pts;skill(p,n,pts,side)};
 P.bikeStart=o=>BK.loadPack().then(()=>startRun(o));
 })();

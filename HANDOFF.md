@@ -56,6 +56,7 @@ Round 6: trick poses follow Hakan's reference photos (wheelie free left arm, noh
 Round 7: BK.poseBike pitches about the down wheel's axle (I.rw/I.fw y and z), not its contact point. poseRider reach fallback moves the hips toward the grips (down and forward) until both hands reach. Drag feet stay on I.peg.
 Round 8: ps.leanMax caps the reach-check fold (then the hips slide, mostly forward); seatstand lean .9 cap .98, drag lean pitch-.95 cap pitch-.75.
 Round 9: Seat Stand removed from TRICKS and the hand drag off (HAND_DRAG=false in bikes.js); pose code kept for a later redo. Seven tricks on 1 to 7.
+Round 10: Superman removed too. Skill chain: skill(p,name,pts,side) adds to p.sk (stacked list) and p.chainPts; endChain(p,ok) banks or loses (p.skEnd); HUD .sk top centre, .nf edge flashes on near misses. Combo cell removed from the score plate. Shove: SHOVE_T=.6 beats driven by p.shE (wind, push at the other rider's chest, recover); push force only in the strike window, o.jolt on the receiver. Test hooks BK._skill, BK._shAt.
 
 ## Architecture
 - `build.py`: base HTML (`base/`) + exact-string `rep()` patches + concatenated layers `src/layers/*.js` (list near line 209) + `src/style.css` (appended; later rules win, many `!important`).
