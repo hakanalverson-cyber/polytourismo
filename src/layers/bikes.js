@@ -66,7 +66,7 @@ const sfx={hiss:(d,v,f0,f1,q,ty)=>{try{P.aud.hiss(d,v,f0,f1,q,ty)}catch(e){}},to
 /* ---------------- run setup ---------------- */
 const RIDER_COL=[{suit:0x24407a,trim:0xe6e9ec,helm:0xf0f0f0},{suit:0x7a1f24,trim:0xf2c14e,helm:0x1b1d21}];
 const PCOL=['#5aa9ff','#ff6a5a'];
-function newPlayer(k,sel){const d=BK.byId(sel.id),m=BK.makeBike(d.id,BK.paintOf(d,sel.paint),RIDER_COL[k]);BK.riderLayer(m.rider,k);
+function newPlayer(k,sel){const d=BK.byId(sel.id),m=BK.makeBike(d.id,BK.paintOf(d,sel.paint),Object.assign({},RIDER_COL[k],{who:sel.who==null?k:sel.who}));BK.riderLayer(m.rider,k);
  const st=d.stats||{top:200,acc:.8,hnd:.8,trk:.8};
  return{k,d,m,sel,vmax:st.top/3.6,acc:3.2+st.acc*5.4,hnd:st.hnd,trk:st.trk,s:40+k*0,d_:RD.laneD(2+k)*1-0,dd:0,psi:0,v:0,lean:0,steer:0,stv:0,pitch:0,pv:0,
   th:0,br:0,st:0,score:0,mult:1,comboT:0,chain:0,best:0,bestCombo:0,top:0,near:0,splits:0,tricks:0,wipes:0,dist:0,bestTrick:null,
@@ -95,7 +95,7 @@ function endRun(silent){if(!B)return;for(const p of B.pl){if(p.eng)p.eng.stop();
 /* ---------------- traffic: IDM car following, MOBIL-style lane changes with indicators, exits ---------------- */
 const DENS={light:5,normal:9,heavy:15};/* vehicles per km per lane, our side */
 function laneOf(d){return Math.round((d-RD.D0)/RD.LW-.5)}
-function spawnVeh(s,lane,side,opt){const r=B.rngT,kind=BK.pickKind(r),t=BK.VT[kind],m=BK.makeVehicle(kind,BK.pickPaint(r),B.tod.lamps>0);B.sc.add(m.g);
+function spawnVeh(s,lane,side,opt){const r=B.rngT,kind=BK.pickKind(r),m=BK.makeVehicle(kind,BK.pickPaint(r),B.tod.lamps>0,r),t=m.t;B.sc.add(m.g);
  const fast=lane===0?1.08:lane===1?1.02:lane===2?.97:.92;
  const v0=(t.v[0]+r()*(t.v[1]-t.v[0]))*(side>0?fast:1)*(opt&&opt.v0k||1);
  const v={m,kind,t,L:t.L,W:t.W,side,lane,s,d:side*RD.laneD(lane),v:v0*.9,v0,a:t.a,b:2.6,T:1.3+r()*.5,sig:0,sigT:0,chg:null,think:1+r()*3,exit:false,hit:0,haz:0,brk:0,yaw:0,y:0,blink:r(),dead:false};
@@ -157,9 +157,12 @@ function decide(v){const opts=[];const ex=B.road.exitNear(v.s+200),toG=ex-v.s,ex
   if(exitZone)inc+=dl>0?2.5:-3;if(v.kind==='semi'||v.kind==='box'||v.kind==='bus'){if(to<2)inc-=1.5}
   if(inc>.35&&safe(v,to))opts.push([inc,to])}
  if(!opts.length)return;opts.sort((a,b)=>b[0]-a[0]);const to=opts[0][1];v.chg={from:v.lane,to,t:0,dur:3.2+B.rngT()*1.2};v.sig=to>v.lane?1:-1;v.sigT=1.4+B.rngT()*.8;v.blink=0}
-function lights(v,dt){const on=(v.blink%0.7)<.38,m=v.m;const L=BK.LM;
- const left=v.haz||(v.sig<0),right=v.haz||(v.sig>0);/* sig + = right (as seen from the driver) */
- m.iL.material=left&&on?L.on:L.off;m.iR.material=right&&on?L.on:L.off;m.br.material=(v.brk||v.hit>0)?L.brOn:L.brOff}
+/* lights, plus distance culling: past 560 m a car is a few pixels in the fog, so it is not drawn at all; small lenses that are off are only drawn up close */
+function lights(v,dt){const on=(v.blink%0.7)<.38,m=v.m;const L=BK.LM;let dn=1e9;for(const p of B.pl){const q=Math.abs(v.s-p.s);if(q<dn)dn=q}
+ const vis=dn<560;m.g.visible=vis;if(!vis)return;const near=dn<90;
+ const left=v.haz||(v.sig<0),right=v.haz||(v.sig>0),bk=v.brk||v.hit>0;/* sig + = right (as seen from the driver) */
+ m.iL.material=left&&on?L.on:L.off;m.iR.material=right&&on?L.on:L.off;m.br.material=bk?L.brOn:L.brOff;
+ m.iL.visible=near||(left&&on);m.iR.visible=near||(right&&on);m.br.visible=near||bk;m.hd.visible=near||B.tod.lamps>0;if(m.sh)m.sh.visible=dn<220}
 
 /* ---------------- rider poses ---------------- */
 /* seated posture: hips on the seat, the torso leaned until the shoulders sit an arm's reach (~.58 m) from the grips */
@@ -185,6 +188,8 @@ function mixPose(a,b,u){const L=(x,y)=>x.map((v,i)=>lp(v,y[i],u));return{hip:L(a
  hands:(a.hands||b.hands)&&u>.5?b.hands:a.hands&&u<=.5?a.hands:null,feet:[L(a.feet[0],b.feet[0]),L(a.feet[1],b.feet[1])]}}
 function poseRiderFor(p,dt){const t=p.trk_;const id=t?t.id:p.lastPose||'wheelie';p.tu=lp(p.tu||0,t?1:0,cl(dt*7,0,1));if(t)p.lastPose=t.id;
  const ps=p.tu>.01?trickPose(p,id,p.tu):basePose(p);ps.side=(ps.side||0)-p.lean*.25;
+ /* stopped: the left foot goes down to the road (people riders) */
+ p.fd=lp(p.fd||0,(!p.trk_&&p.v<1.2&&!p.wipe)?1:0,cl(dt*4,0,1));if(p.fd>.01&&p.m.rider&&p.m.rider.people){const f=ps.feet[0].slice(),I=p.m.I;ps.feet[0]=[lp(f[0],I.peg[0]+.2,p.fd),lp(f[1],-.02,p.fd),lp(f[2],I.peg[2]+.18,p.fd)];ps.side-=.06*p.fd}
  BK.poseRider(p.m,ps)}
 
 /* ---------------- bike physics ---------------- */
@@ -377,7 +382,7 @@ function camStep(p,cam,dt,aspect){const m=p.m;cam.aspect=aspect;if(BK._dbgCam&&!
   const pt=p.cpt;
   cam.rotation.set(pt,yaw+PI,-p.lean*.72,'YXZ');cam.rotation.order='YXZ';cam.rotation.set(pt,yaw+PI,0);
   /* roll about the view axis */cam.rotateZ(p.lean*.72);
-  cam.fov=82;cam.layers.set(0);cam.layers.enable(1+(1-p.k))}
+  cam.fov=82;cam.layers.set(0);cam.layers.enable(1+(1-p.k));cam.layers.enable(3+p.k)/* own arms and legs (people riders) */}
  else{const yaw=m.g.rotation.y;const fx=Math.sin(yaw),fz=Math.cos(yaw);m.g.getWorldPosition(_t);
   /* the offset trails, not the position, so the camera never falls behind at speed */const want=_h.set(-fx*4.6,1.85+p.pitch*.6,-fz*4.6);if(!p.cc)p.cc=want.clone();p.cc.lerp(want,cl(dt*5,0,1));cam.position.copy(_t).add(p.cc);cam.up.set(0,1,0);cam.lookAt(_t.x+fx*2,_t.y+1.0,_t.z+fz*2);
   cam.fov=64;cam.layers.enableAll()}
@@ -391,7 +396,7 @@ function step(dt){if(!B)return;const live=!B.paused;
   if(B.state==='ride'&&B.clock>0){B.left-=dt;if(B.left<=0){B.left=0;finish();return}}
   for(const p of B.pl){physStep(p,dt);if(!B)return;collide(p);scoreStep(p,dt)}
   trafficStep(dt);fxStep(dt);
-  const sMin=Math.min(...B.pl.map(p=>p.s)),sMax=Math.max(...B.pl.map(p=>p.s));B.world.update(sMin,sMax);
+  const sMin=Math.min(...B.pl.map(p=>p.s)),sMax=Math.max(...B.pl.map(p=>p.s));B.world.update(sMin,sMax);for(const p of B.pl){const rn=B.world.regionName(p.s);if(rn!==p.reg){if(p.reg)pop(p,'ENTERING  '+rn.toUpperCase(),'#9fc3e6',2.4);p.reg=rn}}
   for(const p of B.pl){if(!p.wipe)poseRiderFor(p,dt);placeBike(p,dt);if(p.eng)p.eng.set(p.rpm,p.th,p.v,!p.wipe&&B.state!=='done')}}
  render(dt);hudStep(dt)}
 function render(dt){const W=R.domElement.width,H=R.domElement.height,n=B.pl.length;R.setScissorTest(true);
@@ -519,46 +524,7 @@ function resAct(a){sfx.ui('select');const e=$i('bkRes');if(e)e.style.display='no
 
 /* ---------------- prep: up to two riders pick bikes, paint and the run before they ride ---------------- */
 const PREP_CSS=`
-#bkPrep{position:fixed;inset:0;z-index:45;display:none;font-family:var(--gt,"Inter",sans-serif);color:#f2f4f6;-webkit-font-smoothing:antialiased;pointer-events:none}
-#bkPrep .top{position:absolute;left:0;right:0;top:0;height:66px;background:var(--gx);box-shadow:var(--gxhi),inset 0 -1px 0 #000,0 4px 16px #0009;display:flex;align-items:center;padding:0 30px;gap:22px;pointer-events:auto}
-#bkPrep .top .lg{font:italic 700 18px var(--gt);letter-spacing:.12em}#bkPrep .top .lg i{color:#9aa3ab;font-style:italic}
-#bkPrep .top h1{margin:0;font:200 22px var(--gt);letter-spacing:.3em}
-#bkPrep .top .best{margin-left:auto;text-align:right}#bkPrep .top .best small{display:block;font-size:9px;letter-spacing:.24em;color:var(--gxd)}#bkPrep .top .best b{font-weight:400;font-size:16px}
-#bkPrep .cols{background:none!important;backdrop-filter:none!important;position:absolute;left:0;right:0;top:66px;bottom:150px;display:flex;justify-content:space-between;padding:26px 30px;gap:30px}
-#bkPrep .pc{width:min(360px,30vw);pointer-events:auto;display:flex;flex-direction:column;gap:10px;animation:bkIn .6s cubic-bezier(.2,.8,.2,1) both}
-#bkPrep .pc.r{animation-name:bkInR}
-@keyframes bkIn{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:none}}@keyframes bkInR{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}
-#bkPrep .pl{background:linear-gradient(180deg,rgba(70,76,84,.62) 0%,rgba(30,33,37,.74) 50%,rgba(14,15,18,.82) 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.28),inset 0 0 0 1px rgba(255,255,255,.08),0 8px 26px rgba(0,0,0,.45);border-radius:10px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
-#bkPrep .ph{padding:12px 16px;display:flex;align-items:center;gap:10px}#bkPrep .ph i{width:10px;height:10px;border-radius:50%;background:var(--pc);box-shadow:0 0 10px var(--pc)}
-#bkPrep .ph b{font-weight:500;font-size:13px;letter-spacing:.24em}#bkPrep .ph em{margin-left:auto;font-style:normal;font-size:10px;letter-spacing:.2em;padding:4px 10px;border-radius:999px;background:#ffffff1c;color:#c9d2d8}
-#bkPrep .ph em.rd{background:linear-gradient(180deg,#9fe0a8,#4fa860);color:#0c1a0f;box-shadow:0 0 14px #4fa86090}
-#bkPrep .bk{padding:14px 16px 16px}
-#bkPrep .bk .nm{display:flex;align-items:center;gap:10px}#bkPrep .bk .nm button{pointer-events:auto;width:30px;height:30px;border-radius:50%;border:0;background:var(--gxb);color:#fff;box-shadow:inset 0 1px 0 #ffffff38,0 2px 6px #0008;cursor:pointer;font:600 14px var(--gt)}
-#bkPrep .bk .nm button:hover{background:var(--gxw);color:#15181c}
-#bkPrep .bk h2{margin:0;flex:1;font:300 24px/1.1 var(--gt);letter-spacing:.01em;text-align:center}
-#bkPrep .bk .cls{display:flex;justify-content:center;gap:8px;margin:8px 0 12px}#bkPrep .bk .cls span{font-size:9px;letter-spacing:.24em;padding:3px 9px;border-radius:999px;background:#ffffff18;color:#c9d2d8}
-#bkPrep .dots{display:flex;justify-content:center;gap:5px;margin-bottom:12px}#bkPrep .dots u{width:6px;height:6px;border-radius:50%;background:#ffffff30}#bkPrep .dots u.on{background:#fff;box-shadow:0 0 6px #fff}
-#bkPrep .st{display:grid;grid-template-columns:96px 1fr 38px;gap:7px 10px;align-items:center;font-size:10px;letter-spacing:.18em;color:#c9d2d8}
-#bkPrep .st div{height:6px;border-radius:3px;background:#ffffff18;overflow:hidden}#bkPrep .st div u{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,#4f7eab,#8fb4d8);transition:width .5s cubic-bezier(.2,.8,.2,1)}
-#bkPrep .st b{font-weight:500;color:#fff;text-align:right;font-size:11px;letter-spacing:.02em}
-#bkPrep .pt{display:flex;gap:6px;flex-wrap:nowrap;justify-content:center;margin-top:14px}#bkPrep .pt button{pointer-events:auto;width:24px;height:24px;flex:0 0 24px;padding:0;min-width:0;margin:0;border-radius:50%;border:0;cursor:pointer;box-shadow:inset 0 1px 0 #ffffff50,0 1px 4px #000a}
-#bkPrep .pt button.on{box-shadow:0 0 0 2px #fff,0 0 12px #fff8}
-#bkPrep .tr{padding:10px 16px;font-size:11px;letter-spacing:.06em;color:#c9d2d8;display:flex;align-items:center;gap:10px}#bkPrep .tr svg{width:22px;height:22px;color:#fff}#bkPrep .tr b{color:#fff;font-weight:500;letter-spacing:.12em}
-#bkPrep .join{padding:40px 20px;text-align:center}#bkPrep .join b{display:block;font:200 22px var(--gt);letter-spacing:.2em;margin-bottom:12px}#bkPrep .join kbd,#bkPrep .ks kbd,#bkPrep .ft kbd{display:inline-block;background:var(--gxw);color:#15181c;border-radius:5px;padding:2px 8px;font:600 11px var(--gt);box-shadow:0 1px 3px #0008;margin:0 3px}
-#bkPrep .join small{display:block;font-size:11px;letter-spacing:.14em;color:#c9d2d8;line-height:2}
-#bkPrep .join.pulse b{animation:bkPulse 1.6s ease-in-out infinite}@keyframes bkPulse{50%{opacity:.45}}
-#bkPrep .ks{padding:10px 16px;font-size:10px;letter-spacing:.14em;color:#9aa3ab;line-height:2.1}
-#bkPrep .ft{position:absolute;left:0;right:0;bottom:0;height:150px;background:var(--gx);box-shadow:var(--gxhi),0 -4px 16px #0009;display:flex;align-items:center;padding:0 30px;gap:26px;pointer-events:auto}
-#bkPrep .opt{display:flex;flex-direction:column;gap:8px}#bkPrep .opt small{font-size:9px;letter-spacing:.26em;color:var(--gxd)}
-#bkPrep .seg{display:flex;background:#00000055;border-radius:999px;padding:3px;box-shadow:inset 0 1px 3px #000a}
-#bkPrep .seg button{border:0;background:none;color:#c9d2d8;font:500 11px var(--gt);letter-spacing:.12em;padding:7px 14px;border-radius:999px;cursor:pointer}
-#bkPrep .seg button.on{background:var(--gxw);color:#15181c;box-shadow:0 1px 4px #000a}
-#bkPrep .ft .go{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
-#bkPrep .ft .go button{border:0;border-radius:999px;padding:14px 46px;font:500 16px var(--gt);letter-spacing:.2em;cursor:pointer;background:var(--gxa);color:#fff;box-shadow:inset 0 1px 0 #ffffff60,0 0 0 2px #8fb4d8,0 0 22px #4f7eab90;animation:bkGlow 2.2s ease-in-out infinite}
-@keyframes bkGlow{50%{box-shadow:inset 0 1px 0 #ffffff60,0 0 0 2px #cfe2f4,0 0 34px #6f9ecbc0}}
-#bkPrep .ft .go small{font-size:9px;letter-spacing:.2em;color:var(--gxd)}
-#bkPrep .stripe{position:absolute;left:0;right:0;top:66px;height:2px;background:linear-gradient(90deg,transparent,#8fb4d8,transparent);opacity:.6;animation:bkSweep 3.5s linear infinite}
-@keyframes bkSweep{0%{transform:translateX(-60%)}100%{transform:translateX(60%)}}
+#bkPrep{position:fixed;inset:0;z-index:45;display:none;pointer-events:none}
 #bkPause,#bkRes{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 40%,#151a20d0 0%,#05070af0 75%);font-family:var(--gt,"Inter",sans-serif);color:#f2f4f6}
 .bkpbox{display:flex;flex-direction:column;gap:8px;min-width:280px;padding:22px;border-radius:12px;background:linear-gradient(180deg,rgba(70,76,84,.62),rgba(14,15,18,.86));box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 12px 40px #000c}
 .bkpbox h3{margin:0 0 8px;font:200 22px var(--gt);letter-spacing:.3em;text-align:center}
@@ -573,7 +539,7 @@ const PREP_CSS=`
 .bkrb{display:flex;gap:8px}
 body.bkOn #gxDrop,body.bkOn #ptNowPlaying{display:none!important}
 `;
-function prepState(){const sv=SV(),L=BK.list();const pick=(i,dflt)=>{const s=sv.sel[i]||{};const id=s.id&&L.find(b=>b.id===s.id)?s.id:L[dflt%L.length].id;return{id,paint:s.paint==null?i:s.paint,trick:s.trick||'wheelie'}};
+function prepState(){const sv=SV(),L=BK.list();const pick=(i,dflt)=>{const s=sv.sel[i]||{};const id=s.id&&L.find(b=>b.id===s.id)?s.id:L[dflt%L.length].id;return{id,paint:s.paint==null?i:s.paint,trick:s.trick||'wheelie',who:s.who==null?i:s.who}};
  return{p:[Object.assign(pick(0,0),{in:true,ready:false}),Object.assign(pick(1,2),{in:false,ready:false})],opt:Object.assign({clock:180,traffic:'normal',tod:'day'},sv.opt),t:0}}
 P.bikeEnter=()=>{ensureCss();const go=()=>BK.loadPack().then(()=>openPrep());try{if(P.sfx)P.sfx('select')}catch(e){}go()};
 function openPrep(){ensureCss();PR=prepState();let e=$i('bkPrep');if(!e){e=document.createElement('div');e.id='bkPrep';document.body.appendChild(e)}
@@ -587,69 +553,67 @@ function buildPrepScene(){const tod=BK.TOD[PR.opt.tod]||BK.TOD.day,sc=new THREE.
  PR.exp0=PR.exp0||R.toneMappingExposure;R.toneMappingExposure=tod.exp;
  PR.sc=sc;PR.road=road;PR.world=world;PR.sky=sky;PR.cars=cars;PR.bikes=[null,null];PR.cam=new THREE.PerspectiveCamera(40,1,.1,3000);PR.todK=PR.opt.tod;syncPrepBikes()}
 const PREP_S=180;
-function syncPrepBikes(){for(let i=0;i<2;i++){const s=PR.p[i];const key=s.in?s.id+'|'+s.paint:'';const m=PR.bikes[i];if(m&&m.key===key)continue;if(m){BK.disposeBike(m);PR.bikes[i]=null}
-  if(!s.in)continue;const d=BK.byId(s.id),b=BK.makeBike(s.id,BK.paintOf(d,s.paint),RIDER_COL[i]);b.key=key;b.pop=0;PR.sc.add(b.g);PR.bikes[i]=b;
+function syncPrepBikes(){for(let i=0;i<2;i++){const s=PR.p[i];const key=s.in?s.id+'|'+s.paint+'|'+s.who:'';const m=PR.bikes[i];if(m&&m.key===key)continue;if(m){BK.disposeBike(m);PR.bikes[i]=null}
+  if(!s.in)continue;const d=BK.byId(s.id),b=BK.makeBike(s.id,BK.paintOf(d,s.paint),Object.assign({},RIDER_COL[i],{who:s.who}));b.key=key;b.pop=0;PR.sc.add(b.g);PR.bikes[i]=b;
   const fake={m:b,d,trk_:null,lean:0,k:i};BK.poseRider(b,Object.assign(basePose(fake),{look:-.1}));b.fake=fake}}
 function prepStep(dt){if(!PR||!PR.sc)return;PR.t+=dt;const road=PR.road,n=PR.p.filter(x=>x.in).length;
  /* bikes side by side on the hard shoulder, a slow orbiting camera */
  for(let i=0;i<2;i++){const b=PR.bikes[i];if(!b)continue;b.pop=Math.min(1,b.pop+dt*2.2);const two=PR.p[0].in&&PR.p[1].in,dd=RD.SHO-1.6-(two?(i?2.2:-2.2)*0:0),ss_=PREP_S+(two?(i?-1.6:1.6):0);
   road.pos(ss_,dd+(two?(i?1.4:-1.4):0)*0,_pp);b.g.position.set(_pp.x,_pp.y,_pp.z);b.g.rotation.set(0,_pp.h-.5,0);const e=1-Math.pow(1-b.pop,3);b.g.scale.setScalar(.6+.4*e);b.g.position.y+=(1-e)*1.2;
-  BK.poseBike(b,-.0,0,Math.sin(PR.t*.7+i)*.12,dt*0,0);BK.poseRider(b,Object.assign(basePose(b.fake),{look:-.1,side:0}))}
+  BK.poseBike(b,-.0,0,Math.sin(PR.t*.7+i)*.12,dt*0,0);{const bp=basePose(b.fake),I=b.I;if(b.rider&&b.rider.people)bp.feet[0]=[I.peg[0]+.2,-.02,I.peg[2]+.18];BK.poseRider(b,Object.assign(bp,{look:-.1+Math.sin(PR.t*.4+i)*.05,turn:Math.sin(PR.t*.23+i*2)*.25,side:b.rider&&b.rider.people?-.06:0}))}}
  const a=PR.t*.11;road.pos(PREP_S,RD.SHO-1.6,_pp);const cx=_pp.x,cy=_pp.y,cz=_pp.z,h=_pp.h;const dist=n>1?7.2:4.6;
  const ang=h+PI*.5+Math.sin(a)*.95;PR.cam.position.set(cx+Math.sin(ang)*dist,cy+1.25+Math.sin(a*1.7)*.3,cz+Math.cos(ang)*dist);PR.cam.lookAt(cx,cy+.8,cz);
  for(const c of PR.cars){c.s+=c.v*dt*c.side;if(c.s>PREP_S+520)c.s-=900;if(c.s<PREP_S-380)c.s+=900;road.pos(c.s,c.side*RD.laneD(c.lane),_pp);c.m.g.position.set(_pp.x,_pp.y,_pp.z);c.m.g.rotation.set(0,c.side>0?_pp.h:_pp.h+PI,0);c.blink+=dt;
   const on=(c.blink%.7)<.38;c.m.iL.material=c.sig<0&&on?BK.LM.on:BK.LM.off;c.m.iR.material=c.sig>0&&on?BK.LM.on:BK.LM.off}
- const W=R.domElement.width,H=R.domElement.height;PR.cam.aspect=W/H;PR.cam.updateProjectionMatrix();PR.sky.follow(PR.cam.position.x,PR.cam.position.y,PR.cam.position.z);
+ const W=R.domElement.width,H=R.domElement.height;PR.cam.aspect=W/H;/* the bikes sit left of centre, clear of the menu panel on the right */if(W>760)PR.cam.setViewOffset(W,H,W*.16,0,W,H);else PR.cam.clearViewOffset();PR.cam.updateProjectionMatrix();PR.sky.follow(PR.cam.position.x,PR.cam.position.y,PR.cam.position.z);
  R.setScissorTest(false);R.setViewport(0,0,W,H);R.render(PR.sc,PR.cam)}
 const STATN=[['TOP SPEED',d=>d.stats.top/300,d=>Math.round(kmh()?d.stats.top:d.stats.top/1.609)],['ACCELERATION',d=>d.stats.acc,d=>Math.round(d.stats.acc*100)],['HANDLING',d=>d.stats.hnd,d=>Math.round(d.stats.hnd*100)],['TRICKS',d=>d.stats.trk,d=>Math.round(d.stats.trk*100)]];
-function renderPrep(){const e=$i('bkPrep');if(!e||!PR)return;const L=BK.list(),sv=SV(),o=PR.opt;
- const col=i=>{const s=PR.p[i],K=KEYS[i];
-  if(!s.in)return`<div class="pc${i?' r':''}" style="--pc:${PCOL[i]}"><div class="pl ph"><i></i><b>PLAYER ${i+1}</b><em>OPEN</em></div><div class="pl join pulse" data-join="${i}"><b>PRESS TO JOIN</b><small><kbd>${K.tn}</kbd> on the keyboard<br>or <kbd>A</kbd> on pad ${i+1}</small></div>
-   <div class="pl ks">${K.name} RIDE &middot; ${K.tn} TRICK &middot; ${K.mn} TRICK MENU &middot; ${K.cn} CAMERA</div></div>`;
-  const d=BK.byId(s.id),k=L.findIndex(b=>b.id===s.id),t=TBY[s.trick]||TRICKS[0];
-  return`<div class="pc${i?' r':''}" style="--pc:${PCOL[i]}"><div class="pl ph"><i></i><b>PLAYER ${i+1}</b><em class="${s.ready?'rd':''}">${s.ready?'READY':'CHOOSING'}</em></div>
-  <div class="pl bk"><div class="nm"><button data-b="${i}" data-d="-1">&lsaquo;</button><h2>${esc(d.name)}</h2><button data-b="${i}" data-d="1">&rsaquo;</button></div>
-  <div class="cls"><span>${d.kind}</span><span>${k+1} / ${L.length}</span></div><div class="dots">${L.map((b,j)=>`<u class="${j===k?'on':''}"></u>`).join('')}</div>
-  <div class="st">${STATN.map(([n,f,v])=>`<span>${n}</span><div><u style="width:${Math.round(cl(f(d),0,1)*100)}%"></u></div><b>${v(d)}</b>`).join('')}</div>
-  <div class="pt">${BK.PAINTS.map((p,j)=>{const c=BK.paintOf(d,j);return`<button data-pt="${i}" data-j="${j}" class="${j===s.paint?'on':''}" style="background:rgb(${c.map(x=>Math.round(x*255)).join(',')})"></button>`}).join('')}</div></div>
-  <div class="pl tr" data-tr="${i}">${icon(t.id)}<span>STARTING TRICK</span><b>${t.n.toUpperCase()}</b></div>
-  <div class="pl ks">${i?'&larr; &rarr; BIKE &middot; &uarr; &darr; PAINT':'A / D BIKE &middot; W / S PAINT'} &middot; ${K.mn} TRICK &middot; ${K.tn} READY</div></div>`};
- const seg=(k,list)=>`<div class="seg" data-o="${k}">${list.map(([v,l])=>`<button data-v="${v}" class="${String(o[k])===String(v)?'on':''}">${l}</button>`).join('')}</div>`;
- const allR=PR.p.every(x=>!x.in||x.ready);
- e.innerHTML=`<div class="top"><div class="lg">POLY <i>GT</i></div><h1>HIGHWAY CUT-UP</h1><div class="best"><small>BEST SCORE</small><b>${fmtN(sv.best||0)}</b></div></div><div class="stripe"></div>
- <div class="cols">${col(0)}${col(1)}</div>
- <div class="ft"><div class="opt"><small>CLOCK &middot; 1</small>${seg('clock',[[120,'2 MIN'],[180,'3 MIN'],[300,'5 MIN'],[0,'ENDLESS']])}</div>
- <div class="opt"><small>TRAFFIC &middot; 2</small>${seg('traffic',[['light','LIGHT'],['normal','NORMAL'],['heavy','HEAVY']])}</div>
- <div class="opt"><small>TIME OF DAY &middot; 3</small>${seg('tod',[['day','DAY'],['dusk','SUNSET'],['night','NIGHT']])}</div>
- <div class="go"><button id="bkGo">${allR?'RIDE':'RIDE'}</button><small><kbd>ENTER</kbd> RIDE &middot; <kbd>ESC</kbd> BACK</small></div></div>`;
- e.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>prepBike(+b.dataset.b,+b.dataset.d));
- e.querySelectorAll('[data-pt]').forEach(b=>b.onclick=()=>{const i=+b.dataset.pt;PR.p[i].paint=+b.dataset.j;sfx.ui('move');syncPrepBikes();renderPrep()});
- e.querySelectorAll('[data-join]').forEach(b=>b.onclick=()=>prepJoin(+b.dataset.join));
- e.querySelectorAll('[data-tr]').forEach(b=>b.onclick=()=>prepTrick(+b.dataset.tr,1));
- e.querySelectorAll('.seg').forEach(s=>s.querySelectorAll('button').forEach(b=>b.onclick=()=>prepOpt(s.dataset.o,b.dataset.v)));
- $i('bkGo').onclick=()=>prepGo()}
-function prepBike(i,d){const L=BK.list(),s=PR.p[i];let k=L.findIndex(b=>b.id===s.id);k=(k+d+L.length)%L.length;s.id=L[k].id;s.ready=false;sfx.ui('move');syncPrepBikes();renderPrep()}
+const PAINTN=['Stock','Second','Red','Orange','Yellow','Green','Blue','Purple','White','Black'];
+const OPTS={clock:[[120,'2 min'],[180,'3 min'],[300,'5 min'],[0,'Endless']],traffic:[['light','Light'],['normal','Normal'],['heavy','Heavy']],tod:[['day','Day'],['dusk','Sunset'],['night','Night']]};
+const rgb=c=>'rgb('+c.map(x=>Math.round(x*255)).join(',')+')';
+/* the prep is one menu panel in the main menu's look: a row per choice, the selected rider's bike named bottom-left */
+function prepRows(){const L=[],o=PR.opt,two=PR.p[1].in;
+ for(let i=0;i<2;i++){const s=PR.p[i];if(i===1){L.push({k:'join',l:'Rider 2',v:two?'Riding':'Off',adj:1,dot:PCOL[1]});if(!two)continue}
+  const d=BK.byId(s.id),t=TBY[s.trick]||TRICKS[0],pre=two?'Rider '+(i+1)+' · ':'';
+  if(BK.PEOPLE&&window.PEOPLE_B64)L.push({k:'who',i,l:pre+'Rider',v:BK.PEOPLE[s.who%BK.PEOPLE.length].n,adj:1,dot:two?PCOL[i]:null});L.push({k:'bike',i,l:pre+'Bike',v:d.name,adj:1,dot:two?PCOL[i]:null},{k:'paint',i,l:pre+'Paint',v:PAINTN[s.paint]||'',sw:rgb(BK.paintOf(d,s.paint)),adj:1,dot:two?PCOL[i]:null},{k:'trick',i,l:pre+'Starting trick',v:t.n,adj:1,dot:two?PCOL[i]:null})}
+ L.push({gap:1});for(const[k,l]of[['clock','Clock'],['traffic','Traffic'],['tod','Time of day']]){const x=OPTS[k].find(z=>String(z[0])===String(o[k]))||OPTS[k][0];L.push({k,l,v:x[1],adj:1})}
+ L.push({gap:1},{k:'go',l:'Ride'});return L}
+function renderPrep(){const e=$i('bkPrep');if(!e||!PR)return;const sv=SV();PR.rows=prepRows();if(PR.sel==null)PR.sel=PR.rows.findIndex(r=>r.k==='go');
+ if(PR.sel>=PR.rows.length||PR.rows[PR.sel].gap)PR.sel=PR.rows.findIndex(r=>r.k==='go');
+ const r=PR.rows[PR.sel],ri=r&&r.i!=null?r.i:0,s=PR.p[ri],d=BK.byId(s.id),L=BK.list(),k=L.findIndex(b=>b.id===s.id);
+ e.innerHTML=`<div class="psxV"></div>
+ <div class="psxT"><small>${PR.p[1].in?'Rider '+(ri+1)+' · ':''}${esc(d.kind)} · ${k+1} of ${L.length}</small><b>${esc(d.name)}</b>
+  <div class="sb">${STATN.map(([n,f,v])=>`<span>${n}</span><u><i style="width:${Math.round(cl(f(d),0,1)*100)}%"></i></u>`).join('')}</div></div>
+ <div class="psx sm"><div class="hd"><div class="av">${icon('wheelie')}</div><div class="pt"><b>Highway Cut-Up</b><small>Best score ${fmtN(sv.best||0)}</small></div></div><div class="rs">${P.psxRows(PR.rows,PR.sel)}</div></div>
+ <div class="psxPad">${P.psxPad([['&uarr;&darr;','Choose'],['&larr;&rarr;','Change'],['Enter','Ride','go'],['Esc','Back','back']])}</div>`;
+ const av=e.querySelector('.av svg');if(av){av.style.width='60%';av.style.height='60%'}
+ e.querySelectorAll('.psx .r').forEach(el=>{const i=+el.dataset.i;el.onmouseenter=()=>{if(PR.sel!==i){PR.sel=i;renderPrep()}};
+  el.onclick=ev=>{const dd=ev.target&&ev.target.dataset&&ev.target.dataset.d;PR.sel=i;if(dd)prepChange(+dd);else prepAct()}});
+ e.querySelectorAll('.psxPad span').forEach(sp=>sp.onclick=()=>{if(sp.dataset.a==='go')prepGo();else if(sp.dataset.a==='back')leavePrep()})}
+function prepMove(d){const n=PR.rows.length;let i=PR.sel;do{i=(i+d+n)%n}while(PR.rows[i].gap);PR.sel=i;sfx.ui('move');renderPrep()}
+function prepChange(d){const r=PR.rows[PR.sel];if(!r||r.gap)return;
+ if(r.k==='who'){const s=PR.p[r.i];s.who=(s.who+d+BK.PEOPLE.length)%BK.PEOPLE.length;sfx.ui('move');syncPrepBikes();renderPrep()}else if(r.k==='bike')prepBike(r.i,d);else if(r.k==='paint')prepPaint(r.i,d);else if(r.k==='trick')prepTrick(r.i,d);
+ else if(r.k==='join'){const s=PR.p[1];s.in=!s.in;sfx.ui(s.in?'select':'back');syncPrepBikes();renderPrep()}
+ else if(OPTS[r.k]){const L=OPTS[r.k],j=L.findIndex(z=>String(z[0])===String(PR.opt[r.k]));prepOpt(r.k,L[(j+d+L.length)%L.length][0])}}
+function prepAct(){const r=PR.rows[PR.sel];if(!r)return;if(r.k==='go')prepGo();else if(r.k==='join'&&!PR.p[1].in)prepChange(1);else prepChange(1)}
+function prepBike(i,d){const L=BK.list(),s=PR.p[i];let k=L.findIndex(b=>b.id===s.id);k=(k+d+L.length)%L.length;s.id=L[k].id;sfx.ui('move');syncPrepBikes();renderPrep()}
 function prepPaint(i,d){const s=PR.p[i];s.paint=(s.paint+d+BK.PAINTS.length)%BK.PAINTS.length;sfx.ui('move');syncPrepBikes();renderPrep()}
 function prepTrick(i,d){const s=PR.p[i];const k=(TBY[s.trick]?TBY[s.trick].i:0);s.trick=TRICKS[(k+d+TRICKS.length)%TRICKS.length].id;sfx.ui('move');renderPrep()}
-function prepJoin(i){const s=PR.p[i];if(!s.in){s.in=true;s.ready=false;sfx.ui('select');syncPrepBikes();renderPrep();return true}return false}
-function prepOpt(k,v){PR.opt[k]=k==='clock'?+v:v;sfx.ui('move');if(k==='tod'){const keep=PR.p.map(x=>Object.assign({},x));const exp0=PR.exp0;for(const m of PR.bikes)if(m)BK.disposeBike(m);PR.world.dispose();PR.sky.dispose();for(const c of PR.cars)PR.sc.remove(c.m.g);R.toneMappingExposure=exp0;PR.exp0=exp0;buildPrepScene()}renderPrep()}
-function prepKey(code){for(let i=0;i<2;i++){const s=PR.p[i];
-  if(isKey(i,'t',code)){if(!s.in){prepJoin(i)}else{s.ready=!s.ready;sfx.ui(s.ready?'select':'back');renderPrep();if(PR.p.every(x=>!x.in||x.ready))setTimeout(()=>{if(PR&&PR.p.every(x=>!x.in||x.ready))prepGo()},450)}return}
-  if(!s.in)continue;
-  if(isKey(i,'l',code)){prepBike(i,-1);return}if(isKey(i,'r',code)){prepBike(i,1);return}
-  if(isKey(i,'u',code)){prepPaint(i,-1);return}if(isKey(i,'d',code)){prepPaint(i,1);return}
-  if(isKey(i,'m',code)&&code!=='Enter'){prepTrick(i,1);return}}
- if(code==='Enter'||code==='NumpadEnter'){prepGo();return}
- if(code==='Digit1'){const L=[120,180,300,0];prepOpt('clock',L[(L.indexOf(PR.opt.clock)+1)%L.length])}
- if(code==='Digit2'){const L=['light','normal','heavy'];prepOpt('traffic',L[(L.indexOf(PR.opt.traffic)+1)%L.length])}
- if(code==='Digit3'){const L=['day','dusk','night'];prepOpt('tod',L[(L.indexOf(PR.opt.tod)+1)%L.length])}}
-function prepGo(){if(!PR)return;const sv=SV();PR.p.forEach((s,i)=>{sv.sel[i]={id:s.id,paint:s.paint,trick:s.trick}});sv.opt=Object.assign({},PR.opt);try{P.save()}catch(e){}
- const o={players:PR.p.filter(x=>x.in).map(x=>({id:x.id,paint:x.paint,trick:x.trick})),clock:PR.opt.clock,traffic:PR.opt.traffic,tod:PR.opt.tod};
+function prepJoin(i){const s=PR.p[i];if(!s.in){s.in=true;sfx.ui('select');syncPrepBikes();renderPrep();return true}return false}
+function prepOpt(k,v){PR.opt[k]=k==='clock'?+v:v;sfx.ui('move');if(k==='tod'){const exp0=PR.exp0;for(const m of PR.bikes)if(m)BK.disposeBike(m);PR.world.dispose();PR.sky.dispose();for(const c of PR.cars)PR.sc.remove(c.m.g);R.toneMappingExposure=exp0;PR.exp0=exp0;buildPrepScene()}renderPrep()}
+function prepKey(code){
+ if(code==='ArrowUp'||code==='KeyW'){prepMove(-1);return}if(code==='ArrowDown'||code==='KeyS'){prepMove(1);return}
+ if(code==='ArrowLeft'||code==='KeyA'){prepChange(-1);return}if(code==='ArrowRight'||code==='KeyD'){prepChange(1);return}
+ if(code==='Enter'||code==='NumpadEnter'||code==='Space'){prepAct();return}
+ /* rider 2's trick key joins them straight in */
+ if(isKey(1,'t',code)&&!PR.p[1].in){prepJoin(1);return}}
+function prepGo(){if(!PR)return;const sv=SV();PR.p.forEach((s,i)=>{sv.sel[i]={id:s.id,paint:s.paint,trick:s.trick,who:s.who}});sv.opt=Object.assign({},PR.opt);try{P.save()}catch(e){}
+ const o={players:PR.p.filter(x=>x.in).map(x=>({id:x.id,paint:x.paint,trick:x.trick,who:x.who})),clock:PR.opt.clock,traffic:PR.opt.traffic,tod:PR.opt.tod};
  if(!o.players.length)return;try{P.sfx&&P.sfx('start')}catch(e){}
  const f=$i('fade');if(f){f.style.transition='opacity .35s';f.style.opacity=1;setTimeout(()=>{startRun(o);f.style.opacity=0},380)}else startRun(o)}
 /* pads in the prep screen */
 let padPrev=[{},{}];setInterval(()=>{if(scr!=='bikeprep'||!PR)return;for(let i=0;i<2;i++){const p=padIn(i);if(!p)continue;const pv=padPrev[i],e=(k)=>p[k]&&!pv[k];
-  if(e('t')){prepKey(KEYS[i].t)}if(e('lf'))prepKey(KEYS[i].l);if(e('rt'))prepKey(KEYS[i].r);if(e('up'))prepKey(KEYS[i].u);if(e('dn'))prepKey(KEYS[i].d);if(e('m'))prepKey(KEYS[i].m);if(e('st0'))prepGo();padPrev[i]=p}},60);
+  if(e('t')){if(i===1&&!PR.p[1].in)prepJoin(1);else prepAct()}if(e('lf'))prepChange(-1);if(e('rt'))prepChange(1);if(e('up'))prepMove(-1);if(e('dn'))prepMove(1);if(e('st0'))prepGo();padPrev[i]=p}},60);
 setInterval(()=>{if(scr!=='bike'||!B)return;const p=padIn(0);if(p&&p.st0&&!padPrev.s){setPause(!B.paused)}padPrev.s=p&&p.st0},80);
 
 /* ---------------- frame hook ---------------- */

@@ -145,7 +145,7 @@ BK.poseRider=(m,ps,gripW)=>{const R=m.rider,I=m.I;if(!R)return;
  for(let s=0;s<2;s++){const sg=s?-1:1;const Hj=hip.clone().addScaledVector(sx,.11*sg).add(V3(0,-.04,0));const F=V3(ps.feet[s][0]*sg,ps.feet[s][1],ps.feet[s][2]);
   const pole=Hj.clone().add(V3(.25*sg,.1,.9)),kn=V3(0,0,0);const ff=ik(Hj,F,.45,.45,pole,kn);bone(R.th[s],Hj,kn);bone(R.sh[s],kn,ff);
   R.boot[s].position.copy(ff).add(V3(0,-.02,.06));R.boot[s].rotation.set(0,0,0)}};
-BK.headWorld=(m,out)=>{const R=m.rider;if(!R||!R.st.head)return out.set(0,1.6,0);out.copy(R.st.head);m.inner.localToWorld(out);return out};
+BK.headWorld=(m,out)=>{const R=m.rider;m.g.updateMatrixWorld();/* the bike moved this frame after the pose: refresh, or the camera trails the head at speed */if(!R||!R.st.head)return out.set(0,1.6,0);out.copy(R.st.head);m.inner.localToWorld(out);return out};
 
 /* ---------------- endless highway ---------------- */
 /* curvilinear frame: s along the road, d across it (0 = median centre, + = right). Our carriageway is d 1.8..16.2 (4 lanes of 3.6 m), the oncoming one mirrors it */
@@ -157,7 +157,7 @@ BK.makeRoad=seed=>{const r=rng(seed||7),ph=[r()*9,r()*9,r()*9,r()*9,r()*9];
  const yAt=s=>13*Math.sin(s/1150+ph[3])+5*Math.sin(s/430+ph[4]);Y[0]=yAt(0);
  const grow=()=>{cap*=2;for(const k of['X','Z','H','Y']){}const nx=new Float64Array(cap);nx.set(X);X=nx;const nz=new Float64Array(cap);nz.set(Z);Z=nz;const nh=new Float64Array(cap);nh.set(H);H=nh;const ny=new Float64Array(cap);ny.set(Y);Y=ny};
  const ensure=s=>{const need=Math.ceil(s/SP)+2;while(n<need){if(n>=cap)grow();const s0=(n-1)*SP,h=H[n-1]+kap(s0+SP/2)*SP;H[n]=h;const hm=(H[n-1]+h)/2;X[n]=X[n-1]+Math.sin(hm)*SP;Z[n]=Z[n-1]+Math.cos(hm)*SP;Y[n]=yAt(n*SP);n++}};
- const R={kap,yAt,ensure,
+ const R={seed:seed||7,kap,yAt,ensure,
   /* frame at s: position of the centreline, heading, height */
   at(s,o){s=Math.max(0,s);ensure(s+SP);const i=Math.floor(s/SP),f=s/SP-i;o=o||{};o.x=X[i]+(X[i+1]-X[i])*f;o.z=Z[i]+(Z[i+1]-Z[i])*f;o.h=H[i]+(H[i+1]-H[i])*f;o.y=Y[i]+(Y[i+1]-Y[i])*f;o.g=(Y[i+1]-Y[i])/SP;return o},
   /* world position of (s,d) */
@@ -183,12 +183,32 @@ BK.TOD={
 BK.makeWorld=(scene,road,opt)=>{opt=opt||{};const tod=BK.TOD[opt.tod]||BK.TOD.day;const chunks=new Map(),mat=M_VC();
  const lampMat=new THREE.MeshBasicMaterial({color:tod.lamps?0xffe3a8:0xd0d4d8});const signMats=[];
  const exitNo=e=>11+Math.round(e/3100)*3;
- const signFor=(k,exit)=>{const key=k+'|'+exit;let m=signMats.find(x=>x.key===key);if(!m){m={key,mat:new THREE.MeshBasicMaterial({map:signTex([SIGNS[k%SIGNS.length],(2+k%5)+' MILES'],exit),toneMapped:false})};if(tod.lamps>1)m.mat.color.setScalar(.6);signMats.push(m)}return m.mat};
+ const signFor=(k,exit,name,mi)=>{name=name||SIGNS[k%SIGNS.length];mi=mi||(2+k%5)+' MILES';const key=name+'|'+exit+'|'+mi;let m=signMats.find(x=>x.key===key);if(!m){m={key,mat:new THREE.MeshBasicMaterial({map:signTex([name,mi],exit),toneMapped:false})};if(tod.lamps>1)m.mat.color.setScalar(.6);signMats.push(m)}return m.mat};
  const hill=(x,z)=>22*Math.sin(x*.0047+1.3)*Math.sin(z*.0039+.4)+11*Math.sin(x*.013+z*.011)+5*Math.sin(x*.031-z*.027);
  const C={asph:hexRGB(0x3b3e44),asph2:hexRGB(0x34373c),sho:hexRGB(0x55585d),white:hexRGB(0xe8e8e2),yel:hexRGB(0xe0b22a),conc:hexRGB(0xb7b4ac),conc2:hexRGB(0x9a978f),rail:hexRGB(0xc4c8cc),post:hexRGB(0x7a7e84),
   g1:hexRGB(0x5f8a3e),g2:hexRGB(0x6f9a46),g3:hexRGB(0x8a9a52),dirt:hexRGB(0x8b7a58),trunk:hexRGB(0x5a4232),leaf:[hexRGB(0x2f6a34),hexRGB(0x3c7a3a),hexRGB(0x4f8a3a),hexRGB(0x2a5a3a)],rock:hexRGB(0x8d8a86),
   pole:hexRGB(0x8c9096),steel:hexRGB(0x6c7178),cush:hexRGB(0xf2c014),dark:hexRGB(0x22252a)};
  const fr={},pp={};
+ /* regions: the highway runs through a random sequence of landscapes, ~1.7 km each, blended over 240 m */
+ const REG=[
+  {n:'Pine Forest',k:'forest',g:[0x4f7f3a,0x5b8a40,0x7d8f4c],amp:1,lift:8,leaf:[0x2f6a34,0x2a5a3a,0x3c7a3a,0x24503a]},
+  {n:'Farmland',k:'farm',g:[0x8fae4a,0xc9b25a,0x6f9a46],amp:.38,lift:3,leaf:[0x4f8a3a,0x5d9440]},
+  {n:'Red Desert',k:'desert',g:[0xd6b47c,0xcb9c66,0xb0704a],amp:.7,lift:4,leaf:[0x5a8a4a]},
+  {n:'Coast Road',k:'coast',g:[0x8fa45a,0xe2d29e,0x7f9a50],amp:.7,lift:7,leaf:[0x3d7a3a,0x4f8a3a]},
+  {n:'Alpine Pass',k:'alpine',g:[0x5f7f4e,0x7f8a74,0x8f8f88],amp:1.9,lift:20,leaf:[0x1f4a30,0x24503a,0x2a5a3a]},
+  {n:'Metro',k:'city',g:[0x6f7a62,0x7a7c78,0x8a8a84],amp:.12,lift:1,leaf:[0x3c7a3a,0x4f8a3a]}];
+ for(const R of REG){R.c=R.g.map(hexRGB);R.lc=R.leaf.map(hexRGB)}
+ const CX={sea:hexRGB(0x2a6a92),sea2:hexRGB(0x3277a0),sand:hexRGB(0xe6d6a2),snow:hexRGB(0xeef2f4),barn:hexRGB(0x9a2e24),roof:hexRGB(0x4a4a4e),bale:hexRGB(0xd8b85a),white:hexRGB(0xeeeeea),
+  cact:hexRGB(0x4f7f3c),mesa:hexRGB(0xa45a38),mesa2:hexRGB(0xc27a4e),palm:hexRGB(0x8a6a48),bld:[0x8a8f96,0xb8b2a6,0x6c7480,0xa8a090,0x5d6672].map(hexRGB),win:[0,0,0],winD:hexRGB(0x2c3644)};
+ const RL=1700,BL=240,seq=[],rs=rng(road.seed*131+5);
+ const regK=k=>{while(seq.length<=k){const p=seq.length?seq[seq.length-1]:-1;seq.push(p<0?(rs()*REG.length)|0:(p+1+((rs()*(REG.length-1))|0))%REG.length)}return REG[seq[k]]};
+ const RA={};const regAt=s=>{const k=Math.max(0,Math.floor(s/RL)),f=s-k*RL;RA.A=regK(k);RA.B=regK(k+1);RA.t=f>RL-BL?ss(RL-BL,RL,f):0;return RA};
+ const wOf=(R,key)=>(R.A.k===key?1-R.t:0)+(R.B.k===key?R.t:0);
+ const dith=(a,b)=>{const x=Math.sin(a*12.9898+b*78.233)*43758.5453;return x-Math.floor(x)};
+ const pickR=(s,b)=>{const R=regAt(s);return dith(s,b)<R.t?R.B:R.A};
+ /* terrain height at (s, dd metres past the verge base) on side sg */
+ const ground=(s,d,dd,sg)=>{road.pos(s,d,pp);const R=regAt(s),amp=lp(R.A.amp,R.B.amp,R.t),lift=lp(R.A.lift,R.B.lift,R.t),fl=ss(10,70,dd);
+  let y=pp.y-.35*ss(0,2,dd)+(hill(pp.x,pp.z)*amp+lift)*fl*fl;if(sg>0){const w=wOf(R,'coast')*ss(22,52,dd);if(w>0)y=lp(y,pp.y-4.5,w)}return y};
  function build(ci){const gb=new GB(),gm=new GB(),r=rng(ci*977+13),s0=ci*CH,s1=s0+CH,N=Math.round(CH/SP);road.ensure(s1+SP);
   const W=(s,d,dy,o)=>{road.pos(s,d,pp);return[pp.x,pp.y+(dy||0),pp.z]};
   const ex=road.exitNear(s0+CH/2),hasEx=ex>-1e8;
@@ -207,9 +227,15 @@ BK.makeWorld=(scene,road,opt)=>{opt=opt||{};const tod=BK.TOD[opt.tod]||BK.TOD.da
    const DS=[0,1.4,6,14,28,50,85,135,200,280];
    for(const sg of[1,-1]){const base=sg>0?SHO+Math.max(xa,xb):SHO;
     for(let j=0;j<DS.length-1;j++){const d0=base+DS[j],d1=base+DS[j+1];
-     const T=(s,d)=>{road.pos(s,d*sg,pp);const fl=ss(10,70,d-base);return[pp.x,pp.y-.35*ss(0,2,d-base)+(hill(pp.x,pp.z)+8)*fl*fl,pp.z]};
+     const T=(s,d)=>{const y=ground(s,d*sg,d-base,sg);return[pp.x,y,pp.z]};
      const p00=T(a,d0),p01=T(a,d1),p10=T(b,d0),p11=T(b,d1);const hh=(p01[1]+p11[1])/2-(p00[1]+p10[1])/2;
-     const col=j===0?C.g1:hh>3.5?C.g3:(Math.floor(a/24)+j+ci)%3===0?C.g2:C.g1;
+     const RG=pickR(a,j*7+sg),g=RG.c,ry=road.at(a,fr).y,up=(p01[1]+p11[1])/2-ry;let col;
+     if(RG.k==='coast'&&sg>0&&j>=3)col=j===3?CX.sand:(Math.floor(a/16)+j)%2?CX.sea:CX.sea2;
+     else if(j===0)col=g[0];
+     else if(RG.k==='alpine'&&up>40)col=CX.snow;
+     else if(hh>3.5)col=g[2];
+     else if(RG.k==='farm'&&j>=2)col=(Math.floor(a/40)+j+(sg>0?0:1))%2?g[1]:g[0];
+     else col=(Math.floor(a/24)+j+ci)%3===0?g[1]:g[0];
      if(sg>0){gb.quad(p00,p01,p11,p10,col)}else{gb.quad(p00,p10,p11,p01,col)}}}
    /* markings: dashes 3 m every 12 m, solid edges */
    const mk=(d,w,col,s_,e_)=>{gm.quad(W(s_,d-w,.025),W(s_,d+w,.025),W(e_,d+w,.025),W(e_,d-w,.025),col)};
@@ -223,6 +249,8 @@ BK.makeWorld=(scene,road,opt)=>{opt=opt||{};const tod=BK.TOD[opt.tod]||BK.TOD.da
    for(const sg of[1,-1]){const ga=sg*(SHO+.2+(sg>0?xa:0)),gb_=sg*(SHO+.2+(sg>0?xb:0));
     gb.quad(W(a,ga,.45),W(a,ga,.75),W(b,gb_,.75),W(b,gb_,.45),C.rail);gb.quad(W(a,ga,.75),W(a,ga,.45),W(b,gb_,.45),W(b,gb_,.75),C.rail);
     if(k%1===0){const p=W(a,ga+sg*.08,.0);gb.box(p[0],p[1]+.36,p[2],.05,.36,.05,C.post,road.at(a,fr).h)}}
+   /* city: noise walls behind the rails */
+   {const R=regAt(a);if(wOf(R,'city')>.5)for(const sg of[1,-1]){if(sg>0&&(hasEx&&a>ex-300&&a<ex+300))continue;const d=sg*(SHO+1.8);gb.quad(W(a,d,0),W(a,d,4.2),W(b,d,4.2),W(b,d,0),(k%2)?C.conc:C.conc2);gb.quad(W(a,d,4.2),W(a,d,0),W(b,d,0),W(b,d,4.2),C.conc2)}}
    /* the exit lane's dashed line and the gore */
    if(hasEx&&xa>0){const t0=Math.ceil(a/6)*6;for(let t=t0;t<b;t+=6)if(t>ex-200)mk(EDGE+.05,.12,C.white,t,Math.min(t+3,b))}
   }
@@ -243,28 +271,50 @@ BK.makeWorld=(scene,road,opt)=>{opt=opt||{};const tod=BK.TOD[opt.tod]||BK.TOD.da
    for(const d of[SHO+.6,D0-.8]){const p=W(s,d,0);gb.box(p[0],p[1]+3.6,p[2],.18,3.6,.18,col,f.h)}
    const mid=W(s,(SHO+D0)/2,7.1);gb.box(mid[0],mid[1],mid[2],(SHO-D0)/2+1,.22,.22,col,f.h+PI/2);
    const e2=road.exitNear(s+900),k2=Math.floor(s/1600);
+   const nk=Math.floor(s/RL)+1,dist=nk*RL-s,nx=regK(nk).n,mi=dist<800?Math.max(1,Math.round(dist/100))*100+' M':(dist/1609).toFixed(1)+' MILES';
    const panels=[[EDGE-LW*1.2,e2>s&&e2<s+2200?exitNo(e2):0],[D0+LW*1.3,0]];
-   for(const[d,exn]of panels){const c=W(s,d,8.2);const pm=new THREE.Mesh(new THREE.PlaneGeometry(5.6,2.8),signFor(k2+(exn?3:0),exn));pm.position.set(c[0],c[1],c[2]);pm.rotation.y=f.h+PI;gm.p.length;pm.userData.sign=1;pm.matrixAutoUpdate=false;pm.updateMatrix();pp.sign=(pp.sign||[]);pp.sign.push(pm);
+   for(const[d,exn]of panels){const c=W(s,d,8.2);const pm=new THREE.Mesh(new THREE.PlaneGeometry(5.6,2.8),exn?signFor(k2+3,exn):signFor(0,0,nx,mi));pm.position.set(c[0],c[1],c[2]);pm.rotation.y=f.h+PI;gm.p.length;pm.userData.sign=1;pm.matrixAutoUpdate=false;pm.updateMatrix();pp.sign=(pp.sign||[]);pp.sign.push(pm);
     const back=W(s,d,8.2);gb.box(back[0],back[1],back[2],2.85,1.45,.06,C.steel,f.h)}}
   const ok=Math.floor((s0+1500)/2300);for(const s of[ok*2300-1500])if(s>=s0&&s<s1&&s>300){const f=road.at(s,fr);
    for(const d of[-SHO-3,0,SHO+3]){const p=W(s,d,0);gb.box(p[0],p[1]+3.4,p[2],.6,3.4,.9,C.conc,f.h)}
    const c=W(s,0,7.4);gb.box(c[0],c[1],c[2],34,.55,6,C.conc,f.h+PI/2);const c2=W(s,0,8.25);gb.box(c2[0],c2[1],c2[2],34,.3,.12,C.conc2,f.h+PI/2);
    for(const sg of[1,-1]){const e=W(s,sg*42,0);gb.box(e[0],e[1]+3.6,e[2],8,3.8,7,C.conc2,f.h+PI/2)}}
-  /* trees and rocks on the verges */
-  const nt=18+Math.floor(r()*14);for(let i=0;i<nt;i++){const s=s0+r()*CH,sg=r()<.5?-1:1,d=sg*(SHO+9+Math.pow(r(),1.6)*170);road.pos(s,d,pp);const fl=ss(10,70,Math.abs(d)-SHO),y=pp.y-.35+(hill(pp.x,pp.z)+8)*fl*fl;
-   if(r()<.12){gb.box(pp.x,y+.6,pp.z,1.2+r(),.9+r()*.6,1+r(),C.rock,r()*3);continue}
-   const hgt=5+r()*7,lc=C.leaf[(r()*4)|0];gb.box(pp.x,y+hgt*.18,pp.z,.22,hgt*.2,.22,C.trunk,0);
-   const n=6,rad=hgt*.24+.6;for(let l=0;l<2;l++){const yb=y+hgt*(.25+l*.3),yt=yb+hgt*(.55-l*.12),rr=rad*(1-l*.3);
-    for(let q=0;q<n;q++){const a1=q/n*PI2,a2=(q+1)/n*PI2;gb.tri([pp.x+Math.cos(a1)*rr,yb,pp.z+Math.sin(a1)*rr],[pp.x,yt,pp.z],[pp.x+Math.cos(a2)*rr,yb,pp.z+Math.sin(a2)*rr],lc)}}}
+  /* scenery by region: trees, farms, desert, coast, mountains, city blocks */
+  const cone=(x,y,z,hgt,lc)=>{gb.box(x,y+hgt*.18,z,.22,hgt*.2,.22,C.trunk,0);const n=6,rad=hgt*.24+.6;for(let l=0;l<2;l++){const yb=y+hgt*(.25+l*.3),yt=yb+hgt*(.55-l*.12),rr=rad*(1-l*.3);
+    for(let q=0;q<n;q++){const a1=q/n*PI2,a2=(q+1)/n*PI2;gb.tri([x+Math.cos(a1)*rr,yb,z+Math.sin(a1)*rr],[x,yt,z],[x+Math.cos(a2)*rr,yb,z+Math.sin(a2)*rr],lc)}}};
+  const blob=(x,y,z,hgt,lc)=>{gb.box(x,y+hgt*.25,z,.25,hgt*.25,.25,C.trunk,0);const rr=hgt*.32;gb.box(x,y+hgt*.68,z,rr,hgt*.24,rr,lc,r()*3);gb.box(x,y+hgt*.82,z,rr*.7,hgt*.16,rr*.7,lc,r()*3)};
+  const palm=(x,y,z,hgt)=>{const lx=(r()-.5)*1.4,lz=(r()-.5)*1.4;for(let q=0;q<4;q++){const t0=q/4,t1=(q+1)/4;gb.box(x+lx*t0*t0,y+hgt*(t0+t1)/2,z+lz*t0*t0,.2-.03*q,hgt/8,.2-.03*q,CX.palm,q)}
+   const tx=x+lx,ty=y+hgt,tz=z+lz,lc=C.leaf[1];for(let q=0;q<7;q++){const a1=q/7*PI2+r()*.3,ca=Math.cos(a1),sa=Math.sin(a1),L=3.2+r(),ox=-sa*.5,oz=ca*.5;gb.tri([tx+ox,ty,tz+oz],[tx-ox,ty,tz-oz],[tx+ca*L,ty-1.3,tz+sa*L],lc);gb.tri([tx-ox,ty,tz-oz],[tx+ox,ty,tz+oz],[tx+ca*L,ty-1.3,tz+sa*L],lc)}};
+  const cactus=(x,y,z,hgt)=>{gb.box(x,y+hgt/2,z,.28,hgt/2,.28,CX.cact,0);const sd=r()<.5?1:-1;gb.box(x+sd*.7,y+hgt*.5,z,.45,.16,.16,CX.cact,0);gb.box(x+sd*1.05,y+hgt*.68,z,.16,hgt*.2,.16,CX.cact,0);if(r()<.6){gb.box(x-sd*.6,y+hgt*.38,z,.35,.14,.14,CX.cact,0);gb.box(x-sd*.85,y+hgt*.5,z,.14,hgt*.14,.14,CX.cact,0)}};
+  const gable=(x,y,z,hx,hy,hz,rot,col)=>{const s_=Math.sin(rot),c_=Math.cos(rot);const V=(u,v,w)=>[x+u*c_+w*s_,y+v,z-u*s_+w*c_];
+   gb.quad(V(-hx,0,-hz),V(-hx,0,hz),V(0,hy,hz),V(0,hy,-hz),col);gb.quad(V(hx,0,hz),V(hx,0,-hz),V(0,hy,-hz),V(0,hy,hz),col);
+   gb.tri(V(-hx,0,hz),V(hx,0,hz),V(0,hy,hz),CX.barn);gb.tri(V(hx,0,-hz),V(-hx,0,-hz),V(0,hy,-hz),CX.barn)};
+  const yAtD=(s,d)=>ground(s,d,Math.abs(d)-SHO,Math.sign(d));
+  const nt=24+Math.floor(r()*12);for(let i=0;i<nt;i++){const s=s0+r()*CH,sg=r()<.5?-1:1,RG=pickR(s,i),K=RG.k;
+   let d=sg*(SHO+9+Math.pow(r(),1.6)*170);if(K==='coast'&&sg>0)d=SHO+6+r()*16;
+   const y=yAtD(s,d),x=pp.x,z=pp.z,f=road.at(s,fr),lc=RG.lc[(r()*RG.lc.length)|0],q=r();
+   if(K==='forest'||K==='alpine'){if(q<.1)gb.box(x,y+.6,z,1.2+r(),.9+r()*.6,1+r(),C.rock,r()*3);else cone(x,y,z,K==='alpine'?8+r()*9:5+r()*7,lc)}
+   else if(K==='farm'){if(q<.12&&Math.abs(d)>40){const w=5+r()*2,dp=8+r()*3,hb=3.2+r();gb.box(x,y+hb,z,w,hb,dp,CX.barn,f.h);gable(x,y+hb*2,z,w+.3,3.2,dp+.3,f.h,CX.roof);gb.box(x+5,y+5,z,1.6,5,1.6,CX.white,0)}
+    else if(q<.42){for(let n=0;n<3;n++)gb.box(x+n*2.6,y+.55,z+r()*2,.75,.6,.75,CX.bale,r())}
+    else if(q<.5&&Math.abs(d)>60&&i%3===0){const ht=28+r()*8;gb.box(x,y+ht/2,z,.45,ht/2,.45,CX.white,0);const hy=y+ht;gb.box(x,hy,z,.6,.6,1.6,CX.white,f.h);
+     const u=[Math.sin(f.h),Math.cos(f.h)],ph=r()*PI2;for(let n=0;n<3;n++){const t=ph+n*PI2/3,ux=Math.cos(t),uy=Math.sin(t);const L=13;
+      gb.tri([x-u[1]*.0+u[0]*.0,hy,z],[x+u[0]*ux*L+u[1]*.6,hy+uy*L,z+u[1]*ux*L-u[0]*.6],[x+u[0]*ux*L-u[1]*.6,hy+uy*L,z+u[1]*ux*L+u[0]*.6],CX.white);
+      gb.tri([x+u[0]*ux*L-u[1]*.6,hy+uy*L,z+u[1]*ux*L+u[0]*.6],[x+u[0]*ux*L+u[1]*.6,hy+uy*L,z+u[1]*ux*L-u[0]*.6],[x,hy,z],CX.white)}}
+    else if(q<.62)blob(x,y,z,5+r()*4,lc)}
+   else if(K==='desert'){if(q<.12&&Math.abs(d)>90){const w=18+r()*30,h=14+r()*26;gb.box(x,y+h/2-2,z,w,h/2+2,w*.6,CX.mesa,r()*3);gb.box(x,y+h+.6,z,w*.85,.9,w*.5,CX.mesa2,r()*3)}
+    else if(q<.6)cactus(x,y,z,2.5+r()*3);else gb.box(x,y+.4,z,.8+r(),.5+r()*.5,.7+r(),CX.mesa2,r()*3)}
+   else if(K==='coast'){if(sg>0){if(q<.75)palm(x,y,z,7+r()*4)}else if(q<.5)palm(x,y,z,7+r()*4);else blob(x,y,z,5+r()*3,lc)}
+   else if(K==='city'){if(i%2)continue;const w=6+r()*10,dp=6+r()*10,h=12+Math.pow(r(),1.5)*55,col=CX.bld[(r()*CX.bld.length)|0];d=sg*(SHO+8+w+r()*120);const y2=yAtD(s,d),x2=pp.x,z2=pp.z;gb.box(x2,y2+h/2-1,z2,w,h/2+1,dp,col,f.h);
+    for(let fy=4;fy<h-2;fy+=3.6)gm.box(x2,y2+fy,z2,w+.06,.4,dp+.06,tod.lamps?CX.win:CX.winD,f.h);if(r()<.3)gb.box(x2,y2+h+1.2,z2,w*.4,1.2,dp*.4,C.steel,f.h)}}
   const grp=new THREE.Group();const m1=new THREE.Mesh(gb.geo(),mat);grp.add(m1);
   const m2=new THREE.Mesh(gm.geo(),new THREE.MeshBasicMaterial({vertexColors:true}));/* markings, lamp heads */grp.add(m2);
   if(tod.lamps){const g2=m2.geometry,c=g2.attributes.color;for(let i=0;i<c.count;i++)if(c.getX(i)===0&&c.getY(i)===0)c.setXYZ(i,1,.86,.6)}
   if(pp.sign){for(const s of pp.sign)grp.add(s);pp.sign=null}
   scene.add(grp);return{grp,geos:[m1.geometry,m2.geometry],mats:[m2.material]}}
- const W={chunks,tod,
+ const W={chunks,tod,regAt,regionName:s=>{const R=regAt(s);return(R.t>.5?R.B:R.A).n},
   update(sMin,sMax){const c0=Math.max(0,Math.floor((sMin-150)/CH)),c1=Math.floor((sMax+1300)/CH);
    for(const[k,v]of chunks)if(k<c0-1||k>c1+1){scene.remove(v.grp);v.geos.forEach(g=>g.dispose());v.mats.forEach(m=>m.dispose());v.grp.traverse(x=>{if(x.userData.sign)x.geometry.dispose()});chunks.delete(k)}
-   let built=0;for(let k=c0;k<=c1&&built<2;k++)if(!chunks.has(k)){chunks.set(k,build(k));built++}
+   let built=0;for(let k=c0;k<=c1&&built<1;k++)if(!chunks.has(k)){chunks.set(k,build(k));built++}
    return built},
   fill(sMin,sMax){let n=0;while(W.update(sMin,sMax)&&n<60)n++},
   dispose(){for(const[k,v]of chunks){scene.remove(v.grp);v.geos.forEach(g=>g.dispose());v.mats.forEach(m=>m.dispose())}chunks.clear();mat.dispose();lampMat.dispose();signMats.forEach(m=>{m.mat.map.dispose();m.mat.dispose()})}};
@@ -317,16 +367,27 @@ const LM={off:new THREE.MeshBasicMaterial({color:0x5a3a10}),on:new THREE.MeshBas
 BK.LM=LM;
 function lightGeo(pts,w,h){const gb=new GB();for(const p of pts){const yaw=p[3]||0;gb.box(p[0],p[1],p[2],w,h,.03,[1,1,1],yaw)}const g=gb.geo();g.deleteAttribute('color');return g}
 const lgCache={};
-BK.makeVehicle=(kind,col,night)=>{const t=VT[kind],g=new THREE.Group(),body=new THREE.Mesh(vehGeo(kind,col),BK.vmat||(BK.vmat=new THREE.MeshLambertMaterial({vertexColors:true})));g.add(body);
- const L=t.L,W=t.W/2,yL=kind==='semi'||kind==='box'||kind==='bus'?1.05:.72;
- const key=kind;let lg=lgCache[key];if(!lg){lg=lgCache[key]={
+/* the game's own cars (cars10 pack) for the car-sized traffic; vans, trucks, semis and buses stay hand-built */
+const CARPOOL={sedan:['SEDAN','COUPE','SPORTS','MUSCLE'],hatch:['HATCHBACK'],suv:['WAGON','SEDAN']},carBox={};
+function gameCar(kind,r){const C=P.C10;if(!C||!C.ready||!CARPOOL[kind]||!P.CARS)return null;
+ const pool=P.CARS.filter(c=>c.k10!=null&&CARPOOL[kind].includes(c.cat));if(!pool.length)return null;
+ const c=pool[(r()*pool.length)|0],alt=r()<.5,src=C.model(c.k10,alt);if(!src)return null;
+ let bx=carBox[c.k10];if(!bx){src.updateMatrixWorld(true);bx=carBox[c.k10]=new THREE.Box3().setFromObject(src)}
+ const sz=bx.getSize(new THREE.Vector3()),gl=src.userData.gl||4.5,sc=gl/Math.max(sz.x,sz.z,.01);
+ const m=src.clone(true),w=new THREE.Group();w.add(m);m.scale.setScalar(sc);m.rotation.y=sz.x>sz.z?-PI/2:PI;/* model front is -Z, traffic front is +Z */
+ m.position.y=-bx.min.y*sc;m.traverse(o=>{if(o.isMesh)o.castShadow=false});
+ const L=Math.max(sz.x,sz.z)*sc,Wd=Math.min(sz.x,sz.z)*sc,H=sz.y*sc;return{g:w,L,W:Wd,H,name:c.name}}
+BK.makeVehicle=(kind,col,night,rnd)=>{const gc=gameCar(kind,rnd||Math.random);const t=gc?Object.assign({},VT[kind],{L:gc.L,W:gc.W,H:gc.H}):VT[kind],g=new THREE.Group();
+ if(gc)g.add(gc.g);else{const body=new THREE.Mesh(vehGeo(kind,col),BK.vmat||(BK.vmat=new THREE.MeshLambertMaterial({vertexColors:true})));g.add(body)}
+ const L=t.L,W=t.W/2,yL=kind==='semi'||kind==='box'||kind==='bus'?1.05:gc?Math.min(.75,t.H*.5):.72;
+ const key=gc?'g'+L.toFixed(1)+'_'+W.toFixed(2)+'_'+yL.toFixed(2):kind;let lg=lgCache[key];if(!lg){lg=lgCache[key]={
   l:lightGeo([[W-.12,yL,L/2+.02],[W-.12,yL,-L/2-.02],[W+.01,yL+.05,L/2-.8,PI/2]],.1,.06),
   r:lightGeo([[-W+.12,yL,L/2+.02],[-W+.12,yL,-L/2-.02],[-W-.01,yL+.05,L/2-.8,PI/2]],.1,.06),
   b:lightGeo([[W-.32,yL,-L/2-.03],[-W+.32,yL,-L/2-.03]],.16,.07),
   h:lightGeo([[W-.35,yL,L/2+.03],[-W+.35,yL,L/2+.03]],.17,.07)}}
  const iL=new THREE.Mesh(lg.l,LM.off),iR=new THREE.Mesh(lg.r,LM.off),br=new THREE.Mesh(lg.b,LM.brOff),hd=new THREE.Mesh(lg.h,night?LM.head:LM.headOff);g.add(iL,iR,br,hd);
  const sh=new THREE.Mesh(BK.shGeo||(BK.shGeo=new THREE.PlaneGeometry(1,1)),BK.shMat||(BK.shMat=new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:.35,depthWrite:false})));sh.rotation.x=-PI/2;sh.scale.set(t.W*1.05,t.L*1.02,1);sh.position.y=.04;sh.renderOrder=1;g.add(sh);
- return{g,iL,iR,br,hd,t,kind}};
+ return{g,iL,iR,br,hd,sh,t,kind,name:gc&&gc.name}};
 BK.pickKind=r=>{const x=r();return x<.34?'sedan':x<.5?'hatch':x<.66?'suv':x<.74?'pickup':x<.82?'van':x<.89?'box':x<.96?'semi':'bus'};
 BK.pickPaint=r=>PAINT_POOL[(r()*PAINT_POOL.length)|0];
 })();

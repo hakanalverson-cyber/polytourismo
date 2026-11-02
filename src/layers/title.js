@@ -72,15 +72,17 @@ const SC=(()=>{let dbp;const db=()=>dbp||(dbp=new Promise((res,rej)=>{const r=in
  const put=(k,v)=>db().then(d=>new Promise(res=>{const t=d.transaction('s','readwrite');t.objectStore('s').put(v,k);t.oncomplete=res;t.onerror=res;t.onabort=res})).catch(()=>{});
  const blob=cv=>new Promise(r=>{try{cv.toBlob(b=>r(b),'image/jpeg',.94)}catch(e){r(null)}});
  const canvas=async b=>{const im=await createImageBitmap(b),c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);return c};
- const key=(t,i)=>{const d=D[i];let n=0;try{n=JSON.stringify(d).length}catch(e){}return t+'|r2|'+(P.VERSION||'')+'|'+d.name+'|'+n};
+ const key=(t,i)=>{const d=D[i];let n=0;try{n=JSON.stringify(d).length}catch(e){}return t+'|r2|'+d.name+'|'+n};
+ /* Nov 2: the version is no longer in the keys. A new build used to throw every kept picture away and re-render them all behind the menu,
+   which dropped the menu to a crawl after every update. The keys already change when a scene or a track changes; PROMO_REV forces a full refresh */
  /* each one answers true when the picture is in (loaded from the kept copy, or rendered), false when it is not kept and co (cache only) is set */
  return{track:async(i,co)=>{const k=key('t',i),hit=await get(k);if(hit&&P.trackShotSeed){try{P.trackShotSeed(i,await canvas(hit));return true}catch(e){}}if(co)return false;
    const cv=await P.trackShot(i);if(cv){const b=await blob(cv);if(b)put(k,b)}return true},
-  menu:async(k,co)=>{const kk='mn|'+P.PROMO_REV+'|'+(P.VERSION||'')+'|'+JSON.stringify(P.MENU_SCENES[k]),i=P.menuTrack(k),kk2=key(kk,i),hit=await get(kk2);if(hit&&P.menuShotSeed){try{P.menuShotSeed(k,await canvas(hit));return true}catch(e){}}if(co)return false;
+  menu:async(k,co)=>{const kk='mn|'+P.PROMO_REV+'|'+JSON.stringify(P.MENU_SCENES[k]),i=P.menuTrack(k),kk2=key(kk,i),hit=await get(kk2);if(hit&&P.menuShotSeed){try{P.menuShotSeed(k,await canvas(hit));return true}catch(e){}}if(co)return false;
    const cv=await P.menuShot(k);if(cv){const b=await blob(cv);if(b)put(kk2,b)}return true},
-  loc:async(k,co)=>{const kk='lc|'+P.PROMO_REV+'|'+(P.VERSION||'')+'|'+k+'|m',hit=await get(kk);if(hit&&P.locShotSeed){try{P.locShotSeed(k,'m',await canvas(hit));return true}catch(e){}}if(co)return false;
+  loc:async(k,co)=>{const kk='lc|'+P.PROMO_REV+'|'+k+'|m',hit=await get(kk);if(hit&&P.locShotSeed){try{P.locShotSeed(k,'m',await canvas(hit));return true}catch(e){}}if(co)return false;
    const cv=await P.locShot(k,'m');if(cv){const b=await blob(cv);if(b)put(kk,b)}return true},
-  promo:async(k,co)=>{const kk='p|'+P.PROMO_REV+'|'+(P.VERSION||'')+'|'+JSON.stringify(P.PROMO_SCENES[k]),hit=await get(kk);if(hit&&P.promoShotSeed){try{P.promoShotSeed(k,await canvas(hit));return true}catch(e){}}if(co)return false;
+  promo:async(k,co)=>{const kk='p|'+P.PROMO_REV+'|'+JSON.stringify(P.PROMO_SCENES[k]),hit=await get(kk);if(hit&&P.promoShotSeed){try{P.promoShotSeed(k,await canvas(hit));return true}catch(e){}}if(co)return false;
    const cv=await P.promoShot(k);if(cv){const b=await blob(cv);if(b)put(kk,b)}return true},
   stage:async(i,co)=>{const k=key('s',i),hit=await get(k);if(hit&&hit.m&&P.stageSeed){try{const pois=[];for(const p of hit.p||[])pois.push({n:p.n,c:await canvas(p.b)});P.stageSeed(i,await canvas(hit.m),pois);return true}catch(e){}}if(co)return false;
    const cv=await P.stageRender(i);if(cv){const m=await blob(cv),p=[];for(const q of cv.pois||[]){const b=await blob(q.c);if(b)p.push({n:q.n,b})}if(m)put(k,{m,p})}return true},get,put}})();
@@ -102,7 +104,7 @@ window.PT8_BOOT=new Promise(res=>{const run=()=>setTimeout(async()=>{try{const B
  }catch(e){console.error('boot warm-up',e)}res();
  /* behind the title: the pictures that had to be rendered, one at a time, never while a race is running */
  setTimeout(async()=>{REST.sort((a,b)=>a[0]-b[0]);const sl=ms=>new Promise(r=>setTimeout(r,ms));
-  for(const j of REST){while(typeof scr!=='undefined'&&(scr==='game'||scr==='pause'))await sl(1500);try{await Promise.race([j[2](false),sl(120000)])}catch(e){console.error('picture',j[1],e)}await sl(120)}P.picsDone=1},1200)},400);if(document.readyState==='complete')run();else addEventListener('load',run)});
+  for(const j of REST){while(typeof scr!=='undefined'&&(scr==='game'||scr==='pause'))await sl(1500);try{await Promise.race([j[2](false),sl(120000)])}catch(e){console.error('picture',j[1],e)}await sl(1400)}P.picsDone=1},1200)},400);if(document.readyState==='complete')run();else addEventListener('load',run)});
 window.PT8_BOOT.then(()=>{P.bootDone=1});window.PT8_BOOT.then(()=>setTimeout(()=>{d.classList.add('on');if(!BT)slide()},400));
 let done=false;
 function go(e){/* the boot warning cards take the first presses: each one skips a card */{const w=document.getElementById('ptWarn');if(w&&getComputedStyle(w).visibility!=='hidden'&&getComputedStyle(w).opacity>.05){w.classList.add(w.classList.contains('s1')?'s2':'s1');if(e){try{e.preventDefault();e.stopImmediatePropagation()}catch(x){}}return}}
