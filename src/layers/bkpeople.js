@@ -100,9 +100,9 @@ BK.poseRider=(m,ps,gripW)=>{const R=m.rider,I=m.I;if(!R)return;if(!R.people)retu
  const gT=[];for(let s=0;s<2;s++){const sg=s?-1:1;if(ps.hands&&ps.hands[s]){gT.push(null);continue}const H=V(I.grip[0]*sg*(gripW||1),I.grip[1],I.grip[2]);H.sub(m.steer.position);H.applyQuaternion(m.steer.quaternion);H.add(m.steer.position);gT.push(H)}
  const setT=l=>{tup.set(0,Math.cos(l),Math.sin(l)).applyAxisAngle(V(0,0,1),roll);swing(_up,T.left,tup,left,_q1)};
  const reachOK=l=>{setT(l);const mx=(T.len.ua+T.len.fa)*.96;for(let s=0;s<2;s++){if(!gT[s])continue;const sh=V().subVectors(T.bp[X(s?'upper_armR':'upper_armL')],T.hipC).applyQuaternion(_q1).add(hip);if(sh.distanceTo(gT[s])-.06>mx)return false}return true};
- if((gT[0]||gT[1])&&!reachOK(lean)){let lo=lean,hi=Math.max(lean,1.45);if(reachOK(hi)){for(let i=0;i<10;i++){const md=(lo+hi)/2;if(reachOK(md))hi=md;else lo=md}lean=hi}else{lean=hi;/* still short (crouched on the seat, say): move the hips toward the bars, down as well as forward, until both hands reach */
+ if((gT[0]||gT[1])&&!reachOK(lean)){let lo=lean,hi=Math.max(lean,ps.leanMax!=null?ps.leanMax:1.45);/* a pose can cap the fold (leanMax): then the hips move instead */if(reachOK(hi)){for(let i=0;i<10;i++){const md=(lo+hi)/2;if(reachOK(md))hi=md;else lo=md}lean=hi}else{lean=hi;/* still short (crouched on the seat, say): move the hips toward the bars, down as well as forward, until both hands reach */
   for(let i=0;i<24&&!reachOK(lean);i++){setT(lean);const gm=V(),sm=V();let n=0;for(let s=0;s<2;s++){if(!gT[s])continue;gm.add(gT[s]);sm.add(V().subVectors(T.bp[X(s?'upper_armR':'upper_armL')],T.hipC).applyQuaternion(_q1).add(hip));n++}
-   const d=gm.sub(sm).multiplyScalar(1/n);d.x=0;if(d.lengthSq()<1e-6)break;hip.addScaledVector(d.normalize(),.02)}}}
+   const d=gm.sub(sm).multiplyScalar(1/n);d.x=0;d.y*=.35;/* mostly forward, so a standing rider stays standing */if(d.lengthSq()<1e-6)break;hip.addScaledVector(d.normalize(),.02)}}}
  setT(lean);
  /* a free hand reaching for something beyond arm's length (the road on a hand drag): the whole body slides toward it */
  if(ps.reach!=null&&ps.hands&&ps.hands[ps.reach]){const s=ps.reach,sg=s?-1:1,H=V(ps.hands[s][0]*sg,ps.hands[s][1],ps.hands[s][2]);

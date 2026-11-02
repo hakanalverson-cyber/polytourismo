@@ -200,8 +200,8 @@ function trickPose(p,id,u,r){const b=basePose(p),I=p.m.I,seat=I.seat,SY=seatFit(
     straight behind, up high */const fwd=seg(r,0,.6),leg=seg(r,.3,1);
    return Object.assign(b,{hip:[0,lp(b.hip[1],SY+.46,fwd),lp(b.hip[2],seat[2]-.12,fwd)],lean:lp(b.lean,1.15,fwd),feet:[b.feet[0].map((x,j)=>lp(x,[.14,SY+.88,seat[2]-1.05][j],leg)),b.feet[1]],look:.35*fwd})}
   case'seatstand':{/* up onto the pegs, then one foot at a time onto the seat, crouched over with the hands still on the bars */const up=seg(r,0,.45),f0=seg(r,.2,.55),f1=seg(r,.35,.7),crouch=seg(r,.55,1),fy=SY+.06;
-   const fs=[b.feet[0].map((x,j)=>lp(x,[.12,fy,seat[2]+.05][j],f0)),b.feet[1].map((x,j)=>lp(x,[.12,fy,seat[2]-.15][j],f1))];
-   return Object.assign(b,{hip:[0,lp(b.hip[1],SY+.42,up)+.3*crouch,lp(b.hip[2],seat[2]-.04,up)-.12*crouch],lean:lp(lp(b.lean,.6,up),1.45,crouch),feet:fs,look:-.1*crouch})}
+   const fs=[b.feet[0].map((x,j)=>lp(x,[.12,fy,seat[2]+.14][j],f0)),b.feet[1].map((x,j)=>lp(x,[.12,fy,seat[2]-.04][j],f1))];
+   return Object.assign(b,{hip:[0,lp(b.hip[1],SY+.42,up)+.34*crouch,lp(b.hip[2],seat[2]-.04,up)+.12*crouch],lean:lp(lp(b.lean,.6,up),.9,crouch),leanMax:.98,feet:fs,look:-.15*crouch})}/* bent at the waist with straight arms to the bars, a clear gap between chest and tank (from the photo) */
   case'burnout':{/* weight forward over the front, left foot planted ahead of the peg */const ft=seg(r,0,.6);return Object.assign(b,{lean:b.lean+.25*u,hip:[0,b.hip[1],b.hip[2]+.05*u],feet:[b.feet[0].map((x,j)=>lp(x,[I.peg[0]+.1,.05,I.peg[2]+.35][j],ft)),b.feet[1]]})}
  }return b}
 function mixPose(a,b,u){const L=(x,y)=>x.map((v,i)=>lp(v,y[i],u));return{hip:L(a.hip,b.hip),lean:lp(a.lean,b.lean,u),side:lp(a.side||0,b.side||0,u),look:lp(a.look||0,b.look||0,u),
@@ -230,7 +230,7 @@ function poseRiderFor(p,dt){const t=p.trk_;
   B.road.pos(p.s,p.d_,_pp);const yaw=m.g.rotation.y,rgt=new THREE.Vector3(-Math.cos(yaw),0,Math.sin(yaw)),fwd=new THREE.Vector3(Math.sin(yaw),0,Math.cos(yaw));
   const w=new THREE.Vector3(rw.x,_pp.y+.03,rw.z).addScaledVector(rgt,side>0?-.75:.75).addScaledVector(fwd,-.1);m.inner.worldToLocal(w);
   const hs=ps.hands?ps.hands.slice():[null,null];const g=p.m.I.grip;hs[s_]=[lp(g[0],w.x*sg,u),lp(g[1],w.y,u),lp(g[2],w.z,u)];/* the other hand goes back to its grip */const o_=hs[1-s_];hs[1-s_]=o_&&u<.95?[lp(o_[0],g[0],u),lp(o_[1],g[1],u),lp(o_[2],g[2],u)]:null;ps.hands=hs;ps.reach=s_;ps.reachMax=.22;
-  ps.hip=[lp(ps.hip[0],sg*.1,u),lp(ps.hip[1],hy-.02,u),lp(ps.hip[2],S[2]-.16,u)];ps.lean=lp(ps.lean,p.pitch-.5,u);/* hold it longer and the body swings further out over the road */p.dfar=lp(p.dfar||0,cl(((p.dragT||0)-.8)/1.5,0,1),cl(dt*2,0,1));const far=p.dfar;ps.side=lp(ps.side,-sg*(.5+.3*far),u);
+  ps.hip=[lp(ps.hip[0],sg*.1,u),lp(ps.hip[1],hy-.02,u),lp(ps.hip[2],S[2]-.16,u)];ps.lean=lp(ps.lean,p.pitch-.95,u);ps.leanMax=p.pitch-.75;/* leaning back off the bike, chest well clear of the tank *//* hold it longer and the body swings further out over the road */p.dfar=lp(p.dfar||0,cl(((p.dragT||0)-.8)/1.5,0,1),cl(dt*2,0,1));const far=p.dfar;ps.side=lp(ps.side,-sg*(.5+.3*far),u);
   /* feet stay down on the pegs (as in the photos): the outside foot a touch back, the inside knee open */{const pg=p.m.I.peg;ps.feet=ps.feet.map((f,i)=>[lp(f[0],pg[0]+(i===s_?.04:.0),u),lp(f[1],pg[1]+.06,u),lp(f[2],pg[2]+(i===s_?.02:-.08),u)])}ps.look=lp(ps.look||0,.25,u);ps.turn=lp(ps.turn||0,sg*.5,u)}
  /* stopped: the left foot goes down to the road (people riders) */
  p.fd=lp(p.fd||0,(!p.trk_&&p.v<1.2&&!p.wipe)?1:0,cl(dt*4,0,1));if(p.fd>.01&&p.m.rider&&p.m.rider.people){const f=ps.feet[0].slice(),I=p.m.I;ps.feet[0]=[lp(f[0],I.peg[0]+.2,p.fd),lp(f[1],-.02,p.fd),lp(f[2],I.peg[2]+.18,p.fd)];ps.side-=.06*p.fd}
