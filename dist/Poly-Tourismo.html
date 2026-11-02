@@ -12379,6 +12379,7 @@ P.LOG=[
   'Smoother tricks that make more sense: each move is staged (body first, then the feet, then the hands let go), the hands travel from the grips instead of jumping, bigger moves like the Seat Stand and Superman take longer to get into, the No-Hander holds the arms out at shoulder height and the Seat Stand steps up one foot at a time.',
   'Tricks reworked from real photos: the Wheelie is seated with the free arm out to the side, the No-Hander sits upright with the hands in front, the Seat Stand is crouched on the seat holding the bars, the Superman keeps one foot on its peg and kicks the other leg out behind, and the hand drag tucks the legs up along the bike and swings the body further out the longer you hold it.',
   'Traffic cars only come in the paint and livery they came with.',
+  'Wheelies and stoppies pivot on the axle now, so the tyre rolls on the road at any angle instead of sinking into it on a deep wheelie or hand drag. During a hand drag the feet stay on the pegs, and on the Seat Stand the hands always grip the bars (the body crouches lower until they reach).',
 ]},
  {v:'0.02',d:'Oct 31, 2026',t:'Riviera island',items:[
   'Free Roam now takes place on the Riviera, a Mediterranean island about 5 km across that you can drive end to end: a coast road that loops the whole shore, a mountain pass that winds up through hairpins to a summit square with a stone parapet and a statue looking over the sea, and ridge roads branching off it. The island is generated from a seed, so it is the same every time.',
@@ -17014,8 +17015,9 @@ BK.setPaint=setPaint;
 const _q=new THREE.Quaternion();
 /* pose: lean (rad, + = right), pitch (rad, + = front up), steer (rad, + = right), wheel spin increments */
 BK.poseBike=(m,lean,pitch,steer,dF,dR)=>{m.lean.rotation.z=lean;
- const zp=pitch>=0?m.I.rw[2]:m.I.fw[2],a=-pitch;m.pitch.rotation.x=a; /* keep the pivot (ground contact under the wheel that stays down) fixed: offset = pivot - R*pivot */
- m.pitch.position.set(0,zp*Math.sin(a),zp-zp*Math.cos(a));
+ const W=pitch>=0?m.I.rw:m.I.fw,zp=W[2],yp=W[1],a=-pitch;m.pitch.rotation.x=a; /* pivot on the axle of the wheel that stays down, so that wheel rolls
+   on the road at any angle (pivoting at the contact point sank the tyre into the road on a deep wheelie): offset = pivot - R*pivot */
+ const c=Math.cos(a),s_=Math.sin(a);m.pitch.position.set(0,yp-(yp*c-zp*s_),zp-(yp*s_+zp*c));
  _q.setFromAxisAngle(m.axis,-steer);m.steer.quaternion.copy(_q);
  m.spinF+=dF;m.spinR+=dR;m.fwG.rotation.x=m.spinF;m.rwG.rotation.x=m.spinR;
  m.sh.visible=true};
@@ -17446,7 +17448,9 @@ BK.poseRider=(m,ps,gripW)=>{const R=m.rider,I=m.I;if(!R)return;if(!R.people)retu
  const gT=[];for(let s=0;s<2;s++){const sg=s?-1:1;if(ps.hands&&ps.hands[s]){gT.push(null);continue}const H=V(I.grip[0]*sg*(gripW||1),I.grip[1],I.grip[2]);H.sub(m.steer.position);H.applyQuaternion(m.steer.quaternion);H.add(m.steer.position);gT.push(H)}
  const setT=l=>{tup.set(0,Math.cos(l),Math.sin(l)).applyAxisAngle(V(0,0,1),roll);swing(_up,T.left,tup,left,_q1)};
  const reachOK=l=>{setT(l);const mx=(T.len.ua+T.len.fa)*.96;for(let s=0;s<2;s++){if(!gT[s])continue;const sh=V().subVectors(T.bp[X(s?'upper_armR':'upper_armL')],T.hipC).applyQuaternion(_q1).add(hip);if(sh.distanceTo(gT[s])-.06>mx)return false}return true};
- if((gT[0]||gT[1])&&!reachOK(lean)){let lo=lean,hi=Math.max(lean,1.45);if(reachOK(hi)){for(let i=0;i<10;i++){const md=(lo+hi)/2;if(reachOK(md))hi=md;else lo=md}lean=hi}else{lean=hi;for(let i=0;i<12&&!reachOK(lean);i++)hip.z+=.02}}
+ if((gT[0]||gT[1])&&!reachOK(lean)){let lo=lean,hi=Math.max(lean,1.45);if(reachOK(hi)){for(let i=0;i<10;i++){const md=(lo+hi)/2;if(reachOK(md))hi=md;else lo=md}lean=hi}else{lean=hi;/* still short (crouched on the seat, say): move the hips toward the bars, down as well as forward, until both hands reach */
+  for(let i=0;i<24&&!reachOK(lean);i++){setT(lean);const gm=V(),sm=V();let n=0;for(let s=0;s<2;s++){if(!gT[s])continue;gm.add(gT[s]);sm.add(V().subVectors(T.bp[X(s?'upper_armR':'upper_armL')],T.hipC).applyQuaternion(_q1).add(hip));n++}
+   const d=gm.sub(sm).multiplyScalar(1/n);d.x=0;if(d.lengthSq()<1e-6)break;hip.addScaledVector(d.normalize(),.02)}}}
  setT(lean);
  /* a free hand reaching for something beyond arm's length (the road on a hand drag): the whole body slides toward it */
  if(ps.reach!=null&&ps.hands&&ps.hands[ps.reach]){const s=ps.reach,sg=s?-1:1,H=V(ps.hands[s][0]*sg,ps.hands[s][1],ps.hands[s][2]);
@@ -17759,7 +17763,7 @@ function poseRiderFor(p,dt){const t=p.trk_;
   const w=new THREE.Vector3(rw.x,_pp.y+.03,rw.z).addScaledVector(rgt,side>0?-.75:.75).addScaledVector(fwd,-.1);m.inner.worldToLocal(w);
   const hs=ps.hands?ps.hands.slice():[null,null];const g=p.m.I.grip;hs[s_]=[lp(g[0],w.x*sg,u),lp(g[1],w.y,u),lp(g[2],w.z,u)];/* the other hand goes back to its grip */const o_=hs[1-s_];hs[1-s_]=o_&&u<.95?[lp(o_[0],g[0],u),lp(o_[1],g[1],u),lp(o_[2],g[2],u)]:null;ps.hands=hs;ps.reach=s_;ps.reachMax=.22;
   ps.hip=[lp(ps.hip[0],sg*.1,u),lp(ps.hip[1],hy-.02,u),lp(ps.hip[2],S[2]-.16,u)];ps.lean=lp(ps.lean,p.pitch-.5,u);/* hold it longer and the body swings further out over the road */p.dfar=lp(p.dfar||0,cl(((p.dragT||0)-.8)/1.5,0,1),cl(dt*2,0,1));const far=p.dfar;ps.side=lp(ps.side,-sg*(.5+.3*far),u);
-  /* legs tucked up along the bike, feet up by the tank */ps.feet=ps.feet.map(f=>[lp(f[0],.2,u),lp(f[1],hy-.05,u),lp(f[2],S[2]+.45,u)]);ps.look=lp(ps.look||0,.25,u);ps.turn=lp(ps.turn||0,sg*.5,u)}
+  /* feet stay down on the pegs (as in the photos): the outside foot a touch back, the inside knee open */{const pg=p.m.I.peg;ps.feet=ps.feet.map((f,i)=>[lp(f[0],pg[0]+(i===s_?.04:.0),u),lp(f[1],pg[1]+.06,u),lp(f[2],pg[2]+(i===s_?.02:-.08),u)])}ps.look=lp(ps.look||0,.25,u);ps.turn=lp(ps.turn||0,sg*.5,u)}
  /* stopped: the left foot goes down to the road (people riders) */
  p.fd=lp(p.fd||0,(!p.trk_&&p.v<1.2&&!p.wipe)?1:0,cl(dt*4,0,1));if(p.fd>.01&&p.m.rider&&p.m.rider.people){const f=ps.feet[0].slice(),I=p.m.I;ps.feet[0]=[lp(f[0],I.peg[0]+.2,p.fd),lp(f[1],-.02,p.fd),lp(f[2],I.peg[2]+.18,p.fd)];ps.side-=.06*p.fd}
  BK.poseRider(p.m,ps)}

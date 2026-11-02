@@ -119,8 +119,9 @@ BK.setPaint=setPaint;
 const _q=new THREE.Quaternion();
 /* pose: lean (rad, + = right), pitch (rad, + = front up), steer (rad, + = right), wheel spin increments */
 BK.poseBike=(m,lean,pitch,steer,dF,dR)=>{m.lean.rotation.z=lean;
- const zp=pitch>=0?m.I.rw[2]:m.I.fw[2],a=-pitch;m.pitch.rotation.x=a; /* keep the pivot (ground contact under the wheel that stays down) fixed: offset = pivot - R*pivot */
- m.pitch.position.set(0,zp*Math.sin(a),zp-zp*Math.cos(a));
+ const W=pitch>=0?m.I.rw:m.I.fw,zp=W[2],yp=W[1],a=-pitch;m.pitch.rotation.x=a; /* pivot on the axle of the wheel that stays down, so that wheel rolls
+   on the road at any angle (pivoting at the contact point sank the tyre into the road on a deep wheelie): offset = pivot - R*pivot */
+ const c=Math.cos(a),s_=Math.sin(a);m.pitch.position.set(0,yp-(yp*c-zp*s_),zp-(yp*s_+zp*c));
  _q.setFromAxisAngle(m.axis,-steer);m.steer.quaternion.copy(_q);
  m.spinF+=dF;m.spinR+=dR;m.fwG.rotation.x=m.spinF;m.rwG.rotation.x=m.spinR;
  m.sh.visible=true};
