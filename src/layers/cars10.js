@@ -113,7 +113,7 @@ function lamps(k){if(lampCache[k]!==undefined)return lampCache[k];const G=geoms(
   const z=(A.z+B_.z+C.z)/3-zc,x=(A.x+B_.x+C.x)/3,end=Math.abs(z)>zL*.36&&Math.abs(N.z)>.35&&Math.sign(N.z)===Math.sign(z);
   const mx=Math.max(R,Gc,Bc),mn=Math.min(R,Gc,Bc),sat=mx-mn>70;
   const amber=R>190&&Gc>80&&Gc<200&&Bc<90&&R-Bc>120,red=R>140&&Gc<80&&Bc<90,pale=mn>170;
-  if(end&&amber)(x>0?out.r:out.l).push(a,b_,c);/* model front is -Z, so +X is the driver's right */
+  if(end&&amber){(x>0?out.r:out.l).push(a,b_,c);out.rest.push(a,b_,c)}/* model front is -Z, so +X is the driver's right; the lens stays in the body too, so it shows unlit */
   else if(end&&red&&z>0){out.b.push(a,b_,c);out.rest.push(a,b_,c)}
   else if(end&&pale&&z<0){out.h.push(a,b_,c);out.rest.push(a,b_,c)}
   else out.rest.push(a,b_,c)}

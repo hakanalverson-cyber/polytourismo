@@ -47,6 +47,12 @@ P.LOG=[
   'Near misses flash the edge of the screen on the side the car went past, and land in the skill chain.',
   'Shoves are a real move now: the arm winds back, drives out at the other rider\'s shoulder with the body turning into it, then returns to the bar; the rider who gets shoved is knocked sideways and rights themselves.',
   'Every animation fades in and out: tricks, shoves, the balance meter, the trick guide (Q now hides it on the first press) and the pause card.',
+  'The whole handlebar turns as one piece on every bike, with both hands on it (some bikes left the bar on the frame while the grips turned).',
+  'Skill chains are harder to keep: 2.6 seconds to land the next move, three moves per multiplier step, and scraping the barrier cuts the timer.',
+  'Tap a different trick in the middle of one and you go straight into it, the pose cross-fading, instead of landing first.',
+  'Traffic indicators and brake lights no longer light up.',
+  'A wilder sense of speed: the view stretches and shakes as you go faster, with streaks rushing past and the edges closing in. The rider tucks in behind the bars as the speed climbs, sits up when crawling, and gets buffeted by the wind flat out.',
+  'Cut-Up results have more room, and the bike HUD panels (the trick guide, the skill chain) have rounded corners like the rest of the game.',
 ]},
  {v:'0.02',d:'Oct 31, 2026',t:'Riviera island',items:[
   'Free Roam now takes place on the Riviera, a Mediterranean island about 5 km across that you can drive end to end: a coast road that loops the whole shore, a mountain pass that winds up through hairpins to a summit square with a stone parapet and a statue looking over the sea, and ridge roads branching off it. The island is generated from a seed, so it is the same every time.',

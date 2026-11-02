@@ -79,7 +79,11 @@ function splitMirrors(r){const I=r.info,B=r.parts.body,S=r.parts.steer;if(!B||!S
  for(let f=0;f<nf;f++)for(let k=0;k<3;k++){const v=f*3+k,key=q(P.getX(v))+','+q(P.getY(v))+','+q(P.getZ(v));const o=map.get(key);if(o==null)map.set(key,f);else{const a=f_(o),b=f_(f);if(a!==b)par[a]=b}}
  const box=new Map();for(let f=0;f<nf;f++){const c=f_(f);let b=box.get(c);if(!b){b={lo:[1e9,1e9,1e9],hi:[-1e9,-1e9,-1e9],fs:[]};box.set(c,b)}b.fs.push(f);for(let k=0;k<3;k++){const v=f*3+k,x=[P.getX(v),P.getY(v),P.getZ(v)];for(let j=0;j<3;j++){if(x[j]<b.lo[j])b.lo[j]=x[j];if(x[j]>b.hi[j])b.hi[j]=x[j]}}}
  const g=I.grip,take=new Uint8Array(nf);let n=0;
- for(const b of box.values()){const sx=b.hi[0]-b.lo[0],sy=b.hi[1]-b.lo[1],sz=b.hi[2]-b.lo[2];if(Math.max(sx,sy,sz)>.4)continue;
+ for(const b of box.values()){const sx=b.hi[0]-b.lo[0],sy=b.hi[1]-b.lo[1],sz=b.hi[2]-b.lo[2];
+  /* the bar itself (and anything clamped across it: risers, clocks, cross-brace) when the pack left it on the frame: a slim piece that sits
+     wholly at grip height, around the steering head, spanning out toward the grips. It turns with the grips, so the bar never splits from them */
+  if(b.lo[1]>g[1]-.16&&b.hi[1]<g[1]+.3&&b.lo[2]>g[2]-.3&&b.hi[2]<g[2]+.3&&sy<.3&&sz<.36&&b.lo[0]<0&&b.hi[0]>0&&sx>Math.abs(g[0])*.6&&sx<Math.abs(g[0])*2.6){for(const f of b.fs){take[f]=1;n++}continue}
+  if(Math.max(sx,sy,sz)>.4)continue;
   const ax=Math.min(Math.abs(b.lo[0]),Math.abs(b.hi[0]));if(b.lo[0]<0&&b.hi[0]>0)continue;
   if(ax<.12||b.lo[1]<g[1]-.06||b.hi[1]>g[1]+.55||b.hi[2]<g[2]-.3||b.lo[2]>g[2]+.25)continue;
   for(const f of b.fs){take[f]=1;n++}}

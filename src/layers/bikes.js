@@ -160,7 +160,7 @@ function decide(v){const opts=[];const ex=B.road.exitNear(v.s+200),toG=ex-v.s,ex
 /* lights, plus distance culling: past 560 m a car is a few pixels in the fog, so it is not drawn at all; small lenses that are off are only drawn up close */
 function lights(v,dt){const on=(v.blink%0.7)<.38,m=v.m;const L=BK.LM;let dn=1e9;for(const p of B.pl){const q=Math.abs(v.s-p.s);if(q<dn)dn=q}
  const vis=dn<560;m.g.visible=vis;if(!vis)return;const near=dn<90&&!m.name;/* game car models have their own lamps: our lens boxes only show while lit */
- const left=v.haz||(v.sig<0),right=v.haz||(v.sig>0),bk=v.brk||v.hit>0;/* sig + = right (as seen from the driver) */
+ /* Nov 2: indicators and brake lights are never lit (they looked goofy); traffic still signals and brakes, it just does not show it */const left=false,right=false,bk=false;
  m.iL.material=left&&on?L.on:L.off;m.iR.material=right&&on?L.on:L.off;m.br.material=bk?L.brOn:L.brOff;
  m.iL.visible=near||(left&&on);m.iR.visible=near||(right&&on);m.br.visible=near||bk;m.hd.visible=near||B.tod.lamps>0;if(m.sh)m.sh.visible=dn<220}
 
@@ -206,20 +206,31 @@ function trickPose(p,id,u,r){const b=basePose(p),I=p.m.I,seat=I.seat,SY=seatFit(
    return Object.assign(b,{hip:[0,lp(b.hip[1],SY+.42,up)+.34*crouch,lp(b.hip[2],seat[2]-.04,up)+.12*crouch],lean:lp(lp(b.lean,.6,up),.9,crouch),leanMax:.98,feet:fs,look:-.15*crouch})}/* bent at the waist with straight arms to the bars, a clear gap between chest and tank (from the photo) */
   case'burnout':{/* weight forward over the front, left foot planted ahead of the peg */const ft=seg(r,0,.6);return Object.assign(b,{lean:b.lean+.25*u,hip:[0,b.hip[1],b.hip[2]+.05*u],feet:[b.feet[0].map((x,j)=>lp(x,[I.peg[0]+.1,.05,I.peg[2]+.35][j],ft)),b.feet[1]]})}
  }return b}
+/* blend two whole poses; a hand that is on its grip in one pose counts as sitting at the grip, so it travels instead of jumping */
+function blendPose(a,b,w,g){const L=(x,y)=>x.map((v,i)=>lp(v,y[i],w)),G=[g[0],g[1],g[2]];const o=Object.assign({},b);o.hip=L(a.hip,b.hip);o.lean=lp(a.lean,b.lean,w);o.side=lp(a.side||0,b.side||0,w);o.look=lp(a.look||0,b.look||0,w);
+ o.feet=[L(a.feet[0],b.feet[0]),L(a.feet[1],b.feet[1])];if(a.hands||b.hands){const ha=a.hands||[null,null],hb=b.hands||[null,null];o.hands=[0,1].map(s=>{if(!ha[s]&&!hb[s])return null;const h=L(ha[s]||G,hb[s]||G);return Math.hypot(h[0]-G[0],h[1]-G[1],h[2]-G[2])<.01?null:h})}
+ if(a.leanMax!=null||b.leanMax!=null)o.leanMax=Math.max(a.leanMax!=null?a.leanMax:1.45,b.leanMax!=null?b.leanMax:1.45);return o}
 function mixPose(a,b,u){const L=(x,y)=>x.map((v,i)=>lp(v,y[i],u));return{hip:L(a.hip,b.hip),lean:lp(a.lean,b.lean,u),side:lp(a.side||0,b.side||0,u),look:lp(a.look||0,b.look||0,u),
  hands:(a.hands||b.hands)&&u>.5?b.hands:a.hands&&u<=.5?a.hands:null,feet:[L(a.feet[0],b.feet[0]),L(a.feet[1],b.feet[1])]}}
 function poseRiderFor(p,dt){const t=p.trk_;
  /* trick blend: a linear ramp shaped by smootherstep, so each move eases in and out; a new trick waits for the last one to fade first */
+ /* a new trick picked mid-trick cross-fades straight from the old pose to the new one */if(t&&p.lastPose&&t.id!==p.lastPose&&p.tr>=.02){p.prevPose=p.lastPose;p.prevU=p.tu||0;p.tr=0;p.lastPose=t.id}
  if(t&&(!p.lastPose||p.tr<.02))p.lastPose=t.id;const id=p.lastPose||'wheelie',want=t&&t.id===id?1:0;
  const rt=TRATE[id]||3;p.tr=cl((p.tr||0)+(want?rt:-rt*1.15)*dt,0,1);const u=p.tr*p.tr*p.tr*(p.tr*(p.tr*6-15)+10);p.tu=u;
  /* the body counters the bike's lean a little, lagging it so the roll looks weighted */
  p.rs=lp(p.rs||0,-p.lean*.25,cl(dt*6,0,1));
- const ps=u>.005?trickPose(p,id,u,p.tr):basePose(p);ps.side=(ps.side||0)+p.rs;
+ if(p.prevU>0)p.prevU=Math.max(0,p.prevU-dt*(TRATE[p.prevPose]||3)*1.15);
+ let ps=u>.005?trickPose(p,id,u,p.tr):basePose(p);if(p.prevU>.005){const a=trickPose(p,p.prevPose,p.prevU,p.prevU);ps=blendPose(a,ps,u/(u+p.prevU),p.m.I.grip)}ps.side=(ps.side||0)+p.rs;
  /* the body answers the controls: steering shifts the hips and shoulders to the inside and turns the head; throttle and brake rock the torso */
  const st=p.st||0;p.rst=lp(p.rst||0,st,cl(dt*5,0,1));const tb=(p.th||0)-(p.br||0);p.rtb=lp(p.rtb||0,tb,cl(dt*4,0,1));
  ps.hip=ps.hip.slice();ps.hip[0]-=p.rst*.06+p.lean*.05;ps.side-=p.rst*(.12+.18*u);ps.turn=(ps.turn||0)-p.rst*.35;ps.lean+=(p.trk_&&p.trk_.k==='wheelie'?-1:1)*p.rtb*.06;
  if(p.trk_&&p.trk_.k==='balance'){/* balance tricks: the arms and body work against the wobble */ps.side-=(p.bal||0)*.6;if(ps.hands)ps.hands=ps.hands.map((h,i)=>[h[0],h[1]+(i?-1:1)*(p.bal||0)*.5,h[2]])}
  ps.knee=p.lean;
+ /* speed: tuck in behind the bars as the speed climbs (chest down, head up to see over them), sit up when crawling, and at full chat the wind
+    buffets the shoulders and head. Riding only: a trick pose takes over as it blends in */
+ {const tk=seg(p.v,24,52)*(1-u),slow=1-cl(p.v/6,0,1),bf=seg(p.v,38,62)*(1-u);p.tkS=lp(p.tkS||0,tk,cl(dt*2.5,0,1));const k_=p.tkS;
+  ps.lean+=.34*k_-.1*slow*(1-u);ps.hip=ps.hip.slice();ps.hip[1]-=.035*k_;ps.hip[2]+=.05*k_;ps.look=(ps.look||0)+.22*k_;
+  if(bf>0){const t_=B?B.t:0;ps.side+=bf*.035*(Math.sin(t_*11.3+p.k)+.6*Math.sin(t_*17.9));ps.turn=(ps.turn||0)+bf*.03*Math.sin(t_*8.7+1.3);ps.look+=bf*.02*Math.sin(t_*13.1)}}
  /* reach out: shove the other rider (one hand off the bar, arm out towards them) */
  if(p.shoveT>0)p.shoveT-=dt;
  const S=p.m.I.seat,hy=seatFit(p.m.I,p.m).hy;
@@ -264,7 +275,11 @@ function physStep(p,dt){if(p.wipe){wipeStep(p,dt);return}
  const v=p.v,T=p.trk_;
  /* trick start / end */
  /* tap a trick key to start that trick, tap any trick key again to land it */
- if(I.tap&&live){if(!T&&!p.trOn)p.trOn=true;else if(p.trOn)p.trOn=false;else if(I.tk>=0)p.trQ=TRICKS[I.tk].id/* still landing: start this one next */}
+ if(I.tap&&live){const nt=I.tk>=0?TRICKS[I.tk]:null;
+  if(!T&&!p.trOn)p.trOn=true;
+  else if(T&&p.trOn&&nt&&nt.id!==T.id&&canStart(p,nt)){/* combo: a different trick key mid-trick goes straight into that trick (the one you were in is scored), no landing first */
+   endTrick(p,true);p.equip=nt.id;p.trOn=true;beginTrick(p,nt);guidePaint(p)}
+  else if(p.trOn)p.trOn=false;else if(nt)p.trQ=nt.id/* still landing: start this one next */}
  if(!T&&!p.trOn&&p.trQ&&live){p.equip=p.trQ;p.trQ=null;p.trOn=true;guidePaint(p)}
  if(!live){p.trOn=false;p.trQ=null}
  const want=p.trOn&&live;
@@ -346,12 +361,12 @@ function trickStep(p,dt,I){const t=p.trk_;
   const k=t.wob||1;p.balV+=((Math.random()-.5)*2.4*k+p.bal*(1.6*k)+I.st*(-3.4))*dt;p.balV*=1-dt*1.2;p.bal+=p.balV*dt;
   rate=1;if(Math.abs(p.bal)>1){wipeout(p,'LOST BALANCE');return}if(p.v<t.min*.7){endTrick(p,true);return}}
  else if(t.k==='burnout'){rate=p.th>.3?1:0;p.smoke=p.th;if(p.th>.3&&Math.random()<dt*24)smokePuff(p)}
- if(rate>0){const pts=t.pps*rate*dt*(.6+p.trk*.4);p.trickPts+=pts;p.score+=pts*p.mult;p.comboT=Math.max(p.comboT,2.2)}}
+ if(rate>0){const pts=t.pps*rate*dt*(.6+p.trk*.4);p.trickPts+=pts;p.score+=pts*p.mult;p.comboT=Math.max(p.comboT,1.4)}}
 function walls(p,dt){const ex=B.road.exitNear(p.s+250),x=ex>-1e8&&p.s>ex-230&&p.s<ex?RD.LW:0;
  const lo=.62,hi=RD.SHO-.28+x,vlat=p.v*Math.sin(p.psi);
  if(p.d_<lo||p.d_>hi){const side=p.d_<lo?-1:1;p.d_=side<0?lo:hi;
   if(Math.abs(vlat)>7.5&&p.ghost<=0){wipeout(p,side<0?'HIT THE BARRIER':'HIT THE RAIL');return}
-  p.psi=wrapA(-p.psi*.35);p.v*=.93;p.lean*=.6;if(p.scrape<=0){sfx.scrape();p.scrape=.3;spark(p,side)}if(p.mult>1){pop(p,'SCRAPE','#ef6a5a',.8)}}
+  p.psi=wrapA(-p.psi*.35);p.v*=.93;p.lean*=.6;if(p.scrape<=0){sfx.scrape();p.scrape=.3;spark(p,side)}if(p.chain>0){p.comboT=Math.min(p.comboT,.8)}if(p.mult>1){pop(p,'SCRAPE','#ef6a5a',.8)}}
  p.scrape=Math.max(0,p.scrape-dt);
  /* gore nose: the exit lane closes */
  if(ex>-1e8&&p.s>ex&&p.s<ex+3&&p.d_>RD.SHO-.28&&p.ghost<=0)wipeout(p,'HIT THE CUSHION')}
@@ -362,7 +377,8 @@ function walls(p,dt){const ex=B.road.exitNear(p.s+250),x=ex>-1e8&&p.s>ex-230&&p.
 let SKID=0;function skill(p,n,pts,side){const top=p.sk[0];if(top&&top.n===n&&B.t-top.t<3){top.c++;top.pts+=pts;top.t=B.t;top.id=++SKID}else{p.sk.unshift({n,c:1,pts,t:B.t,id:++SKID});if(p.sk.length>4)p.sk.length=4}
  p.chainPts+=pts;p.skV++;p.skEnd=null;if(side){const h=hudOf(p),f=h&&h.querySelector('.nf.'+(side>0?'r':'l'));if(f){f.classList.remove('on');void f.offsetWidth;f.classList.add('on')}}}
 function endChain(p,ok){if(p.chain>0&&p.chainPts>0)p.skEnd={ok,pts:Math.round(p.chainPts),m:p.mult,t:B.t};p.chain=0;p.mult=1;p.comboT=0;p.chainPts=0;p.sk=[];p.skV++}
-function bumpChain(p,n){p.chain+=n;p.mult=Math.min(10,1+Math.floor(p.chain/2));p.comboT=4;if(p.mult>p.bestCombo)p.bestCombo=p.mult}
+/* harder to keep a chain going: 2.6 s to land the next move (was 4), and three moves per multiplier step (was two) */
+const CHAIN_T=2.6;function bumpChain(p,n){p.chain+=n;p.mult=Math.min(10,1+Math.floor(p.chain/3));p.comboT=CHAIN_T;if(p.mult>p.bestCombo)p.bestCombo=p.mult}
 function scoreStep(p,dt){if(p.wipe)return;p.comboT-=dt;if(p.comboT<=0&&p.chain>0)endChain(p,true);
  /* near misses and lane splits: pass a vehicle within 1.3 m */
  const pv=p.v*Math.cos(p.psi);
@@ -488,9 +504,9 @@ function camStep(p,cam,dt,aspect){const m=p.m;cam.aspect=aspect;if(BK._dbgCam&&(
   const yaw=m.g.rotation.y;const fx=Math.sin(yaw),fz=Math.cos(yaw);
   cam.position.set(_h.x-fx*.06,_h.y+.05,_h.z-fz*.06);
   /* Nov 2 (round 4): one fixed view for every bike and both riders: the same downward pitch and field of view, so a dirt bike and a sport bike frame the road the same way */
-  const sp=cl(p.v/60,0,1),FOV=78+6*sp,want=-.4+Math.max(-.12,Math.min(.12,p.pitch||0))*.3;p.cpt=p.cpt==null?want:lp(p.cpt,want,cl(dt*3,0,1));
+  const sp=cl(p.v/60,0,1),FOV=78+24*Math.pow(sp,1.6),/* the view stretches hard with speed */want=-.4+Math.max(-.12,Math.min(.12,p.pitch||0))*.3;p.cpt=p.cpt==null?want:lp(p.cpt,want,cl(dt*3,0,1));
   p.croll=lp(p.croll||0,p.lean*.18,cl(dt*4,0,1));
-  cam.rotation.order='YXZ';cam.rotation.set(p.cpt,yaw+PI,0);cam.rotateZ(p.croll);
+  /* and shakes once you are flying */const sh=Math.max(0,sp-.45)*.016,t_=B.t;cam.rotation.order='YXZ';cam.rotation.set(p.cpt+sh*(Math.sin(t_*31)+.5*Math.sin(t_*47.3)),yaw+PI+sh*.6*Math.sin(t_*23.7),0);cam.rotateZ(p.croll+sh*.5*Math.sin(t_*19.1));
   cam.fov=FOV;cam.layers.set(0);cam.layers.enable(1+(1-p.k));cam.layers.enable(3+p.k)/* own arms and legs (people riders) */}
  else{/* Nov 2: chase cam that trails the bike's heading instead of being bolted to it: low, a little further back at speed, looking down the road */
   const yb=m.g.rotation.y;m.g.getWorldPosition(_t);if(p.cy==null||Math.abs(wrapA(yb-p.cy))>1.2)p.cy=yb;p.cy+=wrapA(yb-p.cy)*cl(dt*4.5,0,1);
@@ -584,6 +600,9 @@ const CSS=`
 /* near miss: a cool flash along the edge the car went past */
 #bkHud .nf{position:absolute;top:0;bottom:0;width:18%;opacity:0;pointer-events:none}#bkHud .nf.l{left:0;background:linear-gradient(90deg,#8fb4d866,#8fb4d800)}#bkHud .nf.r{right:0;background:linear-gradient(270deg,#8fb4d866,#8fb4d800)}
 #bkHud .nf.on{animation:bkNf .5s ease-out}@keyframes bkNf{0%{opacity:1}100%{opacity:0}}
+/* sense of speed: streaks rushing out from the middle of the view and a closing vignette, both from about 160 km/h */
+#bkHud .sl{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#bkHud .vg{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 46%,transparent 52%,#000a 100%);opacity:0}
 #bkHud .hint.pz{left:auto;right:18px;bottom:auto;top:14px}
 #bkHud .hint{left:18px;bottom:18px;padding:7px 12px;font-size:10px;letter-spacing:.16em;color:#c9d2d8;display:flex;gap:12px}
 #bkHud .hint kbd{background:#ffffff22;border-radius:4px;padding:1px 6px;font:500 10px var(--gt);color:#fff;margin-right:5px}
@@ -592,7 +611,7 @@ body.bkOn #ptNowPlaying{display:none}
 const ICON={wheelie:'<path d="M4 18a3 3 0 106 0 3 3 0 00-6 0zM14 9l3-4 3 1M7 15l5-6h4l3 8"/>',stoppie:'<path d="M14 18a3 3 0 106 0 3 3 0 00-6 0zM5 7l4 2 7 9M9 9h5"/>',standup:'<path d="M12 3v6l-3 3M12 9l3 3M5 19a2 2 0 104 0 2 2 0 00-4 0zM15 19h4"/>',
  twelve:'<path d="M12 3v14M8 7l4-4 4 4M9 21h6"/>',nohands:'<path d="M5 5l4 5M19 5l-4 5M12 10v6M6 20a2 2 0 104 0M14 20a2 2 0 104 0"/>',superman:'<path d="M3 12h11l4-3M14 12l5 3M6 19a2 2 0 104 0"/>',seatstand:'<path d="M12 3v8M5 7h14M10 15h4M7 20a2 2 0 104 0M13 20a2 2 0 104 0"/>',burnout:'<path d="M5 18a3 3 0 106 0M14 18c2-1 2-3 4-3s2 2 3 1M15 11c1-2 3-2 4-4"/>'};
 const icon=id=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+(ICON[id]||'')+'</svg>';
-function ensureCss(){if($i('bkCss'))return;const s=document.createElement('style');s.id='bkCss';s.textContent=CSS+PREP_CSS+SAME_CSS;document.head.appendChild(s);cloneCss([['#pause','#bkPause']])}
+function ensureCss(){if($i('bkCss'))return;const s=document.createElement('style');s.id='bkCss';/* the game's theme squares every corner (*{border-radius:0!important}): our rounded corners have to win over it */s.textContent=(CSS+PREP_CSS+SAME_CSS).replace(/border-radius:([^;}!]+)(?=[;}])/g,'border-radius:$1!important');document.head.appendChild(s);cloneCss([['#pause','#bkPause']])}
 /* copy the game's own rules for an element onto ours, so the bike pause looks exactly like the car pause (and follows any later restyle) */
 function cloneCss(map){const out=[];const walk=(rs,media)=>{for(const r of rs){if(r.media&&r.cssRules){walk(r.cssRules,r.media.mediaText);continue}const sel=r.selectorText;if(!sel||!map.some(([a])=>sel.includes(a)))continue;
   const parts=sel.split(',').filter(x=>map.some(([a])=>x.includes(a))).map(x=>{for(const[a,b]of map)x=x.split(a).join(b);return x});out.push((media?'@media '+media+'{':'')+parts.join(',')+'{'+r.style.cssText+'}'+(media?'}':''))}};
@@ -623,7 +642,7 @@ function buildHud(){ensureCss();let h=$i('bkHud');if(!h){h=document.createElemen
  <div class="h8top"><div class="h8plate">${n>1?'<div class="tag" style="color:'+PCOL[i]+'">P'+(i+1)+'</div>':''}<div class="lap">HIGHWAY CUT-UP</div><div class="raceTime">${B.clock?'':'FREE RIDE'}</div><div class="bl" style="display:none"></div></div></div>
  <div class="pl cb"><div class="sc"><small>SCORE</small><b>0</b><em>BEST ${fmtN(SV().best||0)}</em></div></div>
  <div class="sk"><div class="skh"><div class="skm">x1</div><div class="skt"><small>SKILL CHAIN</small><b>0</b></div></div><i class="skb"><u></u></i><ul></ul></div>
- <div class="nf l"></div><div class="nf r"></div>
+ <canvas class="sl"></canvas><div class="vg"></div><div class="nf l"></div><div class="nf r"></div>
  <div class="h8spd"><canvas class="gx5" width="480" height="320"></canvas></div>
  <div class="pl hint"><span><kbd>${KEYS[i].mn}</kbd>GUIDE</span></div>
  <div class="pl bm"><i></i><u></u></div>
@@ -643,12 +662,13 @@ function hudStep(){if(!B)return;const h=$i('bkHud');if(!h)return;
    if(k._s!==st){k._s=st;k.className='sk '+st}
    if(st==='live'){const m='x'+p.mult,mm=k.querySelector('.skm');if(mm._t!==m){mm._t=m;mm.textContent=m;mm.classList.remove('bump');void mm.offsetWidth;mm.classList.add('bump')}
     const tt=fmtN(Math.round(p.chainPts)),tb=k.querySelector('.skt b');if(tb._t!==tt){tb._t=tt;tb.textContent=tt}k.querySelector('.skt small').textContent='SKILL CHAIN';
-    const w=Math.round(cl(p.comboT/4,0,1)*100),u=k.querySelector('.skb u');if(u._w!==w){u._w=w;u.style.width=w+'%'}
+    const w=Math.round(cl(p.comboT/CHAIN_T,0,1)*100),u=k.querySelector('.skb u');if(u._w!==w){u._w=w;u.style.width=w+'%'}
     if(k._v!==p.skV){k._v=p.skV;const top=p.sk[0]&&p.sk[0].id;k.querySelector('ul').innerHTML=p.sk.map(e=>`<li class="${e.id===top?'new':''}"><span>${e.n}${e.c>1?` <em>x${e.c}</em>`:''}</span><b>+${fmtN(Math.round(e.pts))}</b></li>`).join('')}}
    else if(end&&k._e!==end){k._e=end;k.querySelector('.skm').textContent=end.ok?'x'+end.m:'';k.querySelector('.skt small').textContent=end.ok?'CHAIN BANKED':'CHAIN LOST';k.querySelector('.skt b').textContent=(end.ok?'+':'')+fmtN(end.pts);k.querySelector('ul').innerHTML='';k._v=-1}}
   if(B.clock){const l=Math.max(0,B.left),tt=Math.floor(l/60)+':'+String(Math.floor(l%60)).padStart(2,'0'),rt=q('.raceTime');if(rt._t!==tt){rt._t=tt;rt.textContent=tt}rt.style.color=l<15?'#ff6b5e':''}
   {const cv=q('.gx5'),v=Math.round(spd(p.wipe?0:p.v)),rv=cl(p.rpm||0,0,1.04),up=!p.wipe&&rv>.9,key=v+'|'+p.gear+'|'+Math.round(rv*200)+'|'+up;
    if(cv._k!==key){cv._k=key;P.gx5Draw(cv,{rev:rv,kmh:v,gear:p.gear,shift:up,unit:kmh()?'km/h':'mph',tag:B.pl.length>1?'P'+(p.k+1):'',tagCol:PCOL[p.k]})}}
+  speedFx(p,q('.sl'),q('.vg'));
   if(!p.gT||B.t-p.gT>.2){p.gT=B.t;guidePaint(p)}
   const bm=q('.bm'),T=p.trk_;
   /* the meter fades in and out (never pops) */if(T&&(T.k==='balance')){bm.className='pl bm on';bm.querySelector('u').style.left=(50+cl(p.bal,-1,1)*50)+'%';bm.querySelector('u').style.bottom=''}
@@ -656,6 +676,11 @@ function hudStep(){if(!B)return;const h=$i('bkHud');if(!h)return;
   else bm.classList.remove('on');
 }
 }
+function speedFx(p,cv,vg){const f=p.wipe?0:seg(p.v,42,68);p.sfx_=lp(p.sfx_||0,f,.1);const a=p.sfx_;vg.style.opacity=(a*.85).toFixed(3);
+ if(!cv)return;const w=cv.clientWidth,h=cv.clientHeight;if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}const g=cv.getContext('2d');g.clearRect(0,0,w,h);if(a<.02)return;
+ /* each streak lives on a fixed ray from the centre and slides outward, faster with speed */const cx=w/2,cy=h*.46,R0=Math.hypot(w,h)*.5,n=70,t_=B.t*(1.4+a*1.6);
+ g.lineCap='round';for(let i=0;i<n;i++){const ang=i*2.39996,ph=(t_+i*.37)%1,r0=R0*(.28+ph*.9),len=R0*(.08+.22*a)*(.5+ph),c=Math.cos(ang),s_=Math.sin(ang);
+  g.strokeStyle='rgba(235,242,250,'+(a*.7*ph*(1-ph)*4).toFixed(3)+')';g.lineWidth=1.2+ph*3;g.beginPath();g.moveTo(cx+c*r0,cy+s_*r0);g.lineTo(cx+c*(r0+len),cy+s_*(r0+len));g.stroke()}}
 function guidePaint(p){const e=hudOf(p);if(!e)return;const g=e.querySelector('.tg');if(!g)return;g.classList.toggle('off',p.guide===false);
  g.querySelectorAll('li').forEach(x=>{const t=TBY[x.dataset.t];x.classList.toggle('on',!!(p.trk_&&p.trk_.id===t.id));x.classList.toggle('off',!canStart(p,t))})}
 function runKey(code){if(B.paused){pauseKey(code);return}
@@ -771,6 +796,17 @@ const f0=frame;frame=function(n){if(scr==='bike'||(scr==='bikeres'&&B)){requestA
 /* leaving through some other path (menu shortcut, options): tidy up */
 {const sh0=show;show=n=>{sh0(n);if(n!=='bike'&&n!=='bikeres'&&n!=='pause'&&n!=='ptOptions'&&B&&n!=='bikeprep'){endRun()}if(n!=='s8setup'&&PR&&n!=='bike'&&n!=='ptOptions'){stopPrep()}if(n!=='bike'&&n!=='bikeprep'&&n!=='bikeres')document.body.classList.remove('bkOn');
   for(const id of['bkHud'])if($i(id)&&n!=='bike'&&n!=='bikeres')$i(id).style.display='none';if(n!=='bikeres'&&$i('bkRes'))$i('bkRes').style.display='none'}}
+BK._steerView=(id,steer,who)=>{const d=BK.byId(id),m=BK.makeBike(id,BK.paintOf(d,0),Object.assign({},RIDER_COL[0],{who:who||0}));const fake={m,d,trk_:null,lean:0,k:0};BK.poseBike(m,0,0,steer,0,0);BK.poseRider(m,basePose(fake));return m.g};
+BK._handProbe=(ids,whos)=>{const out=[];const L=ids||BK.list().map(b=>b.id),W=whos||[...Array((BK.PEOPLE||[0]).length).keys()];
+ const poses=[['ride',null,0,0,0],['leanL',null,.75,0,.25],['leanR',null,-.75,0,-.25],['steerL',null,0,0,.5],['wheelie','wheelie',0,.7,0],['deep','wheelie',0,1.2,0],['stoppie','stoppie',0,-.35,0],['standup','standup',0,.5,0],['twelve','twelve',0,1.3,0],['burnout','burnout',0,0,0]];
+ for(const id of L)for(const who of W){const d=BK.byId(id),m=BK.makeBike(id,BK.paintOf(d,0),Object.assign({},RIDER_COL[0],{who}));if(!m.rider||!m.rider.people||!m.rider.T){out.push([id,who,"nopeople"]);BK.disposeBike(m);continue}const R=m.rider,T=R.T,ix=T.idx;
+  for(const [n,tid,lean,pitch,steer] of poses){const fake={m,d,trk_:null,lean,pitch,k:0,tr:1};BK.poseBike(m,lean,pitch,steer,0,0);m.g.updateMatrixWorld(true);
+   const ps=tid?trickPose(fake,tid,1,1):basePose(fake);ps.knee=lean;BK.poseRider(m,ps);m.g.updateMatrixWorld(true);let worst=0;
+   for(let s=0;s<2;s++){if(ps.hands&&ps.hands[s])continue;const sg=s?-1:1,H=new THREE.Vector3(m.I.grip[0]*sg,m.I.grip[1],m.I.grip[2]);H.sub(m.steer.position);H.applyQuaternion(m.steer.quaternion);H.add(m.steer.position);
+    const b=R.bones[ix[s?'handR':'handL']],w=new THREE.Vector3();b.getWorldPosition(w);m.inner.worldToLocal(w);worst=Math.max(worst,Math.abs(w.distanceTo(H)-.06))}
+   out.push([id,who,n,+worst.toFixed(3)])}
+  BK.disposeBike(m)}
+ return out};
 BK.debug=()=>({B,PR});BK._wipe=(p,why)=>wipeout(p,why||"TEST");BK._skill=(p,n,pts,side)=>{bumpChain(p,1);p.score+=pts;skill(p,n,pts,side)};
 P.bikeStart=o=>BK.loadPack().then(()=>startRun(o));
 })();

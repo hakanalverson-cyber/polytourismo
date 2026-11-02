@@ -1041,7 +1041,9 @@ b,strong,h1,h2,h3,button,.btn,.gtab,.gti b,.hdr h2,#gtBar .gtl,.gtp,.crbox b,.qc
 .lbm.cut .lbmh,.lbm.cut .lbmr{grid-template-columns:44px minmax(0,1fr) 150px}
 .lbm.cut.st .lbmh,.lbm.cut.st .lbmr{grid-template-columns:44px minmax(130px,1fr) repeat(var(--n),minmax(54px,88px)) 120px}
 .lbm.cut.st .lbmh{height:auto;min-height:26px;padding-top:4px;padding-bottom:4px;line-height:1.35}.lbm.cut.st .lbmh span.r{letter-spacing:.16em;text-transform:uppercase}
-.lbm.cut.st .lbmr span.r{font-size:15px;color:#c9d1d6}.lbm.cut.st .lbmr.me span.r{color:#fff}
+.lbm.cut.st .lbmr span.r{font-size:15px;color:#c9d1d6}
+/* more air: taller rows with a gap between them, wider columns, the header clear of the first row */
+.lbm.cut.st .lbmh,.lbm.cut.st .lbmr{gap:20px;padding:0 14px}.lbm.cut.st .lbmr{min-height:64px;margin-bottom:8px;border-radius:10px}.lbm.cut.st .lbmh{margin-bottom:10px}.lbm.cut.st .lbmr .n{gap:5px}.lbm.cut.st .lbmr.me span.r{color:#fff}
 .lbml{margin:10px 0 0;max-width:420px}
 .lbml div{display:flex;justify-content:space-between;padding:6px 4px;font-size:12px;letter-spacing:.14em;color:#8f9ba3;border-bottom:1px solid #ffffff0d;font-variant-numeric:tabular-nums}
 .lbml div.b{color:#fff}
