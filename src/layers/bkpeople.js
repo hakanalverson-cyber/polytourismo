@@ -38,6 +38,14 @@ function prep(g){const out=[];const meshes=[];g.scene.traverse(o=>{if(o.isSkinne
   const T={sm,idx,bp,bq,par,n,left,fwd,hipC,neck:J('spine004').clone(),
    len:{th:L('thighL','shinL'),sh:L('shinL','footL'),ua:L('upper_armL','forearmL'),fa:L('forearmL','handL')},
    h:Math.max(...bp.map(p=>p.y))-Math.min(...bp.map(p=>p.y))};
+  /* round 13: seated, the thighs swing 90 degrees and drag the back of the hips out into a spike (linear skinning). Hand the thigh weight of
+     the vertices behind the hip joints over to the pelvis, so the seat of the trousers stays with the hips */
+  {const g=sm.geometry,Ji=g.attributes.skinIndex,Wt=g.attributes.skinWeight,Ps=g.attributes.position,pel=idx.spine,th=new Set([idx.thighL,idx.thighR]),v=V(),SG=['setX','setY','setZ','setW'];
+   for(let i=0;i<Ji.count;i++){v.fromBufferAttribute(Ps,i);const d=V().subVectors(v,hipC).dot(fwd);if(d>-.005||v.y<hipC.y-.22||v.y>hipC.y+.12)continue;
+    const k=Math.min(1,(-d-.005)/.06)*Math.min(1,(v.y-(hipC.y-.22))/.08);let moved=0,pk=-1;
+    for(let c=0;c<4;c++){const b=Ji[GC[c]](i),w=Wt[GC[c]](i);if(th.has(b)&&w>0){Wt[SG[c]](i,w*(1-k));moved+=w*k}if(b===pel)pk=c}
+    if(moved<=0)continue;if(pk<0){let lo=9,lc=0;for(let c=0;c<4;c++){const w=Wt[GC[c]](i);if(w<lo){lo=w;lc=c}}pk=lc;Ji[SG[pk]](i,pel);moved+=lo;Wt[SG[pk]](i,0)}
+    Wt[SG[pk]](i,Wt[GC[pk]](i)+moved)}Wt.needsUpdate=true;Ji.needsUpdate=true}
   /* the forearm-and-hand part of the skin (and the legs) for the rider's own head camera, which must not see the head and body */
   T.armGeo=subGeo(sm.geometry,sk,new Set(['forearmL','forearmR','handL','handR','upper_armL','upper_armR','thighL','thighR','shinL','shinR','footL','footR','toeL','toeR'].map(r=>idx[r])),idx,par);
   out[mi]=T});
@@ -90,7 +98,10 @@ function put(R,i,p,q,driven){const T=R.T,b=R.bones[i];b.position.copy(p);b.quate
  /* children that are not driven follow: same delta rotation, bind offsets */
  for(let c=0;c<T.n;c++)if(T.par[c]===i&&!driven.has(c)){const off=V().subVectors(T.bp[c],T.bp[i]).applyQuaternion(q);put(R,c,off.add(p),q,driven)}}
 
-const DRV={};let HT=1.35;BK._ht=v=>{HT=v};/* role sets per template */
+const DRV={};let HT=1.35;const TK=1.07;/* round 13: torso 7% longer, chest and shoulders a touch higher above the hips */
+const TUP=new Set(['spine004','shoulderL','shoulderR','upper_armL','upper_armR']);
+function tOff(T,r){const X=T.idx,o=V().subVectors(T.bp[X[r]],T.hipC);if(TUP.has(r)){const b=T.bp[X.spine].y-T.hipC.y;o.y=b+(o.y-b)*TK}return o}
+BK._ht=v=>{HT=v};/* role sets per template */
 const _q1=Q(),_q2=Q(),_q3=Q(),_up=V(0,1,0);
 BK.poseRider=(m,ps,gripW)=>{const R=m.rider,I=m.I;if(!R)return;if(!R.people)return BK.poseRider0(m,ps,gripW);
  const T=R.T,ix=T.idx,X=r=>ix[r];const drv=DRV[T.n+'_'+T.hipC.x]||(DRV[T.n+'_'+T.hipC.x]=new Set(['spine','spine004','thighL','shinL','footL','thighR','shinR','footR','upper_armL','forearmL','handL','upper_armR','forearmR','handR','shoulderL','shoulderR'].map(X)));
@@ -99,17 +110,17 @@ BK.poseRider=(m,ps,gripW)=>{const R=m.rider,I=m.I;if(!R)return;if(!R.people)retu
  /* grip targets (the bars steer) and the reach check: fold the torso forward just enough that both wrists reach the grips, so the hands never stop short in the air or sink into the fairing */
  const gT=[];for(let s=0;s<2;s++){const sg=s?-1:1;if(ps.hands&&ps.hands[s]){gT.push(null);continue}const H=V(I.grip[0]*sg*(gripW||1),I.grip[1],I.grip[2]);H.sub(m.steer.position);H.applyQuaternion(m.steer.quaternion);H.add(m.steer.position);gT.push(H)}
  const setT=l=>{tup.set(0,Math.cos(l),Math.sin(l)).applyAxisAngle(V(0,0,1),roll);swing(_up,T.left,tup,left,_q1)};
- const reachOK=l=>{setT(l);const mx=(T.len.ua+T.len.fa)*.96;for(let s=0;s<2;s++){if(!gT[s])continue;const sh=V().subVectors(T.bp[X(s?'upper_armR':'upper_armL')],T.hipC).applyQuaternion(_q1).add(hip);if(sh.distanceTo(gT[s])-.06>mx)return false}return true};
+ const reachOK=l=>{setT(l);const mx=(T.len.ua+T.len.fa)*.96;for(let s=0;s<2;s++){if(!gT[s])continue;const sh=tOff(T,s?'upper_armR':'upper_armL').applyQuaternion(_q1).add(hip);if(sh.distanceTo(gT[s])-.06>mx)return false}return true};
  if((gT[0]||gT[1])&&!reachOK(lean)){let lo=lean,hi=Math.max(lean,ps.leanMax!=null?ps.leanMax:1.45);/* a pose can cap the fold (leanMax): then the hips move instead */if(reachOK(hi)){for(let i=0;i<10;i++){const md=(lo+hi)/2;if(reachOK(md))hi=md;else lo=md}lean=hi}else{lean=hi;/* still short (crouched on the seat, say): move the hips toward the bars, down as well as forward, until both hands reach */
-  for(let i=0;i<24&&!reachOK(lean);i++){setT(lean);const gm=V(),sm=V();let n=0;for(let s=0;s<2;s++){if(!gT[s])continue;gm.add(gT[s]);sm.add(V().subVectors(T.bp[X(s?'upper_armR':'upper_armL')],T.hipC).applyQuaternion(_q1).add(hip));n++}
+  for(let i=0;i<24&&!reachOK(lean);i++){setT(lean);const gm=V(),sm=V();let n=0;for(let s=0;s<2;s++){if(!gT[s])continue;gm.add(gT[s]);sm.add(tOff(T,s?'upper_armR':'upper_armL').applyQuaternion(_q1).add(hip));n++}
    const d=gm.sub(sm).multiplyScalar(1/n);d.x=0;d.y*=.35;/* mostly forward, so a standing rider stays standing */if(d.lengthSq()<1e-6)break;hip.addScaledVector(d.normalize(),.02)}}}
  setT(lean);
  /* a free hand reaching for something beyond arm's length (the road on a hand drag): the whole body slides toward it */
  if(ps.reach!=null&&ps.hands&&ps.hands[ps.reach]){const s=ps.reach,sg=s?-1:1,H=V(ps.hands[s][0]*sg,ps.hands[s][1],ps.hands[s][2]);
-  const sh=V().subVectors(T.bp[X(s?'upper_armR':'upper_armL')],T.hipC).applyQuaternion(_q1).add(hip);const ex=sh.distanceTo(H)-(T.len.ua+T.len.fa)*.97;
+  const sh=tOff(T,s?'upper_armR':'upper_armL').applyQuaternion(_q1).add(hip);const ex=sh.distanceTo(H)-(T.len.ua+T.len.fa)*.97;
   if(ex>0)hip.addScaledVector(V().subVectors(H,sh).normalize(),Math.min(ex,ps.reachMax!=null?ps.reachMax:.8))}
  /* torso: one rigid turn from the bind body frame onto the leaning one, hips centred on the seat point */
- const bodyAt=r=>V().subVectors(T.bp[X(r)],T.hipC).applyQuaternion(_q1).add(hip);
+ const bodyAt=r=>tOff(T,r).applyQuaternion(_q1).add(hip);
  const torso=new Set(drv);for(const r of['spine001','spine002','spine003'])torso.delete(X(r));
  put(R,X('spine'),bodyAt('spine'),_q1,new Set([X('spine004'),X('thighL'),X('thighR'),X('shoulderL'),X('shoulderR')]));
  /* shoulders ride with the chest */
@@ -151,20 +162,30 @@ BK.poseRider=(m,ps,gripW)=>{const R=m.rider,I=m.I;if(!R)return;if(!R.people)retu
    Gravity, ground contact with sliding friction, and length constraints; then each bone is turned from its bind pose onto the particles. */
 const RJ=['spine','spine004','spine006','thighL','thighR','upper_armL','upper_armR','forearmL','handL','forearmR','handR','shinL','footL','shinR','footR'];
 const RR=[.11,.1,.12,.08,.08,.08,.08,.06,.05,.06,.05,.07,.06,.07,.06];
-BK.ragStart=(m,vel)=>{const R=m.rider;if(!R||!R.people)return null;const T=R.T,X=r=>T.idx[r];R.g.updateMatrixWorld(true);
+BK.ragStart=(m,vel,o)=>{o=o||{};const R=m.rider;if(!R||!R.people)return null;const T=R.T,X=r=>T.idx[r];R.g.updateMatrixWorld(true);
  const P_=RJ.map(r=>R.bones[X(r)].getWorldPosition(V()));const h=1/60;
- const O=P_.map((p,i)=>p.clone().addScaledVector(vel,-h).add(V((Math.random()-.5)*.02,(Math.random()-.5)*.02,(Math.random()-.5)*.02)));
+ /* round 13: over the bars the legs catch on the bike while the upper body keeps going: the higher the joint, the faster it leaves (a flip) */
+ const fw=V(vel.x,0,vel.z).normalize(),y0=P_[0].y;
+ const O=P_.map((p,i)=>p.clone().addScaledVector(vel,-h).addScaledVector(fw,-(o.flip||0)*(p.y-y0)*h).add(V((Math.random()-.5)*.02,(Math.random()-.5)*.02,(Math.random()-.5)*.02)));
  const C=[];const tor=[0,1,3,4,5,6];for(let a=0;a<tor.length;a++)for(let b=a+1;b<tor.length;b++)C.push([tor[a],tor[b],0,1]);
  for(const [a,b] of[[1,2],[5,7],[7,8],[6,9],[9,10],[3,11],[11,12],[4,13],[13,14],[0,2]])C.push([a,b,0,1]);
  for(const c of C)c[2]=P_[c[0]].distanceTo(P_[c[1]]);
  /* soft: limbs may bend but not fold flat */for(const [a,b,f] of[[5,8,.55],[6,10,.55],[3,12,.6],[4,14,.6]])C.push([a,b,P_[a].distanceTo(P_[b])*f,2]);
- return{P:P_,O,C,h}};
+ return{P:P_,O,C,h,roll:!!o.roll,t:0}};
 BK.ragStep=(rag,dt,gy)=>{const P_=rag.P,O=rag.O,n=P_.length,ss=3,h=Math.min(dt,1/20)/ss,g=-9.8*h*h,t=V();
+ /* round 13: tuck and roll. The first time the body lands after being thrown, it gets a forward roll about its side axis (top moving the
+    way it travels), and the ground grips less while it rolls */
+ rag.t+=dt;if(rag.rollT>0)rag.rollT-=dt;
+ if(rag.roll&&!rag.rolled&&rag.t>.2){let hit=false;for(const i of[0,1,2,5,6])if(P_[i].y<=gy(P_[i].x,P_[i].z)+RR[i]+.03)hit=true;
+  if(hit){rag.rolled=1;rag.rollT=.8;const com=V(),vc=V();for(let i=0;i<n;i++){com.add(P_[i]);vc.add(V().subVectors(P_[i],O[i]))}com.multiplyScalar(1/n);vc.multiplyScalar(1/n/h);vc.y=0;const sp=vc.length();
+   if(sp>3){const ax=V().crossVectors(V(0,1,0),vc.normalize()),w=Math.min(9,Math.max(4,sp/.5)),hh=h;for(let i=0;i<n;i++){const r=V().subVectors(P_[i],com),dv=V().crossVectors(ax,r).multiplyScalar(w);const mx=8;if(dv.length()>mx)dv.setLength(mx);O[i].addScaledVector(dv,-hh)}}}}
  for(let k=0;k<ss;k++){
-  for(let i=0;i<n;i++){const p=P_[i],o=O[i];t.subVectors(p,o).multiplyScalar(.995);const mx=28*h;if(t.lengthSq()>mx*mx)t.setLength(mx);/* speed cap: 28 m/s */o.copy(p);p.add(t);p.y+=g}
+  /* speed cap: the body as a whole at 28 m/s, scaled evenly so a spin survives (each joint is also held under 45 m/s) */
+  const av=V();for(let i=0;i<n;i++)av.add(t.subVectors(P_[i],O[i]));av.multiplyScalar(1/n);const mx=28*h,cf=av.length()>mx?mx/av.length():1;
+  for(let i=0;i<n;i++){const p=P_[i],o=O[i];t.subVectors(p,o).multiplyScalar(.995*cf);const m2=45*h;if(t.lengthSq()>m2*m2)t.setLength(m2);o.copy(p);p.add(t);p.y+=g}
   for(let it=0;it<6;it++){for(const c of rag.C){const a=P_[c[0]],b=P_[c[1]];t.subVectors(b,a);const d=t.length()||1e-4;if(c[3]===2&&d>=c[2])continue;const w=c[0]===0?.35:.5,f=(d-c[2])/d;
      a.addScaledVector(t,f*w);b.addScaledVector(t,-f*(1-w))}
-   for(let i=0;i<n;i++){const p=P_[i],y0=gy(p.x,p.z)+RR[i];if(p.y<y0){p.y=y0;const o=O[i];if(o.y<y0)o.y=y0+(o.y-y0)*-.25;/* sliding friction (about 0.65 g): take a fixed amount of speed off each step */const vx=p.x-o.x,vz=p.z-o.z,vh=Math.hypot(vx,vz),dv=6.5*h*h/6;/* applied once per constraint pass */if(vh<=dv){o.x=p.x;o.z=p.z}else{o.x+=vx*dv/vh;o.z+=vz*dv/vh}}}}}
+   for(let i=0;i<n;i++){const p=P_[i],y0=gy(p.x,p.z)+RR[i];if(p.y<y0){p.y=y0;const o=O[i];if(o.y<y0)o.y=y0+(o.y-y0)*-.25;/* sliding friction (about 0.65 g): take a fixed amount of speed off each step */const vx=p.x-o.x,vz=p.z-o.z,vh=Math.hypot(vx,vz),dv=6.5*h*h/6*(rag.rollT>0?.3:1);/* applied once per constraint pass */if(vh<=dv){o.x=p.x;o.z=p.z}else{o.x+=vx*dv/vh;o.z+=vz*dv/vh}}}}}
  return P_[0]};
 BK.ragPose=(m,rag)=>{const R=m.rider,T=R.T,X=r=>T.idx[r],P_=rag.P;const drv=DRV[T.n+'_'+T.hipC.x];if(!drv)return;
  R.g.position.set(0,0,0);R.g.quaternion.identity();

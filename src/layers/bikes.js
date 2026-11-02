@@ -284,7 +284,8 @@ function physStep(p,dt){if(p.wipe){wipeStep(p,dt);return}
    endTrick(p,true);p.equip=nt.id;p.trOn=true;beginTrick(p,nt);guidePaint(p)}
   else if(p.trOn&&!HOLD(T||TBY[p.equip]))p.trOn=false;else if(!p.trOn&&nt)p.trQ=nt.id/* still landing: start this one next */}
  /* wheelie family: held. Let go of its key and you land */
- {const cur=T||TBY[p.equip];if(p.trOn&&HOLD(cur)&&I.tkH!==cur.i)p.trOn=false}
+ /* wheelie family (round 13): the key is a balance input, not an on/off. The trick lasts until the wheel is back on the road */
+ p.hold=T&&HOLD(T)&&live?I.tkH===T.i:false;
  if(!T&&!p.trOn&&p.trQ&&live){p.equip=p.trQ;p.trQ=null;p.trOn=true;guidePaint(p)}
  if(!live){p.trOn=false;p.trQ=null}
  const want=p.trOn&&live;
@@ -293,11 +294,13 @@ function physStep(p,dt){if(p.wipe){wipeStep(p,dt);return}
  /* drive force */
  let a=0;const top=p.vmax;
  /* landing a wheelie: roll off so the front comes down; landing a stoppie: ease off the front brake */
- const thr=T&&(T.k==='burnout'||(T.k==='wheelie'&&!want))?0:p.th;
+ const thr=T&&T.k==='burnout'?0:p.th;
  a+=thr*p.acc*Math.max(0,1-Math.pow(v/top,2.2))*(v<4?.85:1);
  a-=.0042*v*v+.15;/* drag + rolling */
- const brk=T&&T.k==='burnout'?1:T&&T.k==='stoppie'&&!want?0:p.br;
+ a+=thr*(.0042*top*top+.15)*Math.pow(Math.min(1,v/top),2);/* round 13: full throttle holds the bike's stated top speed */
+ const brk=T&&T.k==='burnout'?1:p.br;
  if(brk>0&&v>0)a-=brk*(T&&T.k==='stoppie'?6.2:9.2);
+ if(T&&T.k==='stoppie'&&p.hold&&v>0)a-=4+Math.max(0,-p.pitch)*7;/* round 13: the stoppie is the front brake */
  p.v=Math.max(0,v+a*dt);if(p.v<.05&&brk>0)p.v=0;
  /* gears for sound and the dial */
  const gr=Math.min(6,1+Math.floor(p.v/top*6.2));p.gear=gr;const lo=(gr-1)/6.2*top,hi=gr/6.2*top;p.rpm=cl((p.v-lo)/(hi-lo+1e-3),0,1)*.8+.15+(T&&T.k==='burnout'?.5*p.th:0);
@@ -325,31 +328,37 @@ function physStep(p,dt){if(p.wipe){wipeStep(p,dt);return}
  if(live&&p.v>36){p.score+=(p.v-36)*.6*dt*p.mult}}
 function canStart(p,t){if(!t)return false;if(t.k==='burnout')return p.v<t.max;return p.v>=t.min&&p.v<=t.max}
 function needMsg(p,t){if(t.k==='burnout')return'STOP FIRST FOR A BURNOUT';if(p.v<t.min)return'FASTER FOR '+t.n.toUpperCase();return'TOO FAST FOR '+t.n.toUpperCase()}
-function beginTrick(p,t){p.trk_=t;p.tt=0;p.trickPts=0;p.bal=(Math.random()-.5)*.1;p.balV=0;if(t.k==='wheelie'&&p.pitch<.05){p.pv=Math.max(p.pv,(1.1+p.trk*.6)*(t.twelve?1.15:1))}
- if(t.k==='stoppie'){p.pv=Math.min(p.pv,-.6)}sfx.trick(t.i);pop(p,t.n.toUpperCase(),'#ffffff',.8,'t')}
-function endTrick(p,clean){const t=p.trk_;if(!t)return;p.trk_=null;p.trOn=false;const pts=Math.round(p.trickPts);
+function beginTrick(p,t){p.trk_=t;p.tt=0;p.up=0;p.trickPts=0;p.bal=(Math.random()-.5)*.1;p.balV=0;if(t.k==='wheelie'&&p.pitch<.05){p.pv=Math.max(p.pv,.25)}
+ if(t.k==='stoppie'){p.pv=Math.min(p.pv,-.2)}sfx.trick(t.i);p.liveSk={n:t.n.toUpperCase(),id:++SKID};p.skV++/* round 13: the trick shows as a live line in the skill chain, not a big label */}
+function endTrick(p,clean){const t=p.trk_;if(!t)return;p.trk_=null;p.trOn=false;p.liveSk=null;p.skV++;const pts=Math.round(p.trickPts);
  if(clean&&pts>20&&p.tt>.6){const bonus=Math.round(pts*.25*p.mult);p.score+=bonus;p.tricks++;bumpChain(p,1);if(!p.bestTrick||pts+bonus>p.bestTrick.pts)p.bestTrick={n:t.n,pts:pts+bonus};
-  skill(p,t.n.toUpperCase(),pts+bonus);sfx.land()}
+  skill(p,t.n.toUpperCase(),pts+bonus,0,p.tt);sfx.land()}
  p.lastTrick=B.t}
 function trickStep(p,dt,I){const t=p.trk_;
  /* pitch dynamics: gravity pulls the bike back to both wheels below the balance point and over it above; throttle lifts, rear brake drops */
  const bal=t&&t.twelve?1.38:1.05;/* wheelie balance angle (rad) */
  /* Nov 2 (round 4): tapped tricks hold themselves. While a wheelie or stoppie is on, the bike is steered to a target angle (throttle
     raises it, brake lowers it); after the landing tap the target is zero and the wheel comes down softly, which ends the trick */
- if(t&&(t.k==='wheelie'||t.k==='stoppie')){const on=p.trOn,wh=t.k==='wheelie',th_=I?I.th:0,br_=I?I.br:0;
+ if(t&&(t.k==='wheelie'||t.k==='stoppie')){const wh=t.k==='wheelie',th_=I?I.th:0,br_=I?I.br:0;
   /* Nov 2 (round 6): no autopilot. The key is held; the bike balances on an unstable point and you ride it there yourself: throttle lifts
      the front, the rear brake drops it, a drifting gust pushes it about. Under the point it falls back, past it it goes over */
   const w0=p.wn||0;p.wn=w0+((Math.random()-.5)*8-w0*1.4)*dt;
-  if(wh){const bp=t.twelve?1.3:t.stand?.95:1.06,pop=on&&p.tt<.32?3.4*(1-p.tt/.32):0;
-   const gt=-3.1*Math.sin(bp-p.pitch),lift=on?th_*(3.3+p.trk*.7)+pop-br_*5.5:0;
-   p.pv+=(lift+gt+p.wn*(on?1.1:.3)-p.pv*(on?.7:2.4))*dt;p.pitch+=p.pv*dt;
-   if(p.pitch<=0){p.pitch=0;p.pv=Math.max(0,p.pv);if(!on||p.tt>.6){endTrick(p,on&&p.tt>.6?true:true);return}}
+  /* Round 13: hold the trick key to lift, let go to let it fall, and balance it there by pumping the key or the throttle (speeding up
+     lifts, braking drops). Getting it up takes the key and the throttle together and enough speed; past the balance point it goes over */
+  const hk=p.hold?1:0;
+  if(wh){const bp=t.twelve?1.3:t.stand?.95:1.06,spdK=ss(4,10,p.v)*(.55+.45*ss(70,20,p.v));
+   const gt=-3.3*Math.sin(bp-p.pitch),lift=(hk*(2.1+p.trk*.3)+th_*(1.45+p.trk*.35))*spdK-br_*5;
+   p.pv+=(lift+gt+p.wn*.9-p.pv*.8)*dt;p.pitch+=p.pv*dt;
+   if(p.pitch<=0){p.pitch=0;p.pv=Math.max(0,p.pv);if(p.tt>.6&&(p.up||!hk)){endTrick(p,!!p.up);p.up=0;return}}
+   if(p.pitch>.12)p.up=1;
    if(p.pitch>bp+.4){wipeout(p,'LOOPED OUT');return}}
-  else{/* stoppie: the front brake tips it up, gravity brings it back, too much and you go over the bars */
-   const press=on?br_*(3.2+p.trk*.8)*ss(3,12,p.v)+(p.tt<.25?2.2:0):0,gt=p.pitch>-.95?2.4*Math.cos(p.pitch):-1.6;
-   p.pv+=(-press+gt+p.wn*(on?.9:.2)-p.pv*(on?1.0:2.4))*dt;p.pitch+=p.pv*dt;
-   if(p.pitch>=0){p.pitch=0;p.pv=Math.min(0,p.pv);if(!on||p.tt>.6){endTrick(p,true);return}}
-   if(p.v<1.5&&on)p.pv+=3*dt;
+  else{/* stoppie: holding the key grabs the front brake, which slows you and tips the back up. Speed keeps it up: the faster you go the
+     harder it tips, the throttle pushes the back down, and it falls back once you have run out of speed */
+   const spdK=ss(3,14,p.v),press=hk*(3.3+p.trk*.5)*spdK+br_*1.2*spdK-th_*2.2,gt=p.pitch>-.95?2.4*Math.cos(p.pitch):-1.6;
+   p.pv+=(-press+gt+p.wn*.8-p.pv*1.0)*dt;p.pitch+=p.pv*dt;
+   if(p.pitch>=0){p.pitch=0;p.pv=Math.min(0,p.pv);if(p.tt>.6&&(p.up||!hk)){endTrick(p,!!p.up);p.up=0;return}}
+   if(p.pitch<-.1)p.up=1;
+   if(p.v<1.5)p.pv+=3*dt;
    if(p.pitch<-1.15){wipeout(p,'OVER THE BARS');return}}}
  else{
  if(p.pitch>0||t&&t.k==='wheelie'){const top=t&&t.twelve?bal+.02:bal-.05,lift=t&&t.k==='wheelie'?p.th*(2.6+p.trk*1.6)*(p.v<25?1:ss(60,25,p.v)*.9+.1)*cl((top-p.pitch)/.45,0,1)+(Math.random()-.5)*1.6:0,drop=p.br*6;
@@ -378,7 +387,7 @@ function walls(p,dt){const ex=B.road.exitNear(p.s+250),x=ex>-1e8&&p.s>ex-230&&p.
  const lo=.62,hi=RD.SHO-.28+x,vlat=p.v*Math.sin(p.psi);
  if(p.d_<lo||p.d_>hi){const side=p.d_<lo?-1:1;p.d_=side<0?lo:hi;
   if(Math.abs(vlat)>7.5&&p.ghost<=0){wipeout(p,side<0?'HIT THE BARRIER':'HIT THE RAIL');return}
-  p.psi=wrapA(-p.psi*.35);p.v*=.93;p.lean*=.6;if(p.scrape<=0){sfx.scrape();p.scrape=.3;spark(p,side)}if(p.chain>0){p.comboT=Math.min(p.comboT,.8)}if(p.mult>1){pop(p,'SCRAPE','#ef6a5a',.8)}}
+  p.psi=wrapA(-p.psi*.35);p.v*=.93;p.lean*=.6;if(p.scrape<=0){sfx.scrape();p.scrape=.3;spark(p,side)}if(p.chain>0){p.comboT=Math.min(p.comboT,.8)}pen(p,'SCRAPE')}
  p.scrape=Math.max(0,p.scrape-dt);
  /* gore nose: the exit lane closes */
  if(ex>-1e8&&p.s>ex&&p.s<ex+3&&p.d_>RD.SHO-.28&&p.ghost<=0)wipeout(p,'HIT THE CUSHION')}
@@ -386,12 +395,18 @@ function walls(p,dt){const ex=B.road.exitNear(p.s+250),x=ex>-1e8&&p.s>ex-230&&p.
 /* ---------------- scoring ---------------- */
 /* the skill chain (Forza style): every move that keeps the chain alive is listed with its points, repeats stack (NEAR MISS x3),
    and the chain total is banked when the timer runs out or lost in a wipeout */
-let SKID=0;function skill(p,n,pts,side){const top=p.sk[0];if(top&&top.n===n&&B.t-top.t<3){top.c++;top.pts+=pts;top.t=B.t;top.id=++SKID}else{p.sk.unshift({n,c:1,pts,t:B.t,id:++SKID});if(p.sk.length>4)p.sk.length=4}
- p.chainPts+=pts;p.skV++;p.skEnd=null;if(side){const h=hudOf(p),f=h&&h.querySelector('.nf.'+(side>0?'r':'l'));if(f){f.classList.remove('on');void f.offsetWidth;f.classList.add('on')}}}
+/* round 13: knocks (traded paint, bumps, scrapes) are small chain lines too, and they take points off */
+function pen(p,n){if(p.chain<=0)return;const x=Math.round(40+p.chainPts*.12);p.score=Math.max(0,p.score-x);skill(p,n,-x)}
+let SKID=0;function skill(p,n,pts,side,dur){const top=p.sk[0];if(dur){p.sk.unshift({n,c:1,pts,t:B.t,id:++SKID,dur});if(p.sk.length>4)p.sk.length=4}else if(top&&top.n===n&&!top.dur&&B.t-top.t<3){top.c++;top.pts+=pts;top.t=B.t;top.id=++SKID}else{p.sk.unshift({n,c:1,pts,t:B.t,id:++SKID});if(p.sk.length>4)p.sk.length=4}
+ p.chainPts=Math.max(0,p.chainPts+pts);p.skV++;p.skEnd=null;if(side){const h=hudOf(p),f=h&&h.querySelector('.nf.'+(side>0?'r':'l'));if(f){f.classList.remove('on');void f.offsetWidth;f.classList.add('on')}}}
 function endChain(p,ok){if(p.chain>0&&p.chainPts>0)p.skEnd={ok,pts:Math.round(p.chainPts),m:p.mult,t:B.t};p.chain=0;p.mult=1;p.comboT=0;p.chainPts=0;p.sk=[];p.skV++}
 /* harder to keep a chain going: 2.6 s to land the next move (was 4), and three moves per multiplier step (was two) */
 const CHAIN_T=2.6;function bumpChain(p,n){p.chain+=n;p.mult=Math.min(10,1+Math.floor(p.chain/3));p.comboT=CHAIN_T;if(p.mult>p.bestCombo)p.bestCombo=p.mult}
 function scoreStep(p,dt){if(p.wipe)return;p.comboT-=dt;if(p.comboT<=0&&p.chain>0)endChain(p,true);
+ /* round 13: more chain moves. HIGH SPEED for holding near the bike's top speed, DRAFTING for tucking in close behind a car */
+ if(B.state==='ride'){if(p.v>p.vmax*.9){p.hsT=(p.hsT||0)+dt;if(p.hsT>3){p.hsT=0;const pts=Math.round(90*p.mult);p.score+=pts;bumpChain(p,1);skill(p,'HIGH SPEED',pts)}}else p.hsT=0;
+  const dv=p.v>20&&B.tr.find(v=>v.side>0&&v.ramp==null&&!(v.hit>0)&&v.s>p.s&&v.s-p.s<v.L/2+8&&Math.abs(v.d-p.d_)<v.W/2-.1);
+  if(dv){p.drT=(p.drT||0)+dt;if(p.drT>2){p.drT=0;const pts=Math.round(120*p.mult);p.score+=pts;bumpChain(p,1);skill(p,'DRAFTING',pts)}}else p.drT=0}
  /* near misses and lane splits: pass a vehicle within 1.3 m */
  const pv=p.v*Math.cos(p.psi);
  for(const v of B.tr){if(v.side<0||v.ramp!=null||v.hit>0)continue;const ds=v.s-p.s;if(Math.abs(ds)>v.L/2+3){v['ps'+p.k]=Math.sign(ds);continue}
@@ -407,29 +422,29 @@ function collide(p){if(p.wipe||p.ghost>0)return;const pd=p.d_,hw=.36+Math.abs(Ma
   /* inside the box: where from? */
   const ox=v.L/2+1.1-Math.abs(ds),oy=v.W/2+hw-Math.abs(dd);const vrel=p.v*Math.cos(p.psi)-(v.hit>0?v.v*.5:v.v);
   if(ox<oy){/* nose or tail: a rear-end */if(Math.abs(vrel)>4.5){hitVeh(v,p);wipeout(p,ds<0?'REAR-ENDED A '+vName(v):'HIT BY A '+vName(v));return}
-   p.s=v.s+Math.sign(ds||-1)*(v.L/2+1.12);p.v=Math.max(0,v.v*(ds<0?.95:1.05));p.pv=0;pop(p,'BUMP','#ef6a5a',.8);sfx.scrape()}
+   p.s=v.s+Math.sign(ds||-1)*(v.L/2+1.12);p.v=Math.max(0,v.v*(ds<0?.95:1.05));p.pv=0;pen(p,'BUMP');sfx.scrape()}
   else{const lat=p.v*Math.sin(p.psi)*Math.sign(-dd);if(lat>5.5||p.trk_&&p.trk_.k==='balance'){hitVeh(v,p);wipeout(p,'SIDESWIPED A '+vName(v));return}
    p.d_=v.d+Math.sign(dd||1)*(v.W/2+hw+.02);p.psi=wrapA(p.psi*.3+Math.sign(dd)*.05);p.v*=.9;p.lean*=.5;if(p.scrape<=0){sfx.scrape();p.scrape=.35;spark(p,-Math.sign(dd))}
-   if(p.chain>0){pop(p,'TRADED PAINT','#ef6a5a',.9);p.comboT=Math.min(p.comboT,.8)}}}}
+   if(p.chain>0){pen(p,'TRADED PAINT');p.comboT=Math.min(p.comboT,.8)}}}}
 /* rider against rider (two players): the same box logic as traffic, but both bikes give way; a hard rear-end or a fast swipe drops whoever caused it */
 function collideRiders(){const P=B.pl;if(P.length<2)return;const a=P[0],b=P[1];if(a.wipe||b.wipe||a.ghost>0||b.ghost>0)return;
  {/* close alongside: whoever is not mid-trick reaches out and shoves; the push only moves you apart */
   const ds0=b.s-a.s,dd0=b.d_-a.d_;if(Math.abs(ds0)<1.3&&Math.abs(dd0)<1.7&&Math.abs(dd0)>.5){for(const [q,o] of[[a,b],[b,a]]){if(q.trk_||q.shoveCD>0)continue;q.shoveT=SHOVE_T;q.shE=0;q.shoveHit=0;q.shoveCD=1.6;q.shoveSide=(o.d_>q.d_)?1:-1}}
-  for(const q of P){q.shoveCD=Math.max(0,(q.shoveCD||0)-1/60);const e=q.shE||0;if(q.shoveT>0&&e>.14&&e<.34){const o=q===a?b:a,dir=Math.sign(o.d_-q.d_)||1;o.d_+=dir*1.2/60;q.d_-=dir*.35/60;o.lv=(o.lv||0)+dir*.4/60*20;if(!q.shoveHit){q.shoveHit=1;o.jolt=1;o.joltSide=dir;sfx.scrape()}}}}
+  for(const q of P){q.shoveCD=Math.max(0,(q.shoveCD||0)-1/60);const e=q.shE||0;if(q.shoveT>0&&e>.14&&e<.34){const o=q===a?b:a,dir=Math.sign(o.d_-q.d_)||1;o.d_+=dir*1.2/60;q.d_-=dir*.35/60;o.lv=(o.lv||0)+dir*.4/60*20;if(!q.shoveHit){q.shoveHit=1;if(B.state==='ride'){const pts=Math.round(180*q.mult);q.score+=pts;bumpChain(q,1);skill(q,'DANGEROUS',pts)}o.jolt=1;o.joltSide=dir;sfx.scrape()}}}}
  const ds=b.s-a.s,dd=b.d_-a.d_,LS=2.05,LD=.62+(Math.abs(Math.sin(a.psi))+Math.abs(Math.sin(b.psi)))*.45;if(Math.abs(ds)>LS||Math.abs(dd)>LD)return;
  const ox=LS-Math.abs(ds),oy=LD-Math.abs(dd);const va=a.v*Math.cos(a.psi),vb=b.v*Math.cos(b.psi),la=a.v*Math.sin(a.psi),lb=b.v*Math.sin(b.psi);
  if(ox<oy){const back=ds>0?a:b,front=ds>0?b:a,close=(ds>0?va-vb:vb-va);
   if(close>6.5){wipeout(back,'REAR-ENDED '+(front===a?'RIDER 1':'RIDER 2'));front.v+=close*.25;front.pv-=.3;return}
-  const sg=Math.sign(ds||1);a.s-=sg*ox*.5;b.s+=sg*ox*.5;if(close>0){back.v-=close*.6;front.v+=close*.4}for(const p of P)pop(p,'BUMP','#ef6a5a',.7);sfx.scrape()}
+  const sg=Math.sign(ds||1);a.s-=sg*ox*.5;b.s+=sg*ox*.5;if(close>0){back.v-=close*.6;front.v+=close*.4}for(const p of P)pen(p,'BUMP');sfx.scrape()}
  else{const sg=Math.sign(dd||1),cl_=(la-lb)*sg;/* closing sideways speed */
   if(cl_>6){const hitter=Math.abs(la)>Math.abs(lb)?a:b;wipeout(hitter,'SIDESWIPED '+(hitter===a?'RIDER 2':'RIDER 1'));return}
   a.d_-=sg*oy*.5;b.d_+=sg*oy*.5;a.psi=wrapA(a.psi*.4-sg*.04);b.psi=wrapA(b.psi*.4+sg*.04);a.lv=(a.lv||0)-sg*1.2;b.lv=(b.lv||0)+sg*1.2;a.v*=.97;b.v*=.97;
-  for(const p of P)if(p.scrape<=0){sfx.scrape();p.scrape=.35;spark(p,p===a?sg:-sg);if(p.chain>0){pop(p,'TRADED PAINT','#ef6a5a',.9);p.comboT=Math.min(p.comboT,.8)}}}}
+  for(const p of P)if(p.scrape<=0){sfx.scrape();p.scrape=.35;spark(p,p===a?sg:-sg);if(p.chain>0){pen(p,'TRADED PAINT');p.comboT=Math.min(p.comboT,.8)}}}}
 const vName=v=>({sedan:'CAR',hatch:'CAR',suv:'SUV',pickup:'PICKUP',van:'VAN',box:'TRUCK',semi:'SEMI',bus:'BUS'})[v.kind]||'CAR';
 function hitVeh(v,p){v.hit=4.5;v.haz=1;v.sig=0;v.chg=null;v.spin=(Math.random()-.5)*.08}
 
 /* ---------------- wipeouts ---------------- */
-function wipeout(p,why){if(p.wipe)return;if(p.trk_)p.trk_=null;p.trOn=false;p.trQ=null;
+function wipeout(p,why){if(p.wipe)return;p.why=why;p.liveSk=null;if(p.trk_)p.trk_=null;p.trOn=false;p.trQ=null;
  const m=p.m,R_=m.rider,vf=p.v,ps=p.psi;p.wipes++;
  endChain(p,false);
  /* the rider leaves the bike: move the rider group into the scene at the same place */
@@ -441,7 +456,8 @@ function wipeout(p,why){if(p.wipe)return;if(p.trk_)p.trk_=null;p.trOn=false;p.tr
   bs:p.s,bd:p.d_,bv:Math.min(vf,24)/* the bike slides a few car lengths, not hundreds of metres */,bpsi:ps,bspin:(Math.random()-.5)*2.5,blean:p.lean,side:p.lean>=0?1:-1,bpitch:p.pitch};
  /* people riders go limp: a ragdoll that starts with the bike's speed plus the throw */
  {const y=m.g.rotation.y,vel=new THREE.Vector3(Math.sin(y),0,Math.cos(y)).multiplyScalar(Math.min(vf*.92,20));/* thrown, not launched: at most 20 m/s along the road */vel.y=p.wipe.rvh*.8;vel.x+=Math.cos(y)*p.wipe.rvd*.3;vel.z-=Math.sin(y)*p.wipe.rvd*.3;
-  const rag=BK.ragStart&&BK.ragStart(m,vel);if(rag){p.wipe.rag=rag;rg.position.set(0,0,0);rg.quaternion.identity();p.wipe.p0=rag.P[0].clone()}}
+  const otb=why==='OVER THE BARS'||why==='LOOPED OUT'&&false;if(otb){vel.y=Math.max(vel.y,4.5)}
+  const rag=BK.ragStart&&BK.ragStart(m,vel,{flip:otb?Math.min(9,3+vf*.15):0,roll:vf>9});if(rag){p.wipe.rag=rag;rg.position.set(0,0,0);rg.quaternion.identity();p.wipe.p0=rag.P[0].clone()}}
  p.pitch=0;p.pv=0;sfx.crash();if(p.eng)p.eng.set(0,0,0,false);
  for(let i=0;i<10;i++)spark(p,(Math.random()-.5)*2);
  pop(p,'WIPEOUT','#ef6a5a',2.4,'w');pop(p,why,'#c9d2d8',2.2)}
@@ -588,13 +604,13 @@ const CSS=`
 #bkHud .mn li.eq:after{content:"";width:7px;height:7px;border-radius:50%;background:#7fd68a;box-shadow:0 0 6px #7fd68a}
 #bkHud .mn p{margin:0;padding:10px 16px 14px;font-size:11px;line-height:1.5;color:#c9d2d8;border-top:1px solid #ffffff14}
 /* score and combo on one plate: score with the best under it, the combo beside it lit only while a chain is running, its bar the time left to keep it */
-#bkHud .cb{left:12px;top:calc(12px + 84px * var(--s));transform:scale(var(--s));transform-origin:left top;display:flex;align-items:stretch;padding:0;overflow:hidden}
+#bkHud .cb{left:12px;top:calc(12px + 63px * var(--s));transform:scale(var(--s));transform-origin:left top;display:flex;align-items:stretch;padding:0;overflow:hidden}
 #bkHud .cb small{display:block;font:600 9px var(--gt);letter-spacing:.24em;color:var(--gxd,#9aa3ab)}
 #bkHud .cb .sc{padding:8px 16px 9px;min-width:118px}#bkHud .cb .sc b{display:block;font:300 28px var(--gt);font-variant-numeric:tabular-nums;line-height:1.1;letter-spacing:.01em}
 #bkHud .cb .sc em{display:block;margin-top:2px;font:500 9px var(--gt);font-style:normal;letter-spacing:.18em;color:var(--gxd,#9aa3ab)}
 @keyframes bkBump{0%{transform:scale(1.45)}100%{transform:none}}
 /* skill chain, top centre: multiplier badge, chain total, the time left to keep it, and the moves in it (newest on top) */
-#bkHud .sk{position:absolute;left:50%;top:12px;transform:translateX(-50%) scale(var(--s));transform-origin:center top;min-width:250px;transition:opacity .25s;opacity:0}
+#bkHud .sk{position:absolute;right:18px;top:58px;transform:scale(var(--s));transform-origin:right top;min-width:250px;/* round 13: off the middle of the screen, top right under the pause chip */transition:opacity .25s;opacity:0}
 #bkHud .sk.live,#bkHud .sk.end{opacity:1}
 #bkHud .sk .skh{display:flex;align-items:stretch;background:var(--gx);border-radius:8px 8px 0 0;box-shadow:var(--gxhi),0 0 0 1px #000c,0 4px 14px #0009;overflow:hidden}
 #bkHud .sk .skm{min-width:62px;display:flex;align-items:center;justify-content:center;font:500 26px var(--gt);color:#fff;background:linear-gradient(180deg,#8fb4d8 0%,#4f7eab 48%,#33608c 52%,#4a77a3 100%);box-shadow:inset 0 1px 0 #ffffff80}
@@ -606,10 +622,14 @@ const CSS=`
 #bkHud .sk li{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:4px 12px;border-radius:6px;background:var(--gx);box-shadow:var(--gxhi),0 0 0 1px #000c;font:500 11px var(--gt);letter-spacing:.14em;color:#c9d2d8;opacity:.8}
 #bkHud .sk li b{font-weight:500;color:#fff;font-variant-numeric:tabular-nums}#bkHud .sk li em{font-style:normal;color:#8fb4d8;margin-left:4px}
 #bkHud .sk li.new{opacity:1;color:#fff;animation:bkSk .3s ease-out}@keyframes bkSk{0%{transform:translateY(-6px) scale(1.04);opacity:0}100%{transform:none;opacity:1}}
+#bkHud .sk li.neg b{color:#ef6a5a}#bkHud .sk li b.dur{display:grid}#bkHud .sk li b.dur i{grid-area:1/1;font-style:normal;text-align:right}
+#bkHud .sk li b.dur i:first-child{animation:bkTmOut .5s .15s both}#bkHud .sk li b.dur i:last-child{color:#8fe08a;animation:bkTmIn .45s .45s both}
+@keyframes bkTmOut{to{opacity:0;transform:translateY(-5px)}}@keyframes bkTmIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+#bkHud .sk li:not(.neg):not(.live) b{color:#8fe08a}#bkHud .sk li.live{opacity:1;color:#fff;box-shadow:var(--gxhi),0 0 0 1px #8fb4d8aa}#bkHud .sk li.live b{color:#bfe0ff}
 #bkHud .sk li:nth-child(3){opacity:.55}#bkHud .sk li:nth-child(4){opacity:.35}
 #bkHud .sk.end .skb,#bkHud .sk.end ul{display:none}#bkHud .sk.end .skh{border-radius:8px}
 #bkHud .sk.end.ok .skt b{color:#bfe0a8}#bkHud .sk.end.no .skm{display:none}#bkHud .sk.end.no .skt{text-align:center}#bkHud .sk.end.no .skt b{color:#ef6a5a}
-#bkHud .sk.end{animation:bkSkEnd 2s forwards}@keyframes bkSkEnd{0%{transform:translateX(-50%) scale(calc(var(--s) * 1.06))}12%{transform:translateX(-50%) scale(var(--s))}75%{opacity:1}100%{opacity:0;transform:translateX(-50%) scale(var(--s))}}
+#bkHud .sk.end{animation:bkSkEnd 2s forwards}@keyframes bkSkEnd{0%{transform:scale(calc(var(--s) * 1.06))}12%{transform:scale(var(--s))}75%{opacity:1}100%{opacity:0;transform:scale(var(--s))}}
 /* near miss: a cool flash along the edge the car went past */
 #bkHud .nf{position:absolute;top:0;bottom:0;width:18%;opacity:0;pointer-events:none}#bkHud .nf.l{left:0;background:linear-gradient(90deg,#8fb4d866,#8fb4d800)}#bkHud .nf.r{right:0;background:linear-gradient(270deg,#8fb4d866,#8fb4d800)}
 #bkHud .nf.on{animation:bkNf .5s ease-out}@keyframes bkNf{0%{opacity:1}100%{opacity:0}}
@@ -671,13 +691,14 @@ function hudStep(){if(!B)return;const h=$i('bkHud');if(!h)return;
  for(const p of B.pl){const e=hudOf(p);if(!e)continue;const q=s=>e.querySelector(s);
   /* the same HUD pieces as the car modes: time plate, score / combo strip, GT-style gauge */
   {const sc=fmtN(Math.round(p.score)),b=q('.cb .sc b');if(b._t!==sc){b._t=sc;b.textContent=sc}}
-  {/* skill chain: live while a chain runs, then BANKED / CHAIN LOST for a moment */const k=q('.sk'),end=p.skEnd&&B.t-p.skEnd.t<2?p.skEnd:null,st=p.chain>0?'live':end?(end.ok?'end ok':'end no'):'off';
+  {/* skill chain: live while a chain runs, then BANKED / CHAIN LOST for a moment */const k=q('.sk'),end=p.skEnd&&B.t-p.skEnd.t<2?p.skEnd:null,st=p.chain>0||p.liveSk?'live':end?(end.ok?'end ok':'end no'):'off';
    if(k._s!==st){k._s=st;k.className='sk '+st}
    if(st==='live'){const m='x'+p.mult,mm=k.querySelector('.skm');if(mm._t!==m){mm._t=m;mm.textContent=m;mm.classList.remove('bump');void mm.offsetWidth;mm.classList.add('bump')}
     const tt=fmtN(Math.round(p.chainPts)),tb=k.querySelector('.skt b');if(tb._t!==tt){tb._t=tt;tb.textContent=tt}k.querySelector('.skt small').textContent='SKILL CHAIN';
     const w=Math.round(cl(p.comboT/CHAIN_T,0,1)*100),u=k.querySelector('.skb u');if(u._w!==w){u._w=w;u.style.width=w+'%'}
-    if(k._v!==p.skV){k._v=p.skV;const top=p.sk[0]&&p.sk[0].id;k.querySelector('ul').innerHTML=p.sk.map(e=>`<li class="${e.id===top?'new':''}"><span>${e.n}${e.c>1?` <em>x${e.c}</em>`:''}</span><b>+${fmtN(Math.round(e.pts))}</b></li>`).join('')}}
-   else if(end&&k._e!==end){k._e=end;k.querySelector('.skm').textContent=end.ok?'x'+end.m:'';k.querySelector('.skt small').textContent=end.ok?'CHAIN BANKED':'CHAIN LOST';k.querySelector('.skt b').textContent=(end.ok?'+':'')+fmtN(end.pts);k.querySelector('ul').innerHTML='';k._v=-1}}
+    {const lv=p.liveSk,vk=p.skV+'|'+(lv?Math.floor(p.tt*10):'');if(k._v!==vk){k._v=vk;const top=p.sk[0]&&p.sk[0].id,sg=v=>(v<0?'\u2212':'+')+fmtN(Math.abs(Math.round(v)));
+     k.querySelector('ul').innerHTML=(lv?`<li class="live"><span>${lv.n}</span><b>${p.tt.toFixed(1)}s</b></li>`:'')+p.sk.slice(0,lv?3:4).map(e=>`<li class="${e.id===top&&!lv?'new':''}${e.pts<0?' neg':''}"><span>${e.n}${e.c>1?` <em>x${e.c}</em>`:''}</span>${e.dur&&e.id===top&&!lv?`<b class="dur"><i>${e.dur.toFixed(1)}s</i><i>${sg(e.pts)}</i></b>`:`<b>${sg(e.pts)}</b>`}</li>`).join('')}}}
+   else if(end&&k._e!==end){k._e=end;const mm=k.querySelector('.skm');mm._t=null;mm.textContent=end.ok?'x'+end.m:'';k.querySelector('.skt small').textContent=end.ok?'CHAIN BANKED':'CHAIN LOST';k.querySelector('.skt b').textContent=(end.ok?'+':'')+fmtN(end.pts);k.querySelector('ul').innerHTML='';k._v=-1}}
   if(B.clock){const l=Math.max(0,B.left),tt=Math.floor(l/60)+':'+String(Math.floor(l%60)).padStart(2,'0'),rt=q('.raceTime');if(rt._t!==tt){rt._t=tt;rt.textContent=tt}rt.style.color=l<15?'#ff6b5e':''}
   {const cv=q('.gx5'),v=Math.round(spd(p.wipe?0:p.v)),rv=cl(p.rpm||0,0,1.04),up=!p.wipe&&rv>.9,key=v+'|'+p.gear+'|'+Math.round(rv*200)+'|'+up;
    if(cv._k!==key){cv._k=key;P.gx5Draw(cv,{rev:rv,kmh:v,gear:p.gear,shift:up,unit:kmh()?'km/h':'mph',tag:B.pl.length>1?'P'+(p.k+1):'',tagCol:PCOL[p.k]})}}
@@ -756,7 +777,9 @@ const shotCache={};
 function bikeShot(cv,list){if(!cv)return;list=Array.isArray(list)?list:[list];const key='bk|'+list.map(s=>s.id+'.'+s.paint+'.'+s.who).join('|'),ms=[];
  P.objShot(cv,key,()=>{const g=new THREE.Group();list.forEach((s,i)=>{const d=BK.byId(s.id),m=BK.makeBike(s.id,BK.paintOf(d,s.paint),Object.assign({},RIDER_COL[i]||RIDER_COL[0],{who:s.who}));ms.push(m);
   const fake={m,d,trk_:null,lean:0,k:0};BK.poseBike(m,0,0,.18,0,0);const bp=basePose(fake),I=m.I;if(m.rider&&m.rider.people)bp.feet[0]=[I.peg[0]+.2,-.02,I.peg[2]+.18];BK.poseRider(m,Object.assign(bp,{look:-.05,turn:.35,side:m.rider&&m.rider.people?-.06:0}));
-  m.g.position.set(list.length>1?(i?-.75:.75):0,0,list.length>1?(i?-.9:.9):0);g.add(m.g)});return g},{yaw:-1.0,fy:list.length>1?1.45:1.3,fx:list.length>1?.8:.62,dispose:()=>{for(const m of ms)BK.disposeBike(m)}})}
+  m.g.position.set(list.length>1?(i?-.75:.75):0,0,list.length>1?(i?-.9:.9):0);g.add(m.g)});return g},{yaw:-1.0,fy:list.length>1?1.45:1.3,fx:list.length>1?.8:.62,clear:true,
+  /* round 13: the camera frames a fixed bike-sized box in each slot (2.2 m long, 1.5 m tall), so a small scooter is not blown up to a big bike's size */
+  ref:(bx,yaw)=>{const b=new THREE.Box3(),v=new THREE.Vector3(),ax=new THREE.Vector3(0,1,0),n=list.length;for(let i=0;i<n;i++){const px=n>1?(i?-.75:.75):0,pz=n>1?(i?-.9:.9):0;for(const sx of[-.45,.45])for(const sz of[-1.1,1.1])for(const sy of[0,1.5]){v.set(px+sx,sy,pz+sz).applyAxisAngle(ax,yaw);b.expandByPoint(v)}}b.min.y=bx.min.y;b.max.y=bx.min.y+1.5;return b},dispose:()=>{for(const m of ms)BK.disposeBike(m)}})}
 const STATN=[['Top speed',d=>d.stats.top/300,d=>Math.round(kmh()?d.stats.top:d.stats.top/1.609)+(kmh()?' km/h':' mph')],['Acceleration',d=>d.stats.acc,d=>Math.round(d.stats.acc*100)],['Handling',d=>d.stats.hnd,d=>Math.round(d.stats.hnd*100)],['Tricks',d=>d.stats.trk,d=>Math.round(d.stats.trk*100)]];
 const PAINTN=['Stock','Second','Red','Orange','Yellow','Green','Blue','Purple','White','Black'];
 const OPTS={clock:[[120,'2 min'],[180,'3 min'],[300,'5 min'],[0,'Endless']],traffic:[['light','Light'],['normal','Normal'],['heavy','Heavy']],tod:[['day','Day'],['dusk','Sunset'],['night','Night']]};
@@ -778,19 +801,24 @@ function rideMap(cv){if(!cv||!PR)return;const dpr=Math.min(2,devicePixelRatio||1
  const [sx,sy]=P_(q[0]);g.fillStyle='#ffd36a';g.beginPath();g.arc(sx,sy,7*dpr,0,7);g.fill();g.fillStyle='#ffd36a';g.fillText('START',sx,sy-14*dpr);
  const [ex,ey]=P_(q[q.length-1]);g.fillStyle='#cfe3ff88';g.fillText('and on…',ex,ey-14*dpr)}
 function bikeRender(){if(!PR)return;const two=PR.p[1].in,L=BK.list(),rows=[];
- const re=()=>{sfx.ui('move');bikeRender()};const step=PR.step||1;P.gxSteps&&P.gxSteps(step,'The ride','Bikes');
+ const re=()=>{sfx.ui('move');bikeRender()};
+ /* round 13 (Hakan): no rider count on the ride step. The bikes step is the 2 x 2 player grid: Add player brings rider 2 in, the x takes them out (two riders at most: split screen) */
+ const addRider=()=>{if(PR.p[1].in)return;PR.p[1].in=true;PR.focus=1;sfx.ui('select');bikeRender()},dropRider=()=>{PR.p[1].in=false;PR.focus=0;sfx.ui('back');bikeRender()};const step=PR.step||1;P.gxSteps&&P.gxSteps(step,'The ride','Bikes');
  if(step===2)for(let i=0;i<2;i++){const s=PR.p[i];if(i===1&&!two)continue;const d=BK.byId(s.id),grp=i?1:0,dot=two?PCOL[i]:null;
   if(BK.PEOPLE&&window.PEOPLE_B64)rows.push({grp,dot,l:'Rider',v:BK.PEOPLE[s.who%BK.PEOPLE.length].n,opts:BK.PEOPLE.length,go:k=>{s.who=(s.who+k+BK.PEOPLE.length)%BK.PEOPLE.length;PR.focus=i;re()}});
   rows.push({grp,dot,l:'Bike',v:d.name,opts:L.length,go:k=>{let j=L.findIndex(b=>b.id===s.id);s.id=L[(j+k+L.length)%L.length].id;PR.focus=i;re()}});
-  rows.push({grp,dot,l:'Paint',v:PAINTN[s.paint]||'Paint',sw:rgb(BK.paintOf(d,s.paint)),opts:BK.PAINTS.length,go:k=>{s.paint=(s.paint+k+BK.PAINTS.length)%BK.PAINTS.length;PR.focus=i;re()}})}
- if(step===1)rows.push({grp:0,l:'Riders',v:two?'2 (split screen)':'1',opts:2,go:k=>{PR.p[1].in=k>0;PR.focus=k>0?1:0;re()}});
+  rows.push({grp,dot,l:'Paint',v:PAINTN[s.paint]||'Paint',sw:rgb(BK.paintOf(d,s.paint)),opts:BK.PAINTS.length,go:k=>{s.paint=(s.paint+k+BK.PAINTS.length)%BK.PAINTS.length;PR.focus=i;re()}});
+  rows.push({grp,l:'Keys',v:i?'Arrows &middot; tricks U I O P H J':'W A S D &middot; tricks E R F C Z X',opts:1})}
+ /* like the car screen: rider 2's frame only appears once they are added (no empty frame, no stats panel) */
+ rows.forEach((r,j)=>{if(r.grp!=null&&step===2&&!r.add)r.pl=r.grp});
  if(step===1)for(const[k,l]of[['clock','Clock'],['traffic','Traffic'],['tod','Time of day']]){const Lo=OPTS[k],j=Math.max(0,Lo.findIndex(z=>String(z[0])===String(PR.opt[k])));
   rows.push({grp:/^(Traffic|Time of day)$/.test(l)?1:0,l,v:Lo[j][1],opts:Lo.length,go:dd=>{const n=Math.min(Lo.length-1,Math.max(0,j+dd));if(n!==j){PR.opt[k]=k==='clock'?+Lo[n][0]:Lo[n][0];re()}}})}
  const fi=PR.focus&&two?1:0,s=PR.p[fi],d=BK.byId(s.id),k=L.findIndex(b=>b.id===s.id);
  const side=`<div class="gxSide"><h6>${esc(d.kind)} &middot; ${k+1} of ${L.length}</h6><div class="st">${STATN.map(([n,f,v])=>`<span>${n}</span><u><i style="width:${Math.round(cl(f(d),0,1)*100)}%"></i></u><em>${v(d)}</em>`).join('')}</div></div>`;
  const lineup=two?[PR.p[0],PR.p[1]]:[PR.p[0]];
- if(step===1)P.gxRender({kind:'Best score '+fmtN(SV().best||0),name:'Highway Cut-Up',facts:[two?'Two riders, split screen':'One rider','Endless highway','Plains'],rows,groups:['The ride','Conditions',''],shot:cv=>rideMap(cv),go:'Next: bikes'});
- else P.gxRender({kind:(two?'Rider '+(fi+1)+' &middot; ':'')+esc(d.kind),name:esc(d.name),facts:[esc(d.kind),'Tricks on '+KEYS[0].tkn.slice(0,TRICKS.length).join(' ')],side,rows,groups:['Rider 1','Rider 2',''],shot:cv=>bikeShot(cv,lineup),go:'Ride'});
+ if(step===1)P.gxRender({kind:'Best score '+fmtN(SV().best||0),name:'Highway Cut-Up',facts:['Endless highway','Plains','Up to two riders, split screen'],rows,groups:['The ride','Conditions',''],shot:cv=>rideMap(cv),go:'Next: bikes'});
+ else P.gxRender({kind:(two?'Player '+(fi+1)+' &middot; ':'')+esc(d.kind),name:esc(d.name),facts:[esc(d.kind),'Tricks on '+KEYS[fi].tkn.slice(0,TRICKS.length).join(' ')],side:'',rows,groups:['Player 1','Player 2'],grid:true,cols:PCOL,heroCls:'cars',rm:(p,go)=>{if(go){dropRider();return}return p===1&&two},
+  tnBtn:two?'':'<button class="gxAdd"><b>+</b> Add player</button>',onAdd:addRider,shot:cv=>bikeShot(cv,lineup),go:'Ride'});
  const g=$i('suGo');if(g)g.innerHTML='<span>'+(step===1?'Next: bikes &rsaquo;':'Ride')+'</span>'}
 function stopPrep(){if(!PR)return;const e=$i('bkPrep');if(e)e.style.display='none';if(PR.sc){for(const m of PR.bikes)if(m)BK.disposeBike(m);PR.world.dispose();PR.sky.dispose();R.toneMappingExposure=PR.exp0}PR=null}
 function leavePrep(){sfx.ui('back');stopPrep();document.body.classList.remove('bkOn');goMenu()}
@@ -809,7 +837,7 @@ const f0=frame;frame=function(n){if(scr==='bike'||(scr==='bikeres'&&B)){requestA
 /* leaving through some other path (menu shortcut, options): tidy up */
 {const sh0=show;show=n=>{sh0(n);if(n!=='bike'&&n!=='bikeres'&&n!=='pause'&&n!=='ptOptions'&&B&&n!=='bikeprep'){endRun()}if(n!=='s8setup'&&PR&&n!=='bike'&&n!=='ptOptions'){stopPrep()}if(n!=='bike'&&n!=='bikeprep'&&n!=='bikeres')document.body.classList.remove('bkOn');
   for(const id of['bkHud'])if($i(id)&&n!=='bike'&&n!=='bikeres')$i(id).style.display='none';if(n!=='bikeres'&&$i('bkRes'))$i('bkRes').style.display='none'}}
-BK._steerView=(id,steer,who)=>{const d=BK.byId(id),m=BK.makeBike(id,BK.paintOf(d,0),Object.assign({},RIDER_COL[0],{who:who||0}));const fake={m,d,trk_:null,lean:0,k:0};BK.poseBike(m,0,0,steer,0,0);BK.poseRider(m,basePose(fake));return m.g};
+BK._steerView=(id,steer,who)=>{const d=BK.byId(id),m=BK.makeBike(id,BK.paintOf(d,0),Object.assign({},RIDER_COL[0],{who:who||0}));const fake={m,d,trk_:null,lean:0,k:0};BK.poseBike(m,0,0,steer,0,0);BK.poseRider(m,basePose(fake));m.g.userData.m=m;return m.g};
 BK._handProbe=(ids,whos)=>{const out=[];const L=ids||BK.list().map(b=>b.id),W=whos||[...Array((BK.PEOPLE||[0]).length).keys()];
  const poses=[['ride',null,0,0,0],['leanL',null,.75,0,.25],['leanR',null,-.75,0,-.25],['steerL',null,0,0,.5],['wheelie','wheelie',0,.7,0],['deep','wheelie',0,1.2,0],['stoppie','stoppie',0,-.35,0],['standup','standup',0,.5,0],['twelve','twelve',0,1.3,0],['burnout','burnout',0,0,0]];
  for(const id of L)for(const who of W){const d=BK.byId(id),m=BK.makeBike(id,BK.paintOf(d,0),Object.assign({},RIDER_COL[0],{who}));if(!m.rider||!m.rider.people||!m.rider.T){out.push([id,who,"nopeople"]);BK.disposeBike(m);continue}const R=m.rider,T=R.T,ix=T.idx;

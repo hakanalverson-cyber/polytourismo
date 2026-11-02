@@ -4,6 +4,7 @@
 const P=window.PT8;if(!P||typeof THREE==='undefined')return;
 const BK=P.BK=P.BK||{};
 const cl=(x,a,b)=>x<a?a:x>b?b:x,lp=(a,b,t)=>a+(b-a)*t,PI=Math.PI,PI2=PI*2;
+const OVERHANGS=false;/* sign gantries and overpasses over the Cut-Up highway */
 const ss=(a,b,x)=>{const t=cl((x-a)/(b-a),0,1);return t*t*(3-2*t)};
 const rng=s=>()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
 const s2l=c=>c<=.04045?c/12.92:Math.pow((c+.055)/1.055,2.4);
@@ -58,6 +59,8 @@ function partGeo(part,pal,paintRGB){const pos=new Int16Array(u8(part.pos).buffer
  for(let f=0;f<nf;f++){const cc=L[col[f]];if(!cc)paint.push(f);const c=cc||paintRGB;for(let k=0;k<3;k++){const v=idx[f*3+k];P[f*9+k*3]=pos[v*3]/15000;P[f*9+k*3+1]=pos[v*3+1]/15000;P[f*9+k*3+2]=pos[v*3+2]/15000;C[f*9+k*3]=c[0];C[f*9+k*3+1]=c[1];C[f*9+k*3+2]=c[2]}}
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(P,3));g.setAttribute('color',new THREE.BufferAttribute(C,3));g.computeVertexNormals();g.userData.paint=paint;return g}
 function gbGeo(gb,paintRGB){const g=gb.geo(),c=g.attributes.color,paint=[];for(let f=0;f<c.count/3;f++)if(c.getX(f*3)<0){paint.push(f);for(let k=0;k<3;k++)c.setXYZ(f*3+k,paintRGB[0],paintRGB[1],paintRGB[2])}g.userData.paint=paint;return g}
+const VISOR={sport600:.97};
+const GRIP={patrol:[.28,1.01,.255],fatscoot:[.37,1.09,.27],retroscoot:[.5,.975,.245],bobber:[.35,1.03,.255],dirt450:[.35,1.157,.25],scrambler:[.36,.975,.305]};
 const geoCache={};BK._geoCache=geoCache;
 function bikeGeos(d){if(geoCache[d.id])return geoCache[d.id];const lin=c=>c?c.map(s2l):[.5,.5,.5];let r;
  if(d.parts){let pal=d.pal;
@@ -68,7 +71,9 @@ function bikeGeos(d){if(geoCache[d.id])return geoCache[d.id];const lin=c=>c?c.ma
    if(best>=0){if(!d.paint)d.paint=pal[best].map(x=>x/63);if(!d.alt)d.alt=[.1,.45,.95];pal=pal.map((c,i)=>i===best?[-1,-1,-1]:c)}}
   r={info:d,parts:{}};for(const k of['body','steer','fw','rw'])if(d.parts[k])r.parts[k]=partGeo(d.parts[k],pal,lin(d.paint))}
  else{const f=fbBike(d);r={info:Object.assign({},d,f.info),parts:{}};for(const k in f.out)r.parts[k]=gbGeo(f.out[k],lin(d.paint))}
+ /* round 13: grips measured off the steering part (the bar-end tube, inboard of the end weight). The pack put some on a brake lever or a lamp */
  try{splitMirrors(r)}catch(e){console.warn('mirrors',e)}
+ if(GRIP[d.id]&&d.parts)r.info.grip=GRIP[d.id];
  return geoCache[d.id]=r}
 /* bar-end and bar-mounted mirrors come baked into the body part: find small loose pieces up by the grips and hand them to the steering part,
    so they turn with the bars (big pieces such as a fairing never qualify) */
@@ -87,6 +92,8 @@ function splitMirrors(r){const I=r.info,B=r.parts.body,S=r.parts.steer;if(!B||!S
   const ax=Math.min(Math.abs(b.lo[0]),Math.abs(b.hi[0]));if(b.lo[0]<0&&b.hi[0]>0)continue;
   if(ax<.12||b.lo[1]<g[1]-.06||b.hi[1]>g[1]+.55||b.hi[2]<g[2]-.3||b.lo[2]>g[2]+.25)continue;
   for(const f of b.fs){take[f]=1;n++}}
+ /* round 13: a screen that sits on the bars' side of the fairing turns with them (VISOR: bike id -> the lowest y of the screen) */
+ const vy=VISOR[I.id];if(vy!=null)for(let f=0;f<nf;f++){if(take[f])continue;let ok=1;for(let k=0;k<3&&ok;k++){const v=f*3+k;if(P.getY(v)<vy||P.getZ(v)<I.piv[2]-.2||Math.abs(P.getX(v))>.24)ok=0}if(ok){take[f]=1;n++}}
  if(!n)return;
  const piv=I.piv,mkG=(keep,shift)=>{const cnt=keep.reduce((a,x)=>a+x,0),Pn=new Float32Array(cnt*9),Cn=new Float32Array(cnt*9);let o=0;const paint=[];const bp=new Set(B.userData.paint||[]);
   for(let f=0;f<nf;f++){if(!keep[f])continue;if(bp.has(f))paint.push(o/9);for(let k=0;k<3;k++){const v=f*3+k;Pn[o+k*3]=P.getX(v)-shift[0];Pn[o+k*3+1]=P.getY(v)-shift[1];Pn[o+k*3+2]=P.getZ(v)-shift[2];Cn[o+k*3]=C.getX(v);Cn[o+k*3+1]=C.getY(v);Cn[o+k*3+2]=C.getZ(v)}o+=9}
@@ -308,8 +315,8 @@ BK.makeWorld=(scene,road,opt)=>{opt=opt||{};const tod=BK.TOD[opt.tod]||BK.TOD.da
   for(let s=Math.ceil(s0/50)*50;s<s1;s+=50)for(const sg of[1,-1]){if(sg>0&&hasEx&&s>ex-320&&s<ex+280)continue;const ss_=s+(sg<0?25:0);if(ss_>=s1)continue;const f=road.at(ss_,fr),p=W(ss_,sg*(SHO+.9),0);gb.box(p[0],p[1]+5,p[2],.1,5,.1,C.pole,f.h);
    const q1=W(ss_,sg*(SHO+.3),10.4),q2=W(ss_,sg*(SHO-2.2),10.6);gb.box((p[0]+q1[0])/2,q1[1]-.15,(p[2]+q1[2])/2,.35,.05,.06,C.pole,f.h+PI/2);gb.box((q1[0]+q2[0])/2,q2[1]-.1,(q1[2]+q2[2])/2,1.3,.05,.06,C.pole,f.h+PI/2);
    const L=W(ss_,sg*(SHO-3.1),10.45);gm.box(L[0],L[1],L[2],.36,.08,.18,[0,0,0],f.h,null)}
-  /* sign gantry every 1600 m, an overpass every 2300 m */
-  const sk=Math.floor((s0+700)/1600);for(const s of[sk*1600-700])if(s>=s0&&s<s1&&s>200){const f=road.at(s,fr);const col=C.steel;
+  /* sign gantry every 1600 m, an overpass every 2300 m. Round 13: both off (OVERHANGS=false); Hakan found them random */
+  const sk=Math.floor((s0+700)/1600);for(const s of[sk*1600-700])if(OVERHANGS&&s>=s0&&s<s1&&s>200){const f=road.at(s,fr);const col=C.steel;
    for(const d of[SHO+.6,D0-.8]){const p=W(s,d,0);gb.box(p[0],p[1]+3.6,p[2],.18,3.6,.18,col,f.h)}
    const mid=W(s,(SHO+D0)/2,7.1);gb.box(mid[0],mid[1],mid[2],(SHO-D0)/2+1,.22,.22,col,f.h+PI/2);
    const e2=road.exitNear(s+900),k2=Math.floor(s/1600);
@@ -317,7 +324,7 @@ BK.makeWorld=(scene,road,opt)=>{opt=opt||{};const tod=BK.TOD[opt.tod]||BK.TOD.da
    const panels=[[EDGE-LW*1.2,e2>s&&e2<s+2200?exitNo(e2):0],[D0+LW*1.3,0]];
    for(const[d,exn]of panels){const c=W(s,d,8.2);const pm=new THREE.Mesh(new THREE.PlaneGeometry(5.6,2.8),signFor(k2+(exn?3:0),exn));pm.position.set(c[0],c[1],c[2]);pm.rotation.y=f.h+PI;gm.p.length;pm.userData.sign=1;pm.matrixAutoUpdate=false;pm.updateMatrix();pp.sign=(pp.sign||[]);pp.sign.push(pm);
     const back=W(s,d,8.2);gb.box(back[0],back[1],back[2],2.85,1.45,.06,C.steel,f.h)}}
-  const ok=Math.floor((s0+1500)/2300);for(const s of[ok*2300-1500])if(s>=s0&&s<s1&&s>300){const f=road.at(s,fr);
+  const ok=Math.floor((s0+1500)/2300);for(const s of[ok*2300-1500])if(OVERHANGS&&s>=s0&&s<s1&&s>300){const f=road.at(s,fr);
    for(const d of[-SHO-3,0,SHO+3]){const p=W(s,d,0);gb.box(p[0],p[1]+3.4,p[2],.6,3.4,.9,C.conc,f.h)}
    const c=W(s,0,7.4);gb.box(c[0],c[1],c[2],34,.55,6,C.conc,f.h+PI/2);const c2=W(s,0,8.25);gb.box(c2[0],c2[1],c2[2],34,.3,.12,C.conc2,f.h+PI/2);
    for(const sg of[1,-1]){const e=W(s,sg*42,0);gb.box(e[0],e[1]+3.6,e[2],8,3.8,7,C.conc2,f.h+PI/2)}}
