@@ -307,22 +307,14 @@ function enterPrep(d,i){const Rc=RACE;if(!Rc)return;Rc.prep=true;Rc.prepT=0;Rc.s
  const car=BYID[d.id],wx=Rc.wx?Rc.wx.n:'Clear',tod=(P.TOD&&Rc.todKey&&P.TOD[Rc.todKey])?P.TOD[Rc.todKey].n:'';
  /* round 21: less clutter. One quiet facts line instead of a row of boxes, no control chips (the briefing shows them when drivers swap,
     and the tutorial covers them), the car in the small label, and the driver line only when several people take turns */
- const multi=!!(S&&S.drv.length>1),laps=(S?S.cfg.laps:Rc.cfg.laps)||1,facts=[(T.L/1000).toFixed(1)+' km',laps+' lap'+(laps>1?'s':''),wx].concat(T.fords&&T.fords.length?[T.fords.length+' fords']:[],T.jumps&&T.jumps.length?['jump']:[]);
+ const multi=S.drv.length>1,facts=[(T.L/1000).toFixed(1)+' km',S.cfg.laps+' lap'+(S.cfg.laps>1?'s':''),wx].concat(T.fords&&T.fords.length?[T.fords.length+' fords']:[],T.jumps&&T.jumps.length?['jump']:[]);
  e.innerHTML=`<div class="rp-l"><small>${W('RALLY','TRACK')} &middot; ${multi?'RUN '+(i+1)+' OF '+S.drv.length:car.name.toUpperCase()+(d.alt?' ALT':'')}</small><h2>${st.name}</h2><div class="rp-f">${facts.join(' &middot; ')}</div>${multi?`<div class="rp-d"><i style="background:${PCOL[d.p%4]}"></i><b>${d.name.replace(/</g,'')}</b><small>${car.name}${d.alt?' ALT':''} &middot; ${keyHint(0)}</small></div>`:''}</div>
  <div class="rp-r"><button class="btn go" id="rlPlay"><span>${W('Start stage','Start race')}</span></button><small>Enter to start &middot; C camera &middot; Esc to leave</small></div>`;
- /* the dressed-up start card (prepfx.js) replaces the plain one when it is loaded */
- if(P.prepDress)P.prepDress(e,Rc,{d,i,multi,label:Rc.cfg.rally?W('RALLY','TRACK'):null,car,facts,startTxt:Rc.cfg.rally?W('Start stage','Start race'):'Start race'});
  e.style.display='flex';bodyCls('rprep',true);$i('rlPlay').onclick=startStage}
-P.enterPrep=(d,i)=>enterPrep(d,i);P.startStage=()=>startStage();
 function startStage(){const Rc=RACE;if(!Rc||!Rc.prep)return;const hc=human(Rc);if(hc)hc.camMode=camPref[curP]||0;Rc.prep=false;bodyCls('rprep',false);const e=$i('rlPrep');if(e)e.style.display='none';dip();beep(700,.1)}
 function prepDraw(Rc,dt){const c=human(Rc),W=R.domElement.width,H=R.domElement.height;Rc.prepT+=dt;
- /* the race loop is held, so place the cars here or they sit hidden at the origin until GO */
- try{for(const q of Rc.cars){updateVisual(q,Rc.T,Rc.prepT);
-  /* physics has not settled the cars yet, so they hang ~20 cm high: drop each onto the road (bottom ~.11 m above the surface, as in the race) */
-  if(q._pdrop==null){q.m.g.updateMatrixWorld(true);const b=new THREE.Box3().setFromObject(q.m.visualModel||q.m.g);q._pdrop=Math.max(0,b.min.y-Rc.T.surf(q.x,q.z,q.y).h-.11)}
-  q.m.g.position.y-=q._pdrop;if(q.m.sh)q.m.sh.position.y=Math.min(q.m.sh.position.y,q.m.g.position.y)}}catch(err){}
  const sh=Math.floor(Rc.prepT/6),u=(Rc.prepT%6)/6,e=u*u*(3-2*u);if(sh!==Rc.shot){Rc.shot=sh;if(sh>0)dip()}
- const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw),fx=sy,fz=cy,lx=cy,lz=-sy,g0=c.y-.6,T0_=Rc.prepT,k=(sh+Rc.shot0)%5,mix=(a,b,t)=>a+(b-a)*t;Rc.shotK=k;let p,l,fov=48;
+ const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw),fx=sy,fz=cy,lx=cy,lz=-sy,g0=c.y-.6,T0_=Rc.prepT,k=(sh+Rc.shot0)%5,mix=(a,b,t)=>a+(b-a)*t;let p,l,fov=48;
  if(k===0){const a=T0_*.3+1;p=[c.x+Math.sin(a)*7.8,g0+2.3,c.z+Math.cos(a)*7.8];l=[c.x,g0+.9,c.z]}
  else if(k===1){const lat=mix(6.5,-6.5,e);p=[c.x+fx*9+lx*lat,g0+.8,c.z+fz*9+lz*lat];l=[c.x+fx*1.4,g0+.7,c.z+fz*1.4];fov=44}
  else if(k===2){const b=mix(12,36,e),lt=mix(-4,6,e);p=[c.x-fx*b+lx*lt,g0+mix(1.6,16,e),c.z-fz*b+lz*lt];const a=mix(2,28,e);l=[c.x+fx*a,g0+mix(1,3,e),c.z+fz*a];fov=52}
@@ -374,7 +366,7 @@ const st0=step;
 step=dt=>{const Rc=RACE;if(Rc&&Rc.prep){if(P.dustTick)P.dustTick(Rc,dt);return}if(Rc&&Rc.replay){replayTick(Rc,dt);return}
  st0(dt);if(Rc&&RACE===Rc&&Rc.cfg&&Rc.cfg.rally){record(Rc);cpCheck(Rc);cutCheck(Rc,dt);crashStep(Rc,dt);liveElev(Rc,dt)}};
 addEventListener('keydown',e=>{const Rc=RACE;if(!Rc)return;
- if(Rc.prep){if(P.prepKey&&P.prepKey(e)){e.preventDefault();e.stopImmediatePropagation();return}if(e.code==='Enter'||e.code==='Space'){e.preventDefault();e.stopImmediatePropagation();startStage()}else if(e.code==='Escape'){e.stopImmediatePropagation();const multi=S&&S.drv.length>1;leaveFx();P.cleanupRace();keysReset();if(multi){S=null;show('menu')}else if(!Rc.cfg.rally&&P.ui.ST.cev&&P.ui.renderCareer){S=null;P.ui.renderCareer();show('s8career')}else{S=null;P.ui.renderSetup();show('s8setup')}}return}
+ if(Rc.prep){if(e.code==='Enter'||e.code==='Space'){e.preventDefault();e.stopImmediatePropagation();startStage()}else if(e.code==='Escape'){e.stopImmediatePropagation();const multi=S&&S.drv.length>1;leaveFx();P.cleanupRace();keysReset();if(multi){S=null;show('menu')}else{S=null;P.ui.renderSetup();show('s8setup')}}return}
  if(Rc.replay){const R_=Rc.replay;let h=true;if(e.code==='Space')$i('rrPlay').click();else if(e.code==='KeyC')cycleCam();else if(e.code==='Escape'||e.code==='Enter')exitReplay();else if(e.code==='ArrowRight')R_.t+=5;else if(e.code==='ArrowLeft')R_.t=Math.max(Rc.rec[0][0],R_.t-5);else if(/^Digit[1-5]$/.test(e.code)){$i('rlRep').querySelectorAll('[data-s]')[+e.code[5]-1].click()}else h=false;if(h){e.preventDefault();e.stopImmediatePropagation()}}},true);
 
 /* ---------------- stage map render (3D aerial of the whole stage with the route marked) ---------------- */

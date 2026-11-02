@@ -9,13 +9,15 @@ const PRE={
  HIGH:{maxDensity:1.5,resolution:1,shadows:true,shadowRate:2,shadowRes:1536,effects:2},
  ULTRA:{maxDensity:2,resolution:1,shadows:true,shadowRate:1,shadowRes:2048,effects:2}};
 let lastPP=O().perfPreset;P.dynRes=1;
+/* Nov 2: adaptive resolution also covers the bike mode and the menus (both were left at full size) */
+const MENUS_DYN=['menu','s8cards','s8quick','s8pick','s8setup','s8career','s8res'],DYN=['game','bike'].concat(MENUS_DYN);
 /* called at the top of the options apply(): applies a chosen preset, or flips to CUSTOM when a value is edited by hand */
 P.perfPre=()=>{const o=O(),pr=PRE[o.perfPreset];if(o.perfPreset!==lastPP){lastPP=o.perfPreset;if(pr)Object.assign(o,pr);return}
  if(pr){for(const k in pr)if(o[k]!==pr[k]){o.perfPreset=lastPP='CUSTOM';break}}};
 P.PERF_PRESETS=PRE;
 /* render size = screen pixels x min(device density, cap) x render scale */
 const rs1=rs;
-rs=()=>{rs1();if(document.body.classList.contains('studio')||(typeof PX!=='undefined'&&PX!==1))return;const o=O(),d2=Math.min(dpr,2),f=Math.min(dpr,o.maxDensity||1.25)/d2*(o.resolution||1)*((typeof scr!=='undefined'&&scr==='game')?P.dynRes:1);
+rs=()=>{rs1();if(document.body.classList.contains('studio')||(typeof PX!=='undefined'&&PX!==1))return;const o=O(),d2=Math.min(dpr,2),f=Math.min(dpr,o.maxDensity||1.25)/d2*(o.resolution||1)*((typeof scr!=='undefined'&&DYN.includes(scr))?P.dynRes:1);
  if(Math.abs(f-1)>.002){R.setSize(Math.max(2,Math.round(cv.width*f)),Math.max(2,Math.round(cv.height*f)),false);cv.style.imageRendering='auto'}else cv.style.imageRendering=''};
 /* FPS counter */
 let fe=null,n=0,t0=performance.now(),worst=0,lt=t0;
@@ -122,7 +124,7 @@ const _c=new THREE.Vector3(),_cp=new THREE.Vector3();
    so "max graphics" keeps full quality on machines that can take it and stays smooth on ones that can't. PTO.adaptRes=false turns it off. */
 {let acc=0,frames=0,slow=0,t0=performance.now(),lastUp=0,lt2=t0;
  (function tick(now){requestAnimationFrame(tick);const d=now-lt2;lt2=now;if(d>0&&d<250){acc+=d;frames++;if(d>24)slow++}
-  if(now-t0<1200)return;const ingame=typeof scr!=='undefined'&&scr==='game'&&typeof RACE!=='undefined'&&RACE&&RACE.state==='race'&&!document.hidden;
+  if(now-t0<1200)return;const ingame=!document.hidden&&typeof scr!=='undefined'&&((scr==='game'&&typeof RACE!=='undefined'&&RACE&&RACE.state==='race')||scr==='bike'||MENUS_DYN.includes(scr));
   const fps=frames*1000/Math.max(1,acc),bad=slow/Math.max(1,frames);acc=0;frames=0;slow=0;t0=now;
   if(!ingame||O().adaptRes===false||frames<0)return;
   let nd=P.dynRes;

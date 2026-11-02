@@ -185,18 +185,16 @@ BK.makeWorld=(scene,road,opt)=>{opt=opt||{};const tod=BK.TOD[opt.tod]||BK.TOD.da
  const exitNo=e=>11+Math.round(e/3100)*3;
  const signFor=(k,exit,name,mi)=>{name=name||SIGNS[k%SIGNS.length];mi=mi||(2+k%5)+' MILES';const key=name+'|'+exit+'|'+mi;let m=signMats.find(x=>x.key===key);if(!m){m={key,mat:new THREE.MeshBasicMaterial({map:signTex([name,mi],exit),toneMapped:false})};if(tod.lamps>1)m.mat.color.setScalar(.6);signMats.push(m)}return m.mat};
  const hill=(x,z)=>22*Math.sin(x*.0047+1.3)*Math.sin(z*.0039+.4)+11*Math.sin(x*.013+z*.011)+5*Math.sin(x*.031-z*.027);
- const C={asph:hexRGB(0x3b3e44),asph2:hexRGB(0x34373c),sho:hexRGB(0x55585d),white:hexRGB(0xe8e8e2),yel:hexRGB(0xe0b22a),conc:hexRGB(0xb7b4ac),conc2:hexRGB(0x9a978f),rail:hexRGB(0xc4c8cc),post:hexRGB(0x7a7e84),
+ const C={asph:hexRGB(0x56585b),asph2:hexRGB(0x525457),sho:hexRGB(0x5d5f62),fence:hexRGB(0x34373a),fpost:hexRGB(0x55585c),hedge:[hexRGB(0x2f5a2c),hexRGB(0x3a6a32),hexRGB(0x44763a)],white:hexRGB(0xe8e8e2),yel:hexRGB(0xe0b22a),conc:hexRGB(0xb7b4ac),conc2:hexRGB(0x9a978f),rail:hexRGB(0xc4c8cc),post:hexRGB(0x7a7e84),
   g1:hexRGB(0x5f8a3e),g2:hexRGB(0x6f9a46),g3:hexRGB(0x8a9a52),dirt:hexRGB(0x8b7a58),trunk:hexRGB(0x5a4232),leaf:[hexRGB(0x2f6a34),hexRGB(0x3c7a3a),hexRGB(0x4f8a3a),hexRGB(0x2a5a3a)],rock:hexRGB(0x8d8a86),
   pole:hexRGB(0x8c9096),steel:hexRGB(0x6c7178),cush:hexRGB(0xf2c014),dark:hexRGB(0x22252a)};
  const fr={},pp={};
+ /* low-poly round canopy: a jittered icosahedron, lit faces a shade lighter on top */
+ const IV=(()=>{const t=(1+Math.sqrt(5))/2,v=[[-1,t,0],[1,t,0],[-1,-t,0],[1,-t,0],[0,-1,t],[0,1,t],[0,-1,-t],[0,1,-t],[t,0,-1],[t,0,1],[-t,0,-1],[-t,0,1]].map(a=>{const l=Math.hypot(...a);return a.map(x=>x/l)});return v})(),IF=[[0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],[1,5,9],[5,11,4],[11,10,2],[10,7,6],[7,1,8],[3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],[4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1]];
+ let canopy=null;
  /* regions: the highway runs through a random sequence of landscapes, ~1.7 km each, blended over 240 m */
- const REG=[
-  {n:'Pine Forest',k:'forest',g:[0x4f7f3a,0x5b8a40,0x7d8f4c],amp:1,lift:8,leaf:[0x2f6a34,0x2a5a3a,0x3c7a3a,0x24503a]},
-  {n:'Farmland',k:'farm',g:[0x8fae4a,0xc9b25a,0x6f9a46],amp:.38,lift:3,leaf:[0x4f8a3a,0x5d9440]},
-  {n:'Red Desert',k:'desert',g:[0xd6b47c,0xcb9c66,0xb0704a],amp:.7,lift:4,leaf:[0x5a8a4a]},
-  {n:'Coast Road',k:'coast',g:[0x8fa45a,0xe2d29e,0x7f9a50],amp:.7,lift:7,leaf:[0x3d7a3a,0x4f8a3a]},
-  {n:'Alpine Pass',k:'alpine',g:[0x5f7f4e,0x7f8a74,0x8f8f88],amp:1.9,lift:20,leaf:[0x1f4a30,0x24503a,0x2a5a3a]},
-  {n:'Metro',k:'city',g:[0x6f7a62,0x7a7c78,0x8a8a84],amp:.12,lift:1,leaf:[0x3c7a3a,0x4f8a3a]}];
+ /* Nov 2: one landscape, as asked: the highway through gentle grassy plains, a few trees, and herds of the game's own animals */
+ const REG=[{n:'Plains',k:'plains',g:[0x6f9a46,0x7ea64c,0x8f9f55],amp:.55,lift:3,leaf:[0x3c7a3a,0x4f8a3a,0x2f6a34,0x5d9440]}];
  for(const R of REG){R.c=R.g.map(hexRGB);R.lc=R.leaf.map(hexRGB)}
  const CX={sea:hexRGB(0x2a6a92),sea2:hexRGB(0x3277a0),sand:hexRGB(0xe6d6a2),snow:hexRGB(0xeef2f4),barn:hexRGB(0x9a2e24),roof:hexRGB(0x4a4a4e),bale:hexRGB(0xd8b85a),white:hexRGB(0xeeeeea),
   cact:hexRGB(0x4f7f3c),mesa:hexRGB(0xa45a38),mesa2:hexRGB(0xc27a4e),palm:hexRGB(0x8a6a48),bld:[0x8a8f96,0xb8b2a6,0x6c7480,0xa8a090,0x5d6672].map(hexRGB),win:[0,0,0],winD:hexRGB(0x2c3644)};
@@ -241,14 +239,20 @@ BK.makeWorld=(scene,road,opt)=>{opt=opt||{};const tod=BK.TOD[opt.tod]||BK.TOD.da
    const mk=(d,w,col,s_,e_)=>{gm.quad(W(s_,d-w,.025),W(s_,d+w,.025),W(e_,d+w,.025),W(e_,d-w,.025),col)};
    for(const sg of[1,-1]){mk(sg*(EDGE-.15),.08,C.white,a,b);mk(sg*(D0+.12),.08,C.yel,a,b);
     if(Math.floor(a/12)!==Math.floor((a+SP*.75)/12)||((a%12)<3)){}
-    for(let l=1;l<NL;l++){const dl=sg*(D0+LW*l);const t0=Math.ceil(a/12)*12;for(let t=t0;t<b;t+=12)mk(dl,.07,C.white,t,Math.min(t+3,b))}}
+    for(let l=1;l<NL;l++){const dl=sg*(D0+LW*l);/* 8 m dashes, 12 m gaps */for(let t=Math.floor(a/20)*20;t<b;t+=20){const lo=Math.max(a,t),hi=Math.min(b,t+8);if(hi>lo)mk(dl,.08,C.white,lo,hi)}}}
    /* median: concrete barrier */
-   {const h=.82,bw=.3,tw=.1;const q=(s,d,y)=>W(s,d,y);
-    gb.quad(q(a,-bw,0),q(a,-tw,h),q(b,-tw,h),q(b,-bw,0),C.conc2);gb.quad(q(a,tw,h),q(a,bw,0),q(b,bw,0),q(b,tw,h),C.conc);gb.quad(q(a,-tw,h),q(a,tw,h),q(b,tw,h),q(b,-tw,h),C.conc)}
+   /* median (after the reference highway): a clipped hedge between two guardrails */
+   {gb.quad(W(a,-.45,.02),W(a,.45,.02),W(b,.45,.02),W(b,-.45,.02),C.dirt);
+    const hc=C.hedge[(k+ci)%3],h1=.75+.25*Math.sin(a*.37+ci),h2=.75+.25*Math.sin(b*.37+ci);
+    gb.quad(W(a,-.4,0),W(a,-.32,h1),W(b,-.32,h2),W(b,-.4,0),hc);gb.quad(W(a,.32,h1),W(a,.4,0),W(b,.4,0),W(b,.32,h2),hc);gb.quad(W(a,-.32,h1),W(a,.32,h1),W(b,.32,h2),W(b,-.32,h2),C.hedge[(k+ci+1)%3]);
+    for(const sg of[1,-1]){const dg=sg*.55;gb.quad(W(a,dg,.45),W(a,dg,.75),W(b,dg,.75),W(b,dg,.45),C.rail);gb.quad(W(a,dg,.75),W(a,dg,.45),W(b,dg,.45),W(b,dg,.75),C.rail);const pp_=W(a,sg*.62,0);gb.box(pp_[0],pp_[1]+.36,pp_[2],.05,.36,.05,C.post,road.at(a,fr).h)}}
    /* guardrails on both outer edges (pushed out along the exit lane) */
    for(const sg of[1,-1]){const ga=sg*(SHO+.2+(sg>0?xa:0)),gb_=sg*(SHO+.2+(sg>0?xb:0));
     gb.quad(W(a,ga,.45),W(a,ga,.75),W(b,gb_,.75),W(b,gb_,.45),C.rail);gb.quad(W(a,ga,.75),W(a,ga,.45),W(b,gb_,.45),W(b,gb_,.75),C.rail);
     if(k%1===0){const p=W(a,ga+sg*.08,.0);gb.box(p[0],p[1]+.36,p[2],.05,.36,.05,C.post,road.at(a,fr).h)}}
+   /* a dark mesh fence behind the outer rails, as on the reference highway */
+   for(const sg of[1,-1]){if(sg>0&&hasEx&&a>ex-320&&a<ex+280)continue;const d=sg*(SHO+1.7);gb.quad(W(a,d,0),W(a,d,2.6),W(b,d,2.6),W(b,d,0),C.fence);gb.quad(W(a,d,2.6),W(a,d,0),W(b,d,0),W(b,d,2.6),C.fence);
+    if(k%1===0){const p_=W(a,d,0);gb.box(p_[0],p_[1]+1.35,p_[2],.06,1.35,.06,C.fpost,road.at(a,fr).h)}}
    /* city: noise walls behind the rails */
    {const R=regAt(a);if(wOf(R,'city')>.5)for(const sg of[1,-1]){if(sg>0&&(hasEx&&a>ex-300&&a<ex+300))continue;const d=sg*(SHO+1.8);gb.quad(W(a,d,0),W(a,d,4.2),W(b,d,4.2),W(b,d,0),(k%2)?C.conc:C.conc2);gb.quad(W(a,d,4.2),W(a,d,0),W(b,d,0),W(b,d,4.2),C.conc2)}}
    /* the exit lane's dashed line and the gore */
@@ -264,8 +268,9 @@ BK.makeWorld=(scene,road,opt)=>{opt=opt||{};const tod=BK.TOD[opt.tod]||BK.TOD.da
     gb.quad(R2(t,dA+2.6,yA+.45),R2(t,dA+2.6,yA+.75),R2(u,dB+2.6,yB+.75),R2(u,dB+2.6,yB+.45),C.rail);
     gm.quad(R2(t,dA-2.45,yA+.025),R2(t,dA-2.3,yA+.025),R2(u,dB-2.3,yB+.025),R2(u,dB-2.45,yB+.025),C.white)}}
   /* median lamp posts every 60 m (both arms) */
-  for(let s=Math.ceil(s0/60)*60;s<s1;s+=60){const f=road.at(s,fr),p=W(s,0,.82);gb.box(p[0],p[1]+5,p[2],.09,5,.09,C.pole,f.h);
-   for(const sg of[1,-1]){const q=W(s,sg*2.6,10);gb.box((p[0]+q[0])/2,q[1],(p[2]+q[2])/2,1.3,.06,.08,C.pole,f.h+PI/2);const L=W(s,sg*3.9,9.92);gm.box(L[0],L[1],L[2],.28,.07,.16,[0,0,0],f.h,null)}}
+  for(let s=Math.ceil(s0/50)*50;s<s1;s+=50)for(const sg of[1,-1]){if(sg>0&&hasEx&&s>ex-320&&s<ex+280)continue;const ss_=s+(sg<0?25:0);if(ss_>=s1)continue;const f=road.at(ss_,fr),p=W(ss_,sg*(SHO+.9),0);gb.box(p[0],p[1]+5,p[2],.1,5,.1,C.pole,f.h);
+   const q1=W(ss_,sg*(SHO+.3),10.4),q2=W(ss_,sg*(SHO-2.2),10.6);gb.box((p[0]+q1[0])/2,q1[1]-.15,(p[2]+q1[2])/2,.35,.05,.06,C.pole,f.h+PI/2);gb.box((q1[0]+q2[0])/2,q2[1]-.1,(q1[2]+q2[2])/2,1.3,.05,.06,C.pole,f.h+PI/2);
+   const L=W(ss_,sg*(SHO-3.1),10.45);gm.box(L[0],L[1],L[2],.36,.08,.18,[0,0,0],f.h,null)}
   /* sign gantry every 1600 m, an overpass every 2300 m */
   const sk=Math.floor((s0+700)/1600);for(const s of[sk*1600-700])if(s>=s0&&s<s1&&s>200){const f=road.at(s,fr);const col=C.steel;
    for(const d of[SHO+.6,D0-.8]){const p=W(s,d,0);gb.box(p[0],p[1]+3.6,p[2],.18,3.6,.18,col,f.h)}
@@ -273,12 +278,17 @@ BK.makeWorld=(scene,road,opt)=>{opt=opt||{};const tod=BK.TOD[opt.tod]||BK.TOD.da
    const e2=road.exitNear(s+900),k2=Math.floor(s/1600);
    const nk=Math.floor(s/RL)+1,dist=nk*RL-s,nx=regK(nk).n,mi=dist<800?Math.max(1,Math.round(dist/100))*100+' M':(dist/1609).toFixed(1)+' MILES';
    const panels=[[EDGE-LW*1.2,e2>s&&e2<s+2200?exitNo(e2):0],[D0+LW*1.3,0]];
-   for(const[d,exn]of panels){const c=W(s,d,8.2);const pm=new THREE.Mesh(new THREE.PlaneGeometry(5.6,2.8),exn?signFor(k2+3,exn):signFor(0,0,nx,mi));pm.position.set(c[0],c[1],c[2]);pm.rotation.y=f.h+PI;gm.p.length;pm.userData.sign=1;pm.matrixAutoUpdate=false;pm.updateMatrix();pp.sign=(pp.sign||[]);pp.sign.push(pm);
+   for(const[d,exn]of panels){const c=W(s,d,8.2);const pm=new THREE.Mesh(new THREE.PlaneGeometry(5.6,2.8),signFor(k2+(exn?3:0),exn));pm.position.set(c[0],c[1],c[2]);pm.rotation.y=f.h+PI;gm.p.length;pm.userData.sign=1;pm.matrixAutoUpdate=false;pm.updateMatrix();pp.sign=(pp.sign||[]);pp.sign.push(pm);
     const back=W(s,d,8.2);gb.box(back[0],back[1],back[2],2.85,1.45,.06,C.steel,f.h)}}
   const ok=Math.floor((s0+1500)/2300);for(const s of[ok*2300-1500])if(s>=s0&&s<s1&&s>300){const f=road.at(s,fr);
    for(const d of[-SHO-3,0,SHO+3]){const p=W(s,d,0);gb.box(p[0],p[1]+3.4,p[2],.6,3.4,.9,C.conc,f.h)}
    const c=W(s,0,7.4);gb.box(c[0],c[1],c[2],34,.55,6,C.conc,f.h+PI/2);const c2=W(s,0,8.25);gb.box(c2[0],c2[1],c2[2],34,.3,.12,C.conc2,f.h+PI/2);
    for(const sg of[1,-1]){const e=W(s,sg*42,0);gb.box(e[0],e[1]+3.6,e[2],8,3.8,7,C.conc2,f.h+PI/2)}}
+  canopy=(cx,cy,cz,rad,col)=>{const j=IV.map(v=>{const k=rad*(.82+r()*.36);return[cx+v[0]*k,cy+v[1]*k*.8,cz+v[2]*k]});const hi=[Math.min(1,col[0]*1.25),Math.min(1,col[1]*1.25),Math.min(1,col[2]*1.25)];
+   for(const f of IF){const up=(IV[f[0]][1]+IV[f[1]][1]+IV[f[2]][1])>.6;gb.tri(j[f[0]],j[f[1]],j[f[2]],up?hi:col)}};
+  /* a dense belt of broadleaf trees behind the fences (reference highway), then open fields */
+  for(const sg of[1,-1])for(let t=s0+r()*4;t<s1;t+=4.5+r()*3){if(sg>0&&hasEx&&t>ex-320&&t<ex+280)continue;for(let row=0;row<2;row++){const d=sg*(SHO+4+row*5+r()*3),y=ground(t,d,Math.abs(d)-SHO,sg);const x=pp.x,z=pp.z,hgt=6+r()*4,lc=C.hedge[(r()*3)|0];
+   gb.box(x,y+hgt*.25,z,.16,hgt*.25,.16,C.trunk,r()*3);canopy(x,y+hgt*.62,z,hgt*.27,lc);if(r()<.6)canopy(x+(r()-.5)*1.6,y+hgt*.82,z+(r()-.5)*1.6,hgt*.19,C.hedge[(r()*3)|0])}}
   /* scenery by region: trees, farms, desert, coast, mountains, city blocks */
   const cone=(x,y,z,hgt,lc)=>{gb.box(x,y+hgt*.18,z,.22,hgt*.2,.22,C.trunk,0);const n=6,rad=hgt*.24+.6;for(let l=0;l<2;l++){const yb=y+hgt*(.25+l*.3),yt=yb+hgt*(.55-l*.12),rr=rad*(1-l*.3);
     for(let q=0;q<n;q++){const a1=q/n*PI2,a2=(q+1)/n*PI2;gb.tri([x+Math.cos(a1)*rr,yb,z+Math.sin(a1)*rr],[x,yt,z],[x+Math.cos(a2)*rr,yb,z+Math.sin(a2)*rr],lc)}}};
@@ -290,10 +300,11 @@ BK.makeWorld=(scene,road,opt)=>{opt=opt||{};const tod=BK.TOD[opt.tod]||BK.TOD.da
    gb.quad(V(-hx,0,-hz),V(-hx,0,hz),V(0,hy,hz),V(0,hy,-hz),col);gb.quad(V(hx,0,hz),V(hx,0,-hz),V(0,hy,-hz),V(0,hy,hz),col);
    gb.tri(V(-hx,0,hz),V(hx,0,hz),V(0,hy,hz),CX.barn);gb.tri(V(hx,0,-hz),V(-hx,0,-hz),V(0,hy,-hz),CX.barn)};
   const yAtD=(s,d)=>ground(s,d,Math.abs(d)-SHO,Math.sign(d));
-  const nt=24+Math.floor(r()*12);for(let i=0;i<nt;i++){const s=s0+r()*CH,sg=r()<.5?-1:1,RG=pickR(s,i),K=RG.k;
-   let d=sg*(SHO+9+Math.pow(r(),1.6)*170);if(K==='coast'&&sg>0)d=SHO+6+r()*16;
+  const nt=14+Math.floor(r()*8);for(let i=0;i<nt;i++){const s=s0+r()*CH,sg=r()<.5?-1:1,RG=pickR(s,i),K=RG.k;
+   let d=sg*(SHO+18+Math.pow(r(),1.6)*160);if(K==='coast'&&sg>0)d=SHO+6+r()*16;
    const y=yAtD(s,d),x=pp.x,z=pp.z,f=road.at(s,fr),lc=RG.lc[(r()*RG.lc.length)|0],q=r();
-   if(K==='forest'||K==='alpine'){if(q<.1)gb.box(x,y+.6,z,1.2+r(),.9+r()*.6,1+r(),C.rock,r()*3);else cone(x,y,z,K==='alpine'?8+r()*9:5+r()*7,lc)}
+   if(K==='plains'){if(q<.16)blob(x,y,z,5+r()*4,lc);else if(q<.22)cone(x,y,z,6+r()*5,lc);else if(q<.26)gb.box(x,y+.4,z,.8+r(),.5+r()*.4,.7+r(),C.rock,r()*3)}
+   else if(K==='forest'||K==='alpine'){if(q<.1)gb.box(x,y+.6,z,1.2+r(),.9+r()*.6,1+r(),C.rock,r()*3);else cone(x,y,z,K==='alpine'?8+r()*9:5+r()*7,lc)}
    else if(K==='farm'){if(q<.12&&Math.abs(d)>40){const w=5+r()*2,dp=8+r()*3,hb=3.2+r();gb.box(x,y+hb,z,w,hb,dp,CX.barn,f.h);gable(x,y+hb*2,z,w+.3,3.2,dp+.3,f.h,CX.roof);gb.box(x+5,y+5,z,1.6,5,1.6,CX.white,0)}
     else if(q<.42){for(let n=0;n<3;n++)gb.box(x+n*2.6,y+.55,z+r()*2,.75,.6,.75,CX.bale,r())}
     else if(q<.5&&Math.abs(d)>60&&i%3===0){const ht=28+r()*8;gb.box(x,y+ht/2,z,.45,ht/2,.45,CX.white,0);const hy=y+ht;gb.box(x,hy,z,.6,.6,1.6,CX.white,f.h);
@@ -307,11 +318,20 @@ BK.makeWorld=(scene,road,opt)=>{opt=opt||{};const tod=BK.TOD[opt.tod]||BK.TOD.da
    else if(K==='city'){if(i%2)continue;const w=6+r()*10,dp=6+r()*10,h=12+Math.pow(r(),1.5)*55,col=CX.bld[(r()*CX.bld.length)|0];d=sg*(SHO+8+w+r()*120);const y2=yAtD(s,d),x2=pp.x,z2=pp.z;gb.box(x2,y2+h/2-1,z2,w,h/2+1,dp,col,f.h);
     for(let fy=4;fy<h-2;fy+=3.6)gm.box(x2,y2+fy,z2,w+.06,.4,dp+.06,tod.lamps?CX.win:CX.winD,f.h);if(r()<.3)gb.box(x2,y2+h+1.2,z2,w*.4,1.2,dp*.4,C.steel,f.h)}}
   const grp=new THREE.Group();const m1=new THREE.Mesh(gb.geo(),mat);grp.add(m1);
+  /* a herd of the game's animals grazing in the fields, now and then */
+  const anims=[];const AK=P.animalKit;if(AK&&P.animalsReady&&!(window.PTO&&window.PTO.animals===false)&&r()<.42){
+   const pool=['Cow','Horse','WhiteHorse','Bull','Donkey','Alpaca','Deer'].filter(n=>AK.SP[n]);if(pool.length){const name=pool[(r()*pool.length)|0],sp=AK.SP[name];
+    const sg=r()<.5?-1:1,hs=s0+r()*CH,hd=SHO+28+r()*110,n=3+((r()*4)|0);
+    for(let i=0;i<n;i++){const s=hs+(r()-.5)*14,d=sg*(hd+(r()-.5)*12),y=yAtD(s,d),x=pp.x,z=pp.z;
+     const root=AK.clone(sp),g=new THREE.Group();g.add(root);root.scale.setScalar(sp.k*(.94+r()*.12));g.position.set(x,y,z);g.rotation.y=r()*PI2;grp.add(g);
+     const mx=new THREE.AnimationMixer(root);const clip=sp.clips.find(c=>c.name===(r()<.65?'Eating':'Idle'))||sp.clips[0];if(clip){const ac=mx.clipAction(clip);ac.play();ac.time=r()*clip.getClip?0:r()*clip.duration}anims.push({mx,s,g})}}}
   const m2=new THREE.Mesh(gm.geo(),new THREE.MeshBasicMaterial({vertexColors:true}));/* markings, lamp heads */grp.add(m2);
   if(tod.lamps){const g2=m2.geometry,c=g2.attributes.color;for(let i=0;i<c.count;i++)if(c.getX(i)===0&&c.getY(i)===0)c.setXYZ(i,1,.86,.6)}
   if(pp.sign){for(const s of pp.sign)grp.add(s);pp.sign=null}
-  scene.add(grp);return{grp,geos:[m1.geometry,m2.geometry],mats:[m2.material]}}
+  scene.add(grp);return{grp,anims,geos:[m1.geometry,m2.geometry],mats:[m2.material]}}
  const W={chunks,tod,regAt,regionName:s=>{const R=regAt(s);return(R.t>.5?R.B:R.A).n},
+  /* animate the animals near the riders (far ones hold still) */
+  tick(dt,sMin,sMax){for(const[k,v]of chunks){if(!v.anims||!v.anims.length)continue;for(const a of v.anims){const ds=a.s<sMin?sMin-a.s:a.s>sMax?a.s-sMax:0;if(ds<220)a.mx.update(dt)}}},
   update(sMin,sMax){const c0=Math.max(0,Math.floor((sMin-150)/CH)),c1=Math.floor((sMax+1300)/CH);
    for(const[k,v]of chunks)if(k<c0-1||k>c1+1){scene.remove(v.grp);v.geos.forEach(g=>g.dispose());v.mats.forEach(m=>m.dispose());v.grp.traverse(x=>{if(x.userData.sign)x.geometry.dispose()});chunks.delete(k)}
    let built=0;for(let k=c0;k<=c1&&built<1;k++)if(!chunks.has(k)){chunks.set(k,build(k));built++}
@@ -368,7 +388,7 @@ BK.LM=LM;
 function lightGeo(pts,w,h){const gb=new GB();for(const p of pts){const yaw=p[3]||0;gb.box(p[0],p[1],p[2],w,h,.03,[1,1,1],yaw)}const g=gb.geo();g.deleteAttribute('color');return g}
 const lgCache={};
 /* the game's own cars (cars10 pack) for the car-sized traffic; vans, trucks, semis and buses stay hand-built */
-const CARPOOL={sedan:['SEDAN','COUPE','SPORTS','MUSCLE'],hatch:['HATCHBACK'],suv:['WAGON','SEDAN']},carBox={};
+const CARPOOL={sedan:['SEDAN','COUPE','SPORTS','MUSCLE','SUPERCAR'],hatch:['HATCHBACK','COUPE'],suv:['WAGON','SEDAN','MUSCLE']},carBox={};
 function gameCar(kind,r){const C=P.C10;if(!C||!C.ready||!CARPOOL[kind]||!P.CARS)return null;
  const pool=P.CARS.filter(c=>c.k10!=null&&CARPOOL[kind].includes(c.cat));if(!pool.length)return null;
  const c=pool[(r()*pool.length)|0],alt=r()<.5,src=C.model(c.k10,alt);if(!src)return null;
@@ -388,6 +408,6 @@ BK.makeVehicle=(kind,col,night,rnd)=>{const gc=gameCar(kind,rnd||Math.random);co
  const iL=new THREE.Mesh(lg.l,LM.off),iR=new THREE.Mesh(lg.r,LM.off),br=new THREE.Mesh(lg.b,LM.brOff),hd=new THREE.Mesh(lg.h,night?LM.head:LM.headOff);g.add(iL,iR,br,hd);
  const sh=new THREE.Mesh(BK.shGeo||(BK.shGeo=new THREE.PlaneGeometry(1,1)),BK.shMat||(BK.shMat=new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:.35,depthWrite:false})));sh.rotation.x=-PI/2;sh.scale.set(t.W*1.05,t.L*1.02,1);sh.position.y=.04;sh.renderOrder=1;g.add(sh);
  return{g,iL,iR,br,hd,sh,t,kind,name:gc&&gc.name}};
-BK.pickKind=r=>{const x=r();return x<.34?'sedan':x<.5?'hatch':x<.66?'suv':x<.74?'pickup':x<.82?'van':x<.89?'box':x<.96?'semi':'bus'};
+BK.pickKind=r=>{const x=r();/* Nov 2: traffic is only the game's own cars when they are loaded */if(P.C10&&P.C10.ready)return x<.45?'sedan':x<.72?'hatch':'suv';return x<.34?'sedan':x<.5?'hatch':x<.66?'suv':x<.74?'pickup':x<.82?'van':x<.89?'box':x<.96?'semi':'bus'};
 BK.pickPaint=r=>PAINT_POOL[(r()*PAINT_POOL.length)|0];
 })();

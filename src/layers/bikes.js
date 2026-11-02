@@ -29,8 +29,8 @@ BK.TRICKS=TRICKS;
 const TBY={};TRICKS.forEach((t,i)=>{TBY[t.id]=t;t.i=i});
 
 /* ---------------- keys ---------------- */
-const KEYS=[{u:'KeyW',d:'KeyS',l:'KeyA',r:'KeyD',t:'Space',m:'KeyQ',c:'KeyC',name:'W A S D',tn:'SPACE',mn:'Q',cn:'C'},
- {u:'ArrowUp',d:'ArrowDown',l:'ArrowLeft',r:'ArrowRight',t:'ShiftRight',m:'Slash',c:'Period',alt:{t:['Numpad0','ControlRight'],m:['NumpadEnter','Enter'],c:['NumpadDecimal']},name:'ARROWS',tn:'R-SHIFT',mn:'/',cn:'.'}];
+const KEYS=[{u:'KeyW',d:'KeyS',l:'KeyA',r:'KeyD',t:'Space',m:'KeyQ',c:'KeyC',name:'W A S D',tn:'SPACE',mn:'Q',cn:'C',tk:['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8'],tkn:['1','2','3','4','5','6','7','8']},
+ {u:'ArrowUp',d:'ArrowDown',l:'ArrowLeft',r:'ArrowRight',t:'ShiftRight',m:'Slash',c:'Period',alt:{t:['Numpad0','ControlRight'],m:['NumpadEnter','Enter'],c:['NumpadDecimal']},name:'ARROWS',tn:'R-SHIFT',mn:'/',cn:'.',tk:['Numpad1','Numpad2','Numpad3','Numpad4','Numpad5','Numpad6','Numpad7','Numpad8'],tkn:['N1','N2','N3','N4','N5','N6','N7','N8']}];
 const down=new Set();let B=null,PR=null;/* B = live run, PR = prep screen */
 const kd=(p,k)=>{const K=KEYS[p];if(down.has(K[k]))return true;const a=K.alt&&K.alt[k];return!!(a&&a.some(x=>down.has(x)))};
 const isKey=(p,k,code)=>{const K=KEYS[p];return K[k]===code||!!(K.alt&&K.alt[k]&&K.alt[k].includes(code))};
@@ -39,7 +39,7 @@ addEventListener('keydown',e=>{if(!active())return;down.add(e.code);
  if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Slash','Tab'].includes(e.code))e.preventDefault();
  if(e.code==='Escape'){e.preventDefault();e.stopImmediatePropagation();onEsc();return}
  if(e.repeat)return;
- if(scr==='bike'&&B)runKey(e.code);else if(scr==='bikeprep'&&PR)prepKey(e.code);else if(scr==='bikeres')resKey(e.code);
+ if(scr==='bike'&&B)runKey(e.code);else if(scr==='bikeres')resKey(e.code);
  e.stopImmediatePropagation()},true);
 addEventListener('keyup',e=>{down.delete(e.code)},true);
 addEventListener('blur',()=>down.clear());
@@ -194,18 +194,20 @@ function poseRiderFor(p,dt){const t=p.trk_;const id=t?t.id:p.lastPose||'wheelie'
 
 /* ---------------- bike physics ---------------- */
 const G=9.81;
-function inputs(p){const K=KEYS[p.k],pad=padIn(p.k);let th=kd(p.k,'u')?1:0,br=kd(p.k,'d')?1:0,st=(kd(p.k,'r')?1:0)-(kd(p.k,'l')?1:0),tr=kd(p.k,'t');
- if(pad){th=Math.max(th,pad.th);br=Math.max(br,pad.br);if(pad.st)st=pad.st;tr=tr||pad.t;
-  if(pad.m&&!p.padM)toggleMenu(p);p.padM=pad.m;if(pad.c&&!p.padC)p.cam=(p.cam+1)%2;p.padC=pad.c;
-  if(p.menu){if(pad.up&&!p.padU)menuMove(p,-1);if(pad.dn&&!p.padD)menuMove(p,1);p.padU=pad.up;p.padD=pad.dn}}
- if(p.menu){/* the menu takes up / down; the throttle holds where it was */th=p.th>.5?1:0;br=0}
- return{th,br,st,tr}}
+/* Nov 2: every trick has its own key (1-8 for rider 1, numpad 1-8 for rider 2): hold it to do the trick. A pad's trick button does the
+   last trick used, and its menu button steps through them */
+function inputs(p){const K=KEYS[p.k],pad=padIn(p.k);let th=kd(p.k,'u')?1:0,br=kd(p.k,'d')?1:0,st=(kd(p.k,'r')?1:0)-(kd(p.k,'l')?1:0),tk=-1;
+ for(let i=0;i<TRICKS.length;i++)if(down.has(K.tk[i])){tk=i;break}
+ if(pad){th=Math.max(th,pad.th);br=Math.max(br,pad.br);if(pad.st)st=pad.st;if(tk<0&&pad.t)tk=TBY[p.equip].i;
+  if(pad.m&&!p.padM){p.equip=TRICKS[(TBY[p.equip].i+1)%TRICKS.length].id;guidePaint(p)}p.padM=pad.m;if(pad.c&&!p.padC)p.cam=(p.cam+1)%2;p.padC=pad.c}
+ if(tk>=0&&TRICKS[tk].id!==p.equip){p.equip=TRICKS[tk].id;guidePaint(p)}
+ return{th,br,st,tr:tk>=0}}
 function physStep(p,dt){if(p.wipe){wipeStep(p,dt);return}
  const I=inputs(p),live=B.state==='ride';const th=live?I.th:0,br=live?I.br:(B.state==='count'?1:0);
  p.th=lp(p.th,th,cl(dt*8,0,1));p.br=br;p.ghost=Math.max(0,p.ghost-dt);
  const v=p.v,T=p.trk_;
  /* trick start / end */
- const want=I.tr&&live&&!p.menu;
+ const want=I.tr&&live;
  if(want&&!T&&p.t2==null){const t=TBY[p.equip];if(canStart(p,t))beginTrick(p,t);else if(!p.warnT||B.t-p.warnT>1.2){p.warnT=B.t;pop(p,needMsg(p,t),'#c9d2d8',.9)}}
  if(T&&!want&&T.k!=='wheelie'&&T.k!=='stoppie')endTrick(p,true);
  /* drive force */
@@ -378,25 +380,29 @@ function camStep(p,cam,dt,aspect){const m=p.m;cam.aspect=aspect;if(BK._dbgCam&&!
   cam.position.set(_h.x-fx*.06,_h.y+.05,_h.z-fz*.06);
   /* look down far enough that the real grips (wherever the pose and the pitch put them) sit in the bottom of the view */
   const I=m.I;_g2.set(0,I.grip[1],I.grip[2]);m.inner.localToWorld(_g2);const hz=(_g2.x-cam.position.x)*fx+(_g2.z-cam.position.z)*fz,al=Math.atan2(cam.position.y-_g2.y,Math.max(.15,hz));
-  const FOV=82,want=-cl(al-FOV/2*.0174*.68,-.3,.58);p.cpt=p.cpt==null?want:lp(p.cpt,want,cl(dt*5,0,1));
-  const pt=p.cpt;
-  cam.rotation.set(pt,yaw+PI,-p.lean*.72,'YXZ');cam.rotation.order='YXZ';cam.rotation.set(pt,yaw+PI,0);
-  /* roll about the view axis */cam.rotateZ(p.lean*.72);
-  cam.fov=82;cam.layers.set(0);cam.layers.enable(1+(1-p.k));cam.layers.enable(3+p.k)/* own arms and legs (people riders) */}
- else{const yaw=m.g.rotation.y;const fx=Math.sin(yaw),fz=Math.cos(yaw);m.g.getWorldPosition(_t);
-  /* the offset trails, not the position, so the camera never falls behind at speed */const want=_h.set(-fx*4.6,1.85+p.pitch*.6,-fz*4.6);if(!p.cc)p.cc=want.clone();p.cc.lerp(want,cl(dt*5,0,1));cam.position.copy(_t).add(p.cc);cam.up.set(0,1,0);cam.lookAt(_t.x+fx*2,_t.y+1.0,_t.z+fz*2);
-  cam.fov=64;cam.layers.enableAll()}
+  /* Nov 2: calmer head cam: a little roll with the lean (it was 0.72 of it), pitch eased, FOV widening a touch with speed */
+  const sp=cl(p.v/60,0,1),FOV=74+8*sp,want=-cl(al-FOV/2*.0174*.68,-.3,.58);p.cpt=p.cpt==null?want:lp(p.cpt,want,cl(dt*3,0,1));
+  p.croll=lp(p.croll||0,p.lean*.18,cl(dt*4,0,1));
+  cam.rotation.order='YXZ';cam.rotation.set(p.cpt,yaw+PI,0);cam.rotateZ(p.croll);
+  cam.fov=FOV;cam.layers.set(0);cam.layers.enable(1+(1-p.k));cam.layers.enable(3+p.k)/* own arms and legs (people riders) */}
+ else{/* Nov 2: chase cam that trails the bike's heading instead of being bolted to it: low, a little further back at speed, looking down the road */
+  const yb=m.g.rotation.y;m.g.getWorldPosition(_t);if(p.cy==null||Math.abs(wrapA(yb-p.cy))>1.2)p.cy=yb;p.cy+=wrapA(yb-p.cy)*cl(dt*4.5,0,1);
+  const sp=cl(p.v/60,0,1),back=5.2+1.3*sp,hgt=1.55+.25*sp+Math.max(0,p.pitch)*.5,fx=Math.sin(p.cy),fz=Math.cos(p.cy);
+  const want=_h.set(_t.x-fx*back,_t.y+hgt,_t.z-fz*back);if(!p.cc)p.cc=want.clone();p.cc.lerp(want,cl(dt*9,0,1));cam.position.copy(p.cc);
+  /* never sink into the road on crests */B.road.pos(p.s,p.d_,_pp);cam.position.y=Math.max(cam.position.y,_pp.y+1.1);
+  cam.up.set(0,1,0);cam.lookAt(_t.x+fx*7,_t.y+1.05,_t.z+fz*7);cam.rotateZ(-p.lean*.06);
+  cam.fov=58+12*sp;cam.layers.enableAll()}
  cam.updateProjectionMatrix()}
 const _fr={},_g2=new THREE.Vector3();
 
 /* ---------------- main loop ---------------- */
 function step(dt){if(!B)return;const live=!B.paused;
  if(live){B.t+=dt;
-  if(B.state==='count'){B.cd-=dt;const n=Math.ceil(B.cd-.6);if(n!==B.cdn){B.cdn=n;if(n>0){sfx.tone(880,880,.16,'sine',1)}else{sfx.tone(1760,1760,.5,'sine',1.1)}showCount(n>0?n:'GO')}if(B.cd<=.6){B.state='ride';}}
+  if(B.state==='count'){B.cd-=dt;const n=Math.ceil(B.cd-.6);if(n!==B.cdn){B.cdn=n;if(n>0){sfx.tone(880,880,.16,'sine',1)}else{sfx.tone(1760,1760,.5,'sine',1.1)}showCount(n>0?n:'GO!')}if(B.cd<=.6){B.state='ride';}}
   if(B.state==='ride'&&B.clock>0){B.left-=dt;if(B.left<=0){B.left=0;finish();return}}
   for(const p of B.pl){physStep(p,dt);if(!B)return;collide(p);scoreStep(p,dt)}
   trafficStep(dt);fxStep(dt);
-  const sMin=Math.min(...B.pl.map(p=>p.s)),sMax=Math.max(...B.pl.map(p=>p.s));B.world.update(sMin,sMax);for(const p of B.pl){const rn=B.world.regionName(p.s);if(rn!==p.reg){if(p.reg)pop(p,'ENTERING  '+rn.toUpperCase(),'#9fc3e6',2.4);p.reg=rn}}
+  const sMin=Math.min(...B.pl.map(p=>p.s)),sMax=Math.max(...B.pl.map(p=>p.s));B.world.update(sMin,sMax);B.world.tick(dt,sMin,sMax);
   for(const p of B.pl){if(!p.wipe)poseRiderFor(p,dt);placeBike(p,dt);if(p.eng)p.eng.set(p.rpm,p.th,p.v,!p.wipe&&B.state!=='done')}}
  render(dt);hudStep(dt)}
 function render(dt){const W=R.domElement.width,H=R.domElement.height,n=B.pl.length;R.setScissorTest(true);
@@ -452,18 +458,43 @@ body.bkOn #ptNowPlaying{display:none}
 const ICON={wheelie:'<path d="M4 18a3 3 0 106 0 3 3 0 00-6 0zM14 9l3-4 3 1M7 15l5-6h4l3 8"/>',stoppie:'<path d="M14 18a3 3 0 106 0 3 3 0 00-6 0zM5 7l4 2 7 9M9 9h5"/>',standup:'<path d="M12 3v6l-3 3M12 9l3 3M5 19a2 2 0 104 0 2 2 0 00-4 0zM15 19h4"/>',
  twelve:'<path d="M12 3v14M8 7l4-4 4 4M9 21h6"/>',nohands:'<path d="M5 5l4 5M19 5l-4 5M12 10v6M6 20a2 2 0 104 0M14 20a2 2 0 104 0"/>',superman:'<path d="M3 12h11l4-3M14 12l5 3M6 19a2 2 0 104 0"/>',seatstand:'<path d="M12 3v8M5 7h14M10 15h4M7 20a2 2 0 104 0M13 20a2 2 0 104 0"/>',burnout:'<path d="M5 18a3 3 0 106 0M14 18c2-1 2-3 4-3s2 2 3 1M15 11c1-2 3-2 4-4"/>'};
 const icon=id=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+(ICON[id]||'')+'</svg>';
-function ensureCss(){if($i('bkCss'))return;const s=document.createElement('style');s.id='bkCss';s.textContent=CSS+PREP_CSS;document.head.appendChild(s)}
+function ensureCss(){if($i('bkCss'))return;const s=document.createElement('style');s.id='bkCss';s.textContent=CSS+PREP_CSS+SAME_CSS;document.head.appendChild(s);cloneCss([['#pause','#bkPause']])}
+/* copy the game's own rules for an element onto ours, so the bike pause looks exactly like the car pause (and follows any later restyle) */
+function cloneCss(map){const out=[];const walk=(rs,media)=>{for(const r of rs){if(r.media&&r.cssRules){walk(r.cssRules,r.media.mediaText);continue}const sel=r.selectorText;if(!sel||!map.some(([a])=>sel.includes(a)))continue;
+  const parts=sel.split(',').filter(x=>map.some(([a])=>x.includes(a))).map(x=>{for(const[a,b]of map)x=x.split(a).join(b);return x});out.push((media?'@media '+media+'{':'')+parts.join(',')+'{'+r.style.cssText+'}'+(media?'}':''))}};
+ for(const sh of document.styleSheets){let rs;try{rs=sh.cssRules}catch(e){continue}if(rs)walk(rs,null)}const st=document.createElement('style');st.id='bkCss2';st.textContent=out.join('\n');document.head.appendChild(st)}
+/* Nov 2: the same look as the car HUD: plates in the glossy panel colours, pop-ups as the car's message plate, the car countdown */
+const SAME_CSS=`
+#bkHud .pl{background:var(--gx)!important;box-shadow:var(--gxhi),0 0 0 1px #000c,0 4px 14px #0009!important;border-radius:8px!important;-webkit-backdrop-filter:none;backdrop-filter:none}
+#bkHud .tk kbd,#bkHud .hint kbd,#bkHud .tg kbd{background:#ffffff1f!important;color:#fff!important;border-radius:5px!important;box-shadow:inset 0 1px 0 #ffffff2e,0 0 0 1px #000a;font:600 10px var(--gt)!important;padding:2px 7px!important}
+#bkHud .tk{font:500 11px var(--gt);letter-spacing:.14em}#bkHud .tk b{font-weight:500}
+#bkHud .pp{top:34%!important;gap:8px}
+#bkHud .pp div,#bkHud .pp div.t,#bkHud .pp div.w{padding:9px 22px;background:var(--gx)!important;border-radius:8px!important;box-shadow:var(--gxhi),0 0 0 1px #000c,0 6px 18px #000a!important;font:500 clamp(13px,2.4vh,20px) var(--gt)!important;letter-spacing:.14em!important;text-shadow:none!important;-webkit-backdrop-filter:none;backdrop-filter:none}
+#bkHud .pp div.w{font-size:clamp(18px,3.4vh,28px)!important}
+#bkHud .cd{top:30%!important;font:200 clamp(80px,22vh,180px) var(--gt)!important;color:#fff!important;text-shadow:0 4px 30px #000a!important;letter-spacing:.02em}
+#bkHud .tg{position:absolute;left:16px;top:50%;transform:translateY(-50%) scale(var(--s,1));transform-origin:left center;min-width:200px;padding:8px;background:var(--gx);border-radius:8px;box-shadow:var(--gxhi),0 0 0 1px #000c,0 4px 14px #0009;font-family:var(--gt);-webkit-font-smoothing:antialiased}
+#bkHud .tg h6{margin:2px 8px 6px;font:600 9px var(--gt);letter-spacing:.24em;color:var(--gxd,#9aa3ab);text-transform:uppercase}
+#bkHud .tg ul{list-style:none;margin:0;padding:0}
+#bkHud .tg li{display:flex;align-items:center;gap:10px;padding:5px 8px;border-radius:6px;font:400 13px var(--gt);color:#e9ecef}
+#bkHud .tg li kbd{min-width:14px;text-align:center}
+#bkHud .tg li em{margin-left:auto;font:500 9px var(--gt);font-style:normal;letter-spacing:.12em;color:#9aa3ab;text-transform:uppercase}
+#bkHud .tg li.off{opacity:.45}
+#bkHud .tg li.on{opacity:1;color:#fff;background:linear-gradient(180deg,#8fb4d8 0%,#4f7eab 48%,#33608c 52%,#4a77a3 100%);box-shadow:inset 0 1px 0 #ffffffa0,0 0 12px #4f7eab90}
+#bkHud .tg li.on em{color:#fff}
+#bkHud .pv.two .tg{min-width:160px}#bkHud .pv.two .tg li{font-size:11px;padding:3px 6px}
+#bkPause{position:fixed;inset:0;z-index:60;align-items:center;justify-content:center}
+`;
 function buildHud(){ensureCss();let h=$i('bkHud');if(!h){h=document.createElement('div');h.id='bkHud';document.body.appendChild(h)}h.style.display='block';const n=B.pl.length;
  h.innerHTML=B.pl.map((p,i)=>`<div class="pv hud${n>1?' two':''}" data-p="${i}" style="left:${n>1?i*50:0}%;width:${n>1?50:100}%;--pc:${PCOL[i]};--s:${Math.max(.46,Math.min(1.15,innerWidth/n/860,innerHeight/580)).toFixed(3)}">
  <div class="h8top"><div class="h8plate">${n>1?'<div class="tag" style="color:'+PCOL[i]+'">P'+(i+1)+'</div>':''}<div class="lap">HIGHWAY CUT-UP</div><div class="raceTime">${B.clock?'':'FREE RIDE'}</div><div class="bl" style="display:none"></div></div></div>
  <div class="h8list" style="top:calc(10px + 94px * var(--s))"><div class="h8mode"><div class="cu"><div class="sc"><small>SCORE</small><b>000000</b></div><div class="cm"><small>COMBO</small><b>x1</b></div><div class="cc"><small>BEST</small><b>${fmtN(SV().best||0)}</b></div></div></div></div>
  <div class="h8spd"><canvas class="gx5" width="480" height="320"></canvas></div>
- <div class="pl tk"><kbd>${KEYS[i].tn}</kbd><b class="tn"></b><span>&middot;</span><kbd>${KEYS[i].mn}</kbd><span>TRICKS</span></div>
+ <div class="pl tk"><kbd>${KEYS[i].tkn[0]}</kbd><span>&ndash;</span><kbd>${KEYS[i].tkn[7]}</kbd><b>HOLD FOR TRICKS</b><span>&middot;</span><kbd>${KEYS[i].mn}</kbd><span>GUIDE</span></div>
  <div class="pl bm"><i></i><u></u></div>
- <div class="pl mn"><h4>TRICKS<span><kbd>${i?'&uarr;&darr;':'W S'}</kbd> <kbd>${KEYS[i].tn}</kbd></span></h4><ul>${TRICKS.map(t=>`<li data-t="${t.id}">${icon(t.id)}<span>${t.n}</span><em>${t.k==='burnout'?'STOPPED':Math.round(spd(t.min))+'+ '+(kmh()?'KM/H':'MPH')}</em></li>`).join('')}</ul><p></p></div>
+ <div class="tg"><h6>Tricks</h6><ul>${TRICKS.map((t,j)=>`<li data-t="${t.id}"><kbd>${KEYS[i].tkn[j]}</kbd><span>${t.n}</span><em>${t.k==='burnout'?'stopped':Math.round(spd(t.min))+'+'}</em></li>`).join('')}</ul></div>
  ${i===0?`<div class="pl hint"><span><kbd>C</kbd>CAMERA</span><span><kbd>ESC</kbd>PAUSE</span></div>`:''}
  <div class="pp"></div><div class="bkfade"></div></div>`).join('')+`<div class="cd"></div>`;
- B.pl.forEach(p=>menuPaint(p))}
+ B.pl.forEach(p=>guidePaint(p))}
 const hudOf=p=>$i('bkHud')&&$i('bkHud').querySelector('.pv[data-p="'+p.k+'"]');
 function pop(p,txt,col,d,cls){const h=hudOf(p);if(!h)return;const pp=h.querySelector('.pp');const e=document.createElement('div');e.textContent=txt;e.style.color=col||'#fff';e.style.setProperty('--d',(d||1.2)+'s');if(cls)e.className=cls;pp.appendChild(e);
  while(pp.children.length>4)pp.firstChild.remove();setTimeout(()=>e.remove(),(d||1.2)*1000+50)}
@@ -475,29 +506,26 @@ function hudStep(){if(!B)return;const h=$i('bkHud');if(!h)return;
   if(B.clock){const l=Math.max(0,B.left),tt=Math.floor(l/60)+':'+String(Math.floor(l%60)).padStart(2,'0'),rt=q('.raceTime');if(rt._t!==tt){rt._t=tt;rt.textContent=tt}rt.style.color=l<15?'#ff6b5e':''}
   {const cv=q('.gx5'),v=Math.round(spd(p.wipe?0:p.v)),rv=cl(p.rpm||0,0,1.04),up=!p.wipe&&rv>.9,key=v+'|'+p.gear+'|'+Math.round(rv*200)+'|'+up;
    if(cv._k!==key){cv._k=key;P.gx5Draw(cv,{rev:rv,kmh:v,gear:p.gear,shift:up,unit:kmh()?'km/h':'mph',tag:B.pl.length>1?'P'+(p.k+1):'',tagCol:PCOL[p.k]})}}
-  const t=TBY[p.equip];q('.tk .tn').textContent=t.n.toUpperCase();
+  if(!p.gT||B.t-p.gT>.2){p.gT=B.t;guidePaint(p)}
   const bm=q('.bm'),T=p.trk_;
   if(T&&(T.k==='balance')){bm.style.display='block';bm.className='pl bm';bm.querySelector('u').style.left=(50+cl(p.bal,-1,1)*50)+'%';bm.querySelector('u').style.bottom=''}
   else if(T&&(T.k==='wheelie'||T.k==='stoppie')||p.pitch>.05||p.pitch<-.05){bm.style.display='block';bm.className='pl bm v';const u=bm.querySelector('u');u.style.left='';const lim=p.pitch<0?1.15:(T&&T.twelve?1.62:1.45);u.style.bottom=(cl(Math.abs(p.pitch)/lim,0,1)*100)+'%'}
   else bm.style.display='none';
-  q('.mn').style.display=p.menu?'block':'none'}
 }
-function menuPaint(p){const e=hudOf(p);if(!e)return;const li=[...e.querySelectorAll('.mn li')];li.forEach((x,i)=>{x.classList.toggle('on',i===p.menuSel);x.classList.toggle('eq',x.dataset.t===p.equip)});e.querySelector('.mn p').textContent=TRICKS[p.menuSel].d}
-function toggleMenu(p){p.menu=!p.menu;if(p.menu)p.menuSel=TBY[p.equip].i;menuPaint(p);sfx.ui(p.menu?'whoosh':'back')}
-function menuMove(p,d){p.menuSel=(p.menuSel+d+TRICKS.length)%TRICKS.length;menuPaint(p);sfx.ui('move')}
-function menuPick(p){p.equip=TRICKS[p.menuSel].id;p.menu=false;menuPaint(p);sfx.ui('select');pop(p,'EQUIPPED: '+TRICKS[p.menuSel].n.toUpperCase(),'#9fc3e6',1.2);SV().sel[p.k]=Object.assign(SV().sel[p.k]||{},{trick:p.equip})}
+}
+function guidePaint(p){const e=hudOf(p);if(!e)return;const g=e.querySelector('.tg');if(!g)return;g.style.display=p.guide===false?'none':'';
+ g.querySelectorAll('li').forEach(x=>{const t=TBY[x.dataset.t];x.classList.toggle('on',!!(p.trk_&&p.trk_.id===t.id));x.classList.toggle('off',!canStart(p,t))})}
 function runKey(code){if(B.paused){pauseKey(code);return}
  for(const p of B.pl){const k=p.k;
-  if(isKey(k,'m',code)){toggleMenu(p);continue}
-  if(isKey(k,'c',code)||(k===0&&code==='KeyC')){p.cam=(p.cam+1)%2;continue}
-  if(p.menu){if(isKey(k,'u',code))menuMove(p,-1);else if(isKey(k,'d',code))menuMove(p,1);else if(isKey(k,'t',code)||isKey(k,'r',code))menuPick(p)}}}
+  if(isKey(k,'m',code)){p.guide=!p.guide;guidePaint(p);continue}
+  if(isKey(k,'c',code)||(k===0&&code==='KeyC')){p.cam=(p.cam+1)%2;continue}}}
 
 /* ---------------- pause ---------------- */
 function onEsc(){if(scr==='bike'&&B){if(B.state==='done')return;setPause(!B.paused)}else if(scr==='bikeprep'){leavePrep()}else if(scr==='bikeres'){resAct('menu')}}
-function setPause(on){if(!B)return;B.paused=on;let e=$i('bkPause');if(!e){e=document.createElement('div');e.id='bkPause';document.body.appendChild(e)}
- if(on){for(const p of B.pl)if(p.eng)p.eng.set(0,0,0,false);e.innerHTML=`<div class="bkpbox"><h3>PAUSED</h3><button data-a="res" class="on">Resume</button><button data-a="rst">Restart</button><button data-a="prep">Change bikes</button><button data-a="quit">Quit to menu</button></div>`;
-  e.style.display='flex';e.querySelectorAll('button').forEach((b,i)=>{b.onmouseenter=()=>{B&&(B.psel=i);paintPause()};b.onclick=()=>pauseAct(b.dataset.a)});B.psel=0;sfx.ui('select')}else{e.style.display='none'}}
-function paintPause(){const e=$i('bkPause');if(!e||!B)return;e.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('on',i===B.psel))}
+function setPause(on){if(!B)return;B.paused=on;let e=$i('bkPause');if(!e){e=document.createElement('div');e.id='bkPause';e.className='s';document.body.appendChild(e)}
+ if(on){for(const p of B.pl)if(p.eng)p.eng.set(0,0,0,false);e.innerHTML=`<div class="mid w"><div class="tb">Paused</div><div class="b"><button data-a="res">Resume</button><button data-a="rst">Restart</button><button data-a="prep">Change bikes</button><button data-a="quit">Quit to menu</button></div></div>`;
+  e.style.display='flex';e.querySelectorAll('button').forEach((b,i)=>{b.onmouseenter=()=>{B&&(B.psel=i);paintPause()};b.onclick=()=>pauseAct(b.dataset.a)});B.psel=0;paintPause();sfx.ui('select')}else{e.style.display='none'}}
+function paintPause(){const e=$i('bkPause');if(!e||!B)return;const bs=e.querySelectorAll('button');if(bs[B.psel])bs[B.psel].focus()}
 function pauseKey(code){const n=4;if(code==='KeyW'||code==='ArrowUp'){B.psel=(B.psel+n-1)%n;paintPause();sfx.ui('move')}else if(code==='KeyS'||code==='ArrowDown'){B.psel=(B.psel+1)%n;paintPause();sfx.ui('move')}
  else if(code==='Enter'||code==='Space'){pauseAct(['res','rst','prep','quit'][B.psel])}}
 function pauseAct(a){sfx.ui('select');if(a==='res'){setPause(false);return}const o=B.o;$i('bkPause').style.display='none';
@@ -505,15 +533,14 @@ function pauseAct(a){sfx.ui('select');if(a==='res'){setPause(false);return}const
 function goMenu(){show('menu');try{P.menuStats&&P.menuStats()}catch(e){}try{P.menuBg&&P.menuBg()}catch(e){}}
 
 /* ---------------- results ---------------- */
-function showResults(res,cr,nb){if(!B)return;let e=$i('bkRes');if(!e){e=document.createElement('div');e.id='bkRes';document.body.appendChild(e)}
- const n=res.length,win=n>1?res.reduce((a,r)=>r.score>a.score?r:a,res[0]):null;
- const row=(l,f)=>`<tr><th>${l}</th>${res.map(r=>`<td>${f(r)}</td>`).join('')}</tr>`;
- e.innerHTML=`<div class="bkrbox"><small>HIGHWAY CUT-UP</small><h2>${n>1?(win?'PLAYER '+(win.k+1)+' WINS':'RUN COMPLETE'):'RUN COMPLETE'}</h2>
- <table><thead><tr><th></th>${res.map(r=>`<td><i style="background:${PCOL[r.k]}"></i>${n>1?'PLAYER '+(r.k+1):'YOU'}<br><span>${esc(r.bike)}</span></td>`).join('')}</tr></thead><tbody>
- ${row('Score',r=>`<b>${fmtN(r.score)}</b>`)}${row('Best combo',r=>'x'+r.best)}${row('Top speed',r=>r.top+' '+(kmh()?'km/h':'mph'))}${row('Tricks landed',r=>r.tricks)}${row('Best trick',r=>r.bestTrick?esc(r.bestTrick.n)+' <span>'+fmtN(r.bestTrick.pts)+'</span>':'&ndash;')}
- ${row('Near misses',r=>r.near)}${row('Lane splits',r=>r.splits)}${row('Wipeouts',r=>r.wipes)}${row('Distance',r=>(r.dist/1000).toFixed(1)+' km')}</tbody></table>
- <div class="bkrf"><div><small>EARNED</small><b>${P.fmtCr?P.fmtCr(cr):fmtN(cr)+' Cr.'}</b>${nb?'<em>NEW BEST</em>':''}</div><div class="bkrb"><button data-a="again" class="on">Ride again</button><button data-a="prep">Change bikes</button><button data-a="menu">Main menu</button></div></div></div>`;
- e.style.display='flex';e.querySelectorAll('button').forEach((b,i)=>{b.onmouseenter=()=>{RS=i;paintRes()};b.onclick=()=>resAct(b.dataset.a)});RS=0;show('bikeres');sfx.ui('whoosh')}
+function showResults(res,cr,nb){if(!B)return;const o=B.o,n=res.length,order=res.slice().sort((x,y)=>y.score-x.score);
+ const rows=order.map((r,i)=>({place:i+1,human:true,name:n>1?'Rider '+(r.k+1):(P.SV().name||'You'),car:r.bike,score:r.score,extra:'BEST COMBO x'+r.best+' / NEAR MISSES '+r.near+' / TRICKS '+r.tricks+' / WIPEOUTS '+r.wipes+' / '+(r.dist/1000).toFixed(1)+' KM'}));
+ const R_={mode:'cutup',title:n>1?'RIDER '+(order[0].k+1)+' WINS':'RUN COMPLETE',sub:'HIGHWAY CUT-UP'+(nb?' &middot; NEW BEST':''),notes:[],rows,pay:[{l:'SCORE BONUS',v:cr}],total:cr,balance:P.SV().cr,cfg:null};
+ endRun(true);P.renderResults(R_);
+ const bind=(id,f)=>{const b=document.getElementById(id);if(b)b.onclick=()=>{sfx.ui('select');f()}};
+ const cont=()=>{openPrep()};bind('rcCont',cont);bind('rcRetry',()=>startRun(o));bind('rcMenu',goMenu);{const b=document.getElementById('rcBrand');if(b)b.style.display='none'}
+ const c=document.getElementById('rcCont');if(c)c.querySelector('span').textContent='Change bikes';
+ P.resHook=cont;sfx.ui('whoosh')}
 let RS=0;function paintRes(){const e=$i('bkRes');if(e)e.querySelectorAll('.bkrb button').forEach((b,i)=>b.classList.toggle('on',i===RS))}
 function resKey(code){if(code==='KeyA'||code==='ArrowLeft'){RS=(RS+2)%3;paintRes();sfx.ui('move')}else if(code==='KeyD'||code==='ArrowRight'){RS=(RS+1)%3;paintRes();sfx.ui('move')}else if(code==='Enter'||code==='Space')resAct(['again','prep','menu'][RS])}
 function resAct(a){sfx.ui('select');const e=$i('bkRes');if(e)e.style.display='none';const o=B?B.o:null;if(a==='again'&&o){startRun(o);return}endRun();if(a==='prep')openPrep();else goMenu()}
@@ -538,87 +565,60 @@ body.bkOn #gxDrop,body.bkOn #ptNowPlaying{display:none!important}
 function prepState(){const sv=SV(),L=BK.list();const pick=(i,dflt)=>{const s=sv.sel[i]||{};const id=s.id&&L.find(b=>b.id===s.id)?s.id:L[dflt%L.length].id;return{id,paint:s.paint==null?i:s.paint,trick:s.trick||'wheelie',who:s.who==null?i:s.who}};
  return{p:[Object.assign(pick(0,0),{in:true,ready:false}),Object.assign(pick(1,2),{in:false,ready:false})],opt:Object.assign({clock:180,traffic:'normal',tod:'day'},sv.opt),t:0}}
 P.bikeEnter=()=>{ensureCss();const go=()=>BK.loadPack().then(()=>openPrep());try{if(P.sfx)P.sfx('select')}catch(e){}go()};
-function openPrep(){ensureCss();PR=prepState();let e=$i('bkPrep');if(!e){e=document.createElement('div');e.id='bkPrep';document.body.appendChild(e)}
- buildPrepScene();renderPrep();e.style.display='block';show('bikeprep');document.body.classList.add('bkOn')}
-function stopPrep(){if(!PR)return;const e=$i('bkPrep');if(e)e.style.display='none';if(PR.sc){for(const m of PR.bikes)if(m)BK.disposeBike(m);PR.world.dispose();PR.sky.dispose();R.toneMappingExposure=PR.exp0}PR=null}
-function leavePrep(){sfx.ui('back');stopPrep();document.body.classList.remove('bkOn');goMenu()}
-function buildPrepScene(){const tod=BK.TOD[PR.opt.tod]||BK.TOD.day,sc=new THREE.Scene();sc.fog=new THREE.Fog(tod.fog,tod.fogN*.6,tod.fogF);sc.add(new THREE.HemisphereLight(tod.hemi[0],tod.hemi[1],tod.hemi[2]));const sun=new THREE.DirectionalLight(tod.sun[0],tod.sun[1]*1.1);sun.position.fromArray(tod.sunPos).multiplyScalar(100);sc.add(sun);
- const road=BK.makeRoad(4242),world=BK.makeWorld(sc,road,{tod:PR.opt.tod}),sky=BK.makeSky(sc,tod);world.fill(0,500);
- /* a few cars streaming past on the highway behind the bikes */
- const cars=[];const r=rng(77);for(let i=0;i<9;i++){const kind=BK.pickKind(r),m=BK.makeVehicle(kind,BK.pickPaint(r),tod.lamps>0);sc.add(m.g);cars.push({m,s:r()*600,lane:(r()*4)|0,v:25+r()*10,side:r()<.5?1:-1,blink:r(),sig:r()<.3?(r()<.5?1:-1):0})}
- PR.exp0=PR.exp0||R.toneMappingExposure;R.toneMappingExposure=tod.exp;
- PR.sc=sc;PR.road=road;PR.world=world;PR.sky=sky;PR.cars=cars;PR.bikes=[null,null];PR.cam=new THREE.PerspectiveCamera(40,1,.1,3000);PR.todK=PR.opt.tod;syncPrepBikes()}
-const PREP_S=180;
-function syncPrepBikes(){for(let i=0;i<2;i++){const s=PR.p[i];const key=s.in?s.id+'|'+s.paint+'|'+s.who:'';const m=PR.bikes[i];if(m&&m.key===key)continue;if(m){BK.disposeBike(m);PR.bikes[i]=null}
-  if(!s.in)continue;const d=BK.byId(s.id),b=BK.makeBike(s.id,BK.paintOf(d,s.paint),Object.assign({},RIDER_COL[i],{who:s.who}));b.key=key;b.pop=0;PR.sc.add(b.g);PR.bikes[i]=b;
-  const fake={m:b,d,trk_:null,lean:0,k:i};BK.poseRider(b,Object.assign(basePose(fake),{look:-.1}));b.fake=fake}}
-function prepStep(dt){if(!PR||!PR.sc)return;PR.t+=dt;const road=PR.road,n=PR.p.filter(x=>x.in).length;
- /* bikes side by side on the hard shoulder, a slow orbiting camera */
- for(let i=0;i<2;i++){const b=PR.bikes[i];if(!b)continue;b.pop=Math.min(1,b.pop+dt*2.2);const two=PR.p[0].in&&PR.p[1].in,dd=RD.SHO-1.6-(two?(i?2.2:-2.2)*0:0),ss_=PREP_S+(two?(i?-1.6:1.6):0);
-  road.pos(ss_,dd+(two?(i?1.4:-1.4):0)*0,_pp);b.g.position.set(_pp.x,_pp.y,_pp.z);b.g.rotation.set(0,_pp.h-.5,0);const e=1-Math.pow(1-b.pop,3);b.g.scale.setScalar(.6+.4*e);b.g.position.y+=(1-e)*1.2;
-  BK.poseBike(b,-.0,0,Math.sin(PR.t*.7+i)*.12,dt*0,0);{const bp=basePose(b.fake),I=b.I;if(b.rider&&b.rider.people)bp.feet[0]=[I.peg[0]+.2,-.02,I.peg[2]+.18];BK.poseRider(b,Object.assign(bp,{look:-.1+Math.sin(PR.t*.4+i)*.05,turn:Math.sin(PR.t*.23+i*2)*.25,side:b.rider&&b.rider.people?-.06:0}))}}
- const a=PR.t*.11;road.pos(PREP_S,RD.SHO-1.6,_pp);const cx=_pp.x,cy=_pp.y,cz=_pp.z,h=_pp.h;const dist=n>1?7.2:4.6;
- const ang=h+PI*.5+Math.sin(a)*.95;PR.cam.position.set(cx+Math.sin(ang)*dist,cy+1.25+Math.sin(a*1.7)*.3,cz+Math.cos(ang)*dist);PR.cam.lookAt(cx,cy+.8,cz);
- for(const c of PR.cars){c.s+=c.v*dt*c.side;if(c.s>PREP_S+520)c.s-=900;if(c.s<PREP_S-380)c.s+=900;road.pos(c.s,c.side*RD.laneD(c.lane),_pp);c.m.g.position.set(_pp.x,_pp.y,_pp.z);c.m.g.rotation.set(0,c.side>0?_pp.h:_pp.h+PI,0);c.blink+=dt;
-  const on=(c.blink%.7)<.38;c.m.iL.material=c.sig<0&&on?BK.LM.on:BK.LM.off;c.m.iR.material=c.sig>0&&on?BK.LM.on:BK.LM.off}
- const W=R.domElement.width,H=R.domElement.height;PR.cam.aspect=W/H;/* the bikes sit left of centre, clear of the menu panel on the right */if(W>760)PR.cam.setViewOffset(W,H,W*.16,0,W,H);else PR.cam.clearViewOffset();PR.cam.updateProjectionMatrix();PR.sky.follow(PR.cam.position.x,PR.cam.position.y,PR.cam.position.z);
- R.setScissorTest(false);R.setViewport(0,0,W,H);R.render(PR.sc,PR.cam)}
-const STATN=[['TOP SPEED',d=>d.stats.top/300,d=>Math.round(kmh()?d.stats.top:d.stats.top/1.609)],['ACCELERATION',d=>d.stats.acc,d=>Math.round(d.stats.acc*100)],['HANDLING',d=>d.stats.hnd,d=>Math.round(d.stats.hnd*100)],['TRICKS',d=>d.stats.trk,d=>Math.round(d.stats.trk*100)]];
+/* Nov 2: the setup is the game's own flat setup screen (ui.js gxRender), not a 3D scene: a still picture of the chosen bike and rider,
+   the options in the same blue cards as every other mode */
+function openPrep(){ensureCss();PR=prepState();PR.sel=0;const ST=P.ui.ST;
+ const reset=()=>{const g=$i('suGo');if(g)g.innerHTML='<span>Start</span>'};ST.custom={render:bikeRender,go:()=>prepGo(),back:()=>{sfx.ui('back');reset();PR=null;goMenu()},leave:reset};
+ show('s8setup');const t=$i('suTitle');if(t)t.innerHTML='HIGHWAY <em>CUT-UP</em>';const g=$i('suGo');if(g)g.innerHTML='<span>Ride</span>';bikeRender()}
+const shotCache={};
+function bikeShot(cv,s){if(!cv)return;const dpr=Math.min(2,devicePixelRatio||1),cw=Math.max(320,Math.round((cv.clientWidth||960)*dpr)),ch=Math.max(180,Math.round((cv.clientHeight||300)*dpr));
+ if(cv.width!==cw||cv.height!==ch){cv.width=cw;cv.height=ch}const key=s.id+'|'+s.paint+'|'+s.who+'|'+cw+'x'+ch,g=cv.getContext('2d');
+ if(shotCache[key]){g.drawImage(shotCache[key],0,0);return}
+ try{const sc=new THREE.Scene();
+  {const bg=document.createElement('canvas');bg.width=512;bg.height=256;const x=bg.getContext('2d'),gr=x.createRadialGradient(330,150,10,330,150,330);gr.addColorStop(0,'#355c86');gr.addColorStop(.5,'#16222f');gr.addColorStop(1,'#07090c');x.fillStyle=gr;x.fillRect(0,0,512,256);
+   x.fillStyle='#ffffff0d';for(let i=0;i<10;i++)x.fillRect(0,196+i*i*.6,512,1);const t=new THREE.CanvasTexture(bg);t.encoding=THREE.sRGBEncoding;sc.background=t}
+  sc.add(new THREE.HemisphereLight(0xdfe9f2,0x30363e,1.05));const sun=new THREE.DirectionalLight(0xffffff,1.1);sun.position.set(-3,6,4);sc.add(sun);const rim=new THREE.DirectionalLight(0x8fb4d8,.9);rim.position.set(4,3,-5);sc.add(rim);
+  const d=BK.byId(s.id),m=BK.makeBike(s.id,BK.paintOf(d,s.paint),Object.assign({},RIDER_COL[0],{who:s.who}));sc.add(m.g);
+  const fake={m,d,trk_:null,lean:0,k:0};BK.poseBike(m,0,0,.18,0,0);const bp=basePose(fake),I=m.I;if(m.rider&&m.rider.people)bp.feet[0]=[I.peg[0]+.2,-.02,I.peg[2]+.18];BK.poseRider(m,Object.assign(bp,{look:-.05,turn:.35,side:m.rider&&m.rider.people?-.06:0}));
+  m.g.rotation.y=-1.0;m.g.updateMatrixWorld(true);const bx=new THREE.Box3().setFromObject(m.g),c=bx.getCenter(new THREE.Vector3()),sz=bx.getSize(new THREE.Vector3());
+  const W=R.domElement.width,H=R.domElement.height,asp=cw/ch;let vw=W,vh=Math.round(W/asp);if(vh>H){vh=H;vw=Math.round(H*asp)}
+  const fov=24,cam=new THREE.PerspectiveCamera(fov,asp,.1,200);cam.layers.enableAll();const dist=(sz.y*1.15/2)/Math.tan(fov/2*PI/180);
+  cam.position.set(c.x+dist*.96,c.y+dist*.08,c.z+dist*.28);cam.lookAt(c.x,c.y,c.z);cam.setViewOffset(vw,vh,-vw*.16,0,vw,vh);cam.updateProjectionMatrix();
+  const sci=R.getScissorTest(),ex=R.toneMappingExposure;R.setScissorTest(false);R.toneMappingExposure=1.05;R.setViewport(0,0,vw,vh);R.clear();R.render(sc,cam);
+  const out=document.createElement('canvas');out.width=cw;out.height=ch;out.getContext('2d').drawImage(R.domElement,0,H-vh,vw,vh,0,0,cw,ch);
+  R.setScissorTest(sci);R.toneMappingExposure=ex;R.setViewport(0,0,W,H);BK.disposeBike(m);sc.background.dispose();shotCache[key]=out;g.drawImage(out,0,0)}catch(e){console.warn('bike shot',e)}}
+const STATN=[['Top speed',d=>d.stats.top/300,d=>Math.round(kmh()?d.stats.top:d.stats.top/1.609)+(kmh()?' km/h':' mph')],['Acceleration',d=>d.stats.acc,d=>Math.round(d.stats.acc*100)],['Handling',d=>d.stats.hnd,d=>Math.round(d.stats.hnd*100)],['Tricks',d=>d.stats.trk,d=>Math.round(d.stats.trk*100)]];
 const PAINTN=['Stock','Second','Red','Orange','Yellow','Green','Blue','Purple','White','Black'];
 const OPTS={clock:[[120,'2 min'],[180,'3 min'],[300,'5 min'],[0,'Endless']],traffic:[['light','Light'],['normal','Normal'],['heavy','Heavy']],tod:[['day','Day'],['dusk','Sunset'],['night','Night']]};
 const rgb=c=>'rgb('+c.map(x=>Math.round(x*255)).join(',')+')';
-/* the prep is one menu panel in the main menu's look: a row per choice, the selected rider's bike named bottom-left */
-function prepRows(){const L=[],o=PR.opt,two=PR.p[1].in;
- for(let i=0;i<2;i++){const s=PR.p[i];if(i===1){L.push({k:'join',l:'Rider 2',v:two?'Riding':'Off',adj:1,dot:PCOL[1]});if(!two)continue}
-  const d=BK.byId(s.id),t=TBY[s.trick]||TRICKS[0],pre=two?'Rider '+(i+1)+' · ':'';
-  if(BK.PEOPLE&&window.PEOPLE_B64)L.push({k:'who',i,l:pre+'Rider',v:BK.PEOPLE[s.who%BK.PEOPLE.length].n,adj:1,dot:two?PCOL[i]:null});L.push({k:'bike',i,l:pre+'Bike',v:d.name,adj:1,dot:two?PCOL[i]:null},{k:'paint',i,l:pre+'Paint',v:PAINTN[s.paint]||'',sw:rgb(BK.paintOf(d,s.paint)),adj:1,dot:two?PCOL[i]:null},{k:'trick',i,l:pre+'Starting trick',v:t.n,adj:1,dot:two?PCOL[i]:null})}
- L.push({gap:1});for(const[k,l]of[['clock','Clock'],['traffic','Traffic'],['tod','Time of day']]){const x=OPTS[k].find(z=>String(z[0])===String(o[k]))||OPTS[k][0];L.push({k,l,v:x[1],adj:1})}
- L.push({gap:1},{k:'go',l:'Ride'});return L}
-function renderPrep(){const e=$i('bkPrep');if(!e||!PR)return;const sv=SV();PR.rows=prepRows();if(PR.sel==null)PR.sel=PR.rows.findIndex(r=>r.k==='go');
- if(PR.sel>=PR.rows.length||PR.rows[PR.sel].gap)PR.sel=PR.rows.findIndex(r=>r.k==='go');
- const r=PR.rows[PR.sel],ri=r&&r.i!=null?r.i:0,s=PR.p[ri],d=BK.byId(s.id),L=BK.list(),k=L.findIndex(b=>b.id===s.id);
- e.innerHTML=`<div class="psxV"></div>
- <div class="psxT"><small>${PR.p[1].in?'Rider '+(ri+1)+' · ':''}${esc(d.kind)} · ${k+1} of ${L.length}</small><b>${esc(d.name)}</b>
-  <div class="sb">${STATN.map(([n,f,v])=>`<span>${n}</span><u><i style="width:${Math.round(cl(f(d),0,1)*100)}%"></i></u>`).join('')}</div></div>
- <div class="psx sm"><div class="hd"><div class="av">${icon('wheelie')}</div><div class="pt"><b>Highway Cut-Up</b><small>Best score ${fmtN(sv.best||0)}</small></div></div><div class="rs">${P.psxRows(PR.rows,PR.sel)}</div></div>
- <div class="psxPad">${P.psxPad([['&uarr;&darr;','Choose'],['&larr;&rarr;','Change'],['Enter','Ride','go'],['Esc','Back','back']])}</div>`;
- const av=e.querySelector('.av svg');if(av){av.style.width='60%';av.style.height='60%'}
- e.querySelectorAll('.psx .r').forEach(el=>{const i=+el.dataset.i;el.onmouseenter=()=>{if(PR.sel!==i){PR.sel=i;renderPrep()}};
-  el.onclick=ev=>{const dd=ev.target&&ev.target.dataset&&ev.target.dataset.d;PR.sel=i;if(dd)prepChange(+dd);else prepAct()}});
- e.querySelectorAll('.psxPad span').forEach(sp=>sp.onclick=()=>{if(sp.dataset.a==='go')prepGo();else if(sp.dataset.a==='back')leavePrep()})}
-function prepMove(d){const n=PR.rows.length;let i=PR.sel;do{i=(i+d+n)%n}while(PR.rows[i].gap);PR.sel=i;sfx.ui('move');renderPrep()}
-function prepChange(d){const r=PR.rows[PR.sel];if(!r||r.gap)return;
- if(r.k==='who'){const s=PR.p[r.i];s.who=(s.who+d+BK.PEOPLE.length)%BK.PEOPLE.length;sfx.ui('move');syncPrepBikes();renderPrep()}else if(r.k==='bike')prepBike(r.i,d);else if(r.k==='paint')prepPaint(r.i,d);else if(r.k==='trick')prepTrick(r.i,d);
- else if(r.k==='join'){const s=PR.p[1];s.in=!s.in;sfx.ui(s.in?'select':'back');syncPrepBikes();renderPrep()}
- else if(OPTS[r.k]){const L=OPTS[r.k],j=L.findIndex(z=>String(z[0])===String(PR.opt[r.k]));prepOpt(r.k,L[(j+d+L.length)%L.length][0])}}
-function prepAct(){const r=PR.rows[PR.sel];if(!r)return;if(r.k==='go')prepGo();else if(r.k==='join'&&!PR.p[1].in)prepChange(1);else prepChange(1)}
-function prepBike(i,d){const L=BK.list(),s=PR.p[i];let k=L.findIndex(b=>b.id===s.id);k=(k+d+L.length)%L.length;s.id=L[k].id;sfx.ui('move');syncPrepBikes();renderPrep()}
-function prepPaint(i,d){const s=PR.p[i];s.paint=(s.paint+d+BK.PAINTS.length)%BK.PAINTS.length;sfx.ui('move');syncPrepBikes();renderPrep()}
-function prepTrick(i,d){const s=PR.p[i];const k=(TBY[s.trick]?TBY[s.trick].i:0);s.trick=TRICKS[(k+d+TRICKS.length)%TRICKS.length].id;sfx.ui('move');renderPrep()}
-function prepJoin(i){const s=PR.p[i];if(!s.in){s.in=true;sfx.ui('select');syncPrepBikes();renderPrep();return true}return false}
-function prepOpt(k,v){PR.opt[k]=k==='clock'?+v:v;sfx.ui('move');if(k==='tod'){const exp0=PR.exp0;for(const m of PR.bikes)if(m)BK.disposeBike(m);PR.world.dispose();PR.sky.dispose();for(const c of PR.cars)PR.sc.remove(c.m.g);R.toneMappingExposure=exp0;PR.exp0=exp0;buildPrepScene()}renderPrep()}
-function prepKey(code){
- if(code==='ArrowUp'||code==='KeyW'){prepMove(-1);return}if(code==='ArrowDown'||code==='KeyS'){prepMove(1);return}
- if(code==='ArrowLeft'||code==='KeyA'){prepChange(-1);return}if(code==='ArrowRight'||code==='KeyD'){prepChange(1);return}
- if(code==='Enter'||code==='NumpadEnter'||code==='Space'){prepAct();return}
- /* rider 2's trick key joins them straight in */
- if(isKey(1,'t',code)&&!PR.p[1].in){prepJoin(1);return}}
+function bikeRender(){if(!PR)return;const two=PR.p[1].in,L=BK.list(),rows=[];
+ const re=()=>{sfx.ui('move');bikeRender()};
+ for(let i=0;i<2;i++){const s=PR.p[i];if(i===1&&!two)continue;const d=BK.byId(s.id),grp=i?2:0,dot=two?PCOL[i]:null;
+  if(BK.PEOPLE&&window.PEOPLE_B64)rows.push({grp,dot,l:'Rider',v:BK.PEOPLE[s.who%BK.PEOPLE.length].n,opts:BK.PEOPLE.length,go:k=>{s.who=(s.who+k+BK.PEOPLE.length)%BK.PEOPLE.length;PR.focus=i;re()}});
+  rows.push({grp,dot,l:'Bike',v:d.name,opts:L.length,go:k=>{let j=L.findIndex(b=>b.id===s.id);s.id=L[(j+k+L.length)%L.length].id;PR.focus=i;re()}});
+  rows.push({grp,dot,l:'Paint',v:PAINTN[s.paint]||'Paint',sw:rgb(BK.paintOf(d,s.paint)),opts:BK.PAINTS.length,go:k=>{s.paint=(s.paint+k+BK.PAINTS.length)%BK.PAINTS.length;PR.focus=i;re()}})}
+ rows.push({grp:1,l:'Riders',v:two?'2 (split screen)':'1',opts:2,go:k=>{PR.p[1].in=k>0;PR.focus=k>0?1:0;re()}});
+ for(const[k,l]of[['clock','Clock'],['traffic','Traffic'],['tod','Time of day']]){const Lo=OPTS[k],j=Math.max(0,Lo.findIndex(z=>String(z[0])===String(PR.opt[k])));
+  rows.push({grp:1,l,v:Lo[j][1],opts:Lo.length,go:dd=>{const n=Math.min(Lo.length-1,Math.max(0,j+dd));if(n!==j){PR.opt[k]=k==='clock'?+Lo[n][0]:Lo[n][0];re()}}})}
+ const fi=PR.focus&&two?1:0,s=PR.p[fi],d=BK.byId(s.id),k=L.findIndex(b=>b.id===s.id);
+ const side=`<div class="gxSide"><h6>${esc(d.kind)} &middot; ${k+1} of ${L.length}</h6><div class="st">${STATN.map(([n,f,v])=>`<span>${n}</span><u><i style="width:${Math.round(cl(f(d),0,1)*100)}%"></i></u><em>${v(d)}</em>`).join('')}</div></div>`;
+ P.gxRender({kind:(two?'Rider '+(fi+1)+' &middot; ':'')+'Best score '+fmtN(SV().best||0),name:esc(d.name),facts:[esc(d.kind),'Tricks on keys 1 to 8','Endless highway'],side,rows,groups:['Rider 1','The ride','Rider 2'],shot:cv=>bikeShot(cv,s),go:'Ride'})}
+function stopPrep(){if(!PR)return;const e=$i('bkPrep');if(e)e.style.display='none';if(PR.sc){for(const m of PR.bikes)if(m)BK.disposeBike(m);PR.world.dispose();PR.sky.dispose();R.toneMappingExposure=PR.exp0}PR=null}
+function leavePrep(){sfx.ui('back');stopPrep();document.body.classList.remove('bkOn');goMenu()}
 function prepGo(){if(!PR)return;const sv=SV();PR.p.forEach((s,i)=>{sv.sel[i]={id:s.id,paint:s.paint,trick:s.trick,who:s.who}});sv.opt=Object.assign({},PR.opt);try{P.save()}catch(e){}
  const o={players:PR.p.filter(x=>x.in).map(x=>({id:x.id,paint:x.paint,trick:x.trick,who:x.who})),clock:PR.opt.clock,traffic:PR.opt.traffic,tod:PR.opt.tod};
  if(!o.players.length)return;try{P.sfx&&P.sfx('start')}catch(e){}
  const f=$i('fade');if(f){f.style.transition='opacity .35s';f.style.opacity=1;setTimeout(()=>{startRun(o);f.style.opacity=0},380)}else startRun(o)}
 /* pads in the prep screen */
-let padPrev=[{},{}];setInterval(()=>{if(scr!=='bikeprep'||!PR)return;for(let i=0;i<2;i++){const p=padIn(i);if(!p)continue;const pv=padPrev[i],e=(k)=>p[k]&&!pv[k];
-  if(e('t')){if(i===1&&!PR.p[1].in)prepJoin(1);else prepAct()}if(e('lf'))prepChange(-1);if(e('rt'))prepChange(1);if(e('up'))prepMove(-1);if(e('dn'))prepMove(1);if(e('st0'))prepGo();padPrev[i]=p}},60);
-setInterval(()=>{if(scr!=='bike'||!B)return;const p=padIn(0);if(p&&p.st0&&!padPrev.s){setPause(!B.paused)}padPrev.s=p&&p.st0},80);
+let padPrev=[{},{}];setInterval(()=>{if(scr!=='bike'||!B)return;const p=padIn(0);if(p&&p.st0&&!padPrev.s){setPause(!B.paused)}padPrev.s=p&&p.st0},80);
 
 /* ---------------- frame hook ---------------- */
-const f0=frame;frame=function(n){if(scr==='bike'||scr==='bikeprep'||(scr==='bikeres'&&B)){requestAnimationFrame(frame);const dt=Math.min(.05,Math.max(0,(n-last)/1000));last=n;dtf=dt;T0+=dt;
+const f0=frame;frame=function(n){if(scr==='bike'||(scr==='bikeres'&&B)){requestAnimationFrame(frame);const dt=Math.min(.05,Math.max(0,(n-last)/1000));last=n;dtf=dt;T0+=dt;
   if(R.domElement.style.visibility==='hidden')R.domElement.style.visibility='';
-  try{if(scr==='bikeprep')prepStep(dt);else if(B){if(scr==='bikeres'){render(dt)}else step(dt)}}catch(e){if(!frame.err){frame.err=1;console.error('bike mode',e)}}return}
+  try{if(B){if(scr==='bikeres'){render(dt)}else step(dt)}}catch(e){if(!frame.err){frame.err=1;console.error('bike mode',e)}}return}
  return f0(n)};
 /* leaving through some other path (menu shortcut, options): tidy up */
-{const sh0=show;show=n=>{sh0(n);if(n!=='bike'&&n!=='bikeres'&&n!=='pause'&&n!=='ptOptions'&&B&&n!=='bikeprep'){endRun()}if(n!=='bikeprep'&&PR&&n!=='bike'){stopPrep()}if(n!=='bike'&&n!=='bikeprep'&&n!=='bikeres')document.body.classList.remove('bkOn');
+{const sh0=show;show=n=>{sh0(n);if(n!=='bike'&&n!=='bikeres'&&n!=='pause'&&n!=='ptOptions'&&B&&n!=='bikeprep'){endRun()}if(n!=='s8setup'&&PR&&n!=='bike'&&n!=='ptOptions'){stopPrep()}if(n!=='bike'&&n!=='bikeprep'&&n!=='bikeres')document.body.classList.remove('bkOn');
   for(const id of['bkHud'])if($i(id)&&n!=='bike'&&n!=='bikeres')$i(id).style.display='none';if(n!=='bikeres'&&$i('bkRes'))$i('bkRes').style.display='none'}}
 BK.debug=()=>({B,PR});
 P.bikeStart=o=>BK.loadPack().then(()=>startRun(o));

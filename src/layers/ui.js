@@ -117,7 +117,7 @@ const rawShow=show;let prevScr='menu';
 const WP=document.createElement('div');WP.id='ptWipe';document.body.appendChild(WP);
 const MENUS=['menu','s8cards','s8quick','s8pick','s8setup','s8career','s8show','s8res'];let wipeT=0;
 function wipe(){try{WP.classList.remove('go');void WP.offsetWidth;WP.classList.add('go');clearTimeout(wipeT);wipeT=setTimeout(()=>WP.classList.remove('go'),600)}catch(e){}}
-show=n=>{const was=scr;if(was&&was!==n&&MENUS.includes(n)&&was!=='game'&&was!=='pause')wipe();rawShow(n);if(was!==n&&['s8cards','s8quick','s8pick','s8setup','s8career','s8show'].includes(n)){const e=$(n);e.classList.add('enter');clearTimeout(e._en);e._en=setTimeout(()=>e.classList.remove('enter'),900)}if(was!==n&&P.sfx&&['s8cards','s8quick','s8pick','s8setup','s8career','s8show','s8res','menu'].includes(n))P.sfx('whoosh');for(const id of SCREENS)$(id).classList.toggle('on',id===n);
+show=n=>{const was=scr;if(n!=='s8setup'&&n!=='ptOptions'&&ST.custom){const c=ST.custom;ST.custom=null;if(c.leave)c.leave()}if(was&&was!==n&&MENUS.includes(n)&&was!=='game'&&was!=='pause')wipe();rawShow(n);if(was!==n&&['s8cards','s8quick','s8pick','s8setup','s8career','s8show'].includes(n)){const e=$(n);e.classList.add('enter');clearTimeout(e._en);e._en=setTimeout(()=>e.classList.remove('enter'),900)}if(was!==n&&P.sfx&&['s8cards','s8quick','s8pick','s8setup','s8career','s8show','s8res','menu'].includes(n))P.sfx('whoosh');for(const id of SCREENS)$(id).classList.toggle('on',id===n);
  {const b=$('v8Bg');if(b){const on=['s8cards','s8pick','s8career','s8setup'].includes(n),was=b.classList.contains('on');b.classList.toggle('on',on);if(on&&!was&&P.v8Bg){b.textContent='';P.v8Bg()}}}
  $$('.crv',root).forEach(e=>e.textContent=fmtCr(P.SV().cr));
  if(was==='s8show'&&n!=='s8show')studioOff();
@@ -125,7 +125,7 @@ show=n=>{const was=scr;if(was&&was!==n&&MENUS.includes(n)&&was!=='game'&&was!=='
  if(n==='menu'&&P.menuStats)P.menuStats();
  /* the start-line card belongs to the race: never leave it over a menu */if(n!=='game'&&n!=='pause'&&n!=='ptOptions'){const e=document.getElementById('rlPrep');if(e)e.style.display='none';document.body.classList.remove('rprep')}};
 function refreshMenuCars(){const sv=P.SV();for(let i=0;i<4;i++){const s=sv.sel[i];carChoices[i]=P.modelOf(s.id,s.alt)}}
-const goBack={s8cards:()=>show('menu'),s8quick:()=>show('menu'),s8pick:()=>show(ST.ret),s8setup:()=>{if(isRL(ST.mode)&&ST.rstep===2){ST.rstep=1;renderSetup();return}if(ST.fromPick&&ST.mode==='track'){openPick(true);return}show(ST.ret)},s8career:()=>{if(P.frBack&&P.frBack())return;show('s8cards')},s8res:()=>resContinue()};
+const goBack={s8cards:()=>show('menu'),s8quick:()=>show('menu'),s8pick:()=>show(ST.ret),s8setup:()=>{if(ST.custom){const c=ST.custom;ST.custom=null;c.back();return}if(isRL(ST.mode)&&ST.rstep===2){ST.rstep=1;renderSetup();return}if(ST.fromPick&&ST.mode==='track'){openPick(true);return}show(ST.ret)},s8career:()=>{if(P.frBack&&P.frBack())return;show('s8cards')},s8res:()=>resContinue()};
 const leaveShow=()=>{const r=SR.ret;if(r==='s8res_back'){renderSetup();show('s8setup');return}show(r);if(r==='s8setup')renderSetup();if(r==='s8career')renderCareer()};
 function fadeTo(fn){const f=$('shFade');f.classList.add('on');setTimeout(()=>{try{fn()}catch(e){console.error('fadeTo',e&&e.stack||e)}setTimeout(()=>f.classList.remove('on'),260)},230)}
 const inGrid=()=>CARDS()&&SR.view==='grid',inCar=()=>CARDS()&&SR.view==='car';
@@ -457,7 +457,7 @@ const GX_NAME={cTod:'Time of day',cCpu:'Opponents',cDif:'CPU level',cPl:'Drivers
 function gxShot(i){const cv=$('gxShot'),rf=$('gxRefl');if(!cv)return;const g=cv.getContext('2d'),c=P.trackShotCached&&P.trackShotCached(i);
  if(c){g.drawImage(c,0,0,cv.width,cv.height);cv.classList.remove('map')}else{drawTrack(cv,i,false);cv.classList.add('map');if(P.trackShot)P.trackShot(i).then(v=>{if(v&&ST.track===i&&cv.isConnected)gxShot(i)})}
  if(rf){const r=rf.getContext('2d');r.clearRect(0,0,rf.width,rf.height);r.drawImage(cv,0,0,rf.width,rf.height)}}
-function gxSetup(){const sec=$('s8setup');if(!sec)return;const m=ST.mode,r2=isRL(m)&&ST.rstep===2;sec.classList.toggle('gxOn',!r2);let box=$('gxSu');
+function gxSetup(){const sec=$('s8setup');if(!sec)return;if(ST.custom){ST.custom.render();return}const m=ST.mode,r2=isRL(m)&&ST.rstep===2;sec.classList.toggle('gxOn',!r2);let box=$('gxSu');
  if(r2){if(box)box.style.display='none';return}
  if(!box){box=document.createElement('div');box.id='gxSu';sec.insertBefore(box,sec.querySelector('.foot8'))}box.style.display='';
  if(GXS.last!==m){GXS.f=0;GXS.more=false;GXS.last=m}
@@ -481,16 +481,23 @@ function gxSetup(){const sec=$('s8setup');if(!sec)return;const m=ST.mode,r2=isRL
  GXS.rows=rows;GXS.f=Math.max(0,Math.min(rows.length-1,GXS.f));
  const T=tr(ST.track),info=[...$('trkInfo').querySelectorAll('.chip')].map(c=>c.textContent.trim()).filter(Boolean);
  const ta=$('trkExtra').querySelector('.medals');
- box.innerHTML=`<div class="gxL"><div class="gxPrev"><canvas id="gxShot" width="1920" height="1080"></canvas><div class="gxTn"><small>${m==='rally'?'STAGE':m==='track'?'CIRCUIT':'TRACK'}</small><b>${D[ST.track].name}</b></div><canvas class="gxMap" width="240" height="150"></canvas></div><canvas id="gxRefl" width="400" height="225"></canvas>
-  <div class="gxFacts">${info.map(t=>`<span>${t}</span>`).join('')}</div>${ta?'<div class="gxMed">'+ta.outerHTML+'</div>':''}</div>
-  <div class="gxR"><div class="gxOpts">${rows.map((r,i)=>`<div class="gxr${i===GXS.f?' on':''}${r.sub?' gxx':''}${r.more?' more':''}" data-i="${i}"><span class="l">${r.l}</span>`+(r.input?'<span class="v gxin"></span>':r.more?`<span class="v">${GXS.more?'Hide':'Show'} &rsaquo;</span>`:r.car?`<span class="v"><i class="x">&lsaquo;</i><em>${r.v}</em><i>&rsaquo;</i></span>`:`<span class="v">${r.opts>1?'<i data-d="-1">&lsaquo;</i>':'<i class="x">&lsaquo;</i>'}<em>${r.v}</em>${r.opts>1?'<i data-d="1">&rsaquo;</i>':'<i class="x">&rsaquo;</i>'}</span>`)+'</div>').join('')}</div></div>`;
- drawTrack(box.querySelector('.gxMap'),ST.track,false);gxShot(ST.track);
+ gxRender(box,{kind:m==='rally'?'Stage':m==='track'?'Circuit':'Track',name:D[ST.track].name,facts:info,extra:ta?ta.outerHTML:'',shot:()=>gxShot(ST.track),map:cv=>drawTrack(cv,ST.track,false),rows,go:isRL(m)?'Next':'Start'})}
+/* Nov 2: the setup screen in a new arrangement (same blue, rounded look): a wide picture banner with the name and facts, the layout
+   inset top right, and the options split into three cards underneath (race / conditions / car). Also used by the bike setup (ST.custom). */
+const GX_GRP=r=>r.grp!=null?r.grp:(r.car||r.more||r.sub||r.l==='Drivers')?2:/^(Weather|Time of day|Damage|Clock|Traffic)$/.test(r.l)?1:0;
+function gxRender(box,o){const rows=o.rows;GXS.rows=rows;GXS.f=Math.max(0,Math.min(rows.length-1,GXS.f));box.className='g2';
+ const T3=o.groups||['Race','Conditions','Car & driver'],cols=[[],[],[]];rows.forEach((r,i)=>cols[Math.min(2,GX_GRP(r))].push(i));
+ const row=i=>{const r=rows[i];return`<div class="gxr${i===GXS.f?' on':''}${r.sub?' gxx':''}${r.more?' more':''}" data-i="${i}">${r.dot?'<b class="gxdot" style="background:'+r.dot+'"></b>':''}<span class="l">${r.l}</span>`+(r.input?'<span class="v gxin"></span>':r.more?`<span class="v">${GXS.more?'Hide':'Show'} &rsaquo;</span>`:r.car?`<span class="v"><i class="x">&lsaquo;</i><em>${r.v}</em><i>&rsaquo;</i></span>`:r.act&&!r.go?`<span class="v"><em>${r.v||''}</em><i>&rsaquo;</i></span>`:`<span class="v">${r.opts>1?'<i data-d="-1">&lsaquo;</i>':'<i class="x">&lsaquo;</i>'}${r.sw?'<s style="background:'+r.sw+'"></s>':''}<em>${r.v}</em>${r.opts>1?'<i data-d="1">&rsaquo;</i>':'<i class="x">&rsaquo;</i>'}</span>`)+'</div>'};
+ box.innerHTML=`<div class="gxHero"><canvas id="gxShot" width="1920" height="1080"></canvas><div class="gxTn"><small>${o.kind}</small><b>${o.name}</b><div class="gxFacts">${(o.facts||[]).map(t=>`<span>${t}</span>`).join('')}</div>${o.extra?'<div class="gxMed">'+o.extra+'</div>':''}</div>${o.map?'<div class="gxMapBox"><canvas class="gxMap" width="240" height="150"></canvas></div>':''}${o.side||''}</div>
+ <div class="gxCards">${cols.map((c,k)=>c.length?`<div class="gxCard"><h5>${T3[k]}</h5><div class="gxOpts">${c.map(row).join('')}</div></div>`:'').join('')}</div>`;
+ if(o.map)o.map(box.querySelector('.gxMap'));if(o.shot)o.shot(box.querySelector('#gxShot'));
  box.querySelectorAll('.gxr').forEach(el=>{const i=+el.dataset.i,r=rows[i];
   if(r.input){const sl=el.querySelector('.gxin');sl.appendChild(r.input)}
   el.onmouseenter=()=>{GXS.f=i;box.querySelectorAll('.gxr').forEach(x=>x.classList.toggle('on',x===el))};
   el.onclick=ev=>{const a=ev.target.closest('i[data-d]');if(a&&r.go){r.go(+a.dataset.d);return}if(r.act){r.act();return}if(r.go&&!r.input&&!a)r.go(1)}});
- const o=box.querySelector('.gxr.on');if(o)o.scrollIntoView({block:'nearest'});
- $('suHint').innerHTML='<u>&uarr;&darr;</u>Choose<u>&larr;&rarr;</u>Change<u>Enter</u>'+(isRL(m)?'Next':'Start')}
+ const on=box.querySelector('.gxr.on');if(on)on.scrollIntoView({block:'nearest'});
+ $('suHint').innerHTML='<u>&uarr;&darr;</u>Choose<u>&larr;&rarr;</u>Change<u>Enter</u>'+(o.go||'Start')}
+P.gxRender=o=>{const sec=$('s8setup');sec.classList.add('gxOn');let box=$('gxSu');if(!box){box=document.createElement('div');box.id='gxSu';sec.insertBefore(box,sec.querySelector('.foot8'))}box.style.display='';gxRender(box,o)};
 P.gxSuKey=e=>{if(!GXS.rows||!$('s8setup').classList.contains('gxOn'))return false;if(e.target&&e.target.tagName==='INPUT'){if(e.code==='Enter'||e.code==='Escape'||e.code==='ArrowUp'||e.code==='ArrowDown')e.target.blur();else return true}
  const c=e.code,n=GXS.rows.length,r=GXS.rows[GXS.f],box=$('gxSu');
  const paint=()=>{box.querySelectorAll('.gxr').forEach(x=>x.classList.toggle('on',+x.dataset.i===GXS.f));const o=box.querySelector('.gxr.on');if(o)o.scrollIntoView({block:'nearest'})};
@@ -500,10 +507,10 @@ P.gxSuKey=e=>{if(!GXS.rows||!$('s8setup').classList.contains('gxOn'))return fals
  if((c==='ArrowRight'||c==='KeyD')&&r&&r.go){r.go(1);e.preventDefault();return true}
  if(c==='Enter'){if(r&&(r.act)){r.act();return true}if(r&&r.input){r.input.focus();return true}$('suGo').click();return true}
  return false};
-{const rs0=renderSetup;renderSetup=function(){rs0.apply(this,arguments);try{gxSetup()}catch(er){console.error('gxSetup',er)}}}
+{const rs0=renderSetup;renderSetup=function(){if(ST.custom){gxSetup();return}rs0.apply(this,arguments);try{gxSetup()}catch(er){console.error('gxSetup',er)}}}
 /* custom driver names: trimmed, 12 chars, unique across players */
 function cleanName(p,np){const nm=(ST.names||[])[p];let v=(nm||'').replace(/[<>&"]/g,'').trim().slice(0,12);if(!v)return null;for(let q=0;q<p;q++){const o=((ST.names||[])[q]||'').trim().slice(0,12);if(o&&o.toLowerCase()===v.toLowerCase())v=v.slice(0,10)+(p+1)}return v}
-$('suGo').onclick=()=>{if(isRL(ST.mode)&&ST.rstep!==2){P.sfx('select');openShow('garage',{player:0,cap:null,ret:'s8setup',rally:ST.mode==='rally',track:ST.mode==='track',flow:true});return}
+$('suGo').onclick=()=>{if(ST.custom){ST.custom.go();return}if(isRL(ST.mode)&&ST.rstep!==2){P.sfx('select');openShow('garage',{player:0,cap:null,ret:'s8setup',rally:ST.mode==='rally',track:ST.mode==='track',flow:true});return}
  const m=ST.mode,d=D[ST.track],np=m==='ta'?1:ST.players,humans=[];for(let p=0;p<np;p++){const s=selCar(p);humans.push({id:s.id,alt:s.alt,name:cleanName(p)})}
  const tod=effTod();let cfg;
  const endur=ST.endurS==='1'?true:ST.endurS==='0'?false:undefined;
@@ -870,7 +877,7 @@ P.lbHTML=(rows,o)=>{o=o||{};const mode=o.mode||'race',cut=mode==='cutup';let fi=
   const fl=i===fi&&rows.length>1;
   return `<div class="lbmr${r.human?' me':''}" style="--i:${i}"><b>${r.place}</b><span class="n"><i>${lbEsc(r.name)}${r.loan?' (loaner)':''}</i><small>${lbEsc(r.car)}</small></span>`+(cut?`<strong class="r">${(r.score||0).toLocaleString('en-US')}${r.extra?`<small>${lbEsc(r.extra)}</small>`:''}</strong>`:`<span class="r${fl?' fl':''}">${r.best!=null?fmtT(r.best):'--'}</span><strong class="r">${r.time!=null?fmtT(r.time):(r.txt?lbEsc(r.txt):(r.lapsDown?'+'+r.lapsDown+' lap':'--'))}${r.gap?`<small>${r.gap}</small>`:''}</strong>`)+'</div>'}).join('')+'</div>';return h};
 let RES=null;
-P.renderResults=res=>{RES=res;const mode=res.mode;
+P.renderResults=res=>{RES=res;P.resHook=null;const mode=res.mode;
  let h=`<h1>${res.title}</h1><div class="sub">${res.sub}</div>`;
  if(res.promo)h+=`<div class="promo">Promoted &middot; ${res.promo.n} rank unlocked</div>`;
  if(res.goal)h+=`<span class="goal ${res.goal.ok?'ok':'no'}">${res.goal.txt}</span>`;
@@ -899,7 +906,7 @@ addEventListener('keydown',e=>{
  if(scr==='s8pick'){const n=PK.list.length;if(!n)return;let k=Math.max(0,PK.list.indexOf(ST.track));if(e.code==='ArrowRight'||e.code==='KeyD')k=(k+1)%n;else if(e.code==='ArrowLeft'||e.code==='KeyA')k=(k+n-1)%n;else if(e.code==='ArrowDown'||e.code==='KeyS')k=Math.min(n-1,k+PK.cols);else if(e.code==='ArrowUp'||e.code==='KeyW')k=Math.max(0,k-PK.cols);else if(e.code==='Enter'){pickNext();return}else return;e.preventDefault();pickSel(PK.list[k],true);return}
  if(scr==='s8setup'){if(P.gxSuKey&&P.gxSuKey(e))return;if(e.code==='Enter'&&!(e.target&&e.target.tagName==='INPUT')){$('suGo').click()}return}
  if(scr==='menu'&&P.menuKey&&P.menuKey(e)){return}
- if(scr==='s8res'&&e.code==='Enter'){resContinue()}});
+ if(scr==='s8res'&&e.code==='Enter'){if(P.resHook){const h=P.resHook;P.resHook=null;h();return}resContinue()}});
 
 /* ================= frame loop ================= */
 const MENU_BG=['menu','s8cards','s8quick','s8pick','s8setup','s8career','s8res'];let CVH=false;

@@ -1582,3 +1582,35 @@ body.gxAsking #tutOffer{display:none!important}
 #s8pick .pkAdd{grid-column:1/-1;aspect-ratio:auto;height:clamp(54px,7vh,76px);flex-direction:row;justify-content:flex-start;gap:20px;padding:0 24px}
 #s8pick .pkAdd .pkPlus{margin:0;font-size:36px}
 #s8pick .pkAdd .pkI{position:static;padding:0;background:none}
+
+/* Nov 2: setup screen arrangement 2 (ui.js gxRender): picture banner on top, three option cards underneath. Same blue rounded look. */
+#gxSu.g2{flex-direction:column!important;align-items:stretch!important;gap:clamp(14px,2.2vh,24px)!important}
+#gxSu.g2 .gxHero{position:relative;flex:1 1 50%;min-height:0;border-radius:12px!important;overflow:hidden;background:#07090c;box-shadow:0 0 0 1px #ffffff40,0 18px 40px #000c}
+#gxSu.g2 #gxShot{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover}
+#gxSu.g2 #gxShot.map{object-fit:contain;opacity:.55}
+#gxSu.g2 .gxHero:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#000d 0%,#0008 34%,#0000 64%),linear-gradient(0deg,#000a 0%,#0000 45%);pointer-events:none}
+#gxSu.g2 .gxTn{position:absolute;left:clamp(22px,3vw,48px);bottom:clamp(18px,3.4vh,40px);top:auto;z-index:2;max-width:60%}
+#gxSu.g2 .gxTn small{font:600 clamp(10px,1.2vh,13px) var(--gt);letter-spacing:.24em;color:#8fb4d8;text-transform:uppercase}
+#gxSu.g2 .gxTn b{font:300 clamp(36px,6vh,72px)/1.05 var(--gt);margin:4px 0 10px}
+#gxSu.g2 .gxFacts{margin:0!important;padding:0!important;gap:6px 8px!important}
+#gxSu.g2 .gxFacts span{padding:5px 12px;border-radius:999px!important;background:#ffffff14;box-shadow:inset 0 1px 0 #ffffff26,0 0 0 1px #0006;font:500 clamp(11px,1.4vh,14px) var(--gt)!important;color:#e9ecef;backdrop-filter:blur(4px)}
+#gxSu.g2 .gxFacts span+span:before{display:none}
+#gxSu.g2 .gxMed{margin-top:12px;max-width:520px}
+#gxSu.g2 .gxMapBox{position:absolute;right:clamp(16px,2vw,32px);top:clamp(14px,2.4vh,28px);z-index:2;padding:10px;border-radius:10px!important;background:linear-gradient(180deg,#2a2e33d9,#16181bd9);box-shadow:inset 0 1px 0 #ffffff30,0 0 0 1px #000,0 10px 24px #0009}
+#gxSu.g2 .gxMapBox .gxMap{position:static;display:block;width:clamp(150px,15vw,260px);height:auto;aspect-ratio:240/150;background:none;box-shadow:none}
+#gxSu.g2 .gxCards{flex:0 1 auto;max-height:48%;min-height:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:clamp(12px,1.4vw,22px)}
+#gxSu.g2 .gxCard{display:flex;flex-direction:column;min-height:0;padding:8px 8px 10px;border-radius:12px!important;background:linear-gradient(180deg,#2a2e33f5,#16181bf5);box-shadow:inset 0 1px 0 #ffffff30,0 0 0 1px #000,0 18px 40px #000c}
+#gxSu.g2 .gxCard h5{margin:6px 14px 6px;font:600 10px var(--gt);letter-spacing:.26em;color:#8fb4d8;text-transform:uppercase}
+#gxSu.g2 .gxCard .gxOpts{display:block!important;flex:1 1 auto;min-height:0;overflow:auto;padding:0!important;background:none!important;box-shadow:none!important;border-radius:0!important}
+#gxSu.g2 .gxr{flex:none!important;min-height:clamp(38px,5vh,50px)!important;max-height:none;font-size:clamp(14px,1.75vh,18px)!important;padding:0 clamp(14px,1vw,20px)!important}
+#gxSu.g2 .gxr.gxx{min-height:clamp(34px,4.2vh,44px)!important;font-size:clamp(12px,1.5vh,15px)!important;padding-left:clamp(14px,1vw,20px)!important}
+#gxSu.g2 .gxr.more{min-height:clamp(34px,4.2vh,44px)!important}
+#gxSu.g2 .gxr .v s{display:inline-block;width:14px;height:14px;border-radius:50%!important;box-shadow:0 0 0 1px #0008,inset 0 1px 0 #fff6}
+#gxSu.g2 .gxr .gxdot{width:8px;height:8px;border-radius:50%!important;flex:none;margin-right:-4px}
+#gxSu.g2 .gxSide{position:absolute;right:clamp(16px,2vw,32px);bottom:clamp(16px,3vh,32px);z-index:2;width:min(340px,34%);padding:12px 16px;border-radius:10px!important;background:linear-gradient(180deg,#2a2e33d9,#16181bd9);box-shadow:inset 0 1px 0 #ffffff30,0 0 0 1px #000,0 10px 24px #0009;font:400 12px var(--gt);color:#c9d2d8}
+#gxSu.g2 .gxSide h6{margin:0 0 8px;font:600 10px var(--gt);letter-spacing:.24em;color:#8fb4d8;text-transform:uppercase}
+#gxSu.g2 .gxSide .st{display:grid;grid-template-columns:auto 1fr auto;gap:6px 10px;align-items:center}
+#gxSu.g2 .gxSide .st u{display:block;height:4px;border-radius:2px!important;background:#ffffff1c;overflow:hidden}#gxSu.g2 .gxSide .st u i{display:block;height:100%;background:linear-gradient(90deg,#8fb4d8,#4f7eab)}
+#gxSu.g2 .gxSide .st em{font-style:normal;color:#fff;font-variant-numeric:tabular-nums}
+@media(max-height:620px){#gxSu.g2 .gxCards{max-height:56%}}
+#gxSu.g2 .gxSide{right:auto;left:clamp(22px,3vw,48px);top:clamp(16px,3vh,32px);bottom:auto}
