@@ -58,11 +58,35 @@ function partGeo(part,pal,paintRGB){const pos=new Int16Array(u8(part.pos).buffer
  for(let f=0;f<nf;f++){const cc=L[col[f]];if(!cc)paint.push(f);const c=cc||paintRGB;for(let k=0;k<3;k++){const v=idx[f*3+k];P[f*9+k*3]=pos[v*3]/15000;P[f*9+k*3+1]=pos[v*3+1]/15000;P[f*9+k*3+2]=pos[v*3+2]/15000;C[f*9+k*3]=c[0];C[f*9+k*3+1]=c[1];C[f*9+k*3+2]=c[2]}}
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(P,3));g.setAttribute('color',new THREE.BufferAttribute(C,3));g.computeVertexNormals();g.userData.paint=paint;return g}
 function gbGeo(gb,paintRGB){const g=gb.geo(),c=g.attributes.color,paint=[];for(let f=0;f<c.count/3;f++)if(c.getX(f*3)<0){paint.push(f);for(let k=0;k<3;k++)c.setXYZ(f*3+k,paintRGB[0],paintRGB[1],paintRGB[2])}g.userData.paint=paint;return g}
-const geoCache={};
+const geoCache={};BK._geoCache=geoCache;
 function bikeGeos(d){if(geoCache[d.id])return geoCache[d.id];const lin=c=>c?c.map(s2l):[.5,.5,.5];let r;
  if(d.parts){r={info:d,parts:{}};for(const k of['body','steer','fw','rw'])if(d.parts[k])r.parts[k]=partGeo(d.parts[k],d.pal,lin(d.paint))}
  else{const f=fbBike(d);r={info:Object.assign({},d,f.info),parts:{}};for(const k in f.out)r.parts[k]=gbGeo(f.out[k],lin(d.paint))}
+ try{splitMirrors(r)}catch(e){console.warn('mirrors',e)}
  return geoCache[d.id]=r}
+/* bar-end and bar-mounted mirrors come baked into the body part: find small loose pieces up by the grips and hand them to the steering part,
+   so they turn with the bars (big pieces such as a fairing never qualify) */
+function splitMirrors(r){const I=r.info,B=r.parts.body,S=r.parts.steer;if(!B||!S||!I.grip||!I.piv)return;
+ const P=B.attributes.position,C=B.attributes.color,nf=P.count/3,q=v=>Math.round(v*400);
+ /* components by shared corners */
+ const par=new Int32Array(nf);for(let i=0;i<nf;i++)par[i]=i;const f_=i=>{while(par[i]!==i){par[i]=par[par[i]];i=par[i]}return i};const map=new Map();
+ for(let f=0;f<nf;f++)for(let k=0;k<3;k++){const v=f*3+k,key=q(P.getX(v))+','+q(P.getY(v))+','+q(P.getZ(v));const o=map.get(key);if(o==null)map.set(key,f);else{const a=f_(o),b=f_(f);if(a!==b)par[a]=b}}
+ const box=new Map();for(let f=0;f<nf;f++){const c=f_(f);let b=box.get(c);if(!b){b={lo:[1e9,1e9,1e9],hi:[-1e9,-1e9,-1e9],fs:[]};box.set(c,b)}b.fs.push(f);for(let k=0;k<3;k++){const v=f*3+k,x=[P.getX(v),P.getY(v),P.getZ(v)];for(let j=0;j<3;j++){if(x[j]<b.lo[j])b.lo[j]=x[j];if(x[j]>b.hi[j])b.hi[j]=x[j]}}}
+ const g=I.grip,take=new Uint8Array(nf);let n=0;
+ for(const b of box.values()){const sx=b.hi[0]-b.lo[0],sy=b.hi[1]-b.lo[1],sz=b.hi[2]-b.lo[2];if(Math.max(sx,sy,sz)>.4)continue;
+  const ax=Math.min(Math.abs(b.lo[0]),Math.abs(b.hi[0]));if(b.lo[0]<0&&b.hi[0]>0)continue;
+  if(ax<.12||b.lo[1]<g[1]-.06||b.hi[1]>g[1]+.55||b.hi[2]<g[2]-.3||b.lo[2]>g[2]+.25)continue;
+  for(const f of b.fs){take[f]=1;n++}}
+ if(!n)return;
+ const piv=I.piv,mkG=(keep,shift)=>{const cnt=keep.reduce((a,x)=>a+x,0),Pn=new Float32Array(cnt*9),Cn=new Float32Array(cnt*9);let o=0;const paint=[];const bp=new Set(B.userData.paint||[]);
+  for(let f=0;f<nf;f++){if(!keep[f])continue;if(bp.has(f))paint.push(o/9);for(let k=0;k<3;k++){const v=f*3+k;Pn[o+k*3]=P.getX(v)-shift[0];Pn[o+k*3+1]=P.getY(v)-shift[1];Pn[o+k*3+2]=P.getZ(v)-shift[2];Cn[o+k*3]=C.getX(v);Cn[o+k*3+1]=C.getY(v);Cn[o+k*3+2]=C.getZ(v)}o+=9}
+  const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.BufferAttribute(Pn,3));gg.setAttribute('color',new THREE.BufferAttribute(Cn,3));gg.computeVertexNormals();gg.userData.paint=paint;return gg};
+ const keepB=take.map(x=>x?0:1),mir=mkG(take,piv),nb=mkG(keepB,[0,0,0]);
+ /* steering part + the mirrors (in steering-pivot space) */
+ const SP=S.attributes.position,SC=S.attributes.color,sn=SP.count,mn=mir.attributes.position.count,Pn=new Float32Array((sn+mn)*3),Cn=new Float32Array((sn+mn)*3);
+ Pn.set(SP.array.subarray(0,sn*3));Cn.set(SC.array.subarray(0,sn*3));Pn.set(mir.attributes.position.array,sn*3);Cn.set(mir.attributes.color.array,sn*3);
+ const ns=new THREE.BufferGeometry();ns.setAttribute('position',new THREE.BufferAttribute(Pn,3));ns.setAttribute('color',new THREE.BufferAttribute(Cn,3));ns.computeVertexNormals();
+ ns.userData.paint=(S.userData.paint||[]).concat(mir.userData.paint.map(f=>f+sn/3));r.parts.body=nb;r.parts.steer=ns;r.mirrors=n}
 /* paint: an sRGB triple (0-1). Geometry is cloned per bike instance so two riders can share a model in different colours */
 function setPaint(m,rgb){const L=rgb.map(s2l);for(const mesh of m.meshes){const g=mesh.geometry,p=g.userData.paint;if(!p||!p.length)continue;const c=g.attributes.color;for(const f of p)for(let k=0;k<3;k++)c.setXYZ(f*3+k,L[0],L[1],L[2]);c.needsUpdate=true}}
 BK.PAINTS=[null,'alt',[.86,.1,.12],[.95,.55,.08],[.98,.86,.15],[.15,.75,.3],[.1,.45,.95],[.55,.2,.85],[.95,.95,.95],[.08,.08,.09]];
@@ -386,19 +410,22 @@ function vehGeo(kind,col){const key=kind+'|'+col;if(vgeoCache[key])return vgeoCa
 /* light quads per vehicle: indicators left / right (front corners + rear corners), brake lights; plus head / tail lamps baked at night */
 const LM={off:new THREE.MeshBasicMaterial({color:0x5a3a10}),on:new THREE.MeshBasicMaterial({color:0xffa31a,toneMapped:false}),brOff:new THREE.MeshBasicMaterial({color:0x4a0d0d}),brOn:new THREE.MeshBasicMaterial({color:0xff2a2a,toneMapped:false}),
  head:new THREE.MeshBasicMaterial({color:0xfff6dc,toneMapped:false}),headOff:new THREE.MeshBasicMaterial({color:0xcfd3d6})};
+for(const k in LM){LM[k].polygonOffset=true;LM[k].polygonOffsetFactor=-2;LM[k].polygonOffsetUnits=-2}
 BK.LM=LM;
 function lightGeo(pts,w,h){const gb=new GB();for(const p of pts){const yaw=p[3]||0;gb.box(p[0],p[1],p[2],w,h,.03,[1,1,1],yaw)}const g=gb.geo();g.deleteAttribute('color');return g}
 const lgCache={};
 /* the game's own cars (cars10 pack) for the car-sized traffic; vans, trucks, semis and buses stay hand-built */
-const CARPOOL={sedan:['SEDAN','COUPE','SPORTS','MUSCLE','SUPERCAR'],hatch:['HATCHBACK','COUPE'],suv:['WAGON','SEDAN','MUSCLE']},carBox={};
-function gameCar(kind,r){const C=P.C10;if(!C||!C.ready||!CARPOOL[kind]||!P.CARS)return null;
- const pool=P.CARS.filter(c=>c.k10!=null&&CARPOOL[kind].includes(c.cat));if(!pool.length)return null;
- const c=pool[(r()*pool.length)|0],alt=r()<.5,src=C.model(c.k10,alt);if(!src)return null;
+/* Nov 2: traffic is everyday cars only (hatchbacks, wagons, saloons) in everyday paint, built fresh so no race livery leaks in */
+const CARPOOL={sedan:['SEDAN','WAGON'],hatch:['HATCHBACK'],suv:['WAGON','SEDAN','HATCHBACK']},carBox={};
+const EVERYDAY=[[236,236,232],[236,236,232],[176,180,184],[176,180,184],[110,114,118],[28,30,34],[28,30,34],[38,58,104],[120,30,32],[196,184,160],[70,92,74]];
+function gameCar(kind,r){const C=P.C10;if(!C||!C.ready||!C.traffic||!CARPOOL[kind]||!P.CARS)return null;
+ const pool=P.CARS.filter(c=>c.k10!=null&&CARPOOL[kind].includes(c.cat)&&!c.rallyOnly);if(!pool.length)return null;
+ const c=pool[(r()*pool.length)|0],src=C.traffic(c.k10,EVERYDAY[(r()*EVERYDAY.length)|0]);if(!src)return null;
  let bx=carBox[c.k10];if(!bx){src.updateMatrixWorld(true);bx=carBox[c.k10]=new THREE.Box3().setFromObject(src)}
  const sz=bx.getSize(new THREE.Vector3()),gl=src.userData.gl||4.5,sc=gl/Math.max(sz.x,sz.z,.01);
- const m=src.clone(true),w=new THREE.Group();w.add(m);m.scale.setScalar(sc);m.rotation.y=sz.x>sz.z?-PI/2:PI;/* model front is -Z, traffic front is +Z */
+ const m=src,w=new THREE.Group();w.add(m);m.scale.setScalar(sc);m.rotation.y=sz.x>sz.z?-PI/2:PI;/* model front is -Z, traffic front is +Z */
  m.position.y=-bx.min.y*sc;m.traverse(o=>{if(o.isMesh)o.castShadow=false});
- const L=Math.max(sz.x,sz.z)*sc,Wd=Math.min(sz.x,sz.z)*sc,H=sz.y*sc;return{g:w,L,W:Wd,H,name:c.name}}
+ const L=Math.max(sz.x,sz.z)*sc,Wd=Math.min(sz.x,sz.z)*sc,H=sz.y*sc;return{g:w,model:m,lamps:src.userData.lamps,lift:src.userData.lift||0,L,W:Wd,H,name:c.name}}
 BK.makeVehicle=(kind,col,night,rnd)=>{const gc=gameCar(kind,rnd||Math.random);const t=gc?Object.assign({},VT[kind],{L:gc.L,W:gc.W,H:gc.H}):VT[kind],g=new THREE.Group();
  if(gc)g.add(gc.g);else{const body=new THREE.Mesh(vehGeo(kind,col),BK.vmat||(BK.vmat=new THREE.MeshLambertMaterial({vertexColors:true})));g.add(body)}
  const L=t.L,W=t.W/2,yL=kind==='semi'||kind==='box'||kind==='bus'?1.05:gc?Math.min(.75,t.H*.5):.72;
@@ -407,7 +434,10 @@ BK.makeVehicle=(kind,col,night,rnd)=>{const gc=gameCar(kind,rnd||Math.random);co
   r:lightGeo([[-W+.12,yL,L/2+.02],[-W+.12,yL,-L/2-.02],[-W-.01,yL+.05,L/2-.8,PI/2]],.1,.06),
   b:lightGeo([[W-.32,yL,-L/2-.03],[-W+.32,yL,-L/2-.03]],.16,.07),
   h:lightGeo([[W-.35,yL,L/2+.03],[-W+.35,yL,L/2+.03]],.17,.07)}}
- const iL=new THREE.Mesh(lg.l,LM.off),iR=new THREE.Mesh(lg.r,LM.off),br=new THREE.Mesh(lg.b,LM.brOff),hd=new THREE.Mesh(lg.h,night?LM.head:LM.headOff);g.add(iL,iR,br,hd);
+ let iL=new THREE.Mesh(lg.l,LM.off),iR=new THREE.Mesh(lg.r,LM.off),br=new THREE.Mesh(lg.b,LM.brOff),hd=new THREE.Mesh(lg.h,night?LM.head:LM.headOff);g.add(iL,iR,br,hd);
+ /* game cars: the lamps are the model's own lamp triangles, lit in place (each falls back to a lens box when the model has none) */
+ const lp_=gc&&gc.lamps;if(lp_){const own=(geo,old,mat)=>{if(!geo)return old;g.remove(old);const q=new THREE.Mesh(geo,mat);q.position.y=gc.lift;q.renderOrder=2;gc.model.add(q);return q};
+  iL=own(lp_.l,iL,LM.off);iR=own(lp_.r,iR,LM.off);br=own(lp_.b,br,LM.brOff);hd=own(lp_.h,hd,night?LM.head:LM.headOff)}
  const sh=new THREE.Mesh(BK.shGeo||(BK.shGeo=new THREE.PlaneGeometry(1,1)),BK.shMat||(BK.shMat=new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:.35,depthWrite:false})));sh.rotation.x=-PI/2;sh.scale.set(t.W*1.05,t.L*1.02,1);sh.position.y=.04;sh.renderOrder=1;g.add(sh);
  return{g,iL,iR,br,hd,sh,t,kind,name:gc&&gc.name}};
 BK.pickKind=r=>{const x=r();/* Nov 2: traffic is only the game's own cars when they are loaded */if(P.C10&&P.C10.ready)return x<.45?'sedan':x<.72?'hatch':'suv';return x<.34?'sedan':x<.5?'hatch':x<.66?'suv':x<.74?'pickup':x<.82?'van':x<.89?'box':x<.96?'semi':'bus'};

@@ -102,6 +102,10 @@ BK.poseRider=(m,ps,gripW)=>{const R=m.rider,I=m.I;if(!R)return;if(!R.people)retu
  const reachOK=l=>{setT(l);const mx=(T.len.ua+T.len.fa)*.96;for(let s=0;s<2;s++){if(!gT[s])continue;const sh=V().subVectors(T.bp[X(s?'upper_armR':'upper_armL')],T.hipC).applyQuaternion(_q1).add(hip);if(sh.distanceTo(gT[s])-.06>mx)return false}return true};
  if((gT[0]||gT[1])&&!reachOK(lean)){let lo=lean,hi=Math.max(lean,1.45);if(reachOK(hi)){for(let i=0;i<10;i++){const md=(lo+hi)/2;if(reachOK(md))hi=md;else lo=md}lean=hi}else{lean=hi;for(let i=0;i<12&&!reachOK(lean);i++)hip.z+=.02}}
  setT(lean);
+ /* a free hand reaching for something beyond arm's length (the road on a hand drag): the whole body slides toward it */
+ if(ps.reach!=null&&ps.hands&&ps.hands[ps.reach]){const s=ps.reach,sg=s?-1:1,H=V(ps.hands[s][0]*sg,ps.hands[s][1],ps.hands[s][2]);
+  const sh=V().subVectors(T.bp[X(s?'upper_armR':'upper_armL')],T.hipC).applyQuaternion(_q1).add(hip);const ex=sh.distanceTo(H)-(T.len.ua+T.len.fa)*.97;
+  if(ex>0)hip.addScaledVector(V().subVectors(H,sh).normalize(),Math.min(ex,.8))}
  /* torso: one rigid turn from the bind body frame onto the leaning one, hips centred on the seat point */
  const bodyAt=r=>V().subVectors(T.bp[X(r)],T.hipC).applyQuaternion(_q1).add(hip);
  const torso=new Set(drv);for(const r of['spine001','spine002','spine003'])torso.delete(X(r));
@@ -132,12 +136,46 @@ BK.poseRider=(m,ps,gripW)=>{const R=m.rider,I=m.I;if(!R)return;if(!R.people)retu
   const qh=(ps.hands&&ps.hands[s])?qf:Q().setFromAxisAngle(V().subVectors(e,j).normalize(),HT*sg).multiply(qf);put(R,X('hand'+S),e,qh,drv)}
  /* legs: IK from each hip joint to the foot target, knees forward and a little out */
  for(let s=0;s<2;s++){const sg=s?-1:1,S=s?'R':'L';const hj=bodyAt('thigh'+S);const F=V(ps.feet[s][0]*sg,ps.feet[s][1]+.07,ps.feet[s][2]-.05);
-  const pole=hj.clone().add(V(.22*sg,.1,.9));ik(hj,F,T.len.th,T.len.sh,pole,j,e);
+  /* the inside knee opens out in a lean (lean + = right; +X is the rider's left) */const ko=Math.max(0,-sg*(ps.knee||0));F.x+=sg*ko*.08;
+  const pole=hj.clone().add(V(.22*sg+sg*ko*1.6,.1-ko*.3,.9));ik(hj,F,T.len.th,T.len.sh,pole,j,e);
   const bT=V().subVectors(T.bp[X('shin'+S)],T.bp[X('thigh'+S)]),bS=V().subVectors(T.bp[X('foot'+S)],T.bp[X('shin'+S)]);
   const nb=V().crossVectors(T.fwd,bT),np=V().crossVectors(V().subVectors(j,hj),V().subVectors(e,j));if(np.lengthSq()<1e-6)np.copy(left);
   put(R,X('thigh'+S),hj,swing(bT,nb,V().subVectors(j,hj),np,Q()),drv);
   const qs=swing(bS,nb,V().subVectors(e,j),np,Q());put(R,X('shin'+S),j,qs,drv);
   /* foot flat along the bike, toes forward */
   const bFt=V().subVectors(T.bp[X('toe'+S)],T.bp[X('foot'+S)]);put(R,X('foot'+S),e,swing(bFt,T.left,V(0,-.25,1),left,Q()),drv)}};
+/* ---------------- wipeout ragdoll (people riders) ----------------
+   Verlet particles on the joints: a stiff torso box (pelvis, neck, hips, shoulders), a neck to the head, and two-link arms and legs.
+   Gravity, ground contact with sliding friction, and length constraints; then each bone is turned from its bind pose onto the particles. */
+const RJ=['spine','spine004','spine006','thighL','thighR','upper_armL','upper_armR','forearmL','handL','forearmR','handR','shinL','footL','shinR','footR'];
+const RR=[.11,.1,.12,.08,.08,.08,.08,.06,.05,.06,.05,.07,.06,.07,.06];
+BK.ragStart=(m,vel)=>{const R=m.rider;if(!R||!R.people)return null;const T=R.T,X=r=>T.idx[r];R.g.updateMatrixWorld(true);
+ const P_=RJ.map(r=>R.bones[X(r)].getWorldPosition(V()));const h=1/60;
+ const O=P_.map((p,i)=>p.clone().addScaledVector(vel,-h).add(V((Math.random()-.5)*.02,(Math.random()-.5)*.02,(Math.random()-.5)*.02)));
+ const C=[];const tor=[0,1,3,4,5,6];for(let a=0;a<tor.length;a++)for(let b=a+1;b<tor.length;b++)C.push([tor[a],tor[b],0,1]);
+ for(const [a,b] of[[1,2],[5,7],[7,8],[6,9],[9,10],[3,11],[11,12],[4,13],[13,14],[0,2]])C.push([a,b,0,1]);
+ for(const c of C)c[2]=P_[c[0]].distanceTo(P_[c[1]]);
+ /* soft: limbs may bend but not fold flat */for(const [a,b,f] of[[5,8,.55],[6,10,.55],[3,12,.6],[4,14,.6]])C.push([a,b,P_[a].distanceTo(P_[b])*f,2]);
+ return{P:P_,O,C,h}};
+BK.ragStep=(rag,dt,gy)=>{const P_=rag.P,O=rag.O,n=P_.length,ss=3,h=Math.min(dt,1/20)/ss,g=-9.8*h*h,t=V();
+ for(let k=0;k<ss;k++){
+  for(let i=0;i<n;i++){const p=P_[i],o=O[i];t.subVectors(p,o).multiplyScalar(.995);o.copy(p);p.add(t);p.y+=g}
+  for(let it=0;it<6;it++){for(const c of rag.C){const a=P_[c[0]],b=P_[c[1]];t.subVectors(b,a);const d=t.length()||1e-4;if(c[3]===2&&d>=c[2])continue;const w=c[0]===0?.35:.5,f=(d-c[2])/d;
+     a.addScaledVector(t,f*w);b.addScaledVector(t,-f*(1-w))}
+   for(let i=0;i<n;i++){const p=P_[i],y0=gy(p.x,p.z)+RR[i];if(p.y<y0){p.y=y0;const o=O[i];if(o.y<y0)o.y=y0+(o.y-y0)*-.25;/* sliding friction (about 0.65 g): take a fixed amount of speed off each step */const vx=p.x-o.x,vz=p.z-o.z,vh=Math.hypot(vx,vz),dv=6.5*h*h/6;/* applied once per constraint pass */if(vh<=dv){o.x=p.x;o.z=p.z}else{o.x+=vx*dv/vh;o.z+=vz*dv/vh}}}}}
+ return P_[0]};
+BK.ragPose=(m,rag)=>{const R=m.rider,T=R.T,X=r=>T.idx[r],P_=rag.P;const drv=DRV[T.n+'_'+T.hipC.x];if(!drv)return;
+ R.g.position.set(0,0,0);R.g.quaternion.identity();
+ const bu=V().subVectors(T.bp[X('spine004')],T.bp[X('spine')]),bl=V().subVectors(T.bp[X('thighL')],T.bp[X('thighR')]);
+ const cu=V().subVectors(P_[1],P_[0]),cl_=V().subVectors(P_[3],P_[4]);const qt=swing(bu,bl,cu,cl_,Q());
+ put(R,X('spine'),P_[0],qt,new Set([X('spine004'),X('thighL'),X('thighR'),X('shoulderL'),X('shoulderR')]));
+ for(const r of['shoulderL','shoulderR'])put(R,X(r),V().subVectors(T.bp[X(r)],T.bp[X('spine')]).applyQuaternion(qt).add(P_[0]),qt,drv);
+ const bh=V().subVectors(T.bp[X('spine006')],T.bp[X('spine004')]),ch=V().subVectors(P_[2],P_[1]);put(R,X('spine004'),P_[1],swing(bh,bl,ch,cl_,Q()),new Set());
+ const lim=(A,Bn,Cn,ia,ib,ic,fw)=>{const a=P_[ia],j=P_[ib],e=P_[ic];const b1=V().subVectors(T.bp[X(Bn)],T.bp[X(A)]),b2=V().subVectors(T.bp[X(Cn)],T.bp[X(Bn)]);
+  const nb=fw?V().crossVectors(b1,T.fwd):V().crossVectors(T.fwd,b1),np=V().crossVectors(V().subVectors(j,a),V().subVectors(e,j));if(np.lengthSq()<1e-6)np.copy(cl_);
+  put(R,X(A),a,swing(b1,nb,V().subVectors(j,a),np,Q()),drv);const q2=swing(b2,nb,V().subVectors(e,j),np,Q());put(R,X(Bn),j,q2,drv);return q2};
+ put(R,X('handL'),P_[8],lim('upper_armL','forearmL','handL',5,7,8,1),drv);put(R,X('handR'),P_[10],lim('upper_armR','forearmR','handR',6,9,10,1),drv);
+ put(R,X('footL'),P_[12],lim('thighL','shinL','footL',3,11,12,0),drv);put(R,X('footR'),P_[14],lim('thighR','shinR','footR',4,13,14,0),drv);
+ R.st.head=P_[2].clone()};
 BK.headWorld=(m,out)=>{const R=m.rider;m.g.updateMatrixWorld();/* the bike moved this frame after the pose: refresh, or the camera trails the head at speed */if(!R||!R.st.head)return out.set(0,1.6,0);out.copy(R.st.head);m.inner.localToWorld(out);return out};
 })();

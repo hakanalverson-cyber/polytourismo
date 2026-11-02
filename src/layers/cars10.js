@@ -88,6 +88,52 @@ function install(){const L=N*2;
  C10.ready=true;ALL_CARS.forEach(attachCarModel);if(typeof $==='function'&&$('loadState'))$('loadState').textContent=N+' cars';
  if(P.onCars10)P.onCars10()}
 C10.model=(k,alt)=>CAR_MODELS[k*2+(alt?1:0)];
+
+/* ================= traffic copies (Nov 2): built fresh, never the cached race model, so no baked livery leaks in ================= */
+/* the pack poses the front wheels steered (a showroom pose): each wheel is turned back until it is thinnest across the car */
+const tireFix={};
+function straightTires(k){if(tireFix[k])return tireFix[k];const G=geoms(k);if(!G.tires)return null;const g=G.tires.clone(),P_=g.attributes.position,n=P_.count;
+ g.computeBoundingBox();const bc=g.boundingBox.getCenter(new THREE.Vector3());const cl=new Int8Array(n);const grp=[[],[],[],[]];
+ for(let i=0;i<n;i++){const q=(P_.getX(i)>bc.x?1:0)+(P_.getZ(i)>bc.z?2:0);cl[i]=q;grp[q].push(i)}
+ for(const ids of grp){if(ids.length<6)continue;let cx=0,cz=0;for(const i of ids){cx+=P_.getX(i);cz+=P_.getZ(i)}cx/=ids.length;cz/=ids.length;
+  let best=0,bw=1e9;for(let a=-.7;a<=.7;a+=.01){const c=Math.cos(a),s_=Math.sin(a);let lo=1e9,hi=-1e9;for(const i of ids){const x=P_.getX(i)-cx,z=P_.getZ(i)-cz,xr=x*c-z*s_;if(xr<lo)lo=xr;if(xr>hi)hi=xr}if(hi-lo<bw-1e-4){bw=hi-lo;best=a}}
+  if(Math.abs(best)<.03)continue;const c=Math.cos(best),s_=Math.sin(best);
+  for(const i of ids){const x=P_.getX(i)-cx,z=P_.getZ(i)-cz;P_.setXYZ(i,cx+x*c-z*s_,P_.getY(i),cz+x*s_+z*c)}}
+ P_.needsUpdate=true;g.computeVertexNormals();return tireFix[k]=g}
+/* the lamps, found from the palette colour under each body triangle: amber = indicators, red = tail, pale at the nose = headlights */
+let pal=null;function palette(){if(pal)return pal;const im=tex.image;if(!im||!im.width)return null;const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const x=c.getContext('2d');x.drawImage(im,0,0);pal={w:im.width,h:im.height,d:x.getImageData(0,0,im.width,im.height).data};return pal}
+const lampCache={};
+/* body triangles sorted by the palette colour under them: lamps only count on the nose and tail faces (facing out), and any other strong
+   colour is a livery stripe, which traffic repaints in its body colour so the cars read as plain everyday paint */
+function lamps(k){if(lampCache[k]!==undefined)return lampCache[k];const G=geoms(k),b=G.body,pl=palette();if(!b||!pl||!b.attributes.uv)return lampCache[k]=null;
+ const P_=b.attributes.position,U=b.attributes.uv,ix=b.index.array;b.computeBoundingBox();const bb=b.boundingBox,zL=bb.max.z-bb.min.z,zc=(bb.max.z+bb.min.z)/2;
+ const out={l:[],r:[],b:[],h:[],liv:[],rest:[]},A=new THREE.Vector3(),B_=new THREE.Vector3(),C=new THREE.Vector3(),N=new THREE.Vector3(),E=new THREE.Vector3();
+ for(let t=0;t<ix.length;t+=3){const a=ix[t],b_=ix[t+1],c=ix[t+2];const u=(U.getX(a)+U.getX(b_)+U.getX(c))/3,v=(U.getY(a)+U.getY(b_)+U.getY(c))/3;
+  const px=Math.min(pl.w-1,Math.max(0,Math.floor(u*pl.w))),py=Math.min(pl.h-1,Math.max(0,Math.floor(v*pl.h))),o=(py*pl.w+px)*4,R=pl.d[o],Gc=pl.d[o+1],Bc=pl.d[o+2];
+  A.fromBufferAttribute(P_,a);B_.fromBufferAttribute(P_,b_);C.fromBufferAttribute(P_,c);N.subVectors(B_,A).cross(E.subVectors(C,A)).normalize();
+  const z=(A.z+B_.z+C.z)/3-zc,x=(A.x+B_.x+C.x)/3,end=Math.abs(z)>zL*.36&&Math.abs(N.z)>.35&&Math.sign(N.z)===Math.sign(z);
+  const mx=Math.max(R,Gc,Bc),mn=Math.min(R,Gc,Bc),sat=mx-mn>70;
+  const amber=R>190&&Gc>80&&Gc<200&&Bc<90&&R-Bc>120,red=R>140&&Gc<80&&Bc<90,pale=mn>170;
+  if(end&&amber)(x>0?out.r:out.l).push(a,b_,c);/* model front is -Z, so +X is the driver's right */
+  else if(end&&red&&z>0){out.b.push(a,b_,c);out.rest.push(a,b_,c)}
+  else if(end&&pale&&z<0){out.h.push(a,b_,c);out.rest.push(a,b_,c)}
+  else if(sat&&!(end&&(red||amber)))out.liv.push(a,b_,c);
+  else out.rest.push(a,b_,c)}
+ /* no amber lenses on this model: the indicators flash the outer part of the head and tail lamps on each side */
+ const outer=(src,neg)=>{const res=[];let xm=0;for(let t=0;t<src.length;t+=3){const x=Math.abs(P_.getX(src[t]));if(x>xm)xm=x}
+  for(let t=0;t<src.length;t+=3){const x=(P_.getX(src[t])+P_.getX(src[t+1])+P_.getX(src[t+2]))/3;if((neg?x<0:x>0)&&Math.abs(x)>xm*.55)res.push(src[t],src[t+1],src[t+2])}return res};
+ if(!out.l.length&&!out.r.length){out.l=outer(out.h,true).concat(outer(out.b,true));out.r=outer(out.h,false).concat(outer(out.b,false))}
+ const mk=arr=>{if(!arr.length)return null;const g=new THREE.BufferGeometry();g.setAttribute('position',P_);g.setIndex(arr);return g};
+ const body=new THREE.BufferGeometry();for(const n in b.attributes)body.setAttribute(n,b.attributes[n]);body.setIndex(out.rest);
+ const liv=out.liv.length?(()=>{const g=new THREE.BufferGeometry();g.setAttribute('position',P_);g.setAttribute('normal',b.attributes.normal);g.setIndex(out.liv);return g})():null;
+ return lampCache[k]={l:mk(out.l),r:mk(out.r),b:mk(out.b),h:mk(out.h),body,liv}}
+const trafMat={};
+C10.traffic=(k,rgb)=>{const m=META[k],G=geoms(k),g=new THREE.Group(),lift=m.lift||0;
+ const L_=lamps(k);let pm=null;if(G.paint||(L_&&L_.liv)){const key=rgb.join(',');pm=trafMat[key]||(trafMat[key]=new THREE.MeshStandardMaterial({color:srgb(rgb[0],rgb[1],rgb[2]),roughness:.5,metalness:.2,flatShading:true}))}
+ if(G.body){const b=new THREE.Mesh(L_?L_.body:G.body,bodyMat);b.position.y=lift;g.add(b);if(L_&&L_.liv){const q=new THREE.Mesh(L_.liv,pm);q.position.y=lift;g.add(q)}}
+ const tg=straightTires(k)||G.tires;if(tg)g.add(new THREE.Mesh(tg,bodyMat));
+ if(G.paint){const p=new THREE.Mesh(G.paint,pm);p.position.y=lift;g.add(p)}
+ g.userData.gl=gameLen(m);g.userData.k=k;g.userData.lamps=L_;g.userData.lift=lift;return g};
 async function init(){try{
  const raw=atob(CAR10_BIN_B64),b=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)b[i]=raw.charCodeAt(i);
  const rs=new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream('gzip')));buf=await rs.arrayBuffer();install()}catch(e){console.error('cars10',e)}}
