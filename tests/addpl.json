@@ -1,0 +1,8 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",2500],
+["js","(()=>{const u=PT8.ui;u.ST.players=1;document.querySelector('[data-m=mp]')||0;return typeof pickMode})()"],
+["js","(()=>{try{PT8.SV().name='Hakan';PT8.save()}catch(e){};document.querySelectorAll('button').forEach(b=>{if(b.textContent.trim()==='OK'&&b.offsetParent)b.click()});PT8.ui.ST.mode='mp';PT8.ui.ST.players=1;PT8.ui.renderSetup();show('s8setup');return 1})()"],["wait",1500],["shot","s1"],
+["js","(()=>{document.getElementById('suGo').click();return 1})()"],["wait",2500],["shot","s2"],
+["js","(()=>{const b=document.querySelector('.gxAdd');if(b){b.click();return 'add'}return 'none'})()"],["wait",2500],["shot","s2b"],
+["js","(()=>{const b=document.querySelector('.gxAdd');if(b){b.click();b.click&&0}return PT8.ui.ST.players})()"],["wait",800],["js","(()=>{const b=document.querySelector('.gxAdd');if(b)b.click();return PT8.ui.ST.players})()"],["wait",2500],["shot","s4"],
+["js","(()=>{const b=document.querySelector('.gxRm');if(b)b.click();return PT8.ui.ST.players})()"],["wait",2000],["shot","s3"],
+["js","(()=>{PT8.ui.ST.mode='rally';PT8.ui.ST.rstep=2;PT8.ui.renderSetup();show('s8setup');return PT8.ui.ST.players})()"],["wait",2500],["shot","rally"]]

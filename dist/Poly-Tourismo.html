@@ -6729,6 +6729,42 @@ body.gxAsking #tutOffer{display:none!important}
 #gxSu.g2 .gxSide .st em{font-style:normal;color:#fff;font-variant-numeric:tabular-nums}
 @media(max-height:620px){#gxSu.g2 .gxCards{max-height:56%}}
 #gxSu.g2 .gxSide{right:auto;left:clamp(22px,3vw,48px);top:clamp(16px,3vh,32px);bottom:auto}
+/* round 25: car step as a 2 x 2 grid of player frames with "Add player" */
+#gxSu.g2 .gxCards.g4{grid-template-columns:1fr 1fr;grid-auto-rows:minmax(0,1fr);max-height:58%;flex:0 0 auto;gap:clamp(8px,1.2vh,14px) clamp(10px,1.2vw,18px)}
+#gxSu.g2 .gxCards.g4~*{display:none}
+#gxSu.g2 .gxCard.pf{padding:6px 8px 8px;border-left:3px solid var(--pc)}
+#gxSu.g2 .gxCard.pf h5{display:flex;align-items:center;gap:8px;margin:4px 10px 4px;color:#e9ecef;letter-spacing:.18em}
+#gxSu.g2 .gxCard.pf h5 .gxdot{width:8px;height:8px;border-radius:50%!important;background:var(--pc);box-shadow:0 0 8px var(--pc)}
+#gxSu.g2 .gxRm{margin-left:auto;width:22px;height:22px;padding:0;border:0;border-radius:50%!important;background:#ffffff14;color:#c9d2d8;font:400 16px/22px var(--gt);cursor:pointer;box-shadow:inset 0 1px 0 #ffffff26}
+#gxSu.g2 .gxRm:hover{background:#ef6a5a;color:#fff}
+#gxSu.g2 .gxCard.pf .gxOpts{display:grid!important;grid-template-columns:1fr 1fr;gap:2px 6px;align-content:start}
+#gxSu.g2 .gxCard.pf .gxr{min-height:clamp(30px,4vh,40px)!important;font-size:clamp(12px,1.5vh,15px)!important;padding:0 12px!important;gap:8px}
+#gxSu.g2 .gxCard.pf .gxr+.gxr{margin-top:0}
+#gxSu.g2 .gxCard.pf .gxr.wide{grid-column:1/-1}
+#gxSu.g2 .gxCard.pf .gxr .l{color:#8fa0ad}#gxSu.g2 .gxCard.pf .gxr.on .l{color:#fff}
+#gxSu.g2 .gxCard.pf .gxr .gxin input{width:min(130px,100%)}
+#gxSu.g2 .gxCard.pf.empty,#gxSu.g2 .gxCard.pf.idle{background:#ffffff06;box-shadow:inset 0 0 0 1px #ffffff1c;border-left-color:#ffffff1c}
+#gxSu.g2 .gxCard.pf.empty{border:1px dashed #8fb4d880;border-left:1px dashed #8fb4d880}
+#gxSu.g2 .gxCard.pf.empty .gxOpts{display:flex!important;height:100%}
+#gxSu.g2 .gxCard.pf .gxAddT{flex:1 1 auto!important;grid-column:1/-1;flex-direction:column;justify-content:center;gap:2px;min-height:0!important;height:100%;color:#cfe0ef;text-align:center}
+#gxSu.g2 .gxCard.pf .gxAddT b{font:200 clamp(26px,4vh,40px)/1 var(--gt);color:#8fb4d8}
+#gxSu.g2 .gxCard.pf .gxAddT span{font:500 clamp(12px,1.6vh,15px) var(--gt);letter-spacing:.16em;text-transform:uppercase}
+#gxSu.g2 .gxCard.pf .gxAddT small{font:400 11px var(--gt);color:#8fa0ad;letter-spacing:.08em}
+#gxSu.g2 .gxCard.pf .gxAddT.on b,#gxSu.g2 .gxCard.pf .gxAddT.on small{color:#fff}
+#gxSu.g2 .gxAdd{margin-top:12px;display:inline-flex;align-items:center;gap:8px;padding:8px 18px 8px 14px;border:0;border-radius:999px!important;cursor:pointer;color:#fff;font:600 12px var(--gt);letter-spacing:.16em;text-transform:uppercase;background:linear-gradient(180deg,#8fb4d8 0%,#4f7eab 48%,#33608c 52%,#4a77a3 100%);box-shadow:inset 0 1px 0 #ffffffa0,0 0 0 1px #000,0 6px 16px #0008}
+#gxSu.g2 .gxAdd b{font:300 18px/1 var(--gt)}
+#gxSu.g2 .gxAdd:hover{filter:brightness(1.12)}
+#gxSu.g2 .gxHero:has(~.gxCards.g4) .gxSide{left:auto;right:clamp(16px,2vw,32px);top:auto;bottom:clamp(14px,2.6vh,28px);width:min(300px,28%)}
+#gxSu.g2 .gxCard.pf h5{height:22px}
+/* round 25: car select, the stats sit large behind the cars (the car picture is drawn on a clear background over them) */
+#gxSu.g2 .gxHero.cars{background:radial-gradient(ellipse 75% 140% at 64% 60%,#355c86 0%,#1d3047 30%,#16222f 50%,#07090c 100%)}
+#gxSu.g2 .gxHero.cars #gxShot{z-index:1}
+#gxSu.g2 .gxHero.cars .gxTn{z-index:3}
+#gxSu.g2 .gxHero.cars .gxSide,#gxSu.g2 .gxHero.cars:has(~.gxCards.g4) .gxSide{z-index:0;left:auto;right:clamp(16px,3vw,56px);top:50%;bottom:auto;transform:translateY(-50%);width:min(560px,46%);padding:0;background:none;box-shadow:none;opacity:.5}
+#gxSu.g2 .gxHero.cars .gxSide h6{font-size:clamp(11px,1.4vh,14px);color:#cfe0ef}
+#gxSu.g2 .gxHero.cars .gxSide .st{gap:clamp(6px,1.4vh,14px) 16px;font:300 clamp(14px,2.2vh,24px) var(--gt);color:#e9ecef;letter-spacing:.06em}
+#gxSu.g2 .gxHero.cars .gxSide .st em{font:200 clamp(20px,3.6vh,40px) var(--gt)}
+#gxSu.g2 .gxHero.cars .gxSide .st u{height:6px}
 
 :root{--gt:"PT Inter","Inter","Segoe UI","Helvetica Neue",Arial,sans-serif!important;--mn:var(--gt)!important;--hd:var(--gt)!important}
 *:not(svg):not(svg *){font-family:var(--gt)!important}
@@ -12351,6 +12387,8 @@ window.__optAction=k=>{if(k==='@tutorial')P.startTutorial()};
 const P=window.PT8;
 P.LOG=[
  {v:'0.03',d:'Nov 2, 2026',t:'Highway Cut-Up on bikes',items:[
+  'Car select: the car\'s stats sit large behind the car, and the preview camera stays fixed, so a big car looks big and a small one small.',
+  'New setup screen: you no longer pick the number of drivers first. On the car step, Add player (next to the car, or in the next empty frame) brings in the next player, and their car, name, gearbox and keys open in their own frame of a 2 x 2 grid. The x on a frame removes that player.',
   'Track Mode handling is 5% down: your car has 5% less grip on circuits, so it turns in less sharply and slides sooner.',
   'Split screen: each player\'s gauge and its dark backing stay inside that player\'s view, so they no longer spill over the split line.',
   'Highway Cut-Up is its own mode now, and it is bikes only: an endless four-lane highway with exits, overpasses, sign gantries and street lamps, in day, sunset or night. Cut-Up left the Quickplay list, so Quickplay is down to four modes and the main menu row count stays the same now that Free Roam is vaulted.',
@@ -13259,7 +13297,7 @@ function renderSetup(){const m=ST.mode;$('s8setup').classList.toggle('pkMode',m=
 const GXS={f:0,more:false,last:null};
 const GX_MORE=['cRev','cStart','cCc','cCpuCar','cGb','cEnd'];
 const GX_DRIVE=[['driftAssist','Drift assist',[[0,'Off'],[.35,'Low'],[.7,'Normal'],[1,'Full']]],['steering','Steering',[[.85,'Slow'],[1,'Normal'],[1.2,'Quick']]],['cameraDistance','Chase camera',[[.9,'Close'],[1,'Normal'],[1.2,'Far']]],['shake','Camera shake',[[true,'On'],[false,'Off']]]];
-const GX_ORDER=['cFmt','cLaps','cRL','cIv','cTime','cPl','cCpu','cDif','cTr','cWx','cTod','cDmg'];
+const GX_ORDER=['cFmt','cLaps','cRL','cIv','cTime',/* round 25: no 'Drivers' count here, players are added on the car step */'cCpu','cDif','cTr','cWx','cTod','cDmg'];
 const GX_NAME={cTod:'Time of day',cCpu:'Opponents',cDif:'CPU level',cPl:'Drivers',cRL:'Laps',cIv:'Knockout every',cFmt:'Format',cGb:'Gearbox',cRev:'Direction',cCc:'CPU class',cCpuCar:'CPU cars',cStart:'Start',cWx:'Weather',cDmg:'Damage',cTime:'Clock',cTr:'Traffic',cLaps:'Laps'};
 function gxShot(i){const cv=$('gxShot'),rf=$('gxRefl');if(!cv)return;const g=cv.getContext('2d'),c=P.trackShotCached&&P.trackShotCached(i);
  if(c){g.drawImage(c,0,0,cv.width,cv.height);cv.classList.remove('map')}else{drawTrack(cv,i,false);cv.classList.add('map');if(P.trackShot)P.trackShot(i).then(v=>{if(v&&ST.track===i&&cv.isConnected)gxShot(i)})}
@@ -13286,7 +13324,7 @@ function gxSetup(){const sec=$('s8setup');if(!sec)return;if(ST.custom){ST.custom
   /* driving settings from the options menu, set right here for this race (and kept, like the options menu) */
   const O=window.PTO;if(O){for(const [k,l,vs] of GX_DRIVE){let i=vs.findIndex(v=>v[0]===O[k]);if(i<0){i=0;let bd=1e9;vs.forEach((v,j)=>{const d=Math.abs(+v[0]-+O[k]);if(d<bd){bd=d;i=j}})}
    rows.push({sub:1,l,v:vs[i][1],opts:vs.length,go:d=>{const n=Math.min(vs.length-1,Math.max(0,i+d));if(n!==i){O[k]=vs[n][0];try{localStorage.setItem('pt7-options',JSON.stringify(O))}catch(e){}P.sfx&&P.sfx('move');gxSetup()}}})}}
-  const kb=[...src.querySelectorAll('.p2kb .kbo')];if(kb.length){const k=Math.max(0,kb.findIndex(b=>b.classList.contains('on')));rows.push({sub:1,l:'P2 keys',v:kb[k].querySelector('b').textContent,opts:kb.length,go:d=>{const n=Math.min(kb.length-1,Math.max(0,k+d));if(n!==k)kb[n].click()}})}}
+  const kb=[];/* round 25: P2's keys are picked in P2's frame on the car step */if(kb.length){const k=Math.max(0,kb.findIndex(b=>b.classList.contains('on')));rows.push({sub:1,l:'P2 keys',v:kb[k].querySelector('b').textContent,opts:kb.length,go:d=>{const n=Math.min(kb.length-1,Math.max(0,k+d));if(n!==k)kb[n].click()}})}}
  GXS.rows=rows;GXS.f=Math.max(0,Math.min(rows.length-1,GXS.f));
  const T=tr(ST.track),info=[...$('trkInfo').querySelectorAll('.chip')].map(c=>c.textContent.trim()).filter(Boolean);
  const ta=$('trkExtra').querySelector('.medals');
@@ -13295,11 +13333,12 @@ function gxSetup(){const sec=$('s8setup');if(!sec)return;if(ST.custom){ST.custom
    inset top right, and the options split into three cards underneath (race / conditions / car). Also used by the bike setup (ST.custom). */
 const GX_GRP=r=>r.grp!=null?r.grp:(r.car||r.more||r.sub||r.l==='Drivers')?2:/^(Weather|Time of day|Damage|Clock|Traffic)$/.test(r.l)?1:0;
 function gxRender(box,o){const rows=o.rows;GXS.rows=rows;GXS.f=Math.max(0,Math.min(rows.length-1,GXS.f));box.className='g2';
- const T3=o.groups||['Race','Conditions','Car & driver'],cols=[[],[],[]];rows.forEach((r,i)=>cols[Math.min(2,GX_GRP(r))].push(i));
- const row=i=>{const r=rows[i];return`<div class="gxr${i===GXS.f?' on':''}${r.sub?' gxx':''}${r.more?' more':''}" data-i="${i}">${r.dot?'<b class="gxdot" style="background:'+r.dot+'"></b>':''}<span class="l">${r.l}</span>`+(r.input?'<span class="v gxin"></span>':r.more?`<span class="v">${GXS.more?'Hide':'Show'} &rsaquo;</span>`:r.car?`<span class="v"><i class="x">&lsaquo;</i><em>${r.v}</em><i>&rsaquo;</i></span>`:r.act&&!r.go?`<span class="v"><em>${r.v||''}</em><i>&rsaquo;</i></span>`:`<span class="v">${r.opts>1?'<i data-d="-1">&lsaquo;</i>':'<i class="x">&lsaquo;</i>'}${r.sw?'<s style="background:'+r.sw+'"></s>':''}<em>${r.v}</em>${r.opts>1?'<i data-d="1">&rsaquo;</i>':'<i class="x">&rsaquo;</i>'}</span>`)+'</div>'};
- box.innerHTML=`<div class="gxHero"><canvas id="gxShot" width="1920" height="1080"></canvas><div class="gxTn"><small>${o.kind}</small><b>${o.name}</b><div class="gxFacts">${(o.facts||[]).map(t=>`<span>${t}</span>`).join('')}</div>${o.extra?'<div class="gxMed">'+o.extra+'</div>':''}</div>${o.map?'<div class="gxMapBox"><canvas class="gxMap" width="240" height="150"></canvas></div>':''}${o.side||''}</div>
- <div class="gxCards">${cols.map((c,k)=>c.length?`<div class="gxCard"><h5>${T3[k]}</h5><div class="gxOpts">${c.map(row).join('')}</div></div>`:'').join('')}</div>`;
+ const T3=o.groups||['Race','Conditions','Car & driver'],nC=T3.length,cols=Array.from({length:nC},()=>[]);rows.forEach((r,i)=>cols[Math.min(nC-1,GX_GRP(r))].push(i));
+ const row=i=>{const r=rows[i];if(r.add)return`<div class="gxr gxAddT${i===GXS.f?' on':''}" data-i="${i}"><b>+</b><span>Add player ${r.pn||''}</span><small>${r.hint||''}</small></div>`;return`<div class="gxr${i===GXS.f?' on':''}${r.sub?' gxx':''}${r.more?' more':''}${r.wide?' wide':''}" data-i="${i}">${r.dot?'<b class="gxdot" style="background:'+r.dot+'"></b>':''}<span class="l">${r.l}</span>`+(r.input?'<span class="v gxin"></span>':r.more?`<span class="v">${GXS.more?'Hide':'Show'} &rsaquo;</span>`:r.car?`<span class="v"><i class="x">&lsaquo;</i><em>${r.v}</em><i>&rsaquo;</i></span>`:r.act&&!r.go?`<span class="v"><em>${r.v||''}</em><i>&rsaquo;</i></span>`:`<span class="v">${r.opts>1?'<i data-d="-1">&lsaquo;</i>':'<i class="x">&lsaquo;</i>'}${r.sw?'<s style="background:'+r.sw+'"></s>':''}<em>${r.v}</em>${r.opts>1?'<i data-d="1">&rsaquo;</i>':'<i class="x">&rsaquo;</i>'}</span>`)+'</div>'};
+ box.innerHTML=`<div class="gxHero${o.heroCls?' '+o.heroCls:''}"><canvas id="gxShot" width="1920" height="1080"></canvas><div class="gxTn"><small>${o.kind}</small><b>${o.name}</b><div class="gxFacts">${(o.facts||[]).map(t=>`<span>${t}</span>`).join('')}</div>${o.extra?'<div class="gxMed">'+o.extra+'</div>':''}${o.tnBtn||''}</div>${o.map?'<div class="gxMapBox"><canvas class="gxMap" width="240" height="150"></canvas></div>':''}${o.side||''}</div>
+ <div class="gxCards${o.grid?' g4':''}">${cols.map((c,k)=>o.grid?`<div class="gxCard pf${c.length&&rows[c[0]].add?' empty':''}${c.length?'':' idle'}" style="--pc:${o.cols?o.cols[k]:'#8fb4d8'}">${c.length&&!rows[c[0]].add?`<h5><b class="gxdot"></b>${T3[k]}${o.rm&&o.rm(k)?`<button class="gxRm" data-p="${k}" title="Remove player">&times;</button>`:''}</h5>`:''}<div class="gxOpts">${c.map(row).join('')}</div></div>`:c.length?`<div class="gxCard"><h5>${T3[k]}</h5><div class="gxOpts">${c.map(row).join('')}</div></div>`:'').join('')}</div>`;
  if(o.map)o.map(box.querySelector('.gxMap'));if(o.shot)o.shot(box.querySelector('#gxShot'));
+ if(o.rm)box.querySelectorAll('.gxRm').forEach(b=>b.onclick=ev=>{ev.stopPropagation();o.rm(+b.dataset.p,true)});if(o.onAdd)box.querySelectorAll('.gxAdd').forEach(b=>b.onclick=ev=>{ev.stopPropagation();o.onAdd()});
  box.querySelectorAll('.gxr').forEach(el=>{const i=+el.dataset.i,r=rows[i];
   if(r.input){const sl=el.querySelector('.gxin');sl.appendChild(r.input)}
   el.onmouseenter=()=>{GXS.f=i;box.querySelectorAll('.gxr').forEach(x=>x.classList.toggle('on',x===el))};
@@ -13313,16 +13352,16 @@ P.gxSteps=gxSteps;
 /* a single studio picture of any model (cars here, bikes in bikes.js), rendered once with the main renderer and cached */
 const OSHOT={};let shotR=null;
 /* its own antialiased renderer at twice the picture size, filtered down: sharp edges whatever resolution the game itself is running at */
-const getShotR=()=>{if(shotR)return shotR;shotR=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true,alpha:false});shotR.outputEncoding=R.outputEncoding;shotR.toneMapping=R.toneMapping;shotR.physicallyCorrectLights=R.physicallyCorrectLights;shotR.setPixelRatio(1);return shotR};
+const getShotR=()=>{if(shotR)return shotR;shotR=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true,alpha:true});shotR.outputEncoding=R.outputEncoding;shotR.toneMapping=R.toneMapping;shotR.physicallyCorrectLights=R.physicallyCorrectLights;shotR.setPixelRatio(1);return shotR};
 /* the box of what is actually drawn: visible meshes only, and a skinned rider by its posed bones (its geometry box is the bind pose, far from where the rider sits) */
 const shotBox=obj=>{const bx=new THREE.Box3(),t=new THREE.Box3(),v=new THREE.Vector3();obj.traverseVisible(o=>{if(o.isSkinnedMesh&&o.skeleton){for(const b of o.skeleton.bones){b.getWorldPosition(v);bx.expandByPoint(v)}}else if(o.isMesh&&o.geometry){const g=o.geometry;if(!g.boundingBox)g.computeBoundingBox();t.copy(g.boundingBox).applyMatrix4(o.matrixWorld);bx.union(t)}});if(bx.isEmpty())bx.setFromObject(obj);return bx};
 P.objShot=(cv,key,make,o)=>{if(!cv)return;o=o||{};const dpr=Math.min(2,devicePixelRatio||1),cw=Math.max(320,Math.round((cv.clientWidth||960)*dpr)),ch=Math.max(180,Math.round((cv.clientHeight||300)*dpr));
- if(cv.width!==cw||cv.height!==ch){cv.width=cw;cv.height=ch}const k=key+'|'+cw+'x'+ch,g=cv.getContext('2d');if(OSHOT[k]){g.drawImage(OSHOT[k],0,0);return}
+ if(cv.width!==cw||cv.height!==ch){cv.width=cw;cv.height=ch}const k=key+'|'+cw+'x'+ch,g=cv.getContext('2d');if(OSHOT[k]){g.clearRect(0,0,cw,ch);g.drawImage(OSHOT[k],0,0);return}
  let obj=null,bgT=null;try{const sc=new THREE.Scene();
-  {const bg=document.createElement('canvas');bg.width=1024;bg.height=512;const x=bg.getContext('2d'),gr=x.createRadialGradient(660,300,20,660,300,660);gr.addColorStop(0,'#355c86');gr.addColorStop(.5,'#16222f');gr.addColorStop(1,'#07090c');x.fillStyle=gr;x.fillRect(0,0,1024,512);
+  if(!o.clear){const bg=document.createElement('canvas');bg.width=1024;bg.height=512;const x=bg.getContext('2d'),gr=x.createRadialGradient(660,300,20,660,300,660);gr.addColorStop(0,'#355c86');gr.addColorStop(.5,'#16222f');gr.addColorStop(1,'#07090c');x.fillStyle=gr;x.fillRect(0,0,1024,512);
    x.fillStyle='#ffffff0d';for(let i=0;i<10;i++)x.fillRect(0,392+i*i*1.2,1024,2);bgT=new THREE.CanvasTexture(bg);bgT.encoding=THREE.sRGBEncoding;sc.background=bgT}
   sc.add(new THREE.HemisphereLight(0xdfe9f2,0x30363e,1.05));const sun=new THREE.DirectionalLight(0xffffff,1.1);sun.position.set(-3,6,4);sc.add(sun);const rim=new THREE.DirectionalLight(0x8fb4d8,.9);rim.position.set(4,3,-5);sc.add(rim);
-  obj=make();if(!obj)return;sc.add(obj);obj.rotation.y=o.yaw!=null?o.yaw:-1.0;obj.updateMatrixWorld(true);const bx=shotBox(obj);const c=bx.getCenter(new THREE.Vector3()),sz=bx.getSize(new THREE.Vector3());
+  obj=make();if(!obj)return;sc.add(obj);obj.rotation.y=o.yaw!=null?o.yaw:-1.0;obj.updateMatrixWorld(true);const bx=shotBox(obj);/* round 25: o.ref gives a fixed box to frame instead of the model's own, so the camera stays put and a big model looks big */if(o.ref){const rb=o.ref(bx,obj.rotation.y);if(rb)bx.copy(rb)}const c=bx.getCenter(new THREE.Vector3()),sz=bx.getSize(new THREE.Vector3());
   const asp=cw/ch,fov=24,cam=new THREE.PerspectiveCamera(fov,asp,.1,600);cam.layers.enableAll();const t=Math.tan(fov/2*Math.PI/180);
   /* fit: whatever is on show (one car or a row of four) is framed inside the free part of the picture, right of the title text, by
      projecting its box corners and then shifting the view so it sits centred in that region, whatever the model's size or origin */
@@ -13332,35 +13371,58 @@ P.objShot=(cv,key,make,o)=>{if(!cv)return;o=o||{};const dpr=Math.min(2,devicePix
   for(let it=0;it<4;it++){const b=bnd(),f=Math.max((b[1]-b[0])/(reg[1]-reg[0]),(b[3]-b[2])/(reg[3]-reg[2]));dist*=Math.max(.5,Math.min(2,.35+.65*f))}
   const b=bnd(),offX=((b[0]+b[1])/2-(reg[0]+reg[1])/2)/2*rw,offY=-((b[2]+b[3])/2-(reg[2]+reg[3])/2)/2*rh;
   cam.setViewOffset(rw,rh,offX,offY,rw,rh);cam.updateProjectionMatrix();
-  const r=getShotR();r.toneMappingExposure=1.05;r.setSize(rw,rh,false);r.render(sc,cam);
+  const r=getShotR();r.setClearColor(0x000000,o.clear?0:1);r.toneMappingExposure=1.05;r.setSize(rw,rh,false);r.render(sc,cam);
   const out=document.createElement('canvas');out.width=cw;out.height=ch;const ox=out.getContext('2d');ox.imageSmoothingQuality='high';ox.drawImage(r.domElement,0,0,rw,rh,0,0,cw,ch);
-  OSHOT[k]=out;g.drawImage(out,0,0)}catch(e){console.warn('obj shot',e)}finally{if(o.dispose&&obj)o.dispose(obj);if(bgT)bgT.dispose()}};
+  OSHOT[k]=out;g.clearRect(0,0,cw,ch);g.drawImage(out,0,0)}catch(e){console.warn('obj shot',e)}finally{if(o.dispose&&obj)o.dispose(obj);if(bgT)bgT.dispose()}};
 /* part two: the car. The picture is the car itself, big; Left / Right on the Car row flips through your cars, Enter opens the full garage */
 const carList=p=>{const m=ST.mode,sv=P.SV(),own=P.ownedList?P.ownedList():[];let L=own.slice();
  if(m==='rally'&&P.RALLY_CARS)L=P.RALLY_CARS.map(id=>BYID[id]).filter(Boolean).concat(own.filter(c=>!P.RALLY_CARS.includes(c.id)));
  if(m==='track'&&P.TRACK_CARS)L=P.TRACK_CARS.map(id=>BYID[id]).filter(Boolean).concat(own.filter(c=>!P.TRACK_CARS.includes(c.id)));return L};
 const setCar=(p,id,alt)=>{const m=ST.mode,sv=P.SV();if(m==='rally'){sv.rsel=sv.rsel||[];sv.rsel[p]={id,alt}}else if(m==='track'){sv.tsel=sv.tsel||[];sv.tsel[p]={id,alt}}else P.setSel(p,id,alt);try{P.save()}catch(e){}};
 /* every player's car on show: one alone, then a staggered row as players are added (the camera pulls back to fit) */
-const carShot=(cv,list)=>{if(!P.C10)return;const key='cars|'+list.map(s=>s.id+'.'+s.alt).join('|');
+const carShot=(cv,list,reg)=>{if(!P.C10)return;const key='cars|'+list.map(s=>s.id+'.'+s.alt).join('|')+(reg?'|'+reg.join(','):'');
  P.objShot(cv,key,()=>{const g=new THREE.Group();list.forEach((s,i)=>{const c=BYID[s.id];const src=c&&P.C10.model(c.k10,s.alt);if(!src)return;const m=src.clone(true);
-  const n=list.length,col=i-(n-1)/2;m.position.set(col*3.1,0,-Math.abs(col)*1.6+(n>1?.8:0));g.add(m)});return g},{yaw:-2.2,fy:list.length>1?2.3:2.0,fx:list.length>1?.95:.9,off:list.length>1?.08:.12,up:.12})};
-function gxCarStep(box){const m=ST.mode,np=m==='ta'?1:ST.players,rows=[];GXS.cf=GXS.cf||0;
+  const n=list.length,col=i-(n-1)/2;m.position.set(col*3.1,0,-Math.abs(col)*1.6+(n>1?.8:0));g.add(m)});return g},{yaw:-2.2,fy:list.length>1?2.3:2.0,fx:list.length>1?.95:.9,off:list.length>1?.08:.12,up:.12,reg,clear:true,ref:(bx,yaw)=>{const n=list.length,b=new THREE.Box3(),v=new THREE.Vector3(),ax=new THREE.Vector3(0,1,0);
+  for(let i=0;i<n;i++){const col=i-(n-1)/2,px=col*3.1,pz=-Math.abs(col)*1.6+(n>1?.8:0);for(const sx of[-.975,.975])for(const sz of[-2.35,2.35])for(const sy of[0,1.45]){v.set(px+sx,sy,pz+sz).applyAxisAngle(ax,yaw);b.expandByPoint(v)}}
+  b.min.y=bx.min.y;b.max.y=bx.min.y+1.45;return b}})};
+/* round 25 (Hakan): no player count up front. The car step is a 2 x 2 grid of player frames: P1 is always there, "Add player" (next to
+   the car, or the next empty frame) brings the next player in and their settings open in that frame; the x on a frame takes them out */
+const PCOLS=['#f1f3f5','#f2c76b','#7fd68a','#ef6a5a'],MAXP=4;
+const multiOK=m=>m!=='ta';
+const KEYN=p=>p===0?'W A S D':p===1?(P.p2Keys==='numpad'?'Numpad 8 4 5 6':'Arrow keys'):p===2?'I J K L':'T F G H';
+function addPlayer(){const m=ST.mode;if(!multiOK(m)||ST.players>=MAXP)return;ST.players++;if((m==='mp'||m==='elim'||m==='track')&&ST.players+(ST.cpus||0)>8)ST.cpus=8-ST.players;
+ GXS.cf=ST.players-1;GXS.fp=ST.players-1;P.sfx&&P.sfx('select');renderSetup()}
+function removePlayer(p){if(p<1||p>=ST.players)return;const n=ST.players;ST.names=ST.names||[];
+ for(let q=p;q<n-1;q++){const s=selCar(q+1);setCar(q,s.id,s.alt);ST.names[q]=ST.names[q+1]||'';P.setTX(q,P.isAuto({human:true,k:q+1}))}ST.names[n-1]='';
+ ST.players=n-1;GXS.cf=Math.min(GXS.cf||0,ST.players-1);GXS.fp=GXS.cf;P.sfx&&P.sfx('back');renderSetup()}
+P.addPlayer=addPlayer;P.removePlayer=removePlayer;
+function gxCarStep(box){const m=ST.mode,multi=multiOK(m);if(!multi)ST.players=1;const np=multi?Math.max(1,Math.min(MAXP,ST.players)):1,rows=[];GXS.cf=Math.min(GXS.cf||0,np-1);
  const dv=[...$('suDrv').querySelectorAll('.drv')];
- for(let p=0;p<np;p++){const s=selCar(p),c=BYID[s.id],L=carList(p),grp=np>1?Math.min(2,p):0,dot=np>1?['#f1f3f5','#f2c76b','#7fd68a','#ef6a5a'][p]:null,pf=np>1?'P'+(p+1)+' ':'';
-  rows.push({grp,dot,l:pf+'Car',v:c.name,car:true,opts:L.length,go:d=>{let j=L.findIndex(x=>x.id===s.id);const n=L[((j<0?0:j)+d+L.length)%L.length];const alt=s.alt&&P.owns(n.id,1)?1:P.owns(n.id,0)?0:1;setCar(p,n.id,alt);GXS.cf=p;P.sfx&&P.sfx('move');renderSetup()},
+ for(let p=0;p<np;p++){const s=selCar(p),c=BYID[s.id],L=carList(p),grp=multi?p:0;
+  rows.push({grp,wide:1,l:'Car',v:c.name,car:true,opts:L.length,go:d=>{let j=L.findIndex(x=>x.id===s.id);const n=L[((j<0?0:j)+d+L.length)%L.length];const alt=s.alt&&P.owns(n.id,1)?1:P.owns(n.id,0)?0:1;setCar(p,n.id,alt);GXS.cf=p;P.sfx&&P.sfx('move');renderSetup()},
    garage:()=>{openShow('garage',{player:p,cap:null,ret:'s8setup',rally:m==='rally',track:m==='track'})},pl:p});
-  if(P.owns(s.id,0)&&P.owns(s.id,1))rows.push({grp,dot,l:pf+'Paint',v:s.alt?'Alternative':'Stock',opts:2,go:d=>{setCar(p,s.id,s.alt?0:1);GXS.cf=p;P.sfx&&P.sfx('move');renderSetup()},pl:p});
-  const inp=dv[p]&&dv[p].querySelector('input.nm');if(inp)rows.push({grp:np>1?grp:1,dot,l:pf+'Name',input:inp,pl:p});
-  const tx=dv[p]&&dv[p].querySelector('.txs');if(tx){const bs=[...tx.querySelectorAll('button')],k=Math.max(0,bs.findIndex(b=>b.classList.contains('sel')));rows.push({grp:np>1?grp:1,dot,l:pf+'Gearbox',v:bs[k].textContent.trim(),opts:bs.length,go:d=>{const n=Math.min(bs.length-1,Math.max(0,k+d));if(n!==k)bs[n].click()},pl:p})}}
+  if(P.owns(s.id,0)&&P.owns(s.id,1))rows.push({grp,l:'Paint',v:s.alt?'Alternative':'Stock',opts:2,go:d=>{setCar(p,s.id,s.alt?0:1);GXS.cf=p;P.sfx&&P.sfx('move');renderSetup()},pl:p});
+  const inp=dv[p]&&dv[p].querySelector('input.nm');if(inp)rows.push({grp:multi?grp:1,l:'Name',input:inp,pl:p});
+  const tx=dv[p]&&dv[p].querySelector('.txs');if(tx){const bs=[...tx.querySelectorAll('button')],k=Math.max(0,bs.findIndex(b=>b.classList.contains('sel')));rows.push({grp:multi?grp:1,l:'Gearbox',v:bs[k].textContent.trim(),opts:bs.length,go:d=>{const n=Math.min(bs.length-1,Math.max(0,k+d));if(n!==k)bs[n].click()},pl:p})}
+  if(multi){if(p===1)rows.push({grp,l:'Keys',v:KEYN(1),opts:2,go:()=>{P.setP2Keys(P.p2Keys==='numpad'?'arrows':'numpad');P.sfx&&P.sfx('move');renderSetup()},pl:p});
+   else rows.push({grp,l:'Keys',v:KEYN(p),opts:1,pl:p})}}
+ if(multi&&np<MAXP)rows.push({grp:np,add:1,pn:np+1,hint:'Keys: '+KEYN(np),act:addPlayer});
+ if(GXS.fp!=null){const k=rows.findIndex(r=>r.pl===GXS.fp);if(k>=0)GXS.f=k;GXS.fp=null}
  const fi=Math.min(np-1,GXS.cf||0),s=selCar(fi),c=BYID[s.id];
  const bar=(n,f,v)=>`<span>${n}</span><u><i style="width:${Math.round(Math.max(0,Math.min(1,f))*100)}%"></i></u><em>${v}</em>`;const kmh=P.SV().units!=='mph';
  const side=`<div class="gxSide"><h6>Class ${c.cls} &middot; ${c.type||''}</h6><div class="st">${bar('Top speed',(c.top-30)/26,Math.round(c.top*3.6*(kmh?1:.6214))+(kmh?' km/h':' mph'))}${bar('Acceleration',(c.acc-18)/18,Math.round(c.acc*2.6))}${bar('Grip',(c.grip-.94)/.2,Math.round(c.grip*80))}${bar('Brakes',(c.brk-.9)/.3,Math.round(c.brk*75))}</div></div>`;
- gxRender(box,{kind:(np>1?'Player '+(fi+1)+' &middot; ':'')+'Class '+c.cls,name:c.name+(s.alt?' <small style="font-size:.4em;opacity:.7">ALT</small>':''),facts:[c.type||''],side,rows,groups:np>1?['P1','P2','P3 & P4']:['Car','Driver','More'],shot:cv=>carShot(cv,Array.from({length:np},(_,p)=>selCar(p))),go:'Start'});
+ const nm=p=>{const v=((ST.names||[])[p]||'').replace(/[<>&"]/g,'').trim();return 'Player '+(p+1)+(v?' &middot; '+v:'')};
+ gxRender(box,{kind:(np>1?'Player '+(fi+1)+' &middot; ':'')+'Class '+c.cls,name:c.name+(s.alt?' <small style="font-size:.4em;opacity:.7">ALT</small>':''),facts:[c.type||''],side,rows,
+  tnBtn:multi&&np<MAXP?`<button class="gxAdd"><b>+</b> Add player</button>`:'',onAdd:addPlayer,
+  grid:multi,cols:PCOLS,rm:multi?(p,go)=>{if(go){removePlayer(p);return}return p>0&&p<np}:null,
+  heroCls:'cars',groups:multi?[0,1,2,3].map(nm):['Car','Driver','More'],shot:cv=>carShot(cv,Array.from({length:np},(_,p)=>selCar(p)),[.06,.64,-.9,.8]),go:'Start'});/* grid: the cars sit between the name (left) and the stats (right) */
+ if(multi)$('suHint').innerHTML='<u>&uarr;&darr;</u>Choose<u>&larr;&rarr;</u>Change'+(np<MAXP?'<u>+</u>Add player':'')+(np>1?'<u>Del</u>Remove':'')+'<u>Enter</u>Start';
  box.querySelectorAll('.gxr').forEach(el=>{const r=rows[+el.dataset.i];if(r&&r.pl!=null)el.addEventListener('mouseenter',()=>{if(GXS.cf!==r.pl){GXS.cf=r.pl;GXS.f=+el.dataset.i;renderSetup()}})})}
 P.gxRender=o=>{const sec=$('s8setup');sec.classList.add('gxOn');let box=$('gxSu');if(!box){box=document.createElement('div');box.id='gxSu';sec.insertBefore(box,sec.querySelector('.foot8'))}box.style.display='';gxRender(box,o)};
 P.gxSuKey=e=>{if(!GXS.rows||!$('s8setup').classList.contains('gxOn'))return false;if(e.target&&e.target.tagName==='INPUT'){if(e.code==='Enter'||e.code==='Escape'||e.code==='ArrowUp'||e.code==='ArrowDown')e.target.blur();else return true}
  const c=e.code,n=GXS.rows.length,r=GXS.rows[GXS.f],box=$('gxSu');
  const paint=()=>{const q=GXS.rows[GXS.f];if(GXS.step===2&&!ST.custom&&q&&q.pl!=null&&q.pl!==GXS.cf){GXS.cf=q.pl;renderSetup();return}box.querySelectorAll('.gxr').forEach(x=>x.classList.toggle('on',+x.dataset.i===GXS.f));const o=box.querySelector('.gxr.on');if(o)o.scrollIntoView({block:'nearest'})};
+ if(GXS.step===2&&!ST.custom&&multiOK(ST.mode)){if(c==='Equal'||c==='NumpadAdd'){addPlayer();e.preventDefault();return true}if((c==='Delete'||c==='Backspace')&&r&&r.pl>0){removePlayer(r.pl);e.preventDefault();return true}}
  if(c==='KeyG'&&r&&r.garage){r.garage();e.preventDefault();return true}
  if(c==='ArrowDown'||c==='KeyS'){GXS.f=(GXS.f+1)%n;P.sfx&&P.sfx('move');paint();e.preventDefault();return true}
  if(c==='ArrowUp'||c==='KeyW'){GXS.f=(GXS.f+n-1)%n;P.sfx&&P.sfx('move');paint();e.preventDefault();return true}
