@@ -1,0 +1,1 @@
+[["js", "(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return document.fonts.check('200 40px \"PT Inter\"')})()"], ["wait", 3000], ["shot", "menu"], ["js", "(()=>{PT8.launch({mode:'mp',track:0,laps:1,humans:[{id:'merc',alt:0}],ai:[],tod:'day'});return getComputedStyle(document.getElementById('cd')).fontFamily})()"], ["wait", 2500], ["shot", "cd"]]

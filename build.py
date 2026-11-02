@@ -256,6 +256,10 @@ if os.environ.get('PACKS') or DRIVE:
     parts.insert(k,'window.PT8_PACKS=window.PT8_PACKS||[];PT8_PACKS.push('+gzip.decompress(open(f,'rb').read()).decode()+');\n')
     print('built in',os.path.basename(f))
 css=open(f'{SRC}/style.css').read()
+# one typeface everywhere: Inter (SIL OFL, assets/Inter-OFL.txt) built in, so every mode and every computer draws the same letters (the
+# stack used to fall back to whatever the machine had, and some screens named their own fonts)
+import base64 as _b64
+css='@font-face{font-family:"PT Inter";src:url(data:font/woff2;base64,'+_b64.b64encode(open(W+'/assets/inter-latin-wght.woff2','rb').read()).decode()+') format("woff2");font-weight:100 900;font-style:normal;font-display:block}\n'+css+'\n:root{--gt:"PT Inter","Inter","Segoe UI","Helvetica Neue",Arial,sans-serif!important;--mn:var(--gt)!important;--hd:var(--gt)!important}\n*:not(svg):not(svg *){font-family:var(--gt)!important}\n'
 import base64
 b64=lambda f:base64.b64encode(open(W+'/assets/'+f,'rb').read()).decode()
 ANIM='<script>const ANIM_B64="'+b64('animals.bin')+'",ANIM_META='+open(W+'/assets/animals.json').read()+';</script>'
