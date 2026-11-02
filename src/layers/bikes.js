@@ -166,28 +166,39 @@ function lights(v,dt){const on=(v.blink%0.7)<.38,m=v.m;const L=BK.LM;let dn=1e9;
 
 /* ---------------- rider poses ---------------- */
 /* seated posture: hips on the seat, the torso leaned until the shoulders sit an arm's reach (~.58 m) from the grips */
-function seatFit(I){if(I._fit)return I._fit;const g=I.grip,hy=I.seat[1]+.1;let hz=Math.min(I.seat[2]-.04,g[2]-.5);const reach=Math.sqrt(.58*.58-Math.pow(g[0]-.2,2)*.5);
+/* the seat's real top surface, found once per model by a ray down the centre line (the seat marker sits on the tail, well above the cushion) */
+function seatTop(m){const I=m.I;if(I._sy!==undefined)return I._sy;const ms=[];m.inner.traverse(o=>{if(o.isMesh&&!o.isSkinnedMesh&&o.visible){let q=o;while(q&&q!==m.inner){if(m.rider&&q===m.rider.g)return;q=q.parent}ms.push(o)}});
+ m.inner.updateMatrixWorld(true);const rc=new THREE.Raycaster(),inv=new THREE.Matrix4().copy(m.inner.matrixWorld).invert(),hs=[];
+ for(const dz of[0,-.06,.06])for(const dx of[0,.05,-.05]){const o=new THREE.Vector3(dx,I.seat[1]+.25,I.seat[2]-.04+dz);m.inner.localToWorld(o);const d=new THREE.Vector3(0,-1,0).transformDirection(m.inner.matrixWorld);rc.set(o,d);
+  const h=rc.intersectObjects(ms,false)[0];if(h){const y=h.point.clone().applyMatrix4(inv).y;if(y>I.seat[1]-.35)hs.push(y)}}
+ hs.sort((a,b)=>a-b);/* the median: one ray clipping the tank or the tail must not lift the rider */return I._sy=hs.length?hs[hs.length>>1]:I.seat[1]+.03}
+function seatFit(I,m){if(I._fit)return I._fit;const g=I.grip,hy=(m&&m.inner?seatTop(m):I.seat[1]+.03)+.08;/* hip joint about a pelvis above the cushion */let hz=Math.min(I.seat[2]-.04,g[2]-.5);const reach=Math.sqrt(.58*.58-Math.pow(g[0]-.2,2)*.5);
  const f=l=>Math.hypot(hy+.5*Math.cos(l)-g[1],hz+.5*Math.sin(l)-g[2]);let lo=-.25,hi=1.2;for(let i=0;i<30;i++){const m=(lo+hi)/2;if(f(m)>reach)lo=m;else hi=m}
  let lean=Math.min(1.0,(lo+hi)/2);/* still too far (low clip-ons): slide the hips forward instead of folding further */
  for(let i=0;i<20&&f(lean)>reach+.01;i++)hz+=.02;return I._fit={hz,hy,lean}}
-function basePose(p){const I=p.m.I,peg=I.peg,F=seatFit(I);
+function basePose(p){const I=p.m.I,peg=I.peg,F=seatFit(I,p.m);
  return{hip:[0,F.hy,F.hz],lean:F.lean,side:0,hands:null,feet:[[peg[0],peg[1]+.06,peg[2]+.05],[peg[0],peg[1]+.06,peg[2]+.05]],look:-.05}}
-function trickPose(p,id,u){const b=basePose(p),I=p.m.I,seat=I.seat;
+function trickPose(p,id,u){const b=basePose(p),I=p.m.I,seat=I.seat,SY=seatFit(I,p.m).hy-.1;
  switch(id){
   case'wheelie':return Object.assign(b,{lean:b.lean+.35*u});
-  case'standup':return Object.assign(b,{hip:[0,seat[1]+.1+.42*u,seat[2]+.14*u],lean:b.lean+.5*u});
-  case'twelve':return Object.assign(b,{hip:[0,seat[1]+.1+.34*u,seat[2]-.04*u],lean:b.lean+1.0*u,look:-.3*u});
-  case'stoppie':return Object.assign(b,{hip:[0,seat[1]+.1+.22*u,seat[2]-.2*u],lean:b.lean-.35*u,look:.15*u});
-  case'nohands':{const sy=seat[1]+.1+.5;return Object.assign(b,{lean:lp(b.lean,-.02,u),hands:u>.05?[[.42,sy+.42*u+.1,seat[2]+.15],[.42,sy+.42*u+.1,seat[2]+.15]]:null})}
-  case'superman':return Object.assign(b,{hip:[0,seat[1]+.1+.32*u,seat[2]-.5*u],lean:lp(b.lean,1.35,u),feet:[[.12,seat[1]+.2+.3*u,seat[2]-1.05*u],[.12,seat[1]+.25+.3*u,seat[2]-1.0*u]],look:.35*u});
-  case'seatstand':{const fy=seat[1]+.06;return Object.assign(b,{hip:[0,seat[1]+.1+.62*u,seat[2]-.06*u],lean:lp(b.lean,.08,u),feet:u>.3?[[.13,fy,seat[2]+.02],[.13,fy,seat[2]-.12]]:b.feet,
-    hands:u>.4?[[.75,seat[1]+1.18,seat[2]+.02],[.75,seat[1]+1.18,seat[2]-.02]]:null,look:.1})}
+  case'standup':return Object.assign(b,{hip:[0,SY+.1+.42*u,seat[2]+.14*u],lean:b.lean+.5*u});
+  case'twelve':return Object.assign(b,{hip:[0,SY+.1+.34*u,seat[2]-.04*u],lean:b.lean+1.0*u,look:-.3*u});
+  case'stoppie':return Object.assign(b,{hip:[0,SY+.1+.22*u,seat[2]-.2*u],lean:b.lean-.35*u,look:.15*u});
+  case'nohands':{const sy=SY+.1+.5;return Object.assign(b,{lean:lp(b.lean,-.02,u),hands:u>.05?[[.42,sy+.42*u+.1,seat[2]+.15],[.42,sy+.42*u+.1,seat[2]+.15]]:null})}
+  case'superman':return Object.assign(b,{hip:[0,SY+.1+.32*u,seat[2]-.5*u],lean:lp(b.lean,1.35,u),feet:[[.12,SY+.2+.3*u,seat[2]-1.05*u],[.12,SY+.25+.3*u,seat[2]-1.0*u]],look:.35*u});
+  case'seatstand':{const fy=SY+.06;return Object.assign(b,{hip:[0,SY+.1+.62*u,seat[2]-.06*u],lean:lp(b.lean,.08,u),feet:u>.3?[[.13,fy,seat[2]+.02],[.13,fy,seat[2]-.12]]:b.feet,
+    hands:u>.4?[[.75,SY+1.18,seat[2]+.02],[.75,SY+1.18,seat[2]-.02]]:null,look:.1})}
   case'burnout':return Object.assign(b,{lean:b.lean+.25*u,feet:[[I.peg[0]+.08,.05,I.peg[2]+.35],b.feet[1]]});
  }return b}
 function mixPose(a,b,u){const L=(x,y)=>x.map((v,i)=>lp(v,y[i],u));return{hip:L(a.hip,b.hip),lean:lp(a.lean,b.lean,u),side:lp(a.side||0,b.side||0,u),look:lp(a.look||0,b.look||0,u),
  hands:(a.hands||b.hands)&&u>.5?b.hands:a.hands&&u<=.5?a.hands:null,feet:[L(a.feet[0],b.feet[0]),L(a.feet[1],b.feet[1])]}}
-function poseRiderFor(p,dt){const t=p.trk_;const id=t?t.id:p.lastPose||'wheelie';p.tu=lp(p.tu||0,t?1:0,cl(dt*7,0,1));if(t)p.lastPose=t.id;
- const ps=p.tu>.01?trickPose(p,id,p.tu):basePose(p);ps.side=(ps.side||0)-p.lean*.25;
+function poseRiderFor(p,dt){const t=p.trk_;
+ /* trick blend: a linear ramp shaped by smootherstep, so each move eases in and out; a new trick waits for the last one to fade first */
+ if(t&&(!p.lastPose||p.tr<.02))p.lastPose=t.id;const id=p.lastPose||'wheelie',want=t&&t.id===id?1:0;
+ p.tr=cl((p.tr||0)+(want?3.2:-3.6)*dt,0,1);const u=p.tr*p.tr*p.tr*(p.tr*(p.tr*6-15)+10);p.tu=u;
+ /* the body counters the bike's lean a little, lagging it so the roll looks weighted */
+ p.rs=lp(p.rs||0,-p.lean*.25,cl(dt*6,0,1));
+ const ps=u>.005?trickPose(p,id,u):basePose(p);ps.side=(ps.side||0)+p.rs;
  /* stopped: the left foot goes down to the road (people riders) */
  p.fd=lp(p.fd||0,(!p.trk_&&p.v<1.2&&!p.wipe)?1:0,cl(dt*4,0,1));if(p.fd>.01&&p.m.rider&&p.m.rider.people){const f=ps.feet[0].slice(),I=p.m.I;ps.feet[0]=[lp(f[0],I.peg[0]+.2,p.fd),lp(f[1],-.02,p.fd),lp(f[2],I.peg[2]+.18,p.fd)];ps.side-=.06*p.fd}
  BK.poseRider(p.m,ps)}
@@ -226,7 +237,8 @@ function physStep(p,dt){if(p.wipe){wipeStep(p,dt);return}
  p.st=lp(p.st,st,cl(dt*(5+p.hnd*4),0,1));
  const vs=p.v,maxL=.78*ss(2,11,vs)*(.85+p.hnd*.2);let tl=p.st*maxL;
  if(T&&T.k==='balance')tl=p.bal*.55;
- p.lean=lp(p.lean,tl,cl(dt*(2.6+p.hnd*2.2),0,1));
+ /* lean as a critically damped spring: it rolls in and settles out gradually instead of snapping to the input */
+ {const om=4.2+p.hnd*2.4,h=Math.min(dt,.05);p.lv=(p.lv||0)+(om*om*(tl-p.lean)-2*om*(p.lv||0))*h;p.lean+=p.lv*h}
  let w=0;if(vs>4)w=G*Math.tan(p.lean)/vs;
  const wl=vs*Math.tan(p.st*.55)/1.45;w=lp(wl,w,ss(3,9,vs));
  if(T&&T.k==='burnout'&&vs<1)w=p.st*.6;/* pivot the rear round on a burnout */
@@ -303,6 +315,17 @@ function collide(p){if(p.wipe||p.ghost>0)return;const pd=p.d_,hw=.36+Math.abs(Ma
   else{const lat=p.v*Math.sin(p.psi)*Math.sign(-dd);if(lat>5.5||p.trk_&&p.trk_.k==='balance'){hitVeh(v,p);wipeout(p,'SIDESWIPED A '+vName(v));return}
    p.d_=v.d+Math.sign(dd||1)*(v.W/2+hw+.02);p.psi=wrapA(p.psi*.3+Math.sign(dd)*.05);p.v*=.9;p.lean*=.5;if(p.scrape<=0){sfx.scrape();p.scrape=.35;spark(p,-Math.sign(dd))}
    if(p.chain>0){pop(p,'TRADED PAINT','#ef6a5a',.9);p.comboT=Math.min(p.comboT,.8)}}}}
+/* rider against rider (two players): the same box logic as traffic, but both bikes give way; a hard rear-end or a fast swipe drops whoever caused it */
+function collideRiders(){const P=B.pl;if(P.length<2)return;const a=P[0],b=P[1];if(a.wipe||b.wipe||a.ghost>0||b.ghost>0)return;
+ const ds=b.s-a.s,dd=b.d_-a.d_,LS=2.05,LD=.62+(Math.abs(Math.sin(a.psi))+Math.abs(Math.sin(b.psi)))*.45;if(Math.abs(ds)>LS||Math.abs(dd)>LD)return;
+ const ox=LS-Math.abs(ds),oy=LD-Math.abs(dd);const va=a.v*Math.cos(a.psi),vb=b.v*Math.cos(b.psi),la=a.v*Math.sin(a.psi),lb=b.v*Math.sin(b.psi);
+ if(ox<oy){const back=ds>0?a:b,front=ds>0?b:a,close=(ds>0?va-vb:vb-va);
+  if(close>6.5){wipeout(back,'REAR-ENDED '+(front===a?'RIDER 1':'RIDER 2'));front.v+=close*.25;front.pv-=.3;return}
+  const sg=Math.sign(ds||1);a.s-=sg*ox*.5;b.s+=sg*ox*.5;if(close>0){back.v-=close*.6;front.v+=close*.4}for(const p of P)pop(p,'BUMP','#ef6a5a',.7);sfx.scrape()}
+ else{const sg=Math.sign(dd||1),cl_=(la-lb)*sg;/* closing sideways speed */
+  if(cl_>6){const hitter=Math.abs(la)>Math.abs(lb)?a:b;wipeout(hitter,'SIDESWIPED '+(hitter===a?'RIDER 2':'RIDER 1'));return}
+  a.d_-=sg*oy*.5;b.d_+=sg*oy*.5;a.psi=wrapA(a.psi*.4-sg*.04);b.psi=wrapA(b.psi*.4+sg*.04);a.lv=(a.lv||0)-sg*1.2;b.lv=(b.lv||0)+sg*1.2;a.v*=.97;b.v*=.97;
+  for(const p of P)if(p.scrape<=0){sfx.scrape();p.scrape=.35;spark(p,p===a?sg:-sg);if(p.chain>0){pop(p,'TRADED PAINT','#ef6a5a',.9);p.comboT=Math.min(p.comboT,.8)}}}}
 const vName=v=>({sedan:'CAR',hatch:'CAR',suv:'SUV',pickup:'PICKUP',van:'VAN',box:'TRUCK',semi:'SEMI',bus:'BUS'})[v.kind]||'CAR';
 function hitVeh(v,p){v.hit=4.5;v.haz=1;v.sig=0;v.chg=null;v.spin=(Math.random()-.5)*.08}
 
@@ -339,12 +362,12 @@ function wipeStep(p,dt){const w=p.wipe;w.t+=dt;
  if(w.bd<.7){w.bd=.7;w.bpsi=-w.bpsi*.5}if(w.bd>RD.SHO-.3+0){w.bd=RD.SHO-.3;w.bpsi=-w.bpsi*.5}
  w.blean=lp(w.blean,w.side*1.32,cl(dt*3.2,0,1));w.bpitch=lp(w.bpitch,0,cl(dt*4,0,1));
  if(w.bv>4&&Math.random()<dt*30)spark(p,w.side,true);
- p.s=w.bs;p.d_=w.bd;p.psi=w.bpsi;p.v=0;p.lean=w.blean;p.pitch=w.bpitch;
+ p.s=w.bs;p.d_=w.bd;p.psi=w.bpsi;p.v=0;p.lean=w.blean;p.lv=0;p.pitch=w.bpitch;
  if(w.t>3.4||(w.t>2&&w.bv<.5&&Math.hypot(w.rvs,w.rvd)<.4)){if(!w.fade){w.fade=1;fadeFlash(p,()=>respawn(p))}}}
 function respawn(p){const w=p.wipe;if(!w)return;const rg=w.rg;B.sc.remove(rg);p.m.inner.add(rg);rg.position.set(0,0,0);rg.quaternion.identity();
  /* back on the right shoulder side of the lane it stopped in, upright, slowly rolling */
  const s=Math.max(w.bs,w.rs)+4;let lane=cl(laneOf(w.bd),0,3);for(const v of B.tr){if(v.side>0&&Math.abs(v.s-s)<14&&v.lane===lane&&v.hit<=0)v.s=s+16}
- p.s=s;p.d_=RD.laneD(lane);p.psi=0;p.v=8;p.lean=0;p.pitch=0;p.pv=0;p.wipe=null;p.ghost=2.2;p.st=0;p.stv=0;p.tu=0;p.trk_=null}
+ p.s=s;p.d_=RD.laneD(lane);p.psi=0;p.v=8;p.lean=0;p.lv=0;p.tr=0;p.pitch=0;p.pv=0;p.wipe=null;p.ghost=2.2;p.st=0;p.stv=0;p.tu=0;p.trk_=null}
 function fadeFlash(p,cb){const h=hudOf(p);const f=h&&h.querySelector('.bkfade');if(f){f.style.opacity=1;setTimeout(()=>{cb();setTimeout(()=>{f.style.opacity=0},120)},420)}else cb()}
 
 /* ---------------- effects: sparks and tyre smoke ---------------- */
@@ -400,7 +423,7 @@ function step(dt){if(!B)return;const live=!B.paused;
  if(live){B.t+=dt;
   if(B.state==='count'){B.cd-=dt;const n=Math.ceil(B.cd-.6);if(n!==B.cdn){B.cdn=n;if(n>0){sfx.tone(880,880,.16,'sine',1)}else{sfx.tone(1760,1760,.5,'sine',1.1)}showCount(n>0?n:'GO!')}if(B.cd<=.6){B.state='ride';}}
   if(B.state==='ride'&&B.clock>0){B.left-=dt;if(B.left<=0){B.left=0;finish();return}}
-  for(const p of B.pl){physStep(p,dt);if(!B)return;collide(p);scoreStep(p,dt)}
+  for(const p of B.pl){physStep(p,dt);if(!B)return;collide(p);scoreStep(p,dt)}collideRiders();
   trafficStep(dt);fxStep(dt);
   const sMin=Math.min(...B.pl.map(p=>p.s)),sMax=Math.max(...B.pl.map(p=>p.s));B.world.update(sMin,sMax);B.world.tick(dt,sMin,sMax);
   for(const p of B.pl){if(!p.wipe)poseRiderFor(p,dt);placeBike(p,dt);if(p.eng)p.eng.set(p.rpm,p.th,p.v,!p.wipe&&B.state!=='done')}}

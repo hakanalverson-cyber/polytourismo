@@ -162,7 +162,9 @@ BK.makeRoad=seed=>{const r=rng(seed||7),ph=[r()*9,r()*9,r()*9,r()*9,r()*9];
   at(s,o){s=Math.max(0,s);ensure(s+SP);const i=Math.floor(s/SP),f=s/SP-i;o=o||{};o.x=X[i]+(X[i+1]-X[i])*f;o.z=Z[i]+(Z[i+1]-Z[i])*f;o.h=H[i]+(H[i+1]-H[i])*f;o.y=Y[i]+(Y[i+1]-Y[i])*f;o.g=(Y[i+1]-Y[i])/SP;return o},
   /* world position of (s,d) */
   pos(s,d,o){const f=R.at(s,_fr);o=o||{};o.x=f.x-Math.cos(f.h)*d;o.z=f.z+Math.sin(f.h)*d;o.y=f.y+R.camber(d);o.h=f.h;o.g=f.g;return o},
-  camber(d){const a=Math.abs(d);return a<D0?.05:a<EDGE?-.02*(a-D0)/LW*.5:a<SHO?-.11-(a-EDGE)*.02:-.16},
+  /* the lanes are one flat quad per side from D0-.3 to EDGE, so the height between is the straight line across it: anything placed on the road
+     (traffic, bikes, paint) follows that line and sits exactly on the surface, where the old stepped curve left whole lanes 3-5 cm in the air or sunk */
+  camber(d){const a=Math.abs(d),a0=D0-.3,ce=-.11;return a<a0?.05:a<EDGE?.05+(ce-.05)*(a-a0)/(EDGE-a0):a<SHO?-.11-(a-EDGE)*.02:-.16},
   /* exits: an extra lane on the right from e-260 to the gore at e, the ramp curls away beyond the guardrail */
   exitNear(s){const E=3100,k=Math.round((s-1400)/E);const e=1400+k*E+((k*7919)%5)*90;return k>=1?e:-1e9}};
  const _fr={};return R};

@@ -94,10 +94,15 @@ const DRV={};let HT=1.35;BK._ht=v=>{HT=v};/* role sets per template */
 const _q1=Q(),_q2=Q(),_q3=Q(),_up=V(0,1,0);
 BK.poseRider=(m,ps,gripW)=>{const R=m.rider,I=m.I;if(!R)return;if(!R.people)return BK.poseRider0(m,ps,gripW);
  const T=R.T,ix=T.idx,X=r=>ix[r];const drv=DRV[T.n+'_'+T.hipC.x]||(DRV[T.n+'_'+T.hipC.x]=new Set(['spine','spine004','thighL','shinL','footL','thighR','shinR','footR','upper_armL','forearmL','handL','upper_armR','forearmR','handR','shoulderL','shoulderR'].map(X)));
- const lean=ps.lean||0,roll=ps.side||0,hip=V(ps.hip[0],ps.hip[1],ps.hip[2]);
- const left=V(1,0,0).applyAxisAngle(V(0,0,1),roll),tup=V(0,Math.cos(lean),Math.sin(lean)).applyAxisAngle(V(0,0,1),roll);
+ let lean=ps.lean||0;const roll=ps.side||0,hip=V(ps.hip[0],ps.hip[1],ps.hip[2]);
+ const left=V(1,0,0).applyAxisAngle(V(0,0,1),roll),tup=V();
+ /* grip targets (the bars steer) and the reach check: fold the torso forward just enough that both wrists reach the grips, so the hands never stop short in the air or sink into the fairing */
+ const gT=[];for(let s=0;s<2;s++){const sg=s?-1:1;if(ps.hands&&ps.hands[s]){gT.push(null);continue}const H=V(I.grip[0]*sg*(gripW||1),I.grip[1],I.grip[2]);H.sub(m.steer.position);H.applyQuaternion(m.steer.quaternion);H.add(m.steer.position);gT.push(H)}
+ const setT=l=>{tup.set(0,Math.cos(l),Math.sin(l)).applyAxisAngle(V(0,0,1),roll);swing(_up,T.left,tup,left,_q1)};
+ const reachOK=l=>{setT(l);const mx=(T.len.ua+T.len.fa)*.96;for(let s=0;s<2;s++){if(!gT[s])continue;const sh=V().subVectors(T.bp[X(s?'upper_armR':'upper_armL')],T.hipC).applyQuaternion(_q1).add(hip);if(sh.distanceTo(gT[s])-.06>mx)return false}return true};
+ if((gT[0]||gT[1])&&!reachOK(lean)){let lo=lean,hi=Math.max(lean,1.45);if(reachOK(hi)){for(let i=0;i<10;i++){const md=(lo+hi)/2;if(reachOK(md))hi=md;else lo=md}lean=hi}else{lean=hi;for(let i=0;i<12&&!reachOK(lean);i++)hip.z+=.02}}
+ setT(lean);
  /* torso: one rigid turn from the bind body frame onto the leaning one, hips centred on the seat point */
- swing(_up,T.left,tup,left,_q1);
  const bodyAt=r=>V().subVectors(T.bp[X(r)],T.hipC).applyQuaternion(_q1).add(hip);
  const torso=new Set(drv);for(const r of['spine001','spine002','spine003'])torso.delete(X(r));
  put(R,X('spine'),bodyAt('spine'),_q1,new Set([X('spine004'),X('thighL'),X('thighR'),X('shoulderL'),X('shoulderR')]));
@@ -114,7 +119,7 @@ BK.poseRider=(m,ps,gripW)=>{const R=m.rider,I=m.I;if(!R)return;if(!R.people)retu
  const j=V(),e=V();
  for(let s=0;s<2;s++){const sg=s?-1:1,S=s?'R':'L';const sh=bodyAt('upper_arm'+S);let H;
   if(ps.hands&&ps.hands[s])H=V(ps.hands[s][0]*sg,ps.hands[s][1],ps.hands[s][2]);
-  else{H=V(I.grip[0]*sg*(gripW||1),I.grip[1],I.grip[2]);H.sub(m.steer.position);H.applyQuaternion(m.steer.quaternion);H.add(m.steer.position)}
+  else H=gT[s].clone();
   /* the hand bone starts at the wrist: aim the wrist a palm short of the grip */
   H.addScaledVector(V().subVectors(H,sh).normalize(),-.06);
   const pole=sh.clone().add(V(.55*sg,-.35,-.35).applyAxisAngle(V(0,0,1),roll));ik(sh,H,T.len.ua,T.len.fa,pole,j,e);
