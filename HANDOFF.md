@@ -55,6 +55,7 @@ Round 5 (Nov 2, night): hand drag pose in poseRiderFor (p.dg; hand aimed beside 
 Round 6: trick poses follow Hakan's reference photos (wheelie free left arm, nohands hands in front, seatstand crouched on seat with hands on grips, superman one leg back, drag legs tucked + p.dfar side swing). Traffic: C10.traffic(k) uses META[k].paint and the stock texture, no livery repaint.
 Round 7: BK.poseBike pitches about the down wheel's axle (I.rw/I.fw y and z), not its contact point. poseRider reach fallback moves the hips toward the grips (down and forward) until both hands reach. Drag feet stay on I.peg.
 Round 8: ps.leanMax caps the reach-check fold (then the hips slide, mostly forward); seatstand lean .9 cap .98, drag lean pitch-.95 cap pitch-.75.
+Round 9: Seat Stand removed from TRICKS and the hand drag off (HAND_DRAG=false in bikes.js); pose code kept for a later redo. Seven tricks on 1 to 7.
 
 ## Architecture
 - `build.py`: base HTML (`base/`) + exact-string `rep()` patches + concatenated layers `src/layers/*.js` (list near line 209) + `src/style.css` (appended; later rules win, many `!important`).

@@ -42,7 +42,7 @@ P.LOG=[
   'Tricks reworked from real photos: the Wheelie is seated with the free arm out to the side, the No-Hander sits upright with the hands in front, the Seat Stand is crouched on the seat holding the bars, the Superman keeps one foot on its peg and kicks the other leg out behind, and the hand drag tucks the legs up along the bike and swings the body further out the longer you hold it.',
   'Traffic cars only come in the paint and livery they came with.',
   'Wheelies and stoppies pivot on the axle now, so the tyre rolls on the road at any angle instead of sinking into it on a deep wheelie or hand drag. During a hand drag the feet stay on the pegs, and on the Seat Stand the hands always grip the bars (the body crouches lower until they reach).',
-  'Seat Stand and hand drag lean back now, leaving a clear gap between the chest and the tank, like the reference photos.',
+  'The Seat Stand and the hand drag are taken out for now while they get reworked, so there are seven tricks on keys 1 to 7.',
 ]},
  {v:'0.02',d:'Oct 31, 2026',t:'Riviera island',items:[
   'Free Roam now takes place on the Riviera, a Mediterranean island about 5 km across that you can drive end to end: a coast road that loops the whole shore, a mountain pass that winds up through hairpins to a summit square with a stone parapet and a statue looking over the sea, and ridge roads branching off it. The island is generated from a seed, so it is the same every time.',

@@ -23,7 +23,6 @@ const TRICKS=[
  {id:'twelve',n:'12 O’Clock',k:'wheelie',twelve:1,pps:300,min:3,max:40,d:'Take a wheelie past 70°, nearly straight up. Points only count while you are past the line.'},
  {id:'nohands',n:'No-Hander',k:'balance',pps:150,min:10,max:80,d:'Let go of the bars and ride on. Steer against the wobble with A / D. Lean too far and you are down.'},
  {id:'superman',n:'Superman',k:'balance',pps:230,min:14,max:70,wob:1.35,d:'Stretch out flat behind the bars, legs off the back. Bigger wobble, bigger score.'},
- {id:'seatstand',n:'Seat Stand',k:'balance',pps:260,min:8,max:55,wob:1.6,d:'Climb up and stand on the seat with your arms out. The hardest balance of them all.'},
  {id:'burnout',n:'Burnout',k:'burnout',pps:110,min:0,max:4,d:'Stop, tap the trick key and hold the throttle: the front brake holds the bike while the rear spins up smoke.'}];
 BK.TRICKS=TRICKS;
 const TBY={};TRICKS.forEach((t,i)=>{TBY[t.id]=t;t.i=i});
@@ -183,6 +182,9 @@ function basePose(p){const I=p.m.I,peg=I.peg,F=seatFit(I,p.m);
 /* trick poses. u is the eased blend (0 riding, 1 in the trick), r the raw ramp, used to stage a move: the body goes first, then the feet,
    then the hands let go, so nothing snaps. Hands always travel from their grips (rider space, x mirrored per side) to where the trick puts them */
 const seg=(r,a,b)=>{const x=cl((r-a)/(b-a),0,1);return x*x*(3-2*x)};
+/* Nov 2: the Seat Stand and the hand drag are switched off for now (they still look wrong). Their pose code stays: set HAND_DRAG and
+   put the Seat Stand back in TRICKS to bring them back */
+const HAND_DRAG=false;
 const TRATE={wheelie:3.2,stoppie:3.4,standup:2.6,twelve:2.2,nohands:2.2,superman:1.7,seatstand:1.4,burnout:3};/* blend speed (1/s): big body moves take longer */
 function trickPose(p,id,u,r){const b=basePose(p),I=p.m.I,seat=I.seat,SY=seatFit(I,p.m).hy-.1,g=I.grip;r=r==null?u:r;
  const hand=(t,v)=>v<.02?null:[lp(g[0],t[0],v),lp(g[1],t[1],v),lp(g[2],t[2],v)],both=(t,v)=>{const h=hand(t,v);return h?[h,h.slice()]:null};
@@ -329,7 +331,7 @@ function trickStep(p,dt,I){const t=p.trk_;
  }
  if(!t){p.smoke=Math.max(0,p.smoke-dt);return}
  p.tt+=dt;let rate=0;
- p.drag=t.k==='wheelie'&&!t.stand&&p.pitch>1.18&&p.v>4;/* near vertical, like a real hand drag */if(p.drag){p.dragT=(p.dragT||0)+dt;p.trickPts+=60*dt*p.mult;if(p.dragT>.3&&!p.dragPop){p.dragPop=1;pop(p,'HAND DRAG','#ffd36a',1.1)}if(Math.random()<dt*14)spark(p,p.dragSide||1)}else{p.dragT=0;p.dragPop=0}
+ p.drag=HAND_DRAG&&t.k==='wheelie'&&!t.stand&&p.pitch>1.18&&p.v>4;/* near vertical, like a real hand drag */if(p.drag){p.dragT=(p.dragT||0)+dt;p.trickPts+=60*dt*p.mult;if(p.dragT>.3&&!p.dragPop){p.dragPop=1;pop(p,'HAND DRAG','#ffd36a',1.1)}if(Math.random()<dt*14)spark(p,p.dragSide||1)}else{p.dragT=0;p.dragPop=0}
  if(t.k==='wheelie'){const ang=p.pitch*57.3;if(t.twelve)rate=ang>70?1:0;else rate=ang>12?(t.stand?(ang>20?1:.4):1):0;if(t.stand&&p.v<2)rate=0}
  else if(t.k==='stoppie'){rate=p.pitch<-.12?1:0;if(p.v<.6)endTrick(p,true)}
  else if(t.k==='balance'){/* wobble: a slow random push, unstable; A / D push back */
@@ -710,7 +712,7 @@ function bikeRender(){if(!PR)return;const two=PR.p[1].in,L=BK.list(),rows=[];
  const side=`<div class="gxSide"><h6>${esc(d.kind)} &middot; ${k+1} of ${L.length}</h6><div class="st">${STATN.map(([n,f,v])=>`<span>${n}</span><u><i style="width:${Math.round(cl(f(d),0,1)*100)}%"></i></u><em>${v(d)}</em>`).join('')}</div></div>`;
  const lineup=two?[PR.p[0],PR.p[1]]:[PR.p[0]];
  if(step===1)P.gxRender({kind:'Best score '+fmtN(SV().best||0),name:'Highway Cut-Up',facts:[two?'Two riders, split screen':'One rider','Endless highway','Plains'],rows,groups:['The ride','Conditions',''],shot:cv=>rideMap(cv),go:'Next: bikes'});
- else P.gxRender({kind:(two?'Rider '+(fi+1)+' &middot; ':'')+esc(d.kind),name:esc(d.name),facts:[esc(d.kind),'Tap 1 to 8 for tricks'],side,rows,groups:['Rider 1','Rider 2',''],shot:cv=>bikeShot(cv,lineup),go:'Ride'});
+ else P.gxRender({kind:(two?'Rider '+(fi+1)+' &middot; ':'')+esc(d.kind),name:esc(d.name),facts:[esc(d.kind),'Tap 1 to '+TRICKS.length+' for tricks'],side,rows,groups:['Rider 1','Rider 2',''],shot:cv=>bikeShot(cv,lineup),go:'Ride'});
  const g=$i('suGo');if(g)g.innerHTML='<span>'+(step===1?'Next: bikes &rsaquo;':'Ride')+'</span>'}
 function stopPrep(){if(!PR)return;const e=$i('bkPrep');if(e)e.style.display='none';if(PR.sc){for(const m of PR.bikes)if(m)BK.disposeBike(m);PR.world.dispose();PR.sky.dispose();R.toneMappingExposure=PR.exp0}PR=null}
 function leavePrep(){sfx.ui('back');stopPrep();document.body.classList.remove('bkOn');goMenu()}
