@@ -8541,8 +8541,7 @@ function straightTires(k){if(tireFix[k])return tireFix[k];const G=geoms(k);if(!G
 /* the lamps, found from the palette colour under each body triangle: amber = indicators, red = tail, pale at the nose = headlights */
 let pal=null;function palette(){if(pal)return pal;const im=tex.image;if(!im||!im.width)return null;const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const x=c.getContext('2d');x.drawImage(im,0,0);pal={w:im.width,h:im.height,d:x.getImageData(0,0,im.width,im.height).data};return pal}
 const lampCache={};
-/* body triangles sorted by the palette colour under them: lamps only count on the nose and tail faces (facing out), and any other strong
-   colour is a livery stripe, which traffic repaints in its body colour so the cars read as plain everyday paint */
+/* body triangles sorted by the palette colour under them: lamps only count on the nose and tail faces (facing out); everything else keeps its stock texture */
 function lamps(k){if(lampCache[k]!==undefined)return lampCache[k];const G=geoms(k),b=G.body,pl=palette();if(!b||!pl||!b.attributes.uv)return lampCache[k]=null;
  const P_=b.attributes.position,U=b.attributes.uv,ix=b.index.array;b.computeBoundingBox();const bb=b.boundingBox,zL=bb.max.z-bb.min.z,zc=(bb.max.z+bb.min.z)/2;
  const out={l:[],r:[],b:[],h:[],liv:[],rest:[]},A=new THREE.Vector3(),B_=new THREE.Vector3(),C=new THREE.Vector3(),N=new THREE.Vector3(),E=new THREE.Vector3();
@@ -8555,7 +8554,6 @@ function lamps(k){if(lampCache[k]!==undefined)return lampCache[k];const G=geoms(
   if(end&&amber)(x>0?out.r:out.l).push(a,b_,c);/* model front is -Z, so +X is the driver's right */
   else if(end&&red&&z>0){out.b.push(a,b_,c);out.rest.push(a,b_,c)}
   else if(end&&pale&&z<0){out.h.push(a,b_,c);out.rest.push(a,b_,c)}
-  else if(sat&&!(end&&(red||amber)))out.liv.push(a,b_,c);
   else out.rest.push(a,b_,c)}
  /* no amber lenses on this model: the indicators flash the outer part of the head and tail lamps on each side */
  const outer=(src,neg)=>{const res=[];let xm=0;for(let t=0;t<src.length;t+=3){const x=Math.abs(P_.getX(src[t]));if(x>xm)xm=x}
@@ -8566,9 +8564,10 @@ function lamps(k){if(lampCache[k]!==undefined)return lampCache[k];const G=geoms(
  const liv=out.liv.length?(()=>{const g=new THREE.BufferGeometry();g.setAttribute('position',P_);g.setAttribute('normal',b.attributes.normal);g.setIndex(out.liv);return g})():null;
  return lampCache[k]={l:mk(out.l),r:mk(out.r),b:mk(out.b),h:mk(out.h),body,liv}}
 const trafMat={};
-C10.traffic=(k,rgb)=>{const m=META[k],G=geoms(k),g=new THREE.Group(),lift=m.lift||0;
- const L_=lamps(k);let pm=null;if(G.paint||(L_&&L_.liv)){const key=rgb.join(',');pm=trafMat[key]||(trafMat[key]=new THREE.MeshStandardMaterial({color:srgb(rgb[0],rgb[1],rgb[2]),roughness:.5,metalness:.2,flatShading:true}))}
- if(G.body){const b=new THREE.Mesh(L_?L_.body:G.body,bodyMat);b.position.y=lift;g.add(b);if(L_&&L_.liv){const q=new THREE.Mesh(L_.liv,pm);q.position.y=lift;g.add(q)}}
+/* traffic wears each car's own stock look: the factory paint colour and its texture untouched (no repaint, no stripes recoloured) */
+C10.traffic=(k)=>{const m=META[k],G=geoms(k),g=new THREE.Group(),lift=m.lift||0,rgb=m.paint;
+ const L_=lamps(k);let pm=null;if(G.paint){const key=rgb.join(',');pm=trafMat[key]||(trafMat[key]=new THREE.MeshStandardMaterial({color:srgb(rgb[0],rgb[1],rgb[2]),roughness:.5,metalness:.2,flatShading:true}))}
+ if(G.body){const b=new THREE.Mesh(L_?L_.body:G.body,bodyMat);b.position.y=lift;g.add(b)}
  const tg=straightTires(k)||G.tires;if(tg)g.add(new THREE.Mesh(tg,bodyMat));
  if(G.paint){const p=new THREE.Mesh(G.paint,pm);p.position.y=lift;g.add(p)}
  g.userData.gl=gameLen(m);g.userData.k=k;g.userData.lamps=L_;g.userData.lift=lift;return g};
@@ -12378,6 +12377,8 @@ P.LOG=[
   'Cleaner bike HUD: the trick bar along the bottom is gone (the guide key stays bottom left, and the guide lists how tricks work), score and combo share one plate with the combo lit only while a multiplier runs and a bar for the time left to keep it, and pause is on Tab like the car modes, shown top right.',
   'The Cut-Up results give every stat its own column (best combo, near misses, tricks, wipeouts, distance) instead of one wrapped line; car Cut-Up results do the same.',
   'Smoother tricks that make more sense: each move is staged (body first, then the feet, then the hands let go), the hands travel from the grips instead of jumping, bigger moves like the Seat Stand and Superman take longer to get into, the No-Hander holds the arms out at shoulder height and the Seat Stand steps up one foot at a time.'
+  'Tricks reworked from real photos: the Wheelie is seated with the free arm out to the side, the No-Hander sits upright with the hands in front, the Seat Stand is crouched on the seat holding the bars, the Superman keeps one foot on its peg and kicks the other leg out behind, and the hand drag tucks the legs up along the bike and swings the body further out the longer you hold it.',
+  'Traffic cars only come in the paint and livery they came with.',
 ]},
  {v:'0.02',d:'Oct 31, 2026',t:'Riviera island',items:[
   'Free Roam now takes place on the Riviera, a Mediterranean island about 5 km across that you can drive end to end: a coast road that loops the whole shore, a mountain pass that winds up through hairpins to a summit square with a stone parapet and a statue looking over the sea, and ridge roads branching off it. The island is generated from a seed, so it is the same every time.',
@@ -17317,10 +17318,9 @@ const lgCache={};
 /* the game's own cars (cars10 pack) for the car-sized traffic; vans, trucks, semis and buses stay hand-built */
 /* Nov 2: traffic is everyday cars only (hatchbacks, wagons, saloons) in everyday paint, built fresh so no race livery leaks in */
 const CARPOOL={sedan:['SEDAN','WAGON'],hatch:['HATCHBACK'],suv:['WAGON','SEDAN','HATCHBACK']},carBox={};
-const EVERYDAY=[[236,236,232],[236,236,232],[176,180,184],[176,180,184],[110,114,118],[28,30,34],[28,30,34],[38,58,104],[120,30,32],[196,184,160],[70,92,74]];
 function gameCar(kind,r){const C=P.C10;if(!C||!C.ready||!C.traffic||!CARPOOL[kind]||!P.CARS)return null;
  const pool=P.CARS.filter(c=>c.k10!=null&&CARPOOL[kind].includes(c.cat)&&!c.rallyOnly);if(!pool.length)return null;
- const c=pool[(r()*pool.length)|0],src=C.traffic(c.k10,EVERYDAY[(r()*EVERYDAY.length)|0]);if(!src)return null;
+ const c=pool[(r()*pool.length)|0],src=C.traffic(c.k10);if(!src)return null;
  let bx=carBox[c.k10];if(!bx){src.updateMatrixWorld(true);bx=carBox[c.k10]=new THREE.Box3().setFromObject(src)}
  const sz=bx.getSize(new THREE.Vector3()),gl=src.userData.gl||4.5,sc=gl/Math.max(sz.x,sz.z,.01);
  const m=src,w=new THREE.Group();w.add(m);m.scale.setScalar(sc);m.rotation.y=sz.x>sz.z?-PI/2:PI;/* model front is -Z, traffic front is +Z */
@@ -17716,18 +17716,20 @@ function trickPose(p,id,u,r){const b=basePose(p),I=p.m.I,seat=I.seat,SY=seatFit(
  const hand=(t,v)=>v<.02?null:[lp(g[0],t[0],v),lp(g[1],t[1],v),lp(g[2],t[2],v)],both=(t,v)=>{const h=hand(t,v);return h?[h,h.slice()]:null};
  const feet=(t,v)=>[0,1].map(i=>b.feet[i].map((x,j)=>lp(x,t[i][j],v)));
  switch(id){
-  case'wheelie':/* the deeper the wheelie, the further forward over the tank, so the body stays near upright; arms straighten as the bars rise */
-   return Object.assign(b,{lean:b.lean+(.12+Math.max(0,p.pitch)*.72)*u,hip:[0,b.hip[1],b.hip[2]-.04*u],look:b.look+.12*u});
+  case'wheelie':{/* seated, weight back on the seat, the bar hand on the throttle and the free (left) arm out to the side for balance;
+    the deeper the wheelie, the further forward over the tank, so the body stays near upright */const arm=seg(r,.35,1);
+   return Object.assign(b,{lean:b.lean+(.12+Math.max(0,p.pitch)*.72)*u,hip:[0,b.hip[1],b.hip[2]-.04*u],look:b.look+.12*u,hands:[hand([.74,b.hip[1]+.36,seat[2]+.36],arm),null]})}
   case'standup':{const up=seg(r,0,.8);/* up onto the pegs, knees soft, chest over the bars */return Object.assign(b,{hip:[0,lp(b.hip[1],SY+.5,up),lp(b.hip[2],seat[2]+.12,up)],lean:b.lean+.42*up+Math.max(0,p.pitch)*.5*u,look:b.look+.1*u})}
   case'twelve':{const up=seg(r,0,.7);/* stood up and folded forward so the body stays plumb while the bike points at the sky */return Object.assign(b,{hip:[0,lp(b.hip[1],SY+.42,up),lp(b.hip[2],seat[2]-.04,up)],lean:b.lean+Math.max(.5,p.pitch)*.95*u,look:-.25*u})}
   case'stoppie':{/* weight back and up off the seat, arms braced, looking down the road over the front */return Object.assign(b,{hip:[0,lp(b.hip[1],SY+.3,u),lp(b.hip[2],seat[2]-.18,u)],lean:b.lean-.3*u-Math.max(0,-p.pitch)*.4*u,look:.2*u})}
-  case'nohands':{/* sit up tall first, then the arms come off the bars and out like wings */const sit=seg(r,0,.6),arm=seg(r,.3,1),sy=SY+.65;
-   return Object.assign(b,{lean:lp(b.lean,.05,sit),hip:[0,b.hip[1],b.hip[2]-.05*sit],hands:both([.64,b.hip[1]+.5,seat[2]+.06],arm),look:.05*sit})}
-  case'superman':{/* chest down onto the tank, hands stay on the bars, then the legs slide off the back and straighten out */const fwd=seg(r,0,.6),leg=seg(r,.3,1);
-   return Object.assign(b,{hip:[0,lp(b.hip[1],SY+.38,fwd),lp(b.hip[2],seat[2]-.45,fwd)],lean:lp(b.lean,1.35,fwd),feet:feet([[.12,SY+.5,seat[2]-1.05],[.14,SY+.55,seat[2]-1.0]],leg),look:.35*fwd})}
-  case'seatstand':{/* stand on the pegs, step up onto the seat one foot at a time, then let go and rise with the arms out */const up=seg(r,0,.45),f0=seg(r,.2,.55),f1=seg(r,.35,.7),rise=seg(r,.55,1),arm=seg(r,.6,1),fy=SY+.06;
-   const fs=[b.feet[0].map((x,j)=>lp(x,[.13,fy,seat[2]+.02][j],f0)),b.feet[1].map((x,j)=>lp(x,[.13,fy,seat[2]-.12][j],f1))];
-   return Object.assign(b,{hip:[0,lp(b.hip[1],SY+.42,up)+.22*rise,lp(b.hip[2],seat[2]-.06,up)],lean:lp(lp(b.lean,.55,up),.08,rise),feet:fs,hands:both([.64,SY+1.1,seat[2]-.02],arm),look:.1*rise})}
+  case'nohands':{/* sat up straight, weight on the back of the seat, the hands come off the bars and rest in front of the chest */const sit=seg(r,0,.6),arm=seg(r,.3,1);
+   return Object.assign(b,{lean:lp(b.lean,-.04,sit),hip:[0,b.hip[1],b.hip[2]-.08*sit],hands:both([.2,b.hip[1]+.42,seat[2]+.3],arm),look:.04*sit})}
+  case'superman':{/* hips up and chest over the tank, hands on the bars, the right foot stays on its peg and the left leg kicks out
+    straight behind, up high */const fwd=seg(r,0,.6),leg=seg(r,.3,1);
+   return Object.assign(b,{hip:[0,lp(b.hip[1],SY+.46,fwd),lp(b.hip[2],seat[2]-.12,fwd)],lean:lp(b.lean,1.15,fwd),feet:[b.feet[0].map((x,j)=>lp(x,[.14,SY+.88,seat[2]-1.05][j],leg)),b.feet[1]],look:.35*fwd})}
+  case'seatstand':{/* up onto the pegs, then one foot at a time onto the seat, crouched over with the hands still on the bars */const up=seg(r,0,.45),f0=seg(r,.2,.55),f1=seg(r,.35,.7),crouch=seg(r,.55,1),fy=SY+.06;
+   const fs=[b.feet[0].map((x,j)=>lp(x,[.12,fy,seat[2]+.05][j],f0)),b.feet[1].map((x,j)=>lp(x,[.12,fy,seat[2]-.15][j],f1))];
+   return Object.assign(b,{hip:[0,lp(b.hip[1],SY+.42,up)+.3*crouch,lp(b.hip[2],seat[2]-.04,up)-.12*crouch],lean:lp(lp(b.lean,.6,up),1.45,crouch),feet:fs,look:-.1*crouch})}
   case'burnout':{/* weight forward over the front, left foot planted ahead of the peg */const ft=seg(r,0,.6);return Object.assign(b,{lean:b.lean+.25*u,hip:[0,b.hip[1],b.hip[2]+.05*u],feet:[b.feet[0].map((x,j)=>lp(x,[I.peg[0]+.1,.05,I.peg[2]+.35][j],ft)),b.feet[1]]})}
  }return b}
 function mixPose(a,b,u){const L=(x,y)=>x.map((v,i)=>lp(v,y[i],u));return{hip:L(a.hip,b.hip),lean:lp(a.lean,b.lean,u),side:lp(a.side||0,b.side||0,u),look:lp(a.look||0,b.look||0,u),
@@ -17755,8 +17757,9 @@ function poseRiderFor(p,dt){const t=p.trk_;
   const m=p.m,side=p.dragSide||1,u=p.dg,s_=side>0?0:1,sg=s_?-1:1;p.m.g.updateMatrixWorld(true);/* beside the rear tyre, where the bike actually stands */const rw=new THREE.Vector3().fromArray(p.m.I.rw);m.inner.localToWorld(rw);
   B.road.pos(p.s,p.d_,_pp);const yaw=m.g.rotation.y,rgt=new THREE.Vector3(-Math.cos(yaw),0,Math.sin(yaw)),fwd=new THREE.Vector3(Math.sin(yaw),0,Math.cos(yaw));
   const w=new THREE.Vector3(rw.x,_pp.y+.03,rw.z).addScaledVector(rgt,side>0?-.75:.75).addScaledVector(fwd,-.1);m.inner.worldToLocal(w);
-  const hs=ps.hands?ps.hands.slice():[null,null];const g=p.m.I.grip;hs[s_]=[lp(g[0],w.x*sg,u),lp(g[1],w.y,u),lp(g[2],w.z,u)];if(!hs[1-s_])hs[1-s_]=null;ps.hands=hs;ps.reach=s_;ps.reachMax=.22;
-  ps.hip=[lp(ps.hip[0],sg*.1,u),lp(ps.hip[1],hy-.02,u),lp(ps.hip[2],S[2]-.16,u)];ps.lean=lp(ps.lean,p.pitch-.5,u);ps.side=lp(ps.side,-sg*.5,u);ps.look=lp(ps.look||0,.25,u);ps.turn=lp(ps.turn||0,sg*.5,u)}
+  const hs=ps.hands?ps.hands.slice():[null,null];const g=p.m.I.grip;hs[s_]=[lp(g[0],w.x*sg,u),lp(g[1],w.y,u),lp(g[2],w.z,u)];/* the other hand goes back to its grip */const o_=hs[1-s_];hs[1-s_]=o_&&u<.95?[lp(o_[0],g[0],u),lp(o_[1],g[1],u),lp(o_[2],g[2],u)]:null;ps.hands=hs;ps.reach=s_;ps.reachMax=.22;
+  ps.hip=[lp(ps.hip[0],sg*.1,u),lp(ps.hip[1],hy-.02,u),lp(ps.hip[2],S[2]-.16,u)];ps.lean=lp(ps.lean,p.pitch-.5,u);/* hold it longer and the body swings further out over the road */p.dfar=lp(p.dfar||0,cl(((p.dragT||0)-.8)/1.5,0,1),cl(dt*2,0,1));const far=p.dfar;ps.side=lp(ps.side,-sg*(.5+.3*far),u);
+  /* legs tucked up along the bike, feet up by the tank */ps.feet=ps.feet.map(f=>[lp(f[0],.2,u),lp(f[1],hy-.05,u),lp(f[2],S[2]+.45,u)]);ps.look=lp(ps.look||0,.25,u);ps.turn=lp(ps.turn||0,sg*.5,u)}
  /* stopped: the left foot goes down to the road (people riders) */
  p.fd=lp(p.fd||0,(!p.trk_&&p.v<1.2&&!p.wipe)?1:0,cl(dt*4,0,1));if(p.fd>.01&&p.m.rider&&p.m.rider.people){const f=ps.feet[0].slice(),I=p.m.I;ps.feet[0]=[lp(f[0],I.peg[0]+.2,p.fd),lp(f[1],-.02,p.fd),lp(f[2],I.peg[2]+.18,p.fd)];ps.side-=.06*p.fd}
  BK.poseRider(p.m,ps)}

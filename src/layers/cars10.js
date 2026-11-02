@@ -103,8 +103,7 @@ function straightTires(k){if(tireFix[k])return tireFix[k];const G=geoms(k);if(!G
 /* the lamps, found from the palette colour under each body triangle: amber = indicators, red = tail, pale at the nose = headlights */
 let pal=null;function palette(){if(pal)return pal;const im=tex.image;if(!im||!im.width)return null;const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const x=c.getContext('2d');x.drawImage(im,0,0);pal={w:im.width,h:im.height,d:x.getImageData(0,0,im.width,im.height).data};return pal}
 const lampCache={};
-/* body triangles sorted by the palette colour under them: lamps only count on the nose and tail faces (facing out), and any other strong
-   colour is a livery stripe, which traffic repaints in its body colour so the cars read as plain everyday paint */
+/* body triangles sorted by the palette colour under them: lamps only count on the nose and tail faces (facing out); everything else keeps its stock texture */
 function lamps(k){if(lampCache[k]!==undefined)return lampCache[k];const G=geoms(k),b=G.body,pl=palette();if(!b||!pl||!b.attributes.uv)return lampCache[k]=null;
  const P_=b.attributes.position,U=b.attributes.uv,ix=b.index.array;b.computeBoundingBox();const bb=b.boundingBox,zL=bb.max.z-bb.min.z,zc=(bb.max.z+bb.min.z)/2;
  const out={l:[],r:[],b:[],h:[],liv:[],rest:[]},A=new THREE.Vector3(),B_=new THREE.Vector3(),C=new THREE.Vector3(),N=new THREE.Vector3(),E=new THREE.Vector3();
@@ -117,7 +116,6 @@ function lamps(k){if(lampCache[k]!==undefined)return lampCache[k];const G=geoms(
   if(end&&amber)(x>0?out.r:out.l).push(a,b_,c);/* model front is -Z, so +X is the driver's right */
   else if(end&&red&&z>0){out.b.push(a,b_,c);out.rest.push(a,b_,c)}
   else if(end&&pale&&z<0){out.h.push(a,b_,c);out.rest.push(a,b_,c)}
-  else if(sat&&!(end&&(red||amber)))out.liv.push(a,b_,c);
   else out.rest.push(a,b_,c)}
  /* no amber lenses on this model: the indicators flash the outer part of the head and tail lamps on each side */
  const outer=(src,neg)=>{const res=[];let xm=0;for(let t=0;t<src.length;t+=3){const x=Math.abs(P_.getX(src[t]));if(x>xm)xm=x}
@@ -128,9 +126,10 @@ function lamps(k){if(lampCache[k]!==undefined)return lampCache[k];const G=geoms(
  const liv=out.liv.length?(()=>{const g=new THREE.BufferGeometry();g.setAttribute('position',P_);g.setAttribute('normal',b.attributes.normal);g.setIndex(out.liv);return g})():null;
  return lampCache[k]={l:mk(out.l),r:mk(out.r),b:mk(out.b),h:mk(out.h),body,liv}}
 const trafMat={};
-C10.traffic=(k,rgb)=>{const m=META[k],G=geoms(k),g=new THREE.Group(),lift=m.lift||0;
- const L_=lamps(k);let pm=null;if(G.paint||(L_&&L_.liv)){const key=rgb.join(',');pm=trafMat[key]||(trafMat[key]=new THREE.MeshStandardMaterial({color:srgb(rgb[0],rgb[1],rgb[2]),roughness:.5,metalness:.2,flatShading:true}))}
- if(G.body){const b=new THREE.Mesh(L_?L_.body:G.body,bodyMat);b.position.y=lift;g.add(b);if(L_&&L_.liv){const q=new THREE.Mesh(L_.liv,pm);q.position.y=lift;g.add(q)}}
+/* traffic wears each car's own stock look: the factory paint colour and its texture untouched (no repaint, no stripes recoloured) */
+C10.traffic=(k)=>{const m=META[k],G=geoms(k),g=new THREE.Group(),lift=m.lift||0,rgb=m.paint;
+ const L_=lamps(k);let pm=null;if(G.paint){const key=rgb.join(',');pm=trafMat[key]||(trafMat[key]=new THREE.MeshStandardMaterial({color:srgb(rgb[0],rgb[1],rgb[2]),roughness:.5,metalness:.2,flatShading:true}))}
+ if(G.body){const b=new THREE.Mesh(L_?L_.body:G.body,bodyMat);b.position.y=lift;g.add(b)}
  const tg=straightTires(k)||G.tires;if(tg)g.add(new THREE.Mesh(tg,bodyMat));
  if(G.paint){const p=new THREE.Mesh(G.paint,pm);p.position.y=lift;g.add(p)}
  g.userData.gl=gameLen(m);g.userData.k=k;g.userData.lamps=L_;g.userData.lift=lift;return g};

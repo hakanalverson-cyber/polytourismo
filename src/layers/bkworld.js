@@ -423,10 +423,9 @@ const lgCache={};
 /* the game's own cars (cars10 pack) for the car-sized traffic; vans, trucks, semis and buses stay hand-built */
 /* Nov 2: traffic is everyday cars only (hatchbacks, wagons, saloons) in everyday paint, built fresh so no race livery leaks in */
 const CARPOOL={sedan:['SEDAN','WAGON'],hatch:['HATCHBACK'],suv:['WAGON','SEDAN','HATCHBACK']},carBox={};
-const EVERYDAY=[[236,236,232],[236,236,232],[176,180,184],[176,180,184],[110,114,118],[28,30,34],[28,30,34],[38,58,104],[120,30,32],[196,184,160],[70,92,74]];
 function gameCar(kind,r){const C=P.C10;if(!C||!C.ready||!C.traffic||!CARPOOL[kind]||!P.CARS)return null;
  const pool=P.CARS.filter(c=>c.k10!=null&&CARPOOL[kind].includes(c.cat)&&!c.rallyOnly);if(!pool.length)return null;
- const c=pool[(r()*pool.length)|0],src=C.traffic(c.k10,EVERYDAY[(r()*EVERYDAY.length)|0]);if(!src)return null;
+ const c=pool[(r()*pool.length)|0],src=C.traffic(c.k10);if(!src)return null;
  let bx=carBox[c.k10];if(!bx){src.updateMatrixWorld(true);bx=carBox[c.k10]=new THREE.Box3().setFromObject(src)}
  const sz=bx.getSize(new THREE.Vector3()),gl=src.userData.gl||4.5,sc=gl/Math.max(sz.x,sz.z,.01);
  const m=src,w=new THREE.Group();w.add(m);m.scale.setScalar(sc);m.rotation.y=sz.x>sz.z?-PI/2:PI;/* model front is -Z, traffic front is +Z */

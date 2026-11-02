@@ -188,18 +188,20 @@ function trickPose(p,id,u,r){const b=basePose(p),I=p.m.I,seat=I.seat,SY=seatFit(
  const hand=(t,v)=>v<.02?null:[lp(g[0],t[0],v),lp(g[1],t[1],v),lp(g[2],t[2],v)],both=(t,v)=>{const h=hand(t,v);return h?[h,h.slice()]:null};
  const feet=(t,v)=>[0,1].map(i=>b.feet[i].map((x,j)=>lp(x,t[i][j],v)));
  switch(id){
-  case'wheelie':/* the deeper the wheelie, the further forward over the tank, so the body stays near upright; arms straighten as the bars rise */
-   return Object.assign(b,{lean:b.lean+(.12+Math.max(0,p.pitch)*.72)*u,hip:[0,b.hip[1],b.hip[2]-.04*u],look:b.look+.12*u});
+  case'wheelie':{/* seated, weight back on the seat, the bar hand on the throttle and the free (left) arm out to the side for balance;
+    the deeper the wheelie, the further forward over the tank, so the body stays near upright */const arm=seg(r,.35,1);
+   return Object.assign(b,{lean:b.lean+(.12+Math.max(0,p.pitch)*.72)*u,hip:[0,b.hip[1],b.hip[2]-.04*u],look:b.look+.12*u,hands:[hand([.74,b.hip[1]+.36,seat[2]+.36],arm),null]})}
   case'standup':{const up=seg(r,0,.8);/* up onto the pegs, knees soft, chest over the bars */return Object.assign(b,{hip:[0,lp(b.hip[1],SY+.5,up),lp(b.hip[2],seat[2]+.12,up)],lean:b.lean+.42*up+Math.max(0,p.pitch)*.5*u,look:b.look+.1*u})}
   case'twelve':{const up=seg(r,0,.7);/* stood up and folded forward so the body stays plumb while the bike points at the sky */return Object.assign(b,{hip:[0,lp(b.hip[1],SY+.42,up),lp(b.hip[2],seat[2]-.04,up)],lean:b.lean+Math.max(.5,p.pitch)*.95*u,look:-.25*u})}
   case'stoppie':{/* weight back and up off the seat, arms braced, looking down the road over the front */return Object.assign(b,{hip:[0,lp(b.hip[1],SY+.3,u),lp(b.hip[2],seat[2]-.18,u)],lean:b.lean-.3*u-Math.max(0,-p.pitch)*.4*u,look:.2*u})}
-  case'nohands':{/* sit up tall first, then the arms come off the bars and out like wings */const sit=seg(r,0,.6),arm=seg(r,.3,1),sy=SY+.65;
-   return Object.assign(b,{lean:lp(b.lean,.05,sit),hip:[0,b.hip[1],b.hip[2]-.05*sit],hands:both([.64,b.hip[1]+.5,seat[2]+.06],arm),look:.05*sit})}
-  case'superman':{/* chest down onto the tank, hands stay on the bars, then the legs slide off the back and straighten out */const fwd=seg(r,0,.6),leg=seg(r,.3,1);
-   return Object.assign(b,{hip:[0,lp(b.hip[1],SY+.38,fwd),lp(b.hip[2],seat[2]-.45,fwd)],lean:lp(b.lean,1.35,fwd),feet:feet([[.12,SY+.5,seat[2]-1.05],[.14,SY+.55,seat[2]-1.0]],leg),look:.35*fwd})}
-  case'seatstand':{/* stand on the pegs, step up onto the seat one foot at a time, then let go and rise with the arms out */const up=seg(r,0,.45),f0=seg(r,.2,.55),f1=seg(r,.35,.7),rise=seg(r,.55,1),arm=seg(r,.6,1),fy=SY+.06;
-   const fs=[b.feet[0].map((x,j)=>lp(x,[.13,fy,seat[2]+.02][j],f0)),b.feet[1].map((x,j)=>lp(x,[.13,fy,seat[2]-.12][j],f1))];
-   return Object.assign(b,{hip:[0,lp(b.hip[1],SY+.42,up)+.22*rise,lp(b.hip[2],seat[2]-.06,up)],lean:lp(lp(b.lean,.55,up),.08,rise),feet:fs,hands:both([.64,SY+1.1,seat[2]-.02],arm),look:.1*rise})}
+  case'nohands':{/* sat up straight, weight on the back of the seat, the hands come off the bars and rest in front of the chest */const sit=seg(r,0,.6),arm=seg(r,.3,1);
+   return Object.assign(b,{lean:lp(b.lean,-.04,sit),hip:[0,b.hip[1],b.hip[2]-.08*sit],hands:both([.2,b.hip[1]+.42,seat[2]+.3],arm),look:.04*sit})}
+  case'superman':{/* hips up and chest over the tank, hands on the bars, the right foot stays on its peg and the left leg kicks out
+    straight behind, up high */const fwd=seg(r,0,.6),leg=seg(r,.3,1);
+   return Object.assign(b,{hip:[0,lp(b.hip[1],SY+.46,fwd),lp(b.hip[2],seat[2]-.12,fwd)],lean:lp(b.lean,1.15,fwd),feet:[b.feet[0].map((x,j)=>lp(x,[.14,SY+.88,seat[2]-1.05][j],leg)),b.feet[1]],look:.35*fwd})}
+  case'seatstand':{/* up onto the pegs, then one foot at a time onto the seat, crouched over with the hands still on the bars */const up=seg(r,0,.45),f0=seg(r,.2,.55),f1=seg(r,.35,.7),crouch=seg(r,.55,1),fy=SY+.06;
+   const fs=[b.feet[0].map((x,j)=>lp(x,[.12,fy,seat[2]+.05][j],f0)),b.feet[1].map((x,j)=>lp(x,[.12,fy,seat[2]-.15][j],f1))];
+   return Object.assign(b,{hip:[0,lp(b.hip[1],SY+.42,up)+.3*crouch,lp(b.hip[2],seat[2]-.04,up)-.12*crouch],lean:lp(lp(b.lean,.6,up),1.45,crouch),feet:fs,look:-.1*crouch})}
   case'burnout':{/* weight forward over the front, left foot planted ahead of the peg */const ft=seg(r,0,.6);return Object.assign(b,{lean:b.lean+.25*u,hip:[0,b.hip[1],b.hip[2]+.05*u],feet:[b.feet[0].map((x,j)=>lp(x,[I.peg[0]+.1,.05,I.peg[2]+.35][j],ft)),b.feet[1]]})}
  }return b}
 function mixPose(a,b,u){const L=(x,y)=>x.map((v,i)=>lp(v,y[i],u));return{hip:L(a.hip,b.hip),lean:lp(a.lean,b.lean,u),side:lp(a.side||0,b.side||0,u),look:lp(a.look||0,b.look||0,u),
@@ -227,8 +229,9 @@ function poseRiderFor(p,dt){const t=p.trk_;
   const m=p.m,side=p.dragSide||1,u=p.dg,s_=side>0?0:1,sg=s_?-1:1;p.m.g.updateMatrixWorld(true);/* beside the rear tyre, where the bike actually stands */const rw=new THREE.Vector3().fromArray(p.m.I.rw);m.inner.localToWorld(rw);
   B.road.pos(p.s,p.d_,_pp);const yaw=m.g.rotation.y,rgt=new THREE.Vector3(-Math.cos(yaw),0,Math.sin(yaw)),fwd=new THREE.Vector3(Math.sin(yaw),0,Math.cos(yaw));
   const w=new THREE.Vector3(rw.x,_pp.y+.03,rw.z).addScaledVector(rgt,side>0?-.75:.75).addScaledVector(fwd,-.1);m.inner.worldToLocal(w);
-  const hs=ps.hands?ps.hands.slice():[null,null];const g=p.m.I.grip;hs[s_]=[lp(g[0],w.x*sg,u),lp(g[1],w.y,u),lp(g[2],w.z,u)];if(!hs[1-s_])hs[1-s_]=null;ps.hands=hs;ps.reach=s_;ps.reachMax=.22;
-  ps.hip=[lp(ps.hip[0],sg*.1,u),lp(ps.hip[1],hy-.02,u),lp(ps.hip[2],S[2]-.16,u)];ps.lean=lp(ps.lean,p.pitch-.5,u);ps.side=lp(ps.side,-sg*.5,u);ps.look=lp(ps.look||0,.25,u);ps.turn=lp(ps.turn||0,sg*.5,u)}
+  const hs=ps.hands?ps.hands.slice():[null,null];const g=p.m.I.grip;hs[s_]=[lp(g[0],w.x*sg,u),lp(g[1],w.y,u),lp(g[2],w.z,u)];/* the other hand goes back to its grip */const o_=hs[1-s_];hs[1-s_]=o_&&u<.95?[lp(o_[0],g[0],u),lp(o_[1],g[1],u),lp(o_[2],g[2],u)]:null;ps.hands=hs;ps.reach=s_;ps.reachMax=.22;
+  ps.hip=[lp(ps.hip[0],sg*.1,u),lp(ps.hip[1],hy-.02,u),lp(ps.hip[2],S[2]-.16,u)];ps.lean=lp(ps.lean,p.pitch-.5,u);/* hold it longer and the body swings further out over the road */p.dfar=lp(p.dfar||0,cl(((p.dragT||0)-.8)/1.5,0,1),cl(dt*2,0,1));const far=p.dfar;ps.side=lp(ps.side,-sg*(.5+.3*far),u);
+  /* legs tucked up along the bike, feet up by the tank */ps.feet=ps.feet.map(f=>[lp(f[0],.2,u),lp(f[1],hy-.05,u),lp(f[2],S[2]+.45,u)]);ps.look=lp(ps.look||0,.25,u);ps.turn=lp(ps.turn||0,sg*.5,u)}
  /* stopped: the left foot goes down to the road (people riders) */
  p.fd=lp(p.fd||0,(!p.trk_&&p.v<1.2&&!p.wipe)?1:0,cl(dt*4,0,1));if(p.fd>.01&&p.m.rider&&p.m.rider.people){const f=ps.feet[0].slice(),I=p.m.I;ps.feet[0]=[lp(f[0],I.peg[0]+.2,p.fd),lp(f[1],-.02,p.fd),lp(f[2],I.peg[2]+.18,p.fd)];ps.side-=.06*p.fd}
  BK.poseRider(p.m,ps)}

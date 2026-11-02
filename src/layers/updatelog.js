@@ -39,6 +39,8 @@ P.LOG=[
   'Cleaner bike HUD: the trick bar along the bottom is gone (the guide key stays bottom left, and the guide lists how tricks work), score and combo share one plate with the combo lit only while a multiplier runs and a bar for the time left to keep it, and pause is on Tab like the car modes, shown top right.',
   'The Cut-Up results give every stat its own column (best combo, near misses, tricks, wipeouts, distance) instead of one wrapped line; car Cut-Up results do the same.',
   'Smoother tricks that make more sense: each move is staged (body first, then the feet, then the hands let go), the hands travel from the grips instead of jumping, bigger moves like the Seat Stand and Superman take longer to get into, the No-Hander holds the arms out at shoulder height and the Seat Stand steps up one foot at a time.'
+  'Tricks reworked from real photos: the Wheelie is seated with the free arm out to the side, the No-Hander sits upright with the hands in front, the Seat Stand is crouched on the seat holding the bars, the Superman keeps one foot on its peg and kicks the other leg out behind, and the hand drag tucks the legs up along the bike and swings the body further out the longer you hold it.',
+  'Traffic cars only come in the paint and livery they came with.',
 ]},
  {v:'0.02',d:'Oct 31, 2026',t:'Riviera island',items:[
   'Free Roam now takes place on the Riviera, a Mediterranean island about 5 km across that you can drive end to end: a coast road that loops the whole shore, a mountain pass that winds up through hairpins to a summit square with a stone parapet and a statue looking over the sea, and ridge roads branching off it. The island is generated from a seed, so it is the same every time.',
