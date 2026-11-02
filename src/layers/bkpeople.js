@@ -161,7 +161,7 @@ BK.ragStart=(m,vel)=>{const R=m.rider;if(!R||!R.people)return null;const T=R.T,X
  return{P:P_,O,C,h}};
 BK.ragStep=(rag,dt,gy)=>{const P_=rag.P,O=rag.O,n=P_.length,ss=3,h=Math.min(dt,1/20)/ss,g=-9.8*h*h,t=V();
  for(let k=0;k<ss;k++){
-  for(let i=0;i<n;i++){const p=P_[i],o=O[i];t.subVectors(p,o).multiplyScalar(.995);o.copy(p);p.add(t);p.y+=g}
+  for(let i=0;i<n;i++){const p=P_[i],o=O[i];t.subVectors(p,o).multiplyScalar(.995);const mx=28*h;if(t.lengthSq()>mx*mx)t.setLength(mx);/* speed cap: 28 m/s */o.copy(p);p.add(t);p.y+=g}
   for(let it=0;it<6;it++){for(const c of rag.C){const a=P_[c[0]],b=P_[c[1]];t.subVectors(b,a);const d=t.length()||1e-4;if(c[3]===2&&d>=c[2])continue;const w=c[0]===0?.35:.5,f=(d-c[2])/d;
      a.addScaledVector(t,f*w);b.addScaledVector(t,-f*(1-w))}
    for(let i=0;i<n;i++){const p=P_[i],y0=gy(p.x,p.z)+RR[i];if(p.y<y0){p.y=y0;const o=O[i];if(o.y<y0)o.y=y0+(o.y-y0)*-.25;/* sliding friction (about 0.65 g): take a fixed amount of speed off each step */const vx=p.x-o.x,vz=p.z-o.z,vh=Math.hypot(vx,vz),dv=6.5*h*h/6;/* applied once per constraint pass */if(vh<=dv){o.x=p.x;o.z=p.z}else{o.x+=vx*dv/vh;o.z+=vz*dv/vh}}}}}

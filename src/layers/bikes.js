@@ -17,8 +17,8 @@ const SV=()=>{const s=P.SV();return s.bk||(s.bk={best:0,sel:[{id:null,paint:0},{
 /* kind: 'wheelie' (front up, balance with throttle and rear brake), 'stoppie' (rear up on the front brake), 'balance' (a held move with a wobble you steer against),
    'burnout' (stand still, spin the rear). pps = points per second; min/max = speed window (m/s) */
 const TRICKS=[
- {id:'wheelie',n:'Wheelie',k:'wheelie',pps:120,min:3,max:70,d:'Tap the trick key with the throttle on to lift the front. Throttle lifts, the rear brake (S) brings it down, tap again to land. Too far and you loop out.'},
- {id:'stoppie',n:'Stoppie',k:'stoppie',pps:170,min:9,max:60,d:'Tap the trick key and brake hard: the rear wheel lifts. Ease the brake to hold it, tap again to land. Too much and you go over the bars.'},
+ {id:'wheelie',n:'Wheelie',k:'wheelie',pps:120,min:3,max:70,d:'Hold the trick key and open the throttle to lift the front, then ride the balance point: throttle lifts, the rear brake (S) brings it down. Let go to land. Too far and you loop out.'},
+ {id:'stoppie',n:'Stoppie',k:'stoppie',pps:170,min:9,max:60,d:'Hold the trick key and brake hard: the rear wheel lifts. Ease the brake to hold it, let go to land. Too much and you go over the bars.'},
  {id:'standup',n:'Stand-Up Wheelie',k:'wheelie',stand:1,pps:190,min:3,max:55,d:'A wheelie standing on the pegs. Narrower balance than the sit-down one, more points.'},
  {id:'twelve',n:'12 O’Clock',k:'wheelie',twelve:1,pps:300,min:3,max:40,d:'Take a wheelie past 70°, nearly straight up. Points only count while you are past the line.'},
  {id:'nohands',n:'No-Hander',k:'balance',pps:150,min:10,max:80,d:'Let go of the bars and ride on. Steer against the wobble with A / D. Lean too far and you are down.'},
@@ -27,7 +27,7 @@ BK.TRICKS=TRICKS;
 const TBY={};TRICKS.forEach((t,i)=>{TBY[t.id]=t;t.i=i});
 
 /* ---------------- keys ---------------- */
-const KEYS=[{u:'KeyW',d:'KeyS',l:'KeyA',r:'KeyD',t:'Space',m:'KeyQ',c:'KeyC',name:'W A S D',tn:'SPACE',mn:'Q',cn:'C',tk:['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8'],tkn:['1','2','3','4','5','6','7','8']},
+const KEYS=[{u:'KeyW',d:'KeyS',l:'KeyA',r:'KeyD',t:'Space',m:'KeyQ',c:'KeyC',name:'W A S D',tn:'SPACE',mn:'Q',cn:'C',tk:['KeyE','KeyR','KeyF','KeyC','KeyZ','KeyX','KeyT','KeyG'],tkn:['E','R','F','C','Z','X','T','G']},/* Nov 2: rider 1's tricks on letters around WASD */
  {u:'ArrowUp',d:'ArrowDown',l:'ArrowLeft',r:'ArrowRight',t:'ShiftRight',m:'Slash',c:'Period',alt:{t:['Numpad0','ControlRight'],m:['NumpadEnter','Enter'],c:['NumpadDecimal']},name:'ARROWS',tn:'R-SHIFT',mn:'/',cn:'.',tk:['KeyU','KeyI','KeyO','KeyP','KeyH','KeyJ','KeyK','KeyL'],tkn:['U','I','O','P','H','J','K','L']}];/* Nov 2: rider 2's tricks on letters, so no numpad is needed */
 const down=new Set(),taps=new Set();/* taps: keys pressed since the last frame, so a quick tap between two frames still counts */let B=null,PR=null;/* B = live run, PR = prep screen */
 const kd=(p,k)=>{const K=KEYS[p];if(down.has(K[k]))return true;const a=K.alt&&K.alt[k];return!!(a&&a.some(x=>down.has(x)))};
@@ -184,6 +184,7 @@ const seg=(r,a,b)=>{const x=cl((r-a)/(b-a),0,1);return x*x*(3-2*x)};
 /* Nov 2: the Seat Stand and the hand drag are switched off for now (they still look wrong). Their pose code stays: set HAND_DRAG and
    put the Seat Stand back in TRICKS to bring them back */
 const HAND_DRAG=false;
+const HOLD=t=>!!t&&(t.k==='wheelie'||t.k==='stoppie');/* Nov 2: wheelie-type tricks are held, the rest are tapped on and off */
 const SHOVE_T=.6;/* one shove, wind-up to recovery (s) */
 const TRATE={wheelie:3.2,stoppie:3.4,standup:2.6,twelve:2.2,nohands:2.2,superman:1.7,seatstand:1.4,burnout:3};/* blend speed (1/s): big body moves take longer */
 function trickPose(p,id,u,r){const b=basePose(p),I=p.m.I,seat=I.seat,SY=seatFit(I,p.m).hy-.1,g=I.grip;r=r==null?u:r;
@@ -268,7 +269,9 @@ function inputs(p){const K=KEYS[p.k],pad=padIn(p.k);let th=kd(p.k,'u')?1:0,br=kd
  if(pad){th=Math.max(th,pad.th);br=Math.max(br,pad.br);if(pad.st)st=pad.st;if(pad.t&&!p.padT){tap=true;if(tk<0)tk=TBY[p.equip].i}p.padT=pad.t;
   if(pad.m&&!p.padM){p.equip=TRICKS[(TBY[p.equip].i+1)%TRICKS.length].id;guidePaint(p)}p.padM=pad.m;p.padC=pad.c}
  if(tap&&tk>=0&&!p.trk_&&TRICKS[tk].id!==p.equip){p.equip=TRICKS[tk].id;guidePaint(p)}
- return{th,br,st,tap,tk}}
+ /* held trick key (wheelies and stoppies are held, not toggled): its index, or the equipped trick while a pad's trick button is held */
+ let tkH=-1;for(let i=0;i<TRICKS.length;i++)if(down.has(K.tk[i])){tkH=i;break}if(tkH<0&&pad&&pad.t)tkH=TBY[p.equip].i;
+ return{th,br,st,tap,tk,tkH}}
 function physStep(p,dt){if(p.wipe){wipeStep(p,dt);return}
  const I=inputs(p),live=B.state==='ride';const th=live?I.th:0,br=live?I.br:(B.state==='count'?1:0);
  p.th=lp(p.th,th,cl(dt*8,0,1));p.br=br;p.ghost=Math.max(0,p.ghost-dt);
@@ -279,7 +282,9 @@ function physStep(p,dt){if(p.wipe){wipeStep(p,dt);return}
   if(!T&&!p.trOn)p.trOn=true;
   else if(T&&p.trOn&&nt&&nt.id!==T.id&&canStart(p,nt)){/* combo: a different trick key mid-trick goes straight into that trick (the one you were in is scored), no landing first */
    endTrick(p,true);p.equip=nt.id;p.trOn=true;beginTrick(p,nt);guidePaint(p)}
-  else if(p.trOn)p.trOn=false;else if(nt)p.trQ=nt.id/* still landing: start this one next */}
+  else if(p.trOn&&!HOLD(T||TBY[p.equip]))p.trOn=false;else if(!p.trOn&&nt)p.trQ=nt.id/* still landing: start this one next */}
+ /* wheelie family: held. Let go of its key and you land */
+ {const cur=T||TBY[p.equip];if(p.trOn&&HOLD(cur)&&I.tkH!==cur.i)p.trOn=false}
  if(!T&&!p.trOn&&p.trQ&&live){p.equip=p.trQ;p.trQ=null;p.trOn=true;guidePaint(p)}
  if(!live){p.trOn=false;p.trQ=null}
  const want=p.trOn&&live;
@@ -331,14 +336,21 @@ function trickStep(p,dt,I){const t=p.trk_;
  const bal=t&&t.twelve?1.38:1.05;/* wheelie balance angle (rad) */
  /* Nov 2 (round 4): tapped tricks hold themselves. While a wheelie or stoppie is on, the bike is steered to a target angle (throttle
     raises it, brake lowers it); after the landing tap the target is zero and the wheel comes down softly, which ends the trick */
- if(t&&(t.k==='wheelie'||t.k==='stoppie')){const on=p.trOn,wh=t.k==='wheelie';
-  /* throttle walks a wheelie deeper, the brake brings it back; deep enough and the rider drags a hand on the road */
-  if(on&&wh){const lo=t.stand?.3:.28,hi=t.twelve?1.45:t.stand?.8:1.42;if(p.wtg==null)p.wtg=t.twelve?1.3:t.stand?.42:.5;if(I){p.wtg+=(I.th*.38-I.br*.6)*dt}p.wtg=cl(p.wtg,lo,hi)}else p.wtg=null;
-  let tgt=0;if(on){tgt=wh?p.wtg+Math.sin(p.tt*1.7)*.03:-.32-(I?I.br*.08:0)}
-  if(on&&p.tt<.45)tgt*=ss(0,.45,p.tt)*.6+.4;/* pop up rather than snap */
-  const k=on?16:12,c=2*Math.sqrt(k)*(on?1:1.1);p.pv+=(k*(tgt-p.pitch)-c*p.pv)*dt;p.pitch+=p.pv*dt;
-  if(wh?p.pitch<=0:p.pitch>=0){p.pitch=0;p.pv=0}
-  if(!on&&Math.abs(p.pitch)<.03&&p.tt>.25){p.pitch=0;p.pv=0;endTrick(p,true);return}}
+ if(t&&(t.k==='wheelie'||t.k==='stoppie')){const on=p.trOn,wh=t.k==='wheelie',th_=I?I.th:0,br_=I?I.br:0;
+  /* Nov 2 (round 6): no autopilot. The key is held; the bike balances on an unstable point and you ride it there yourself: throttle lifts
+     the front, the rear brake drops it, a drifting gust pushes it about. Under the point it falls back, past it it goes over */
+  const w0=p.wn||0;p.wn=w0+((Math.random()-.5)*8-w0*1.4)*dt;
+  if(wh){const bp=t.twelve?1.3:t.stand?.95:1.06,pop=on&&p.tt<.32?3.4*(1-p.tt/.32):0;
+   const gt=-3.1*Math.sin(bp-p.pitch),lift=on?th_*(3.3+p.trk*.7)+pop-br_*5.5:0;
+   p.pv+=(lift+gt+p.wn*(on?1.1:.3)-p.pv*(on?.7:2.4))*dt;p.pitch+=p.pv*dt;
+   if(p.pitch<=0){p.pitch=0;p.pv=Math.max(0,p.pv);if(!on||p.tt>.6){endTrick(p,on&&p.tt>.6?true:true);return}}
+   if(p.pitch>bp+.4){wipeout(p,'LOOPED OUT');return}}
+  else{/* stoppie: the front brake tips it up, gravity brings it back, too much and you go over the bars */
+   const press=on?br_*(3.2+p.trk*.8)*ss(3,12,p.v)+(p.tt<.25?2.2:0):0,gt=p.pitch>-.95?2.4*Math.cos(p.pitch):-1.6;
+   p.pv+=(-press+gt+p.wn*(on?.9:.2)-p.pv*(on?1.0:2.4))*dt;p.pitch+=p.pv*dt;
+   if(p.pitch>=0){p.pitch=0;p.pv=Math.min(0,p.pv);if(!on||p.tt>.6){endTrick(p,true);return}}
+   if(p.v<1.5&&on)p.pv+=3*dt;
+   if(p.pitch<-1.15){wipeout(p,'OVER THE BARS');return}}}
  else{
  if(p.pitch>0||t&&t.k==='wheelie'){const top=t&&t.twelve?bal+.02:bal-.05,lift=t&&t.k==='wheelie'?p.th*(2.6+p.trk*1.6)*(p.v<25?1:ss(60,25,p.v)*.9+.1)*cl((top-p.pitch)/.45,0,1)+(Math.random()-.5)*1.6:0,drop=p.br*6;
   const gtq=-Math.cos(p.pitch)*(2.2+(bal-1)*1.5)+Math.max(0,p.pitch-bal)*4.2;
@@ -358,10 +370,10 @@ function trickStep(p,dt,I){const t=p.trk_;
  if(t.k==='wheelie'){const ang=p.pitch*57.3;if(t.twelve)rate=ang>70?1:0;else rate=ang>12?(t.stand?(ang>20?1:.4):1):0;if(t.stand&&p.v<2)rate=0}
  else if(t.k==='stoppie'){rate=p.pitch<-.12?1:0;if(p.v<.6)endTrick(p,true)}
  else if(t.k==='balance'){/* wobble: a slow random push, unstable; A / D push back */
-  const k=t.wob||1;p.balV+=((Math.random()-.5)*2.4*k+p.bal*(1.6*k)+I.st*(-3.4))*dt;p.balV*=1-dt*1.2;p.bal+=p.balV*dt;
+  const k=t.wob||1;p.balV+=((Math.random()-.5)*3.4*k+p.bal*(2.1*k)+I.st*(-3.4))*dt;p.balV*=1-dt*1.0;/* round 6: wobblier, less damped */p.bal+=p.balV*dt;
   rate=1;if(Math.abs(p.bal)>1){wipeout(p,'LOST BALANCE');return}if(p.v<t.min*.7){endTrick(p,true);return}}
  else if(t.k==='burnout'){rate=p.th>.3?1:0;p.smoke=p.th;if(p.th>.3&&Math.random()<dt*24)smokePuff(p)}
- if(rate>0){const pts=t.pps*rate*dt*(.6+p.trk*.4);p.trickPts+=pts;p.score+=pts*p.mult;p.comboT=Math.max(p.comboT,1.4)}}
+ if(rate>0){const pts=t.pps*rate*dt*(.6+p.trk*.4);p.trickPts+=pts;p.score+=pts*p.mult/* the chain timer keeps running during a trick (it used to be topped up, which froze the counter through a long burnout or wheelie); landing the trick is what extends the chain */}}
 function walls(p,dt){const ex=B.road.exitNear(p.s+250),x=ex>-1e8&&p.s>ex-230&&p.s<ex?RD.LW:0;
  const lo=.62,hi=RD.SHO-.28+x,vlat=p.v*Math.sin(p.psi);
  if(p.d_<lo||p.d_>hi){const side=p.d_<lo?-1:1;p.d_=side<0?lo:hi;
@@ -426,9 +438,9 @@ function wipeout(p,why){if(p.wipe)return;if(p.trk_)p.trk_=null;p.trOn=false;p.tr
  const pitchUp=p.pitch;
  p.wipe={t:0,why,rg,rs:p.s,rd:p.d_,rh:.9,rvs:vf*Math.cos(ps)*.92,rvd:vf*Math.sin(ps)+(Math.random()-.5)*2,rvh:2.5+Math.min(6,vf*.12)+(pitchUp<0?3:0),
   spin:new THREE.Vector3((Math.random()-.5)*6+(pitchUp<0?-7:pitchUp>0?5:0),(Math.random()-.5)*4,(Math.random()-.5)*6),
-  bs:p.s,bd:p.d_,bv:vf,bpsi:ps,bspin:(Math.random()-.5)*2.5,blean:p.lean,side:p.lean>=0?1:-1,bpitch:p.pitch};
+  bs:p.s,bd:p.d_,bv:Math.min(vf,24)/* the bike slides a few car lengths, not hundreds of metres */,bpsi:ps,bspin:(Math.random()-.5)*2.5,blean:p.lean,side:p.lean>=0?1:-1,bpitch:p.pitch};
  /* people riders go limp: a ragdoll that starts with the bike's speed plus the throw */
- {const y=m.g.rotation.y,vel=new THREE.Vector3(Math.sin(y),0,Math.cos(y)).multiplyScalar(vf*.92);vel.y=p.wipe.rvh*.8;vel.x+=Math.cos(y)*p.wipe.rvd*.3;vel.z-=Math.sin(y)*p.wipe.rvd*.3;
+ {const y=m.g.rotation.y,vel=new THREE.Vector3(Math.sin(y),0,Math.cos(y)).multiplyScalar(Math.min(vf*.92,20));/* thrown, not launched: at most 20 m/s along the road */vel.y=p.wipe.rvh*.8;vel.x+=Math.cos(y)*p.wipe.rvd*.3;vel.z-=Math.sin(y)*p.wipe.rvd*.3;
   const rag=BK.ragStart&&BK.ragStart(m,vel);if(rag){p.wipe.rag=rag;rg.position.set(0,0,0);rg.quaternion.identity();p.wipe.p0=rag.P[0].clone()}}
  p.pitch=0;p.pv=0;sfx.crash();if(p.eng)p.eng.set(0,0,0,false);
  for(let i=0;i<10;i++)spark(p,(Math.random()-.5)*2);
@@ -438,7 +450,8 @@ function wipeStep(p,dt){const w=p.wipe;w.t+=dt;
  if(w.rag){/* ragdoll: follow the pelvis in the road frame so the ground height and the verges are known */
   B.road.at(w.rs,_fr);const fx=Math.sin(_fr.h),fz=Math.cos(_fr.h);
   const gy=(x,z)=>{B.road.pos(w.rs,w.rd,_pp);return _pp.y};
-  const p0=BK.ragStep(w.rag,dt,gy);const dx=p0.x-w.p0.x,dz=p0.z-w.p0.z;w.rs+=dx*fx+dz*fz;w.rd+=-dx*Math.cos(_fr.h)+dz*Math.sin(_fr.h);w.p0.copy(p0);
+  const p0=BK.ragStep(w.rag,dt,gy);/* a ragdoll that blew up (NaN, or flung far off) must never take the run down: drop it and respawn */
+  if(!isFinite(p0.x+p0.y+p0.z)||Math.abs(p0.x-w.p0.x)+Math.abs(p0.z-w.p0.z)>5){w.rag=null;if(!w.fade){w.fade=1;fadeFlash(p,()=>respawn(p))}return}const dx=p0.x-w.p0.x,dz=p0.z-w.p0.z;w.rs+=dx*fx+dz*fz;w.rd+=-dx*Math.cos(_fr.h)+dz*Math.sin(_fr.h);w.p0.copy(p0);
   /* the median and the outer fence stop the body */
   const lim=w.rd<.6?.6-w.rd:w.rd>RD.SHO-.2?RD.SHO-.2-w.rd:0;if(lim){const ax=-Math.cos(_fr.h)*lim,az=Math.sin(_fr.h)*lim;for(const q of w.rag.P){q.x+=ax;q.z+=az}for(const q of w.rag.O){q.x+=ax*1.3;q.z+=az*1.3}w.rd+=lim;w.p0.copy(w.rag.P[0])}
   BK.ragPose(p.m,w.rag)}
@@ -456,7 +469,7 @@ function wipeStep(p,dt){const w=p.wipe;w.t+=dt;
  BK.poseRider({rider:p.m.rider,I:p.m.I,steer:p.m.steer},{hip:[0,1,0],lean:Math.sin(ft*.7)*.4*fl,side:0,look:.3,
   hands:[[.55+Math.sin(ft)*.2*fl,1.35+Math.cos(ft*1.3)*.3*fl,.15],[.55+Math.cos(ft*1.1)*.2*fl,1.3+Math.sin(ft*.9)*.3*fl,-.1]],feet:[[.2+Math.sin(ft*.8)*.15*fl,.15,.3*Math.cos(ft)*fl],[.22,.2+Math.cos(ft*.6)*.2*fl,-.25]]});}
  /* bike: falls on its side and slides, spinning, throwing sparks */
- w.bv=Math.max(0,w.bv-(w.bv>3?7.5:4)*dt);w.bpsi+=w.bspin*dt*(w.bv>.5?1:0);w.bs+=w.bv*Math.cos(w.bpsi)*dt;w.bd+=w.bv*Math.sin(w.bpsi)*dt;
+ w.bv=Math.max(0,w.bv-(w.bv>3?11:6)*dt);w.bpsi+=w.bspin*dt*(w.bv>.5?1:0);w.bs+=w.bv*Math.cos(w.bpsi)*dt;w.bd+=w.bv*Math.sin(w.bpsi)*dt;
  if(w.bd<.7){w.bd=.7;w.bpsi=-w.bpsi*.5}if(w.bd>RD.SHO-.3+0){w.bd=RD.SHO-.3;w.bpsi=-w.bpsi*.5}
  w.blean=lp(w.blean,w.side*1.32,cl(dt*3.2,0,1));w.bpitch=lp(w.bpitch,0,cl(dt*4,0,1));
  if(w.bv>4&&Math.random()<dt*30)spark(p,w.side,true);
@@ -562,7 +575,7 @@ const CSS=`
 #bkHud .cd.on{animation:bkCd .9s forwards}@keyframes bkCd{0%{opacity:0;transform:translate(-50%,-50%) scale(1.4)}20%{opacity:1;transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0}}
 #bkHud .bm{display:block!important;opacity:0;transition:opacity .25s}#bkHud .bm.on{opacity:1}
 #bkHud .tg{transition:opacity .25s,translate .25s}#bkHud .tg.off{opacity:0;translate:-12px 0}
-#bkPause{animation:bkPzB .2s ease-out;transition:opacity .16s}#bkPause.out{opacity:0}@keyframes bkPzB{0%{opacity:0}100%{opacity:1}}#bkPause .mid{animation:bkPz .22s ease-out}@keyframes bkPz{0%{opacity:0;transform:scale(.97)}100%{opacity:1;transform:none}}
+#bkPause{animation:bkPzB .2s ease-out;transition:opacity .16s}#bkPause.out{opacity:0}@keyframes bkPzB{0%{opacity:0}100%{opacity:1}}/* opacity only: the card is centred with a transform, so animating transform made it jump in from the corner */
 #bkHud .bkfade{position:absolute;inset:0;background:#000;opacity:0;transition:opacity .35s}
 #bkHud .mn{left:18px;top:50%;transform:translateY(-50%);width:min(300px,46%);padding:0;overflow:hidden;display:none}
 #bkHud .mn h4{margin:0;padding:12px 16px 10px;font-size:11px;font-weight:500;letter-spacing:.28em;color:#c9d2d8;border-bottom:1px solid #ffffff14;display:flex;justify-content:space-between}
@@ -646,7 +659,7 @@ function buildHud(){ensureCss();let h=$i('bkHud');if(!h){h=document.createElemen
  <div class="h8spd"><canvas class="gx5" width="480" height="320"></canvas></div>
  <div class="pl hint"><span><kbd>${KEYS[i].mn}</kbd>GUIDE</span></div>
  <div class="pl bm"><i></i><u></u></div>
- <div class="tg"><h6>Tricks</h6><ul>${TRICKS.map((t,j)=>`<li data-t="${t.id}"><kbd>${KEYS[i].tkn[j]}</kbd><span>${t.n}</span><em>${t.k==='burnout'?'stopped':Math.round(spd(t.min))+'+'}</em></li>`).join('')}</ul><p>Tap to start, tap again to land</p></div>
+ <div class="tg"><h6>Tricks</h6><ul>${TRICKS.map((t,j)=>`<li data-t="${t.id}"><kbd>${KEYS[i].tkn[j]}</kbd><span>${t.n}</span><em>${t.k==='burnout'?'stopped':Math.round(spd(t.min))+'+'}</em></li>`).join('')}</ul><p>Hold wheelies &middot; tap the rest on and off</p></div>
  ${i===n-1?`<div class="pl hint pz"><span><kbd>TAB</kbd>PAUSE</span></div>`:''}
  <div class="pp"></div><div class="bkfade"></div></div>`).join('')+`<div class="cd"></div>`;
  B.pl.forEach(p=>guidePaint(p))}
@@ -777,7 +790,7 @@ function bikeRender(){if(!PR)return;const two=PR.p[1].in,L=BK.list(),rows=[];
  const side=`<div class="gxSide"><h6>${esc(d.kind)} &middot; ${k+1} of ${L.length}</h6><div class="st">${STATN.map(([n,f,v])=>`<span>${n}</span><u><i style="width:${Math.round(cl(f(d),0,1)*100)}%"></i></u><em>${v(d)}</em>`).join('')}</div></div>`;
  const lineup=two?[PR.p[0],PR.p[1]]:[PR.p[0]];
  if(step===1)P.gxRender({kind:'Best score '+fmtN(SV().best||0),name:'Highway Cut-Up',facts:[two?'Two riders, split screen':'One rider','Endless highway','Plains'],rows,groups:['The ride','Conditions',''],shot:cv=>rideMap(cv),go:'Next: bikes'});
- else P.gxRender({kind:(two?'Rider '+(fi+1)+' &middot; ':'')+esc(d.kind),name:esc(d.name),facts:[esc(d.kind),'Tap 1 to '+TRICKS.length+' for tricks'],side,rows,groups:['Rider 1','Rider 2',''],shot:cv=>bikeShot(cv,lineup),go:'Ride'});
+ else P.gxRender({kind:(two?'Rider '+(fi+1)+' &middot; ':'')+esc(d.kind),name:esc(d.name),facts:[esc(d.kind),'Tricks on '+KEYS[0].tkn.slice(0,TRICKS.length).join(' ')],side,rows,groups:['Rider 1','Rider 2',''],shot:cv=>bikeShot(cv,lineup),go:'Ride'});
  const g=$i('suGo');if(g)g.innerHTML='<span>'+(step===1?'Next: bikes &rsaquo;':'Ride')+'</span>'}
 function stopPrep(){if(!PR)return;const e=$i('bkPrep');if(e)e.style.display='none';if(PR.sc){for(const m of PR.bikes)if(m)BK.disposeBike(m);PR.world.dispose();PR.sky.dispose();R.toneMappingExposure=PR.exp0}PR=null}
 function leavePrep(){sfx.ui('back');stopPrep();document.body.classList.remove('bkOn');goMenu()}
