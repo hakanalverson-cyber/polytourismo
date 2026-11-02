@@ -4,6 +4,8 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.03',d:'Nov 2, 2026',t:'Highway Cut-Up on bikes',items:[
+  'Track Mode handling is 5% down: your car has 5% less grip on circuits, so it turns in less sharply and slides sooner.',
+  'Split screen: each player\'s gauge and its dark backing stay inside that player\'s view, so they no longer spill over the split line.',
   'Highway Cut-Up is its own mode now, and it is bikes only: an endless four-lane highway with exits, overpasses, sign gantries and street lamps, in day, sunset or night. Cut-Up left the Quickplay list, so Quickplay is down to four modes and the main menu row count stays the same now that Free Roam is vaulted.',
   'Nine bikes from a supplied motorbike pack, each in its own paints: Dirt 450, Scrambler 1200, Superbike 1100, Sport 600, Bobber 900, Power Cruiser 1250, Patrol 1800 and two scooters. The rider is posed on each bike with hands on the grips and feet on the pegs.',
   'Traffic thinks: cars follow each other at a safe gap, signal before changing lanes, check the gap again, then move. Some take the exits. Hit one and it puts its hazards on.',

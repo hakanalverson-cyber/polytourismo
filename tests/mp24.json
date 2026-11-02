@@ -1,0 +1,6 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",2500],
+["js","(()=>{PT8.launch({mode:'mp',track:14,laps:1,humans:[{id:'merc',alt:0},{id:'merc',alt:0}],ai:PT8.makeAI({n:2,classes:['B'],skill:.88,rally:false}),trackRace:true,rolling:true});show('game');for(let i=0;i<60*8;i++){step(1/60);if(RACE.state==='count')RACE.state='race'}return scr})()"],["wait",2500],["shot","2p"],
+["key","Tab"],["wait",1200],["js","(()=>{const p=document.getElementById('pause');return scr+' '+(p?getComputedStyle(p).display+' '+getComputedStyle(p).visibility+' '+p.offsetWidth:'none')})()"],["shot","2pause"],
+["key","Tab"],["wait",800],
+["js","(()=>{PT8.cleanupRace&&PT8.cleanupRace();PT8.launch({mode:'mp',track:14,laps:1,humans:[{id:'merc',alt:0},{id:'merc',alt:0},{id:'merc',alt:0},{id:'merc',alt:0}],ai:[],trackRace:true,rolling:true});show('game');for(let i=0;i<60*8;i++){step(1/60);if(RACE.state==='count')RACE.state='race'}return scr})()"],["wait",2500],["shot","4p"],
+["key","Tab"],["wait",1200],["js","(()=>scr)()"],["shot","4pause"]]
