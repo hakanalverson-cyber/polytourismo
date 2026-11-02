@@ -1,0 +1,1 @@
+[["js", "(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return JSON.stringify({packs:(window.PT8_PACKS||[]).length,bikes:!!window.BIKES_B64&&BIKES_B64.length,bg:(window.PT8_BOOTBG||[]).length})})()"], ["wait", 3000], ["shot", "menu"]]

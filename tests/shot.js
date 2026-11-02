@@ -6,10 +6,10 @@ const ROOT=path.dirname(__dirname),OUT=path.join(ROOT,'tests','out');fs.mkdirSyn
  const b=await chromium.launch({args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist','--enable-webgl']});
  const pg=await b.newPage({viewport:{width:W,height:H}});const logs=[];
  pg.on('console',m=>logs.push(m.type()+': '+m.text()));pg.on('pageerror',e=>logs.push('PAGEERROR: '+e.message+' | '+String(e.stack).slice(0,400)));
- await pg.route('**/*',r=>{const u=r.request().url();if(u.startsWith('file:'))return r.continue();
+ await pg.route('**/*',r=>{const u=r.request().url();if(u.startsWith('file:'))return r.continue();if(process.env.ARTDIR&&u.startsWith('https://art.test/')){const f=path.join(process.env.ARTDIR,u.slice(17).split('?')[0]||'index.html');return r.fulfill({path:f,contentType:f.endsWith('.html')?'text/html':'text/plain'})}
   if(u.includes('three.min.js'))return r.fulfill({path:ROOT+'/node_modules/three/build/three.min.js',contentType:'application/javascript'});
   if(u.includes('GLTFLoader'))return r.fulfill({path:ROOT+'/node_modules/three/examples/js/loaders/GLTFLoader.js',contentType:'application/javascript'});return r.abort()});
- await pg.goto('file://'+html,{timeout:240000,waitUntil:'commit'});await pg.waitForTimeout(+(process.env.BOOT||40000));
+ await pg.goto(process.env.ARTDIR?'https://art.test/index.html':'file://'+html,{timeout:240000,waitUntil:'commit'});await pg.waitForTimeout(+(process.env.BOOT||40000));
  for(const s of steps){try{
   if(s[0]==='js'){const v=await pg.evaluate(s[1]);console.log('JS->',v)}
   else if(s[0]==='wait')await pg.waitForTimeout(s[1]);

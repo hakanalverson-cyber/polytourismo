@@ -2,7 +2,7 @@
 """Split dist/Poly-Tourismo.html into a small index.html + data files (<16 MB page limit for in-app artifacts).
 Game code stays inline; only the big base64 blobs move to files, read with a synchronous same-origin XHR.
 Music tracks are read lazily (textContent getter) so the first load is ~9 MB."""
-import re,os,sys
+import re,os,sys,gzip,base64
 src=sys.argv[1] if len(sys.argv)>1 else 'dist/Poly-Tourismo.html';out=sys.argv[2] if len(sys.argv)>2 else '/tmp/art'
 os.makedirs(out,exist_ok=True);s=open(src).read();n=[0]
 CH=15000000  # each published file stays under the 16 MB limit; bigger blobs become several parts read back to back
@@ -21,11 +21,16 @@ def blk(m):
         v=c.group(2)
         if len(v)<300000: return c.group(0)
         return 'var %s=%s'%(c.group(1),dump(v))
-    body=re.sub(r'PT8_PACKS\.push\((\{.*?\})\);\n',lambda c:'PT8_PACKS.push(JSON.parse(%s));\n'%dump(c.group(1)),body,flags=re.S)  # built-in track files
-    return '<script%s>%s</script>'%(at,re.sub(r'const (\w+)="([^"]*)"',cst,body))
+    # built-in track files: gzipped + base64 (the plain JSON pushed the artifact past its 256 MB version limit), inflated with fflate
+    body=re.sub(r'PT8_PACKS\.push\((\{.*?\})\);\n',lambda c:'PT8_PACKS.push(JSON.parse(__gz(%s)));\n'%dump(base64.b64encode(gzip.compress(c.group(1).encode(),9)).decode()),body,flags=re.S)
+    body=re.sub(r'const (\w+)="([^"]*)"',cst,body)
+    # any other big base64 string literal (window.X="...", arrays and objects of images or models) moves out too
+    body=re.sub(r'"([A-Za-z0-9+/=,:._-]{300000,})"',lambda c:dump(c.group(1)),body)
+    return '<script%s>%s</script>'%(at,body)
 h=re.sub(r'<script([^>]*)>(.*?)</script>',blk,s,flags=re.S)
 h=re.sub(r'<!DOCTYPE[^>]*>','',h,flags=re.I);h=re.sub(r'</?(html|head|body)[^>]*>','',h,flags=re.I);h=re.sub(r'<meta charset[^>]*>','',h,count=1)
-ldr='<script>function __ld(f){var x=new XMLHttpRequest();x.open("GET",f,false);x.send();if(x.status!==200&&x.status!==0)throw new Error(f+" "+x.status);return x.responseText}function __lazy(id,f){var e=document.getElementById(id),c=null;Object.defineProperty(e,"textContent",{get:function(){return c===null?(c=f()):c},configurable:true})}</script>'
+FF=open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','node_modules','three','examples','js','libs','fflate.min.js')).read()
+ldr='<script>'+FF+'</script><script>function __gz(b){var s=atob(b),u=new Uint8Array(s.length);for(var i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return fflate.strFromU8(fflate.gunzipSync(u))}function __ld(f){var x=new XMLHttpRequest();x.open("GET",f,false);x.send();if(x.status!==200&&x.status!==0)throw new Error(f+" "+x.status);return x.responseText}function __lazy(id,f){var e=document.getElementById(id),c=null;Object.defineProperty(e,"textContent",{get:function(){return c===null?(c=f()):c},configurable:true})}</script>'
 i=h.index('<script')
 h=h[:i]+ldr+h[i:]
 open(os.path.join(out,'index.html'),'w').write(h)
