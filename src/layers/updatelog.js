@@ -3,6 +3,16 @@
 'use strict';
 const P=window.PT8;
 P.LOG=[
+ {v:'0.03',d:'Nov 2, 2026',t:'Highway Cut-Up on bikes',items:[
+  'Highway Cut-Up is its own mode now, and it is bikes only: an endless four-lane highway with exits, overpasses, sign gantries and median lamps, in day, sunset or night. Cut-Up left the Quickplay list, so Quickplay is down to four modes and the main menu row count stays the same now that Free Roam is vaulted.',
+  'Nine bikes from a supplied motorbike pack, each in its own paints: Dirt 450, Scrambler 1200, Superbike 1100, Sport 600, Bobber 900, Power Cruiser 1250, Patrol 1800 and two scooters. The rider is posed on each bike with hands on the grips and feet on the pegs.',
+  'Up to two riders in split screen. The start screen lets each rider pick a bike, a paint and a starting trick, with the clock, traffic and time of day shared, while the bikes idle on the hard shoulder and traffic streams past.',
+  'The camera sits in the rider helmet, looking down far enough that the bars and grips stay in view, and the bars turn as you steer. C swaps to a chase camera.',
+  'Traffic thinks: cars, vans, trucks, semis and buses follow each other at a safe gap, signal before changing lanes, check the gap again, then move. Some take the exits. Hit one and it puts its hazards on.',
+  'Eight tricks, each picked from a trick menu every rider can open and close on their own: Wheelie, Stoppie, Stand-Up Wheelie, 12 O Clock, No-Hander, Superman, Seat Stand and Burnout. Wheelies balance on the throttle and rear brake, the balance tricks wobble and you steer against it.',
+  'You can wipe out: looping a wheelie, going over the bars, losing balance, rear-ending or sideswiping traffic, or hitting the barrier hard. The rider tumbles down the road, the bike slides on its side throwing sparks, and you are back on after a moment.',
+  'Score comes from near misses, close calls, lane splits, speed and tricks, with a multiplier up to x10 that you bank by keeping the chain going.',
+  'Every car mode now opens on a start-line showcase: cinematic bars, a live camera that cycles shots (C skips), the lap or route map with a tracer running round it, the car card with its numbers and, in races, the field you are up against. Quickplay and Career races get it too, not just Rally and Track. The car was missing from the old rally start-line shots; it is there now.']},
  {v:'0.02',d:'Oct 31, 2026',t:'Riviera island',items:[
   'Free Roam now takes place on the Riviera, a Mediterranean island about 5 km across that you can drive end to end: a coast road that loops the whole shore, a mountain pass that winds up through hairpins to a summit square with a stone parapet and a statue looking over the sea, and ridge roads branching off it. The island is generated from a seed, so it is the same every time.',
   'Four towns, Porto, Borgo, Rocco and Cala. Each is built round a paved square with a bell tower, a statue, cafe parasols, a gelato cart and street lamps, with pedestrians strolling, and hill-town houses packed round it with their fronts to the square. Cypress lines the roads in, and olive groves, pine woods and boulders fill the slopes.',

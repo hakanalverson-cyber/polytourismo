@@ -30,7 +30,7 @@ function paint(){const e=mkEl(),s=S[st.i],last=!!s.done;e.style.display='';e.cla
  const b=e.querySelector('#tutSkip');b.textContent=last?'Back to menu':s.info?'Next':'Skip step';b.className=(s.info||last)?'pri':'';
  e.querySelector('#tutQuit').style.display=last?'none':''}
 function next(){if(st.hold)return;P.sfx('click');const e=mkEl(),bd=e.querySelector('#tutBody'),mine=st;bd.style.opacity=0;st.i=Math.min(S.length-1,st.i+1);st.okT=0;st.s={};st.hold=1;setTimeout(()=>{if(st!==mine)return;st.hold=0;paint();bd.style.opacity=1},260);if(S[st.i].done){try{const sv=P.SV();sv.tutDone=1;P.save()}catch(e){}P.sfx('medal')}}
-P.startTutorial=()=>{P.launch({mode:'ta',track:0,laps:99,endur:false,humans:[{id:'merc',alt:0}],ai:[]});if(RACE)RACE.tut=1;st={i:0,okT:0,s:{}};lt=0;mkEl();paint()};
+P.startTutorial=()=>{P.launch({mode:'ta',track:0,laps:99,endur:false,noPrep:true,humans:[{id:'merc',alt:0}],ai:[]});if(RACE)RACE.tut=1;st={i:0,okT:0,s:{}};lt=0;mkEl();paint()};
 const kd={a:0,d:0,hb:0};
 addEventListener('keydown',e=>{if(!st)return;const s=st.s;if(e.code==='KeyA')s.a=1;if(e.code==='KeyD')s.d=1;if(e.code==='Space')s.hb=1});
 const hu0=hudUpdate;let lt=0;

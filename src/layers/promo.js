@@ -267,11 +267,11 @@ P.PROMO_SCENES=[
  {q:2,rd:{A:3,L:200,G:-.03},env:'desert',cars:[['c34',0,-1.5],['c46',3.5,1.7],['c15',7.5,-1.2],['c78',5.5,.1,.4]],cam:[.2,.55,9],look:[0,1.1,-4],fov:30,blur:'zoom',amt:.05},
  {q:2,rd:{A:8,L:500,cA:25,cL:600},env:'redrock',cars:[['c64',0,0],['c54',5,-1.6],['c60',10,1.5],['c31',16,-.4,.35]],cam:[5,4,25],look:[0,1,2],fov:32,blur:'zoom',amt:.03},
  /* Cut-Up: weaving through traffic */
- {q:3,rd:{G:.02,cA:12,cL:600},env:'night',cars:[['c86',0,1.2],['c26',1.5,-3.2],['c50',4.5,4],['c28',9,-3.2]],cam:[5,3.2,10],look:[0,1.6,-6],fov:34,blur:'zoom',amt:.03},
- {q:3,rd:{A:3,L:300,ph:.8},env:'rush',cars:[['c134',0,-.2],['c19',4,-3.6],['c14',8,3.8],['c29',13,0],['c10',18,-3.6]],cam:[1.6,.6,7],look:[0,1.2,-6],fov:32,blur:'zoom',amt:.045},
+ {q:-1,rd:{G:.02,cA:12,cL:600},env:'night',cars:[['c86',0,1.2],['c26',1.5,-3.2],['c50',4.5,4],['c28',9,-3.2]],cam:[5,3.2,10],look:[0,1.6,-6],fov:34,blur:'zoom',amt:.03},
+ {q:-1,rd:{A:3,L:300,ph:.8},env:'rush',cars:[['c134',0,-.2],['c19',4,-3.6],['c14',8,3.8],['c29',13,0],['c10',18,-3.6]],cam:[1.6,.6,7],look:[0,1.2,-6],fov:32,blur:'zoom',amt:.045},
  /* Versus: side by side */
- {q:4,env:'neon',cars:[['ferr',0,-1.8],['c42',.4,1.8]],cam:[0,.42,6],look:[0,1,-1],fov:38,blur:'zoom',amt:.05,pair:1},
- {q:4,rd:{A:2.5,L:260,cA:-15,cL:500},env:'floods',cars:[['c90',0,-1.8],['c4',.2,1.8]],cam:[-1,1.1,-12],look:[0,1,1],fov:30,blur:'zoom',amt:.045,pair:1},
+ {q:3,env:'neon',cars:[['ferr',0,-1.8],['c42',.4,1.8]],cam:[0,.42,6],look:[0,1,-1],fov:38,blur:'zoom',amt:.05,pair:1},
+ {q:3,rd:{A:2.5,L:260,cA:-15,cL:500},env:'floods',cars:[['c90',0,-1.8],['c4',.2,1.8]],cam:[-1,1.1,-12],look:[0,1,1],fov:30,blur:'zoom',amt:.045,pair:1},
  /* the main menu */
  {rd:{G:-.06,cA:22,cL:350},env:'alpine',cars:[['c79',0,-.9],['c102',5.5,1.3]],cam:[3.6,.5,6.5],look:[0,1.1,-1],fov:30,blur:'zoom',amt:.04},
  {env:'harbour',cars:[['c46',0,0]],cam:[7.5,.8,-.6],look:[0,.9,-.6],fov:34,blur:'pan',amt:.05},

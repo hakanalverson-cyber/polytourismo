@@ -243,7 +243,7 @@ src=rep(src,"let bi=c.idx,bd=1e9;for(let k=-6;k<=30;k++){","let bi=c.idx,bd=1e9;
 src=rep(src,"c.wrong=hd<-3&&live?c.wrong+dt:0;","c.wrong=!T.free&&hd<-3&&live?c.wrong+dt:0;")
 src=rep(src,"if(live&&(c.y<T.y[c.idx]-12||Math.abs(c.roll)>.68","if(live&&((!T.free&&c.y<T.y[c.idx]-12)||Math.abs(c.roll)>.68")
 src=rep(src," if(!live)return;\n const sf=T.surf(c.x,c.z,c.y);"," if(!live||T.free)return;\n const sf=T.surf(c.x,c.z,c.y);")
-parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','frmodels','frdress','frtown','frisland','frisdress','frworld','frwater','freeroam','cars10','audio','modes','tracks','hpack','tracks2','extra','race2','elim','tod','bridge','props','bld','stages','trees_q','propkit','scenery','ra_data','tracks3','imola_data','tracks4','ring_data','ring_forest','tracks5','tracks6','cartoon','logos','weather','ambience','menuaudio','tutorial','updatelog','hud2','shade','ui','promo','cinema','rally','trackmode','realspeed','barn','animals','franimals','frlife','frrock','clean','solid','damage','grip','airline','ride','snap','perf','econ','frhud','title','brandbg','uifx','fade','arcade','drivelab']  if os.path.exists(f'{SRC}/layers/{n}.js')]
+parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','frmodels','frdress','frtown','frisland','frisdress','frworld','frwater','freeroam','cars10','audio','modes','tracks','hpack','tracks2','extra','race2','elim','tod','bridge','props','bld','stages','trees_q','propkit','scenery','ra_data','tracks3','imola_data','tracks4','ring_data','ring_forest','tracks5','tracks6','cartoon','logos','weather','ambience','menuaudio','tutorial','updatelog','hud2','shade','ui','promo','cinema','rally','trackmode','realspeed','barn','animals','franimals','frlife','frrock','clean','solid','damage','grip','airline','ride','snap','perf','econ','frhud','title','brandbg','uifx','fade','arcade','drivelab','bkworld','bikes','prepfx']  if os.path.exists(f'{SRC}/layers/{n}.js')]
 # track files (bought cartoon models of Imola / Road Atlanta, made by tools/cartoon_track, kept out of the public repo in project files).
 # PACKS=1 builds them in (Artifact, full build); otherwise players load them with "+ Add track file" so the lite file stays small.
 # DRIVE=1: the Drive Lab test build (src/layers/drivelab.js): lite assets plus only the packs named in DRIVE_TRACKS (default the Nurburgring)
@@ -289,6 +289,10 @@ if os.environ.get('PACKS'):
   if all(os.path.exists(f) for f in _u.values()):UIFX='<script>window.UIFX_B64='+_js.dumps({k:base64.b64encode(open(f,'rb').read()).decode() for k,f in _u.items()})+';</script>'
 PREV='<script>window.PT8_PACKREV='+_js.dumps(_rev)+';</script>'
 _bb=['"'+b64('brandbg/b%d.jpg'%i)+'"' for i in range(6)];_bn=['']*6
+# bike pack for Highway Cut-Up (Motorbikes Pack, bought: tools/bikes/convert.py writes it to project files, never to the repo): PACKS or BIKES=1 builds
+BIKES=''
+if (os.environ.get('PACKS') or os.environ.get('BIKES')) and os.path.exists('/mnt/project-files/poly-gt/packs/bikes.pack'):
+  BIKES='<script>window.BIKES_B64="'+base64.b64encode(open('/mnt/project-files/poly-gt/packs/bikes.pack','rb').read()).decode()+'";</script>';print('built in bikes.pack')
 # action stills on the bought model tracks (kept in project files, not in the public repo): PACKS builds only
 if os.environ.get('PACKS'):
   import glob as _gb
@@ -383,7 +387,7 @@ src=src.replace('<body>','<body>'+WARN+'<div id="ptBoot"><div class="bs"></div><
 BOOT_JS='<script>(function(){var fin=0;function done(){if(fin)return;fin=1;var b=document.getElementById("ptBoot"),c=document.getElementById("ptBootCss");if(window.PT8_BP)PT8_BP(1);if(c)c.remove();if(!b)return;b.classList.add("rdy");if(!document.getElementById("ptTitle")){b.style.opacity=0;setTimeout(function(){b.remove()},1050)}}function go(){var w=window.PT8_BOOT;(w&&w.then?w:Promise.resolve()).then(function(){requestAnimationFrame(function(){requestAnimationFrame(function(){setTimeout(done,350)})})})}if(document.readyState==="complete")go();else addEventListener("load",go);setTimeout(done,900000)})();</script>'
 GLTF='<script>'+open(W+'/assets/GLTFLoader.r128.js').read()+'</script>'
 # the first half of the bar follows the file as it is read in (a marker after each big block), the second half the warm-up in title.js
-_pcs=[('<script>window.PT8_DRIVE=1</script>' if DRIVE else ''),GLTF,ANIM,BLD,FRM,FRI,FRP,FRR,CARS10,HPACK,PHOTO,BBG,PREV,UIFX,MUS,'<style id="v8css">'+css+'</style><script>\n'+'\n'.join(parts)+'\n</script>']
+_pcs=[('<script>window.PT8_DRIVE=1</script>' if DRIVE else ''),BIKES,GLTF,ANIM,BLD,FRM,FRI,FRP,FRR,CARS10,HPACK,PHOTO,BBG,PREV,UIFX,MUS,'<style id="v8css">'+css+'</style><script>\n'+'\n'.join(parts)+'\n</script>']
 i=src.rindex('</body>') if '</body>' in src else len(src)
 _tot=i+sum(len(x) for x in _pcs);_c=i;add=''
 for _x in _pcs:
