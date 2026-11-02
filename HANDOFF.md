@@ -131,3 +131,4 @@ Hakan bought "Cartoon Race Track Imola" and "Cartoon Race Track Atlanta" (Retro 
 - Time Attack stays single player. gxRender's option cards now take any number of groups. Cut-Up (bikes, ST.custom) belongs to the bike thread, which can pass grid:true to P.gxRender.
 - Test: tests/addpl.json.
 - Car select: P.objShot takes o.ref(bx,yaw), a fixed box to frame instead of the model's own, so the camera stays anchored. It also takes o.clear for a transparent background. carShot uses both, with a 4.7x1.95x1.45 m box per slot, and .gxHero.cars puts the gxSide stats behind the car canvas. The bike thread was told about o.ref for bikes.
+- Round 26: the stats behind the cars are gone (side:''), and empty frames and the add tile are no longer drawn. Add player is the hero button or the + key.

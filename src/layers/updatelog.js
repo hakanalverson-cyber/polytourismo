@@ -4,7 +4,7 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.03',d:'Nov 2, 2026',t:'Highway Cut-Up on bikes',items:[
-  'Car select: the car\'s stats sit large behind the car, and the preview camera stays fixed, so a big car looks big and a small one small.',
+  'Car select: the preview camera stays fixed, so a big car looks big and a small one small. A player\'s frame appears only once they are added.',
   'New setup screen: you no longer pick the number of drivers first. On the car step, Add player (next to the car, or in the next empty frame) brings in the next player, and their car, name, gearbox and keys open in their own frame of a 2 x 2 grid. The x on a frame removes that player.',
   'Track Mode handling is 5% down: your car has 5% less grip on circuits, so it turns in less sharply and slides sooner.',
   'Split screen: each player\'s gauge and its dark backing stay inside that player\'s view, so they no longer spill over the split line.',
