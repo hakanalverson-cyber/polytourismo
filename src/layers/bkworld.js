@@ -60,7 +60,13 @@ function partGeo(part,pal,paintRGB){const pos=new Int16Array(u8(part.pos).buffer
 function gbGeo(gb,paintRGB){const g=gb.geo(),c=g.attributes.color,paint=[];for(let f=0;f<c.count/3;f++)if(c.getX(f*3)<0){paint.push(f);for(let k=0;k<3;k++)c.setXYZ(f*3+k,paintRGB[0],paintRGB[1],paintRGB[2])}g.userData.paint=paint;return g}
 const geoCache={};BK._geoCache=geoCache;
 function bikeGeos(d){if(geoCache[d.id])return geoCache[d.id];const lin=c=>c?c.map(s2l):[.5,.5,.5];let r;
- if(d.parts){r={info:d,parts:{}};for(const k of['body','steer','fw','rw'])if(d.parts[k])r.parts[k]=partGeo(d.parts[k],d.pal,lin(d.paint))}
+ if(d.parts){let pal=d.pal;
+  /* a bike whose pack colours mark no paint (the cruiser) never took a paint: make its main body colour the paint, so every paint works on every bike */
+  if(d.parts.body&&!pal.some(c=>c[0]<0)){const col=u8(d.parts.body.col),h=new Map();for(const c of col)h.set(c,(h.get(c)||0)+1);
+   const score=i=>{const c=pal[i].map(x=>x/63),mx=Math.max(...c),mn=Math.min(...c);return mx<.12?0:(mx-mn>.1?2:1)};let best=-1,bn=0;
+   for(const [i,n] of h){const sc=score(i)*n;if(sc>bn){bn=sc;best=i}}
+   if(best>=0){if(!d.paint)d.paint=pal[best].map(x=>x/63);if(!d.alt)d.alt=[.1,.45,.95];pal=pal.map((c,i)=>i===best?[-1,-1,-1]:c)}}
+  r={info:d,parts:{}};for(const k of['body','steer','fw','rw'])if(d.parts[k])r.parts[k]=partGeo(d.parts[k],pal,lin(d.paint))}
  else{const f=fbBike(d);r={info:Object.assign({},d,f.info),parts:{}};for(const k in f.out)r.parts[k]=gbGeo(f.out[k],lin(d.paint))}
  try{splitMirrors(r)}catch(e){console.warn('mirrors',e)}
  return geoCache[d.id]=r}
@@ -90,7 +96,7 @@ function splitMirrors(r){const I=r.info,B=r.parts.body,S=r.parts.steer;if(!B||!S
 /* paint: an sRGB triple (0-1). Geometry is cloned per bike instance so two riders can share a model in different colours */
 function setPaint(m,rgb){const L=rgb.map(s2l);for(const mesh of m.meshes){const g=mesh.geometry,p=g.userData.paint;if(!p||!p.length)continue;const c=g.attributes.color;for(const f of p)for(let k=0;k<3;k++)c.setXYZ(f*3+k,L[0],L[1],L[2]);c.needsUpdate=true}}
 BK.PAINTS=[null,'alt',[.86,.1,.12],[.95,.55,.08],[.98,.86,.15],[.15,.75,.3],[.1,.45,.95],[.55,.2,.85],[.95,.95,.95],[.08,.08,.09]];
-BK.paintOf=(d,i)=>{const p=BK.PAINTS[i%BK.PAINTS.length];return p===null?(d.paint||[.6,.6,.6]):p==='alt'?(d.alt||d.paint||[.6,.6,.6]):p};
+BK.paintOf=(d,i)=>{if(d&&d.parts)bikeGeos(d);/* decoding settles the paint colour of bikes that had none */const p=BK.PAINTS[i%BK.PAINTS.length];return p===null?(d.paint||[.6,.6,.6]):p==='alt'?(d.alt||d.paint||[.6,.6,.6]):p};
 
 /* bike instance: yaw group -> lean group (rolls about the tyre contact line) -> pitch group (wheelie about the rear contact, stoppie about the front)
    -> body, steering (rotates about the steering axis, carries the front wheel), rear wheel, rider */

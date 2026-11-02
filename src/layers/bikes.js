@@ -17,14 +17,14 @@ const SV=()=>{const s=P.SV();return s.bk||(s.bk={best:0,sel:[{id:null,paint:0},{
 /* kind: 'wheelie' (front up, balance with throttle and rear brake), 'stoppie' (rear up on the front brake), 'balance' (a held move with a wobble you steer against),
    'burnout' (stand still, spin the rear). pps = points per second; min/max = speed window (m/s) */
 const TRICKS=[
- {id:'wheelie',n:'Wheelie',k:'wheelie',pps:120,min:3,max:70,d:'Hold the trick key with the throttle on to lift the front. Throttle lifts, the rear brake (S) brings it down. Too far and you loop out.'},
- {id:'stoppie',n:'Stoppie',k:'stoppie',pps:170,min:9,max:60,d:'Hold the trick key and brake hard: the rear wheel lifts. Ease the brake to hold it. Too much and you go over the bars.'},
+ {id:'wheelie',n:'Wheelie',k:'wheelie',pps:120,min:3,max:70,d:'Tap the trick key with the throttle on to lift the front. Throttle lifts, the rear brake (S) brings it down, tap again to land. Too far and you loop out.'},
+ {id:'stoppie',n:'Stoppie',k:'stoppie',pps:170,min:9,max:60,d:'Tap the trick key and brake hard: the rear wheel lifts. Ease the brake to hold it, tap again to land. Too much and you go over the bars.'},
  {id:'standup',n:'Stand-Up Wheelie',k:'wheelie',stand:1,pps:190,min:3,max:55,d:'A wheelie standing on the pegs. Narrower balance than the sit-down one, more points.'},
  {id:'twelve',n:'12 O’Clock',k:'wheelie',twelve:1,pps:300,min:3,max:40,d:'Take a wheelie past 70°, nearly straight up. Points only count while you are past the line.'},
  {id:'nohands',n:'No-Hander',k:'balance',pps:150,min:10,max:80,d:'Let go of the bars and ride on. Steer against the wobble with A / D. Lean too far and you are down.'},
  {id:'superman',n:'Superman',k:'balance',pps:230,min:14,max:70,wob:1.35,d:'Stretch out flat behind the bars, legs off the back. Bigger wobble, bigger score.'},
  {id:'seatstand',n:'Seat Stand',k:'balance',pps:260,min:8,max:55,wob:1.6,d:'Climb up and stand on the seat with your arms out. The hardest balance of them all.'},
- {id:'burnout',n:'Burnout',k:'burnout',pps:110,min:0,max:4,d:'Stop, hold the trick key and the throttle: the front brake holds the bike while the rear spins up smoke.'}];
+ {id:'burnout',n:'Burnout',k:'burnout',pps:110,min:0,max:4,d:'Stop, tap the trick key and hold the throttle: the front brake holds the bike while the rear spins up smoke.'}];
 BK.TRICKS=TRICKS;
 const TBY={};TRICKS.forEach((t,i)=>{TBY[t.id]=t;t.i=i});
 
@@ -37,7 +37,9 @@ const isKey=(p,k,code)=>{const K=KEYS[p];return K[k]===code||!!(K.alt&&K.alt[k]&
 const active=()=>scr==='bike'||scr==='bikeprep'||scr==='bikeres';
 addEventListener('keydown',e=>{if(!active())return;down.add(e.code);if(!e.repeat)taps.add(e.code);
  if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Slash','Tab'].includes(e.code))e.preventDefault();
- if(e.code==='Escape'){e.preventDefault();e.stopImmediatePropagation();onEsc();return}
+ /* pause on Tab like the car modes; Escape still backs out of the setup and results screens */
+ if(e.code==='Tab'&&scr==='bike'){e.preventDefault();e.stopImmediatePropagation();if(!e.repeat)onEsc();return}
+ if(e.code==='Escape'){e.preventDefault();e.stopImmediatePropagation();if(scr!=='bike')onEsc();return}
  if(e.repeat)return;
  if(scr==='bike'&&B)runKey(e.code);else if(scr==='bikeres')resKey(e.code);
  e.stopImmediatePropagation()},true);
@@ -76,7 +78,7 @@ function startRun(o){/* o: {players:[{id,paint,trick}], clock, traffic, tod} */
  stopPrep();endRun(true);
  const sc=new THREE.Scene(),tod=BK.TOD[o.tod]||BK.TOD.day;sc.fog=new THREE.Fog(tod.fog,tod.fogN,tod.fogF);
  const hemi=new THREE.HemisphereLight(tod.hemi[0],tod.hemi[1],tod.hemi[2]);sc.add(hemi);const sun=new THREE.DirectionalLight(tod.sun[0],tod.sun[1]);sun.position.fromArray(tod.sunPos).multiplyScalar(100);sc.add(sun);sc.add(sun.target);
- const road=BK.makeRoad(((Math.random()*1e6)|0)+1),world=BK.makeWorld(sc,road,{tod:o.tod}),sky=BK.makeSky(sc,tod);
+ const road=BK.makeRoad(o.seed||(((Math.random()*1e6)|0)+1)),world=BK.makeWorld(sc,road,{tod:o.tod}),sky=BK.makeSky(sc,tod);
  const pl=o.players.map((s,k)=>newPlayer(k,s));
  pl.forEach((p,k)=>{p.s=START_S-k*0;p.d_=RD.laneD(o.players.length>1?(k?3:1):2);sc.add(p.m.g)});
  const cams=pl.map(()=>new THREE.PerspectiveCamera(72,1,.03,3200));
@@ -178,27 +180,37 @@ function seatFit(I,m){if(I._fit)return I._fit;const g=I.grip,hy=(m&&m.inner?seat
  for(let i=0;i<20&&f(lean)>reach+.01;i++)hz+=.02;return I._fit={hz,hy,lean}}
 function basePose(p){const I=p.m.I,peg=I.peg,F=seatFit(I,p.m);
  return{hip:[0,F.hy,F.hz],lean:F.lean,side:0,hands:null,feet:[[peg[0],peg[1]+.06,peg[2]+.05],[peg[0],peg[1]+.06,peg[2]+.05]],look:-.05}}
-function trickPose(p,id,u){const b=basePose(p),I=p.m.I,seat=I.seat,SY=seatFit(I,p.m).hy-.1;
+/* trick poses. u is the eased blend (0 riding, 1 in the trick), r the raw ramp, used to stage a move: the body goes first, then the feet,
+   then the hands let go, so nothing snaps. Hands always travel from their grips (rider space, x mirrored per side) to where the trick puts them */
+const seg=(r,a,b)=>{const x=cl((r-a)/(b-a),0,1);return x*x*(3-2*x)};
+const TRATE={wheelie:3.2,stoppie:3.4,standup:2.6,twelve:2.2,nohands:2.2,superman:1.7,seatstand:1.4,burnout:3};/* blend speed (1/s): big body moves take longer */
+function trickPose(p,id,u,r){const b=basePose(p),I=p.m.I,seat=I.seat,SY=seatFit(I,p.m).hy-.1,g=I.grip;r=r==null?u:r;
+ const hand=(t,v)=>v<.02?null:[lp(g[0],t[0],v),lp(g[1],t[1],v),lp(g[2],t[2],v)],both=(t,v)=>{const h=hand(t,v);return h?[h,h.slice()]:null};
+ const feet=(t,v)=>[0,1].map(i=>b.feet[i].map((x,j)=>lp(x,t[i][j],v)));
  switch(id){
-  case'wheelie':/* the deeper the wheelie, the further forward over the tank, so the body stays near upright */return Object.assign(b,{lean:b.lean+(.15+Math.max(0,p.pitch)*.7)*u});
-  case'standup':return Object.assign(b,{hip:[0,SY+.1+.42*u,seat[2]+.14*u],lean:b.lean+.5*u});
-  case'twelve':return Object.assign(b,{hip:[0,SY+.1+.34*u,seat[2]-.04*u],lean:b.lean+1.0*u,look:-.3*u});
-  case'stoppie':return Object.assign(b,{hip:[0,SY+.1+.22*u,seat[2]-.2*u],lean:b.lean-.35*u,look:.15*u});
-  case'nohands':{/* sit up tall, arms out to the sides like wings */const sy=SY+.1+.55;return Object.assign(b,{lean:lp(b.lean,.05,u),hands:u>.05?[[lp(.3,.78,u),sy+.12*u,seat[2]+.12],[lp(.3,.78,u),sy+.12*u,seat[2]+.12]]:null,look:.05})}
-  case'superman':return Object.assign(b,{hip:[0,SY+.1+.32*u,seat[2]-.5*u],lean:lp(b.lean,1.35,u),feet:[[.12,SY+.2+.3*u,seat[2]-1.05*u],[.12,SY+.25+.3*u,seat[2]-1.0*u]],look:.35*u});
-  case'seatstand':{const fy=SY+.06;return Object.assign(b,{hip:[0,SY+.1+.62*u,seat[2]-.06*u],lean:lp(b.lean,.08,u),feet:u>.3?[[.13,fy,seat[2]+.02],[.13,fy,seat[2]-.12]]:b.feet,
-    hands:u>.4?[[.75,SY+1.18,seat[2]+.02],[.75,SY+1.18,seat[2]-.02]]:null,look:.1})}
-  case'burnout':return Object.assign(b,{lean:b.lean+.25*u,feet:[[I.peg[0]+.08,.05,I.peg[2]+.35],b.feet[1]]});
+  case'wheelie':/* the deeper the wheelie, the further forward over the tank, so the body stays near upright; arms straighten as the bars rise */
+   return Object.assign(b,{lean:b.lean+(.12+Math.max(0,p.pitch)*.72)*u,hip:[0,b.hip[1],b.hip[2]-.04*u],look:b.look+.12*u});
+  case'standup':{const up=seg(r,0,.8);/* up onto the pegs, knees soft, chest over the bars */return Object.assign(b,{hip:[0,lp(b.hip[1],SY+.5,up),lp(b.hip[2],seat[2]+.12,up)],lean:b.lean+.42*up+Math.max(0,p.pitch)*.5*u,look:b.look+.1*u})}
+  case'twelve':{const up=seg(r,0,.7);/* stood up and folded forward so the body stays plumb while the bike points at the sky */return Object.assign(b,{hip:[0,lp(b.hip[1],SY+.42,up),lp(b.hip[2],seat[2]-.04,up)],lean:b.lean+Math.max(.5,p.pitch)*.95*u,look:-.25*u})}
+  case'stoppie':{/* weight back and up off the seat, arms braced, looking down the road over the front */return Object.assign(b,{hip:[0,lp(b.hip[1],SY+.3,u),lp(b.hip[2],seat[2]-.18,u)],lean:b.lean-.3*u-Math.max(0,-p.pitch)*.4*u,look:.2*u})}
+  case'nohands':{/* sit up tall first, then the arms come off the bars and out like wings */const sit=seg(r,0,.6),arm=seg(r,.3,1),sy=SY+.65;
+   return Object.assign(b,{lean:lp(b.lean,.05,sit),hip:[0,b.hip[1],b.hip[2]-.05*sit],hands:both([.64,b.hip[1]+.5,seat[2]+.06],arm),look:.05*sit})}
+  case'superman':{/* chest down onto the tank, hands stay on the bars, then the legs slide off the back and straighten out */const fwd=seg(r,0,.6),leg=seg(r,.3,1);
+   return Object.assign(b,{hip:[0,lp(b.hip[1],SY+.38,fwd),lp(b.hip[2],seat[2]-.45,fwd)],lean:lp(b.lean,1.35,fwd),feet:feet([[.12,SY+.5,seat[2]-1.05],[.14,SY+.55,seat[2]-1.0]],leg),look:.35*fwd})}
+  case'seatstand':{/* stand on the pegs, step up onto the seat one foot at a time, then let go and rise with the arms out */const up=seg(r,0,.45),f0=seg(r,.2,.55),f1=seg(r,.35,.7),rise=seg(r,.55,1),arm=seg(r,.6,1),fy=SY+.06;
+   const fs=[b.feet[0].map((x,j)=>lp(x,[.13,fy,seat[2]+.02][j],f0)),b.feet[1].map((x,j)=>lp(x,[.13,fy,seat[2]-.12][j],f1))];
+   return Object.assign(b,{hip:[0,lp(b.hip[1],SY+.42,up)+.22*rise,lp(b.hip[2],seat[2]-.06,up)],lean:lp(lp(b.lean,.55,up),.08,rise),feet:fs,hands:both([.64,SY+1.1,seat[2]-.02],arm),look:.1*rise})}
+  case'burnout':{/* weight forward over the front, left foot planted ahead of the peg */const ft=seg(r,0,.6);return Object.assign(b,{lean:b.lean+.25*u,hip:[0,b.hip[1],b.hip[2]+.05*u],feet:[b.feet[0].map((x,j)=>lp(x,[I.peg[0]+.1,.05,I.peg[2]+.35][j],ft)),b.feet[1]]})}
  }return b}
 function mixPose(a,b,u){const L=(x,y)=>x.map((v,i)=>lp(v,y[i],u));return{hip:L(a.hip,b.hip),lean:lp(a.lean,b.lean,u),side:lp(a.side||0,b.side||0,u),look:lp(a.look||0,b.look||0,u),
  hands:(a.hands||b.hands)&&u>.5?b.hands:a.hands&&u<=.5?a.hands:null,feet:[L(a.feet[0],b.feet[0]),L(a.feet[1],b.feet[1])]}}
 function poseRiderFor(p,dt){const t=p.trk_;
  /* trick blend: a linear ramp shaped by smootherstep, so each move eases in and out; a new trick waits for the last one to fade first */
  if(t&&(!p.lastPose||p.tr<.02))p.lastPose=t.id;const id=p.lastPose||'wheelie',want=t&&t.id===id?1:0;
- p.tr=cl((p.tr||0)+(want?3.2:-3.6)*dt,0,1);const u=p.tr*p.tr*p.tr*(p.tr*(p.tr*6-15)+10);p.tu=u;
+ const rt=TRATE[id]||3;p.tr=cl((p.tr||0)+(want?rt:-rt*1.15)*dt,0,1);const u=p.tr*p.tr*p.tr*(p.tr*(p.tr*6-15)+10);p.tu=u;
  /* the body counters the bike's lean a little, lagging it so the roll looks weighted */
  p.rs=lp(p.rs||0,-p.lean*.25,cl(dt*6,0,1));
- const ps=u>.005?trickPose(p,id,u):basePose(p);ps.side=(ps.side||0)+p.rs;
+ const ps=u>.005?trickPose(p,id,u,p.tr):basePose(p);ps.side=(ps.side||0)+p.rs;
  /* the body answers the controls: steering shifts the hips and shoulders to the inside and turns the head; throttle and brake rock the torso */
  const st=p.st||0;p.rst=lp(p.rst||0,st,cl(dt*5,0,1));const tb=(p.th||0)-(p.br||0);p.rtb=lp(p.rtb||0,tb,cl(dt*4,0,1));
  ps.hip=ps.hip.slice();ps.hip[0]-=p.rst*.06+p.lean*.05;ps.side-=p.rst*(.12+.18*u);ps.turn=(ps.turn||0)-p.rst*.35;ps.lean+=(p.trk_&&p.trk_.k==='wheelie'?-1:1)*p.rtb*.06;
@@ -210,10 +222,13 @@ function poseRiderFor(p,dt){const t=p.trk_;
  if(p.shv>.05){const s_=p.shoveSide>0?1:0,hs=ps.hands?ps.hands.slice():[null,null];hs[s_]=[.45+.4*p.shv,hy+.5,S[2]+.35];ps.hands=hs;ps.side+=(p.shoveSide>0?-1:1)*.12*p.shv}
  /* deep wheelie: one hand goes down to the road behind */
  p.dg=lp(p.dg||0,p.drag?1:0,cl(dt*6,0,1));
- if(p.dg>.05){const m=p.m,side=p.dragSide||1;p.m.g.updateMatrixWorld(true);B.road.pos(p.s,p.d_+(side>0?-.55:.55),_pp);const w=new THREE.Vector3(_pp.x,_pp.y+.04,_pp.z);
-  const back=new THREE.Vector3(Math.sin(m.g.rotation.y),0,Math.cos(m.g.rotation.y)).multiplyScalar(-.25);w.add(back);m.inner.worldToLocal(w);
-  const s_=side>0?0:1,sg=s_?-1:1,hs=ps.hands?ps.hands.slice():[null,null];const g=[p.m.I.grip[0],p.m.I.grip[1],p.m.I.grip[2]];
-  hs[s_]=[lp(g[0],w.x*sg,p.dg),lp(g[1],w.y,p.dg),lp(g[2],w.z,p.dg)];if(!hs[1-s_])hs[1-s_]=null;ps.hands=hs;ps.reach=s_;/* hang off towards the road on that side */ps.side-=sg*.75*p.dg;ps.hip[0]+=sg*.14*p.dg;ps.lean+=.25*p.dg}
+ if(p.dg>.05){/* the hand-drag pose (from a real one): bike near vertical, the rider sat low on the tail with the legs along the bike,
+   torso leaning back and out to one side, the bar hand up on its grip and the other arm straight down to the road beside the rear wheel */
+  const m=p.m,side=p.dragSide||1,u=p.dg,s_=side>0?0:1,sg=s_?-1:1;p.m.g.updateMatrixWorld(true);/* beside the rear tyre, where the bike actually stands */const rw=new THREE.Vector3().fromArray(p.m.I.rw);m.inner.localToWorld(rw);
+  B.road.pos(p.s,p.d_,_pp);const yaw=m.g.rotation.y,rgt=new THREE.Vector3(-Math.cos(yaw),0,Math.sin(yaw)),fwd=new THREE.Vector3(Math.sin(yaw),0,Math.cos(yaw));
+  const w=new THREE.Vector3(rw.x,_pp.y+.03,rw.z).addScaledVector(rgt,side>0?-.75:.75).addScaledVector(fwd,-.1);m.inner.worldToLocal(w);
+  const hs=ps.hands?ps.hands.slice():[null,null];const g=p.m.I.grip;hs[s_]=[lp(g[0],w.x*sg,u),lp(g[1],w.y,u),lp(g[2],w.z,u)];if(!hs[1-s_])hs[1-s_]=null;ps.hands=hs;ps.reach=s_;ps.reachMax=.22;
+  ps.hip=[lp(ps.hip[0],sg*.1,u),lp(ps.hip[1],hy-.02,u),lp(ps.hip[2],S[2]-.16,u)];ps.lean=lp(ps.lean,p.pitch-.5,u);ps.side=lp(ps.side,-sg*.5,u);ps.look=lp(ps.look||0,.25,u);ps.turn=lp(ps.turn||0,sg*.5,u)}
  /* stopped: the left foot goes down to the road (people riders) */
  p.fd=lp(p.fd||0,(!p.trk_&&p.v<1.2&&!p.wipe)?1:0,cl(dt*4,0,1));if(p.fd>.01&&p.m.rider&&p.m.rider.people){const f=ps.feet[0].slice(),I=p.m.I;ps.feet[0]=[lp(f[0],I.peg[0]+.2,p.fd),lp(f[1],-.02,p.fd),lp(f[2],I.peg[2]+.18,p.fd)];ps.side-=.06*p.fd}
  BK.poseRider(p.m,ps)}
@@ -290,7 +305,7 @@ function trickStep(p,dt,I){const t=p.trk_;
     raises it, brake lowers it); after the landing tap the target is zero and the wheel comes down softly, which ends the trick */
  if(t&&(t.k==='wheelie'||t.k==='stoppie')){const on=p.trOn,wh=t.k==='wheelie';
   /* throttle walks a wheelie deeper, the brake brings it back; deep enough and the rider drags a hand on the road */
-  if(on&&wh){const lo=t.stand?.3:.28,hi=t.twelve?1.42:t.stand?.8:1.2;if(p.wtg==null)p.wtg=t.twelve?1.3:t.stand?.42:.5;if(I){p.wtg+=(I.th*.38-I.br*.6)*dt}p.wtg=cl(p.wtg,lo,hi)}else p.wtg=null;
+  if(on&&wh){const lo=t.stand?.3:.28,hi=t.twelve?1.45:t.stand?.8:1.42;if(p.wtg==null)p.wtg=t.twelve?1.3:t.stand?.42:.5;if(I){p.wtg+=(I.th*.38-I.br*.6)*dt}p.wtg=cl(p.wtg,lo,hi)}else p.wtg=null;
   let tgt=0;if(on){tgt=wh?p.wtg+Math.sin(p.tt*1.7)*.03:-.32-(I?I.br*.08:0)}
   if(on&&p.tt<.45)tgt*=ss(0,.45,p.tt)*.6+.4;/* pop up rather than snap */
   const k=on?16:12,c=2*Math.sqrt(k)*(on?1:1.1);p.pv+=(k*(tgt-p.pitch)-c*p.pv)*dt;p.pitch+=p.pv*dt;
@@ -311,7 +326,7 @@ function trickStep(p,dt,I){const t=p.trk_;
  }
  if(!t){p.smoke=Math.max(0,p.smoke-dt);return}
  p.tt+=dt;let rate=0;
- p.drag=t.k==='wheelie'&&!t.stand&&p.pitch>.95&&p.v>4;if(p.drag){p.dragT=(p.dragT||0)+dt;p.trickPts+=60*dt*p.mult;if(p.dragT>.3&&!p.dragPop){p.dragPop=1;pop(p,'HAND DRAG','#ffd36a',1.1)}if(Math.random()<dt*14)spark(p,p.dragSide||1)}else{p.dragT=0;p.dragPop=0}
+ p.drag=t.k==='wheelie'&&!t.stand&&p.pitch>1.18&&p.v>4;/* near vertical, like a real hand drag */if(p.drag){p.dragT=(p.dragT||0)+dt;p.trickPts+=60*dt*p.mult;if(p.dragT>.3&&!p.dragPop){p.dragPop=1;pop(p,'HAND DRAG','#ffd36a',1.1)}if(Math.random()<dt*14)spark(p,p.dragSide||1)}else{p.dragT=0;p.dragPop=0}
  if(t.k==='wheelie'){const ang=p.pitch*57.3;if(t.twelve)rate=ang>70?1:0;else rate=ang>12?(t.stand?(ang>20?1:.4):1):0;if(t.stand&&p.v<2)rate=0}
  else if(t.k==='stoppie'){rate=p.pitch<-.12?1:0;if(p.v<.6)endTrick(p,true)}
  else if(t.k==='balance'){/* wobble: a slow random push, unstable; A / D push back */
@@ -497,10 +512,7 @@ const CSS=`
 #bkHud .pv{position:absolute;top:0;bottom:0;overflow:hidden}
 #bkHud .pv.two+.pv.two{border-left:2px solid #000}
 #bkHud .pl{position:absolute;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);background:var(--plate);box-shadow:var(--plhi);border-radius:8px}
-#bkHud .tk{left:50%;bottom:18px;transform:translateX(-50%);padding:8px 16px 8px 10px;display:flex;align-items:center;gap:10px;font-size:12px;letter-spacing:.14em;white-space:nowrap}
-#bkHud .tk kbd{display:inline-block;background:linear-gradient(180deg,#fff 0%,#e9ecef 48%,#d3d8dc 52%,#e6e9ec 100%);color:#15181c;border-radius:5px;padding:2px 8px;font:600 11px var(--gt,sans-serif);box-shadow:0 1px 3px #0008}
-#bkHud .tk span{color:#c9d2d8}#bkHud .tk b{font-weight:600;color:#fff}
-#bkHud .bm{left:50%;bottom:66px;transform:translateX(-50%);width:min(320px,70%);height:12px;padding:5px;display:none}
+#bkHud .bm{left:50%;bottom:26px;transform:translateX(-50%);width:min(320px,70%);height:12px;padding:5px;display:none}
 #bkHud .bm i{position:absolute;left:5px;right:5px;top:5px;bottom:5px;border-radius:3px;background:linear-gradient(90deg,#ef6a5a 0%,#ffd36a 22%,#7fd68a 40%,#7fd68a 60%,#ffd36a 78%,#ef6a5a 100%);opacity:.75}
 #bkHud .bm u{position:absolute;top:2px;bottom:2px;width:4px;margin-left:-2px;background:#fff;border-radius:2px;box-shadow:0 0 8px #fff}
 #bkHud .bm.v{left:auto;right:22px;bottom:50%;transform:translateY(50%);width:12px;height:min(220px,40%)}
@@ -525,6 +537,16 @@ const CSS=`
 #bkHud .mn li.on{background:linear-gradient(180deg,#fff 0%,#e9ecef 48%,#d3d8dc 52%,#e6e9ec 100%);color:#15181c;box-shadow:0 0 0 2px #8fb4d8,0 0 16px #4f7eab90}#bkHud .mn li.on em{color:#4a5560}
 #bkHud .mn li.eq:after{content:"";width:7px;height:7px;border-radius:50%;background:#7fd68a;box-shadow:0 0 6px #7fd68a}
 #bkHud .mn p{margin:0;padding:10px 16px 14px;font-size:11px;line-height:1.5;color:#c9d2d8;border-top:1px solid #ffffff14}
+/* score and combo on one plate: score with the best under it, the combo beside it lit only while a chain is running, its bar the time left to keep it */
+#bkHud .cb{left:12px;top:calc(12px + 84px * var(--s));transform:scale(var(--s));transform-origin:left top;display:flex;align-items:stretch;padding:0;overflow:hidden}
+#bkHud .cb small{display:block;font:600 9px var(--gt);letter-spacing:.24em;color:var(--gxd,#9aa3ab)}
+#bkHud .cb .sc{padding:8px 16px 9px;min-width:118px}#bkHud .cb .sc b{display:block;font:300 28px var(--gt);font-variant-numeric:tabular-nums;line-height:1.1;letter-spacing:.01em}
+#bkHud .cb .sc em{display:block;margin-top:2px;font:500 9px var(--gt);font-style:normal;letter-spacing:.18em;color:var(--gxd,#9aa3ab)}
+#bkHud .cb .cm{min-width:70px;padding:8px 14px 9px;border-left:1px solid #ffffff14;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:.45;transition:opacity .25s,background .25s}
+#bkHud .cb .cm b{font:400 26px var(--gt);line-height:1.1}#bkHud .cb .cm i{display:block;width:46px;height:3px;margin-top:4px;border-radius:2px;background:#ffffff1c;overflow:hidden}#bkHud .cb .cm u{display:block;height:100%;width:0;background:#fff;transition:width .2s linear}
+#bkHud .cb .cm.on{opacity:1;background:linear-gradient(180deg,#8fb4d8 0%,#4f7eab 48%,#33608c 52%,#4a77a3 100%);box-shadow:inset 0 1px 0 #ffffff80}#bkHud .cb .cm.on small{color:#e6eef6}
+#bkHud .cb .cm.bump b{animation:bkBump .35s ease-out}@keyframes bkBump{0%{transform:scale(1.45)}100%{transform:none}}
+#bkHud .hint.pz{left:auto;right:18px;bottom:auto;top:14px}
 #bkHud .hint{left:18px;bottom:18px;padding:7px 12px;font-size:10px;letter-spacing:.16em;color:#c9d2d8;display:flex;gap:12px}
 #bkHud .hint kbd{background:#ffffff22;border-radius:4px;padding:1px 6px;font:500 10px var(--gt);color:#fff;margin-right:5px}
 body.bkOn #ptNowPlaying{display:none}
@@ -540,8 +562,7 @@ function cloneCss(map){const out=[];const walk=(rs,media)=>{for(const r of rs){i
 /* Nov 2: the same look as the car HUD: plates in the glossy panel colours, pop-ups as the car's message plate, the car countdown */
 const SAME_CSS=`
 #bkHud .pl{background:var(--gx)!important;box-shadow:var(--gxhi),0 0 0 1px #000c,0 4px 14px #0009!important;border-radius:8px!important;-webkit-backdrop-filter:none;backdrop-filter:none}
-#bkHud .tk kbd,#bkHud .hint kbd,#bkHud .tg kbd{background:#ffffff1f!important;color:#fff!important;border-radius:5px!important;box-shadow:inset 0 1px 0 #ffffff2e,0 0 0 1px #000a;font:600 10px var(--gt)!important;padding:2px 7px!important}
-#bkHud .tk{font:500 11px var(--gt);letter-spacing:.14em}#bkHud .tk b{font-weight:500}
+#bkHud .hint kbd,#bkHud .tg kbd{background:#ffffff1f!important;color:#fff!important;border-radius:5px!important;box-shadow:inset 0 1px 0 #ffffff2e,0 0 0 1px #000a;font:600 10px var(--gt)!important;padding:2px 7px!important}
 #bkHud .pp{top:34%!important;gap:8px}
 #bkHud .pp div,#bkHud .pp div.t,#bkHud .pp div.w{padding:9px 22px;background:var(--gx)!important;border-radius:8px!important;box-shadow:var(--gxhi),0 0 0 1px #000c,0 6px 18px #000a!important;font:500 clamp(13px,2.4vh,20px) var(--gt)!important;letter-spacing:.14em!important;text-shadow:none!important;-webkit-backdrop-filter:none;backdrop-filter:none}
 #bkHud .pp div.w{font-size:clamp(18px,3.4vh,28px)!important}
@@ -549,6 +570,7 @@ const SAME_CSS=`
 #bkHud .tg{position:absolute;left:16px;top:50%;transform:translateY(-50%) scale(var(--s,1));transform-origin:left center;min-width:200px;padding:8px;background:var(--gx);border-radius:8px;box-shadow:var(--gxhi),0 0 0 1px #000c,0 4px 14px #0009;font-family:var(--gt);-webkit-font-smoothing:antialiased}
 #bkHud .tg h6{margin:2px 8px 6px;font:600 9px var(--gt);letter-spacing:.24em;color:var(--gxd,#9aa3ab);text-transform:uppercase}
 #bkHud .tg ul{list-style:none;margin:0;padding:0}
+#bkHud .tg p{margin:6px 8px 2px;font:500 9px var(--gt);letter-spacing:.14em;color:var(--gxd,#9aa3ab);text-transform:uppercase}
 #bkHud .tg li{display:flex;align-items:center;gap:10px;padding:5px 8px;border-radius:6px;font:400 13px var(--gt);color:#e9ecef}
 #bkHud .tg li kbd{min-width:14px;text-align:center}
 #bkHud .tg li em{margin-left:auto;font:500 9px var(--gt);font-style:normal;letter-spacing:.12em;color:#9aa3ab;text-transform:uppercase}
@@ -561,12 +583,12 @@ const SAME_CSS=`
 function buildHud(){ensureCss();let h=$i('bkHud');if(!h){h=document.createElement('div');h.id='bkHud';document.body.appendChild(h)}h.style.display='block';const n=B.pl.length;
  h.innerHTML=B.pl.map((p,i)=>`<div class="pv hud${n>1?' two':''}" data-p="${i}" style="left:${n>1?i*50:0}%;width:${n>1?50:100}%;--pc:${PCOL[i]};--s:${Math.max(.46,Math.min(1.15,innerWidth/n/860,innerHeight/580)).toFixed(3)}">
  <div class="h8top"><div class="h8plate">${n>1?'<div class="tag" style="color:'+PCOL[i]+'">P'+(i+1)+'</div>':''}<div class="lap">HIGHWAY CUT-UP</div><div class="raceTime">${B.clock?'':'FREE RIDE'}</div><div class="bl" style="display:none"></div></div></div>
- <div class="h8list" style="top:calc(10px + 94px * var(--s))"><div class="h8mode"><div class="cu"><div class="sc"><small>SCORE</small><b>000000</b></div><div class="cm"><small>COMBO</small><b>x1</b></div><div class="cc"><small>BEST</small><b>${fmtN(SV().best||0)}</b></div></div></div></div>
+ <div class="pl cb"><div class="sc"><small>SCORE</small><b>0</b><em>BEST ${fmtN(SV().best||0)}</em></div><div class="cm"><small>COMBO</small><b>x1</b><i><u></u></i></div></div>
  <div class="h8spd"><canvas class="gx5" width="480" height="320"></canvas></div>
- <div class="pl tk"><kbd>${KEYS[i].tkn[0]}</kbd><span>&ndash;</span><kbd>${KEYS[i].tkn[7]}</kbd><b>TAP A TRICK, TAP AGAIN TO LAND</b><span>&middot;</span><kbd>${KEYS[i].mn}</kbd><span>GUIDE</span></div>
+ <div class="pl hint"><span><kbd>${KEYS[i].mn}</kbd>GUIDE</span></div>
  <div class="pl bm"><i></i><u></u></div>
- <div class="tg"><h6>Tricks</h6><ul>${TRICKS.map((t,j)=>`<li data-t="${t.id}"><kbd>${KEYS[i].tkn[j]}</kbd><span>${t.n}</span><em>${t.k==='burnout'?'stopped':Math.round(spd(t.min))+'+'}</em></li>`).join('')}</ul></div>
- ${i===0?`<div class="pl hint"><span><kbd>ESC</kbd>PAUSE</span></div>`:''}
+ <div class="tg"><h6>Tricks</h6><ul>${TRICKS.map((t,j)=>`<li data-t="${t.id}"><kbd>${KEYS[i].tkn[j]}</kbd><span>${t.n}</span><em>${t.k==='burnout'?'stopped':Math.round(spd(t.min))+'+'}</em></li>`).join('')}</ul><p>Tap to start, tap again to land</p></div>
+ ${i===n-1?`<div class="pl hint pz"><span><kbd>TAB</kbd>PAUSE</span></div>`:''}
  <div class="pp"></div><div class="bkfade"></div></div>`).join('')+`<div class="cd"></div>`;
  B.pl.forEach(p=>guidePaint(p))}
 const hudOf=p=>$i('bkHud')&&$i('bkHud').querySelector('.pv[data-p="'+p.k+'"]');
@@ -576,7 +598,9 @@ function showCount(n){const c=$i('bkHud')&&$i('bkHud').querySelector('.cd');if(!
 function hudStep(){if(!B)return;const h=$i('bkHud');if(!h)return;
  for(const p of B.pl){const e=hudOf(p);if(!e)continue;const q=s=>e.querySelector(s);
   /* the same HUD pieces as the car modes: time plate, score / combo strip, GT-style gauge */
-  {const sc=String(Math.round(p.score)).padStart(6,'0'),b=q('.cu .sc b');if(b._t!==sc){b._t=sc;b.textContent=sc}const cm=q('.cu .cm');cm.className='cm'+(p.mult>1?' on':'');const mt='x'+p.mult;if(cm._t!==mt){cm._t=mt;cm.lastChild.textContent=mt}}
+  {const sc=fmtN(Math.round(p.score)),b=q('.cb .sc b');if(b._t!==sc){b._t=sc;b.textContent=sc}const cm=q('.cb .cm'),on=p.mult>1;if(cm._on!==on){cm._on=on;cm.classList.toggle('on',on)}
+   const mt='x'+p.mult;if(cm._t!==mt){cm._t=mt;cm.querySelector('b').textContent=mt;if(p.mult>1){cm.classList.remove('bump');void cm.offsetWidth;cm.classList.add('bump')}}
+   const w=p.chain>0?Math.round(cl(p.comboT/4,0,1)*100):0;if(cm._w!==w){cm._w=w;cm.querySelector('u').style.width=w+'%'}}
   if(B.clock){const l=Math.max(0,B.left),tt=Math.floor(l/60)+':'+String(Math.floor(l%60)).padStart(2,'0'),rt=q('.raceTime');if(rt._t!==tt){rt._t=tt;rt.textContent=tt}rt.style.color=l<15?'#ff6b5e':''}
   {const cv=q('.gx5'),v=Math.round(spd(p.wipe?0:p.v)),rv=cl(p.rpm||0,0,1.04),up=!p.wipe&&rv>.9,key=v+'|'+p.gear+'|'+Math.round(rv*200)+'|'+up;
    if(cv._k!==key){cv._k=key;P.gx5Draw(cv,{rev:rv,kmh:v,gear:p.gear,shift:up,unit:kmh()?'km/h':'mph',tag:B.pl.length>1?'P'+(p.k+1):'',tagCol:PCOL[p.k]})}}
@@ -608,7 +632,7 @@ function goMenu(){show('menu');try{P.menuStats&&P.menuStats()}catch(e){}try{P.me
 
 /* ---------------- results ---------------- */
 function showResults(res,cr,nb){if(!B)return;const o=B.o,n=res.length,order=res.slice().sort((x,y)=>y.score-x.score);
- const rows=order.map((r,i)=>({place:i+1,human:true,name:n>1?'Rider '+(r.k+1):(P.SV().name||'You'),car:r.bike,score:r.score,extra:'BEST COMBO x'+r.best+' / NEAR MISSES '+r.near+' / TRICKS '+r.tricks+' / WIPEOUTS '+r.wipes+' / '+(r.dist/1000).toFixed(1)+' KM'}));
+ const rows=order.map((r,i)=>({place:i+1,human:true,name:n>1?'Rider '+(r.k+1):(P.SV().name||'You'),car:r.bike,score:r.score,stats:[['Best combo','x'+Math.max(1,r.best)],['Near misses',r.near],['Tricks',r.tricks],['Wipeouts',r.wipes],['Distance',(kmh()?(r.dist/1000).toFixed(1)+' km':(r.dist/1609).toFixed(1)+' mi')]]}));
  const R_={mode:'cutup',title:n>1?'RIDER '+(order[0].k+1)+' WINS':'RUN COMPLETE',sub:'HIGHWAY CUT-UP'+(nb?' &middot; NEW BEST':''),notes:[],rows,pay:[{l:'SCORE BONUS',v:cr}],total:cr,balance:P.SV().cr,cfg:null};
  endRun(true);P.renderResults(R_);
  const bind=(id,f)=>{const b=document.getElementById(id);if(b)b.onclick=()=>{sfx.ui('select');f()}};
@@ -641,7 +665,7 @@ function prepState(){const sv=SV(),L=BK.list();const pick=(i,dflt)=>{const s=sv.
 P.bikeEnter=()=>{ensureCss();const go=()=>BK.loadPack().then(()=>openPrep());try{if(P.sfx)P.sfx('select')}catch(e){}go()};
 /* Nov 2: the setup is the game's own flat setup screen (ui.js gxRender), not a 3D scene: a still picture of the chosen bike and rider,
    the options in the same blue cards as every other mode */
-function openPrep(step){ensureCss();PR=prepState();PR.sel=0;PR.step=step||1;/* 'Change bikes' lands straight on part two */const ST=P.ui.ST;
+function openPrep(step){ensureCss();PR=prepState();PR.sel=0;PR.step=step||1;PR.seed=((Math.random()*1e6)|0)+1;/* the ride previewed on the map is the ride you get *//* 'Change bikes' lands straight on part two */const ST=P.ui.ST;
  const reset=()=>{const g=$i('suGo');if(g)g.innerHTML='<span>Start</span>'};ST.custom={render:bikeRender,go:()=>{if((PR.step||1)===1){sfx.ui('select');PR.step=2;bikeRender();return}prepGo()},back:()=>{if(PR&&PR.step===2){sfx.ui('back');PR.step=1;ST.custom=cst;bikeRender();return}sfx.ui('back');reset();PR=null;goMenu()},leave:reset};const cst=ST.custom;
  show('s8setup');const t=$i('suTitle');if(t)t.innerHTML='HIGHWAY <em>CUT-UP</em>';const g=$i('suGo');if(g)g.innerHTML='<span>Ride</span>';bikeRender()}
 const shotCache={};
@@ -649,11 +673,27 @@ const shotCache={};
 function bikeShot(cv,list){if(!cv)return;list=Array.isArray(list)?list:[list];const key='bk|'+list.map(s=>s.id+'.'+s.paint+'.'+s.who).join('|'),ms=[];
  P.objShot(cv,key,()=>{const g=new THREE.Group();list.forEach((s,i)=>{const d=BK.byId(s.id),m=BK.makeBike(s.id,BK.paintOf(d,s.paint),Object.assign({},RIDER_COL[i]||RIDER_COL[0],{who:s.who}));ms.push(m);
   const fake={m,d,trk_:null,lean:0,k:0};BK.poseBike(m,0,0,.18,0,0);const bp=basePose(fake),I=m.I;if(m.rider&&m.rider.people)bp.feet[0]=[I.peg[0]+.2,-.02,I.peg[2]+.18];BK.poseRider(m,Object.assign(bp,{look:-.05,turn:.35,side:m.rider&&m.rider.people?-.06:0}));
-  m.g.position.set(list.length>1?(i?-.75:.75):0,0,list.length>1?(i?-.9:.9):0);g.add(m.g)});return g},{yaw:-1.0,fy:list.length>1?1.25:1.15,fx:list.length>1?.7:.62,dispose:()=>{for(const m of ms)BK.disposeBike(m)}})}
+  m.g.position.set(list.length>1?(i?-.75:.75):0,0,list.length>1?(i?-.9:.9):0);g.add(m.g)});return g},{yaw:-1.0,fy:list.length>1?1.45:1.3,fx:list.length>1?.8:.62,dispose:()=>{for(const m of ms)BK.disposeBike(m)}})}
 const STATN=[['Top speed',d=>d.stats.top/300,d=>Math.round(kmh()?d.stats.top:d.stats.top/1.609)+(kmh()?' km/h':' mph')],['Acceleration',d=>d.stats.acc,d=>Math.round(d.stats.acc*100)],['Handling',d=>d.stats.hnd,d=>Math.round(d.stats.hnd*100)],['Tricks',d=>d.stats.trk,d=>Math.round(d.stats.trk*100)]];
 const PAINTN=['Stock','Second','Red','Orange','Yellow','Green','Blue','Purple','White','Black'];
 const OPTS={clock:[[120,'2 min'],[180,'3 min'],[300,'5 min'],[0,'Endless']],traffic:[['light','Light'],['normal','Normal'],['heavy','Heavy']],tod:[['day','Day'],['dusk','Sunset'],['night','Night']]};
 const rgb=c=>'rgb('+c.map(x=>Math.round(x*255)).join(',')+')';
+/* part one's picture: the route ahead, drawn from the same road the run will use: the first 6 km with the exits and the start */
+function rideMap(cv){if(!cv||!PR)return;const dpr=Math.min(2,devicePixelRatio||1),cw=Math.max(320,Math.round((cv.clientWidth||960)*dpr)),ch=Math.max(180,Math.round((cv.clientHeight||300)*dpr));if(cv.width!==cw||cv.height!==ch){cv.width=cw;cv.height=ch}
+ const g=cv.getContext('2d'),road=BK.makeRoad(PR.seed),L=6000,pts=[],f={};for(let s_=0;s_<=L;s_+=20){road.at(s_,f);pts.push([f.x,f.z])}
+ /* rotate so the run heads left to right, then fit into the right part of the picture */
+ const a=Math.atan2(pts[pts.length-1][0]-pts[0][0],pts[pts.length-1][1]-pts[0][1]),ca=Math.cos(a),sa=Math.sin(a);const q=pts.map(([x,z])=>[z*ca+x*sa,x*ca-z*sa]);
+ let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;for(const [x,y] of q){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y)}
+ const rx0=cw*.36,rx1=cw*.95,ry0=ch*.18,ry1=ch*.82,k=Math.min((rx1-rx0)/(x1-x0||1),(ry1-ry0)/Math.max(400,y1-y0)),ky=Math.max(k,Math.min(k*5,(ry1-ry0)*.8/Math.max(1,y1-y0))),ox=(rx0+rx1)/2-(x0+x1)/2*k,oy=(ry0+ry1)/2-(y0+y1)/2*ky,P_=([x,y])=>[ox+x*k,oy+y*ky];/* bends drawn up to 5x deeper so a gentle highway still reads as a route */
+ const bg=g.createRadialGradient(cw*.66,ch*.55,10,cw*.66,ch*.55,cw*.7);bg.addColorStop(0,'#24405e');bg.addColorStop(.55,'#121b26');bg.addColorStop(1,'#07090c');g.fillStyle=bg;g.fillRect(0,0,cw,ch);
+ g.strokeStyle='#ffffff08';g.lineWidth=1;for(let x=0;x<cw;x+=40*dpr){g.beginPath();g.moveTo(x,0);g.lineTo(x,ch);g.stroke()}for(let y=0;y<ch;y+=40*dpr){g.beginPath();g.moveTo(0,y);g.lineTo(cw,y);g.stroke()}
+ const line=(w,c)=>{g.beginPath();q.forEach((p,i)=>{const [x,y]=P_(p);i?g.lineTo(x,y):g.moveTo(x,y)});g.lineWidth=w;g.strokeStyle=c;g.lineJoin='round';g.lineCap='round';g.stroke()};
+ line(16*dpr,'#5aa0ff22');line(7*dpr,'#0b0f14');line(3.2*dpr,'#cfe3ff');
+ g.font=`700 ${10*dpr}px system-ui,sans-serif`;g.textAlign='center';
+ for(let s_=1000;s_<L;s_+=1000){const [x,y]=P_(q[Math.round(s_/20)]);g.fillStyle='#ffffff55';g.fillRect(x-1*dpr,y-7*dpr,2*dpr,14*dpr);g.fillText((s_/1000)+' km',x,y+20*dpr)}
+ for(let kk=1;kk<4;kk++){const e=road.exitNear(1400+kk*3100);if(e<0||e>=L)continue;const [x,y]=P_(q[Math.round(e/20)]);g.fillStyle='#7fd68a';g.beginPath();g.arc(x,y,5*dpr,0,7);g.fill();g.fillStyle='#7fd68acc';g.fillText('EXIT',x,y-12*dpr)}
+ const [sx,sy]=P_(q[0]);g.fillStyle='#ffd36a';g.beginPath();g.arc(sx,sy,7*dpr,0,7);g.fill();g.fillStyle='#ffd36a';g.fillText('START',sx,sy-14*dpr);
+ const [ex,ey]=P_(q[q.length-1]);g.fillStyle='#cfe3ff88';g.fillText('and on…',ex,ey-14*dpr)}
 function bikeRender(){if(!PR)return;const two=PR.p[1].in,L=BK.list(),rows=[];
  const re=()=>{sfx.ui('move');bikeRender()};const step=PR.step||1;P.gxSteps&&P.gxSteps(step,'The ride','Bikes');
  if(step===2)for(let i=0;i<2;i++){const s=PR.p[i];if(i===1&&!two)continue;const d=BK.byId(s.id),grp=i?1:0,dot=two?PCOL[i]:null;
@@ -666,13 +706,13 @@ function bikeRender(){if(!PR)return;const two=PR.p[1].in,L=BK.list(),rows=[];
  const fi=PR.focus&&two?1:0,s=PR.p[fi],d=BK.byId(s.id),k=L.findIndex(b=>b.id===s.id);
  const side=`<div class="gxSide"><h6>${esc(d.kind)} &middot; ${k+1} of ${L.length}</h6><div class="st">${STATN.map(([n,f,v])=>`<span>${n}</span><u><i style="width:${Math.round(cl(f(d),0,1)*100)}%"></i></u><em>${v(d)}</em>`).join('')}</div></div>`;
  const lineup=two?[PR.p[0],PR.p[1]]:[PR.p[0]];
- if(step===1)P.gxRender({kind:'Best score '+fmtN(SV().best||0),name:'Highway Cut-Up',facts:[two?'Two riders, split screen':'One rider','Tap 1 to 8 for tricks','Endless highway'],rows,groups:['The ride','Conditions',''],shot:cv=>bikeShot(cv,lineup),go:'Next: bikes'});
+ if(step===1)P.gxRender({kind:'Best score '+fmtN(SV().best||0),name:'Highway Cut-Up',facts:[two?'Two riders, split screen':'One rider','Endless highway','Plains'],rows,groups:['The ride','Conditions',''],shot:cv=>rideMap(cv),go:'Next: bikes'});
  else P.gxRender({kind:(two?'Rider '+(fi+1)+' &middot; ':'')+esc(d.kind),name:esc(d.name),facts:[esc(d.kind),'Tap 1 to 8 for tricks'],side,rows,groups:['Rider 1','Rider 2',''],shot:cv=>bikeShot(cv,lineup),go:'Ride'});
  const g=$i('suGo');if(g)g.innerHTML='<span>'+(step===1?'Next: bikes &rsaquo;':'Ride')+'</span>'}
 function stopPrep(){if(!PR)return;const e=$i('bkPrep');if(e)e.style.display='none';if(PR.sc){for(const m of PR.bikes)if(m)BK.disposeBike(m);PR.world.dispose();PR.sky.dispose();R.toneMappingExposure=PR.exp0}PR=null}
 function leavePrep(){sfx.ui('back');stopPrep();document.body.classList.remove('bkOn');goMenu()}
 function prepGo(){if(!PR)return;const sv=SV();PR.p.forEach((s,i)=>{sv.sel[i]={id:s.id,paint:s.paint,trick:s.trick,who:s.who}});sv.opt=Object.assign({},PR.opt);try{P.save()}catch(e){}
- const o={players:PR.p.filter(x=>x.in).map(x=>({id:x.id,paint:x.paint,trick:x.trick,who:x.who})),clock:PR.opt.clock,traffic:PR.opt.traffic,tod:PR.opt.tod};
+ const o={players:PR.p.filter(x=>x.in).map(x=>({id:x.id,paint:x.paint,trick:x.trick,who:x.who})),clock:PR.opt.clock,traffic:PR.opt.traffic,tod:PR.opt.tod,seed:PR.seed};
  if(!o.players.length)return;try{P.sfx&&P.sfx('start')}catch(e){}
  const f=$i('fade');if(f){f.style.transition='opacity .35s';f.style.opacity=1;setTimeout(()=>{startRun(o);f.style.opacity=0},380)}else startRun(o)}
 /* pads in the prep screen */

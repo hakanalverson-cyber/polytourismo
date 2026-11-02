@@ -31,7 +31,15 @@ P.LOG=[
   'Mirrors on bar-mounted bikes turn with the handlebars.',
   'One camera, the same for every bike and both riders: the same height on the horizon and the bars in view. The camera switch is gone.',
   'Traffic is everyday cars only (hatchbacks, wagons, saloons) in everyday paint, with their front wheels straight. Their indicators, brake lights and headlights now light up the car\'s own lamps.',
-  'Every setup screen is now two parts: first the race, then the car, with your car as the big picture and Left / Right flipping through your cars (G opens the full garage). Cut-Up does the same: the ride first, then the bikes, with both riders shown.']},
+  'Every setup screen is now two parts: first the race, then the car, with your car as the big picture and Left / Right flipping through your cars (G opens the full garage). Cut-Up does the same: the ride first, then the bikes, with both riders shown.',
+  'The hand drag looks like the real thing now: the bike goes near vertical, the rider sits low on the tail with the legs along the bike, one hand up on the bar and the other arm straight down to the road beside the rear tyre.',
+  'The car step of setup shows every player\'s car at once, one to four side by side, with the camera pulling back to fit; Cut-Up shows both bikes the same way. Cars and bikes stay centred whatever the model, the track and garage labels are gone, and these pictures and the main menu photos are much sharper.',
+  'Bike paints work on every bike (some bikes had no paintable panels picked, so the paint did nothing).',
+  'Cut-Up part one shows a map of the ride ahead (the start, the first few kilometres and the exits) instead of the riders; the riders are in part two.',
+  'Cleaner bike HUD: the trick bar along the bottom is gone (the guide key stays bottom left, and the guide lists how tricks work), score and combo share one plate with the combo lit only while a multiplier runs and a bar for the time left to keep it, and pause is on Tab like the car modes, shown top right.',
+  'The Cut-Up results give every stat its own column (best combo, near misses, tricks, wipeouts, distance) instead of one wrapped line; car Cut-Up results do the same.',
+  'Smoother tricks that make more sense: each move is staged (body first, then the feet, then the hands let go), the hands travel from the grips instead of jumping, bigger moves like the Seat Stand and Superman take longer to get into, the No-Hander holds the arms out at shoulder height and the Seat Stand steps up one foot at a time.'
+]},
  {v:'0.02',d:'Oct 31, 2026',t:'Riviera island',items:[
   'Free Roam now takes place on the Riviera, a Mediterranean island about 5 km across that you can drive end to end: a coast road that loops the whole shore, a mountain pass that winds up through hairpins to a summit square with a stone parapet and a statue looking over the sea, and ridge roads branching off it. The island is generated from a seed, so it is the same every time.',
   'Four towns, Porto, Borgo, Rocco and Cala. Each is built round a paved square with a bell tower, a statue, cafe parasols, a gelato cart and street lamps, with pedestrians strolling, and hill-town houses packed round it with their fronts to the square. Cypress lines the roads in, and olive groves, pine woods and boulders fill the slopes.',

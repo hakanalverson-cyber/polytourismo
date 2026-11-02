@@ -1039,6 +1039,9 @@ b,strong,h1,h2,h3,button,.btn,.gtab,.gti b,.hdr h2,#gtBar .gtl,.gtp,.crbox b,.qc
 .lbmr .r small{display:block;font-size:10px;font-weight:400;color:#6f7c84;margin-top:2px}
 .lbmr.me{color:#fff;box-shadow:inset 2px 0 0 #fff;background:#ffffff08}.lbmr.me b,.lbmr.me strong.r{color:#fff}
 .lbm.cut .lbmh,.lbm.cut .lbmr{grid-template-columns:44px minmax(0,1fr) 150px}
+.lbm.cut.st .lbmh,.lbm.cut.st .lbmr{grid-template-columns:44px minmax(130px,1fr) repeat(var(--n),minmax(54px,88px)) 120px}
+.lbm.cut.st .lbmh{height:auto;min-height:26px;padding-top:4px;padding-bottom:4px;line-height:1.35}.lbm.cut.st .lbmh span.r{letter-spacing:.16em;text-transform:uppercase}
+.lbm.cut.st .lbmr span.r{font-size:15px;color:#c9d1d6}.lbm.cut.st .lbmr.me span.r{color:#fff}
 .lbml{margin:10px 0 0;max-width:420px}
 .lbml div{display:flex;justify-content:space-between;padding:6px 4px;font-size:12px;letter-spacing:.14em;color:#8f9ba3;border-bottom:1px solid #ffffff0d;font-variant-numeric:tabular-nums}
 .lbml div.b{color:#fff}
@@ -1047,7 +1050,7 @@ b,strong,h1,h2,h3,button,.btn,.gtab,.gti b,.hdr h2,#gtBar .gtl,.gtp,.crbox b,.qc
 .rscar{background:#0f1418!important;border-top:0!important}
 .rscar .rsn{background:none!important}
 @keyframes lbmIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-@media(max-width:640px){.lbmh,.lbmr{grid-template-columns:30px minmax(0,1fr) 96px;gap:10px}.lbm:not(.cut) .lbmh span.r:nth-of-type(3),.lbmr span.r{display:none}}
+@media(max-width:640px){.lbm.cut.st .lbmh,.lbm.cut.st .lbmr{grid-template-columns:30px minmax(0,1fr) 96px}.lbm.cut.st .lbmh span.r:not(:last-child){display:none}.lbmh,.lbmr{grid-template-columns:30px minmax(0,1fr) 96px;gap:10px}.lbm:not(.cut) .lbmh span.r:nth-of-type(3),.lbmr span.r{display:none}}
 @media (prefers-reduced-motion:reduce){.lbmr{animation:none}}
 /* Poly GT: car strip. The scrollbar always has its own row under the cards and the strip sizes itself to the cards, so a scrollbar
    appearing never pushes the cards up into the clipped top edge (the raised selected card keeps its 34 px of headroom) */

@@ -105,7 +105,7 @@ BK.poseRider=(m,ps,gripW)=>{const R=m.rider,I=m.I;if(!R)return;if(!R.people)retu
  /* a free hand reaching for something beyond arm's length (the road on a hand drag): the whole body slides toward it */
  if(ps.reach!=null&&ps.hands&&ps.hands[ps.reach]){const s=ps.reach,sg=s?-1:1,H=V(ps.hands[s][0]*sg,ps.hands[s][1],ps.hands[s][2]);
   const sh=V().subVectors(T.bp[X(s?'upper_armR':'upper_armL')],T.hipC).applyQuaternion(_q1).add(hip);const ex=sh.distanceTo(H)-(T.len.ua+T.len.fa)*.97;
-  if(ex>0)hip.addScaledVector(V().subVectors(H,sh).normalize(),Math.min(ex,.8))}
+  if(ex>0)hip.addScaledVector(V().subVectors(H,sh).normalize(),Math.min(ex,ps.reachMax!=null?ps.reachMax:.8))}
  /* torso: one rigid turn from the bind body frame onto the leaning one, hips centred on the seat point */
  const bodyAt=r=>V().subVectors(T.bp[X(r)],T.hipC).applyQuaternion(_q1).add(hip);
  const torso=new Set(drv);for(const r of['spine001','spine002','spine003'])torso.delete(X(r));

@@ -70,7 +70,7 @@ d.querySelector('.st').textContent='VERSION '+(P.VERSION||'0.01');
 const SC=(()=>{let dbp;const db=()=>dbp||(dbp=new Promise((res,rej)=>{const r=indexedDB.open('polygt-shots',1);r.onupgradeneeded=()=>r.result.createObjectStore('s');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}));
  const get=k=>db().then(d=>new Promise(res=>{const q=d.transaction('s').objectStore('s').get(k);q.onsuccess=()=>res(q.result||null);q.onerror=()=>res(null)})).catch(()=>null);
  const put=(k,v)=>db().then(d=>new Promise(res=>{const t=d.transaction('s','readwrite');t.objectStore('s').put(v,k);t.oncomplete=res;t.onerror=res;t.onabort=res})).catch(()=>{});
- const blob=cv=>new Promise(r=>{try{cv.toBlob(b=>r(b),'image/jpeg',.94)}catch(e){r(null)}});
+ const blob=cv=>new Promise(r=>{try{cv.toBlob(b=>r(b),'image/jpeg',.97)}catch(e){r(null)}});
  const canvas=async b=>{const im=await createImageBitmap(b),c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);return c};
  const key=(t,i)=>{const d=D[i];let n=0;try{n=JSON.stringify(d).length}catch(e){}return t+'|r2|'+d.name+'|'+n};
  /* Nov 2: the version is no longer in the keys. A new build used to throw every kept picture away and re-render them all behind the menu,
@@ -78,7 +78,7 @@ const SC=(()=>{let dbp;const db=()=>dbp||(dbp=new Promise((res,rej)=>{const r=in
  /* each one answers true when the picture is in (loaded from the kept copy, or rendered), false when it is not kept and co (cache only) is set */
  return{track:async(i,co)=>{const k=key('t',i),hit=await get(k);if(hit&&P.trackShotSeed){try{P.trackShotSeed(i,await canvas(hit));return true}catch(e){}}if(co)return false;
    const cv=await P.trackShot(i);if(cv){const b=await blob(cv);if(b)put(k,b)}return true},
-  menu:async(k,co)=>{const kk='mn|'+P.PROMO_REV+'|'+JSON.stringify(P.MENU_SCENES[k]),i=P.menuTrack(k),kk2=key(kk,i),hit=await get(kk2);if(hit&&P.menuShotSeed){try{P.menuShotSeed(k,await canvas(hit));return true}catch(e){}}if(co)return false;
+  menu:async(k,co)=>{const kk='mn|s2|'+P.PROMO_REV+'|'+JSON.stringify(P.MENU_SCENES[k]),i=P.menuTrack(k),kk2=key(kk,i),hit=await get(kk2);if(hit&&P.menuShotSeed){try{P.menuShotSeed(k,await canvas(hit));return true}catch(e){}}if(co)return false;
    const cv=await P.menuShot(k);if(cv){const b=await blob(cv);if(b)put(kk2,b)}return true},
   loc:async(k,co)=>{const kk='lc|'+P.PROMO_REV+'|'+k+'|m',hit=await get(kk);if(hit&&P.locShotSeed){try{P.locShotSeed(k,'m',await canvas(hit));return true}catch(e){}}if(co)return false;
    const cv=await P.locShot(k,'m');if(cv){const b=await blob(cv);if(b)put(kk,b)}return true},

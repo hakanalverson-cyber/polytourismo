@@ -504,26 +504,39 @@ function gxSteps(k,a,b){let st=$('suSteps');if(!st){st=document.createElement('d
  const g=$('suGo');if(g)g.innerHTML='<span>'+(k===1?'Next: '+b.toLowerCase()+' &rsaquo;':'Start')+'</span>'}
 P.gxSteps=gxSteps;
 /* a single studio picture of any model (cars here, bikes in bikes.js), rendered once with the main renderer and cached */
-const OSHOT={};
+const OSHOT={};let shotR=null;
+/* its own antialiased renderer at twice the picture size, filtered down: sharp edges whatever resolution the game itself is running at */
+const getShotR=()=>{if(shotR)return shotR;shotR=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true,alpha:false});shotR.outputEncoding=R.outputEncoding;shotR.toneMapping=R.toneMapping;shotR.physicallyCorrectLights=R.physicallyCorrectLights;shotR.setPixelRatio(1);return shotR};
+/* the box of what is actually drawn: visible meshes only, and a skinned rider by its posed bones (its geometry box is the bind pose, far from where the rider sits) */
+const shotBox=obj=>{const bx=new THREE.Box3(),t=new THREE.Box3(),v=new THREE.Vector3();obj.traverseVisible(o=>{if(o.isSkinnedMesh&&o.skeleton){for(const b of o.skeleton.bones){b.getWorldPosition(v);bx.expandByPoint(v)}}else if(o.isMesh&&o.geometry){const g=o.geometry;if(!g.boundingBox)g.computeBoundingBox();t.copy(g.boundingBox).applyMatrix4(o.matrixWorld);bx.union(t)}});if(bx.isEmpty())bx.setFromObject(obj);return bx};
 P.objShot=(cv,key,make,o)=>{if(!cv)return;o=o||{};const dpr=Math.min(2,devicePixelRatio||1),cw=Math.max(320,Math.round((cv.clientWidth||960)*dpr)),ch=Math.max(180,Math.round((cv.clientHeight||300)*dpr));
  if(cv.width!==cw||cv.height!==ch){cv.width=cw;cv.height=ch}const k=key+'|'+cw+'x'+ch,g=cv.getContext('2d');if(OSHOT[k]){g.drawImage(OSHOT[k],0,0);return}
  let obj=null,bgT=null;try{const sc=new THREE.Scene();
-  {const bg=document.createElement('canvas');bg.width=512;bg.height=256;const x=bg.getContext('2d'),gr=x.createRadialGradient(330,150,10,330,150,330);gr.addColorStop(0,'#355c86');gr.addColorStop(.5,'#16222f');gr.addColorStop(1,'#07090c');x.fillStyle=gr;x.fillRect(0,0,512,256);
-   x.fillStyle='#ffffff0d';for(let i=0;i<10;i++)x.fillRect(0,196+i*i*.6,512,1);bgT=new THREE.CanvasTexture(bg);bgT.encoding=THREE.sRGBEncoding;sc.background=bgT}
+  {const bg=document.createElement('canvas');bg.width=1024;bg.height=512;const x=bg.getContext('2d'),gr=x.createRadialGradient(660,300,20,660,300,660);gr.addColorStop(0,'#355c86');gr.addColorStop(.5,'#16222f');gr.addColorStop(1,'#07090c');x.fillStyle=gr;x.fillRect(0,0,1024,512);
+   x.fillStyle='#ffffff0d';for(let i=0;i<10;i++)x.fillRect(0,392+i*i*1.2,1024,2);bgT=new THREE.CanvasTexture(bg);bgT.encoding=THREE.sRGBEncoding;sc.background=bgT}
   sc.add(new THREE.HemisphereLight(0xdfe9f2,0x30363e,1.05));const sun=new THREE.DirectionalLight(0xffffff,1.1);sun.position.set(-3,6,4);sc.add(sun);const rim=new THREE.DirectionalLight(0x8fb4d8,.9);rim.position.set(4,3,-5);sc.add(rim);
-  obj=make();if(!obj)return;sc.add(obj);obj.rotation.y=o.yaw!=null?o.yaw:-1.0;obj.updateMatrixWorld(true);const bx=new THREE.Box3().setFromObject(obj),c=bx.getCenter(new THREE.Vector3()),sz=bx.getSize(new THREE.Vector3());
-  const W=R.domElement.width,H=R.domElement.height,asp=cw/ch;let vw=W,vh=Math.round(W/asp);if(vh>H){vh=H;vw=Math.round(H*asp)}
-  const fov=24,cam=new THREE.PerspectiveCamera(fov,asp,.1,400);cam.layers.enableAll();const fitY=(sz.y*(o.fy||1.15)/2)/Math.tan(fov/2*Math.PI/180),fitX=(Math.max(sz.x,sz.z)*(o.fx||.62)/2)/Math.tan(fov/2*Math.PI/180)/Math.max(.4,asp*.55);const dist=Math.max(fitY,fitX);
-  cam.position.set(c.x+dist*.96,c.y+dist*(o.up||.08),c.z+dist*.28);cam.lookAt(c.x,c.y,c.z);cam.setViewOffset(vw,vh,-vw*(o.off!=null?o.off:.16),0,vw,vh);cam.updateProjectionMatrix();
-  const sci=R.getScissorTest(),ex=R.toneMappingExposure;R.setScissorTest(false);R.toneMappingExposure=1.05;R.setViewport(0,0,vw,vh);R.clear();R.render(sc,cam);
-  const out=document.createElement('canvas');out.width=cw;out.height=ch;out.getContext('2d').drawImage(R.domElement,0,H-vh,vw,vh,0,0,cw,ch);
-  R.setScissorTest(sci);R.toneMappingExposure=ex;R.setViewport(0,0,W,H);OSHOT[k]=out;g.drawImage(out,0,0)}catch(e){console.warn('obj shot',e)}finally{if(o.dispose&&obj)o.dispose(obj);if(bgT)bgT.dispose()}};
+  obj=make();if(!obj)return;sc.add(obj);obj.rotation.y=o.yaw!=null?o.yaw:-1.0;obj.updateMatrixWorld(true);const bx=shotBox(obj);const c=bx.getCenter(new THREE.Vector3()),sz=bx.getSize(new THREE.Vector3());
+  const asp=cw/ch,fov=24,cam=new THREE.PerspectiveCamera(fov,asp,.1,600);cam.layers.enableAll();const t=Math.tan(fov/2*Math.PI/180);
+  /* fit: whatever is on show (one car or a row of four) is framed inside the free part of the picture, right of the title text, by
+     projecting its box corners and then shifting the view so it sits centred in that region, whatever the model's size or origin */
+  const dir=new THREE.Vector3(.96,o.up||.1,.28).normalize(),SS=Math.min(2,4096/cw),rw=Math.round(cw*SS),rh=Math.round(ch*SS);
+  const reg=o.reg||[-.12,.94,-.82,.78],cor=[];for(let i=0;i<8;i++)cor.push(new THREE.Vector3(i&1?bx.max.x:bx.min.x,i&2?bx.max.y:bx.min.y,i&4?bx.max.z:bx.min.z));
+  let dist=(Math.max(sz.y,Math.hypot(sz.x,sz.z)/asp)*.9)/t;const bnd=()=>{cam.position.copy(c).addScaledVector(dir,dist);cam.lookAt(c);cam.updateMatrixWorld(true);cam.updateProjectionMatrix();let x0=9,x1=-9,y0=9,y1=-9;for(const q of cor){const v=q.clone().project(cam);x0=Math.min(x0,v.x);x1=Math.max(x1,v.x);y0=Math.min(y0,v.y);y1=Math.max(y1,v.y)}return[x0,x1,y0,y1]};
+  for(let it=0;it<4;it++){const b=bnd(),f=Math.max((b[1]-b[0])/(reg[1]-reg[0]),(b[3]-b[2])/(reg[3]-reg[2]));dist*=Math.max(.5,Math.min(2,.35+.65*f))}
+  const b=bnd(),offX=((b[0]+b[1])/2-(reg[0]+reg[1])/2)/2*rw,offY=-((b[2]+b[3])/2-(reg[2]+reg[3])/2)/2*rh;
+  cam.setViewOffset(rw,rh,offX,offY,rw,rh);cam.updateProjectionMatrix();
+  const r=getShotR();r.toneMappingExposure=1.05;r.setSize(rw,rh,false);r.render(sc,cam);
+  const out=document.createElement('canvas');out.width=cw;out.height=ch;const ox=out.getContext('2d');ox.imageSmoothingQuality='high';ox.drawImage(r.domElement,0,0,rw,rh,0,0,cw,ch);
+  OSHOT[k]=out;g.drawImage(out,0,0)}catch(e){console.warn('obj shot',e)}finally{if(o.dispose&&obj)o.dispose(obj);if(bgT)bgT.dispose()}};
 /* part two: the car. The picture is the car itself, big; Left / Right on the Car row flips through your cars, Enter opens the full garage */
 const carList=p=>{const m=ST.mode,sv=P.SV(),own=P.ownedList?P.ownedList():[];let L=own.slice();
  if(m==='rally'&&P.RALLY_CARS)L=P.RALLY_CARS.map(id=>BYID[id]).filter(Boolean).concat(own.filter(c=>!P.RALLY_CARS.includes(c.id)));
  if(m==='track'&&P.TRACK_CARS)L=P.TRACK_CARS.map(id=>BYID[id]).filter(Boolean).concat(own.filter(c=>!P.TRACK_CARS.includes(c.id)));return L};
 const setCar=(p,id,alt)=>{const m=ST.mode,sv=P.SV();if(m==='rally'){sv.rsel=sv.rsel||[];sv.rsel[p]={id,alt}}else if(m==='track'){sv.tsel=sv.tsel||[];sv.tsel[p]={id,alt}}else P.setSel(p,id,alt);try{P.save()}catch(e){}};
-const carShot=(cv,s)=>{const c=BYID[s.id];if(!c||!P.C10)return;P.objShot(cv,'car|'+s.id+'|'+s.alt,()=>{const src=P.C10.model(c.k10,s.alt);if(!src)return null;const g=new THREE.Group(),m=src.clone(true);g.add(m);return g},{yaw:-2.2,fy:1.6,fx:.8,off:.1})};
+/* every player's car on show: one alone, then a staggered row as players are added (the camera pulls back to fit) */
+const carShot=(cv,list)=>{if(!P.C10)return;const key='cars|'+list.map(s=>s.id+'.'+s.alt).join('|');
+ P.objShot(cv,key,()=>{const g=new THREE.Group();list.forEach((s,i)=>{const c=BYID[s.id];const src=c&&P.C10.model(c.k10,s.alt);if(!src)return;const m=src.clone(true);
+  const n=list.length,col=i-(n-1)/2;m.position.set(col*3.1,0,-Math.abs(col)*1.6+(n>1?.8:0));g.add(m)});return g},{yaw:-2.2,fy:list.length>1?2.3:2.0,fx:list.length>1?.95:.9,off:list.length>1?.08:.12,up:.12})};
 function gxCarStep(box){const m=ST.mode,np=m==='ta'?1:ST.players,rows=[];GXS.cf=GXS.cf||0;
  const dv=[...$('suDrv').querySelectorAll('.drv')];
  for(let p=0;p<np;p++){const s=selCar(p),c=BYID[s.id],L=carList(p),grp=np>1?Math.min(2,p):0,dot=np>1?['#f1f3f5','#f2c76b','#7fd68a','#ef6a5a'][p]:null,pf=np>1?'P'+(p+1)+' ':'';
@@ -535,7 +548,7 @@ function gxCarStep(box){const m=ST.mode,np=m==='ta'?1:ST.players,rows=[];GXS.cf=
  const fi=Math.min(np-1,GXS.cf||0),s=selCar(fi),c=BYID[s.id];
  const bar=(n,f,v)=>`<span>${n}</span><u><i style="width:${Math.round(Math.max(0,Math.min(1,f))*100)}%"></i></u><em>${v}</em>`;const kmh=P.SV().units!=='mph';
  const side=`<div class="gxSide"><h6>Class ${c.cls} &middot; ${c.type||''}</h6><div class="st">${bar('Top speed',(c.top-30)/26,Math.round(c.top*3.6*(kmh?1:.6214))+(kmh?' km/h':' mph'))}${bar('Acceleration',(c.acc-18)/18,Math.round(c.acc*2.6))}${bar('Grip',(c.grip-.94)/.2,Math.round(c.grip*80))}${bar('Brakes',(c.brk-.9)/.3,Math.round(c.brk*75))}</div></div>`;
- gxRender(box,{kind:(np>1?'Player '+(fi+1)+' &middot; ':'')+'Class '+c.cls,name:c.name+(s.alt?' <small style="font-size:.4em;opacity:.7">ALT</small>':''),facts:[c.type||'',D[ST.track].name,'G or click: full garage'],side,rows,groups:np>1?['P1','P2','P3 & P4']:['Car','Driver','More'],shot:cv=>carShot(cv,s),go:'Start'});
+ gxRender(box,{kind:(np>1?'Player '+(fi+1)+' &middot; ':'')+'Class '+c.cls,name:c.name+(s.alt?' <small style="font-size:.4em;opacity:.7">ALT</small>':''),facts:[c.type||''],side,rows,groups:np>1?['P1','P2','P3 & P4']:['Car','Driver','More'],shot:cv=>carShot(cv,Array.from({length:np},(_,p)=>selCar(p))),go:'Start'});
  box.querySelectorAll('.gxr').forEach(el=>{const r=rows[+el.dataset.i];if(r&&r.pl!=null)el.addEventListener('mouseenter',()=>{if(GXS.cf!==r.pl){GXS.cf=r.pl;GXS.f=+el.dataset.i;renderSetup()}})})}
 P.gxRender=o=>{const sec=$('s8setup');sec.classList.add('gxOn');let box=$('gxSu');if(!box){box=document.createElement('div');box.id='gxSu';sec.insertBefore(box,sec.querySelector('.foot8'))}box.style.display='';gxRender(box,o)};
 P.gxSuKey=e=>{if(!GXS.rows||!$('s8setup').classList.contains('gxOn'))return false;if(e.target&&e.target.tagName==='INPUT'){if(e.code==='Enter'||e.code==='Escape'||e.code==='ArrowUp'||e.code==='ArrowDown')e.target.blur();else return true}
@@ -914,9 +927,11 @@ P.lbTitles=(rows,mode)=>{const T=rows.map(()=>[]);let fi=-1,fb=1e9;rows.forEach(
  rows.forEach((r,i)=>{if(r.medal!=null&&r.medal>=0&&P.MEDALS[r.medal])T[i].push(P.MEDALS[r.medal].n+' MEDAL')});return T};
 P.lbHTML=(rows,o)=>{o=o||{};const mode=o.mode||'race',cut=mode==='cutup';let fi=-1,fb=1e9;rows.forEach((r,i)=>{if(r.best!=null&&r.best<fb){fb=r.best;fi=i}});
  /* minimal standings, the same in every mode: position, driver (car underneath), best lap, time. No chips, no colour blocks; the player's row is the bright one */
- let h='<div class="lb lbm'+(cut?' cut':'')+'"><div class="lbmh"><span>POS</span><span>DRIVER</span>'+(cut?'<span class="r">SCORE</span>':'<span class="r">BEST</span><span class="r">TIME</span>')+'</div>'+rows.map((r,i)=>{
+ /* cut-up rows can carry their stats as [label, value] pairs: each gets its own column instead of one wrapped line under the score */
+ const st=cut&&rows.length&&rows[0].stats?rows[0].stats:null;
+ let h='<div class="lb lbm'+(cut?' cut':'')+(st?' st" style="--n:'+st.length:'')+'"><div class="lbmh"><span>POS</span><span>DRIVER</span>'+(st?st.map(x=>'<span class="r">'+lbEsc(x[0])+'</span>').join(''):'')+(cut?'<span class="r">SCORE</span>':'<span class="r">BEST</span><span class="r">TIME</span>')+'</div>'+rows.map((r,i)=>{
   const fl=i===fi&&rows.length>1;
-  return `<div class="lbmr${r.human?' me':''}" style="--i:${i}"><b>${r.place}</b><span class="n"><i>${lbEsc(r.name)}${r.loan?' (loaner)':''}</i><small>${lbEsc(r.car)}</small></span>`+(cut?`<strong class="r">${(r.score||0).toLocaleString('en-US')}${r.extra?`<small>${lbEsc(r.extra)}</small>`:''}</strong>`:`<span class="r${fl?' fl':''}">${r.best!=null?fmtT(r.best):'--'}</span><strong class="r">${r.time!=null?fmtT(r.time):(r.txt?lbEsc(r.txt):(r.lapsDown?'+'+r.lapsDown+' lap':'--'))}${r.gap?`<small>${r.gap}</small>`:''}</strong>`)+'</div>'}).join('')+'</div>';return h};
+  return `<div class="lbmr${r.human?' me':''}" style="--i:${i}"><b>${r.place}</b><span class="n"><i>${lbEsc(r.name)}${r.loan?' (loaner)':''}</i><small>${lbEsc(r.car)}</small></span>`+(cut?(st?(r.stats||[]).map(x=>`<span class="r">${lbEsc(x[1])}</span>`).join(''):'')+`<strong class="r">${(r.score||0).toLocaleString('en-US')}${r.extra&&!st?`<small>${lbEsc(r.extra)}</small>`:''}</strong>`:`<span class="r${fl?' fl':''}">${r.best!=null?fmtT(r.best):'--'}</span><strong class="r">${r.time!=null?fmtT(r.time):(r.txt?lbEsc(r.txt):(r.lapsDown?'+'+r.lapsDown+' lap':'--'))}${r.gap?`<small>${r.gap}</small>`:''}</strong>`)+'</div>'}).join('')+'</div>';return h};
 let RES=null;
 P.renderResults=res=>{RES=res;P.resHook=null;const mode=res.mode;
  let h=`<h1>${res.title}</h1><div class="sub">${res.sub}</div>`;
