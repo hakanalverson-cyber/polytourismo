@@ -18,7 +18,10 @@ P.LOG=[
   'The highway is generated as you ride: it passes through pine forest, farmland, red desert, the coast, an alpine pass and the city, in a random order each run, with the overhead signs naming the next region and an Entering banner as you cross into it.',
   'Smoother bike runs: cars far down the road are no longer drawn, small lights that are off are only drawn up close, and the road builds one piece per frame.',
   'Start screens for every race and the bike mode use the main menu\'s own panel now: a few clear rows, with Up and Down to choose and Enter to go.',
-  'The main menu no longer re-renders all its pictures after an update, which was making it crawl.']},
+  'The main menu no longer re-renders all its pictures after an update, which was making it crawl.',
+  'Bike riders ride without the helmet now, so you see their own face and hair.',
+  'The bike HUD is the same as every car mode: the time plate, the score and combo strip, and the GT-style rev gauge.',
+  'Cars on the start stage sit on the road instead of hovering, and traffic cars no longer show stray lamp boxes outside their bodies.']},
  {v:'0.02',d:'Oct 31, 2026',t:'Riviera island',items:[
   'Free Roam now takes place on the Riviera, a Mediterranean island about 5 km across that you can drive end to end: a coast road that loops the whole shore, a mountain pass that winds up through hairpins to a summit square with a stone parapet and a statue looking over the sea, and ridge roads branching off it. The island is generated from a seed, so it is the same every time.',
   'Four towns, Porto, Borgo, Rocco and Cala. Each is built round a paved square with a bell tower, a statue, cafe parasols, a gelato cart and street lamps, with pedestrians strolling, and hill-town houses packed round it with their fronts to the square. Cypress lines the roads in, and olive groves, pine woods and boulders fill the slopes.',

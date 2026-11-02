@@ -63,7 +63,7 @@ BK.makeRider=o=>{o=o||{};if(!PEO)return BK.makeRider0(o);const pick=BK.PEOPLE[((
  const hm=new THREE.MeshStandardMaterial({color:o.helm||0xe8e8e8,roughness:.3,metalness:.2,flatShading:true}),vm=new THREE.MeshStandardMaterial({color:0x101418,roughness:.15,metalness:.6,flatShading:true});
  const helm=new THREE.Group(),hs=new THREE.Mesh(new THREE.IcosahedronGeometry(.15,1),hm);hs.scale.set(1,1.02,1.1);const vz=new THREE.Mesh(new THREE.BoxGeometry(.19,.07,.06),vm);vz.position.set(0,.0,.14);
  const stripe=new THREE.Mesh(new THREE.BoxGeometry(.04,.02,.3),new THREE.MeshStandardMaterial({color:o.suit||0x2a3f6a,roughness:.5,flatShading:true}));stripe.position.set(0,.15,-.01);
- helm.add(hs,vz,stripe);g.add(helm);
+ helm.add(hs,vz,stripe);helm.visible=false;/* Nov 2: no helmet, the rider's own head shows */g.add(helm);
  const R={g,T,bones,skel,body,arms,helm,Ms:{hm,vm,st:stripe.material},own:[body,hs,vz,stripe],st:{},pp:{},people:1};
  /* bind pose until the first pose */
  for(let i=0;i<T.n;i++){bones[i].position.copy(T.bp[i]);bones[i].quaternion.copy(T.bq[i])}

@@ -159,7 +159,7 @@ function decide(v){const opts=[];const ex=B.road.exitNear(v.s+200),toG=ex-v.s,ex
  if(!opts.length)return;opts.sort((a,b)=>b[0]-a[0]);const to=opts[0][1];v.chg={from:v.lane,to,t:0,dur:3.2+B.rngT()*1.2};v.sig=to>v.lane?1:-1;v.sigT=1.4+B.rngT()*.8;v.blink=0}
 /* lights, plus distance culling: past 560 m a car is a few pixels in the fog, so it is not drawn at all; small lenses that are off are only drawn up close */
 function lights(v,dt){const on=(v.blink%0.7)<.38,m=v.m;const L=BK.LM;let dn=1e9;for(const p of B.pl){const q=Math.abs(v.s-p.s);if(q<dn)dn=q}
- const vis=dn<560;m.g.visible=vis;if(!vis)return;const near=dn<90;
+ const vis=dn<560;m.g.visible=vis;if(!vis)return;const near=dn<90&&!m.name;/* game car models have their own lamps: our lens boxes only show while lit */
  const left=v.haz||(v.sig<0),right=v.haz||(v.sig>0),bk=v.brk||v.hit>0;/* sig + = right (as seen from the driver) */
  m.iL.material=left&&on?L.on:L.off;m.iR.material=right&&on?L.on:L.off;m.br.material=bk?L.brOn:L.brOff;
  m.iL.visible=near||(left&&on);m.iR.visible=near||(right&&on);m.br.visible=near||bk;m.hd.visible=near||B.tod.lamps>0;if(m.sh)m.sh.visible=dn<220}
@@ -417,14 +417,6 @@ const CSS=`
 #bkHud .pv{position:absolute;top:0;bottom:0;overflow:hidden}
 #bkHud .pv.two+.pv.two{border-left:2px solid #000}
 #bkHud .pl{position:absolute;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);background:var(--plate);box-shadow:var(--plhi);border-radius:8px}
-#bkHud .sc{left:18px;top:16px;padding:10px 18px 10px 16px;min-width:170px}
-#bkHud .sc small{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:.24em;color:#c9d2d8}#bkHud .sc small i{width:8px;height:8px;border-radius:50%;background:var(--pc)}
-#bkHud .sc b{display:block;font-size:30px;font-weight:300;letter-spacing:.02em;margin-top:2px;font-variant-numeric:tabular-nums}
-#bkHud .mu{display:flex;align-items:center;gap:10px;margin-top:6px}#bkHud .mu em{font-style:normal;font-size:18px;font-weight:600;color:#ffd36a;min-width:36px}
-#bkHud .mu .bar{flex:1;height:4px;border-radius:2px;background:#ffffff22;overflow:hidden}#bkHud .mu .bar u{display:block;height:100%;background:linear-gradient(90deg,#8fb4d8,#ffd36a);width:0}
-#bkHud .sp{right:18px;bottom:18px;padding:10px 20px 10px 18px;text-align:right;min-width:150px}
-#bkHud .sp b{font-size:46px;font-weight:200;line-height:1;font-variant-numeric:tabular-nums}#bkHud .sp small{display:block;font-size:10px;letter-spacing:.26em;color:#c9d2d8;margin-top:4px}
-#bkHud .sp .gr{position:absolute;left:14px;top:12px;font-size:11px;letter-spacing:.14em;color:var(--cb)}
 #bkHud .tk{left:50%;bottom:18px;transform:translateX(-50%);padding:8px 16px 8px 10px;display:flex;align-items:center;gap:10px;font-size:12px;letter-spacing:.14em;white-space:nowrap}
 #bkHud .tk kbd{display:inline-block;background:linear-gradient(180deg,#fff 0%,#e9ecef 48%,#d3d8dc 52%,#e6e9ec 100%);color:#15181c;border-radius:5px;padding:2px 8px;font:600 11px var(--gt,sans-serif);box-shadow:0 1px 3px #0008}
 #bkHud .tk span{color:#c9d2d8}#bkHud .tk b{font-weight:600;color:#fff}
@@ -462,14 +454,15 @@ const ICON={wheelie:'<path d="M4 18a3 3 0 106 0 3 3 0 00-6 0zM14 9l3-4 3 1M7 15l
 const icon=id=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+(ICON[id]||'')+'</svg>';
 function ensureCss(){if($i('bkCss'))return;const s=document.createElement('style');s.id='bkCss';s.textContent=CSS+PREP_CSS;document.head.appendChild(s)}
 function buildHud(){ensureCss();let h=$i('bkHud');if(!h){h=document.createElement('div');h.id='bkHud';document.body.appendChild(h)}h.style.display='block';const n=B.pl.length;
- h.innerHTML=B.pl.map((p,i)=>`<div class="pv${n>1?' two':''}" data-p="${i}" style="left:${n>1?i*50:0}%;width:${n>1?50:100}%;--pc:${PCOL[i]}">
- <div class="pl sc"><small><i></i>${n>1?'PLAYER '+(i+1):'SCORE'}</small><b>0</b><div class="mu"><em>x1</em><div class="bar"><u></u></div></div></div>
- <div class="pl sp"><span class="gr">GEAR 1</span><b>0</b><small>${kmh()?'KM/H':'MPH'}</small></div>
+ h.innerHTML=B.pl.map((p,i)=>`<div class="pv hud${n>1?' two':''}" data-p="${i}" style="left:${n>1?i*50:0}%;width:${n>1?50:100}%;--pc:${PCOL[i]};--s:${Math.max(.46,Math.min(1.15,innerWidth/n/860,innerHeight/580)).toFixed(3)}">
+ <div class="h8top"><div class="h8plate">${n>1?'<div class="tag" style="color:'+PCOL[i]+'">P'+(i+1)+'</div>':''}<div class="lap">HIGHWAY CUT-UP</div><div class="raceTime">${B.clock?'':'FREE RIDE'}</div><div class="bl" style="display:none"></div></div></div>
+ <div class="h8list" style="top:calc(10px + 94px * var(--s))"><div class="h8mode"><div class="cu"><div class="sc"><small>SCORE</small><b>000000</b></div><div class="cm"><small>COMBO</small><b>x1</b></div><div class="cc"><small>BEST</small><b>${fmtN(SV().best||0)}</b></div></div></div></div>
+ <div class="h8spd"><canvas class="gx5" width="480" height="320"></canvas></div>
  <div class="pl tk"><kbd>${KEYS[i].tn}</kbd><b class="tn"></b><span>&middot;</span><kbd>${KEYS[i].mn}</kbd><span>TRICKS</span></div>
  <div class="pl bm"><i></i><u></u></div>
  <div class="pl mn"><h4>TRICKS<span><kbd>${i?'&uarr;&darr;':'W S'}</kbd> <kbd>${KEYS[i].tn}</kbd></span></h4><ul>${TRICKS.map(t=>`<li data-t="${t.id}">${icon(t.id)}<span>${t.n}</span><em>${t.k==='burnout'?'STOPPED':Math.round(spd(t.min))+'+ '+(kmh()?'KM/H':'MPH')}</em></li>`).join('')}</ul><p></p></div>
  ${i===0?`<div class="pl hint"><span><kbd>C</kbd>CAMERA</span><span><kbd>ESC</kbd>PAUSE</span></div>`:''}
- <div class="pp"></div><div class="bkfade"></div></div>`).join('')+`<div class="pl tm" style="${B.clock?'':'display:none'}"><small>TIME</small><b></b></div><div class="cd"></div>`;
+ <div class="pp"></div><div class="bkfade"></div></div>`).join('')+`<div class="cd"></div>`;
  B.pl.forEach(p=>menuPaint(p))}
 const hudOf=p=>$i('bkHud')&&$i('bkHud').querySelector('.pv[data-p="'+p.k+'"]');
 function pop(p,txt,col,d,cls){const h=hudOf(p);if(!h)return;const pp=h.querySelector('.pp');const e=document.createElement('div');e.textContent=txt;e.style.color=col||'#fff';e.style.setProperty('--d',(d||1.2)+'s');if(cls)e.className=cls;pp.appendChild(e);
@@ -477,15 +470,18 @@ function pop(p,txt,col,d,cls){const h=hudOf(p);if(!h)return;const pp=h.querySele
 function showCount(n){const c=$i('bkHud')&&$i('bkHud').querySelector('.cd');if(!c)return;c.textContent=n;c.classList.remove('on');void c.offsetWidth;c.classList.add('on')}
 function hudStep(){if(!B)return;const h=$i('bkHud');if(!h)return;
  for(const p of B.pl){const e=hudOf(p);if(!e)continue;const q=s=>e.querySelector(s);
-  q('.sc b').textContent=fmtN(p.score);q('.mu em').textContent='x'+p.mult;q('.mu .bar u').style.width=(p.chain>0?cl(p.comboT/4,0,1)*100:0)+'%';
-  q('.sp b').textContent=Math.round(spd(p.wipe?0:p.v));q('.sp .gr').textContent='GEAR '+p.gear;
+  /* the same HUD pieces as the car modes: time plate, score / combo strip, GT-style gauge */
+  {const sc=String(Math.round(p.score)).padStart(6,'0'),b=q('.cu .sc b');if(b._t!==sc){b._t=sc;b.textContent=sc}const cm=q('.cu .cm');cm.className='cm'+(p.mult>1?' on':'');const mt='x'+p.mult;if(cm._t!==mt){cm._t=mt;cm.lastChild.textContent=mt}}
+  if(B.clock){const l=Math.max(0,B.left),tt=Math.floor(l/60)+':'+String(Math.floor(l%60)).padStart(2,'0'),rt=q('.raceTime');if(rt._t!==tt){rt._t=tt;rt.textContent=tt}rt.style.color=l<15?'#ff6b5e':''}
+  {const cv=q('.gx5'),v=Math.round(spd(p.wipe?0:p.v)),rv=cl(p.rpm||0,0,1.04),up=!p.wipe&&rv>.9,key=v+'|'+p.gear+'|'+Math.round(rv*200)+'|'+up;
+   if(cv._k!==key){cv._k=key;P.gx5Draw(cv,{rev:rv,kmh:v,gear:p.gear,shift:up,unit:kmh()?'km/h':'mph',tag:B.pl.length>1?'P'+(p.k+1):'',tagCol:PCOL[p.k]})}}
   const t=TBY[p.equip];q('.tk .tn').textContent=t.n.toUpperCase();
   const bm=q('.bm'),T=p.trk_;
   if(T&&(T.k==='balance')){bm.style.display='block';bm.className='pl bm';bm.querySelector('u').style.left=(50+cl(p.bal,-1,1)*50)+'%';bm.querySelector('u').style.bottom=''}
   else if(T&&(T.k==='wheelie'||T.k==='stoppie')||p.pitch>.05||p.pitch<-.05){bm.style.display='block';bm.className='pl bm v';const u=bm.querySelector('u');u.style.left='';const lim=p.pitch<0?1.15:(T&&T.twelve?1.62:1.45);u.style.bottom=(cl(Math.abs(p.pitch)/lim,0,1)*100)+'%'}
   else bm.style.display='none';
   q('.mn').style.display=p.menu?'block':'none'}
- const tm=h.querySelector('.tm');if(B.clock){const l=Math.max(0,B.left);tm.querySelector('b').textContent=Math.floor(l/60)+':'+String(Math.floor(l%60)).padStart(2,'0');tm.classList.toggle('low',l<15)}}
+}
 function menuPaint(p){const e=hudOf(p);if(!e)return;const li=[...e.querySelectorAll('.mn li')];li.forEach((x,i)=>{x.classList.toggle('on',i===p.menuSel);x.classList.toggle('eq',x.dataset.t===p.equip)});e.querySelector('.mn p').textContent=TRICKS[p.menuSel].d}
 function toggleMenu(p){p.menu=!p.menu;if(p.menu)p.menuSel=TBY[p.equip].i;menuPaint(p);sfx.ui(p.menu?'whoosh':'back')}
 function menuMove(p,d){p.menuSel=(p.menuSel+d+TRICKS.length)%TRICKS.length;menuPaint(p);sfx.ui('move')}

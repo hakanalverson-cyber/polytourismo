@@ -317,7 +317,10 @@ P.enterPrep=(d,i)=>enterPrep(d,i);P.startStage=()=>startStage();
 function startStage(){const Rc=RACE;if(!Rc||!Rc.prep)return;const hc=human(Rc);if(hc)hc.camMode=camPref[curP]||0;Rc.prep=false;bodyCls('rprep',false);const e=$i('rlPrep');if(e)e.style.display='none';dip();beep(700,.1)}
 function prepDraw(Rc,dt){const c=human(Rc),W=R.domElement.width,H=R.domElement.height;Rc.prepT+=dt;
  /* the race loop is held, so place the cars here or they sit hidden at the origin until GO */
- try{for(const q of Rc.cars)updateVisual(q,Rc.T,Rc.prepT)}catch(err){}
+ try{for(const q of Rc.cars){updateVisual(q,Rc.T,Rc.prepT);
+  /* physics has not settled the cars yet, so they hang ~20 cm high: drop each onto the road (bottom ~.11 m above the surface, as in the race) */
+  if(q._pdrop==null){q.m.g.updateMatrixWorld(true);const b=new THREE.Box3().setFromObject(q.m.visualModel||q.m.g);q._pdrop=Math.max(0,b.min.y-Rc.T.surf(q.x,q.z,q.y).h-.11)}
+  q.m.g.position.y-=q._pdrop;if(q.m.sh)q.m.sh.position.y=Math.min(q.m.sh.position.y,q.m.g.position.y)}}catch(err){}
  const sh=Math.floor(Rc.prepT/6),u=(Rc.prepT%6)/6,e=u*u*(3-2*u);if(sh!==Rc.shot){Rc.shot=sh;if(sh>0)dip()}
  const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw),fx=sy,fz=cy,lx=cy,lz=-sy,g0=c.y-.6,T0_=Rc.prepT,k=(sh+Rc.shot0)%5,mix=(a,b,t)=>a+(b-a)*t;Rc.shotK=k;let p,l,fov=48;
  if(k===0){const a=T0_*.3+1;p=[c.x+Math.sin(a)*7.8,g0+2.3,c.z+Math.cos(a)*7.8];l=[c.x,g0+.9,c.z]}
