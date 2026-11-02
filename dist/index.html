@@ -6773,6 +6773,9 @@ body.gxAsking #tutOffer{display:none!important}
 #gxSu.g2 #gxHi.on{animation:gxHi 4s ease forwards}
 @keyframes gxHi{0%{opacity:0}8%{opacity:1}65%{opacity:1}100%{opacity:0}}
 @media(prefers-reduced-motion:reduce){#gxSu.g2 #gxHi.on{animation:none;opacity:0}}
+/* round 29: the x is a plain mark on the header line, its right edge in line with the rows below (no disc sitting off the rounded corner) */
+#gxSu.g2 .gxCard.pf .gxRm{top:9px;right:8px;width:24px;height:24px;background:none;box-shadow:none;color:#8fa0ad;font:300 22px/24px var(--gt);border-radius:6px!important}
+#gxSu.g2 .gxCard.pf .gxRm:hover{background:#ef6a5a;color:#fff}
 
 :root{--gt:"PT Inter","Inter","Segoe UI","Helvetica Neue",Arial,sans-serif!important;--mn:var(--gt)!important;--hd:var(--gt)!important}
 *:not(svg):not(svg *){font-family:var(--gt)!important}
@@ -13355,7 +13358,7 @@ function gxSetup(){const sec=$('s8setup');if(!sec)return;if(ST.custom){ST.custom
 const GX_GRP=r=>r.grp!=null?r.grp:(r.car||r.more||r.sub||r.l==='Drivers')?2:/^(Weather|Time of day|Damage|Clock|Traffic)$/.test(r.l)?1:0;
 function gxRender(box,o){const rows=o.rows;GXS.rows=rows;GXS.f=Math.max(0,Math.min(rows.length-1,GXS.f));box.className='g2';
  const T3=o.groups||['Race','Conditions','Car & driver'],nC=T3.length,cols=Array.from({length:nC},()=>[]);rows.forEach((r,i)=>cols[Math.min(nC-1,GX_GRP(r))].push(i));
- const row=i=>{const r=rows[i];if(r.add)return`<div class="gxr gxAddT${i===GXS.f?' on':''}" data-i="${i}"><b>+</b><span>Add player ${r.pn||''}</span><small>${r.hint||''}</small></div>`;return`<div class="gxr${i===GXS.f?' on':''}${r.sub?' gxx':''}${r.more?' more':''}${r.wide?' wide':''}" data-i="${i}">${r.dot?'<b class="gxdot" style="background:'+r.dot+'"></b>':''}<span class="l">${r.l}</span>`+(r.input?'<span class="v gxin"></span>':r.more?`<span class="v">${GXS.more?'Hide':'Show'} &rsaquo;</span>`:r.car?`<span class="v"><i class="x">&lsaquo;</i><em>${r.v}</em><i>&rsaquo;</i></span>`:r.act&&!r.go?`<span class="v"><em>${r.v||''}</em><i>&rsaquo;</i></span>`:`<span class="v">${r.opts>1?'<i data-d="-1">&lsaquo;</i>':'<i class="x">&lsaquo;</i>'}${r.sw?'<s style="background:'+r.sw+'"></s>':''}<em>${r.v}</em>${r.opts>1?'<i data-d="1">&rsaquo;</i>':'<i class="x">&rsaquo;</i>'}</span>`)+'</div>'};
+ const row=i=>{const r=rows[i];if(r.add)return`<div class="gxr gxAddT${i===GXS.f?' on':''}" data-i="${i}"><b>+</b><span>Add player ${r.pn||''}</span><small>${r.hint||''}</small></div>`;return`<div class="gxr${i===GXS.f?' on':''}${r.sub?' gxx':''}${r.more?' more':''}${r.wide?' wide':''}" data-i="${i}">${r.dot&&!o.grid?'<b class="gxdot" style="background:'+r.dot+'"></b>':''}<span class="l">${r.l}</span>`+(r.input?'<span class="v gxin"></span>':r.more?`<span class="v">${GXS.more?'Hide':'Show'} &rsaquo;</span>`:r.car?`<span class="v"><i class="x">&lsaquo;</i><em>${r.v}</em><i>&rsaquo;</i></span>`:r.act&&!r.go?`<span class="v"><em>${r.v||''}</em><i>&rsaquo;</i></span>`:`<span class="v">${r.opts>1?'<i data-d="-1">&lsaquo;</i>':'<i class="x">&lsaquo;</i>'}${r.sw?'<s style="background:'+r.sw+'"></s>':''}<em>${r.v}</em>${r.opts>1?'<i data-d="1">&rsaquo;</i>':'<i class="x">&rsaquo;</i>'}</span>`)+'</div>'};
  box.innerHTML=`<div class="gxHero${o.heroCls?' '+o.heroCls:''}"><canvas id="gxShot" width="1920" height="1080"></canvas><div class="gxTn"><small>${o.kind}</small><b>${o.name}</b><div class="gxFacts">${(o.facts||[]).map(t=>`<span>${t}</span>`).join('')}</div>${o.extra?'<div class="gxMed">'+o.extra+'</div>':''}${o.tnBtn||''}</div>${o.map?'<div class="gxMapBox"><canvas class="gxMap" width="240" height="150"></canvas></div>':''}${o.side||''}</div>
  <div class="gxCards${o.grid?' g4':''}">${cols.map((c,k)=>o.grid&&!c.length?'':o.grid?`<div class="gxCard pf${c.length&&rows[c[0]].add?' empty':''}${c.length?'':' idle'}" style="--pc:${o.cols?o.cols[k]:'#8fb4d8'}">${c.length&&!rows[c[0]].add?`<h5><b class="gxdot"></b>${T3[k]}${o.rm&&o.rm(k)?`<button class="gxRm" data-p="${k}" title="Remove player">&times;</button>`:''}</h5>`:''}<div class="gxOpts">${c.map(row).join('')}</div></div>`:c.length?`<div class="gxCard"><h5>${T3[k]}</h5><div class="gxOpts">${c.map(row).join('')}</div></div>`:'').join('')}</div>`;
  if(o.map)o.map(box.querySelector('.gxMap'));if(o.shot)o.shot(box.querySelector('#gxShot'));
@@ -13378,7 +13381,7 @@ const getShotR=()=>{if(shotR)return shotR;shotR=new THREE.WebGLRenderer({antiali
 const shotBox=obj=>{const bx=new THREE.Box3(),t=new THREE.Box3(),v=new THREE.Vector3();obj.traverseVisible(o=>{if(o.isSkinnedMesh&&o.skeleton){for(const b of o.skeleton.bones){b.getWorldPosition(v);bx.expandByPoint(v)}}else if(o.isMesh&&o.geometry){const g=o.geometry;if(!g.boundingBox)g.computeBoundingBox();t.copy(g.boundingBox).applyMatrix4(o.matrixWorld);bx.union(t)}});if(bx.isEmpty())bx.setFromObject(obj);return bx};
 P.objShot=(cv,key,make,o)=>{if(!cv)return;o=o||{};const dpr=Math.min(2,devicePixelRatio||1),cw=Math.max(320,Math.round((cv.clientWidth||960)*dpr)),ch=Math.max(180,Math.round((cv.clientHeight||300)*dpr));
  if(cv.width!==cw||cv.height!==ch){cv.width=cw;cv.height=ch}const k=key+'|'+cw+'x'+ch,g=cv.getContext('2d');if(OSHOT[k]){g.clearRect(0,0,cw,ch);g.drawImage(OSHOT[k],0,0);return}
- let obj=null,bgT=null;try{const sc=new THREE.Scene();
+ let obj=null,bgT=null,flr=null;try{const sc=new THREE.Scene();
   if(!o.clear){const bg=document.createElement('canvas');bg.width=1024;bg.height=512;const x=bg.getContext('2d'),gr=x.createRadialGradient(660,300,20,660,300,660);gr.addColorStop(0,'#355c86');gr.addColorStop(.5,'#16222f');gr.addColorStop(1,'#07090c');x.fillStyle=gr;x.fillRect(0,0,1024,512);
    x.fillStyle='#ffffff0d';for(let i=0;i<10;i++)x.fillRect(0,392+i*i*1.2,1024,2);bgT=new THREE.CanvasTexture(bg);bgT.encoding=THREE.sRGBEncoding;sc.background=bgT}
   sc.add(new THREE.HemisphereLight(0xdfe9f2,0x30363e,1.05));const sun=new THREE.DirectionalLight(0xffffff,1.1);sun.position.set(-3,6,4);sc.add(sun);const rim=new THREE.DirectionalLight(0x8fb4d8,.9);rim.position.set(4,3,-5);sc.add(rim);
@@ -13392,9 +13395,12 @@ P.objShot=(cv,key,make,o)=>{if(!cv)return;o=o||{};const dpr=Math.min(2,devicePix
   for(let it=0;it<4;it++){const b=bnd(),f=Math.max((b[1]-b[0])/(reg[1]-reg[0]),(b[3]-b[2])/(reg[3]-reg[2]));dist*=Math.max(.5,Math.min(2,.35+.65*f))}
   const b=bnd(),offX=((b[0]+b[1])/2-(reg[0]+reg[1])/2)/2*rw,offY=-((b[2]+b[3])/2-(reg[2]+reg[3])/2)/2*rh;
   cam.setViewOffset(rw,rh,offX,offY,rw,rh);cam.updateProjectionMatrix();
-  const r=getShotR();r.setClearColor(0x000000,o.clear?0:1);r.toneMappingExposure=1.05;r.setSize(rw,rh,false);r.render(sc,cam);
+  if(o.floor){const y0=bx.min.y;obj.traverse(q=>{if(q.isMesh)q.castShadow=true});sun.castShadow=true;sun.position.set(c.x-2,y0+14,c.z+3);sun.target.position.set(c.x,y0,c.z);sc.add(sun.target);
+   const sz2=Math.max(sz.x,sz.z)*1.6+8,sh=sun.shadow.camera;sh.left=-sz2/2;sh.right=sz2/2;sh.top=sz2/2;sh.bottom=-sz2/2;sh.near=1;sh.far=40;sh.updateProjectionMatrix();sun.shadow.mapSize.set(2048,2048);sun.shadow.radius=6;sun.shadow.bias=-.0005;
+   flr=new THREE.Mesh(new THREE.PlaneGeometry(sz2*2,sz2*2),new THREE.ShadowMaterial({opacity:.55}));flr.rotation.x=-Math.PI/2;flr.position.set(c.x,y0+.01,c.z);flr.receiveShadow=true;sc.add(flr)}
+  const r=getShotR();r.shadowMap.enabled=!!o.floor;r.shadowMap.type=THREE.PCFSoftShadowMap;r.setClearColor(0x000000,o.clear?0:1);r.toneMappingExposure=1.05;r.setSize(rw,rh,false);r.render(sc,cam);
   const out=document.createElement('canvas');out.width=cw;out.height=ch;const ox=out.getContext('2d');ox.imageSmoothingQuality='high';ox.drawImage(r.domElement,0,0,rw,rh,0,0,cw,ch);
-  OSHOT[k]=out;g.clearRect(0,0,cw,ch);g.drawImage(out,0,0)}catch(e){console.warn('obj shot',e)}finally{if(o.dispose&&obj)o.dispose(obj);if(bgT)bgT.dispose()}};
+  OSHOT[k]=out;g.clearRect(0,0,cw,ch);g.drawImage(out,0,0)}catch(e){console.warn('obj shot',e)}finally{if(flr){flr.geometry.dispose();flr.material.dispose()}if(o.dispose&&obj)o.dispose(obj);if(bgT)bgT.dispose()}};
 /* part two: the car. The picture is the car itself, big; Left / Right on the Car row flips through your cars, Enter opens the full garage */
 const carList=p=>{const m=ST.mode,sv=P.SV(),own=P.ownedList?P.ownedList():[];let L=own.slice();
  if(m==='rally'&&P.RALLY_CARS)L=P.RALLY_CARS.map(id=>BYID[id]).filter(Boolean).concat(own.filter(c=>!P.RALLY_CARS.includes(c.id)));
@@ -13406,9 +13412,9 @@ const CARY0={};
 const carShot=(cv,list,reg,only)=>{if(!P.C10)return;const lk=list.map(s=>s.id+'.'+s.alt).join('|'),key='cars|'+lk+(reg?'|'+reg.join(','):'')+(only!=null?'|only'+only:'')+'|row2';
  /* round 28: the cars stand in one straight line across the picture (square to the camera), so every car sits at the same height and size;
     the old staggered row put the back cars higher on screen and the row drifted up as players were added */
- const YAW=-2.2,SP=3.3,PX=-.28,PZ=.96,slot=i=>{const col=i-(list.length-1)/2;return[col*SP*PX,col*SP*PZ]};
+ const YAW=-2.2,SP=2.6,PX=-.28,PZ=.96,slot=i=>{const col=i-(list.length-1)/2;return[col*SP*PX,col*SP*PZ]};
  P.objShot(cv,key,()=>{const g=new THREE.Group();list.forEach((s,i)=>{if(only!=null&&i!==only)return;const c=BYID[s.id];const src=c&&P.C10.model(c.k10,s.alt);if(!src)return;const m=src.clone(true);
-  const q=slot(i);m.position.set(q[0],0,q[1]);m.rotation.y=YAW;g.add(m)});return g},{yaw:0,up:.12,reg,clear:true,ref:bx=>{const n=list.length,b=new THREE.Box3(),v=new THREE.Vector3(),ax=new THREE.Vector3(0,1,0);
+  const q=slot(i);m.position.set(q[0],0,q[1]);m.rotation.y=YAW;g.add(m)});return g},{yaw:0,up:.12,reg,clear:true,floor:only==null,ref:bx=>{const n=list.length,b=new THREE.Box3(),v=new THREE.Vector3(),ax=new THREE.Vector3(0,1,0);
   for(let i=0;i<n;i++){const q=slot(i);for(const sx of[-.975,.975])for(const sz of[-2.35,2.35])for(const sy of[0,1.45]){v.set(sx,sy,sz).applyAxisAngle(ax,YAW);v.x+=q[0];v.z+=q[1];b.expandByPoint(v)}}
   const y0=only!=null&&CARY0[lk]!=null?CARY0[lk]:bx.min.y;if(only==null)CARY0[lk]=y0;b.min.y=y0;b.max.y=y0+1.45;return b}})};
 /* round 25 (Hakan): no player count up front. The car step is a 2 x 2 grid of player frames: P1 is always there, "Add player" (next to
@@ -13423,8 +13429,8 @@ function removePlayer(p){if(p<1||p>=ST.players)return;const n=ST.players;ST.name
  ST.players=n-1;GXS.cf=Math.min(GXS.cf||0,ST.players-1);GXS.fp=GXS.cf;P.sfx&&P.sfx('back');renderSetup()}
 P.addPlayer=addPlayer;P.removePlayer=removePlayer;
 /* round 27: the cars sit level with the car name, whatever the picture's height (the region keeps one size, so the camera stays anchored) */
-const carReg=box=>{try{const h=box.querySelector('.gxHero'),t=h.querySelector('.gxTn b'),hr=h.getBoundingClientRect(),tr_=t.getBoundingClientRect();if(!hr.height)return[.04,.88,-.6,.6];
- let yc=1-2*((tr_.top+tr_.height/2-hr.top)/hr.height);yc=Math.max(-.42,Math.min(.42,yc));yc=Math.round(yc*50)/50;return[.16,.92,yc-.5,yc+.5]}catch(e){return[.04,.88,-.6,.6]}};
+const carReg=(box,np)=>{try{const h=box.querySelector('.gxHero'),t=h.querySelector('.gxTn b'),hr=h.getBoundingClientRect(),tr_=t.getBoundingClientRect();if(!hr.height)return[.04,.88,-.6,.6];
+ let yc=1-2*((tr_.top+tr_.height/2-hr.top)/hr.height);yc=Math.round(yc*50)/50;/* round 29: one car fills much more of the picture */if(np===1){const hh=1.02;yc=Math.max(-1.02+hh,Math.min(.96-hh,yc+.1));return[.02,1.02,yc-hh,yc+hh]}const hh=np>2?.8:.86;yc=Math.max(-.98+hh,Math.min(.98-hh,yc));return[.1,1.02,yc-hh,yc+hh]}catch(e){return[.04,.88,-.6,.6]}};
 /* the player being edited: their car glows in their colour, then fades after a few seconds; any change or typing for them lights it again */
 function gxHiPulse(){const h=document.getElementById('gxHi');if(!h)return;h.classList.remove('on');void h.offsetWidth;h.classList.add('on')}
 P.gxHiPulse=gxHiPulse;
@@ -13447,7 +13453,7 @@ function gxCarStep(box){const m=ST.mode,multi=multiOK(m);if(!multi)ST.players=1;
  gxRender(box,{kind:(np>1?'Player '+(fi+1)+' &middot; ':'')+'Class '+c.cls,name:c.name+(s.alt?' <small style="font-size:.4em;opacity:.7">ALT</small>':''),facts:[c.type||''],side,rows,side:'',
   tnBtn:multi&&np<MAXP?`<button class="gxAdd"><b>+</b> Add player</button>`:'',onAdd:addPlayer,
   grid:multi,cols:PCOLS,rm:multi?(p,go)=>{if(go){removePlayer(p);return}return p>0&&p<np}:null,
-  heroCls:'cars',groups:multi?[0,1,2,3].map(nm):['Car','Driver','More'],shot:cv=>{const L=Array.from({length:np},(_,p)=>selCar(p)),rg=carReg(box);carShot(cv,L,rg);if(np>1){const hc=document.createElement('canvas');hc.id='gxHi';hc.style.setProperty('--pc',PCOLS[fi]);cv.after(hc);carShot(hc,L,rg,fi);gxHiPulse()}},go:'Start'});/* grid: the cars sit between the name (left) and the stats (right) */
+  heroCls:'cars',groups:multi?[0,1,2,3].map(nm):['Car','Driver','More'],shot:cv=>{const L=Array.from({length:np},(_,p)=>selCar(p)),rg=carReg(box,np);carShot(cv,L,rg);if(np>1){const hc=document.createElement('canvas');hc.id='gxHi';hc.style.setProperty('--pc',PCOLS[fi]);cv.after(hc);carShot(hc,L,rg,fi);gxHiPulse()}},go:'Start'});/* grid: the cars sit between the name (left) and the stats (right) */
  box.querySelectorAll('.gxCard.pf input').forEach(i=>{i.addEventListener('input',gxHiPulse);i.addEventListener('focus',gxHiPulse)});
  if(multi)$('suHint').innerHTML='<u>&uarr;&darr;</u>Choose<u>&larr;&rarr;</u>Change'+(np<MAXP?'<u>+</u>Add player':'')+(np>1?'<u>Del</u>Remove':'')+'<u>Enter</u>Start';
  box.querySelectorAll('.gxr').forEach(el=>{const r=rows[+el.dataset.i];if(r&&r.pl!=null)el.addEventListener('mouseenter',()=>{if(GXS.cf!==r.pl){GXS.cf=r.pl;GXS.f=+el.dataset.i;renderSetup()}})})}

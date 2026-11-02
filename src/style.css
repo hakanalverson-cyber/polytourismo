@@ -1666,3 +1666,6 @@ body.gxAsking #tutOffer{display:none!important}
 #gxSu.g2 #gxHi.on{animation:gxHi 4s ease forwards}
 @keyframes gxHi{0%{opacity:0}8%{opacity:1}65%{opacity:1}100%{opacity:0}}
 @media(prefers-reduced-motion:reduce){#gxSu.g2 #gxHi.on{animation:none;opacity:0}}
+/* round 29: the x is a plain mark on the header line, its right edge in line with the rows below (no disc sitting off the rounded corner) */
+#gxSu.g2 .gxCard.pf .gxRm{top:9px;right:8px;width:24px;height:24px;background:none;box-shadow:none;color:#8fa0ad;font:300 22px/24px var(--gt);border-radius:6px!important}
+#gxSu.g2 .gxCard.pf .gxRm:hover{background:#ef6a5a;color:#fff}
