@@ -1,0 +1,6 @@
+[["key","Enter"],["wait",3000],["js","document.getElementById('gxAsk')&&document.getElementById('gxAsk').remove();document.body.classList.remove('gxAsking');1"],
+["js","PT8.careerEnter();const g=PT8.gcDebug().G;g.offers=g.offers.filter(o=>o.type!=='rally');PT8.SV().gc.offers.unshift(Object.assign({},g.offers.find(o=>o.type==='race')||g.offers[0]));1"],["wait",9000],["shot","vin"],
+["key","Enter"],["wait",2000],["key","Enter"],["wait",25000],["shot","race"],
+["js","const c=RACE.cars.find(c=>c.human);c.fin=true;c.finT=60;c.dmg=.45;RACE.cars.filter(x=>!x.human).forEach((x,i)=>{x.fin=true;x.finT=70+i});PT8.showResults();1"],["wait",3000],["shot","res"],
+["key","Enter"],["wait",8000],["shot","back"],["js","JSON.stringify({cr:PT8.SV().cr,gc:PT8.SV().gc.wear,wins:PT8.SV().gc.wins,rep:PT8.SV().gc.rep})"],
+["key","Escape"],["wait",3000],["key","ArrowLeft"],["key","Enter"],["wait",4000],["shot","red"]]

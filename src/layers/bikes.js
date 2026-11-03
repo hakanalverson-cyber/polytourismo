@@ -569,7 +569,7 @@ function render(dt){const W=R.domElement.width,H=R.domElement.height,n=B.pl.leng
  R.setScissorTest(false)}
 function finish(){if(!B||B.state==='done')return;B.state='done';for(const p of B.pl){if(p.trk_)endTrick(p,true);if(p.eng)p.eng.set(0,0,0,false)}
  const res=B.pl.map(p=>({k:p.k,bike:p.d.name,score:Math.round(p.score),best:p.bestCombo,top:Math.round(p.top),near:p.near,splits:p.splits,tricks:p.tricks,wipes:p.wipes,dist:p.dist,bestTrick:p.bestTrick}));
- const total=res.reduce((a,r)=>a+r.score,0),cr=Math.round(Math.min(60000,total/12));const sv=SV();const top=Math.max(...res.map(r=>r.score));const nb=top>sv.best;if(nb)sv.best=top;
+ const total=res.reduce((a,r)=>a+r.score,0),cr=Math.round(Math.min(60000,total/12)*(P.qpK?P.qpK():1));/* 0.03: Quick Play pays less than Career (career.js) */const sv=SV();const top=Math.max(...res.map(r=>r.score));const nb=top>sv.best;if(nb)sv.best=top;
  if(cr>0&&P.earn)P.earn(cr);try{P.save()}catch(e){}
  setTimeout(()=>showResults(res,cr,nb),900)}
 

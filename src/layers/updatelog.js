@@ -4,6 +4,11 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.03',d:'Nov 2, 2026',t:'Highway Cut-Up on bikes',items:[
+  'New: Career. The main menu is now Career, Quick Play, Garage and Brand Central. Career opens your garage in 3D with your car in the middle.',
+  'Career: talk to Vince (races and car deals) for race offers, cars and how you are doing, and to Nina (mechanic and tuner) to fix damage and tune the car. Click a person or use Left/Right and Enter, then pick an answer.',
+  'Career: offers are races, eliminations, hot laps and rally stages that pay real prizes. Clearing them earns reputation and moves you up from Rookie to Legend, with faster fields and bigger prizes.',
+  'Career: damage from a career race stays on the car until Nina fixes it, and a damaged car is slower.',
+  'Quick Play now holds every mode: Quick Race, Time Attack, Elimination, Versus, Track, Rally and Highway Cut-Up. It pays a quarter of what it used to, so the big money comes from Career.',
   'Car select: Add player is back in the next empty frame, and the cars are centred properly between the name and the right edge.',
   'Car select: the cars stay level with the car name in every layout, including four players.',
   'Car select: cars are bigger and alternate poses. Typing a name no longer re-lights the car, and Enter in a name box no longer starts the race. Option arrows wrap around. A lone frame fills the whole row. Menu and loading pictures are now 4K.',

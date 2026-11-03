@@ -243,7 +243,7 @@ src=rep(src,"let bi=c.idx,bd=1e9;for(let k=-6;k<=30;k++){","let bi=c.idx,bd=1e9;
 src=rep(src,"c.wrong=hd<-3&&live?c.wrong+dt:0;","c.wrong=!T.free&&hd<-3&&live?c.wrong+dt:0;")
 src=rep(src,"if(live&&(c.y<T.y[c.idx]-12||Math.abs(c.roll)>.68","if(live&&((!T.free&&c.y<T.y[c.idx]-12)||Math.abs(c.roll)>.68")
 src=rep(src," if(!live)return;\n const sf=T.surf(c.x,c.z,c.y);"," if(!live||T.free)return;\n const sf=T.surf(c.x,c.z,c.y);")
-parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','frmodels','frdress','frtown','frisland','frisdress','frworld','frwater','freeroam','cars10','audio','modes','tracks','hpack','tracks2','extra','race2','elim','tod','bridge','props','bld','stages','trees_q','propkit','scenery','ra_data','tracks3','imola_data','tracks4','ring_data','ring_forest','tracks5','tracks6','cartoon','logos','weather','ambience','menuaudio','tutorial','updatelog','hud2','shade','ui','promo','cinema','rally','trackmode','realspeed','barn','animals','franimals','frlife','frrock','clean','solid','damage','grip','airline','ride','snap','perf','econ','frhud','title','brandbg','uifx','fade','arcade','drivelab','bkworld','bkpeople','bikes']  if os.path.exists(f'{SRC}/layers/{n}.js')]
+parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','frmodels','frdress','frtown','frisland','frisdress','frworld','frwater','freeroam','cars10','audio','modes','tracks','hpack','tracks2','extra','race2','elim','tod','bridge','props','bld','stages','trees_q','propkit','scenery','ra_data','tracks3','imola_data','tracks4','ring_data','ring_forest','tracks5','tracks6','cartoon','logos','weather','ambience','menuaudio','tutorial','updatelog','hud2','shade','ui','promo','cinema','rally','trackmode','realspeed','barn','animals','franimals','frlife','frrock','clean','solid','damage','grip','airline','ride','snap','perf','econ','frhud','title','brandbg','uifx','fade','arcade','drivelab','bkworld','bkpeople','bikes','career']  if os.path.exists(f'{SRC}/layers/{n}.js')]
 # track files (bought cartoon models of Imola / Road Atlanta, made by tools/cartoon_track, kept out of the public repo in project files).
 # PACKS=1 builds them in (Artifact, full build); otherwise players load them with "+ Add track file" so the lite file stays small.
 # DRIVE=1: the Drive Lab test build (src/layers/drivelab.js): lite assets plus only the packs named in DRIVE_TRACKS (default the Nurburgring)
@@ -300,6 +300,15 @@ if (os.environ.get('PACKS') or os.environ.get('BIKES')) and os.path.exists('/mnt
 # Summer People (Studio Ochi, supplied by Hakan: never commit it): the riders. tools/people/embed.py packs the textures into the GLB
 if (os.environ.get('PACKS') or os.environ.get('BIKES')) and os.path.exists('/mnt/project-files/poly-gt/packs/people.glb'):
   BIKES+='<script>window.PEOPLE_B64="'+base64.b64encode(open('/mnt/project-files/poly-gt/packs/people.glb','rb').read()).decode()+'";</script>';print('built in people.glb')
+# Career garage (career.js): Hakan's garage interior and the Studio Ochi Business / Construction People packs (all supplied by Hakan, project files only, never in the repo).
+# Built in with the bikes/people (lite) or PACKS; the garage is skipped here when the Rockport build already carries it
+if os.environ.get('PACKS') or os.environ.get('BIKES'):
+  if os.path.exists('/mnt/project-files/poly-gt/packs/construction.glb'):
+    BIKES+='<script>window.CON_B64="'+base64.b64encode(open('/mnt/project-files/poly-gt/packs/construction.glb','rb').read()).decode()+'";</script>';print('built in construction.glb')
+  if os.path.exists('/mnt/project-files/poly-gt/packs/business.glb'):
+    BIKES+='<script>window.BIZ_B64="'+base64.b64encode(open('/mnt/project-files/poly-gt/packs/business.glb','rb').read()).decode()+'";</script>';print('built in business.glb')
+  if not FRR and os.path.exists('/mnt/project-files/poly-gt/packs/edge_garage.glb'):
+    BIKES+='<script>var GARAGE_GLB_B64="'+base64.b64encode(open('/mnt/project-files/poly-gt/packs/edge_garage.glb','rb').read()).decode()+'";</script>';print('built in edge_garage.glb')
 # action stills on the bought model tracks (kept in project files, not in the public repo): PACKS builds only
 if os.environ.get('PACKS'):
   import glob as _gb

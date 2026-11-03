@@ -1,0 +1,4 @@
+[["key","Enter"],["wait",3000],["js","document.getElementById('gxAsk')&&document.getElementById('gxAsk').remove();document.body.classList.remove('gxAsking');1"],["shot","menu"],
+["js","PT8.careerEnter();1"],["wait",12000],["shot","vin"],["js","JSON.stringify({ok:PT8.gcDebug().GS.ok,red:!!PT8.gcDebug().GS.red.g,vin:!!PT8.gcDebug().GS.vin.g,car:!!PT8.gcDebug().GS.car})"],
+["key","Escape"],["wait",4000],["shot","over"],["key","ArrowLeft"],["key","Enter"],["wait",4000],["shot","red"],
+["key","Escape"],["key","ArrowRight"],["key","Enter"],["wait",2500],["key","Enter"],["wait",3000],["shot","offers"]]
