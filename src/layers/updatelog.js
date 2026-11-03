@@ -4,6 +4,8 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.03',d:'Nov 2, 2026',t:'Highway Cut-Up on bikes',items:[
+  'Career: a loading screen when you open it, and Esc now opens a career menu instead of dropping you out. The background blurs when you walk up to someone, the camera is at eye level, and the labels are a single rounded name tag ("Change car" on the car).',
+  'Career: Nina no longer holds her hands up, both of them have new idle and talking moves, the people are a bit bigger, the garage light is cooler, and the current car card bottom left opens your cars.',
   'New: Career. The main menu is now Career, Quick Play, Garage and Brand Central. Career opens your garage in 3D with your car in the middle.',
   'Career: talk to Vince (races and car deals) for race offers, cars and how you are doing, and to Nina (mechanic and tuner) to fix damage and tune the car. Click a person or use Left/Right and Enter, then pick an answer.',
   'Career: offers are races, eliminations, hot laps and rally stages that pay real prizes. Clearing them earns reputation and moves you up from Rookie to Legend, with faster fields and bigger prizes.',
