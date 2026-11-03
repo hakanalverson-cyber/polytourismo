@@ -7,7 +7,7 @@ P.LOG=[
   'New: Career. The main menu is now Career, Quick Play, Garage and Brand Central. Career opens your garage in 3D with your car in the middle.',
   'Career: talk to Vince (races and car deals) for race offers, cars and how you are doing, and to Nina (mechanic and tuner) to fix damage and tune the car. Click a person or use Left/Right and Enter, then pick an answer.',
   'Career: offers are races, eliminations, hot laps and rally stages that pay real prizes. Clearing them earns reputation and moves you up from Rookie to Legend, with faster fields and bigger prizes.',
-  'Career garage: restyled in the game'"'"'s low-poly look with a POLY GT sign, a turntable and light strips. Nina and Vince breathe, look around, wave and nod while they talk, and the answer choices slide in, shine and pulse when you pick one.',
+  'Career garage: restyled in the game\'s low-poly look with a POLY GT sign, a turntable and light strips. Nina and Vince breathe, look around, wave and nod while they talk, and the answer choices slide in, shine and pulse when you pick one.',
   'Career: damage from a career race stays on the car until Nina fixes it, and a damaged car is slower.',
   'Quick Play now holds every mode: Quick Race, Time Attack, Elimination, Versus, Track, Rally and Highway Cut-Up. It pays a quarter of what it used to, so the big money comes from Career.',
   'Car select: Add player is back in the next empty frame, and the cars are centred properly between the name and the right edge.',
