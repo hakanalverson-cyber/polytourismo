@@ -309,6 +309,8 @@ if os.environ.get('PACKS') or os.environ.get('BIKES'):
     BIKES+='<script>window.BIZ_B64="'+base64.b64encode(open('/mnt/project-files/poly-gt/packs/business.glb','rb').read()).decode()+'";</script>';print('built in business.glb')
   if os.path.exists('/mnt/project-files/poly-gt/packs/garage_lp.bin'):  # Hakan's Garage.zip, baked by tools/garage/bake.py (career hub)
     BIKES+='<script>window.GAR2_B64="'+base64.b64encode(open('/mnt/project-files/poly-gt/packs/garage_lp.bin','rb').read()).decode()+'";</script>';print('built in garage_lp.bin')
+  if os.path.exists('/mnt/project-files/poly-gt/packs/props_lp.bin'):  # Hakan's phone.glb + laptop.glb, baked by tools/garage/props.py (career props)
+    BIKES+='<script>window.GPROP_B64="'+base64.b64encode(open('/mnt/project-files/poly-gt/packs/props_lp.bin','rb').read()).decode()+'";</script>';print('built in props_lp.bin')
 # action stills on the bought model tracks (kept in project files, not in the public repo): PACKS builds only
 if os.environ.get('PACKS'):
   import glob as _gb

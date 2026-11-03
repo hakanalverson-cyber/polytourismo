@@ -4,6 +4,9 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.03',d:'Nov 2, 2026',t:'Highway Cut-Up on bikes',items:[
+  'Career: Nina and Vince now move around the shop. Nina sorts through the benches and shelves, checks the tyres and looks at her phone; Vince walks over to his laptop and types, or stares out of the door window. Click either of them and they stop and talk right where they are.',
+  'Career: you can now sell cars through Vince in the Marketplace. Set a price, give the listing a title and a description, and watch the chance meter: ask too much and nobody buys. You get an announcement when it sells (or doesn\'t), anywhere except in the middle of a race.',
+  'Career: picking a car keeps the camera in the room and Nina answers in a speech bubble. Bring out something ugly and she will tell you exactly what she thinks of it. The loading screen now shows the garage behind it.',
   'Career: a loading screen when you open it, and Esc now opens a career menu instead of dropping you out. The background blurs when you walk up to someone, the camera is at eye level, and the labels are a single rounded name tag ("Change car" on the car).',
   'Career: Nina no longer holds her hands up, both of them have new idle and talking moves, the people are a bit bigger, the garage light is cooler, and the current car card bottom left opens your cars.',
   'New: Career. The main menu is now Career, Quick Play, Garage and Brand Central. Career opens your garage in 3D with your car in the middle.',
