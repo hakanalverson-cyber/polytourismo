@@ -524,7 +524,10 @@ P.objShot=(cv,key,make,o)=>{if(!cv)return;o=o||{};const dpr=Math.min(2,devicePix
   const reg=o.reg||[-.12,.94,-.82,.78],cor=[];for(let i=0;i<8;i++)cor.push(new THREE.Vector3(i&1?bx.max.x:bx.min.x,i&2?bx.max.y:bx.min.y,i&4?bx.max.z:bx.min.z));
   let dist=(Math.max(sz.y,Math.hypot(sz.x,sz.z)/asp)*.9)/t;const bnd=()=>{cam.position.copy(c).addScaledVector(dir,dist);cam.lookAt(c);cam.updateMatrixWorld(true);cam.updateProjectionMatrix();let x0=9,x1=-9,y0=9,y1=-9;for(const q of cor){const v=q.clone().project(cam);x0=Math.min(x0,v.x);x1=Math.max(x1,v.x);y0=Math.min(y0,v.y);y1=Math.max(y1,v.y)}return[x0,x1,y0,y1]};
   for(let it=0;it<4;it++){const b=bnd(),f=Math.max((b[1]-b[0])/(reg[1]-reg[0]),(b[3]-b[2])/(reg[3]-reg[2]));dist*=Math.max(.5,Math.min(2,.35+.65*f))}
-  const b=bnd(),offX=((b[0]+b[1])/2-(reg[0]+reg[1])/2)/2*rw,offY=-((b[2]+b[3])/2-(reg[2]+reg[3])/2)/2*rh;
+  const b=bnd();/* round 32: the fixed box frames size, but the cars inside it can sit off its middle on screen; measure the real meshes once
+     per line-up (o.cx caches it, so the glow copy of one car lines up with the full row) and shift so the cars themselves are centred */
+  let dX=0;if(o.cx){if(o.cx.v==null){let m0=9,m1=-9;const v=new THREE.Vector3();obj.updateMatrixWorld(true);obj.traverseVisible(q=>{if(!q.isMesh||!q.geometry||q.isSprite)return;q.geometry.boundingBox||q.geometry.computeBoundingBox();const gb=q.geometry.boundingBox;if(!gb||gb.isEmpty())return;for(let i=0;i<8;i++){v.set(i&1?gb.max.x:gb.min.x,i&2?gb.max.y:gb.min.y,i&4?gb.max.z:gb.min.z).applyMatrix4(q.matrixWorld).project(cam);m0=Math.min(m0,v.x);m1=Math.max(m1,v.x)}});o.cx.v=m1>m0?(m0+m1)/2-(b[0]+b[1])/2:0}dX=o.cx.v}
+  const offX=((b[0]+b[1])/2+dX-(reg[0]+reg[1])/2)/2*rw,offY=-((b[2]+b[3])/2-(reg[2]+reg[3])/2)/2*rh;
   cam.setViewOffset(rw,rh,offX,offY,rw,rh);cam.updateProjectionMatrix();
   if(o.floor){const y0=bx.min.y;obj.traverse(q=>{if(q.isMesh)q.castShadow=true});sun.castShadow=true;sun.position.set(c.x-2,y0+14,c.z+3);sun.target.position.set(c.x,y0,c.z);sc.add(sun.target);
    const sz2=Math.max(sz.x,sz.z)*1.6+8,sh=sun.shadow.camera;sh.left=-sz2/2;sh.right=sz2/2;sh.top=sz2/2;sh.bottom=-sz2/2;sh.near=1;sh.far=40;sh.updateProjectionMatrix();sun.shadow.mapSize.set(2048,2048);sun.shadow.radius=6;sun.shadow.bias=-.0005;
@@ -539,13 +542,13 @@ const carList=p=>{const m=ST.mode,sv=P.SV(),own=P.ownedList?P.ownedList():[];let
 const setCar=(p,id,alt)=>{const m=ST.mode,sv=P.SV();if(m==='rally'){sv.rsel=sv.rsel||[];sv.rsel[p]={id,alt}}else if(m==='track'){sv.tsel=sv.tsel||[];sv.tsel[p]={id,alt}}else P.setSel(p,id,alt);try{P.save()}catch(e){}};
 /* every player's car on show: one alone, then a staggered row as players are added (the camera pulls back to fit) */
 /* only: draw just that player's car, framed exactly as in the full picture (same reference box and ground height), for the highlight */
-const CARY0={};
-const carShot=(cv,list,reg,only)=>{if(!P.C10)return;const lk=list.map(s=>s.id+'.'+s.alt).join('|'),key='cars|'+lk+(reg?'|'+reg.join(','):'')+(only!=null?'|only'+only:'')+'|row3';
+const CARY0={},CARCX={};
+const carShot=(cv,list,reg,only)=>{if(!P.C10)return;const lk=list.map(s=>s.id+'.'+s.alt).join('|'),key='cars|'+lk+(reg?'|'+reg.join(','):'')+(only!=null?'|only'+only:'')+'|row4';
  /* round 28: the cars stand in one straight line across the picture (square to the camera), so every car sits at the same height and size;
     the old staggered row put the back cars higher on screen and the row drifted up as players were added */
  const YAW=-2.2,YAW2=-1.51,yw=i=>list.length>1&&i%2?YAW2:YAW,SP=3.35,/* round 30: wide enough apart that no two cars overlap in the picture */PX=-.28,PZ=.96,slot=i=>{const col=i-(list.length-1)/2;return[col*SP*PX,col*SP*PZ]};
  P.objShot(cv,key,()=>{const g=new THREE.Group();list.forEach((s,i)=>{if(only!=null&&i!==only)return;const c=BYID[s.id];const src=c&&P.C10.model(c.k10,s.alt);if(!src)return;const m=src.clone(true);
-  const q=slot(i);m.position.set(q[0],0,q[1]);m.rotation.y=yw(i);/* round 31: alternating poses */g.add(m)});return g},{yaw:0,up:.12,reg,clear:true,floor:only==null,ref:bx=>{const n=list.length,b=new THREE.Box3(),v=new THREE.Vector3(),ax=new THREE.Vector3(0,1,0);
+  const q=slot(i);m.position.set(q[0],0,q[1]);m.rotation.y=yw(i);/* round 31: alternating poses */g.add(m)});return g},{yaw:0,up:.12,reg,clear:true,floor:only==null,cx:CARCX[lk+'|'+reg]||(CARCX[lk+'|'+reg]={}),ref:bx=>{const n=list.length,b=new THREE.Box3(),v=new THREE.Vector3(),ax=new THREE.Vector3(0,1,0);
   for(let i=0;i<n;i++){const q=slot(i);for(const sx of[-.975,.975])for(const sz of[-2.35,2.35])for(const sy of[0,1.45]){v.set(sx,sy,sz).applyAxisAngle(ax,yw(i));v.x+=q[0];v.z+=q[1];b.expandByPoint(v)}}
   const y0=only!=null&&CARY0[lk]!=null?CARY0[lk]:bx.min.y;if(only==null)CARY0[lk]=y0;b.min.y=y0;b.max.y=y0+1.45;return b}})};
 /* round 25 (Hakan): no player count up front. The car step is a 2 x 2 grid of player frames: P1 is always there, "Add player" (next to
@@ -562,7 +565,7 @@ P.addPlayer=addPlayer;P.removePlayer=removePlayer;
 /* round 27: the cars sit level with the car name, whatever the picture's height (the region keeps one size, so the camera stays anchored) */
 const carReg=(box,np)=>{try{const h=box.querySelector('.gxHero'),t=h.querySelector('.gxTn b'),hr=h.getBoundingClientRect(),tr_=t.getBoundingClientRect();if(!hr.height)return[.04,.88,-.6,.6];
  /* round 30: the cars are centred in the space between the end of the car name and the picture's right edge */
- let tx=tr_.right;try{const rg=document.createRange();rg.selectNodeContents(t);tx=rg.getBoundingClientRect().right}catch(e){}const x0=Math.max(-.2,Math.min(.5,Math.round((2*((tx-hr.left)/hr.width)-1+.05)*50)/50)),x1=1.0;
+ let tx=tr_.right;try{const rg=document.createRange();rg.selectNodeContents(t);tx=rg.getBoundingClientRect().right}catch(e){}const x0=Math.max(-.6,Math.min(.5,Math.round((2*((tx-hr.left)/hr.width)-1)*50)/50)),x1=1.0;
  let yc=1-2*((tr_.top+tr_.height/2-hr.top)/hr.height);yc=Math.round(yc*50)/50;/* round 29: one car fills much more of the picture */if(np===1){const hh=1.02;yc=Math.max(-1.02+hh,Math.min(.96-hh,yc+.1));return[x0,x1,yc-hh,yc+hh]}const hh=np>2?.92:.95;/* round 32: the region may run past the picture edge so the cars always follow the name's height (the cars themselves are much shorter than the region) */yc=Math.max(-.62,Math.min(.62,yc));return[x0,x1,yc-hh,yc+hh]}catch(e){return[.04,.88,-.6,.6]}};
 /* the player being edited: their car glows in their colour, then fades after a few seconds; any change or typing for them lights it again */
 function gxHiPulse(){const h=document.getElementById('gxHi');if(!h)return;h.classList.remove('on');void h.offsetWidth;h.classList.add('on')}
@@ -582,9 +585,10 @@ function gxCarStep(box){const m=ST.mode,multi=multiOK(m);if(!multi)ST.players=1;
  const fi=Math.min(np-1,GXS.cf||0),s=selCar(fi),c=BYID[s.id];
  const bar=(n,f,v)=>`<span>${n}</span><u><i style="width:${Math.round(Math.max(0,Math.min(1,f))*100)}%"></i></u><em>${v}</em>`;const kmh=P.SV().units!=='mph';
  const side=`<div class="gxSide"><h6>Class ${c.cls} &middot; ${c.type||''}</h6><div class="st">${bar('Top speed',(c.top-30)/26,Math.round(c.top*3.6*(kmh?1:.6214))+(kmh?' km/h':' mph'))}${bar('Acceleration',(c.acc-18)/18,Math.round(c.acc*2.6))}${bar('Grip',(c.grip-.94)/.2,Math.round(c.grip*80))}${bar('Brakes',(c.brk-.9)/.3,Math.round(c.brk*75))}</div></div>`;
+ if(multi&&np<MAXP)rows.push({grp:np,add:1,pn:np+1,hint:'or press +',act:addPlayer});
  const nm=p=>{const v=((ST.names||[])[p]||'').replace(/[<>&"]/g,'').trim();return 'Player '+(p+1)+(v?' &middot; '+v:'')};
  gxRender(box,{kind:(np>1?'Player '+(fi+1)+' &middot; ':'')+'Class '+c.cls,name:c.name+(s.alt?' <small style="font-size:.4em;opacity:.7">ALT</small>':''),facts:[c.type||''],side,rows,side:'',
-  tnBtn:multi&&np<MAXP?`<button class="gxAdd"><b>+</b> Add player</button>`:'',onAdd:addPlayer,
+  /* round 32 (Hakan): Add player sits in the next empty frame again, not under the name */onAdd:addPlayer,
   grid:multi,cols:PCOLS,rm:multi?(p,go)=>{if(go){removePlayer(p);return}return p>0&&p<np}:null,
   heroCls:'cars'+(GXS.newP!=null?' fin':''),newP:GXS.newP,groups:multi?[0,1,2,3].map(nm):['Car','Driver','More'],shot:cv=>{const L=Array.from({length:np},(_,p)=>selCar(p)),rg=carReg(box,np);carShot(cv,L,rg);if(np>1){const hc=document.createElement('canvas');hc.id='gxHi';hc.style.setProperty('--pc',PCOLS[fi]);cv.after(hc);carShot(hc,L,rg,fi);gxHiPulse()}},go:'Start'});/* grid: the cars sit between the name (left) and the stats (right) */
  box.querySelectorAll('.gxCard.pf input').forEach(i=>{i.addEventListener('focus',gxHiPulse)});
