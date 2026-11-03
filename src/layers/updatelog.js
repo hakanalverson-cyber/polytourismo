@@ -4,6 +4,7 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.03',d:'Nov 2, 2026',t:'Highway Cut-Up on bikes',items:[
+  'Car select: cars are bigger and alternate poses. Typing a name no longer re-lights the car, and Enter in a name box no longer starts the race. Option arrows wrap around. A lone frame fills the whole row. Menu and loading pictures are now 4K.',
   'Escape pauses a race as well as Tab, in every mode and in split screen. A new player\'s frame fades in, and the cars sit centred between the name and the edge of the picture.',
   'Car select: the car of the player you are setting up glows in their colour, then fades after a few seconds. The cars line up with the car name.',
   'Car select: the preview camera stays fixed, so a big car looks big and a small one small. A player\'s frame appears only once they are added.',

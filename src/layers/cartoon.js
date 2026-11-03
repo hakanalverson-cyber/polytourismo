@@ -125,7 +125,7 @@ P.menuShotSeed=(k,cv)=>{const pr=Promise.resolve(cv);pr._v=cv;MNS[k]=pr};
 P.menuTrack=k=>{const q=P.quickTracks?P.quickTracks():[0];return q[(P.MENU_SCENES[k].trk||0)%q.length]};
 /* the car models come with their front wheels steered (about 25 degrees): for a car at speed they are turned back straight */
 const straightWheels=m=>P.straightWheels&&P.straightWheels(m);
-P.menuShot=k=>MNS[k]||(MNS[k]=new Promise(res=>setTimeout(async()=>{let sc=null;const W=1920,H=1080,SSm=2/* Nov 2: rendered at 4K and filtered down, for a sharper menu picture */,cars=[];try{
+P.menuShot=k=>MNS[k]||(MNS[k]=new Promise(res=>setTimeout(async()=>{let sc=null;const W=(innerWidth*(devicePixelRatio||1)>2000)?3840:1920,H=W*9/16,SSm=W>1920?1:2/* Nov 2: rendered at 4K and filtered down; round 31: on big or retina screens the picture itself is 4K */,cars=[];try{
  const S=P.MENU_SCENES[k],idx=P.menuTrack(k),def=Object.assign({},D[idx]),T=sampleTrack(def);sc=buildWorld(T);
  const ims=[];sc.traverse(o=>{const m=o.material;if(m&&m.map&&m.map.image)ims.push(m.map.image)});
  for(let t=0;t<60&&ims.some(im=>!(im.complete&&im.naturalWidth));t++)await new Promise(r=>setTimeout(r,50));

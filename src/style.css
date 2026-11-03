@@ -1678,3 +1678,9 @@ body.gxAsking #tutOffer{display:none!important}
 /* round 30: the x is drawn (not a font glyph), so it sits exactly in the middle of its button */
 #gxSu.g2 .gxCard.pf .gxRm{display:grid;place-items:center;padding:0;line-height:0;font-size:0}
 #gxSu.g2 .gxCard.pf .gxRm svg{display:block}
+/* round 31: a frame alone on its row of the grid spans the full width */
+#gxSu.g2 .gxCards.g4>.gxCard.pf:last-child:nth-child(odd){grid-column:1/-1}
+#gxSu.g2 .gxCards.g4>.gxCard.pf:last-child:nth-child(odd) .gxOpts{grid-template-columns:repeat(4,minmax(0,1fr))}
+#gxSu.g2 .gxCards.g4>.gxCard.pf:last-child:nth-child(odd) .gxr.wide{grid-column:span 2}
+/* the pause menu always draws on top while a race is paused */
+body.ptPause #pause{visibility:visible!important;opacity:1!important;z-index:2147483000!important;position:fixed!important;inset:0!important}

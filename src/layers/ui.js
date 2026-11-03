@@ -468,18 +468,18 @@ function gxSetup(){const sec=$('s8setup');if(!sec)return;if(ST.custom){ST.custom
  const tl=D.map((d,i)=>okTrack(m,i)?i:-1).filter(i=>i>=0);
  rows.push({l:m==='rally'?'Stage':m==='track'?'Circuit':'Track',v:D[ST.track].name,opts:m==='track'?null:tl.length,go:d=>{const k=tl.indexOf(ST.track);ST.track=tl[((k<0?0:k)+d+tl.length)%tl.length];renderSetup()}});
  const segRow=(id,label)=>{const s=src.querySelector('#'+id);if(!s)return null;const bs=[...s.querySelectorAll('button')];if(!bs.length)return null;const k=Math.max(0,bs.findIndex(b=>b.classList.contains('sel')));
-  return{l:label,v:bs[k].textContent.trim(),opts:bs.length,go:d=>{const n=Math.min(bs.length-1,Math.max(0,k+d));if(n!==k){P.sfx&&P.sfx('move');bs[n].click()}}}};
+  return{l:label,v:bs[k].textContent.trim(),opts:bs.length,go:d=>{const n=((k+d)%bs.length+bs.length)%bs.length;if(n!==k){P.sfx&&P.sfx('move');bs[n].click()}}}};
  for(const id of GX_ORDER){const r=segRow(id,GX_NAME[id]);if(r)rows.push(r)}
  /* cars: one row per driver, Enter or a click opens the garage for that driver */
  const dv=[...$('suDrv').querySelectorAll('.drv')];/* the cars are part two */
  rows.push({l:'More options',more:true,act:()=>{GXS.more=!GXS.more;P.sfx&&P.sfx('select');gxSetup();if(GXS.more){const f=$('gxSu').querySelector('.gxr.gxx');if(f)f.scrollIntoView({block:'nearest',behavior:'smooth'})}}});
  if(GXS.more){for(const id of GX_MORE){const r=segRow(id,GX_NAME[id]);if(r){r.sub=1;rows.push(r)}}
-  dv.forEach((e,p)=>{const s=src.querySelector('#cGb')?null:e.querySelector('.txs');if(s){const bs=[...s.querySelectorAll('button')],k=Math.max(0,bs.findIndex(b=>b.classList.contains('sel')));rows.push({sub:1,l:(dv.length>1?'P'+(p+1)+' ':'')+'Gearbox',v:bs[k].textContent.trim(),opts:bs.length,go:d=>{const n=Math.min(bs.length-1,Math.max(0,k+d));if(n!==k)bs[n].click()}})}
+  dv.forEach((e,p)=>{const s=src.querySelector('#cGb')?null:e.querySelector('.txs');if(s){const bs=[...s.querySelectorAll('button')],k=Math.max(0,bs.findIndex(b=>b.classList.contains('sel')));rows.push({sub:1,l:(dv.length>1?'P'+(p+1)+' ':'')+'Gearbox',v:bs[k].textContent.trim(),opts:bs.length,go:d=>{const n=((k+d)%bs.length+bs.length)%bs.length;if(n!==k)bs[n].click()}})}
    const inp=e.querySelector('input.nm');if(inp)rows.push({sub:1,l:(dv.length>1?'P'+(p+1)+' ':'')+'Name',input:inp})});
   /* driving settings from the options menu, set right here for this race (and kept, like the options menu) */
   const O=window.PTO;if(O){for(const [k,l,vs] of GX_DRIVE){let i=vs.findIndex(v=>v[0]===O[k]);if(i<0){i=0;let bd=1e9;vs.forEach((v,j)=>{const d=Math.abs(+v[0]-+O[k]);if(d<bd){bd=d;i=j}})}
-   rows.push({sub:1,l,v:vs[i][1],opts:vs.length,go:d=>{const n=Math.min(vs.length-1,Math.max(0,i+d));if(n!==i){O[k]=vs[n][0];try{localStorage.setItem('pt7-options',JSON.stringify(O))}catch(e){}P.sfx&&P.sfx('move');gxSetup()}}})}}
-  const kb=[];/* round 25: P2's keys are picked in P2's frame on the car step */if(kb.length){const k=Math.max(0,kb.findIndex(b=>b.classList.contains('on')));rows.push({sub:1,l:'P2 keys',v:kb[k].querySelector('b').textContent,opts:kb.length,go:d=>{const n=Math.min(kb.length-1,Math.max(0,k+d));if(n!==k)kb[n].click()}})}}
+   rows.push({sub:1,l,v:vs[i][1],opts:vs.length,go:d=>{const n=((i+d)%vs.length+vs.length)%vs.length;if(n!==i){O[k]=vs[n][0];try{localStorage.setItem('pt7-options',JSON.stringify(O))}catch(e){}P.sfx&&P.sfx('move');gxSetup()}}})}}
+  const kb=[];/* round 25: P2's keys are picked in P2's frame on the car step */if(kb.length){const k=Math.max(0,kb.findIndex(b=>b.classList.contains('on')));rows.push({sub:1,l:'P2 keys',v:kb[k].querySelector('b').textContent,opts:kb.length,go:d=>{const n=((k+d)%kb.length+kb.length)%kb.length;if(n!==k)kb[n].click()}})}}
  GXS.rows=rows;GXS.f=Math.max(0,Math.min(rows.length-1,GXS.f));
  const T=tr(ST.track),info=[...$('trkInfo').querySelectorAll('.chip')].map(c=>c.textContent.trim()).filter(Boolean);
  const ta=$('trkExtra').querySelector('.medals');
@@ -540,13 +540,13 @@ const setCar=(p,id,alt)=>{const m=ST.mode,sv=P.SV();if(m==='rally'){sv.rsel=sv.r
 /* every player's car on show: one alone, then a staggered row as players are added (the camera pulls back to fit) */
 /* only: draw just that player's car, framed exactly as in the full picture (same reference box and ground height), for the highlight */
 const CARY0={};
-const carShot=(cv,list,reg,only)=>{if(!P.C10)return;const lk=list.map(s=>s.id+'.'+s.alt).join('|'),key='cars|'+lk+(reg?'|'+reg.join(','):'')+(only!=null?'|only'+only:'')+'|row2';
+const carShot=(cv,list,reg,only)=>{if(!P.C10)return;const lk=list.map(s=>s.id+'.'+s.alt).join('|'),key='cars|'+lk+(reg?'|'+reg.join(','):'')+(only!=null?'|only'+only:'')+'|row3';
  /* round 28: the cars stand in one straight line across the picture (square to the camera), so every car sits at the same height and size;
     the old staggered row put the back cars higher on screen and the row drifted up as players were added */
- const YAW=-2.2,SP=3.2,/* round 30: wide enough apart that no two cars overlap in the picture */PX=-.28,PZ=.96,slot=i=>{const col=i-(list.length-1)/2;return[col*SP*PX,col*SP*PZ]};
+ const YAW=-2.2,YAW2=-1.51,yw=i=>list.length>1&&i%2?YAW2:YAW,SP=3.35,/* round 30: wide enough apart that no two cars overlap in the picture */PX=-.28,PZ=.96,slot=i=>{const col=i-(list.length-1)/2;return[col*SP*PX,col*SP*PZ]};
  P.objShot(cv,key,()=>{const g=new THREE.Group();list.forEach((s,i)=>{if(only!=null&&i!==only)return;const c=BYID[s.id];const src=c&&P.C10.model(c.k10,s.alt);if(!src)return;const m=src.clone(true);
-  const q=slot(i);m.position.set(q[0],0,q[1]);m.rotation.y=YAW;g.add(m)});return g},{yaw:0,up:.12,reg,clear:true,floor:only==null,ref:bx=>{const n=list.length,b=new THREE.Box3(),v=new THREE.Vector3(),ax=new THREE.Vector3(0,1,0);
-  for(let i=0;i<n;i++){const q=slot(i);for(const sx of[-.975,.975])for(const sz of[-2.35,2.35])for(const sy of[0,1.45]){v.set(sx,sy,sz).applyAxisAngle(ax,YAW);v.x+=q[0];v.z+=q[1];b.expandByPoint(v)}}
+  const q=slot(i);m.position.set(q[0],0,q[1]);m.rotation.y=yw(i);/* round 31: alternating poses */g.add(m)});return g},{yaw:0,up:.12,reg,clear:true,floor:only==null,ref:bx=>{const n=list.length,b=new THREE.Box3(),v=new THREE.Vector3(),ax=new THREE.Vector3(0,1,0);
+  for(let i=0;i<n;i++){const q=slot(i);for(const sx of[-.975,.975])for(const sz of[-2.35,2.35])for(const sy of[0,1.45]){v.set(sx,sy,sz).applyAxisAngle(ax,yw(i));v.x+=q[0];v.z+=q[1];b.expandByPoint(v)}}
   const y0=only!=null&&CARY0[lk]!=null?CARY0[lk]:bx.min.y;if(only==null)CARY0[lk]=y0;b.min.y=y0;b.max.y=y0+1.45;return b}})};
 /* round 25 (Hakan): no player count up front. The car step is a 2 x 2 grid of player frames: P1 is always there, "Add player" (next to
    the car, or the next empty frame) brings the next player in and their settings open in that frame; the x on a frame takes them out */
@@ -562,8 +562,8 @@ P.addPlayer=addPlayer;P.removePlayer=removePlayer;
 /* round 27: the cars sit level with the car name, whatever the picture's height (the region keeps one size, so the camera stays anchored) */
 const carReg=(box,np)=>{try{const h=box.querySelector('.gxHero'),t=h.querySelector('.gxTn b'),hr=h.getBoundingClientRect(),tr_=t.getBoundingClientRect();if(!hr.height)return[.04,.88,-.6,.6];
  /* round 30: the cars are centred in the space between the end of the car name and the picture's right edge */
- let tx=tr_.right;try{const rg=document.createRange();rg.selectNodeContents(t);tx=rg.getBoundingClientRect().right}catch(e){}const x0=Math.max(-.2,Math.min(.5,Math.round((2*((tx-hr.left)/hr.width)-1+.05)*50)/50)),x1=.95;
- let yc=1-2*((tr_.top+tr_.height/2-hr.top)/hr.height);yc=Math.round(yc*50)/50;/* round 29: one car fills much more of the picture */if(np===1){const hh=1.02;yc=Math.max(-1.02+hh,Math.min(.96-hh,yc+.1));return[x0,x1,yc-hh,yc+hh]}const hh=np>2?.8:.86;yc=Math.max(-.98+hh,Math.min(.98-hh,yc));return[x0,x1,yc-hh,yc+hh]}catch(e){return[.04,.88,-.6,.6]}};
+ let tx=tr_.right;try{const rg=document.createRange();rg.selectNodeContents(t);tx=rg.getBoundingClientRect().right}catch(e){}const x0=Math.max(-.2,Math.min(.5,Math.round((2*((tx-hr.left)/hr.width)-1+.05)*50)/50)),x1=1.0;
+ let yc=1-2*((tr_.top+tr_.height/2-hr.top)/hr.height);yc=Math.round(yc*50)/50;/* round 29: one car fills much more of the picture */if(np===1){const hh=1.02;yc=Math.max(-1.02+hh,Math.min(.96-hh,yc+.1));return[x0,x1,yc-hh,yc+hh]}const hh=np>2?.92:.95;/* round 31: bigger */yc=Math.max(-.98+hh,Math.min(.98-hh,yc));return[x0,x1,yc-hh,yc+hh]}catch(e){return[.04,.88,-.6,.6]}};
 /* the player being edited: their car glows in their colour, then fades after a few seconds; any change or typing for them lights it again */
 function gxHiPulse(){const h=document.getElementById('gxHi');if(!h)return;h.classList.remove('on');void h.offsetWidth;h.classList.add('on')}
 P.gxHiPulse=gxHiPulse;
@@ -574,7 +574,7 @@ function gxCarStep(box){const m=ST.mode,multi=multiOK(m);if(!multi)ST.players=1;
    garage:()=>{openShow('garage',{player:p,cap:null,ret:'s8setup',rally:m==='rally',track:m==='track'})},pl:p});
   if(P.owns(s.id,0)&&P.owns(s.id,1))rows.push({grp,l:'Paint',v:s.alt?'Alternative':'Stock',opts:2,go:d=>{setCar(p,s.id,s.alt?0:1);GXS.cf=p;P.sfx&&P.sfx('move');renderSetup()},pl:p});
   const inp=dv[p]&&dv[p].querySelector('input.nm');if(inp)rows.push({grp:multi?grp:1,l:'Name',input:inp,pl:p});
-  const tx=dv[p]&&dv[p].querySelector('.txs');if(tx){const bs=[...tx.querySelectorAll('button')],k=Math.max(0,bs.findIndex(b=>b.classList.contains('sel')));rows.push({grp:multi?grp:1,l:'Gearbox',v:bs[k].textContent.trim(),opts:bs.length,go:d=>{const n=Math.min(bs.length-1,Math.max(0,k+d));if(n!==k)bs[n].click()},pl:p})}
+  const tx=dv[p]&&dv[p].querySelector('.txs');if(tx){const bs=[...tx.querySelectorAll('button')],k=Math.max(0,bs.findIndex(b=>b.classList.contains('sel')));rows.push({grp:multi?grp:1,l:'Gearbox',v:bs[k].textContent.trim(),opts:bs.length,go:d=>{const n=((k+d)%bs.length+bs.length)%bs.length;if(n!==k)bs[n].click()},pl:p})}
   if(multi){if(p===1)rows.push({grp,l:'Keys',v:KEYN(1),opts:2,go:()=>{P.setP2Keys(P.p2Keys==='numpad'?'arrows':'numpad');P.sfx&&P.sfx('move');renderSetup()},pl:p});
    else rows.push({grp,l:'Keys',v:KEYN(p),opts:1,pl:p})}}
  /* round 26 (Hakan): no empty frames; a player's frame appears only once they are added (Add player by the car, or the + key) */
@@ -587,11 +587,11 @@ function gxCarStep(box){const m=ST.mode,multi=multiOK(m);if(!multi)ST.players=1;
   tnBtn:multi&&np<MAXP?`<button class="gxAdd"><b>+</b> Add player</button>`:'',onAdd:addPlayer,
   grid:multi,cols:PCOLS,rm:multi?(p,go)=>{if(go){removePlayer(p);return}return p>0&&p<np}:null,
   heroCls:'cars'+(GXS.newP!=null?' fin':''),newP:GXS.newP,groups:multi?[0,1,2,3].map(nm):['Car','Driver','More'],shot:cv=>{const L=Array.from({length:np},(_,p)=>selCar(p)),rg=carReg(box,np);carShot(cv,L,rg);if(np>1){const hc=document.createElement('canvas');hc.id='gxHi';hc.style.setProperty('--pc',PCOLS[fi]);cv.after(hc);carShot(hc,L,rg,fi);gxHiPulse()}},go:'Start'});/* grid: the cars sit between the name (left) and the stats (right) */
- box.querySelectorAll('.gxCard.pf input').forEach(i=>{i.addEventListener('input',gxHiPulse);i.addEventListener('focus',gxHiPulse)});
+ box.querySelectorAll('.gxCard.pf input').forEach(i=>{i.addEventListener('focus',gxHiPulse)});
  if(multi)$('suHint').innerHTML='<u>&uarr;&darr;</u>Choose<u>&larr;&rarr;</u>Change'+(np<MAXP?'<u>+</u>Add player':'')+(np>1?'<u>Del</u>Remove':'')+'<u>Enter</u>Start';
  box.querySelectorAll('.gxr').forEach(el=>{const r=rows[+el.dataset.i];if(r&&r.pl!=null)el.addEventListener('mouseenter',()=>{if(GXS.cf!==r.pl){GXS.cf=r.pl;GXS.f=+el.dataset.i;renderSetup()}})})}
 P.gxRender=o=>{const sec=$('s8setup');sec.classList.add('gxOn');let box=$('gxSu');if(!box){box=document.createElement('div');box.id='gxSu';sec.insertBefore(box,sec.querySelector('.foot8'))}box.style.display='';gxRender(box,o)};
-P.gxSuKey=e=>{if(!GXS.rows||!$('s8setup').classList.contains('gxOn'))return false;if(e.target&&e.target.tagName==='INPUT'){if(e.code==='Enter'||e.code==='Escape'||e.code==='ArrowUp'||e.code==='ArrowDown')e.target.blur();else return true}
+P.gxSuKey=e=>{if(!GXS.rows||!$('s8setup').classList.contains('gxOn'))return false;if(e.target&&e.target.tagName==='INPUT'){if(e.code==='Enter'||e.code==='Escape'){e.target.blur();e.preventDefault();return true}/* round 31: Enter only finishes the name, it never starts the race */if(e.code==='ArrowUp'||e.code==='ArrowDown')e.target.blur();else return true}
  const c=e.code,n=GXS.rows.length,r=GXS.rows[GXS.f],box=$('gxSu');
  const paint=()=>{const q=GXS.rows[GXS.f];if(GXS.step===2&&!ST.custom&&q&&q.pl!=null&&q.pl!==GXS.cf){GXS.cf=q.pl;renderSetup();return}box.querySelectorAll('.gxr').forEach(x=>x.classList.toggle('on',+x.dataset.i===GXS.f));const o=box.querySelector('.gxr.on');if(o)o.scrollIntoView({block:'nearest'})};
  if(GXS.step===2&&!ST.custom&&multiOK(ST.mode)){if(c==='Equal'||c==='NumpadAdd'){addPlayer();e.preventDefault();return true}if((c==='Delete'||c==='Backspace')&&r&&r.pl>0){removePlayer(r.pl);e.preventDefault();return true}}
