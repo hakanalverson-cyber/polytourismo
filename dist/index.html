@@ -12413,6 +12413,8 @@ window.__optAction=k=>{if(k==='@tutorial')P.startTutorial()};
 const P=window.PT8;
 P.LOG=[
  {v:'0.03',d:'Nov 2, 2026',t:'Highway Cut-Up on bikes',items:[
+  'Career: haggling on an old phone. Text a Marketplace seller for a better price, and buyers sometimes text you about your listings with an offer. Five texts at most, nobody moves more than 5,000, and they get stubborn near their limit. You also get a notification when you buy a car.',
+  'Career: a short black fade whenever the car changes (bringing one out, buying, selling, paint, repairs, tuning). Nina keeps her hands where they make sense (on her hips, her belt, the bench), no more holding nothing up or hammering the air while she tunes. Fewer lights in the garage for a smoother frame rate, and the selling form no longer jitters while you type.',
   'Races: the race now waits behind the black fade until the track is actually running smoothly, so the countdown starts as the picture comes up instead of running out in the dark. With damage on (always, in career) hitting a track wall hurts the car and riding along one wears it down.',
   'Career: Nina can repaint a car with a bad paintjob back to its factory colour, warmer garage lighting, Nina and Vince call you by your name now and then, and the garage picture no longer shrinks into a corner. A title and a description add at most 10% to the selling chance.',
   'Career: worn cars now look worn, with scratches, chips, grime and rust in the paint, and the bad paintjobs are properly awful. Standing around, Nina and Vince shift their weight and change posture instead of fidgeting, they blend smoothly into walking, and they stay in view. The loading screen is the start-up screen again, with CAREER on it.',
@@ -17021,7 +17023,7 @@ P.launchWithIntro=cfg=>{
   /* the race stays frozen behind the black (no formation lap, no countdown) until frames come smoothly: the first frames of a new track
      can take seconds while textures upload and shaders compile, and the countdown used to run out in the dark. Then let go and fade in */
   let n=0,ok=0,last=performance.now();const t0=last;
-  const tick=()=>{const now=performance.now(),d=now-last;last=now;n++;ok=d<45?ok+1:0;if((n<8||ok<6)&&now-t0<6000)return requestAnimationFrame(tick);
+  let pd=0;const tick=()=>{const now=performance.now(),d=now-last;last=now;n++;/* steady, not necessarily fast: a slow machine settles at its own pace */ok=d<120&&pd&&Math.abs(d-pd)<Math.max(8,pd*.3)?ok+1:0;pd=d;if((n<8||ok<5)&&now-t0<3500)return requestAnimationFrame(tick);
    hold=false;setTimeout(()=>{el.style.transition='opacity .6s ease';el.style.opacity='0';el.style.pointerEvents='none';busy=false},60)};requestAnimationFrame(tick)}},240)};
 /* the freeze: wrapped once at the first launch, when every layer has added its own step, so it sits outside all of them */
 let hold=false,wrapped=false;
@@ -18662,7 +18664,7 @@ const G=()=>{const s=P.SV();if(!s.gc||typeof s.gc!=='object')s.gc={};const g=s.g
  g.rep=g.rep|0;g.seq=g.seq|0;g.wins=g.wins|0;g.runs=g.runs|0;g.earned=g.earned|0;return g};
 
 /* ---------------- people ---------------- */
-const ICO={fix:'<path d="M14.5 6.5a4 4 0 0 0-5.4 5.1L4 16.7 7.3 20l5.1-5.1a4 4 0 0 0 5.1-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>',tune:'<path d="M5 4v6M5 14v6M12 4v3M12 11v9M19 4v9M19 17v3"/><circle cx="5" cy="12" r="2"/><circle cx="12" cy="9" r="2"/><circle cx="19" cy="15" r="2"/>',
+const ICO={chat:'<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M9.5 6.5h5v4h-5zM10 14h.01M12 14h.01M14 14h.01M10 16.5h.01M12 16.5h.01M14 16.5h.01"/>',fix:'<path d="M14.5 6.5a4 4 0 0 0-5.4 5.1L4 16.7 7.3 20l5.1-5.1a4 4 0 0 0 5.1-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>',tune:'<path d="M5 4v6M5 14v6M12 4v3M12 11v9M19 4v9M19 17v3"/><circle cx="5" cy="12" r="2"/><circle cx="12" cy="9" r="2"/><circle cx="19" cy="15" r="2"/>',
  look:'<path d="M3.5 15a8.5 8.5 0 0 1 17 0"/><path d="M12 15l4-5"/><circle cx="12" cy="15" r="1.2"/>',tip:'<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>',
  bye:'<path d="M14 4h5v16h-5"/><path d="M10 8l-4 4 4 4M6 12h9"/>',race:'<path d="M5 21V4"/><path d="M5 4h12l-2 4 2 4H5"/>',car:'<path d="M3 15l2-5.5C5.4 8.5 6.2 8 7.2 8h9.6c1 0 1.8.5 2.2 1.5L21 15v3h-3v-1.5H6V18H3z"/>',
  chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',swap:'<path d="M4 9h13l-3-3M20 15H7l3 3"/>',shop:'<path d="M4 9l1.5-5h13L20 9M4 9h16v11H4zM9 13h6"/>',paint:'<path d="M4 4h13v5H4zM17 6.5h3V12h-8v3"/><path d="M11 15h2v6h-2z"/>',ok:'<path d="M5 12.5l4.5 4.5L19 7"/>',back:'<path d="M15 18l-6-6 6-6"/>'};
@@ -18738,7 +18740,7 @@ const TIPS=['Brake in a straight line, then turn. The car can only do one damn t
  'If you keep hitting the wall, the car gets slower. I can fix it, but it costs.','On hot laps, a clean lap beats a fast messy one. Every time.'];
 /* the name the player picked when the game asked them; both of them use it now and then */
 const pName=()=>(P.SV().name||'').trim();
-const withName=(t,p)=>{const n=pName();if(!n||Math.random()>(p==null?.45:p))return t;return /^[A-Z][^.!?]*[.!?]$/.test(t)&&t.length<40?t.replace(/([.!?])$/,`, ${n}$1`):`${n}. ${t}`};
+const withName=(t,p)=>{const n=pName();if(!n||t.includes(n)||Math.random()>(p==null?.45:p))return t;return /^[A-Z][^.!?]*[.!?]$/.test(t)&&t.length<40?t.replace(/([.!?])$/,`, ${n}$1`):`${n}. ${t}`};
 function vinLine(state){const g=G(),r=state&&state.res,nm=pName();
  if(r){const fix=wearOf(curCar().id)>.2?' Might want Nina to look at the car.':'';
   if(r.ok){const p=r.paid?` ${fmtCr(r.paid)}, as promised.`:'';return rnd([`Nice. ${r.what}.${p}`,`${r.what}. Not bad.${p}`,`Knew you had it. ${r.what}.${p}`])+(r.tierUp?` People are talking. You're ${TIERS[r.tierUp].n} level now.`:'')+fix}
@@ -18829,12 +18831,12 @@ function rig(bones){const R={};for(const b of bones){const r=b.name.replace(/_\d
 const buildScene=()=>GS.bp||(GS.bp=buildScene_());
 async function buildScene_(){GS.busy=true;const pr=f=>{try{GS.onProg&&GS.onProg(f)}catch(e){}};
  try{const sc=new THREE.Scene();sc.background=new THREE.Color(0x10141a);sc.fog=new THREE.Fog(0x10141a,40,80);const cam=new THREE.PerspectiveCamera(56,16/9,.05,120);GS.sc=sc;GS.cam=cam;
-  sc.add(new THREE.HemisphereLight(0xf4f1ea,0x2c313a,.42));
+  sc.add(new THREE.HemisphereLight(0xf4f1ea,0x2c313a,.55));
   /* the strip lights in the ceiling: soft pools of cool white under each fitting, and a little warm bounce off the floor */
-  for(const [x,z] of [[-3.3,-3.6],[-0.4,-3.6],[-3.3,0.2],[-0.4,0.2],[-1.9,2.6]]){const pl=new THREE.PointLight(0xfff3e2,.85,6.5,2);pl.position.set(x,2.55,z);sc.add(pl)}
-  {const b=new THREE.PointLight(0xffd9b0,.2,6,1.5);b.position.set(-1.9,.25,-.9);sc.add(b)}
+  /* two lights, not five: every light costs every pixel of every mesh, and the five plus the floor bounce made the garage slow on laptops */
+  for(const [x,z] of [[-1.9,-3.4],[-1.9,0.6]]){const pl=new THREE.PointLight(0xfff3e2,1.0,8,1.6);pl.position.set(x,2.55,z);sc.add(pl)}
   const ks=(x,y,z,tx,tz,i,ang,c)=>{const l=new THREE.SpotLight(c||0xe6efff,i,26,ang,.7,1.2);l.position.set(x,y,z);l.target.position.set(tx,0,tz);sc.add(l,l.target);return l};
-  ks(SPOT.car.x,5.2,SPOT.car.z+.6,SPOT.car.x,SPOT.car.z,1.6,.62);ks(SPOT.red.x+.4,4.8,SPOT.red.z+1.2,SPOT.red.x,SPOT.red.z,.8,.5);ks(SPOT.vin.x+.6,4.8,SPOT.vin.z+1.4,SPOT.vin.x,SPOT.vin.z,.8,.5);
+  ks(SPOT.car.x,5.2,SPOT.car.z+.6,SPOT.car.x,SPOT.car.z,1.6,.62);
   const d=new THREE.DirectionalLight(0xf1f5ff,.32);d.position.set(4,9,7);sc.add(d);const rim=new THREE.DirectionalLight(0x8fb8ff,.5);rim.position.set(-3,4,-9);sc.add(rim);
   let gm=null;try{if(window.GAR2_B64)gm=garMesh(window.GAR2_B64)}catch(e){console.warn('career garage',e)}
   if(gm){for(const k in gm)sc.add(gm[k]);GS.clutter=gm.clutter||null;GS.gar=gm;try{navBuild(gm)}catch(e){console.warn('career map',e)}}
@@ -18936,8 +18938,9 @@ function tick(dt){GS.t+=dt;const k=1-Math.exp(-dt*3.4);GS.cp.lerp(GS.tp,k);GS.cl
    (nods, shrugs, a point at the car). They turn to face you when you walk up, and Nina gets stuck in with the hammer while she tunes */
 const QW=new THREE.Quaternion(),QP=new THREE.Quaternion(),QD=new THREE.Quaternion();
 function rotW(b,axis,ang){if(!b||!ang)return;b.parent.updateWorldMatrix(true,false);b.parent.getWorldQuaternion(QP);QW.setFromAxisAngle(axis,ang);QD.copy(QP).invert().multiply(QW).multiply(QP);b.quaternion.premultiply(QD)}
-const GEST={red:{idle:['tap','wipe','stretch','tap','look'],talk:['nod','shrug','point','tap','nod','hip']},vin:{idle:['watch','jacket','shift','look','watch'],talk:['nod','shrug','point','nod','palm']}};
-const GLEN={tap:2.4,wipe:2.2,stretch:2.6,look:2.8,watch:2.6,jacket:2.0,shift:3.0,nod:1.1,shrug:1.4,point:1.8,hip:2.0,palm:1.6,hey:2.2};
+/* talking gestures stay small and low: a nod, a shrug, a hand to the hip. Nothing that lifts the hands into the air without a reason */
+const GEST={red:{idle:['look'],talk:['nod','shrug','nod','hip','nod']},vin:{idle:['watch','look'],talk:['nod','shrug','nod','palm']}};
+const GLEN={tap:2.4,wipe:2.2,stretch:2.6,look:2.8,watch:2.6,jacket:2.0,shift:3.0,nod:1.1,shrug:1.4,point:1.8,hip:2.0,palm:1.6,hey:1.5};
 function gesture(pe,k){if(!pe)return;pe.gs={k,t:0,d:GLEN[k]||1.5}}
 P.gcGesture=(who,k)=>gesture(GS[who],k);
 function anim(pe,k,dt){const B=pe.rig,t=GS.t+(k==='red'?1.7:0),g=pe.g;for(const r in B)if(B[r].userData.q0)B[r].quaternion.copy(B[r].userData.q0);
@@ -18962,7 +18965,7 @@ function anim(pe,k,dt){const B=pe.rig,t=GS.t+(k==='red'?1.7:0),g=pe.g;for(const 
  /* body */
  const shift=0,hip=gk==='hip'?E:0;
  rotW(B.spine,fw,sw*.012-hip*.07);rotW(B.spine,up,Math.sin(t*.31)*.04);
- if(work){rotW(B.spine002,rt,.22+Math.sin(t*3.1)*.03);rotW(B.spine003,rt,.12)}
+ if(work){rotW(B.spine002,rt,.1+Math.sin(t*.8)*.02);rotW(B.spine003,rt,.05)}
  rotW(B.spine002,rt,-br*.02-(gk==='stretch'?E*.2:0));rotW(B.spine003,rt,-br*.024);rotW(B.spine003,fw,-sw*.016-shift*.05+hip*.05);
  /* head */
  const nod=gk==='nod'?Math.sin(gp*Math.PI*3)*E*.14:0;
@@ -18975,17 +18978,17 @@ function anim(pe,k,dt){const B=pe.rig,t=GS.t+(k==='red'?1.7:0),g=pe.g;for(const 
  /* arms (negative about the body's right axis lifts the arm forwards) */
  for(const [s,sg] of [['L',1],['R',-1]]){rotW(B['upper_arm'+s],rt,Math.sin(t*.42+sg)*.025);rotW(B['upper_arm'+s],fw,sg*br*.015);rotW(B['forearm'+s],rt,-.08-Math.sin(t*.5+sg)*.025)}
  const A=(s,u,f)=>{rotW(B['upper_arm'+s],rt,u);rotW(B['forearm'+s],rt,f)};
- if(work){A('R',-.55,-.7-Math.max(0,Math.sin(t*6.5))*.6);A('L',-.3,-.6)}
+ if(work){A('L',.05,-.2);rotW(B.upper_armL,fw,.5);rotW(B.forearmL,fw,-1.15)}
  else if(gk==='tap'){A('L',-.35*E,-1.2*E);A('R',-.3*E,-(1.0+Math.max(0,Math.sin(t*8))*.45)*E)}
  else if(gk==='wipe'){A('L',-.35*E,-1.3*E);A('R',-.35*E,-1.3*E);rotW(B.forearmR,up,Math.sin(t*7)*.25*E);rotW(B.forearmL,up,-Math.sin(t*7)*.25*E)}
  else if(gk==='stretch'){A('L',-.25*E,-.5*E);A('R',-.25*E,-.5*E);for(const [s,sg] of [['L',1],['R',-1]])rotW(B['upper_arm'+s],fw,sg*E*.35)}
  else if(gk==='watch'){A('L',-.5*E,-1.45*E);rotW(B.forearmL,up,-.4*E)}
  else if(gk==='jacket'){A('L',-.25*E,-1.5*E);A('R',-.25*E,-1.5*E);rotW(B.spine005,rt,.1*E)}
  else if(gk==='point'){A('R',-1.05*E,-.25*E)}
- else if(gk==='palm'){A('R',-.45*E,-1.0*E);A('L',-.45*E,-1.0*E);for(const [s,sg] of [['L',1],['R',-1]])rotW(B['forearm'+s],fw,sg*.35*E)}
+ else if(gk==='palm'){A('R',-.3*E,-.6*E);A('L',-.2*E,-.45*E);for(const [s,sg] of [['L',1],['R',-1]])rotW(B['forearm'+s],fw,sg*.35*E)}
  else if(gk==='shrug'){A('L',-.2*E,-.75*E);A('R',-.2*E,-.75*E);for(const [s,sg] of [['L',1],['R',-1]])rotW(B['forearm'+s],fw,sg*.4*E)}
  else if(gk==='hip'){A('R',-.1*E,-.4*E);rotW(B.upper_armR,fw,-.5*E)}
- else if(gk==='hey'){A('R',-.3*E,-1.35*E);rotW(B.forearmR,fw,Math.sin(t*9)*.25*E)}
+ else if(gk==='hey'){const e=E*Math.min(1,(1-gp)*3);A('R',-.35*e,-1.15*e);rotW(B.forearmR,fw,Math.sin(t*9)*.12*e)}
  g.position.y=walkPose(pe,B,rt,fw,up);posePP(pe,k,B,t,dt,rt,fw,up,A,me,work||!!G_)}
 /* ---------------- moving around the shop ----------------
    The garage is mapped once from its own mesh into a 10 cm floor grid (NAV): every bit of wall, bench, shelf, locker or bin between 8 cm and
@@ -19108,16 +19111,16 @@ function walkPose(pe,B,rt,fw,up){const w=pe.wk;if(w<.01)return 0;const f=pe.ph,a
    sw: weight to the left (+) or right (-) leg; ln: lean forward; u/f: upper arm and forearm forwards (negative lifts); o: upper arm out to
    the side; tw: forearm turned in; hd: head down */
 const PK=['sw','ln','uL','fL','oL','tL','uR','fR','oR','tR','hd'];
-const PZ={N:{},WL:{sw:.9},WR:{sw:-.9},hipR:{sw:-.7,uR:-.12,fR:-.55,oR:.55},hipL:{sw:.7,uL:-.12,fL:-.55,oL:.55},hips:{sw:.35,uL:-.12,fL:-.55,oL:.5,uR:-.12,fR:-.55,oR:.5},
- clasp:{sw:.5,uL:-.22,fL:-.72,tL:.5,uR:-.22,fR:-.72,tR:.5},pockets:{sw:-.7,uL:.06,fL:-.42,oL:.12,uR:.06,fR:-.42,oR:.12}};
-const IDLE={red:['WL','WR','hipR','hips','hipL','WR'],vin:['WL','clasp','pockets','WR','pockets']};
+const PZ={N:{},WL:{sw:.9},WR:{sw:-.9},hipR:{sw:-.7,uR:.05,fR:-.2,oR:.5},hipL:{sw:.7,uL:.05,fL:-.2,oL:.5},hips:{sw:.35,uL:.05,fL:-.2,oL:.45,uR:.05,fR:-.2,oR:.45},
+ belt:{sw:-.6,uL:0,fL:-.18,oL:.2,uR:0,fR:-.18,oR:.2},clasp:{sw:.5,uL:-.22,fL:-.72,tL:.5,uR:-.22,fR:-.72,tR:.5},pockets:{sw:-.7,uL:.06,fL:-.42,oL:.12,uR:.06,fR:-.42,oR:.12}};
+const IDLE={red:['WL','belt','WR','hipR','WL','belt','hipL'],vin:['WL','clasp','pockets','WR','pockets']};
 function routine(a,k,tt,t){const H=Object.assign;switch(a.k){
  case 'type':{const c=tt%9;return c<6.2?{ln:.12,uL:-.72,fL:-.78,tL:.25,uR:-.72,fR:-.78,tR:.25,_ty:1}:{ln:.06,sw:.5,uL:-.04,fL:-.22,uR:-.62,fR:-.5,tR:.15}}
- case 'bench':{const c=tt%7;return c<4.2?{ln:.24,uL:-.62,fL:-.45,tL:.15+.12*Math.sin(t*.9),uR:-.62,fR:-.45,tR:.15-.12*Math.sin(t*.7)}:{ln:.1,sw:.5,uL:-.55,fL:-.48,uR:-.42,fR:-1.0,tR:.35,_hand:1}}
- case 'shelf':{const c=tt%6.5;return c<2?H({hd:-.12},PZ.hipL):c<3.8?{sw:.3,ln:-.04,uR:-1.25,fR:-.22,uL:-.12,fL:-.55,oL:.5}:{sw:.3,uR:-.42,fR:-1.05,tR:.35,uL:-.12,fL:-.55,oL:.5,_hand:1}}
+ case 'bench':{const c=tt%9;return c<5.5?{ln:.24,hd:.1,uL:-.62,fL:-.45,tL:.15+.12*Math.sin(t*.9),uR:-.62,fR:-.45,tR:.15-.12*Math.sin(t*.7),_wk:1}:{ln:.16,sw:.5,hd:.12,uL:-.6,fL:-.45,tL:.15,uR:-.12,fR:-.55,oR:.55}}
+ case 'shelf':{const c=tt%8;return c<3?H({hd:-.12},PZ.hipL):c<5?{sw:.3,ln:-.04,hd:-.1,uR:-1.2,fR:-.2,uL:-.12,fL:-.55,oL:.5}:H({hd:-.08},PZ.WL)}
  case 'tires':{const c=tt%6;return c<3.8?{ln:.3,sw:.5,uR:-.42,fR:-.12,_pat:1}:PZ.hipL}
  case 'lean':{const c=tt%8;return c<5?{ln:.2,uL:-.6,fL:-.42,uR:-.6,fR:-.42}:PZ.clasp}
- case 'car':return k==='vin'?H({ln:.05},PZ.pockets):{ln:.16,sw:.4,uR:-.66,fR:-.3,uL:-.12,fL:-.55,oL:.5}}
+ case 'car':return k==='vin'?H({ln:.05},PZ.pockets):H({ln:.12,hd:.1},PZ.hips)}
  return PZ.N}
 function posePP(pe,k,B,t,dt,rt,fw,up,A,me,busy){if(!pe.pp){pe.pp={};for(const q of PK)pe.pp[q]=0}const pp=pe.pp,ac=pe.ac&&!pe.mv&&!me?pe.ac:null;
  let tg=ac?routine(ac,k,ac.t||0,t):PZ[pe.pz||'N']||PZ.N;if(pe.mv)tg=PZ.N;
@@ -19127,10 +19130,11 @@ function posePP(pe,k,B,t,dt,rt,fw,up,A,me,busy){if(!pe.pp){pe.pp={};for(const q 
  const a=Math.abs(pp.sw)*st,fr=pp.sw>0?'R':'L';rotW(B['thigh'+fr],rt,-.05*a);rotW(B['shin'+fr],rt,.2*a);rotW(B['foot'+fr],rt,-.14*a);
  rotW(B.spine001,fw,pp.sw*.035*st);rotW(B.spine003,fw,-pp.sw*.04*st);rotW(B.spine,up,pp.sw*.05*st);
  rotW(B.spine002,rt,pp.ln);rotW(B.spine003,rt,pp.ln*.4);rotW(B.spine005,rt,pp.hd);
- A('L',pp.uL,pp.fL);A('R',pp.uR,pp.fR);rotW(B.upper_armL,fw,pp.oL);rotW(B.upper_armR,fw,-pp.oR);rotW(B.forearmL,up,-pp.tL);rotW(B.forearmR,up,pp.tR);
+ A('L',pp.uL,pp.fL);A('R',pp.uR,pp.fR);rotW(B.upper_armL,fw,pp.oL);rotW(B.upper_armR,fw,-pp.oR);/* the elbow goes out, the forearm folds back in: that is what puts a hand on a hip or a belt instead of out in the air */rotW(B.forearmL,fw,-pp.oL*2.3);rotW(B.forearmR,fw,pp.oR*2.3);rotW(B.forearmL,up,-pp.tL);rotW(B.forearmR,up,pp.tR);
  /* small live detail on top, only once the routine's shape has settled in */
  const on=!!(ac&&pe.task);pe.aw+=((on?1:0)-pe.aw)*Math.min(1,dt*2);const tg_=ac?routine(ac,k,ac.t||0,t):null;
  if(tg_&&tg_._ty&&pe.aw>.05){const ps=Math.sin(t*.9)>.75?0:1;rotW(B.forearmL,rt,Math.sin(t*13.1)*.06*ps*pe.aw);rotW(B.forearmR,rt,Math.sin(t*11.3+1.3)*.06*ps*pe.aw)}
+ if(tg_&&tg_._wk&&pe.aw>.05){rotW(B.forearmR,up,Math.sin(t*1.7)*.12*pe.aw);rotW(B.handR,rt,Math.sin(t*2.3)*.15*pe.aw)}
  if(tg_&&tg_._pat&&pe.aw>.05)rotW(B.forearmR,rt,-Math.max(0,Math.sin(t*4.2))*.3*pe.aw);
  pe.lkH=tg_&&tg_._hand&&B.handR?B.handR.getWorldPosition(V3()):null}
 /* the hover label: a rounded pill with the name ("Change car" on the car) */
@@ -19180,10 +19184,11 @@ body.gcG #v8Bg{opacity:0!important}
 #s8career.gcOn .gcDlg{position:absolute;right:5vw;top:calc(50% - 10px);max-height:calc(100vh - 230px);display:flex;flex-direction:column;transform:translate(50px,-50%) perspective(1400px) rotateY(-9deg);transform-origin:right center;width:clamp(360px,31vw,540px);z-index:3;opacity:0;pointer-events:none;
  padding:clamp(12px,1.1vw,20px);box-sizing:border-box;border-radius:14px;background:linear-gradient(180deg,#2a2e33ec,#141619f2);box-shadow:inset 0 1px 0 #ffffff35,0 0 0 1px #000,0 24px 50px #000c;transition:opacity .35s,transform .5s cubic-bezier(.16,.85,.25,1)}
 #s8career.gcOn .gcDlg.on{opacity:1;transform:translate(0,-50%) perspective(1400px) rotateY(-9deg);pointer-events:auto}
+body.gcPhone #s8career.gcOn .gcBox.on{transform:translateX(262px)}
 #s8career.gcOn .gcDlg h6:empty{display:none}
 #s8career.gcOn .gcDlg h6{margin:2px 8px 10px;font:600 11px var(--gt);letter-spacing:.24em;color:var(--c);text-transform:uppercase;display:flex;align-items:center;gap:10px}
 #s8career.gcOn .gcDlg h6 span{margin-left:auto;color:#9aa4b0;letter-spacing:.14em}
-#s8career.gcOn .gcCh{display:flex;flex-direction:column;gap:7px;overflow-y:auto;min-height:0;scrollbar-width:thin;padding:6px 6px 8px;margin:-6px -6px -8px}
+#s8career.gcOn .gcCh{display:flex;flex-direction:column;gap:7px;overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable;min-height:0;scrollbar-width:thin;padding:6px 6px 8px;margin:-6px -6px -8px}
 #s8career.gcOn .gcRow{position:relative;flex:none;display:flex;align-items:center;gap:16px;height:clamp(44px,5.8vh,56px);padding:0 18px;border-radius:999px;cursor:pointer;overflow:hidden;font:300 clamp(17px,2.3vh,23px) var(--gt);color:#ffffffb0;transition:background .15s,color .15s}
 #s8career.gcOn .gcRow .mi{flex:none;width:24px;height:24px;opacity:.7;transition:transform .3s cubic-bezier(.3,1.6,.5,1),opacity .15s}
 #s8career.gcOn .gcRow em{margin-left:auto;font:500 12px var(--gt);letter-spacing:.12em;color:#ffffff80;font-style:normal}
@@ -19266,7 +19271,7 @@ body.gcG #v8Bg{opacity:0!important}
 #s8career.gcOn .sfAsk{height:auto;padding:10px 16px 8px;border-radius:16px;display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:10px}#s8career.gcOn .sfAsk>span{white-space:nowrap}
 #s8career.gcOn .sfAsk u{text-decoration:none;display:grid;place-items:center;width:26px;height:26px;border-radius:8px;font:400 20px/1 var(--gt);background:#ffffff10;box-shadow:inset 0 1px 0 #ffffff24,0 0 0 1px #00000080;cursor:pointer}
 #s8career.gcOn .sfAsk b{font:700 15px var(--gt);min-width:96px;text-align:center}#s8career.gcOn .sfAsk small{grid-column:1/-1;margin-top:0;font:600 9px var(--gt);letter-spacing:.18em;text-transform:uppercase;color:#9aa4b0}
-#s8career.gcOn .sfIn{height:auto;padding:10px 16px 12px;border-radius:16px;overflow:visible;display:flex;flex-direction:column;align-items:stretch;gap:5px;cursor:text}#s8career.gcOn .sfIn>span{font:600 9px var(--gt);letter-spacing:.2em;text-transform:uppercase;color:#9aa4b0}
+#s8career.gcOn .sfIn{height:auto;padding:10px 16px 12px;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;align-items:stretch;gap:5px;cursor:text}#s8career.gcOn .sfIn>span{font:600 9px var(--gt);letter-spacing:.2em;text-transform:uppercase;color:#9aa4b0}
 #s8career.gcOn .sfIn input,#s8career.gcOn .sfIn textarea{width:100%;box-sizing:border-box;resize:none;border:0;outline:0;padding:7px 10px;border-radius:8px;font:400 14px/1.35 var(--gt);color:#f2f4f6;background:#0007;box-shadow:inset 0 1px 3px #000a,0 0 0 1px #ffffff14}
 #s8career.gcOn .sfIn input:focus,#s8career.gcOn .sfIn textarea:focus{box-shadow:inset 0 1px 3px #000a,0 0 0 1px var(--c)}
 #s8career.gcOn .sfMeter{padding:8px 12px 10px;display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;animation:gcIn .4s both;animation-delay:var(--d)}
@@ -19280,7 +19285,25 @@ body.gcG #v8Bg{opacity:0!important}
 #gcAnn.on{transform:translate(-50%,0) scale(1);opacity:1;pointer-events:auto}
 #gcAnn .pic{flex:none;width:48px;height:48px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:#22262c;box-shadow:0 0 0 2px #7fb6ff;font:300 22px var(--gt)}#gcAnn .pic img{width:100%;height:100%;object-fit:cover;transform:scale(1.25)}
 #gcAnn .tx{flex:1;min-width:0}#gcAnn small{display:block;font:700 9px var(--gt);letter-spacing:.22em}#gcAnn small.ok{color:#7ee3a0}#gcAnn small.no{color:#ff9d90}
-#gcAnn b{display:block;font:500 16px var(--gt);margin:2px 0}#gcAnn p{margin:0;font:400 12.5px/1.35 var(--gt);color:#b8c0c8}#gcAnn .cr{flex:none;font:700 17px var(--gt);color:#7ee3a0}
+#gcAnn b{display:block;font:500 16px var(--gt);margin:2px 0}#gcAnn p{margin:0;font:400 12.5px/1.35 var(--gt);color:#b8c0c8}#gcAnn .cr{flex:none;font:700 17px var(--gt);color:#7ee3a0}#gcAnn .cr.neg{color:#ff9d90}
+#gcTxt{position:fixed;left:22px;bottom:-30px;z-index:99991;transform:translateY(105%) rotate(-4deg);transition:transform .55s cubic-bezier(.16,.9,.25,1.1);pointer-events:none;font-family:"Courier New",ui-monospace,monospace}
+#gcTxt.on{transform:translateY(0) rotate(2deg);pointer-events:auto}
+#gcTxt .ph{width:250px;padding:16px 16px 22px;border-radius:38px 38px 46px 46px;background:linear-gradient(90deg,#4b5057 0%,#7a8088 18%,#6a7078 50%,#5a6068 82%,#3e4248 100%);box-shadow:inset 0 2px 0 #ffffff40,inset 0 -3px 6px #0006,0 0 0 2px #22252a,0 24px 50px #000c}
+#gcTxt .ear{width:46px;height:5px;margin:2px auto 8px;border-radius:3px;background:#2a2d31;box-shadow:inset 0 1px 2px #000}
+#gcTxt .brand{text-align:center;font:700 9px/1 Arial,sans-serif;letter-spacing:.32em;color:#d8dce0a0;margin-bottom:7px}
+#gcTxt .lcd{height:230px;display:flex;flex-direction:column;padding:6px 7px;border-radius:6px;background:linear-gradient(180deg,#a8c48c,#97b57c);box-shadow:inset 0 0 0 3px #1e2418,inset 0 3px 8px #0005;color:#1d2a14;font-size:12px;line-height:1.25;-webkit-font-smoothing:none;image-rendering:pixelated}
+#gcTxt .bar{display:flex;align-items:center;gap:6px;border-bottom:2px solid #1d2a14;padding-bottom:3px;margin-bottom:4px}#gcTxt .bar b{flex:1;text-align:center;font-size:11px;letter-spacing:.08em}
+#gcTxt .sig{display:flex;align-items:flex-end;gap:1px;height:9px}#gcTxt .sig i{width:2px;background:#1d2a14}#gcTxt .sig i:nth-child(1){height:3px}#gcTxt .sig i:nth-child(2){height:5px}#gcTxt .sig i:nth-child(3){height:7px}#gcTxt .sig i:nth-child(4){height:9px}
+#gcTxt .bat{width:14px;height:7px;border:1px solid #1d2a14;padding:1px}#gcTxt .bat i{display:block;height:100%;width:70%;background:#1d2a14}
+#gcTxt .msgs{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;display:flex;flex-direction:column;gap:5px}
+#gcTxt .m{max-width:88%;padding:2px 4px;border:1px solid #1d2a14;white-space:pre-wrap;word-break:break-word}#gcTxt .m s{display:block;text-decoration:none;font-size:9px;font-weight:700;letter-spacing:.1em;opacity:.75}
+#gcTxt .m.them{align-self:flex-start}#gcTxt .m.me{align-self:flex-end;background:#1d2a14;color:#a8c48c}#gcTxt .m.typing{animation:gcBlink .6s steps(2) infinite}
+#gcTxt .m.note{align-self:center;border:0;border-top:1px dashed #1d2a14;border-bottom:1px dashed #1d2a14;font-size:10px;font-weight:700;letter-spacing:.06em}
+#gcTxt .opts{border-top:2px solid #1d2a14;margin-top:4px;padding-top:3px;display:flex;flex-direction:column;gap:1px}#gcTxt .opts:empty{display:none}
+#gcTxt .opts div{cursor:pointer;padding:1px 3px;font-size:11px}#gcTxt .opts div:hover{background:#1d2a14;color:#a8c48c}#gcTxt .opts em{font-style:normal;font-weight:700;margin-right:5px}
+#gcTxt .keys{display:flex;justify-content:space-between;align-items:center;margin:12px 4px 10px}#gcTxt .keys u{width:44px;height:12px;border-radius:7px;background:#2f3338;box-shadow:inset 0 1px 0 #ffffff30}#gcTxt .keys u.nav{width:56px;height:26px;border-radius:50%}
+#gcTxt .pad{display:grid;grid-template-columns:repeat(3,1fr);gap:6px 10px;padding:0 6px}#gcTxt .pad i{font:700 12px/20px Arial,sans-serif;font-style:normal;text-align:center;border-radius:10px 10px 12px 12px;background:#2f3338;color:#c9ced3;box-shadow:inset 0 1px 0 #ffffff30,0 1px 0 #0008}
+@keyframes gcBlink{50%{opacity:.25}}
 @keyframes gcLdIn{from{opacity:0}}
 @keyframes gcLdPan{to{transform:translateX(8%)}}
 @keyframes gcLdT{from{letter-spacing:.4em;opacity:0}}@keyframes gcSheen{0%{background-position:100% 0}60%,100%{background-position:-60% 0}}
@@ -19313,9 +19336,9 @@ function hint(){const h=$('gcHint');if(!h)return;sec.classList.toggle('talk',!!U
 /* ---------------- talking ---------------- */
 const fixCost=id=>repairCost(id),tuneFee=()=>{const c=curCar().car;return Math.max(400,Math.round((c.price||30000)*.015/50)*50)};
 function choices(){if(UI.ch)return UI.ch;const c=curCar();if(UI.who==='red'){const cost=fixCost(c.id),L=[];
-  if(cost)L.push({ic:'fix',t:'Fix the damage',pz:fmtCr(cost),off:P.SV().cr<cost,a:()=>{const sv=P.SV();if(sv.cr<cost){say(`That's ${fmtCr(cost)}. Win a race and come back.`);return}sv.cr-=cost;G().wear[c.id]=0;P.save();say(rnd([`Done. Good as new.`,`All fixed. Keep it off the walls this time.`]));refreshCar()}});
+  if(cost)L.push({ic:'fix',t:'Fix the damage',pz:fmtCr(cost),off:P.SV().cr<cost,a:()=>{const sv=P.SV();if(sv.cr<cost){say(`That's ${fmtCr(cost)}. Win a race and come back.`);return}sv.cr-=cost;$$crv();fadeDo(()=>{G().wear[c.id]=0;P.save();setCar(true);refreshCar();say(rnd([`Done. Good as new.`,`All fixed. Keep it off the walls this time.`]));drawDlg()},420)}});
   /* a bad respray can be stripped back to the factory colour. That's the only colour she does */
-  if(paintOf(c.id)){const pc=1200;L.push({ic:'paint',t:'Repaint it (factory colour)',pz:fmtCr(pc),off:P.SV().cr<pc,a:()=>{const sv=P.SV();if(sv.cr<pc){say(`Paint costs ${fmtCr(pc)}. You'll have to live with it for now.`);return}sv.cr-=pc;setPaint(c.id,null);$$crv();setCar(true);refreshCar();UI.ch=null;P.sfx&&P.sfx('select');say(rnd([`Back to the factory colour. Much better. My eyes thank you.`,`There. Now it looks like a car and not a crime scene.`,`Stripped that shit off and did it properly. Factory colour, nothing fancy.`]));drawDlg()}})}
+  if(paintOf(c.id)){const pc=1200;L.push({ic:'paint',t:'Repaint it (factory colour)',pz:fmtCr(pc),off:P.SV().cr<pc,a:()=>{const sv=P.SV();if(sv.cr<pc){say(`Paint costs ${fmtCr(pc)}. You'll have to live with it for now.`);return}sv.cr-=pc;$$crv();UI.ch=null;fadeDo(()=>{setPaint(c.id,null);setCar(true);refreshCar();say(rnd([`Back to the factory colour. Much better. My eyes thank you.`,`There. Now it looks like a car and not a crime scene.`,`Stripped that shit off and did it properly. Factory colour, nothing fancy.`]));drawDlg()},420)}})}
   L.push({ic:'tune',t:'Tune my car',a:askTune});
   L.push({ic:'swap',t:'Bring out another car',a:openCars});
   L.push({ic:'look',t:'How is the car looking?',a:()=>{const w=wearOf(c.id),T=TIERS[tierOf(G().rep)];let s=w>.02?`It's at ${pctOK(c.id)}%. ${w>.3?'It\'ll feel slow until I fix it.':'Nothing serious.'}`:`It's in perfect shape.`;
@@ -19326,19 +19349,26 @@ function choices(){if(UI.ch)return UI.ch;const c=curCar();if(UI.who==='red'){con
   {ic:'car',t:'Brand Central',pz:'NEW',a:()=>{UI.line='';P.ui.openShow('brand',{player:0,cap:null,ret:'s8career'})}},
   {ic:'chart',t:'How am I doing?',a:()=>{const g=G(),ti=tierOf(g.rep),nx=TIERS[ti+1];say(`${TIERS[ti].n}. ${g.wins} cleared, ${fmtCr(g.earned)} earned.`+(nx?` ${nx.rep-g.rep} more and the ${nx.n} people call.`:` Nobody's above you.`)+' '+moneyLine())}},
   {ic:'bye',t:'See you later',a:()=>leave()}]}
+/* a short black fade around anything that changes the car (bringing one out, buying, selling the one you have, paint, repairs, tuning):
+   the screen goes black, the change happens out of sight, the new car gets a couple of frames to draw, and the room fades back up */
+const FD={el:null,on:false};
+function fadeDo(fn,hold){if(FD.on){try{fn()}catch(e){console.warn(e)}return}FD.on=true;if(!FD.el){FD.el=document.createElement('div');FD.el.id='gcFade';FD.el.style.cssText='position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:99980;transition:opacity .28s ease';document.body.appendChild(FD.el)}
+ const el=FD.el;el.style.transition='opacity .28s ease';el.style.pointerEvents='auto';void el.offsetWidth;el.style.opacity='1';P.sfx&&P.sfx('move');
+ setTimeout(()=>{try{fn()}catch(e){console.warn('career fade',e)}let n=0;const tk=()=>{if(++n<4)return requestAnimationFrame(tk);setTimeout(()=>{el.style.transition='opacity .5s ease';el.style.opacity='0';el.style.pointerEvents='none';FD.on=false},hold||260)};requestAnimationFrame(tk)},300)}
 /* tuning costs: she asks first, then the tuning bench */
 function askTune(){const fee=tuneFee();say(rnd([`I can tune it, but it's gonna cost you. ${fmtCr(fee)}.`,`Tuning? Sure. Not free though. ${fmtCr(fee)}.`,`I can make it faster. ${fmtCr(fee)}, and that's the friends price.`]));
- UI.ch=[{ic:'tune',t:'Do it',pz:fmtCr(fee),off:P.SV().cr<fee,a:()=>{const sv=P.SV();if(sv.cr<fee){UI.ch=null;say(`You're short. ${fmtCr(fee-sv.cr)} short. Go win something.`);return}sv.cr-=fee;P.save();$$crv();UI.ch=null;UI.view='tune';UI.f=0;
-   say(rnd([`Alright, let's see what we've got. Tell me what you want changed.`,`Hand me that wrench. Okay. What are we doing?`]))}},
+ UI.ch=[{ic:'tune',t:'Do it',pz:fmtCr(fee),off:P.SV().cr<fee,a:()=>{const sv=P.SV();if(sv.cr<fee){UI.ch=null;say(`You're short. ${fmtCr(fee-sv.cr)} short. Go win something.`);return}sv.cr-=fee;P.save();$$crv();UI.ch=null;fadeDo(()=>{UI.view='tune';UI.f=0;aim();GS.cp.copy(GS.tp);GS.cl.copy(GS.tl);
+   say(rnd([`Alright, let's see what we've got. Tell me what you want changed.`,`Hand me that wrench. Okay. What are we doing?`]));drawDlg();hint()})}},
   {ic:'back',t:'Maybe later',a:()=>{UI.ch=null;say(rnd([`Your call.`,`Fine. It's not getting any faster on its own, though.`]))}}];UI.f=0}
 function tuneAdj(i,d){const T=P.TUNE[i];if(!T)return;const c=curCar(),t=P.tuneGet(c.id,c.alt),v=Math.max(-T.r,Math.min(T.r,t[T.k]+d));if(v===t[T.k])return;P.tuneSet(c.id,c.alt,T.k,v);P.sfx&&P.sfx('move');
  const L=TUNE_L[T.k];setLine(v===0?rnd([`Back to stock on the ${T.n.toLowerCase()}.`,`Stock ${T.n.toLowerCase()}. Boring, but it works.`]):L[d>0?1:0]);UI.f=i;drawDlg(true);const r=sec.querySelector('.gcTu[data-i="'+i+'"]');if(r){r.classList.remove('bump');void r.offsetWidth;r.classList.add('bump')}}
-function tuneDone(){UI.view='talk';UI.f=0;say(rnd([`There. Go break something. Not the car, though.`,`Done. If it handles badly, that's on you, not me.`,`All set. Damn, that sounds good.`]));}
+function tuneDone(){fadeDo(()=>{UI.view='talk';UI.f=0;aim();GS.cp.copy(GS.tp);GS.cl.copy(GS.tl);say(rnd([`There. Go break something. Not the car, though.`,`Done. If it handles badly, that's on you, not me.`,`All set. Damn, that sounds good.`]));drawDlg();hint()})}
 /* the cars you own, one click to bring one out */
 function owned(){const own=P.SV().owned||{},cur=curCar();const L=P.CARS.filter(c=>own[c.id]&1&&!listed(c.id)).map(c=>({id:c.id,alt:0,car:c}));if(!L.some(x=>x.id===cur.id))L.unshift({id:cur.id,alt:cur.alt,car:cur.car});return L}
 function openCars(){UI.who='red';UI.view='cars';UI.ch=null;const L=owned(),cur=curCar();UI.f=Math.max(0,L.findIndex(x=>x.id===cur.id));aim();
  say(rnd([`Which one do you want out?`,`Pick one. I'll roll it out.`,`Which one? Hurry up, I've got stuff to do.`]));drawDlg();hint()}
-function bringOut(i){const x=owned()[i];if(!x)return;const was=curCar().id;if(x.id!==was){P.setSel(0,x.id,x.alt);setCar();refreshCar()}
+function bringOut(i){const x=owned()[i];if(!x)return;const was=curCar().id;if(x.id===was){bringOut_(x);return}fadeDo(()=>{P.setSel(0,x.id,x.alt);setCar();refreshCar();bringOut_(x);GS.cp.copy(GS.tp);GS.cl.copy(GS.tl)},420)}
+function bringOut_(x){
  /* back to the overview; Nina says it over her head. A car that looks like shit (bad paint, or worn out) gets an insult instead */
  const ugly=!!paintOf(x.id)||pctOK(x.id)<55;UI.who=null;UI.view='talk';UI.ch=null;UI.f=0;UI.line='';aim();const d=$('gcDlg');if(d)d.classList.remove('on');hint();P.sfx&&P.sfx('select');
  bubble('red',withName(ugly?rnd(ROAST):rnd(GOT).replace('%s',x.car.name),.4),ugly?3.4:3);gesture(GS.red,ugly?rnd(['point','shrug']):'hey')}
@@ -19370,7 +19400,7 @@ function sfPaint(){const f=UI.sf,d=$('gcDlg');if(!f||!d)return;const v=carValue(
  const r=d.querySelector('.sfAsk small');if(r){const q=f.ask/v;r.textContent=q>1.25?'Way over value':q>1.05?'Over value':q<.85?'Under value':'About right'}}
 function sfList(){const f=UI.sf;if(!f)return;const p=sellChance(f.id,f.ask,f.title,f.desc),ok=Math.random()<p,c=BYID[f.id];
  sales().push({id:f.id,ask:f.ask,title:(f.title||'').trim().slice(0,60),ch:p,ok,due:Date.now()+(35+Math.random()*70)*1000*(ok?1:1.4)});
- if(curCar().id===f.id){const o=sellable()[0];if(o){P.setSel(0,o.id,o.alt);setCar();refreshCar()}}P.save();UI.sf=null;UI.view='talk';UI.f=0;
+ if(curCar().id===f.id){const o=sellable().find(x=>x.id!==f.id);if(o)fadeDo(()=>{P.setSel(0,o.id,o.alt);setCar();refreshCar()},420)}P.save();UI.sf=null;UI.view='talk';UI.f=0;
  const q=f.ask/carValue(f.id);say(q>1.3?rnd([`Listed. At that price? Good luck.`,`It's up. Don't hold your breath.`]):q<.85?rnd([`Listed. You're basically giving it away.`,`It's up. Cheap. It'll go.`]):rnd([`It's on the lot. I'll let you know.`,`Listed. Someone will call. Probably.`]));P.sfx&&P.sfx('select');drawDlg();hint()}
 function sfHtml(){const f=UI.sf,c=BYID[f.id],v=carValue(f.id),on=i=>UI.f===i?' on':'';
  return `<div class="gcO sfCar" style="--d:40ms"><div class="sw" data-car="${f.id}"></div><div><em>VALUE ${fmtCr(v)}</em><b>${esc_(c.name)}<span class="cls ${c.cls}">${c.cls}</span></b><small>Condition ${pctOK(f.id)}%${paintOf(f.id)?' &middot; bad paint':''}</small></div><div class="pz"></div></div>
@@ -19384,14 +19414,69 @@ function sfWire(d){const f=UI.sf;if(!f)return;const ti=d.querySelector('.sfIn in
  const keys=(el,i)=>{el.oninput=()=>{if(i===1)f.title=el.value;else f.desc=el.value;sfPaint()};el.onfocus=()=>{UI.f=i;d.querySelectorAll('.gcCh .gcRow').forEach(e=>e.classList.toggle('on',+e.dataset.i===i))};
   el.onkeydown=e=>{if(e.key==='Escape'){el.blur();e.stopPropagation();e.preventDefault();return}if((e.key==='Enter'&&i===1)||(e.key==='ArrowDown'&&(i===1||el.selectionStart===el.value.length))){e.preventDefault();el.blur();focusC(i+1)}else if(e.key==='ArrowUp'&&(i===1||el.selectionStart===0)){e.preventDefault();el.blur();focusC(i-1)}e.stopPropagation()}};
  if(ti)keys(ti,1);if(ta)keys(ta,2);d.querySelectorAll('.sfAsk u[data-d]').forEach(u=>u.onclick=ev=>{ev.stopPropagation();sfAdj(+u.dataset.d)});sfPaint()}
+/* ---------------- texts: haggling on an old phone ----------------
+   Marketplace sellers can be texted for a lower price, and buyers sometimes text about your listings instead of just paying. Everybody is
+   stubborn: a seller never comes down more than 5,000 (less on cheap cars), a buyer never offers more than 5,000 under your price, and the
+   closer anyone gets to that line the less they move and the more they complain. A conversation is five texts at most; after the fifth it's
+   take it or leave it. The phone slides up from the bottom right like an old candybar handset: grey plastic, a green-lit screen, numbered
+   replies (keys 1 to 4 work too) */
+const TX={on:false,el:null,o:null};
+const r50=v=>Math.round(v/50)*50;
+function txEl(){if(TX.el)return TX.el;const e=document.createElement('div');e.id='gcTxt';e.innerHTML='<div class="ph"><div class="ear"></div><div class="brand">POLYFON</div><div class="lcd"><div class="bar"><span class="sig"><i></i><i></i><i></i><i></i></span><b></b><span class="bat"><i></i></span></div><div class="msgs"></div><div class="opts"></div></div><div class="keys"><u></u><u class="nav"></u><u></u></div><div class="pad">'+[1,2,3,4,5,6,7,8,9,'*',0,'#'].map(k=>`<i>${k}</i>`).join('')+'</div></div>';document.body.appendChild(e);TX.el=e;
+ e.querySelector('.opts').addEventListener('click',ev=>{const b=ev.target.closest('[data-o]');if(b)txPick(+b.dataset.o)});return e}
+function txOpen(o){TX.on=true;document.body.classList.add('gcPhone');TX.o=o;o.n=0;o.msgs=[];const e=txEl();e.querySelector('.bar b').textContent=o.who.toUpperCase();e.querySelector('.msgs').innerHTML='';e.querySelector('.opts').innerHTML='';
+ e.classList.remove('on');void e.offsetWidth;e.classList.add('on');P.sfx&&P.sfx('select')}
+function txClose(){TX.on=false;document.body.classList.remove('gcPhone');if(TX.el)TX.el.classList.remove('on');TX.o=null}
+function txMsg(me,t){const o=TX.o;if(!o)return;o.n++;const m=TX.el.querySelector('.msgs'),d=document.createElement('div');d.className='m '+(me?'me':'them');d.innerHTML=`<s>${me?'ME':esc_(o.who.toUpperCase())}</s>${esc_(t.replace(/Cr\.\./g,'Cr.'))}`;m.appendChild(d);m.scrollTop=m.scrollHeight;P.sfx&&P.sfx(me?'move':'select')}
+function txNote(t){const m=TX.el.querySelector('.msgs'),d=document.createElement('div');d.className='m note';d.textContent=t;m.appendChild(d);m.scrollTop=m.scrollHeight}
+function txOpts(L){const o=TX.o;if(!o)return;o.opts=L;TX.el.querySelector('.opts').innerHTML=L.map((x,i)=>`<div data-o="${i}"><em>${i+1}</em>${esc_(x.t)}</div>`).join('');const m=TX.el.querySelector('.msgs');m.scrollTop=m.scrollHeight}
+function txPick(i){const o=TX.o;if(!o||!o.opts||!o.opts[i])return;const x=o.opts[i];o.opts=null;TX.el.querySelector('.opts').innerHTML='';x.a()}
+/* the other side types for a moment before the answer lands */
+function txReply(t,then){const o=TX.o;if(!o)return;const m=TX.el.querySelector('.msgs'),d=document.createElement('div');d.className='m them typing';d.textContent='...';m.appendChild(d);m.scrollTop=m.scrollHeight;
+ setTimeout(()=>{d.remove();if(TX.o!==o)return;txMsg(false,t);then&&then()},900+Math.random()*700)}
+/* the phone goes away during a race and comes back after */
+setInterval(()=>{if(TX.el)TX.el.classList.toggle('on',TX.on&&!inRace());document.body.classList.toggle('gcPhone',TX.on&&!inRace())},300);
+addEventListener('keydown',e=>{if(!TX.on||!TX.o||!TX.o.opts)return;const m=/^(Digit|Numpad)([1-4])$/.exec(e.code);if(!m)return;e.preventDefault();e.stopImmediatePropagation();txPick(+m[2]-1)},true);
+/* how far someone will move: most of the time a little, sometimes not at all, and hardly anything once they're near their limit */
+function budge(cur,lim,gap,dir){const room=Math.abs(cur-lim);if(room<50)return cur;const near=room<Math.max(600,Math.abs(lim-(dir>0?lim-5000:lim+5000))*.25)||false;
+ if(Math.random()<(near?.55:.3))return cur;const step=Math.min(room,Math.max(100,Math.abs(gap)*(near?.15:.35)));return r50(cur+dir*step)}
+/* buying: you text the seller */
+function haggleBuy(l){const c=BYID[l.id],P0=l.price,D=Math.min(5000,r50(Math.max(250,P0*.15))),F=P0-D;l.tx=1;P.save();
+ const o={who:rnd(['Dale','Marco','Steph','Big Mike','Ronnie','Trish','Gus','Lena']),ask:P0};txOpen(o);
+ const offers=()=>{const a=o.ask;return[a-r50(a*.05),a-r50(a*.1),a-r50(a*.2)].filter((v,i,A)=>v>0&&v<a&&A.indexOf(v)===i)};
+ const done=v=>{if(v!=null){l.deal=v;P.save();txNote(`DEAL: ${fmtCr(v)}`)}else txNote('CONVERSATION ENDED');TX.el.querySelector('.opts').innerHTML='<div data-o="0"><em>1</em>Close</div>';o.opts=[{t:'Close',a:()=>{txClose();if(scr==='s8career'&&UI.who==='vin'){const i=G().mkt.indexOf(l);if(i>=0&&v!=null)mktPick(i);else{drawDlg();hint()}}}}]};
+ const mine=()=>{if(o.n>=5){done(null);return}const L=offers().map(v=>({t:`Offer ${fmtCr(v)}`,a:()=>send(v)}));if(o.n>0)L.unshift({t:`OK, ${fmtCr(o.ask)}`,a:()=>{txMsg(true,`Ok. ${fmtCr(o.ask)} it is.`);done(o.ask)}});L.push({t:'Never mind',a:()=>{txMsg(true,'Never mind, thanks.');done(null)}});txOpts(L.slice(0,4))};
+ const send=v=>{txMsg(true,o.n===0?rnd([`Hey, is the ${c.name} still for sale? Would you take ${fmtCr(v)}?`,`Hi. Interested in the ${c.name}. ${fmtCr(v)} cash?`]):rnd([`How about ${fmtCr(v)}?`,`${fmtCr(v)}. Final offer.`,`Come on. ${fmtCr(v)}?`]));
+  const gap=o.ask-v,last=o.n>=4;let nx=v>=o.ask?o.ask:budge(o.ask,F,gap,-1);if(v>=nx){txReply(rnd([`Deal. Come get it.`,`Fine. ${fmtCr(v)}. Bring cash.`]),()=>done(v));return}
+  const moved=nx<o.ask,near=nx-F<D*.25;o.ask=Math.max(F,nx);
+  const t=v<F-D?rnd([`Lol. No.`,`Are you serious? It's ${fmtCr(o.ask)}.`,`Don't waste my time. ${fmtCr(o.ask)}.`]):!moved?rnd([`Price is ${fmtCr(o.ask)}. Not moving on it.`,`No. ${fmtCr(o.ask)}.`,`It's worth every bit of ${fmtCr(o.ask)}, man.`]):near?rnd([`Ugh. ${fmtCr(o.ask)}. And that's me being nice. Not a cent less.`,`Man... fine. ${fmtCr(o.ask)}. That's it. I mean it.`,`${fmtCr(o.ask)}. I'm already losing money here.`]):rnd([`I could do ${fmtCr(o.ask)}.`,`Meet me at ${fmtCr(o.ask)}?`,`${fmtCr(o.ask)}, and you're picking it up today.`]);
+  txReply(last?t+' Take it or leave it.':t,()=>{if(o.n>=5){txOpts([{t:`Take it at ${fmtCr(o.ask)}`,a:()=>done(o.ask)},{t:'Leave it',a:()=>done(null)}])}else mine()})};
+ mine()}
+/* selling: a buyer texts you about a listing */
+function haggleSell(s){const c=BYID[s.id],A=s.ask,D=Math.min(5000,r50(Math.max(250,A*.15))),floor=A-D;let off=Math.max(floor,A-r50(D*(.5+Math.random()*.5)));const cap=Math.min(A,r50(off+(A-off)*(.35+Math.random()*.4)));
+ const o={who:rnd(['Unknown','Kev','Jordan','Priya','Tommo','Sal','Nadia','Rick']),bid:off};txOpen(o);
+ const fin=v=>{const i=sales().indexOf(s);if(v!=null){if(i>=0)sales().splice(i,1);const sv=P.SV();sv.cr+=v;if(sv.owned)sv.owned[s.id]=(sv.owned[s.id]||0)&~1;const g=G();delete g.wear[s.id];try{setPaint(s.id,null)}catch(e){}
+   if(curCar().id===s.id){const q=owned().find(x=>x.id!==s.id);if(q)P.setSel(0,q.id,q.alt)}P.save();txNote(`SOLD: ${fmtCr(v)}`);
+   setTimeout(()=>announce({ok:1,h:`Your ${c?c.name:'car'} sold`,p:`Haggled, but it's done. ${fmtCr(v)} is in your account.`,cr:v}),1800);if(scr==='s8career'){try{refreshCar();setCar()}catch(e){}}}
+  else{s.due=Date.now()+(20+Math.random()*40)*1000;P.save();txNote('CONVERSATION ENDED')}
+  o.opts=[{t:'Close',a:txClose}];TX.el.querySelector('.opts').innerHTML='<div data-o="0"><em>1</em>Close</div>'};
+ const mine=()=>{const L=[{t:`Deal at ${fmtCr(o.bid)}`,a:()=>{txMsg(true,rnd([`Deal. ${fmtCr(o.bid)}.`,`Ok, ${fmtCr(o.bid)}. It's yours.`]));fin(o.bid)}}];
+  if(o.n<4){const mid=r50((o.bid+A)/2);if(mid>o.bid&&mid<A)L.push({t:`Counter ${fmtCr(mid)}`,a:()=>counter(mid)});L.push({t:`Price is ${fmtCr(A)}`,a:()=>counter(A)})}
+  L.push({t:'No thanks',a:()=>{txMsg(true,rnd([`No thanks.`,`Not that low. Sorry.`]));fin(null)}});txOpts(L)};
+ const counter=v=>{txMsg(true,v>=A?rnd([`Price is firm. ${fmtCr(A)}.`,`It's ${fmtCr(A)}. That's already fair.`]):rnd([`Meet me at ${fmtCr(v)}?`,`Can't go that low. ${fmtCr(v)}?`]));
+  if(v<=cap&&Math.random()<.5){txReply(rnd([`Fine. ${fmtCr(v)}. On my way.`,`Ok ok. ${fmtCr(v)}. Deal.`]),()=>fin(v));return}
+  const nb=Math.min(cap,budge(o.bid,cap,v-o.bid,1)),moved=nb>o.bid,near=cap-nb<Math.max(300,(cap-off)*.25);o.bid=nb;const last=o.n>=3;
+  const t=!moved?rnd([`${fmtCr(o.bid)}. That's what I've got.`,`Nah. ${fmtCr(o.bid)}.`,`I've seen cheaper. ${fmtCr(o.bid)}.`]):near?rnd([`Ugh. ${fmtCr(o.bid)}. That's everything I have, man.`,`${fmtCr(o.bid)}. Seriously, that's my limit.`]):rnd([`I can do ${fmtCr(o.bid)}.`,`${fmtCr(o.bid)}?`,`How about ${fmtCr(o.bid)}, cash today?`]);
+  txReply(last?t+' Last offer.':t,()=>{if(o.n>=5)txOpts([{t:`Take ${fmtCr(o.bid)}`,a:()=>fin(o.bid)},{t:'Turn it down',a:()=>fin(null)}]);else mine()})};
+ txReply(rnd([`Hey, saw your ${s.title?'"'+s.title+'"':c.name}. Would you take ${fmtCr(off)}?`,`Is the ${c.name} still available? I can do ${fmtCr(off)} cash.`,`${fmtCr(off)} for the ${c.name}? Can pick up today.`]),mine)}
 /* the announcement */
 const inRace=()=>scr==='game'||scr==='bike';let ANN=null,annQ=[];
 function announce(o){annQ.push(o);if(!ANN||!ANN.classList.contains('on'))annNext()}
 function annNext(){const o=annQ.shift();if(!o)return;if(!ANN){ANN=document.createElement('div');ANN.id='gcAnn';document.body.appendChild(ANN);ANN.onclick=()=>{ANN.classList.remove('on');setTimeout(annNext,400)}}
- const pic=GS.vin&&GS.vin.pic;ANN.innerHTML=`<div class="pic">${pic?`<img src="${pic}" alt="">`:'V'}</div><div class="tx"><small class="${o.ok?'ok':'no'}">${o.ok?'SOLD':'NO BUYERS'} &middot; MARKETPLACE</small><b>${esc_(o.h)}</b><p>${esc_(o.p)}</p></div>${o.cr?`<div class="cr">+${fmtCr(o.cr)}</div>`:''}`;
+ const pic=GS.vin&&GS.vin.pic;ANN.innerHTML=`<div class="pic">${pic?`<img src="${pic}" alt="">`:'V'}</div><div class="tx"><small class="${o.ok?'ok':'no'}">${o.tag||(o.ok?'SOLD':'NO BUYERS')} &middot; MARKETPLACE</small><b>${esc_(o.h)}</b><p>${esc_(o.p)}</p></div>${o.cr?`<div class="cr${o.cr<0?' neg':''}">${o.cr<0?'&minus;':'+'}${fmtCr(Math.abs(o.cr))}</div>`:''}`;
  ANN.classList.remove('on');void ANN.offsetWidth;ANN.classList.add('on');P.sfx&&P.sfx(o.ok?'select':'back');clearTimeout(ANN._t);ANN._t=setTimeout(()=>{ANN.classList.remove('on');setTimeout(annNext,450)},6000)}
 function salesTick(){let S;try{S=sales()}catch(e){return}if(!S.length||inRace()||document.hidden)return;const now=Date.now();
- for(const s of S.slice()){if(s.due>now)continue;S.splice(S.indexOf(s),1);const c=BYID[s.id],nm=c?c.name:'car',sv=P.SV();
+ for(const s of S.slice()){if(s.due>now||(s.tx&&TX.on))continue;if(!s.tx&&!TX.on&&s.ask>=1500&&Math.random()<.5){s.tx=1;haggleSell(s);continue}S.splice(S.indexOf(s),1);const c=BYID[s.id],nm=c?c.name:'car',sv=P.SV();
   if(s.ok){sv.cr+=s.ask;if(sv.owned)sv.owned[s.id]=(sv.owned[s.id]||0)&~1;const g=G();delete g.wear[s.id];try{setPaint(s.id,null)}catch(e){}
    if(curCar().id===s.id){const o=owned().find(x=>x.id!==s.id);if(o)P.setSel(0,o.id,o.alt)}
    announce({ok:1,h:`Your ${nm} sold`,p:(s.title?`"${s.title}" `:'')+rnd([`went for the asking price. Vince took his cut out of the buyer, apparently.`,`is gone. Buyer paid cash. Vince didn't ask questions.`,`found a buyer. Money's in your account.`]),cr:s.ask})}
@@ -19407,15 +19492,23 @@ function bubTick(dt){const b=$('gcBub');if(!b||!BUB.who)return;const keep=UI.vie
  if(BUB.t<=0||(UI.who&&UI.view!=='cars')||UI.menu){b.classList.remove('on');BUB.who=null;return}
  const p=headOf(BUB.who).add(V3(0,.42,0));p.project(GS.cam);b.style.left=((p.x*.5+.5)*innerWidth).toFixed(1)+'px';b.style.top=((-p.y*.5+.5)*innerHeight).toFixed(1)+'px'}
 /* buying in the Marketplace: the money goes, the car comes out with its wear and its paint, and Nina has something to say about it */
-function buy(i){const g=G(),l=g.mkt[i],sv=P.SV();if(!l)return;const c=BYID[l.id];if(sv.cr<l.price){say(`You're short. Come back with ${fmtCr(l.price-sv.cr)} more.`);return}
- sv.cr-=l.price;sv.owned[l.id]=(sv.owned[l.id]||0)|1;g.wear[l.id]=Math.max(0,Math.min(1,1-l.cond));setPaint(l.id,l.L||null);P.setSel(0,l.id,0);g.mkt.splice(i,1);P.save();$$crv();setCar();refreshCar();
+const lPrice=l=>l.deal||l.price;
+/* picking a listing: buy it at the price (or the price you talked them down to), or text the seller first */
+function mktPick(i){const l=G().mkt[i];if(!l)return;const c=BYID[l.id],pr=lPrice(l);UI.view='talk';UI.f=0;
+ UI.ch=[{ic:'shop',t:l.deal?'Buy it at the agreed price':'Buy it',pz:fmtCr(pr),off:P.SV().cr<pr,a:()=>{UI.ch=null;buy(G().mkt.indexOf(l))}}];
+ if(!l.tx)UI.ch.push({ic:'chat',t:'Text the seller',a:()=>{UI.ch=null;UI.view='mkt';UI.f=Math.max(0,G().mkt.indexOf(l));say(rnd([`Go ahead. They won't budge much.`,`Try it. Most of these guys are stubborn as hell.`]));haggleBuy(l)}});
+ UI.ch.push({ic:'back',t:'Back to the list',a:()=>{UI.ch=null;UI.view='mkt';UI.f=Math.max(0,G().mkt.indexOf(l))}});
+ say(l.deal?`You got them to ${fmtCr(pr)}. Still want it?`:rnd([`The ${c.name}. ${fmtCr(pr)}. Want it, or want to try your luck with the seller?`,`${fmtCr(pr)} for the ${c.name}. Buy it, or text the guy.`]));drawDlg();hint()}
+function buy(i){const g=G(),l=g.mkt[i],sv=P.SV();if(!l)return;const c=BYID[l.id],pr=lPrice(l);if(sv.cr<pr){say(`You're short. Come back with ${fmtCr(pr-sv.cr)} more.`);return}
+ fadeDo(()=>{sv.cr-=pr;sv.owned[l.id]=(sv.owned[l.id]||0)|1;g.wear[l.id]=Math.max(0,Math.min(1,1-l.cond));setPaint(l.id,l.L||null);P.setSel(0,l.id,0);g.mkt.splice(i,1);P.save();$$crv();setCar();refreshCar();buy_(l);announce({ok:1,tag:'BOUGHT',h:`You bought the ${c.name}`,p:l.deal?`Talked down to ${fmtCr(pr)}. It's in your garage.`:`It's in your garage. Nina's already looking at it.`,cr:-pr})},420)}
+function buy_(l){
  say(rnd([`Pleasure.`,`It's yours. Don't call me about it.`,`Done. Keys are on the bench.`]));gesture(GS.vin,'palm');UI.view='talk';UI.f=0;drawDlg();
  const id=l.id,bad=!!l.L;setTimeout(()=>{if(scr!=='s8career'||curCar().id!==id)return;popIn(id,bad)},1500)}
 function popIn(id,bad){const c=BYID[id],oil=Math.max(150,Math.round(fixCost(id)*.45/50)*50),paint=1200;
  const line=bad?rnd([`Dear god... that is the shittiest paintjob I've ever seen!`,`Who painted this, a toddler with a grudge? Damn.`,`Oh hell no. That paint has to go.`]):rnd([`Ooh, a project! I'll change the oil for cheap!`,`That thing's been sitting for years. I'll change the oil for cheap, at least.`,`Well, shit. It runs, I guess. I'll do the oil and the basics for cheap.`]);
  const L=[];const drop=x=>{UI.ch=UI.ch.filter(y=>y!==x);if(UI.ch.length<=1)UI.ch=null};
- if(wearOf(id)>.02){const o={ic:'fix',t:'Oil and the basics',pz:fmtCr(oil),a:()=>{const sv=P.SV();if(sv.cr<oil){say(`Can't do it for less than ${fmtCr(oil)}. Sorry.`);return}sv.cr-=oil;G().wear[id]=0;P.save();$$crv();refreshCar();drop(o);say(rnd([`Done. Runs like a dream now. Well, a loud dream.`,`Oil's fresh, belts are new. Damn, that's better.`]))}};L.push(o)}
- if(bad){const o={ic:'paint',t:'Repaint it',pz:fmtCr(paint),a:()=>{const sv=P.SV();if(sv.cr<paint){say(`Paint costs ${fmtCr(paint)}. You'll have to live with it for now.`);return}sv.cr-=paint;setPaint(id,null);$$crv();setCar();drop(o);say(rnd([`Much better. My eyes thank you.`,`There. Now it looks like a car and not a crime scene.`]))}};L.push(o)}
+ if(wearOf(id)>.02){const o={ic:'fix',t:'Oil and the basics',pz:fmtCr(oil),a:()=>{const sv=P.SV();if(sv.cr<oil){say(`Can't do it for less than ${fmtCr(oil)}. Sorry.`);return}sv.cr-=oil;$$crv();drop(o);fadeDo(()=>{G().wear[id]=0;P.save();setCar(true);refreshCar();say(rnd([`Done. Runs like a dream now. Well, a loud dream.`,`Oil's fresh, belts are new. Damn, that's better.`]));drawDlg()},420)}};L.push(o)}
+ if(bad){const o={ic:'paint',t:'Repaint it',pz:fmtCr(paint),a:()=>{const sv=P.SV();if(sv.cr<paint){say(`Paint costs ${fmtCr(paint)}. You'll have to live with it for now.`);return}sv.cr-=paint;$$crv();drop(o);fadeDo(()=>{setPaint(id,null);setCar(true);say(rnd([`Much better. My eyes thank you.`,`There. Now it looks like a car and not a crime scene.`]));drawDlg()},420)}};L.push(o)}
  L.push({ic:'bye',t:'Later',a:()=>{UI.ch=null;say(rnd([`Suit yourself. It'll sound like a damn coffee grinder till then.`,`Your funeral.`]))}});
  UI.who='red';UI.view='talk';UI.f=0;UI.ch=L.length>1?L:null;aim();UI.line=line;UI.ty=null;if(GS.red){GS.red.tk=2.5;gesture(GS.red,'shrug')}drawDlg();hint()}
 function talk(who,keep,line){UI.who=who;if(!keep){UI.view='talk';UI.f=0;UI.ch=null}
@@ -19423,7 +19516,7 @@ function talk(who,keep,line){UI.who=who;if(!keep){UI.view='talk';UI.f=0;UI.ch=nu
 function leave(){UI.who=null;UI.line='';UI.view='talk';UI.ch=null;aim();const d=$('gcDlg');if(d)d.classList.remove('on');const b=$('gcBox');if(b)b.classList.remove('on');P.sfx&&P.sfx('back');hint()}
 function act(k){if(k==='car'){P.sfx&&P.sfx('select');openCars()}else if(k)talk(k)}
 function say(t){setLine(t);UI.line=t}
-function setLine(t){UI.line=t;if(UI.view==='cars'&&UI.who){bubble(UI.who,t);return}UI.ty={t,i:0};const pe=GS[UI.who];if(pe)pe.tk=Math.min(3.5,t.length/26);paintType()}
+function setLine(t){t=String(t).replace(/Cr\.\./g,'Cr.');UI.line=t;if(UI.view==='cars'&&UI.who){bubble(UI.who,t);return}UI.ty={t,i:0};const pe=GS[UI.who];if(pe)pe.tk=Math.min(3.5,t.length/26);paintType()}
 function paintType(){const p=sec.querySelector('#gcBox .tx');if(!p||!UI.ty)return;const n=Math.floor(UI.ty.i),done=n>=UI.ty.t.length;p.innerHTML=esc_(UI.ty.t.slice(0,n))+(done?'':'<i class="cur"></i>')+'<span class="ghost">'+esc_(UI.ty.t.slice(n))+'</span>';p.classList.toggle('done',done)}
 function type(dt){const ty=UI.ty;if(!ty||ty.i>=ty.t.length)return;const n0=Math.floor(ty.i);ty.i=Math.min(ty.t.length,ty.i+dt*62);if(Math.floor(ty.i)!==n0)paintType()}
 const typing=()=>UI.ty&&UI.ty.i<UI.ty.t.length;const finishType=()=>{if(UI.ty){UI.ty.i=UI.ty.t.length;paintType()}};
@@ -19469,7 +19562,7 @@ function pickC(){if(typing()){finishType();return}if(UI.busy)return;const el=$('
  P.sfx&&P.sfx('select');UI.busy=1;setTimeout(()=>{UI.busy=0;pickC_()},150)}
 function pickC_(){const pe=GS[UI.who];if(pe&&!pe.gs&&UI.view!=='tune')gesture(pe,rnd(GEST[UI.who].talk))
  if(UI.view==='offers'){const g=G();if(UI.f>=g.offers.length){UI.view='talk';UI.f=0;say(`Something else, then?`);drawDlg();hint();return}start(UI.f);return}
- if(UI.view==='mkt'){const g=G();if(UI.f===g.mkt.length){openSell();return}if(UI.f>g.mkt.length){UI.view='talk';UI.f=0;say(`Sure.`);drawDlg();hint();return}buy(UI.f);hint();return}
+ if(UI.view==='mkt'){const g=G();if(UI.f===g.mkt.length){openSell();return}if(UI.f>g.mkt.length){UI.view='talk';UI.f=0;say(`Sure.`);drawDlg();hint();return}mktPick(UI.f);hint();return}
  if(UI.view==='sell'){pickSell(UI.f);return}
  if(UI.view==='sellForm'){if(UI.f===3)sfList();else if(UI.f===4){UI.sf=null;openSell()}return}
  if(UI.view==='cars'){bringOut(UI.f);return}
@@ -19581,7 +19674,7 @@ function escBack(){if(UI.view==='sellForm'){UI.sf=null;openSell();return}if(UI.v
  if(UI.who&&UI.ch){UI.ch=null;UI.f=0;say(UI.who==='red'?`Fine. What else?`:`Okay.`);drawDlg();hint();return}
  leave()}
 {const fb=P.frBack;P.frBack=()=>{if(scr==='s8career'&&sec.classList.contains('gcOn')){if(LD&&LD.classList.contains('on')&&!LD.classList.contains('rdy'))return true;if(UI.menu){menuClose();return true}if(UI.who||onCar()){escBack();return true}menuOpen();return true}return fb?fb():false}}
-addEventListener('keydown',e=>{if(scr!=='s8career'||!sec.classList.contains('gcOn'))return;if(e.target&&(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'))return;const c=e.code;
+addEventListener('keydown',e=>{if(scr!=='s8career'||!sec.classList.contains('gcOn'))return;if(FD.on){e.preventDefault();e.stopImmediatePropagation();return}if(e.target&&(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'))return;const c=e.code;
  if(LD&&LD.classList.contains('on')&&!LD.classList.contains('rdy')){e.preventDefault();e.stopImmediatePropagation();return}
  if(UI.menu){if(c==='ArrowDown'||c==='KeyS')menuFocus((UI.menu.f+1)%MENU.length);else if(c==='ArrowUp'||c==='KeyW')menuFocus((UI.menu.f+MENU.length-1)%MENU.length);else if(c==='Enter'||c==='Space')menuPick();else return;e.preventDefault();e.stopImmediatePropagation();return}
  if(!UI.who&&!onCar()){if(c==='ArrowLeft'||c==='KeyA'||c==='ArrowRight'||c==='KeyD'){const d=c==='ArrowLeft'||c==='KeyA'?-1:1;let t=UI.tag;for(let n=0;n<3;n++){t=(t+d+3)%3;if(TAGK[t]==='car'?GS.car:GS[TAGK[t]]&&GS[TAGK[t]].g)break}UI.tag=t;GS.hov=TAGK[t];P.sfx&&P.sfx('move')}
@@ -19591,7 +19684,7 @@ addEventListener('keydown',e=>{if(scr!=='s8career'||!sec.classList.contains('gcO
  else if(UI.view==='sellForm'&&UI.f===0&&(c==='ArrowLeft'||c==='KeyA'||c==='ArrowRight'||c==='KeyD'))sfAdj(c==='ArrowLeft'||c==='KeyA'?-1:1)
  else if(c==='Enter'||c==='Space')pickC();
  else if(/^Digit[1-9]$/.test(c)&&+c[5]<=n&&UI.view!=='tune'){focusC(+c[5]-1);finishType();pickC()}else return;e.preventDefault();e.stopImmediatePropagation()},true);
-P.gcDebug=()=>({G:G(),UI,GS,run:P.gcRun});P.gcRoam=(k,i)=>{const pe=GS[k];if(pe){if(!pe.home)roamInit(pe,k);startTask(pe,k,STN[k][i]);pe.nxR=30}};P.gcNav=()=>NAV;P.gcSetCar=()=>setCar(true);P.gcSell=()=>{talk('vin');openSell()};P.gcSellPick=i=>pickSell(i);P.gcSellList=()=>sfList();P.gcPath=(k,x,z)=>navPath(GS[k].g.position,V3(x,0,z),null);P.gcTalk=talk;P.gcAct=act;P.gcPick=(x,y)=>pickAt(x,y);P.gcHover=k=>{GS.hov=k};P.gcPop=popIn;
+P.gcDebug=()=>({G:G(),UI,GS,run:P.gcRun});P.gcHaggle=()=>{talk('vin');mktFill();haggleBuy(G().mkt[0])};P.gcTx=i=>txPick(i);P.gcHagSell=()=>{const x=owned()[0];sales().push({id:x.id,ask:20000,title:'Clean one',ch:.5,ok:true,due:0,tx:1});haggleSell(sales()[sales().length-1])};P.gcRoam=(k,i)=>{const pe=GS[k];if(pe){if(!pe.home)roamInit(pe,k);startTask(pe,k,STN[k][i]);pe.nxR=30}};P.gcNav=()=>NAV;P.gcSetCar=()=>setCar(true);P.gcSell=()=>{talk('vin');openSell()};P.gcSellPick=i=>pickSell(i);P.gcSellList=()=>sfList();P.gcPath=(k,x,z)=>navPath(GS[k].g.position,V3(x,0,z),null);P.gcTalk=talk;P.gcAct=act;P.gcPick=(x,y)=>pickAt(x,y);P.gcHover=k=>{GS.hov=k};P.gcPop=popIn;
 })();
 
 </script><script>window.PT8_BP&&PT8_BP(0.500)</script><script>(function(){var fin=0;function done(){if(fin)return;fin=1;var b=document.getElementById("ptBoot"),c=document.getElementById("ptBootCss");if(window.PT8_BP)PT8_BP(1);if(c)c.remove();if(!b)return;b.classList.add("rdy");if(!document.getElementById("ptTitle")){b.style.opacity=0;setTimeout(function(){b.remove()},1050)}}function go(){var w=window.PT8_BOOT;(w&&w.then?w:Promise.resolve()).then(function(){requestAnimationFrame(function(){requestAnimationFrame(function(){setTimeout(done,350)})})})}if(document.readyState==="complete")go();else addEventListener("load",go);setTimeout(done,900000)})();</script></body></html>

@@ -4,6 +4,8 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.03',d:'Nov 2, 2026',t:'Highway Cut-Up on bikes',items:[
+  'Career: haggling on an old phone. Text a Marketplace seller for a better price, and buyers sometimes text you about your listings with an offer. Five texts at most, nobody moves more than 5,000, and they get stubborn near their limit. You also get a notification when you buy a car.',
+  'Career: a short black fade whenever the car changes (bringing one out, buying, selling, paint, repairs, tuning). Nina keeps her hands where they make sense (on her hips, her belt, the bench), no more holding nothing up or hammering the air while she tunes. Fewer lights in the garage for a smoother frame rate, and the selling form no longer jitters while you type.',
   'Races: the race now waits behind the black fade until the track is actually running smoothly, so the countdown starts as the picture comes up instead of running out in the dark. With damage on (always, in career) hitting a track wall hurts the car and riding along one wears it down.',
   'Career: Nina can repaint a car with a bad paintjob back to its factory colour, warmer garage lighting, Nina and Vince call you by your name now and then, and the garage picture no longer shrinks into a corner. A title and a description add at most 10% to the selling chance.',
   'Career: worn cars now look worn, with scratches, chips, grime and rust in the paint, and the bad paintjobs are properly awful. Standing around, Nina and Vince shift their weight and change posture instead of fidgeting, they blend smoothly into walking, and they stay in view. The loading screen is the start-up screen again, with CAREER on it.',

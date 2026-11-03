@@ -15,7 +15,7 @@ P.launchWithIntro=cfg=>{
   /* the race stays frozen behind the black (no formation lap, no countdown) until frames come smoothly: the first frames of a new track
      can take seconds while textures upload and shaders compile, and the countdown used to run out in the dark. Then let go and fade in */
   let n=0,ok=0,last=performance.now();const t0=last;
-  const tick=()=>{const now=performance.now(),d=now-last;last=now;n++;ok=d<45?ok+1:0;if((n<8||ok<6)&&now-t0<6000)return requestAnimationFrame(tick);
+  let pd=0;const tick=()=>{const now=performance.now(),d=now-last;last=now;n++;/* steady, not necessarily fast: a slow machine settles at its own pace */ok=d<120&&pd&&Math.abs(d-pd)<Math.max(8,pd*.3)?ok+1:0;pd=d;if((n<8||ok<5)&&now-t0<3500)return requestAnimationFrame(tick);
    hold=false;setTimeout(()=>{el.style.transition='opacity .6s ease';el.style.opacity='0';el.style.pointerEvents='none';busy=false},60)};requestAnimationFrame(tick)}},240)};
 /* the freeze: wrapped once at the first launch, when every layer has added its own step, so it sits outside all of them */
 let hold=false,wrapped=false;
