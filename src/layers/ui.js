@@ -491,7 +491,7 @@ function gxRender(box,o){const rows=o.rows;GXS.rows=rows;GXS.f=Math.max(0,Math.m
  const T3=o.groups||['Race','Conditions','Car & driver'],nC=T3.length,cols=Array.from({length:nC},()=>[]);rows.forEach((r,i)=>cols[Math.min(nC-1,GX_GRP(r))].push(i));
  const row=i=>{const r=rows[i];if(r.add)return`<div class="gxr gxAddT${i===GXS.f?' on':''}" data-i="${i}"><b>+</b><span>Add player ${r.pn||''}</span><small>${r.hint||''}</small></div>`;return`<div class="gxr${i===GXS.f?' on':''}${r.sub?' gxx':''}${r.more?' more':''}${r.wide?' wide':''}" data-i="${i}">${r.dot&&!o.grid?'<b class="gxdot" style="background:'+r.dot+'"></b>':''}<span class="l">${r.l}</span>`+(r.input?'<span class="v gxin"></span>':r.more?`<span class="v">${GXS.more?'Hide':'Show'} &rsaquo;</span>`:r.car?`<span class="v"><i class="x">&lsaquo;</i><em>${r.v}</em><i>&rsaquo;</i></span>`:r.act&&!r.go?`<span class="v"><em>${r.v||''}</em><i>&rsaquo;</i></span>`:`<span class="v">${r.opts>1?'<i data-d="-1">&lsaquo;</i>':'<i class="x">&lsaquo;</i>'}${r.sw?'<s style="background:'+r.sw+'"></s>':''}<em>${r.v}</em>${r.opts>1?'<i data-d="1">&rsaquo;</i>':'<i class="x">&rsaquo;</i>'}</span>`)+'</div>'};
  box.innerHTML=`<div class="gxHero${o.heroCls?' '+o.heroCls:''}"><canvas id="gxShot" width="1920" height="1080"></canvas><div class="gxTn"><small>${o.kind}</small><b>${o.name}</b><div class="gxFacts">${(o.facts||[]).map(t=>`<span>${t}</span>`).join('')}</div>${o.extra?'<div class="gxMed">'+o.extra+'</div>':''}${o.tnBtn||''}</div>${o.map?'<div class="gxMapBox"><canvas class="gxMap" width="240" height="150"></canvas></div>':''}${o.side||''}</div>
- <div class="gxCards${o.grid?' g4':''}">${cols.map((c,k)=>o.grid&&!c.length?'':o.grid?`<div class="gxCard pf${c.length&&rows[c[0]].add?' empty':''}${c.length?'':' idle'}" style="--pc:${o.cols?o.cols[k]:'#8fb4d8'}">${c.length&&!rows[c[0]].add?`<h5><b class="gxdot"></b>${T3[k]}${o.rm&&o.rm(k)?`<button class="gxRm" data-p="${k}" title="Remove player">&times;</button>`:''}</h5>`:''}<div class="gxOpts">${c.map(row).join('')}</div></div>`:c.length?`<div class="gxCard"><h5>${T3[k]}</h5><div class="gxOpts">${c.map(row).join('')}</div></div>`:'').join('')}</div>`;
+ <div class="gxCards${o.grid?' g4':''}">${cols.map((c,k)=>o.grid&&!c.length?'':o.grid?`<div class="gxCard pf${o.newP===k?' fin':''}${c.length&&rows[c[0]].add?' empty':''}${c.length?'':' idle'}" style="--pc:${o.cols?o.cols[k]:'#8fb4d8'}">${c.length&&!rows[c[0]].add?`<h5><b class="gxdot"></b>${T3[k]}${o.rm&&o.rm(k)?`<button class="gxRm" data-p="${k}" title="Remove player" aria-label="Remove player"><svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>`:''}</h5>`:''}<div class="gxOpts">${c.map(row).join('')}</div></div>`:c.length?`<div class="gxCard"><h5>${T3[k]}</h5><div class="gxOpts">${c.map(row).join('')}</div></div>`:'').join('')}</div>`;
  if(o.map)o.map(box.querySelector('.gxMap'));if(o.shot)o.shot(box.querySelector('#gxShot'));
  if(o.rm)box.querySelectorAll('.gxRm').forEach(b=>b.onclick=ev=>{ev.stopPropagation();o.rm(+b.dataset.p,true)});if(o.onAdd)box.querySelectorAll('.gxAdd').forEach(b=>b.onclick=ev=>{ev.stopPropagation();o.onAdd()});
  box.querySelectorAll('.gxr').forEach(el=>{const i=+el.dataset.i,r=rows[i];
@@ -543,7 +543,7 @@ const CARY0={};
 const carShot=(cv,list,reg,only)=>{if(!P.C10)return;const lk=list.map(s=>s.id+'.'+s.alt).join('|'),key='cars|'+lk+(reg?'|'+reg.join(','):'')+(only!=null?'|only'+only:'')+'|row2';
  /* round 28: the cars stand in one straight line across the picture (square to the camera), so every car sits at the same height and size;
     the old staggered row put the back cars higher on screen and the row drifted up as players were added */
- const YAW=-2.2,SP=2.6,PX=-.28,PZ=.96,slot=i=>{const col=i-(list.length-1)/2;return[col*SP*PX,col*SP*PZ]};
+ const YAW=-2.2,SP=3.2,/* round 30: wide enough apart that no two cars overlap in the picture */PX=-.28,PZ=.96,slot=i=>{const col=i-(list.length-1)/2;return[col*SP*PX,col*SP*PZ]};
  P.objShot(cv,key,()=>{const g=new THREE.Group();list.forEach((s,i)=>{if(only!=null&&i!==only)return;const c=BYID[s.id];const src=c&&P.C10.model(c.k10,s.alt);if(!src)return;const m=src.clone(true);
   const q=slot(i);m.position.set(q[0],0,q[1]);m.rotation.y=YAW;g.add(m)});return g},{yaw:0,up:.12,reg,clear:true,floor:only==null,ref:bx=>{const n=list.length,b=new THREE.Box3(),v=new THREE.Vector3(),ax=new THREE.Vector3(0,1,0);
   for(let i=0;i<n;i++){const q=slot(i);for(const sx of[-.975,.975])for(const sz of[-2.35,2.35])for(const sy of[0,1.45]){v.set(sx,sy,sz).applyAxisAngle(ax,YAW);v.x+=q[0];v.z+=q[1];b.expandByPoint(v)}}
@@ -554,14 +554,16 @@ const PCOLS=['#f1f3f5','#f2c76b','#7fd68a','#ef6a5a'],MAXP=4;
 const multiOK=m=>m!=='ta';
 const KEYN=p=>p===0?'W A S D':p===1?(P.p2Keys==='numpad'?'Numpad 8 4 5 6':'Arrow keys'):p===2?'I J K L':'T F G H';
 function addPlayer(){const m=ST.mode;if(!multiOK(m)||ST.players>=MAXP)return;ST.players++;if((m==='mp'||m==='elim'||m==='track')&&ST.players+(ST.cpus||0)>8)ST.cpus=8-ST.players;
- GXS.cf=ST.players-1;GXS.fp=ST.players-1;P.sfx&&P.sfx('select');renderSetup()}
+ GXS.cf=ST.players-1;GXS.fp=ST.players-1;GXS.newP=ST.players-1;P.sfx&&P.sfx('select');renderSetup();GXS.newP=null}
 function removePlayer(p){if(p<1||p>=ST.players)return;const n=ST.players;ST.names=ST.names||[];
  for(let q=p;q<n-1;q++){const s=selCar(q+1);setCar(q,s.id,s.alt);ST.names[q]=ST.names[q+1]||'';P.setTX(q,P.isAuto({human:true,k:q+1}))}ST.names[n-1]='';
  ST.players=n-1;GXS.cf=Math.min(GXS.cf||0,ST.players-1);GXS.fp=GXS.cf;P.sfx&&P.sfx('back');renderSetup()}
 P.addPlayer=addPlayer;P.removePlayer=removePlayer;
 /* round 27: the cars sit level with the car name, whatever the picture's height (the region keeps one size, so the camera stays anchored) */
 const carReg=(box,np)=>{try{const h=box.querySelector('.gxHero'),t=h.querySelector('.gxTn b'),hr=h.getBoundingClientRect(),tr_=t.getBoundingClientRect();if(!hr.height)return[.04,.88,-.6,.6];
- let yc=1-2*((tr_.top+tr_.height/2-hr.top)/hr.height);yc=Math.round(yc*50)/50;/* round 29: one car fills much more of the picture */if(np===1){const hh=1.02;yc=Math.max(-1.02+hh,Math.min(.96-hh,yc+.1));return[.02,1.02,yc-hh,yc+hh]}const hh=np>2?.8:.86;yc=Math.max(-.98+hh,Math.min(.98-hh,yc));return[.1,1.02,yc-hh,yc+hh]}catch(e){return[.04,.88,-.6,.6]}};
+ /* round 30: the cars are centred in the space between the end of the car name and the picture's right edge */
+ let tx=tr_.right;try{const rg=document.createRange();rg.selectNodeContents(t);tx=rg.getBoundingClientRect().right}catch(e){}const x0=Math.max(-.2,Math.min(.5,Math.round((2*((tx-hr.left)/hr.width)-1+.05)*50)/50)),x1=.95;
+ let yc=1-2*((tr_.top+tr_.height/2-hr.top)/hr.height);yc=Math.round(yc*50)/50;/* round 29: one car fills much more of the picture */if(np===1){const hh=1.02;yc=Math.max(-1.02+hh,Math.min(.96-hh,yc+.1));return[x0,x1,yc-hh,yc+hh]}const hh=np>2?.8:.86;yc=Math.max(-.98+hh,Math.min(.98-hh,yc));return[x0,x1,yc-hh,yc+hh]}catch(e){return[.04,.88,-.6,.6]}};
 /* the player being edited: their car glows in their colour, then fades after a few seconds; any change or typing for them lights it again */
 function gxHiPulse(){const h=document.getElementById('gxHi');if(!h)return;h.classList.remove('on');void h.offsetWidth;h.classList.add('on')}
 P.gxHiPulse=gxHiPulse;
@@ -584,7 +586,7 @@ function gxCarStep(box){const m=ST.mode,multi=multiOK(m);if(!multi)ST.players=1;
  gxRender(box,{kind:(np>1?'Player '+(fi+1)+' &middot; ':'')+'Class '+c.cls,name:c.name+(s.alt?' <small style="font-size:.4em;opacity:.7">ALT</small>':''),facts:[c.type||''],side,rows,side:'',
   tnBtn:multi&&np<MAXP?`<button class="gxAdd"><b>+</b> Add player</button>`:'',onAdd:addPlayer,
   grid:multi,cols:PCOLS,rm:multi?(p,go)=>{if(go){removePlayer(p);return}return p>0&&p<np}:null,
-  heroCls:'cars',groups:multi?[0,1,2,3].map(nm):['Car','Driver','More'],shot:cv=>{const L=Array.from({length:np},(_,p)=>selCar(p)),rg=carReg(box,np);carShot(cv,L,rg);if(np>1){const hc=document.createElement('canvas');hc.id='gxHi';hc.style.setProperty('--pc',PCOLS[fi]);cv.after(hc);carShot(hc,L,rg,fi);gxHiPulse()}},go:'Start'});/* grid: the cars sit between the name (left) and the stats (right) */
+  heroCls:'cars'+(GXS.newP!=null?' fin':''),newP:GXS.newP,groups:multi?[0,1,2,3].map(nm):['Car','Driver','More'],shot:cv=>{const L=Array.from({length:np},(_,p)=>selCar(p)),rg=carReg(box,np);carShot(cv,L,rg);if(np>1){const hc=document.createElement('canvas');hc.id='gxHi';hc.style.setProperty('--pc',PCOLS[fi]);cv.after(hc);carShot(hc,L,rg,fi);gxHiPulse()}},go:'Start'});/* grid: the cars sit between the name (left) and the stats (right) */
  box.querySelectorAll('.gxCard.pf input').forEach(i=>{i.addEventListener('input',gxHiPulse);i.addEventListener('focus',gxHiPulse)});
  if(multi)$('suHint').innerHTML='<u>&uarr;&darr;</u>Choose<u>&larr;&rarr;</u>Change'+(np<MAXP?'<u>+</u>Add player':'')+(np>1?'<u>Del</u>Remove':'')+'<u>Enter</u>Start';
  box.querySelectorAll('.gxr').forEach(el=>{const r=rows[+el.dataset.i];if(r&&r.pl!=null)el.addEventListener('mouseenter',()=>{if(GXS.cf!==r.pl){GXS.cf=r.pl;GXS.f=+el.dataset.i;renderSetup()}})})}
@@ -1028,4 +1030,5 @@ refreshMenuCars();MS=null;
    pause screen) a real Escape press does nothing; menus still go back with Escape, and a controller's B button still works */
 addEventListener('keydown',e=>{if(typeof scr==='undefined'||(scr!=='game'&&scr!=='pause'))return;const R_=typeof RACE!=='undefined'?RACE:null;if(R_&&(R_.prep||R_.replay))return;
  if(e.code==='Tab'){e.preventDefault();e.stopImmediatePropagation();if(!e.repeat)esc();return}
- if(e.code==='Escape'&&e.isTrusted){e.preventDefault();e.stopImmediatePropagation()}},true);
+ /* round 30: Escape opens and closes the pause menu too (a single press; a held key's repeats are ignored, which was the old flashing) */
+ if(e.code==='Escape'){e.preventDefault();e.stopImmediatePropagation();if(!e.repeat)esc()}},true);

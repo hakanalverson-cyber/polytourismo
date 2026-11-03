@@ -1,0 +1,9 @@
+[["wait",2000],["key","Enter"],["wait",2500],
+["js","(()=>{try{PT8.SV().name='Hakan';PT8.save()}catch(e){};document.querySelectorAll('button').forEach(b=>{if(b.textContent.trim()==='OK'&&b.offsetParent)b.click()});const e=document.querySelector('[data-m=mp][data-p=\"2\"]');show('s8quick');e.click();return scr})()"],["wait",1500],
+["js","(()=>{document.getElementById('suGo').click();return 1})()"],["wait",1500],
+["js","(()=>{const i=document.querySelector('.gxCard.pf input');i.focus();i.value='Bob';i.dispatchEvent(new Event('input'));document.getElementById('suGo').click();return scr+' '+document.activeElement.tagName})()"],["wait",9000],
+["js","(()=>scr+' active='+document.activeElement.tagName)()"],
+["key","Tab"],["wait",1200],["js","(()=>scr+' '+getComputedStyle(document.getElementById('pause')).display)()"],["shot","p"],["key","Tab"],["wait",500],
+["js","(()=>{PT8.cleanupRace&&PT8.cleanupRace();const u=PT8.ui;u.ST.mode='track';u.ST.trkType='race';u.ST.players=2;u.ST.rstep=1;u.renderSetup();show('s8setup');document.getElementById('suGo').click();return scr+' '+u.ST.rstep})()"],["wait",1500],
+["js","(()=>{document.getElementById('suGo').click();return scr})()"],["wait",9000],["js","(()=>scr+' '+(RACE&&RACE.cfg.trackRace)+' prep='+(RACE&&RACE.prep))()"],["shot","trk"],
+["key","Tab"],["wait",1200],["js","(()=>scr+' '+getComputedStyle(document.getElementById('pause')).display)()"],["shot","trkp"]]

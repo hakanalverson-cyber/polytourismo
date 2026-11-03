@@ -4,6 +4,7 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.03',d:'Nov 2, 2026',t:'Highway Cut-Up on bikes',items:[
+  'Escape pauses a race as well as Tab, in every mode and in split screen. A new player\'s frame fades in, and the cars sit centred between the name and the edge of the picture.',
   'Car select: the car of the player you are setting up glows in their colour, then fades after a few seconds. The cars line up with the car name.',
   'Car select: the preview camera stays fixed, so a big car looks big and a small one small. A player\'s frame appears only once they are added.',
   'New setup screen: you no longer pick the number of drivers first. On the car step, Add player (next to the car, or in the next empty frame) brings in the next player, and their car, name, gearbox and keys open in their own frame of a 2 x 2 grid. The x on a frame removes that player.',

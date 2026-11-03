@@ -1,0 +1,6 @@
+[["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",2500],
+["js","(()=>{try{PT8.SV().name='Hakan';PT8.save()}catch(e){};document.querySelectorAll('button').forEach(b=>{if(b.textContent.trim()==='OK'&&b.offsetParent)b.click()});const u=PT8.ui;u.ST.mode='mp';u.ST.players=1;u.renderSetup();show('s8setup');document.getElementById('suGo').click();return 1})()"],["wait",2500],["shot","p1"],
+["js","(()=>{PT8.addPlayer();return document.querySelectorAll('.gxCard.pf.fin').length})()"],["wait",150],["shot","p2mid"],["wait",1500],["shot","p2"],
+["js","(()=>{PT8.addPlayer();return PT8.ui.ST.players})()"],["wait",1500],["shot","p3"],
+["js","(()=>{PT8.addPlayer();return PT8.ui.ST.players})()"],["wait",5000],["shot","p4"],
+["js","(()=>{PT8.ui.ST.mode='ta';PT8.ui.ST.players=1;PT8.ui.renderSetup();document.getElementById('suGo').click();return 1})()"],["wait",2500],["shot","ta"]]

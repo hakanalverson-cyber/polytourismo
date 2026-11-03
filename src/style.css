@@ -1669,3 +1669,12 @@ body.gxAsking #tutOffer{display:none!important}
 /* round 29: the x is a plain mark on the header line, its right edge in line with the rows below (no disc sitting off the rounded corner) */
 #gxSu.g2 .gxCard.pf .gxRm{top:9px;right:8px;width:24px;height:24px;background:none;box-shadow:none;color:#8fa0ad;font:300 22px/24px var(--gt);border-radius:6px!important}
 #gxSu.g2 .gxCard.pf .gxRm:hover{background:#ef6a5a;color:#fff}
+/* round 30: a newly added player's frame fades and slides in */
+#gxSu.g2 .gxCard.pf.fin{animation:gxFin .45s cubic-bezier(.2,.7,.2,1) both}
+@keyframes gxFin{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+#gxSu.g2 .gxHero.cars.fin #gxShot{animation:gxShotIn .5s ease both}
+@keyframes gxShotIn{from{opacity:.25}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){#gxSu.g2 .gxCard.pf.fin,#gxSu.g2 .gxHero.cars.fin #gxShot{animation:none}}
+/* round 30: the x is drawn (not a font glyph), so it sits exactly in the middle of its button */
+#gxSu.g2 .gxCard.pf .gxRm{display:grid;place-items:center;padding:0;line-height:0;font-size:0}
+#gxSu.g2 .gxCard.pf .gxRm svg{display:block}
