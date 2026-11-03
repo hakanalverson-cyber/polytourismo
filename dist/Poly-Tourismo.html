@@ -17125,7 +17125,7 @@ function partGeo(part,pal,paintRGB){const pos=new Int16Array(u8(part.pos).buffer
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(P,3));g.setAttribute('color',new THREE.BufferAttribute(C,3));g.computeVertexNormals();g.userData.paint=paint;return g}
 function gbGeo(gb,paintRGB){const g=gb.geo(),c=g.attributes.color,paint=[];for(let f=0;f<c.count/3;f++)if(c.getX(f*3)<0){paint.push(f);for(let k=0;k<3;k++)c.setXYZ(f*3+k,paintRGB[0],paintRGB[1],paintRGB[2])}g.userData.paint=paint;return g}
 const VISOR={sport600:.97,superbike:.95};
-const GRIP={patrol:[.28,1.01,.255],fatscoot:[.37,1.09,.27],retroscoot:[.5,.975,.245],bobber:[.35,1.03,.255],dirt450:[.35,1.157,.25],scrambler:[.36,.975,.305]};
+const GRIP={patrol:[.25,.905,.245],fatscoot:[.37,1.09,.27],retroscoot:[.5,.975,.245],bobber:[.35,1.03,.255],dirt450:[.35,1.157,.25],scrambler:[.36,.975,.305]};
 const geoCache={};BK._geoCache=geoCache;
 function bikeGeos(d){if(geoCache[d.id])return geoCache[d.id];const lin=c=>c?c.map(s2l):[.5,.5,.5];let r;
  if(d.parts){let pal=d.pal;
