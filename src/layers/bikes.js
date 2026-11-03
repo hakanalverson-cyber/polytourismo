@@ -794,6 +794,58 @@ const STATN=[['Top speed',d=>d.stats.top/300,d=>Math.round(kmh()?d.stats.top:d.s
 const PAINTN=['Stock','Second','Red','Orange','Yellow','Green','Blue','Purple','White','Black'];
 const OPTS={clock:[[120,'2 min'],[180,'3 min'],[300,'5 min'],[0,'Endless']],traffic:[['light','Light'],['normal','Normal'],['heavy','Heavy']],tod:[['day','Day'],['dusk','Sunset'],['night','Night']]};
 const rgb=c=>'rgb('+c.map(x=>Math.round(x*255)).join(',')+')';
+/* Nov 3 (Hakan): the cut-up previews its real level, like the circuits do: the highway itself at the chosen time of day, with the riders
+   and the traffic on it, rendered once per look and kept. Also the two Quick Play pictures of the mode (promo.js asks for them) */
+let lvR=null;const LVS={};
+const lvRdr=()=>{if(!lvR){lvR=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});lvR.outputEncoding=THREE.sRGBEncoding;lvR.toneMapping=R.toneMapping;lvR.setPixelRatio(1)}return lvR};
+BK.levelShot=o=>{const key=JSON.stringify(o);return LVS[key]||(LVS[key]=(async()=>{await BK.loadPack();await new Promise(r=>setTimeout(r,20));
+ const tod=BK.TOD[o.tod]||BK.TOD.day,W=o.W||1920,H=o.H||1080,SSK=1.5,sc=new THREE.Scene(),rr=rng(o.seed*7+3),pp={},ms=[],vs=[];sc.fog=new THREE.Fog(tod.fog,tod.fogN,tod.fogF);
+ sc.add(new THREE.HemisphereLight(tod.hemi[0],tod.hemi[1],tod.hemi[2]));const sun=new THREE.DirectionalLight(tod.sun[0],tod.sun[1]);sun.position.fromArray(tod.sunPos).multiplyScalar(100);sc.add(sun);sc.add(sun.target);
+ const road=BK.makeRoad(o.seed),s0=o.s||140,world=BK.makeWorld(sc,road,{tod:o.tod}),sky=BK.makeSky(sc,tod);let out=null;
+ try{world.fill(s0-160,s0+700);
+  /* the riders: on the bike, tucked in, leaning into the line they are taking */
+  const L=BK.list(),rid=o.riders||[{id:L[0].id,paint:2,who:0}];
+  rid.forEach((x,i)=>{const d=BK.byId(x.id),m=BK.makeBike(d.id,BK.paintOf(d,x.paint||0),Object.assign({},RIDER_COL[i]||RIDER_COL[0],{who:x.who||0})),lean=x.lean||0;
+   BK.poseBike(m,lean,0,-lean*.25,0,0);const bp=basePose({m,d,trk_:null,lean,k:i});BK.poseRider(m,Object.assign(bp,{look:-.05,side:-lean*.4}));
+   road.pos(s0+(x.ds||0),RD.laneD(x.lane!=null?x.lane:2)+(x.dd||0),pp);m.g.position.set(pp.x,pp.y,pp.z);m.g.rotation.set(0,pp.h-(x.psi||0),0);sc.add(m.g);ms.push(m)});
+  /* traffic: our side ahead and around the riders, a few coming the other way */
+  const dens=o.traffic==='light'?.6:o.traffic==='heavy'?1.6:1;
+  const put=(s,lane,side)=>{for(const v of vs)if(v.side===side&&v.lane===lane&&Math.abs(v.s-s)<14)return;for(const m of ms){if(side<0)break;const q=m.g.position;road.pos(s,side*RD.laneD(lane),pp);if(Math.hypot(pp.x-q.x,pp.z-q.z)<9)return}
+   const kind=BK.pickKind(rr),m=BK.makeVehicle(kind,BK.pickPaint(rr),tod.lamps>0,rr);road.pos(s,side*RD.laneD(lane),pp);m.g.position.set(pp.x,pp.y,pp.z);m.g.rotation.set(-Math.atan(pp.g)*side,side>0?pp.h:pp.h+PI,0,'YXZ');sc.add(m.g);vs.push({m,s,lane,side})};
+  for(const [ds,lane] of(o.near||[]))put(s0+ds,lane,1);
+  for(let lane=0;lane<4;lane++){let s=s0-30;while(s<s0+420){s+=(34+rr()*60)/dens;put(s,lane,1)}}
+  for(let lane=0;lane<4;lane++){let s=s0-20;while(s<s0+520){s+=(60+rr()*90)/dens;put(s,lane,-1)}}
+  /* the camera: o.cam [ds, d, up] from rider 1, looking at [ds, d, up] */
+  const C=o.cam||[-7.5,1.4,2.1],Lk=o.look||[30,-.4,1],d0=RD.laneD(rid[0].lane!=null?rid[0].lane:2)+(rid[0].dd||0),cam=new THREE.PerspectiveCamera(o.fov||48,W/H,.1,3200);
+  road.pos(s0+C[0],d0+C[1],pp);cam.position.set(pp.x,pp.y+C[2],pp.z);road.pos(s0+Lk[0],d0+Lk[1],pp);cam.lookAt(pp.x,pp.y+Lk[2],pp.z);
+  if(o.shift){cam.setViewOffset(W,H,o.shift*W,0,W,H)}cam.updateMatrixWorld();cam.updateProjectionMatrix();sky.follow(cam.position.x,cam.position.y,cam.position.z);
+  sun.target.position.copy(ms[0]?ms[0].g.position:cam.position);sun.position.copy(sun.target.position).add(new THREE.Vector3().fromArray(tod.sunPos).multiplyScalar(100));
+  const r=lvRdr();r.toneMappingExposure=tod.exp;r.setSize(Math.round(W*SSK),Math.round(H*SSK),false);r.setClearColor(tod.fog,1);r.render(sc,cam);
+  out=document.createElement('canvas');out.width=W;out.height=H;const g=out.getContext('2d');g.imageSmoothingQuality='high';g.filter='saturate(1.12) contrast(1.05)';g.drawImage(r.domElement,0,0,W,H);g.filter='none';
+  const vg=g.createRadialGradient(W/2,H/2,H*.45,W/2,H/2,W*.75);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.32)');g.fillStyle=vg;g.fillRect(0,0,W,H)}
+ catch(e){console.error('level shot',e);delete LVS[key]}
+ finally{for(const m of ms)BK.disposeBike(m);for(const v of vs)sc.remove(v.m.g);world.dispose();sky.dispose()}
+ return out})())};
+/* the Quick Play pictures: weaving through the traffic in the day; two riders side by side at sunset */
+const QP_SEED=4711;
+P.promoCustom=P.promoCustom||{};
+const qpBike=(id,k)=>{const L=BK.list();return(L.find(b=>b.id===id)||L[Math.min(L.length-1,k)]||L[0]).id};
+P.promoCustom.bk0=async()=>{await BK.loadPack();return BK.levelShot({tod:'day',seed:QP_SEED,s:420,riders:[{id:qpBike('superbike',2),paint:2,who:0,lane:1,dd:1.6,lean:-.26,psi:-.04}],near:[[7,1],[8.5,2],[-7,0],[24,2],[38,1],[30,3]],cam:[-4.4,-1.1,1.05],look:[18,1.1,1.05],fov:50,traffic:'heavy'})};
+P.promoCustom.bk1=async()=>{await BK.loadPack();return BK.levelShot({tod:'dusk',seed:QP_SEED+9,s:640,riders:[{id:qpBike('sport600',3),paint:6,who:0,lane:2,lean:.16},{id:qpBike('superbike',2),paint:2,who:1,lane:1,dd:.4,ds:-2.2,lean:.12}],near:[[16,3],[26,0],[40,2]],cam:[-5.6,-2.4,.95],look:[14,1.2,1.1],fov:40,traffic:'normal'})};
+/* the setup screen's picture: your bikes on the run you are about to ride (its seed), the time of day you picked; the map moves to the corner */
+let lvLast=null;
+function levelPrev(cv){if(!cv||!PR)return;const two=PR.p[1].in,rid=[{id:PR.p[0].id,paint:PR.p[0].paint,who:PR.p[0].who,lane:2,lean:.08}];if(two)rid.push({id:PR.p[1].id,paint:PR.p[1].paint,who:PR.p[1].who,lane:3,ds:-3,lean:.06});
+ const o={tod:PR.opt.tod,seed:PR.seed,s:START_S+90,riders:rid,traffic:PR.opt.traffic,cam:[-6.8,-2.6,1.9],look:[20,2.2,.9],fov:44,shift:-.12};
+ const draw=v=>{if(!v||!cv.isConnected)return;cv.width=v.width;cv.height=v.height;const g=cv.getContext('2d');g.drawImage(v,0,0);cv.classList.remove('map');lvLast=v;const rf=$i('gxRefl');if(rf){const r=rf.getContext('2d');r.clearRect(0,0,rf.width,rf.height);r.drawImage(cv,0,0,rf.width,rf.height)}};
+ const pr=BK.levelShot(o);if(pr._v){draw(pr._v);return}if(lvLast){draw(lvLast);cv.style.opacity=.55}else{rideMap(cv);cv.classList.add('map')}
+ pr.then(v=>{pr._v=v;if(!cv.isConnected)return;cv.style.opacity='';draw(v)})}
+/* the route in the corner box: the same road as the big map, small */
+function rideMini(cv){if(!cv||!PR)return;const g=cv.getContext('2d'),cw=cv.width,ch=cv.height,road=BK.makeRoad(PR.seed),L=6000,pts=[],f={};for(let s_=0;s_<=L;s_+=40){road.at(s_,f);pts.push([f.x,f.z])}
+ const a=Math.atan2(pts[pts.length-1][0]-pts[0][0],pts[pts.length-1][1]-pts[0][1]),ca=Math.cos(a),sa=Math.sin(a),q=pts.map(([x,z])=>[z*ca+x*sa,x*ca-z*sa]);let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;for(const [x,y] of q){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y)}
+ const k=(cw*.84)/(x1-x0||1),ky=Math.max(k,Math.min(k*5,ch*.5/Math.max(1,y1-y0))),P_=([x,y])=>[cw*.08+(x-x0)*k,ch/2+(y-(y0+y1)/2)*ky];g.clearRect(0,0,cw,ch);
+ g.beginPath();q.forEach((p,i)=>{const [x,y]=P_(p);i?g.lineTo(x,y):g.moveTo(x,y)});g.lineJoin='round';g.lineCap='round';g.lineWidth=7;g.strokeStyle='#0b0f14';g.stroke();g.lineWidth=3;g.strokeStyle='#e8eef5';g.stroke();
+ for(let kk=1;kk<4;kk++){const e=road.exitNear(1400+kk*3100);if(e<0||e>=L)continue;const [x,y]=P_(q[Math.round(e/40)]);g.fillStyle='#7fd68a';g.beginPath();g.arc(x,y,4,0,7);g.fill()}
+ const [sx,sy]=P_(q[0]);g.fillStyle='#ffd36a';g.beginPath();g.arc(sx,sy,5,0,7);g.fill()}
 /* part one's picture: the route ahead, drawn from the same road the run will use: the first 6 km with the exits and the start */
 function rideMap(cv){if(!cv||!PR)return;const dpr=Math.min(2,devicePixelRatio||1),cw=Math.max(320,Math.round((cv.clientWidth||960)*dpr)),ch=Math.max(180,Math.round((cv.clientHeight||300)*dpr));if(cv.width!==cw||cv.height!==ch){cv.width=cw;cv.height=ch}
  const g=cv.getContext('2d'),road=BK.makeRoad(PR.seed),L=6000,pts=[],f={};for(let s_=0;s_<=L;s_+=20){road.at(s_,f);pts.push([f.x,f.z])}
@@ -827,7 +879,7 @@ function bikeRender(){if(!PR)return;const two=PR.p[1].in,L=BK.list(),rows=[];
  const fi=PR.focus&&two?1:0,s=PR.p[fi],d=BK.byId(s.id),k=L.findIndex(b=>b.id===s.id);
  const side=`<div class="gxSide"><h6>${esc(d.kind)} &middot; ${k+1} of ${L.length}</h6><div class="st">${STATN.map(([n,f,v])=>`<span>${n}</span><u><i style="width:${Math.round(cl(f(d),0,1)*100)}%"></i></u><em>${v(d)}</em>`).join('')}</div></div>`;
  const lineup=two?[PR.p[0],PR.p[1]]:[PR.p[0]];
- if(step===1)P.gxRender({kind:'Best score '+fmtN(SV().best||0),name:'Highway Cut-Up',facts:['Endless highway','Plains','Up to two riders, split screen'],rows,groups:['The ride','Conditions',''],shot:cv=>rideMap(cv),go:'Next: bikes'});
+ if(step===1)P.gxRender({kind:'Best score '+fmtN(SV().best||0),name:'Highway Cut-Up',facts:['Endless highway','Plains','Up to two riders, split screen'],rows,groups:['The ride','Conditions',''],shot:cv=>levelPrev(cv),map:cv=>rideMini(cv),go:'Next: bikes'});
  else P.gxRender({kind:(two?'Player '+(fi+1)+' &middot; ':'')+esc(d.kind),name:esc(d.name),facts:[esc(d.kind),'Tricks on '+KEYS[fi].tkn.slice(0,TRICKS.length).join(' ')],side:'',rows,groups:['Player 1','Player 2'],grid:true,cols:PCOL,heroCls:'cars'+(PR.newP!=null?' fin':''),newP:PR.newP,rm:(p,go)=>{if(go){dropRider();return}return p===1&&two},
   onAdd:addRider,shot:cv=>{bikeShot(cv,lineup);/* round 15: the bike being edited glows for a moment, like the car screen */if(two&&P.gxHiPulse){const hc=document.createElement('canvas');hc.id='gxHi';hc.style.setProperty('--pc',PCOL[fi]);cv.after(hc);bikeShot(hc,lineup,fi);P.gxHiPulse()}},go:'Ride'});
  const g=$i('suGo');if(g)g.innerHTML='<span>'+(step===1?'Next: bikes &rsaquo;':'Ride')+'</span>'}

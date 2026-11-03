@@ -4,6 +4,9 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.03',d:'Nov 2, 2026',t:'Highway Cut-Up on bikes',items:[
+  'Menus: every Quick Play mode has two pictures of its own now. Track shows GT race cars through a kerbed corner and a Mazda 787B at dusk, Rally a Subaru sideways on a forest gravel stage and a Polo WRC on snow, Highway Cut-Up the real highway with bikes in the traffic. The mode list now lines up with the picture, top and bottom.',
+  'Highway Cut-Up: the setup screen previews the level itself (the highway you will ride, at the time of day you pick, with your bikes and the traffic), with the route map in the corner like the circuits.',
+  'Menus: the Career menu\'s motion everywhere. Rows slide in one after another when the main menu, Quick Play, a setup screen, Options or the pause menu opens, the chosen row has the glint and its icon springs up, hovered rows light up and a picked row pulses. Up and Down now move through the pause menu too.',
   'Career: the Marketplace lives on the computer now. Click the laptop (or ask Vince) and the site opens right on its screen: browse and buy, list your cars, and a Messages tab that keeps every haggle, so you can come back to a conversation any time and answer from there. Notifications open the right chat.',
   'Career: real shadows in the garage from the light over the car, softer contact shadows under the people, easier clicking on Nina, Vince, the car and the computer, no more wandering around the garage, calmer postures, and Nina and Vince no longer turn to follow your mouse.',
   'Bikes: the hands stay on the grips when you steer while a trick is starting or ending, and the rider is posed after the bike each frame so the hands no longer trail the bars.',

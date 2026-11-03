@@ -92,7 +92,7 @@ window.PT8_BOOT=new Promise(res=>{const run=()=>setTimeout(async()=>{try{const B
   /* the order the pictures are needed in once the menu is up: the main menu's own scenes first, then the circuit select, then Quickplay, the stages, the rest */
   if(P.menuShot&&!window.PT8_NOSCENE){P.MENU_SCENES.forEach((x,k)=>job(1,'MENU',co=>SC.menu(k,co)));if(P.locShot)P.MENU_LOC.forEach((k,i)=>job(i<4?1:2,'MENU',co=>SC.loc(k,co)))}
   for(const i of(P.TRK_TRACKS||[]))if(isC(i)&&P.trackShot)job(2,D[i].name,co=>SC.track(i,co));
-  if(P.promoShot&&!window.PT8_NOSCENE){for(let q=0;q<5;q++)for(const k of P.promoFor(q))job(3,'QUICKPLAY',co=>SC.promo(k,co))}
+  if(P.promoShot&&!window.PT8_NOSCENE){for(let q=0;q<7;q++)for(const k of P.promoFor(q))job(3,'QUICKPLAY',co=>SC.promo(k,co))}
   for(const i of(P.STAGES||[]))if(P.stageRender&&typeof D!=='undefined'&&D[i])job(4,D[i].name,co=>SC.stage(i,co));
   if(P.quickTracks&&P.trackShot&&!window.PT8_FAST)for(const i of P.quickTracks())if(!isC(i))job(5,D[i].name,co=>SC.track(i,co));
   /* the card pictures of the main menu and the Quickplay setup previews are decoded now, so nothing pops in on the menu after loading */

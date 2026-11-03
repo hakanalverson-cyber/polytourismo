@@ -97,6 +97,11 @@ function lamp(mp,me,night){const g=new THREE.Group(),p=box(.18,7,.18,mp);p.posit
 let GLOW=null;function glowTex(){if(GLOW)return GLOW;const c=cnv(64,64),g=c.getContext('2d'),q=g.createRadialGradient(32,32,0,32,32,32);q.addColorStop(0,'rgba(255,255,255,1)');q.addColorStop(.25,'rgba(255,255,255,.45)');q.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=q;g.fillRect(0,0,64,64);return GLOW=new THREE.CanvasTexture(c)}
 function windows(seed,lit,base,day){const c=cnv(128,256),g=c.getContext('2d'),r=rng(seed);g.fillStyle=base;g.fillRect(0,0,128,256);for(let y=8;y<250;y+=12)for(let x=6;x<124;x+=10){g.fillStyle=day?(r()<.5?'#b8d0e6':'#8aa6c2'):r()<lit?(r()<.5?'#ffd98a':'#bfe3ff'):'rgba(0,0,0,.35)';g.fillRect(x,y,6,7)}return tex(c)}
 function asphalt(E){const c=cnv(512,1024),g=c.getContext('2d'),r=rng(3);g.fillStyle=E.road;g.fillRect(0,0,512,1024);
+ /* Nov 3: rally stages are loose gravel (or packed snow): stones, two worn wheel lines, soft edges, no paint */
+ if(E.gravel){for(let i=0;i<16000;i++){const v=r();g.fillStyle=v<.45?'rgba(0,0,0,.13)':v<.8?'rgba(255,255,255,.10)':'rgba(90,70,50,.18)';const z=1+r()*3;g.fillRect(r()*512,r()*1024,z,z)}
+  for(const x of[150,362]){const q=g.createLinearGradient(x-46,0,x+46,0);q.addColorStop(0,'rgba(0,0,0,0)');q.addColorStop(.5,E.gravel);q.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=q;g.fillRect(x-46,0,92,1024)}
+  for(const [x0,x1] of[[0,60],[452,512]]){const q=g.createLinearGradient(x0,0,x1,0);q.addColorStop(x0?0:1,'rgba(0,0,0,0)');q.addColorStop(x0?1:0,E.tc[0]);g.fillStyle=q;g.fillRect(x0,0,x1-x0,1024)}
+  return tex(c,[1,40])}
  for(let i=0;i<9000;i++){const v=r();g.fillStyle=v<.5?'rgba(0,0,0,.10)':'rgba(255,255,255,.06)';g.fillRect(r()*512,r()*1024,1+r()*2,1+r()*2)}
  g.fillStyle='rgba(255,255,255,.92)';g.fillRect(14,0,10,1024);g.fillRect(488,0,10,1024);
  if(E.lanes)for(const x of E.lanes)for(let y=0;y<1024;y+=256)g.fillRect(x-5,y,10,140);
@@ -146,6 +151,15 @@ const ENV={
   light:[0xffb890,.7,[-10,6,-40]],hemi:[0x8a7ab8,0x18141c,.6],fogN:120,fogF:1300,props:'city',night:1},
  floods:{sky:['#02040c','#081232','#142050','#26306a'],fog:'#1e2448',stars:1,road:'#1a1b20',tc:['#14201a','#18261e','#202624'],hill:6,mount:60,rockH:50,lanes:[],kerb:1,wet:1,
   light:[0xd0dcff,.6,[15,30,10]],hemi:[0x5a6aa0,0x0a0c12,.55],fogN:100,fogF:1100,props:'circuit',night:1},
+ /* Nov 3: Track and Rally pictures */
+ trackday:{sky:['#1858c0','#3c88e2','#8cc0f0','#d8eaf8'],fog:'#d2e4f2',sun:[.7,.55,.016,'#ffffff'],clouds:CU('#ffffff','#b4c6da',6),road:'#2f3036',tc:['#4c7a32','#5f9038','#6a6458'],hill:6,mount:70,rockH:50,lanes:[],kerb:1,
+  light:[0xfff6e6,1.85,[35,40,10]],hemi:[0xd4e8ff,0x5a5a48,.8],fogN:180,fogF:1900,props:'circuit'},
+ trackdusk:{sky:['#1a2350','#5a3f7a','#d0705a','#ffb070'],fog:'#e8a07a',sun:[.22,.04,.03,'#ffd09a'],sunCore:'#fff0d4',clouds:CU('#ffc8a8','#8a4a6a',5),streaks:5,streakC:'#ffa880',road:'#45454e',tc:['#46623a','#587440','#6a5a50'],hill:8,mount:110,rockH:50,lanes:[],kerb:1,
+  light:[0xffb880,1.7,[-25,7,-40]],hemi:[0xffc8a8,0x50506a,.9],fogN:140,fogF:1600,props:'circuit'},
+ rallyforest:{sky:['#2a64b8','#5c98da','#b4d4ee','#e8f0f4'],fog:'#c9d6cf',sun:[.25,.45,.016,'#fffaf0'],clouds:CU('#ffffff','#c0ccd6',8),road:'#9a8466',gravel:'rgba(70,52,34,.28)',dust:0xc8b090,tc:['#6a5a42','#3f6a34','#4f7a3a'],hill:16,mount:140,rockH:55,lanes:[],
+  light:[0xfff0d8,1.65,[-30,32,20]],hemi:[0xdfeaf6,0x5a4a36,.8],fogN:320,fogF:2600,props:'forest',leaf:[0x24522c,0x2f6a36,0x1f4a28]},
+ rallysnow:{sky:['#3a5a9a','#7a9ac8','#c8d8ea','#eef3f8'],fog:'#e4ebf2',sun:[.7,.3,.016,'#fffaf2'],clouds:CU('#ffffff','#c8d2de',7),road:'#d8dee6',gravel:'rgba(120,130,150,.30)',dust:0xf4f8ff,tc:['#e8eef4','#f2f6fa','#c4ccd6'],hill:18,mount:240,rockH:40,snowH:20,lanes:[],
+  light:[0xfff4e8,1.6,[30,24,25]],hemi:[0xe8f0ff,0x8a96a8,.85],fogN:150,fogF:1700,props:'alpine',leaf:[0x2a4a3a,0x34584a,0x223e32]},
  /* main menu, more */
  snow:{sky:['#4a7cc4','#8ab4e4','#cfe2f4','#f2f6fa'],fog:'#e8eef4',sun:[.7,.4,.016,'#ffffff'],clouds:CU('#ffffff','#c8d4e0',6),road:'#44474e',tc:['#e8eef4','#f4f7fa','#9aa4b0'],hill:16,mount:240,rockH:60,snowH:40,lanes:[256],leaf:[0x1f4a32,0x2a5a3a,0x1a3f2c],
   light:[0xfff6ec,1.5,[25,30,20]],hemi:[0xe8f2ff,0xb0b8c4,.9],fogN:160,fogF:1800,props:'alpine'},
@@ -284,15 +298,31 @@ P.PROMO_SCENES=[
  {rd:{G:.05,cA:20,cL:400},env:'snow',cars:[['c102',0,1.2],['c79',4,-1.4]],cam:[-3.8,1.4,-9],look:[0,1,1],fov:30,blur:'zoom',amt:.04},
  {rd:{A:3,L:250,base:5},env:'tropic',cars:[['c42',0,0]],cam:[-7.2,.7,.4],look:[0,.9,.4],fov:34,blur:'pan',amt:.06},
  {rd:{A:7,L:420,cA:25,cL:700},env:'fields',cars:[['c123',0,-1.3],['c27',6,1.4]],cam:[5,2.6,9],look:[0,1,-3],fov:30,blur:'zoom',amt:.035},
- {rd:{G:-.04,cA:-25,cL:420},env:'fjord',cars:[['gtr',0,-.8]],cam:[3.5,1.5,8.5],look:[0,1,-4],fov:30,blur:'zoom',amt:.04}];
+ {rd:{G:-.04,cA:-25,cL:420},env:'fjord',cars:[['gtr',0,-.8]],cam:[3.5,1.5,8.5],look:[0,1,-4],fov:30,blur:'zoom',amt:.04},
+ /* Nov 3 (Hakan: every mode gets two pictures of its own). Kept at the end: the title stills point at the scenes above by number */
+ /* Track: race cars nose to tail through a kerbed corner past the grandstands, then one car low on the kerb at dusk */
+ {q:4,rd:{A:2,L:300,cA:-22,cL:420},env:'trackday',cars:[['c9',0,-1.4],['c45',4.6,1.5],['c35',9.4,-1.1],['c92',14.5,1.2]],cam:[5.5,2.6,11],look:[0,1,-3],fov:30,blur:'zoom',amt:.035},
+ {q:4,rd:{cA:14,cL:520},env:'trackdusk',cars:[['c63',0,-.4]],cam:[-7.2,1.05,.2],look:[0,.8,.2],fov:34,blur:'pan',amt:.06},
+ /* Rally: a gravel stage in the forest, the car sideways in its own dust; then a snow stage in the mountains */
+ {q:5,rd:{A:5,L:240,cA:26,cL:360},env:'rallyforest',cars:[['c108',0,.4,0,-.62]],cam:[5.2,1.5,9],look:[0,.8,-1.5],fov:30,blur:'zoom',amt:.04},
+ {q:5,rd:{A:4,L:280,cA:-24,cL:400},env:'rallysnow',cars:[['c65',0,-.3,0,.55]],cam:[-4.6,1,7.8],look:[0,.9,-1.5],fov:30,blur:'zoom',amt:.035},
+ /* Highway Cut-Up: the real highway and bikes, drawn by bikes.js */
+ {q:6,custom:'bk0',v:2},{q:6,custom:'bk1',v:2}];
+
 P.promoFor=q=>P.PROMO_SCENES.map((s,k)=>s.q===q?k:-1).filter(k=>k>=0);
 
 const PS={};
 P.promoShotCached=k=>PS[k]&&PS[k]._v||null;
 P.promoShotSeed=(k,cv)=>{const pr=Promise.resolve(cv);pr._v=cv;PS[k]=pr};
-P.promoShot=k=>PS[k]||(PS[k]=new Promise(res=>setTimeout(()=>{let sc=null;try{const W=1920,H=1080,S=P.PROMO_SCENES[k],E=ENV[S.env],o=envScene(E,k*31+7,S.rd);sc=o.sc;const RL=o.RL;
+const dustTex=()=>{if(GEO.dustT)return GEO.dustT;const c=cnv(64,64),g=c.getContext('2d'),q=g.createRadialGradient(32,32,2,32,32,32);q.addColorStop(0,'rgba(255,255,255,1)');q.addColorStop(.5,'rgba(255,255,255,.45)');q.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=q;g.fillRect(0,0,64,64);return GEO.dustT=new THREE.CanvasTexture(c)};
+P.promoCustom=P.promoCustom||{};
+P.promoShot=k=>PS[k]||(PS[k]=P.PROMO_SCENES[k]&&P.PROMO_SCENES[k].custom?new Promise(res=>setTimeout(async()=>{let v=null;try{const f=P.promoCustom[P.PROMO_SCENES[k].custom];v=f?await f():null}catch(e){console.error('promo custom',e)}if(!v)delete PS[k];res(v)},30)):new Promise(res=>setTimeout(()=>{let sc=null;try{const W=1920,H=1080,S=P.PROMO_SCENES[k],E=ENV[S.env],o=envScene(E,k*31+7,S.rd);sc=o.sc;const RL=o.RL;
  /* the scenery runs off towards -z: a shot from behind the cars is turned round so it looks into it too */const fl=S.look[2]>S.cam[2]+.5?-1:1;
- const cars=[];for(const [id,d,l,fade] of S.cars){const g=car(id,fade);if(!g)continue;g.userData.fade=fade;g.position.copy(RL.at(l*fl,0,-d*fl));g.rotation.y=fl>0?0:Math.PI;RL.orient(g,-d*fl);if(fl<0)g.rotation.x=-g.rotation.x;sc.add(g);cars.push(g)}
+ const cars=[];for(const [id,d,l,fade,yaw] of S.cars){const g=car(id,fade);if(!g)continue;g.userData.fade=fade;g.position.copy(RL.at(l*fl,0,-d*fl));g.rotation.y=fl>0?0:Math.PI;RL.orient(g,-d*fl);if(fl<0)g.rotation.x=-g.rotation.x;if(yaw)g.rotation.y+=yaw;sc.add(g);cars.push(g)}
+ /* Nov 3: rally cars throw up a dust (or snow) cloud behind them; sprites, so they stay in the blurred background layer */
+ if(E.dust){const dt=dustTex(),rr=rng(k*13+5);for(const g of cars){if(g.userData.fade)continue;const f=g.getWorldDirection(new V3()).setY(0).normalize(),sd=new V3(-f.z,0,f.x);
+  for(let i=0;i<26;i++){const b=1.6+i*.55+rr()*.6,sp=new THREE.Sprite(new THREE.SpriteMaterial({map:dt,color:E.dust,transparent:true,depthWrite:false,opacity:Math.max(.12,.7-i*.022)}));
+   sp.position.copy(g.position).addScaledVector(f,-b).addScaledVector(sd,(rr()-.5)*(1.4+i*.18));sp.position.y+=.35+rr()*.5+i*.07;const z=1.4+i*.32+rr()*.8;sp.scale.set(z,z*.8,1);sc.add(sp)}}}
  const cam=new THREE.PerspectiveCamera(S.fov||32,W/H,.3,2400);cam.position.copy(RL.at(S.cam[0]*fl,S.cam[1],S.cam[2]*fl));cam.lookAt(RL.at(S.look[0]*fl,S.look[1],S.look[2]*fl));cam.updateMatrixWorld();
  /* the main menu's panel covers the right of the screen: those shots are re-aimed (an off-centre lens) so the cars sit at about a third across */
  if(S.q===undefined&&cars.length){let sx=0,n=0;cars.forEach(c=>{if(c.userData.fade)return;const v=new V3(0,.8,0).applyMatrix4(c.matrixWorld).project(cam);if(v.z<1){sx+=(v.x+1)/2;n++}});

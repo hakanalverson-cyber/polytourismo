@@ -151,7 +151,8 @@ let qv=0,qT=0;
 function qPrev(c,keep){if(!c)return;clearTimeout(qT);if(!keep)qv=0;$('qpName').textContent=c.querySelector('span').textContent;$('qpDesc').textContent=c.dataset.d;
  const m=c.dataset.m,t=m==='bike'?0:okTrack(m,ST.track)?ST.track:firstTrack(m),cv=$('qpShot'),g=cv.getContext('2d'),rf=$('qpRefl');let sh=P.trackShotCached&&P.trackShotCached(t);
  /* 0.02: the mode's own action scenes (promo.js, made behind the boot screen), shown in turn */const k0=[...c.parentNode.children].indexOf(c),L=P.promoFor?P.promoFor(k0):[],ks=L.length?L[qv%L.length]:-1,art=ks>=0&&P.promoShotCached(ks);
- if(art)sh=art;else if(ks>=0)P.promoShot(ks).then(v=>{if(v&&qf===k0)qPrev(c,1)});if(L.length>1)qT=setTimeout(()=>{if(scr==='s8quick'&&qf===k0){if(P.promoShotCached(L[(qv+1)%L.length]))qv++;qPrev(c,1)}},6500);
+ /* Nov 3: every mode has two pictures of its own now; until they are ready the frame stays dark instead of borrowing another mode's art */
+ if(art)sh=art;else if(ks>=0){sh=null;P.promoShot(ks).then(v=>{if(v&&qf===k0)qPrev(c,1)});if(!keep){g.fillStyle='#0b0e12';g.fillRect(0,0,cv.width,cv.height);return}}if(L.length>1)qT=setTimeout(()=>{if(scr==='s8quick'&&qf===k0){if(P.promoShotCached(L[(qv+1)%L.length]))qv++;qPrev(c,1)}},6500);
  const put=im=>{if(keep&&art){let n=0;const f=()=>{if(qf!==k0)return;g.globalAlpha=.16;g.drawImage(im,0,0,cv.width,cv.height);g.globalAlpha=1;if(++n<24)requestAnimationFrame(f);else{g.drawImage(im,0,0,cv.width,cv.height);refl()}};f();return}g.drawImage(im,0,0,cv.width,cv.height);refl()},refl=()=>{const r=rf.getContext('2d');r.clearRect(0,0,rf.width,rf.height);r.drawImage(cv,0,cv.height*.75,cv.width,cv.height*.25,0,0,rf.width,rf.height)};
  if(sh){put(sh);return}const bb=typeof BBG_B64!=='undefined'?BBG_B64:[],k=[...c.parentNode.children].indexOf(c),u=bb[[3,2,1,4,0,2,1,1][k]%Math.max(1,bb.length)];
  if(u){const im=new Image();im.onload=()=>{if(qf===k)put(im)};im.src='data:image/jpeg;base64,'+u}else drawTrack(cv,t,false)}
