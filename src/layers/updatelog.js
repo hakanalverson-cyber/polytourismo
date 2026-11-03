@@ -4,7 +4,9 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.03',d:'Nov 2, 2026',t:'Highway Cut-Up on bikes',items:[
-  'Career: Nina and Vince now move around the shop. Nina sorts through the benches and shelves, checks the tyres and looks at her phone; Vince walks over to his laptop and types, or stares out of the door window. Click either of them and they stop and talk right where they are.',
+  'Career: worn cars now look worn, with scratches, chips, grime and rust in the paint, and the bad paintjobs are properly awful. Standing around, Nina and Vince shift their weight and change posture instead of fidgeting, they blend smoothly into walking, and they stay in view. The loading screen is the start-up screen again, with CAREER on it.',
+  'Career: fixed the List it button in the selling form, and gave the form more room.',
+  'Career: Nina and Vince now move around the shop. Nina sorts through the benches and shelves and checks the tyres; Vince walks over to his laptop and types. Click either of them and they stop and talk right where they are.',
   'Career: you can now sell cars through Vince in the Marketplace. Set a price, give the listing a title and a description, and watch the chance meter: ask too much and nobody buys. You get an announcement when it sells (or doesn\'t), anywhere except in the middle of a race.',
   'Career: picking a car keeps the camera in the room and Nina answers in a speech bubble. Bring out something ugly and she will tell you exactly what she thinks of it. The loading screen now shows the garage behind it.',
   'Career: a loading screen when you open it, and Esc now opens a career menu instead of dropping you out. The background blurs when you walk up to someone, the camera is at eye level, and the labels are a single rounded name tag ("Change car" on the car).',

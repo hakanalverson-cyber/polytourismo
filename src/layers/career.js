@@ -93,7 +93,7 @@ function moneyLine(){const sv=P.SV(),cr=sv.cr,own=sv.owned||{},cur=curCar().car;
  if(next)return `${fmtCr(next.price-cr)} more and the ${next.name} is yours. Or check the Marketplace.`;return `Your garage is fine. Keep winning.`}
 const TIPS=['Brake in a straight line, then turn. The car can only do one damn thing at a time.','Tyres and gearing make the biggest difference. Pay me and I\'ll sort them.',
  'A rally stage is one run. A small mistake costs less than a big crash.','In an elimination you only need to beat one car each lap. Stay out of the shit.',
- 'If you keep hitting the wall, the car gets slower. I can fix it, but it costs.','On hot laps, a clean lap beats a fast messy one. Every damn time.'];
+ 'If you keep hitting the wall, the car gets slower. I can fix it, but it costs.','On hot laps, a clean lap beats a fast messy one. Every time.'];
 function vinLine(state){const g=G(),r=state&&state.res,nm=(P.SV().name||'').trim();
  if(r){const fix=wearOf(curCar().id)>.2?' Might want Nina to look at the car.':'';
   if(r.ok){const p=r.paid?` ${fmtCr(r.paid)}, as promised.`:'';return rnd([`Nice. ${r.what}.${p}`,`${r.what}. Not bad.${p}`,`Knew you had it. ${r.what}.${p}`])+(r.tierUp?` People are talking. You're ${TIERS[r.tierUp].n} level now.`:'')+fix}
@@ -104,10 +104,10 @@ function redLine(){const c=curCar(),w=wearOf(c.id);if(w>.35)return rnd([`What th
  if(w>.02)return `A few scratches on the ${c.car.name}. It's at ${pctOK(c.id)}%.`;return rnd([`Hey. The ${c.car.name} is ready to go.`,`Need something? I'm here.`,`Car's clean. Want me to tune it?`,`Hell of a car, this one. What do you need?`])}
 const GOT=['Got the %s for you!','Got the %s for you! Keys are in it.','Got the %s for you! Try not to scratch this one.','Got the %s for you! Damn, I love this one.'];
 const TUNE_L={gear:[`Shorter gears. It'll jump off the line, but top speed takes a hit.`,`Longer gears. Faster on the straights, lazy out of the corners.`],
- tyre:[`Softer tyres. Grippy as hell, but they wear quicker.`,`Harder compound. Lasts forever, slides a bit.`],
+ tyre:[`Softer tyres. Loads of grip, but they wear quicker.`,`Harder compound. Lasts forever, slides a bit.`],
  susp:[`Softer springs. Better over bumps and gravel.`,`Stiffer. Sharp on tarmac. Your back will hate it.`],
  aero:[`Less wing. Slippery. Don't be a hero in the fast bends.`,`More wing. Sticks in corners, slower on the straights.`],
- brake:[`Softer brakes. Easier to feel.`,`Stronger brakes. Don't lock the damn things.`]};
+ brake:[`Softer brakes. Easier to feel.`,`Stronger brakes. Try not to lock them.`]};
 
 /* ---------------- Vince's Marketplace: older cars, cheap, and they need work ---------------- */
 const BADPAL=[['#5cff1a'],['#ff2fa8'],['#8a2be2'],['#ff6a00'],['#00e5c8']];
@@ -121,10 +121,32 @@ function mktFill(){const g=G();if(!Array.isArray(g.mkt))g.mkt=[];const own=P.SV(
 /* a bad paintjob: the body paint swapped for a loud colour (saved per car in gc.paint until Nina repaints it) */
 const paintOf=id=>(G().paint||{})[id]||null;
 function setPaint(id,c){const g=G();if(!g.paint)g.paint={};if(c)g.paint[id]=c;else delete g.paint[id];P.save()}
-function badPaint(root,c){if(!root||!c)return;/* body and trim get a cheap respray: every lit surface pulled hard towards one loud colour, windows and tyres left dark */
- const col=new THREE.Color(c);root.traverse(m=>{if(!m.isMesh||Array.isArray(m.material)||!m.material||(m.name!=='paint'&&m.name!=='body'))return;const mm=m.material.clone(),prev=mm.onBeforeCompile;
-  mm.onBeforeCompile=function(sh,r){if(prev)prev.call(this,sh,r);sh.uniforms.uBad={value:col};sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uBad;').replace('#include <color_fragment>','#include <color_fragment>\n{float l=dot(diffuseColor.rgb,vec3(.3,.59,.11));diffuseColor.rgb=mix(diffuseColor.rgb,uBad*(.3+.4*l),smoothstep(.04,.12,l)*.92);}')};
-  mm.customProgramCacheKey=()=>'gcBad'+(prev?1:0);mm.roughness=.95;mm.metalness=0;m.material=mm})}
+/* the look of a used car, in the paint shader itself so everything sits flush with the body: a bad respray (a loud colour, a second
+   mismatched colour on whole panels, grey primer patches, runs, overspray grain, the old paint showing where it flaked) and wear (grime
+   towards the sills, clusters of fine scratches down to bare metal, stone chips, rust spots low down on tired cars, sun-faded tops).
+   Positions are the mesh's own, scaled to roughly metres, so the pattern stays put on the car in the garage and in races */
+const GL_NOISE=`float gcH(vec3 p){p=fract(p*.3183099+.1);p*=17.;return fract(p.x*p.y*p.z*(p.x+p.y+p.z));}
+float gcN(vec3 x){vec3 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);return mix(mix(mix(gcH(i),gcH(i+vec3(1,0,0)),f.x),mix(gcH(i+vec3(0,1,0)),gcH(i+vec3(1,1,0)),f.x),f.y),mix(mix(gcH(i+vec3(0,0,1)),gcH(i+vec3(1,0,1)),f.x),mix(gcH(i+vec3(0,1,1)),gcH(i+vec3(1,1,1)),f.x),f.y),f.z);}
+float gcF(vec3 p){return .5*gcN(p)+.25*gcN(p*2.03+1.7)+.125*gcN(p*4.01+3.1)+.125*gcN(p*7.9+5.3);}`;
+const GL_LOOK=`{vec3 c=diffuseColor.rgb;float l=dot(c,vec3(.3,.59,.11)),pm=smoothstep(.006,.025,l);l=sqrt(l);vec3 p=(vCP-uMin)/uSz*4.6+uSeed;float hg=(vCP.y-uMin.y)/uSz,bot=1.-smoothstep(.03,.15,hg);
+ if(uBadOn>.5){vec3 a=uBad*(.32+.4*l);a=mix(a,uBad2*(.32+.4*l),smoothstep(.5,.53,gcF(p*.55)));a=mix(a,vec3(.44,.45,.44)*(.5+.5*l),smoothstep(.6,.63,gcF(p*1.3+3.)));
+  a*=1.-.4*smoothstep(.66,.74,gcF(vec3(p.x*10.,p.y*.7,p.z*10.)));a*=.84+.32*gcN(p*31.);a=mix(a,c,smoothstep(.66,.68,gcF(p*3.6+11.)));c=mix(c,a,pm*.96);}
+ if(uWear>.01){float w=uWear;c=mix(c,c*vec3(.5,.46,.4),clamp(w*(.2+.7*bot)*gcF(p*2.2+5.)*1.5,0.,.85));
+  float sc=0.;for(int i=0;i<4;i++){float fi=float(i);vec3 d=normalize(vec3(cos(fi*2.1+uSeed),.4*sin(fi*1.7),sin(fi*2.1+uSeed)));float u=dot(p,d)*(9.+fi*4.)+gcF(p*1.4+fi)*2.5;
+   float ln=1.-smoothstep(0.,.05,abs(fract(u)-.5));float m=smoothstep(1.-w*.5,1.-w*.5+.05,gcF(p*vec3(1.6,3.,1.6)+fi*13.));sc=max(sc,ln*m);}
+  c=mix(c,vec3(.74,.75,.77),sc*pm*.9);c=mix(c,vec3(.86,.86,.83),smoothstep(1.-w*.1,1.-w*.1+.015,gcN(p*26.))*pm*.85);
+  c=mix(c,vec3(.33,.15,.06),smoothstep(.58,.72,gcF(p*2.8+9.))*bot*smoothstep(.3,.75,w)*pm);
+  c=mix(c,vec3(dot(c,vec3(.333)))*1.12,smoothstep(.16,.28,hg)*w*.4*pm);}
+ diffuseColor.rgb=c;}`;
+const hashId=s_=>{let h=7;for(const ch of String(s_))h=(h*31+ch.charCodeAt(0))>>>0;return h};
+function carLook(root,id,bad,wear){if(!root||(!bad&&!(wear>.03)))return;const h=hashId(id),col=new THREE.Color(bad||'#000'),pal=BADPAL.map(x=>x[0]).filter(x=>x!==bad),col2=new THREE.Color(pal[h%pal.length]||'#888');
+ root.traverse(m=>{if(!m.isMesh||Array.isArray(m.material)||!m.material||(m.name!=='paint'&&m.name!=='body'))return;const ge=m.geometry;if(!ge.boundingBox)ge.computeBoundingBox();const bb=ge.boundingBox,sz=bb.getSize(V3());
+  const mm=m.material.clone(),prev=mm.onBeforeCompile,U={uBad:{value:col},uBad2:{value:col2},uBadOn:{value:bad?1:0},uWear:{value:Math.min(1,wear||0)},uMin:{value:bb.min.clone()},uSz:{value:Math.max(sz.x,sz.y,sz.z,1e-3)},uSeed:{value:(h%997)/37}};
+  mm.onBeforeCompile=function(sh,r){if(prev)prev.call(this,sh,r);Object.assign(sh.uniforms,U);
+   sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vCP;').replace('#include <begin_vertex>','#include <begin_vertex>\nvCP=position;');
+   sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vCP;uniform vec3 uBad,uBad2,uMin;uniform float uBadOn,uWear,uSz,uSeed;\n'+GL_NOISE).replace('#include <color_fragment>','#include <color_fragment>\n'+GL_LOOK)};
+  mm.customProgramCacheKey=()=>'gcLook'+(prev?1:0);if(bad){mm.roughness=.95;mm.metalness=0}else if('roughness' in mm)mm.roughness=Math.max(mm.roughness||0,.45+.45*wear);m.material=mm})}
+const badPaint=(root,c)=>carLook(root,'x',c,0);
 const mktPitch=l=>{const c=BYID[l.id];return l.bad?rnd([`Paint's... a choice. Price reflects it.`,`Yeah, I know. The paint. It was like that when I got it.`]):rnd([`${c.name}. ${Math.round(l.km/1000)}k km. It's fine.`,`Previous owner was a florist. Make of that what you will.`,`It's a ${c.name}. Drives. Mostly.`,`Cheap because it's tired. Nina can sort it.`,`${fmtCr(l.price)}. That's the price. I don't haggle.`])};
 
 /* ---------------- the garage scene ---------------- */
@@ -170,7 +192,7 @@ async function buildScene_(){GS.busy=true;const pr=f=>{try{GS.onProg&&GS.onProg(
   if(gm){for(const k in gm)sc.add(gm[k]);GS.clutter=gm.clutter||null;GS.gar=gm;try{navBuild(gm)}catch(e){console.warn('career map',e)}}
   else{const f=new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshStandardMaterial({color:0x8d9097,roughness:.9}));f.rotation.x=-Math.PI/2;sc.add(f);
    const w=new THREE.Mesh(new THREE.PlaneGeometry(40,10),new THREE.MeshStandardMaterial({color:0xc9bba8,roughness:1}));w.position.set(0,5,-6.2);sc.add(w)}
-  try{if(window.GPROP_B64){const pm=garMesh(window.GPROP_B64);if(pm.laptop){pm.laptop.position.copy(LAPTOP.p);pm.laptop.rotation.y=LAPTOP.ry;sc.add(pm.laptop);GS.laptop=pm.laptop}if(pm.phone){pm.phone.visible=false;sc.add(pm.phone);GS.phone=pm.phone}}}catch(e){console.warn('career props',e)}
+  try{if(window.GPROP_B64){const pm=garMesh(window.GPROP_B64);if(pm.laptop){pm.laptop.position.copy(LAPTOP.p);pm.laptop.rotation.y=LAPTOP.ry;pm.laptop.scale.setScalar(1.35);sc.add(pm.laptop);GS.laptop=pm.laptop}}}catch(e){console.warn('career props',e)}
   pr(.35);
   /* Studio Ochi people (Hakan's packs): one character out of a pack, picked by its place along x. Skins with only a few bones are props
      (shovel, hammer): they stay when they sit close to the chosen person */
@@ -192,13 +214,13 @@ async function buildScene_(){GS.busy=true;const pr=f=>{try{GS.onProg&&GS.onProg(
   GS.cp.copy(SPOT.over.p);GS.cl.copy(SPOT.over.l);GS.tp.copy(SPOT.over.p);GS.tl.copy(SPOT.over.l);GS.ok=true;setCar(true)}
  catch(e){console.warn('career scene',e)}GS.busy=false}
 /* the current car, built like cinema.js does (scaled to its real length, wheels on the floor), in its saved paint */
-function setCar(force){if(!GS.ok)return;const c=curCar(),L=paintOf(c.id),key=c.id+':'+c.alt+':'+JSON.stringify(L||0);if(!force&&GS.carKey===key&&GS.car)return;
+function setCar(force){if(!GS.ok)return;const c=curCar(),L=paintOf(c.id),key=c.id+':'+c.alt+':'+JSON.stringify(L||0)+':'+Math.round(wearOf(c.id)*20);if(!force&&GS.carKey===key&&GS.car)return;
  if(GS.car){GS.sc.remove(GS.car);GS.car=null}GS.carKey=key;const idx=P.modelOf(c.id,c.alt),src=typeof CAR_MODELS!=='undefined'&&CAR_MODELS[idx];if(!src){GS.carKey='';return}
  const model=src.clone(true),g=new THREE.Group(),ctd=new THREE.Group();ctd.add(model);g.add(ctd);ctd.updateMatrixWorld(true);
  const bb=new THREE.Box3().setFromObject(model),sz=bb.getSize(V3()),ct=bb.getCenter(V3()),k=(src.userData.gl?src.userData.gl*1.093:4.7)/Math.max(sz.x,sz.z,.001);
  ctd.position.set(-ct.x,-bb.min.y,-ct.z);g.scale.setScalar(k);g.rotation.y=(sz.x>sz.z?Math.PI/2:0)+Math.PI;
  const o=new THREE.Group();o.add(g);o.position.copy(SPOT.car);o.rotation.y=SPOT.carRy;o.add(blob(2.9));o.traverse(m=>{if(m.isMesh){const ms=Array.isArray(m.material)?m.material:[m.material];ms.forEach(x=>{if(x&&x.isMeshStandardMaterial)x.envMapIntensity=.55})}});
- if(L)badPaint(model,L);
+ carLook(model,c.id,L,wearOf(c.id));
  GS.sc.add(o);GS.car=o;o.updateMatrixWorld(true);GS.carBox=new THREE.Box3().setFromObject(o);navGrow()}
 /* portraits for the text box: each head rendered once, front on */
 function portraits(){if(GS.pics)return;GS.pics=1;const rt=new THREE.WebGLRenderTarget(192,192);rt.texture.encoding=THREE.sRGBEncoding;const pc=new THREE.PerspectiveCamera(26,1,.05,20),fog=GS.sc.fog;GS.sc.fog=null;const hid=[GS.car,...Object.values(GS.gar||{}),GS.red&&GS.red.g,GS.vin&&GS.vin.g].filter(Boolean),vis0=hid.map(o=>o.visible);
@@ -222,7 +244,7 @@ function renderGarage(){const k=GS.fk,F=focusSet();if(k<.02){R.render(GS.sc,GS.c
  F.forEach(o=>o.visible=false);R.setRenderTarget(BL.a);R.clear();R.render(GS.sc,GS.cam);F.forEach(o=>o.visible=true);
  const u=BL.q.blur.uniforms;for(let i=0;i<3;i++){const r=k*(1+i*1.2);u.dir.value.set(r/w,0);blPass(BL.q.blur,BL.a,BL.b);u.dir.value.set(0,r/h);blPass(BL.q.blur,BL.b,BL.a)}
  R.setRenderTarget(null);const cp=BL.q.copy;cp.uniforms.uA.value=1-k*.3;cp.uniforms.tD.value=BL.a.texture;BL.q.q.material=cp;R.render(BL.q.sc,BL.q.cam);if(!F.length)return;
- const all=[...Object.values(GS.gar||{}),GS.car,GS.red&&GS.red.g,GS.vin&&GS.vin.g].filter(Boolean),vis=all.map(o=>o.visible),bg=GS.sc.background;
+ const all=[...Object.values(GS.gar||{}),GS.car,GS.laptop,GS.red&&GS.red.g,GS.vin&&GS.vin.g].filter(Boolean),vis=all.map(o=>o.visible),bg=GS.sc.background;
  all.forEach(o=>o.visible=F.includes(o));GS.sc.background=null;const ac=R.autoClear;R.autoClear=false;R.clearDepth();R.render(GS.sc,GS.cam);R.autoClear=ac;GS.sc.background=bg;all.forEach((o,i)=>o.visible=vis[i])}
 /* the hover outline: whatever is hovered is drawn alone into a mask, then one full-screen pass draws a soft white rim around it */
 const OL={rt:null,q:null,a:0,k:null},CC=new THREE.Color();
@@ -258,7 +280,7 @@ function tick(dt){GS.t+=dt;const k=1-Math.exp(-dt*3.4);GS.cp.lerp(GS.tp,k);GS.cl
  /* behind the loading screen: a slow drift round the car, like the title screen's drive-by */
  if(LD_on()){const a=GS.t*.09+.5;GS.tp.set(SPOT.car.x+Math.sin(a)*2.5,1.35,SPOT.car.z+Math.cos(a)*3.3);GS.tl.set(SPOT.car.x,.7,SPOT.car.z)}const tg=onCar()?SPOT.car:UI.who?headOf(UI.who):null,dd=tg?cam.position.distanceTo(tg):6;
  if(GS.clutter)GS.clutter.visible=GS.fk<.85;
- for(const k of ['red','vin']){const pe=GS[k];if(pe&&pe.rig)try{roam(pe,k,dt);anim(pe,k,dt)}catch(e){if(!GS.aerr){GS.aerr=1;console.warn('career anim',e)}}}try{propTick()}catch(e){}
+ for(const k of ['red','vin']){const pe=GS[k];if(pe&&pe.rig)try{roam(pe,k,dt);anim(pe,k,dt)}catch(e){if(!GS.aerr){GS.aerr=1;console.warn('career anim',e)}}}
  type(dt);tags();bubTick(dt)}
 /* idle life on top of the file's pose. Always: breathing, a slow weight shift, loose arms. The head goes to whatever they're busy with (Nina the car,
    Vince the room), to your cursor when you hover over them, to you while you talk. On top, short gestures: idle ones every few seconds (Nina taps
@@ -277,7 +299,7 @@ function anim(pe,k,dt){const B=pe.rig,t=GS.t+(k==='red'?1.7:0),g=pe.g;for(const 
  pe.tk=Math.max(0,(pe.tk||0)-dt);
  /* gestures */
  if(pe.gs){pe.gs.t+=dt;if(pe.gs.t>=pe.gs.d)pe.gs=null}
- pe.nx=(pe.nx==null?2+Math.random()*3:pe.nx)-dt;if(!pe.gs&&!work&&pe.nx<=0&&!pe.mv&&!pe.ac){pe.nx=4+Math.random()*5;if(!me)gesture(pe,rnd(GEST[k].idle))}
+ pe.nx=(pe.nx==null?1+Math.random()*3:pe.nx)-dt;if(pe.nx<=0&&!pe.mv&&!pe.ac){pe.nx=5+Math.random()*6;let q;do q=rnd(IDLE[k]);while(q===pe.pz&&IDLE[k].length>1);pe.pz=q;if(!me&&!pe.gs&&!work&&Math.random()<.3)gesture(pe,'look')}
  const G_=pe.gs,gk=G_?G_.k:'',gp=G_?G_.t/G_.d:0,E=G_?Math.pow(Math.sin(Math.PI*Math.min(1,gp)),.7):0;
  /* where the head looks */
  const h=headOf(k);let tp=me?GS.cam.position:hov&&GS.cur?GS.cur:work?V3(SPOT.car.x,.6,SPOT.car.z):pe.foc?pe.foc():GS.cam.position;
@@ -290,8 +312,8 @@ function anim(pe,k,dt){const B=pe.rig,t=GS.t+(k==='red'?1.7:0),g=pe.g;for(const 
  const kk=Math.min(1,dt*(hov||me||G_?4.5:2));pe.hy_=pe.hy_==null?yaw:pe.hy_+(yaw-pe.hy_)*kk;pe.hp_=pe.hp_==null?pit:pe.hp_+(pit-pe.hp_)*kk;
  const br=Math.sin(t*2*Math.PI/3.8),sw=Math.sin(t*.42),tk=pe.tk>0?Math.min(1,pe.tk)*Math.sin(t*6.5):0;
  /* body */
- const shift=gk==='shift'?E:0,hip=gk==='hip'?E:0;
- rotW(B.spine,fw,sw*.025+shift*.09-hip*.07);rotW(B.spine,up,Math.sin(t*.31)*.04);
+ const shift=0,hip=gk==='hip'?E:0;
+ rotW(B.spine,fw,sw*.012-hip*.07);rotW(B.spine,up,Math.sin(t*.31)*.04);
  if(work){rotW(B.spine002,rt,.22+Math.sin(t*3.1)*.03);rotW(B.spine003,rt,.12)}
  rotW(B.spine002,rt,-br*.02-(gk==='stretch'?E*.2:0));rotW(B.spine003,rt,-br*.024);rotW(B.spine003,fw,-sw*.016-shift*.05+hip*.05);
  /* head */
@@ -316,7 +338,7 @@ function anim(pe,k,dt){const B=pe.rig,t=GS.t+(k==='red'?1.7:0),g=pe.g;for(const 
  else if(gk==='shrug'){A('L',-.2*E,-.75*E);A('R',-.2*E,-.75*E);for(const [s,sg] of [['L',1],['R',-1]])rotW(B['forearm'+s],fw,sg*.4*E)}
  else if(gk==='hip'){A('R',-.1*E,-.4*E);rotW(B.upper_armR,fw,-.5*E)}
  else if(gk==='hey'){A('R',-.3*E,-1.35*E);rotW(B.forearmR,fw,Math.sin(t*9)*.25*E)}
- g.position.y=walkPose(pe,B,rt,fw,up);actPose(pe,k,B,t,rt,fw,up,A)}
+ g.position.y=walkPose(pe,B,rt,fw,up);posePP(pe,k,B,t,dt,rt,fw,up,A,me,work||!!G_)}
 /* ---------------- moving around the shop ----------------
    The garage is mapped once from its own mesh into a 10 cm floor grid (NAV): every bit of wall, bench, shelf, locker or bin between 8 cm and
    1.75 m up blocks its cell, the car blocks its rotated footprint, and the grid is grown by a body's radius so nobody brushes a wall. People walk
@@ -341,9 +363,12 @@ function navBuild(gm){const N=NAV.W*NAV.H,raw=new Uint8Array(N),cam=new Uint8Arr
 function carObb(){const o=GS.car;if(!o)return null;const g=o.children[0],ry=o.rotation.y;o.rotation.y=0;o.updateMatrixWorld(true);const b=new THREE.Box3().setFromObject(g);o.rotation.y=ry;o.updateMatrixWorld(true);
  const c=b.getCenter(V3()).sub(o.position);return{x:o.position.x+c.x*Math.cos(ry)+c.z*Math.sin(ry),z:o.position.z-c.x*Math.sin(ry)+c.z*Math.cos(ry),hx:(b.max.x-b.min.x)/2,hz:(b.max.z-b.min.z)/2,ry,top:b.max.y}}
 const inObb=(o,x,z,m)=>{const dx=x-o.x,dz=z-o.z,c=Math.cos(o.ry),s=Math.sin(o.ry),lx=dx*c-dz*s,lz=dx*s+dz*c;return Math.abs(lx)<o.hx+m&&Math.abs(lz)<o.hz+m};
-function navGrow(){if(!NAV.raw)return;const R_=3,N=NAV.W*NAV.H,nav=new Uint8Array(N),ob=GS.car?carObb():null;GS.obb=ob;
+function navView(){const c=new THREE.PerspectiveCamera(56,1.6,.05,120);c.position.copy(SPOT.over.p);c.lookAt(SPOT.over.l);c.updateMatrixWorld(true);const v=new Uint8Array(NAV.W*NAV.H),q=V3();
+ for(let j=0;j<NAV.H;j++)for(let i=0;i<NAV.W;i++){const x=NAV.x0+(i+.5)*NAV.c,z=NAV.z0+(j+.5)*NAV.c;let ok=true;for(const y of [0,1.85]){q.set(x,y,z).project(c);if(q.z>1||Math.abs(q.x)>.86||q.y<-.74||q.y>.78)ok=false}v[j*NAV.W+i]=ok?0:1}return v}
+function navGrow(){if(!NAV.raw)return;if(!NAV.view)NAV.view=navView();const R_=3,N=NAV.W*NAV.H,nav=new Uint8Array(N),ob=GS.car?carObb():null;GS.obb=ob;
  for(let j=0;j<NAV.H;j++)for(let i=0;i<NAV.W;i++){if(!NAV.raw[j*NAV.W+i])continue;for(let b=-R_;b<=R_;b++)for(let a=-R_;a<=R_;a++){if(a*a+b*b>R_*R_+1)continue;const ii=i+a,jj=j+b;if(ii>=0&&jj>=0&&ii<NAV.W&&jj<NAV.H)nav[jj*NAV.W+ii]=1}}
  if(ob)for(let j=0;j<NAV.H;j++)for(let i=0;i<NAV.W;i++)if(inObb(ob,NAV.x0+(i+.5)*NAV.c,NAV.z0+(j+.5)*NAV.c,.34))nav[j*NAV.W+i]=1;
+ for(let i=0;i<nav.length;i++)if(NAV.view[i])nav[i]=1;
  NAV.nav=nav}
 const navFree=(x,z,blk)=>{const i=nIdx(x,z);return i>=0&&!NAV.nav[i]&&!(blk&&Math.hypot(x-blk.x,z-blk.z)<.75)};
 function navSeg(a,b,blk){const d=Math.hypot(b.x-a.x,b.z-a.z),n=Math.ceil(d/.05);for(let s=1;s<=n;s++){const t=s/n;if(!navFree(a.x+(b.x-a.x)*t,a.z+(b.z-a.z)*t,blk))return false}return true}
@@ -368,11 +393,11 @@ const STN={
  red:[{k:'bench',p:V3(-1.2,0,-4.62),ry:Math.PI,look:V3(-1.2,.98,-5.45),d:[7,11]},
   {k:'bench',p:V3(-.6,0,-4.62),ry:Math.PI,look:V3(-.6,1.08,-5.4),d:[6,10]},
   {k:'shelf',p:V3(.22,0,-3.3),ry:Math.PI/2,look:V3(1.25,1.4,-3.3),d:[5,8]},
-  {k:'tires',p:V3(.55,0,-4.45),ry:Math.PI*.9,look:V3(.75,.7,-5.45),d:[5,8]},
-  {k:'phone',p:null,d:[8,13]}],
+  {k:'tires',p:V3(.55,0,-4.45),ry:Math.PI*.9,look:V3(.75,.7,-5.45),d:[6,10]},
+  {k:'car',p:null,d:[6,10]}],
  vin:[{k:'type',p:V3(-4.36,0,-.3),ry:-Math.PI/2,look:V3(-5.0,1.25,-.3),d:[10,18]},
   {k:'type',p:V3(-4.36,0,-.3),ry:-Math.PI/2,look:V3(-5.0,1.25,-.3),d:[10,18]},
-  {k:'window',p:V3(-2.0,0,3.05),ry:0,look:V3(-2.0,1.65,4.5),d:[6,10]},
+  {k:'lean',p:V3(-2.7,0,-4.62),ry:Math.PI,look:V3(-2.7,.98,-5.45),d:[8,12]},
   {k:'car',p:null,d:[5,8]}]};
 const LAPTOP={p:V3(-5.0,1.14,-.3),ry:Math.PI/2};
 /* a spot beside the car, on the side nearest to the person */
@@ -382,7 +407,6 @@ function roamInit(pe,k){pe.home=pe.g.position.clone();pe.homeRy=pe.ry0;pe.ryB=pe
 const other=k=>GS[k==='red'?'vin':'red'];
 function goTo(pe,k,p,then){const o=other(k),blk=o&&o.g?o.g.position:null;let path=navPath(pe.g.position,p,blk);if(!path)path=navPath(pe.g.position,p,null);if(!path)return false;pe.path=path;pe.then=then;pe.wait=0;return true}
 function startTask(pe,k,st){pe.ac=null;if(st.k==='car'){st=carStation(pe);if(!st)return}
- if(st.k==='phone'){pe.task={k:'phone',d:st.d[0]+Math.random()*(st.d[1]-st.d[0]),t:0,look:null};pe.ac=pe.task;return}
  pe.task=Object.assign({},st,{t:0,d:st.d[0]+Math.random()*(st.d[1]-st.d[0])});goTo(pe,k,st.p,'act')}
 const free_=k=>GS.ok&&!LD_on()&&UI.who!==k&&!(k==='red'&&(onCar()||UI.view==='tune'));
 const LD_on=()=>!!(LD&&LD.classList.contains('on')&&!LD.classList.contains('rdy'));
@@ -403,7 +427,7 @@ function roam(pe,k,dt){if(!pe.home)roamInit(pe,k);const g=pe.g,me=UI.who===k;
    else{const rem=pe.path.reduce((s,p,i,a)=>s+(i?p.distanceTo(a[i-1]):Math.hypot(p.x-g.position.x,p.z-g.position.z)),0);
     tgtSp=Math.abs(off)>.9?0:pe.spd*Math.max(.25,Math.min(1,rem/.55))*(1-Math.min(.6,Math.abs(off)*.6))}
    pe.mv=true}}
- if(pe.mv||pe.sp>.01){pe.sp+=(tgtSp-pe.sp)*Math.min(1,dt*(tgtSp>pe.sp?3:6));if(pe.sp<.005&&!pe.mv)pe.sp=0;const ry=g.rotation.y;
+ if(pe.mv||pe.sp>.01){pe.sp+=(tgtSp-pe.sp)*Math.min(1,dt*(tgtSp>pe.sp?2.2:4));if(pe.sp<.005&&!pe.mv)pe.sp=0;const ry=g.rotation.y;
   if(ryT!=null){const off=wrapA(ryT-ry),tr=Math.sign(off)*Math.min(Math.abs(off),dt*(pe.sp<.2?3.2:4.5));g.rotation.y=ry+tr;pe.turn=Math.abs(tr)/Math.max(dt,1e-4)}else pe.turn=0;
   const fx=Math.sin(g.rotation.y),fz=Math.cos(g.rotation.y),nx=g.position.x+fx*pe.sp*dt,nz=g.position.z+fz*pe.sp*dt;
   if(navFree(nx,nz)||!navFree(g.position.x,g.position.z)){g.position.x=nx;g.position.z=nz}else pe.sp=0;
@@ -414,11 +438,11 @@ function roam(pe,k,dt){if(!pe.home)roamInit(pe,k);const g=pe.g,me=UI.who===k;
  else pe.turn=0;
  const wk=Math.min(1,pe.sp/.9)+(pe.turn>.3&&pe.sp<.15?.35:0);pe.wk+=(Math.min(1,wk)-pe.wk)*Math.min(1,dt*8);
  /* the routine's pose fades in once they've arrived, and out when it ends or you click on them */
- const on=!!(pe.ac&&pe.task&&!pe.mv&&!me);pe.aw+=((on?1:0)-pe.aw)*Math.min(1,dt*(on?2.2:4.5));if(!on&&pe.aw<.02&&pe.ac)pe.ac=null;if(pe.qPh&&!pe.ac&&!me&&!pe.mv){pe.qPh=0;pe.task={k:'phone',d:6+Math.random()*4,t:0};pe.ac=pe.task}
+ if(pe.ac&&(!pe.task||me))pe.ac=null;
  if(pe.task&&pe.ac&&!pe.mv){pe.task.t+=dt;if(pe.task.t>=pe.task.d){const tk=pe.task;pe.task=null;
    /* now and then she checks her phone before heading back */
-   if(k==='red'&&tk.k!=='phone'&&Math.random()<.35)pe.qPh=1}}
- pe.lk=pe.mv?g.position.clone().add(V3(Math.sin(g.rotation.y)*3,1.45,Math.cos(g.rotation.y)*3)):pe.ac&&pe.aw>.2?(pe.ac.k==='phone'?pe.phoneAt||null:pe.ac.look):null}
+}}
+ pe.lk=pe.mv?g.position.clone().add(V3(Math.sin(g.rotation.y)*3,1.45,Math.cos(g.rotation.y)*3)):pe.ac&&pe.aw>.2?(pe.lkH||pe.ac.look):null}
 function arrive(pe,k){pe.path=null;const th=pe.then;pe.then=null;if(th==='home'){pe.ryB=pe.homeRy;pe.ac=null;return}
  if(th==='act'&&pe.task){pe.ryB=pe.task.ry;pe.ac=pe.task;pe.task.t=0}}
 /* the walk: thighs swing about the hip, the knee folds on the forward swing, the foot stays flat, hips and shoulders counter-rotate, arms
@@ -429,35 +453,38 @@ function walkPose(pe,B,rt,fw,up){const w=pe.wk;if(w<.01)return 0;const f=pe.ph,a
  const sn=Math.sin(f);rotW(B.spine,up,.07*w*sn);rotW(B.spine003,up,-.11*w*sn);rotW(B.spine,fw,.025*w*Math.sin(f*2));rotW(B.spine002,rt,.05*w);
  for(const [s,sg] of [['L',1],['R',-1]]){rotW(B['upper_arm'+s],rt,sg*.32*w*sn);rotW(B['forearm'+s],rt,-.18*w-Math.max(0,-sg*sn)*.2*w)}
  return -.022*w*(.5-.5*Math.cos(2*f))}
-/* the routines, scaled by pe.aw so they fade in and out */
-function actPose(pe,k,B,t,rt,fw,up,A){const a=pe.ac,E=pe.aw;if(!a||E<.01)return;const tt=a.t||0;
- if(a.k==='type'){/* hunched over the laptop, both hands on the keys, fingers going */
-  rotW(B.spine002,rt,.1*E);rotW(B.spine003,rt,.05*E);rotW(B.spine,fw,.02*E*Math.sin(t*.5));
-  const pause=Math.sin(t*.9)>.75?0:1;A('L',-.72*E,(-.78+Math.sin(t*13.1)*.07*pause)*E);A('R',-.72*E,(-.78+Math.sin(t*11.3+1.3)*.07*pause)*E);
-  rotW(B.upper_armL,fw,-.14*E);rotW(B.upper_armR,fw,.14*E);rotW(B.forearmL,up,-.25*E);rotW(B.forearmR,up,.25*E)}
- else if(a.k==='bench'){/* sorting through the bench: both hands on the top, one picks something up for a look and puts it back */
-  rotW(B.spine002,rt,.3*E);rotW(B.spine003,rt,.12*E);const c=(tt%5)/5,up_=c>.45&&c<.85?Math.sin((c-.45)/.4*Math.PI):0;
-  A('L',-.7*E,-.5*E+Math.sin(t*2.1)*.06*E);A('R',(-.72-up_*.3)*E,(-.45-up_*.5+Math.sin(t*2.7)*.06)*E);if(up_>.1)pe.lkO=V3(0,.35*up_,0)}
- else if(a.k==='shelf'){/* reaching for a box on the shelf, then turning it over */
-  const c=(tt%4.5)/4.5,r=Math.sin(Math.min(1,c/.35)*Math.PI/2)*(c>.8?1-(c-.8)/.2:1);rotW(B.spine002,rt,-.05*r*E);
-  A('R',(-1.25*r-.2)*E,(-.25-.3*(1-r))*E);A('L',-.25*E,-.6*E);rotW(B.forearmR,up,Math.sin(t*1.7)*.2*r*E)}
- else if(a.k==='tires'){/* crouched over the tyre stack, patting and checking the tread */
-  rotW(B.spine001,rt,.18*E);rotW(B.spine002,rt,.42*E);rotW(B.spine003,rt,.12*E);for(const s of ['L','R']){rotW(B['thigh'+s],rt,-.35*E);rotW(B['shin'+s],rt,.6*E);rotW(B['foot'+s],rt,-.25*E)}
-  A('R',-.45*E,(-.15-Math.max(0,Math.sin(t*4.2))*.35)*E);A('L',-.3*E,-.5*E)}
- else if(a.k==='window'){/* hands in pockets, looking out of the door window */
-  A('L',.05*E,-.45*E);A('R',.05*E,-.45*E);rotW(B.upper_armL,fw,-.12*E);rotW(B.upper_armR,fw,.12*E)}
- else if(a.k==='car'){/* bent a little over the car, one hand on it */
-  rotW(B.spine002,rt,.22*E);A('R',-.75*E,-.35*E);A('L',-.15*E,-.5*E)}
- else if(a.k==='phone'){/* phone out of the back pocket, thumbing through it, a laugh now and then, back into the pocket */
-  const d=a.d||8,p=Math.min(1,tt/d),hold=Math.min(1,Math.max(0,(tt-.55)/.45))*Math.min(1,Math.max(0,(d-tt-.2)/.45)),pk=Math.max(0,1-Math.abs(tt-.35)/.35)+Math.max(0,1-Math.abs(d-tt-.15)/.35)*(tt>d-.9?1:0);
-  A('R',(.12*pk-.3*hold)*E,(-.45*pk-1.2*hold+Math.sin(t*9)*.03*hold)*E);rotW(B.forearmR,up,.38*hold*E);rotW(B.upper_armR,fw,-.08*hold*E);
-  if(k==='red'){A('L',-.05*hold*E,-.3*hold*E)}
-  rotW(B.spine005,rt,.3*hold*E);rotW(B.spine004,rt,.12*hold*E);const lau=Math.sin(tt*.7)>.93?Math.sin(t*16)*.05:0;rotW(B.spine003,rt,lau*hold*E);
-  pe.ph_=hold*E;pe.phP=p}}
-/* the phone sits in her right hand and faces her eyes; the laptop stays open on the cart */
-function propTick(){const pe=GS.red,ph=GS.phone;if(ph&&pe&&pe.rig){const v=pe.ac&&pe.ac.k==='phone'?pe.ph_||0:0,s=Math.min(1,Math.max(0,(v-.25)/.35));
-  ph.visible=s>.01;if(ph.visible){const hd=pe.rig.handR,hp=hd.getWorldPosition(V3()),h=headOf('red');ph.scale.setScalar(s);
-   const f=V3(Math.sin(pe.g.rotation.y),0,Math.cos(pe.g.rotation.y));ph.position.copy(hp).addScaledVector(f,.03).add(V3(0,.01,0));ph.lookAt(h.x,h.y+.05,h.z);ph.rotateX(-.25);ph.translateY(-.05);pe.phoneAt=ph.position.clone()}}}
+/* posture. Standing still is a held shape the body drifts between every few seconds (weight on one leg with the other knee eased, a hand
+   on the hip, hands in pockets, hands folded in front); a routine at a station is the same kind of shape with a few phases (typing, then a
+   hand resting on the cart; both hands on the bench, then holding something up to look at). Everything goes through pe.pp, which eases
+   toward its target, so standing, walking, routines and talking all blend into each other instead of snapping.
+   sw: weight to the left (+) or right (-) leg; ln: lean forward; u/f: upper arm and forearm forwards (negative lifts); o: upper arm out to
+   the side; tw: forearm turned in; hd: head down */
+const PK=['sw','ln','uL','fL','oL','tL','uR','fR','oR','tR','hd'];
+const PZ={N:{},WL:{sw:.9},WR:{sw:-.9},hipR:{sw:-.7,uR:-.12,fR:-.55,oR:.55},hipL:{sw:.7,uL:-.12,fL:-.55,oL:.55},hips:{sw:.35,uL:-.12,fL:-.55,oL:.5,uR:-.12,fR:-.55,oR:.5},
+ clasp:{sw:.5,uL:-.22,fL:-.72,tL:.5,uR:-.22,fR:-.72,tR:.5},pockets:{sw:-.7,uL:.06,fL:-.42,oL:.12,uR:.06,fR:-.42,oR:.12}};
+const IDLE={red:['WL','WR','hipR','hips','hipL','WR'],vin:['WL','clasp','pockets','WR','pockets']};
+function routine(a,k,tt,t){const H=Object.assign;switch(a.k){
+ case 'type':{const c=tt%9;return c<6.2?{ln:.12,uL:-.72,fL:-.78,tL:.25,uR:-.72,fR:-.78,tR:.25,_ty:1}:{ln:.06,sw:.5,uL:-.04,fL:-.22,uR:-.62,fR:-.5,tR:.15}}
+ case 'bench':{const c=tt%7;return c<4.2?{ln:.24,uL:-.62,fL:-.45,tL:.15+.12*Math.sin(t*.9),uR:-.62,fR:-.45,tR:.15-.12*Math.sin(t*.7)}:{ln:.1,sw:.5,uL:-.55,fL:-.48,uR:-.42,fR:-1.0,tR:.35,_hand:1}}
+ case 'shelf':{const c=tt%6.5;return c<2?H({hd:-.12},PZ.hipL):c<3.8?{sw:.3,ln:-.04,uR:-1.25,fR:-.22,uL:-.12,fL:-.55,oL:.5}:{sw:.3,uR:-.42,fR:-1.05,tR:.35,uL:-.12,fL:-.55,oL:.5,_hand:1}}
+ case 'tires':{const c=tt%6;return c<3.8?{ln:.3,sw:.5,uR:-.42,fR:-.12,_pat:1}:PZ.hipL}
+ case 'lean':{const c=tt%8;return c<5?{ln:.2,uL:-.6,fL:-.42,uR:-.6,fR:-.42}:PZ.clasp}
+ case 'car':return k==='vin'?H({ln:.05},PZ.pockets):{ln:.16,sw:.4,uR:-.66,fR:-.3,uL:-.12,fL:-.55,oL:.5}}
+ return PZ.N}
+function posePP(pe,k,B,t,dt,rt,fw,up,A,me,busy){if(!pe.pp){pe.pp={};for(const q of PK)pe.pp[q]=0}const pp=pe.pp,ac=pe.ac&&!pe.mv&&!me?pe.ac:null;
+ let tg=ac?routine(ac,k,ac.t||0,t):PZ[pe.pz||'N']||PZ.N;if(pe.mv)tg=PZ.N;
+ const kk=Math.min(1,dt*2.4);for(const q of PK){let v=tg[q]||0;if(busy&&q!=='sw'&&q!=='ln'&&q!=='hd')v=0;pp[q]+=(v-pp[q])*kk}
+ const st=1-pe.wk;
+ /* weight on one leg: the other knee eases, the shoulders tilt back over the standing leg */
+ const a=Math.abs(pp.sw)*st,fr=pp.sw>0?'R':'L';rotW(B['thigh'+fr],rt,-.05*a);rotW(B['shin'+fr],rt,.2*a);rotW(B['foot'+fr],rt,-.14*a);
+ rotW(B.spine001,fw,pp.sw*.035*st);rotW(B.spine003,fw,-pp.sw*.04*st);rotW(B.spine,up,pp.sw*.05*st);
+ rotW(B.spine002,rt,pp.ln);rotW(B.spine003,rt,pp.ln*.4);rotW(B.spine005,rt,pp.hd);
+ A('L',pp.uL,pp.fL);A('R',pp.uR,pp.fR);rotW(B.upper_armL,fw,pp.oL);rotW(B.upper_armR,fw,-pp.oR);rotW(B.forearmL,up,-pp.tL);rotW(B.forearmR,up,pp.tR);
+ /* small live detail on top, only once the routine's shape has settled in */
+ const on=!!(ac&&pe.task);pe.aw+=((on?1:0)-pe.aw)*Math.min(1,dt*2);const tg_=ac?routine(ac,k,ac.t||0,t):null;
+ if(tg_&&tg_._ty&&pe.aw>.05){const ps=Math.sin(t*.9)>.75?0:1;rotW(B.forearmL,rt,Math.sin(t*13.1)*.06*ps*pe.aw);rotW(B.forearmR,rt,Math.sin(t*11.3+1.3)*.06*ps*pe.aw)}
+ if(tg_&&tg_._pat&&pe.aw>.05)rotW(B.forearmR,rt,-Math.max(0,Math.sin(t*4.2))*.3*pe.aw);
+ pe.lkH=tg_&&tg_._hand&&B.handR?B.handR.getWorldPosition(V3()):null}
 /* the hover label: a rounded pill with the name ("Change car" on the car) */
 function tags(){const t=$('gcTag');if(!t)return;const k=!UI.who&&!onCar()&&GS.ok&&!UI.menu&&GS.hov!==BUB.who?GS.hov:null;t.classList.toggle('on',!!k);if(!k)return;
  const p=k==='car'?V3(SPOT.car.x,(GS.carBox?GS.carBox.max.y:1.3)+.3,SPOT.car.z):headOf(k).add(V3(0,.36,0));p.project(GS.cam);
@@ -505,7 +532,7 @@ body.gcG #v8Bg{opacity:0!important}
 #s8career.gcOn .gcDlg h6:empty{display:none}
 #s8career.gcOn .gcDlg h6{margin:2px 8px 10px;font:600 11px var(--gt);letter-spacing:.24em;color:var(--c);text-transform:uppercase;display:flex;align-items:center;gap:10px}
 #s8career.gcOn .gcDlg h6 span{margin-left:auto;color:#9aa4b0;letter-spacing:.14em}
-#s8career.gcOn .gcCh{display:flex;flex-direction:column;gap:2px;overflow-y:auto;min-height:0;scrollbar-width:thin}
+#s8career.gcOn .gcCh{display:flex;flex-direction:column;gap:7px;overflow-y:auto;min-height:0;scrollbar-width:thin;padding:6px 6px 8px;margin:-6px -6px -8px}
 #s8career.gcOn .gcRow{position:relative;flex:none;display:flex;align-items:center;gap:16px;height:clamp(44px,5.8vh,56px);padding:0 18px;border-radius:999px;cursor:pointer;overflow:hidden;font:300 clamp(17px,2.3vh,23px) var(--gt);color:#ffffffb0;transition:background .15s,color .15s}
 #s8career.gcOn .gcRow .mi{flex:none;width:24px;height:24px;opacity:.7;transition:transform .3s cubic-bezier(.3,1.6,.5,1),opacity .15s}
 #s8career.gcOn .gcRow em{margin-left:auto;font:500 12px var(--gt);letter-spacing:.12em;color:#ffffff80;font-style:normal}
@@ -519,7 +546,7 @@ body.gcG #v8Bg{opacity:0!important}
 @keyframes gcIn{from{opacity:0;transform:translateX(30px)}}
 #s8career.gcOn .gcCh>div.hit{animation:gcHit .22s ease-out}
 @keyframes gcHit{0%{transform:scale(1)}40%{transform:scale(.96);filter:brightness(1.6)}100%{transform:scale(1)}}
-#s8career.gcOn .gcO{position:relative;flex:none;overflow:hidden;display:grid;grid-template-columns:96px 1fr auto;gap:14px;align-items:center;padding:6px 10px;margin-bottom:3px;border-radius:10px;cursor:pointer;background:#ffffff08;box-shadow:inset 0 1px 0 #ffffff24,0 0 0 1px #00000080;transition:box-shadow .15s,background .15s}
+#s8career.gcOn .gcO{position:relative;flex:none;overflow:hidden;display:grid;grid-template-columns:96px 1fr auto;gap:14px;align-items:center;padding:7px 12px;margin-bottom:0;border-radius:12px;cursor:pointer;background:#ffffff08;box-shadow:inset 0 1px 0 #ffffff24,0 0 0 1px #00000080;transition:box-shadow .15s,background .15s}
 #s8career.gcOn .gcO.on{background:var(--gxa,linear-gradient(180deg,#4f7eabd0,#33608cd8));box-shadow:inset 0 1px 0 #ffffffa0,0 0 0 1px #00000080,0 0 14px #4f7eab60}#s8career.gcOn .gcO.on em,#s8career.gcOn .gcO.on small,#s8career.gcOn .gcO.on .pz u{color:#e8f0f7}
 #s8career.gcOn .gcO canvas{width:96px;height:52px;border-radius:6px;background:#07090c}
 #s8career.gcOn .gcO .sw{width:96px;height:52px;border-radius:6px;background:#07090c center/cover no-repeat;display:grid;place-items:center;font:600 10px var(--gt);letter-spacing:.14em;color:#9aa4b0}
@@ -577,20 +604,18 @@ body.gcG #v8Bg{opacity:0!important}
 #s8career.gcOn.menu .gcTier,#s8career.gcOn.menu .gcCarI,#s8career.gcOn.menu .gcTag{opacity:0;pointer-events:none}
 #s8career.gcOn .gcFoot{justify-content:center}
 /* loading screen, built like the one at the start */
-#gcLoad{position:fixed;inset:0;z-index:99980;display:none;color:#f3f5f4;overflow:hidden;background:radial-gradient(ellipse at 70% 60%,#2a3442 0%,#141922 45%,#07090c 100%);font-family:var(--gt)}
 #s8career.gcOn .gcBub{position:absolute;z-index:3;max-width:300px;transform:translate(-50%,-100%) translateY(8px) scale(.9);transform-origin:50% 100%;pointer-events:none;opacity:0;padding:9px 14px 10px;border-radius:14px;font:400 14.5px/1.35 var(--gt);color:#f2f4f6;background:linear-gradient(180deg,#2c3036f2,#1b1e22f2);box-shadow:inset 0 1px 0 #ffffff30,0 0 0 1px #000a,0 8px 22px #0009;transition:opacity .2s,transform .25s cubic-bezier(.2,.9,.3,1.2)}
 #s8career.gcOn .gcBub.on{opacity:1;transform:translate(-50%,-100%) translateY(-6px) scale(1)}
 #s8career.gcOn .gcBub b{display:block;font:600 10px var(--gt);letter-spacing:.18em;text-transform:uppercase;color:var(--c);margin-bottom:2px}
 #s8career.gcOn .gcBub::after{content:'';position:absolute;left:50%;bottom:-6px;width:12px;height:12px;margin-left:-6px;transform:rotate(45deg);background:#1b1e22;box-shadow:1px 1px 0 #000a}
 #s8career.gcOn.cars .gcDlg{right:auto;left:5vw}#s8career.gcOn.cars .gcCarI{opacity:0}
 #s8career.gcOn.ld>*{visibility:hidden}
-#gcLoad.see{background:transparent;transition:background .8s}#gcLoad.see .bv{opacity:0;transition:opacity .8s}#gcLoad::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .8s;background:linear-gradient(90deg,#07090ccc 0%,#07090c55 45%,transparent 70%),radial-gradient(ellipse at 60% 55%,transparent 40%,#07090c99 100%)}#gcLoad.see::before{opacity:1}
 #s8career.gcOn .gcSF{display:contents}
 #s8career.gcOn .sfCar{cursor:default;background:#ffffff05}
-#s8career.gcOn .sfAsk{display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:10px}#s8career.gcOn .sfAsk>span{white-space:nowrap}
+#s8career.gcOn .sfAsk{height:auto;padding:10px 16px 8px;border-radius:16px;display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:10px}#s8career.gcOn .sfAsk>span{white-space:nowrap}
 #s8career.gcOn .sfAsk u{text-decoration:none;display:grid;place-items:center;width:26px;height:26px;border-radius:8px;font:400 20px/1 var(--gt);background:#ffffff10;box-shadow:inset 0 1px 0 #ffffff24,0 0 0 1px #00000080;cursor:pointer}
-#s8career.gcOn .sfAsk b{font:700 15px var(--gt);min-width:96px;text-align:center}#s8career.gcOn .sfAsk small{grid-column:1/-1;margin-top:-6px;font:600 9px var(--gt);letter-spacing:.18em;text-transform:uppercase;color:#9aa4b0}
-#s8career.gcOn .sfIn{display:flex;flex-direction:column;align-items:stretch;gap:5px;cursor:text}#s8career.gcOn .sfIn>span{font:600 9px var(--gt);letter-spacing:.2em;text-transform:uppercase;color:#9aa4b0}
+#s8career.gcOn .sfAsk b{font:700 15px var(--gt);min-width:96px;text-align:center}#s8career.gcOn .sfAsk small{grid-column:1/-1;margin-top:0;font:600 9px var(--gt);letter-spacing:.18em;text-transform:uppercase;color:#9aa4b0}
+#s8career.gcOn .sfIn{height:auto;padding:10px 16px 12px;border-radius:16px;overflow:visible;display:flex;flex-direction:column;align-items:stretch;gap:5px;cursor:text}#s8career.gcOn .sfIn>span{font:600 9px var(--gt);letter-spacing:.2em;text-transform:uppercase;color:#9aa4b0}
 #s8career.gcOn .sfIn input,#s8career.gcOn .sfIn textarea{width:100%;box-sizing:border-box;resize:none;border:0;outline:0;padding:7px 10px;border-radius:8px;font:400 14px/1.35 var(--gt);color:#f2f4f6;background:#0007;box-shadow:inset 0 1px 3px #000a,0 0 0 1px #ffffff14}
 #s8career.gcOn .sfIn input:focus,#s8career.gcOn .sfIn textarea:focus{box-shadow:inset 0 1px 3px #000a,0 0 0 1px var(--c)}
 #s8career.gcOn .sfMeter{padding:8px 12px 10px;display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;animation:gcIn .4s both;animation-delay:var(--d)}
@@ -605,25 +630,10 @@ body.gcG #v8Bg{opacity:0!important}
 #gcAnn .pic{flex:none;width:48px;height:48px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:#22262c;box-shadow:0 0 0 2px #7fb6ff;font:300 22px var(--gt)}#gcAnn .pic img{width:100%;height:100%;object-fit:cover;transform:scale(1.25)}
 #gcAnn .tx{flex:1;min-width:0}#gcAnn small{display:block;font:700 9px var(--gt);letter-spacing:.22em}#gcAnn small.ok{color:#7ee3a0}#gcAnn small.no{color:#ff9d90}
 #gcAnn b{display:block;font:500 16px var(--gt);margin:2px 0}#gcAnn p{margin:0;font:400 12.5px/1.35 var(--gt);color:#b8c0c8}#gcAnn .cr{flex:none;font:700 17px var(--gt);color:#7ee3a0}
-#gcLoad.on{display:block;animation:gcLdIn .35s ease both}#gcLoad.rdy{opacity:0;transition:opacity .6s ease}
 @keyframes gcLdIn{from{opacity:0}}
-#gcLoad .bv{position:absolute;inset:-10%;background:repeating-linear-gradient(115deg,transparent 0 120px,#ffffff05 120px 122px),radial-gradient(ellipse at 30% 40%,#4f7eab30,transparent 60%);animation:gcLdPan 14s linear infinite}
 @keyframes gcLdPan{to{transform:translateX(8%)}}
-#gcLoad .gt,#gcLoad .gb{position:absolute;left:0;right:0;display:flex;align-items:center;padding:0 28px;background:linear-gradient(180deg,#3a3e44 0%,#24272c 48%,#17191c 52%,#1e2125 100%)}
-#gcLoad .gt{top:0;height:66px;justify-content:space-between;box-shadow:inset 0 1px 0 #ffffff30,inset 0 -1px 0 #000,0 4px 16px #0009}#gcLoad .gb{bottom:0;height:120px;box-shadow:inset 0 1px 0 #ffffff30,0 -4px 16px #0009}
-#gcLoad .gt b{font:italic 700 20px var(--gt)}#gcLoad .gt b i{font-weight:300;color:#9aa3ab}#gcLoad .gt span{font:500 10px var(--gt);letter-spacing:.22em;color:#9aa3ab}
-#gcLoad .ttl{position:absolute;left:5.2vw;top:calc(66px + 5vh)}
-#gcLoad .lg{font:italic 700 min(8vw,116px)/.9 var(--gt);letter-spacing:.02em;background:linear-gradient(100deg,#fff 0%,#fff 38%,#9fb0b4 50%,#fff 62%,#fff 100%);background-size:260% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:gcLdT 1.1s cubic-bezier(.2,.8,.2,1) both,gcSheen 5s ease-in-out 1.2s infinite}
 @keyframes gcLdT{from{letter-spacing:.4em;opacity:0}}@keyframes gcSheen{0%{background-position:100% 0}60%,100%{background-position:-60% 0}}
-#gcLoad .st{margin:1.4vh 0 0 .35vw;font:700 10px/1 var(--gt);letter-spacing:.42em;color:#c9d2d8;opacity:.85;animation:gcLdIn 1s ease .4s both}
-#gcLoad .ln{width:min(17vw,250px);height:1px;margin-top:3vh;background:linear-gradient(90deg,#ffffffb0,transparent);animation:gcLdIn 1s ease .6s both}
-#gcLoad .tip{position:absolute;right:6vw;bottom:170px;width:min(420px,40vw);padding:16px 20px;border-radius:14px;background:linear-gradient(180deg,#2a2e33d8,#141619e8);box-shadow:inset 0 1px 0 #ffffff35,0 0 0 1px #000,0 18px 40px #000a;animation:gcLdUp .7s cubic-bezier(.16,.85,.25,1) .5s both}
 @keyframes gcLdUp{from{opacity:0;transform:translateY(16px)}}
-#gcLoad .tip small{display:block;font:600 9px var(--gt);letter-spacing:.2em;color:#9aa4b0;text-transform:uppercase}#gcLoad .tip b{display:block;font:500 17px var(--gt);margin:2px 0 6px}#gcLoad .tip p{margin:0;font:300 16px/1.5 var(--gt);color:#e6eaee}
-#gcLoad .bp{position:absolute;left:50%;bottom:52px;width:min(40vw,360px);transform:translateX(-50%)}
-#gcLoad .bl{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px;font:600 10px/1 var(--gt);letter-spacing:.32em;color:#c9d2d8}#gcLoad .bl b{font-weight:700;color:#fff;letter-spacing:.12em}
-#gcLoad .bt{position:relative;height:8px;border-radius:4px;background:#00000080;box-shadow:inset 0 1px 2px #000,0 1px 0 #ffffff1a;overflow:hidden}
-#gcLoad .bt u{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:4px;background:linear-gradient(180deg,#8fb4d8 0%,#4f7eab 48%,#33608c 52%,#4a77a3 100%);box-shadow:inset 0 1px 0 #ffffffa0,0 0 10px #4f7eab90;transition:width .35s ease}
 #resBox .gcRes{display:flex;gap:14px;align-items:center;margin:4px 0 14px;padding:12px 16px;border-radius:10px;background:linear-gradient(180deg,rgba(62,68,76,.6),rgba(22,25,29,.8));box-shadow:inset 0 0 0 1px #ffffff14}
 #resBox .gcRes small{display:block;font:600 9px var(--gt);letter-spacing:.2em;color:#7fb6ff}#resBox .gcRes p{margin:3px 0 0;font:400 14px/1.4 var(--gt);color:#eef1f4}
 #resBox .gcRes .gcPz{margin-left:auto;text-align:right;font:700 16px var(--mn);color:var(--ac2);white-space:nowrap}#resBox .gcRes .gcPz.no{color:#9aa4b0}
@@ -652,10 +662,10 @@ function hint(){const h=$('gcHint');if(!h)return;sec.classList.toggle('talk',!!U
 /* ---------------- talking ---------------- */
 const fixCost=id=>repairCost(id),tuneFee=()=>{const c=curCar().car;return Math.max(400,Math.round((c.price||30000)*.015/50)*50)};
 function choices(){if(UI.ch)return UI.ch;const c=curCar();if(UI.who==='red'){const cost=fixCost(c.id),L=[];
-  if(cost)L.push({ic:'fix',t:'Fix the damage',pz:fmtCr(cost),off:P.SV().cr<cost,a:()=>{const sv=P.SV();if(sv.cr<cost){say(`That's ${fmtCr(cost)}. Win a damn race and come back.`);return}sv.cr-=cost;G().wear[c.id]=0;P.save();say(rnd([`Done. Good as new.`,`All fixed. Keep it off the damn walls this time.`]));refreshCar()}});
+  if(cost)L.push({ic:'fix',t:'Fix the damage',pz:fmtCr(cost),off:P.SV().cr<cost,a:()=>{const sv=P.SV();if(sv.cr<cost){say(`That's ${fmtCr(cost)}. Win a race and come back.`);return}sv.cr-=cost;G().wear[c.id]=0;P.save();say(rnd([`Done. Good as new.`,`All fixed. Keep it off the walls this time.`]));refreshCar()}});
   L.push({ic:'tune',t:'Tune my car',a:askTune});
   L.push({ic:'swap',t:'Bring out another car',a:openCars});
-  L.push({ic:'look',t:'How is the car looking?',a:()=>{const w=wearOf(c.id),T=TIERS[tierOf(G().rep)];let s=w>.02?`It's at ${pctOK(c.id)}%. ${w>.3?'It\'ll feel slow as hell until I fix it.':'Nothing serious.'}`:`It's in perfect shape.`;
+  L.push({ic:'look',t:'How is the car looking?',a:()=>{const w=wearOf(c.id),T=TIERS[tierOf(G().rep)];let s=w>.02?`It's at ${pctOK(c.id)}%. ${w>.3?'It\'ll feel slow until I fix it.':'Nothing serious.'}`:`It's in perfect shape.`;
    if(CLS.indexOf(c.car.cls)<CLS.indexOf(T.cl[0]))s+=` But it's a class ${c.car.cls} car, and the ${T.n} races are getting faster. Talk to Vince.`;else s+=` A tune would help more than you'd think.`;say(s)}});
   L.push({ic:'tip',t:'Any tips?',a:()=>say(rnd(TIPS))});L.push({ic:'bye',t:'See you later',a:()=>leave()});return L}
  return[{ic:'race',t:'What races have you got?',a:()=>{UI.view='offers';UI.f=0;const o=G().offers[0];if(o)setLine(pitch(o))}},
@@ -664,17 +674,17 @@ function choices(){if(UI.ch)return UI.ch;const c=curCar();if(UI.who==='red'){con
   {ic:'chart',t:'How am I doing?',a:()=>{const g=G(),ti=tierOf(g.rep),nx=TIERS[ti+1];say(`${TIERS[ti].n}. ${g.wins} cleared, ${fmtCr(g.earned)} earned.`+(nx?` ${nx.rep-g.rep} more and the ${nx.n} people call.`:` Nobody's above you.`)+' '+moneyLine())}},
   {ic:'bye',t:'See you later',a:()=>leave()}]}
 /* tuning costs: she asks first, then the tuning bench */
-function askTune(){const fee=tuneFee();say(rnd([`I can tune it, but it's gonna cost you. ${fmtCr(fee)}.`,`Tuning? Sure. Not free though. ${fmtCr(fee)}.`,`I can make it faster. ${fmtCr(fee)}, and that's the friends price, damn it.`]));
+function askTune(){const fee=tuneFee();say(rnd([`I can tune it, but it's gonna cost you. ${fmtCr(fee)}.`,`Tuning? Sure. Not free though. ${fmtCr(fee)}.`,`I can make it faster. ${fmtCr(fee)}, and that's the friends price.`]));
  UI.ch=[{ic:'tune',t:'Do it',pz:fmtCr(fee),off:P.SV().cr<fee,a:()=>{const sv=P.SV();if(sv.cr<fee){UI.ch=null;say(`You're short. ${fmtCr(fee-sv.cr)} short. Go win something.`);return}sv.cr-=fee;P.save();$$crv();UI.ch=null;UI.view='tune';UI.f=0;
    say(rnd([`Alright, let's see what we've got. Tell me what you want changed.`,`Hand me that wrench. Okay. What are we doing?`]))}},
   {ic:'back',t:'Maybe later',a:()=>{UI.ch=null;say(rnd([`Your call.`,`Fine. It's not getting any faster on its own, though.`]))}}];UI.f=0}
 function tuneAdj(i,d){const T=P.TUNE[i];if(!T)return;const c=curCar(),t=P.tuneGet(c.id,c.alt),v=Math.max(-T.r,Math.min(T.r,t[T.k]+d));if(v===t[T.k])return;P.tuneSet(c.id,c.alt,T.k,v);P.sfx&&P.sfx('move');
  const L=TUNE_L[T.k];setLine(v===0?rnd([`Back to stock on the ${T.n.toLowerCase()}.`,`Stock ${T.n.toLowerCase()}. Boring, but it works.`]):L[d>0?1:0]);UI.f=i;drawDlg(true);const r=sec.querySelector('.gcTu[data-i="'+i+'"]');if(r){r.classList.remove('bump');void r.offsetWidth;r.classList.add('bump')}}
-function tuneDone(){UI.view='talk';UI.f=0;say(rnd([`There. Go break something. Not the car, though.`,`Done. If it handles like shit, that's on you, not me.`,`All set. Damn, that sounds good.`]));}
+function tuneDone(){UI.view='talk';UI.f=0;say(rnd([`There. Go break something. Not the car, though.`,`Done. If it handles badly, that's on you, not me.`,`All set. Damn, that sounds good.`]));}
 /* the cars you own, one click to bring one out */
 function owned(){const own=P.SV().owned||{},cur=curCar();const L=P.CARS.filter(c=>own[c.id]&1&&!listed(c.id)).map(c=>({id:c.id,alt:0,car:c}));if(!L.some(x=>x.id===cur.id))L.unshift({id:cur.id,alt:cur.alt,car:cur.car});return L}
 function openCars(){UI.who='red';UI.view='cars';UI.ch=null;const L=owned(),cur=curCar();UI.f=Math.max(0,L.findIndex(x=>x.id===cur.id));aim();
- say(rnd([`Which one do you want out?`,`Pick one. I'll roll it out.`,`Which one? Hurry up, I've got shit to do.`]));drawDlg();hint()}
+ say(rnd([`Which one do you want out?`,`Pick one. I'll roll it out.`,`Which one? Hurry up, I've got stuff to do.`]));drawDlg();hint()}
 function bringOut(i){const x=owned()[i];if(!x)return;const was=curCar().id;if(x.id!==was){P.setSel(0,x.id,x.alt);setCar();refreshCar()}
  /* back to the overview; Nina says it over her head. A car that looks like shit (bad paint, or worn out) gets an insult instead */
  const ugly=!!paintOf(x.id)||pctOK(x.id)<55;UI.who=null;UI.view='talk';UI.ch=null;UI.f=0;UI.line='';aim();const d=$('gcDlg');if(d)d.classList.remove('on');hint();P.sfx&&P.sfx('select');
@@ -709,14 +719,13 @@ function sfList(){const f=UI.sf;if(!f)return;const p=sellChance(f.id,f.ask,f.tit
  if(curCar().id===f.id){const o=sellable()[0];if(o){P.setSel(0,o.id,o.alt);setCar();refreshCar()}}P.save();UI.sf=null;UI.view='talk';UI.f=0;
  const q=f.ask/carValue(f.id);say(q>1.3?rnd([`Listed. At that price? Good luck.`,`It's up. Don't hold your breath.`]):q<.85?rnd([`Listed. You're basically giving it away.`,`It's up. Cheap. It'll go.`]):rnd([`It's on the lot. I'll let you know.`,`Listed. Someone will call. Probably.`]));P.sfx&&P.sfx('select');drawDlg();hint()}
 function sfHtml(){const f=UI.sf,c=BYID[f.id],v=carValue(f.id),on=i=>UI.f===i?' on':'';
- return `<div class="gcSF">
- <div class="gcO sfCar" style="--d:40ms"><div class="sw" data-car="${f.id}"></div><div><em>VALUE ${fmtCr(v)}</em><b>${esc_(c.name)}<span class="cls ${c.cls}">${c.cls}</span></b><small>Condition ${pctOK(f.id)}%${paintOf(f.id)?' &middot; bad paint':''}</small></div><div class="pz"></div></div>
+ return `<div class="gcO sfCar" style="--d:40ms"><div class="sw" data-car="${f.id}"></div><div><em>VALUE ${fmtCr(v)}</em><b>${esc_(c.name)}<span class="cls ${c.cls}">${c.cls}</span></b><small>Condition ${pctOK(f.id)}%${paintOf(f.id)?' &middot; bad paint':''}</small></div><div class="pz"></div></div>
  <div class="gcRow sfAsk${on(0)}" data-i="0" style="--d:90ms"><span>Asking price</span><u data-d="-1">&lsaquo;</u><b>${fmtCr(f.ask)}</b><u data-d="1">&rsaquo;</u><small></small></div>
  <label class="gcRow sfIn${on(1)}" data-i="1" style="--d:140ms"><span>Title</span><input maxlength="60" placeholder="e.g. Clean ${esc_(c.name.split(' ').slice(-1)[0])}, runs great" value="${esc_(f.title)}"></label>
  <label class="gcRow sfIn sfTa${on(2)}" data-i="2" style="--d:190ms"><span>Description</span><textarea maxlength="400" rows="3" placeholder="Mileage, history, what's been done to it...">${esc_(f.desc)}</textarea></label>
  <div class="sfMeter" style="--d:240ms"><small></small><b></b><i><u></u></i></div>
  <div class="gcRow${on(3)}" data-i="3" style="--d:290ms">${svgI('ok')}<span>List it</span></div>
- <div class="gcRow${on(4)}" data-i="4" style="--d:330ms">${svgI('back')}<span>Cancel</span></div></div>`}
+ <div class="gcRow${on(4)}" data-i="4" style="--d:330ms">${svgI('back')}<span>Cancel</span></div>`}
 function sfWire(d){const f=UI.sf;if(!f)return;const ti=d.querySelector('.sfIn input'),ta=d.querySelector('.sfIn textarea');
  const keys=(el,i)=>{el.oninput=()=>{if(i===1)f.title=el.value;else f.desc=el.value;sfPaint()};el.onfocus=()=>{UI.f=i;d.querySelectorAll('.gcCh .gcRow').forEach(e=>e.classList.toggle('on',+e.dataset.i===i))};
   el.onkeydown=e=>{if(e.key==='Escape'){el.blur();e.stopPropagation();e.preventDefault();return}if((e.key==='Enter'&&i===1)||(e.key==='ArrowDown'&&(i===1||el.selectionStart===el.value.length))){e.preventDefault();el.blur();focusC(i+1)}else if(e.key==='ArrowUp'&&(i===1||el.selectionStart===0)){e.preventDefault();el.blur();focusC(i-1)}e.stopPropagation()}};
@@ -808,7 +817,7 @@ function pickC_(){const pe=GS[UI.who];if(pe&&!pe.gs&&UI.view!=='tune')gesture(pe
  if(UI.view==='offers'){const g=G();if(UI.f>=g.offers.length){UI.view='talk';UI.f=0;say(`Something else, then?`);drawDlg();hint();return}start(UI.f);return}
  if(UI.view==='mkt'){const g=G();if(UI.f===g.mkt.length){openSell();return}if(UI.f>g.mkt.length){UI.view='talk';UI.f=0;say(`Sure.`);drawDlg();hint();return}buy(UI.f);hint();return}
  if(UI.view==='sell'){pickSell(UI.f);return}
- if(UI.view==='sellForm'){if(UI.f===3)sfList();else if(UI.f===4){UI.sf=null;openSell()}else if(UI.f===0)sfAdj(1);return}
+ if(UI.view==='sellForm'){if(UI.f===3)sfList();else if(UI.f===4){UI.sf=null;openSell()}return}
  if(UI.view==='cars'){bringOut(UI.f);return}
  if(UI.view==='tune'){if(UI.f>=P.TUNE.length){tuneDone();aim();drawDlg();hint()}return}
  const c=choices()[UI.f];if(c){const v0=UI.view;c.a();if(UI.who&&scr==='s8career'){if(UI.view!==v0)aim();drawDlg();hint()}}}
@@ -836,7 +845,7 @@ function start(i){const g=G(),o=g.offers[i];if(!o)return;const c=curCar(),T=TIER
   /* the car starts the race with the damage it came home with */
   if(P.gcRun){try{for(const c of RACE.cars)if(c.human){const w=wearOf(c.carId);if(w>0)c.dmg=Math.max(c.dmg||0,w)}}catch(e){}}
   /* the bad paint goes racing too, in every mode */
-  try{for(const c of RACE.cars)if(c.human&&!c.loan&&paintOf(c.carId))badPaint(c.m&&(c.m.visualModel||c.m.g||c.m),paintOf(c.carId))}catch(e){}return r}}
+  try{for(const c of RACE.cars)if(c.human&&!c.loan)carLook(c.m&&(c.m.visualModel||c.m.g||c.m),c.carId,paintOf(c.carId),wearOf(c.carId))}catch(e){}return r}}
 
 /* ---------------- Quick Play pays less ---------------- */
 P.qpK=()=>P.gcRun?1:QP_K;
@@ -887,14 +896,23 @@ function menuPick(){if(!UI.menu)return;const r=MENU[UI.menu.f],el=$('gcMenu').qu
 const TIPS_LD=[['Nina','Brake in a straight line, then turn. The car can only do one damn thing at a time.'],['Vince','Marketplace cars are cheap for a reason. Nina likes a project.'],
  ['Nina','A tune costs money, but it\'s the cheapest speed you\'ll ever buy.'],['Vince','Win races, the better organisers call. Simple as that.'],['Nina','Keep it off the walls. Damage stays on the car until I fix it.'],['Vince','Quick Play is fine. Career is where the money is.']];
 let LD=null;
-function ldShow(){if(!LD){LD=document.createElement('div');LD.id='gcLoad';document.body.appendChild(LD)}const g=G(),T=TIERS[tierOf(g.rep)],tp=rnd(TIPS_LD);
- LD.className='';LD.innerHTML=`<div class="bv"></div><div class="gt"><b>POLY <i>GT</i></b><span>CAREER</span></div><div class="ttl"><div class="lg">CAREER</div><div class="st">${T.n} &middot; ${g.wins} CLEARED &middot; ${esc_(fmtCr(P.SV().cr)).toUpperCase()}</div><div class="ln"></div></div>
- <div class="tip"><small>${tp[0]==='Nina'?RED.role:VIN.role}</small><b style="color:${tp[0]==='Nina'?RED.col:VIN.col}">${tp[0]}</b><p>&ldquo;${esc_(tp[1])}&rdquo;</p></div><div class="gb"></div><div class="bp"><div class="bl"><span>LOADING</span><b>0%</b></div><div class="bt"><u></u></div></div>`;void LD.offsetWidth;LD.classList.add('on');sec.classList.add('ld')}
+/* the loading screen is the game's own start-up screen (build.py's #ptBoot, whose style stays in the page), with CAREER for POLY GT and the
+   same slideshow of car stills */
+function ldShow(){if(!LD){LD=document.createElement('div');LD.id='gcBoot';document.body.appendChild(LD);
+  const bs=document.getElementById('ptBootSt'),st=document.createElement('style');st.textContent=(bs?bs.textContent.replace(/#ptBoot/g,'#gcBoot'):'')+'#gcBoot{display:none;z-index:99980}#gcBoot.on{display:flex}#gcBoot.out{opacity:0}';document.head.appendChild(st)}
+ const g=G(),T=TIERS[tierOf(g.rep)];clearTimeout(LD._t);
+ LD.className='';LD.innerHTML=`<div class="bs"></div><div class="bv"></div><div class="gt"><b>POLY <i>GT</i></b></div><div class="gb"></div><div class="lg">CAREER</div><div class="st">${T.n.toUpperCase()} &middot; ${g.wins} CLEARED</div><div class="ln"></div><div class="bp"><div class="bl"><span>LOADING</span><b>0%</b></div><div class="bt"><u></u></div></div>`;
+ void LD.offsetWidth;LD.classList.add('on');sec.classList.add('ld');ldSlide(true)}
+function ldSlide(first){if(!LD||!LD.classList.contains('on')||LD.classList.contains('out'))return;const L=window.PT8_BOOTBG||[],s=LD.querySelector('.bs');if(!L.length||!s)return;
+ LD._i=first?Math.random()*L.length|0:((LD._i|0)+1)%L.length;let x=L[LD._i];const m=x.charAt(1)===','?x.charAt(0):'';if(m)x=x.slice(2);
+ LD.classList.toggle('bx',m==='b'||m==='w');LD.classList.toggle('lt',m==='w');LD.classList.toggle('up',m==='u');
+ const e=document.createElement('div'),r=()=>(Math.random()*3-1.5).toFixed(2)+'%';e.style.backgroundImage='url(data:image/jpeg;base64,'+x+')';e.style.setProperty('--x0',r());e.style.setProperty('--y0',r());s.appendChild(e);void e.offsetWidth;e.className='on';
+ const o=[...s.children].filter(c=>c!==e);setTimeout(()=>o.forEach(c=>c.remove()),1800);LD._t=setTimeout(()=>ldSlide(false),6500)}
 function ldProg(f){if(!LD)return;const u=LD.querySelector('.bt u'),b=LD.querySelector('.bl b');if(u)u.style.width=Math.round(f*100)+'%';if(b)b.textContent=Math.round(f*100)+'%'}
-function ldHide(){sec.classList.remove('ld');aim();if(!LD)return;LD.classList.add('rdy');setTimeout(()=>{if(LD&&LD.classList.contains('rdy'))LD.classList.remove('on')},700)}
+function ldHide(){sec.classList.remove('ld');aim();if(!LD)return;LD.classList.add('rdy','out');clearTimeout(LD._t);setTimeout(()=>{if(LD&&LD.classList.contains('out'))LD.classList.remove('on')},1000)}
 const tick0=()=>new Promise(r=>setTimeout(r,16));
 async function loadCareer(){const t0=performance.now();ldShow();ldProg(.04);GS.onProg=f=>ldProg(.04+f*.6);
- try{await buildScene();ldProg(.66);setCar();if(GS.ok&&LD)LD.classList.add('see');await tick0();
+ try{await buildScene();ldProg(.66);setCar();await tick0();
   /* the thumbnails the Marketplace and the car list will show */
   const ids=[...G().mkt.map(l=>l.id),...owned().map(x=>x.id),curCar().id];for(let i=0;i<ids.length;i++){try{P.carThumb&&P.carThumb(ids[i])}catch(e){}ldProg(.66+.22*(i+1)/ids.length);await tick0()}
   refreshCar();if(GS.ok){try{R.compile(GS.sc,GS.cam)}catch(e){}if(!GS.pics)portraits()}ldProg(.96);await tick0()}catch(e){console.warn('career load',e)}
@@ -919,5 +937,5 @@ addEventListener('keydown',e=>{if(scr!=='s8career'||!sec.classList.contains('gcO
  else if(UI.view==='sellForm'&&UI.f===0&&(c==='ArrowLeft'||c==='KeyA'||c==='ArrowRight'||c==='KeyD'))sfAdj(c==='ArrowLeft'||c==='KeyA'?-1:1)
  else if(c==='Enter'||c==='Space')pickC();
  else if(/^Digit[1-9]$/.test(c)&&+c[5]<=n&&UI.view!=='tune'){focusC(+c[5]-1);finishType();pickC()}else return;e.preventDefault();e.stopImmediatePropagation()},true);
-P.gcDebug=()=>({G:G(),UI,GS,run:P.gcRun});P.gcRoam=(k,i)=>{const pe=GS[k];if(pe){if(!pe.home)roamInit(pe,k);startTask(pe,k,STN[k][i]);pe.nxR=30}};P.gcNav=()=>NAV;P.gcSell=()=>{talk('vin');openSell()};P.gcSellPick=i=>pickSell(i);P.gcSellList=()=>sfList();P.gcPath=(k,x,z)=>navPath(GS[k].g.position,V3(x,0,z),null);P.gcTalk=talk;P.gcAct=act;P.gcPick=(x,y)=>pickAt(x,y);P.gcHover=k=>{GS.hov=k};P.gcPop=popIn;
+P.gcDebug=()=>({G:G(),UI,GS,run:P.gcRun});P.gcRoam=(k,i)=>{const pe=GS[k];if(pe){if(!pe.home)roamInit(pe,k);startTask(pe,k,STN[k][i]);pe.nxR=30}};P.gcNav=()=>NAV;P.gcSetCar=()=>setCar(true);P.gcSell=()=>{talk('vin');openSell()};P.gcSellPick=i=>pickSell(i);P.gcSellList=()=>sfList();P.gcPath=(k,x,z)=>navPath(GS[k].g.position,V3(x,0,z),null);P.gcTalk=talk;P.gcAct=act;P.gcPick=(x,y)=>pickAt(x,y);P.gcHover=k=>{GS.hov=k};P.gcPop=popIn;
 })();
