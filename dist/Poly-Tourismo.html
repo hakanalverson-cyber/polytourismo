@@ -12413,6 +12413,9 @@ window.__optAction=k=>{if(k==='@tutorial')P.startTutorial()};
 const P=window.PT8;
 P.LOG=[
  {v:'0.03',d:'Nov 2, 2026',t:'Highway Cut-Up on bikes',items:[
+  'Career: the Marketplace lives on the computer now. Click the laptop (or ask Vince) and the site opens right on its screen: browse and buy, list your cars, and a Messages tab that keeps every haggle, so you can come back to a conversation any time and answer from there. Notifications open the right chat.',
+  'Career: real shadows in the garage from the light over the car, softer contact shadows under the people, easier clicking on Nina, Vince, the car and the computer, no more wandering around the garage, calmer postures, and Nina and Vince no longer turn to follow your mouse.',
+  'Bikes: the hands stay on the grips when you steer while a trick is starting or ending, and the rider is posed after the bike each frame so the hands no longer trail the bars.',
   'Career: the texting phone now sits where the list was, as a mid-2000s colour-screen phone, with what the car costs new, the listed price and the number on the table across the top. Everyone gives reasons now: buyers point at bad paint, wear and mileage, sellers at condition, original paint and what a new one costs.',
   'Career: haggling on an old phone. Text a Marketplace seller for a better price, and buyers sometimes text you about your listings with an offer. Five texts at most, nobody moves more than 5,000, and they get stubborn near their limit. You also get a notification when you buy a car.',
   'Career: a short black fade whenever the car changes (bringing one out, buying, selling, paint, repairs, tuning). Nina keeps her hands where they make sense (on her hips, her belt, the bench), no more holding nothing up or hammering the air while she tunes. Fewer lights in the garage for a smoother frame rate, and the selling form no longer jitters while you type.',
@@ -17707,7 +17710,7 @@ BK.poseRider=(m,ps,gripW)=>{const R=m.rider,I=m.I;if(!R)return;if(!R.people)retu
  /* arms: IK from each upper arm to its hand target */
  const j=V(),e=V();
  for(let s=0;s<2;s++){const sg=s?-1:1,S=s?'R':'L';const sh=bodyAt('upper_arm'+S);let H;
-  if(ps.hands&&ps.hands[s])H=V(ps.hands[s][0]*sg,ps.hands[s][1],ps.hands[s][2]);
+  if(ps.hands&&ps.hands[s]){H=V(ps.hands[s][0]*sg,ps.hands[s][1],ps.hands[s][2]);/* a hand on its way to or from the grip turns with the bars, so it never leaves the bar behind when you steer mid-move */const G0=V(I.grip[0]*sg,I.grip[1],I.grip[2]),dg=H.distanceTo(G0),w=Math.max(0,1-dg/.45);if(w>0){const G1=G0.clone().sub(m.steer.position).applyQuaternion(m.steer.quaternion).add(m.steer.position);H.addScaledVector(G1.sub(G0),w)}}
   /* round 14: a gripping hand lies over the bar, palm down: fingers forward and down across the grip (turned with the bars), the wrist
      a palm's length behind and a little above it. A free hand: the wrist a palm short of its target */
   const grip=!(ps.hands&&ps.hands[s]),sq=m.steer.quaternion,dT=V(0,-.45,1).normalize().applyQuaternion(sq),nT=V(0,-1,-.45).normalize().applyQuaternion(sq);
@@ -18340,7 +18343,7 @@ function step(dt){if(!B)return;const live=!B.paused;
   for(const p of B.pl){physStep(p,dt);if(!B)return;collide(p);scoreStep(p,dt)}collideRiders();
   trafficStep(dt);fxStep(dt);
   const sMin=Math.min(...B.pl.map(p=>p.s)),sMax=Math.max(...B.pl.map(p=>p.s));B.world.update(sMin,sMax);B.world.tick(dt,sMin,sMax);
-  for(const p of B.pl){if(!p.wipe)poseRiderFor(p,dt);placeBike(p,dt);if(p.eng)p.eng.set(p.rpm,p.th,p.v,!p.wipe&&B.state!=='done')}}
+  for(const p of B.pl){placeBike(p,dt);if(!p.wipe)poseRiderFor(p,dt);if(p.eng)p.eng.set(p.rpm,p.th,p.v,!p.wipe&&B.state!=='done')}}
  render(dt);hudStep(dt)}
 function render(dt){const W=R.domElement.width,H=R.domElement.height,n=B.pl.length;R.setScissorTest(true);
  for(let i=0;i<n;i++){const p=B.pl[i],cam=B.cams[i],x=n>1?(i*W/2)|0:0,w=n>1?(W/2)|0:W;camStep(p,cam,dt,w/H);
@@ -18807,8 +18810,8 @@ const parseGLB=b64=>new Promise(res=>{if(!b64||!THREE.GLTFLoader){res(null);retu
  try{new THREE.GLTFLoader().parse(b64u(b64),'',g=>res(g),e=>{console.warn('career glb',e);res(null)})}catch(e){console.warn('career glb',e);res(null)}finally{window.createImageBitmap=cib}});
 const yawTo=(from,to)=>Math.atan2(to.x-from.x,to.z-from.z);
 const wrapA=a=>Math.atan2(Math.sin(a),Math.cos(a)),lerpA=(a,b,k)=>a+wrapA(b-a)*k;
-function blob(r){const cv=document.createElement('canvas');cv.width=cv.height=64;const g=cv.getContext('2d'),gr=g.createRadialGradient(32,32,2,32,32,31);gr.addColorStop(0,'rgba(0,0,0,.55)');gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(0,0,64,64);
- const m=new THREE.Mesh(new THREE.PlaneGeometry(r*2,r*2),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv),transparent:true,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.y=.012;m.renderOrder=2;m.userData.noOL=1;return m}
+function blob(r,op){const cv=document.createElement('canvas');cv.width=cv.height=64;const g=cv.getContext('2d'),gr=g.createRadialGradient(32,32,2,32,32,31);gr.addColorStop(0,'rgba(0,0,0,.55)');gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(0,0,64,64);
+ const m=new THREE.Mesh(new THREE.PlaneGeometry(r*2,r*2),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv),transparent:true,depthWrite:false,opacity:op==null?1:op}));m.rotation.x=-Math.PI/2;m.position.y=.012;m.renderOrder=2;m.userData.noOL=1;return m}
 /* Hakan's garage, baked offline (tools/garage/bake.py) to flat colours per face: a json header, then per group uint16 positions and one rgb per face.
    'shell' is the room and the big furniture, 'clutter' the small stuff that is hidden while you talk to someone */
 function garMesh(b64){const buf=b64u(b64),dv=new DataView(buf),hl=dv.getUint32(0,true),h=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,4,hl)));let o=4+hl;const out={},mn=h.min,mx=h.max;
@@ -18837,13 +18840,16 @@ async function buildScene_(){GS.busy=true;const pr=f=>{try{GS.onProg&&GS.onProg(
   /* two lights, not five: every light costs every pixel of every mesh, and the five plus the floor bounce made the garage slow on laptops */
   for(const [x,z] of [[-1.9,-3.4],[-1.9,0.6]]){const pl=new THREE.PointLight(0xfff3e2,1.0,8,1.6);pl.position.set(x,2.55,z);sc.add(pl)}
   const ks=(x,y,z,tx,tz,i,ang,c)=>{const l=new THREE.SpotLight(c||0xe6efff,i,26,ang,.7,1.2);l.position.set(x,y,z);l.target.position.set(tx,0,tz);sc.add(l,l.target);return l};
-  ks(SPOT.car.x,5.2,SPOT.car.z+.6,SPOT.car.x,SPOT.car.z,1.6,.62);
+  /* real shadows (the dark blobs under everyone looked like stains): the ceiling light over the car throws soft, nearly straight-down
+     shadows of the car and both people onto the floor and benches. The room itself only receives, it never casts, so the ceiling
+     above the light can't black everything out */
+  {const l=ks(SPOT.car.x+.3,5.2,SPOT.car.z+.2,SPOT.car.x,SPOT.car.z-.4,1.6,.78);l.castShadow=true;l.shadow.mapSize.set(1024,1024);l.shadow.bias=-.0004;l.shadow.normalBias=.02;l.shadow.radius=3;l.shadow.camera.near=1;l.shadow.camera.far=9;GS.shL=l}
   const d=new THREE.DirectionalLight(0xf1f5ff,.32);d.position.set(4,9,7);sc.add(d);const rim=new THREE.DirectionalLight(0x8fb8ff,.5);rim.position.set(-3,4,-9);sc.add(rim);
   let gm=null;try{if(window.GAR2_B64)gm=garMesh(window.GAR2_B64)}catch(e){console.warn('career garage',e)}
-  if(gm){for(const k in gm)sc.add(gm[k]);GS.clutter=gm.clutter||null;GS.gar=gm;try{navBuild(gm)}catch(e){console.warn('career map',e)}}
+  if(gm){for(const k in gm){gm[k].receiveShadow=true;gm[k].castShadow=false;sc.add(gm[k])}GS.clutter=gm.clutter||null;GS.gar=gm;try{navBuild(gm)}catch(e){console.warn('career map',e)}}
   else{const f=new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshStandardMaterial({color:0x8d9097,roughness:.9}));f.rotation.x=-Math.PI/2;sc.add(f);
    const w=new THREE.Mesh(new THREE.PlaneGeometry(40,10),new THREE.MeshStandardMaterial({color:0xc9bba8,roughness:1}));w.position.set(0,5,-6.2);sc.add(w)}
-  try{if(window.GPROP_B64){const pm=garMesh(window.GPROP_B64);if(pm.laptop){pm.laptop.position.copy(LAPTOP.p);pm.laptop.rotation.y=LAPTOP.ry;pm.laptop.scale.setScalar(1.35);sc.add(pm.laptop);GS.laptop=pm.laptop}}}catch(e){console.warn('career props',e)}
+  try{if(window.GPROP_B64){const pm=garMesh(window.GPROP_B64);if(pm.laptop){pm.laptop.position.copy(LAPTOP.p);pm.laptop.rotation.y=LAPTOP.ry;pm.laptop.scale.setScalar(1.35);pm.laptop.traverse(m=>{if(m.isMesh){m.castShadow=true;m.receiveShadow=true}});sc.add(pm.laptop);GS.laptop=pm.laptop}}}catch(e){console.warn('career props',e)}
   pr(.35);
   /* Studio Ochi people (Hakan's packs): one character out of a pack, picked by its place along x. Skins with only a few bones are props
      (shovel, hammer): they stay when they sit close to the chosen person */
@@ -18854,7 +18860,7 @@ async function buildScene_(){GS.busy=true;const pr=f=>{try{GS.onProg&&GS.onProg(
    const near=m=>{const p=m.skeleton.bones[0].getWorldPosition(V3());let best=1e9,bx=null;for(const c of L){const d=Math.abs(p.x-c.x);if(d<best){best=d;bx=c}}return bx===pick};
    o.traverse(m=>{if(!m.isMesh)return;if(m.isSkinnedMesh){m.visible=props_.includes(m)?near(m):pick.ms.includes(m)}else{let a=m.parent,ok=false;while(a){if(keep.has(a)){ok=true;break}a=a.parent}m.visible=ok}if(m.visible){m.frustumCulled=false;if(m.material)m.material.envMapIntensity=.3}});
    const inner=new THREE.Group(),w=new THREE.Group();inner.add(o);o.position.set(-hip.x,-pick.y0,-hip.z);w.add(inner);
-   const hy0=(pick.yh>-1e8?pick.yh:1.5)-pick.y0,ks_=hTo/Math.max(.3,hy0);inner.scale.setScalar(ks_);w.position.copy(spot);w.rotation.y=ry0;w.add(blob(.42));sc.add(w);
+   const hy0=(pick.yh>-1e8?pick.yh:1.5)-pick.y0,ks_=hTo/Math.max(.3,hy0);inner.scale.setScalar(ks_);w.position.copy(spot);w.rotation.y=ry0;w.traverse(m=>{if(m.isMesh){m.castShadow=true;m.frustumCulled=false}});sc.add(w);w.add(blob(.5,.5));
    const rg=rig(pick.bones);lowerArms(rg,w,props_.filter(m=>m.visible),k===3);const pe={g:w,h:hTo+.1,hy:hTo+.12,rig:rg,ry0,hand:''};return pe};
   /* Nina: the girl with the orange helmet and the hammer (Construction People, far left), half turned to the car she's working on.
      Vince: the man in the dark suit (Business People, 4th), by the bench, looking at his hands */
@@ -18870,7 +18876,7 @@ function setCar(force){if(!GS.ok)return;const c=curCar(),L=paintOf(c.id),key=c.i
  const model=src.clone(true),g=new THREE.Group(),ctd=new THREE.Group();ctd.add(model);g.add(ctd);ctd.updateMatrixWorld(true);
  const bb=new THREE.Box3().setFromObject(model),sz=bb.getSize(V3()),ct=bb.getCenter(V3()),k=(src.userData.gl?src.userData.gl*1.093:4.7)/Math.max(sz.x,sz.z,.001);
  ctd.position.set(-ct.x,-bb.min.y,-ct.z);g.scale.setScalar(k);g.rotation.y=(sz.x>sz.z?Math.PI/2:0)+Math.PI;
- const o=new THREE.Group();o.add(g);o.position.copy(SPOT.car);o.rotation.y=SPOT.carRy;o.add(blob(2.9));o.traverse(m=>{if(m.isMesh){const ms=Array.isArray(m.material)?m.material:[m.material];ms.forEach(x=>{if(x&&x.isMeshStandardMaterial)x.envMapIntensity=.55})}});
+ const o=new THREE.Group();o.add(g);o.position.copy(SPOT.car);o.rotation.y=SPOT.carRy;o.add(blob(2.6,.7));o.traverse(m=>{if(m.isMesh&&!m.userData.noOL){m.castShadow=true;const ms=Array.isArray(m.material)?m.material:[m.material];ms.forEach(x=>{if(x&&x.isMeshStandardMaterial)x.envMapIntensity=.55})}});
  carLook(model,c.id,L,wearOf(c.id));
  GS.sc.add(o);GS.car=o;o.updateMatrixWorld(true);GS.carBox=new THREE.Box3().setFromObject(o);navGrow()}
 /* portraits for the text box: each head rendered once, front on */
@@ -18904,7 +18910,7 @@ function olInit(){const mat=new THREE.ShaderMaterial({uniforms:{tM:{value:null},
   fragmentShader:'uniform sampler2D tM;uniform vec2 px;uniform float uA;varying vec2 vU;void main(){float c=texture2D(tM,vU).a,m=0.;for(int i=0;i<16;i++){float a=float(i)*.3927;vec2 d=vec2(cos(a),sin(a))*px;m=max(m,texture2D(tM,vU+d*3.5).a*.8);m=max(m,texture2D(tM,vU+d*1.8).a);}gl_FragColor=vec4(1.,1.,1.,clamp(m-c,0.,1.)*uA);}'});
  const q=new THREE.Mesh(new THREE.PlaneGeometry(2,2),mat);q.frustumCulled=false;const sc=new THREE.Scene();sc.add(q);OL.q={sc,mat,cam:new THREE.OrthographicCamera(-1,1,1,-1,0,1)}}
 function olRender(dt){const k=!UI.who&&!onCar()?GS.hov:null;if(k&&k!==OL.k){OL.k=k;OL.a=0}OL.a+=((k?.85:0)-OL.a)*Math.min(1,dt*12);if(OL.a<.01||!OL.k)return;
- const root=OL.k==='car'?GS.car:GS[OL.k]&&GS[OL.k].g;if(!root)return;const L=[];root.traverse(m=>{if(m.isMesh&&m.visible&&!m.userData.noOL)L.push(m)});if(!L.length)return;
+ const root=OL.k==='car'?GS.car:OL.k==='pc'?GS.laptop:GS[OL.k]&&GS[OL.k].g;if(!root)return;const L=[];root.traverse(m=>{if(m.isMesh&&m.visible&&!m.userData.noOL)L.push(m)});if(!L.length)return;
  if(!OL.q)olInit();const W=R.domElement.width,H=R.domElement.height,dpr=Math.max(1,W/Math.max(1,innerWidth));if(!OL.rt||OL.rt.width!==W||OL.rt.height!==H){if(OL.rt)OL.rt.dispose();OL.rt=new THREE.WebGLRenderTarget(W,H)}
  for(const m of L)m.layers.enable(5);GS.cam.layers.set(5);const bg=GS.sc.background;GS.sc.background=null;R.getClearColor(CC);const ca=R.getClearAlpha();
  R.setRenderTarget(OL.rt);R.setClearColor(0,0);R.clear();R.render(GS.sc,GS.cam);R.setRenderTarget(null);R.setClearColor(CC,ca);GS.sc.background=bg;GS.cam.layers.set(0);for(const m of L)m.layers.disable(5);
@@ -18920,11 +18926,11 @@ function camFor(who){if(!who)return SPOT.over;const h=headOf(who),base=yawTo(h,S
  for(const D of [2.3,1.95,1.6])for(const da of [0,.3,-.3,.6,-.6,.9,-.9,1.25,-1.25,1.6,-1.6,2.1,-2.1,2.6,-2.6,3.14]){const a=base+da,dir=V3(Math.sin(a),0,Math.cos(a)),side=V3(dir.z,0,-dir.x);
   const p=h.clone().addScaledVector(dir,D).addScaledVector(side,.12);p.y=h.y-.22;if(!camOk(p,h))continue;const l=h.clone().addScaledVector(side,.78*D/2.3);l.y=h.y-.5;return{p,l}}
  const dir=V3(SPOT.over.p.x-h.x,0,SPOT.over.p.z-h.z).normalize(),side=V3(dir.z,0,-dir.x),p=h.clone().addScaledVector(dir,2.3).addScaledVector(side,.12);p.y=h.y-.22;const l=h.clone().addScaledVector(side,.78);l.y=h.y-.5;return{p,l}}
-function aim(){let c;if(UI.view==='cars')c=SPOT.over;else if(onCar()){const s=SPOT.car,tu=UI.view==='tune';/* from the door side, the car on the left of the shot */
+function aim(){let c;if(UI.view==='pc'&&pcCam())c=pcCam();else if(UI.view==='cars')c=SPOT.over;else if(onCar()){const s=SPOT.car,tu=UI.view==='tune';/* from the door side, the car on the left of the shot */
   c={p:s.clone().add(tu?V3(.9,1.25,3.7):V3(.5,1.9,4.5)),l:s.clone().add(tu?V3(1.5,.45,0):V3(1.75,.35,0))}}else c=camFor(UI.who);
  GS.tp.copy(c.p);GS.tl.copy(c.l)}
 function tick(dt){GS.t+=dt;const k=1-Math.exp(-dt*3.4);GS.cp.lerp(GS.tp,k);GS.cl.lerp(GS.tl,k);if(!GS.pics)portraits();
- const cam=GS.cam,s=UI.who?.01:.04;cam.position.set(GS.cp.x+Math.sin(GS.t*.23)*s,GS.cp.y+Math.sin(GS.t*.31)*s*.4,GS.cp.z);cam.lookAt(GS.cl);
+ const cam=GS.cam,s=UI.view==='pc'?0:UI.who?.01:.04;cam.position.set(GS.cp.x+Math.sin(GS.t*.23)*s,GS.cp.y+Math.sin(GS.t*.31)*s*.4,GS.cp.z);cam.lookAt(GS.cl);
  const W=R.domElement.width,H=R.domElement.height;if(H&&Math.abs(cam.aspect-W/H)>1e-3){cam.aspect=W/H;cam.updateProjectionMatrix()}
  /* talking: the room fades into the dark behind whoever you're with, and the small clutter goes away once it can't be seen */
  const fo=(UI.who&&UI.view!=='cars')||UI.view==='tune'||UI.menu||LD_on();GS.fk+=((fo?1:0)-GS.fk)*Math.min(1,dt*(fo?3.4:9));
@@ -18932,7 +18938,7 @@ function tick(dt){GS.t+=dt;const k=1-Math.exp(-dt*3.4);GS.cp.lerp(GS.tp,k);GS.cl
  if(LD_on()){const a=GS.t*.09+.5;GS.tp.set(SPOT.car.x+Math.sin(a)*2.5,1.35,SPOT.car.z+Math.cos(a)*3.3);GS.tl.set(SPOT.car.x,.7,SPOT.car.z)}const tg=onCar()?SPOT.car:UI.who?headOf(UI.who):null,dd=tg?cam.position.distanceTo(tg):6;
  if(GS.clutter)GS.clutter.visible=GS.fk<.85;
  for(const k of ['red','vin']){const pe=GS[k];if(pe&&pe.rig)try{roam(pe,k,dt);anim(pe,k,dt)}catch(e){if(!GS.aerr){GS.aerr=1;console.warn('career anim',e)}}}
- type(dt);tags();bubTick(dt)}
+ type(dt);tags();bubTick(dt);if(PC.el)pcPlace()}
 /* idle life on top of the file's pose. Always: breathing, a slow weight shift, loose arms. The head goes to whatever they're busy with (Nina the car,
    Vince the room), to your cursor when you hover over them, to you while you talk. On top, short gestures: idle ones every few seconds (Nina taps
    her hammer, wipes her hands, stretches; Vince checks his watch, straightens his jacket, shifts his weight), and talking ones on every line
@@ -18945,13 +18951,13 @@ const GLEN={tap:2.4,wipe:2.2,stretch:2.6,look:2.8,watch:2.6,jacket:2.0,shift:3.0
 function gesture(pe,k){if(!pe)return;pe.gs={k,t:0,d:GLEN[k]||1.5}}
 P.gcGesture=(who,k)=>gesture(GS[who],k);
 function anim(pe,k,dt){const B=pe.rig,t=GS.t+(k==='red'?1.7:0),g=pe.g;for(const r in B)if(B[r].userData.q0)B[r].quaternion.copy(B[r].userData.q0);
- const me=UI.who===k&&!onCar(),work=k==='red'&&UI.view==='tune'&&!pe.mv&&(!pe.home||g.position.distanceTo(pe.home)<.2),hov=!UI.who&&GS.hov===k;
+ const me=UI.who===k&&!onCar(),work=k==='red'&&UI.view==='tune'&&!pe.mv&&(!pe.home||g.position.distanceTo(pe.home)<.2),hov=false;
  if(!pe.mv){const ryT=me?yawTo(g.position,GS.tp)-.12:work?yawTo(g.position,SPOT.car):pe.ryB!=null?pe.ryB:pe.ry0;g.rotation.y=lerpA(g.rotation.y,ryT,Math.min(1,dt*3.2))}
  const ry=g.rotation.y,fw=V3(Math.sin(ry),0,Math.cos(ry)),rt=V3(Math.cos(ry),0,-Math.sin(ry)),up=V3(0,1,0);
  pe.tk=Math.max(0,(pe.tk||0)-dt);
  /* gestures */
  if(pe.gs){pe.gs.t+=dt;if(pe.gs.t>=pe.gs.d)pe.gs=null}
- pe.nx=(pe.nx==null?1+Math.random()*3:pe.nx)-dt;if(pe.nx<=0&&!pe.mv&&!pe.ac){pe.nx=5+Math.random()*6;let q;do q=rnd(IDLE[k]);while(q===pe.pz&&IDLE[k].length>1);pe.pz=q;if(!me&&!pe.gs&&!work&&Math.random()<.3)gesture(pe,'look')}
+ pe.nx=(pe.nx==null?1+Math.random()*3:pe.nx)-dt;if(pe.nx<=0&&!pe.mv&&!pe.ac){pe.nx=8+Math.random()*8;let q;do q=rnd(IDLE[k]);while(q===pe.pz&&IDLE[k].length>1);pe.pz=q;if(!me&&!pe.gs&&!work&&Math.random()<.3)gesture(pe,'look')}
  const G_=pe.gs,gk=G_?G_.k:'',gp=G_?G_.t/G_.d:0,E=G_?Math.pow(Math.sin(Math.PI*Math.min(1,gp)),.7):0;
  /* where the head looks */
  const h=headOf(k);let tp=me?GS.cam.position:hov&&GS.cur?GS.cur:work?V3(SPOT.car.x,.6,SPOT.car.z):pe.foc?pe.foc():GS.cam.position;
@@ -18988,7 +18994,7 @@ function anim(pe,k,dt){const B=pe.rig,t=GS.t+(k==='red'?1.7:0),g=pe.g;for(const 
  else if(gk==='point'){A('R',-1.05*E,-.25*E)}
  else if(gk==='palm'){A('R',-.3*E,-.6*E);A('L',-.2*E,-.45*E);for(const [s,sg] of [['L',1],['R',-1]])rotW(B['forearm'+s],fw,sg*.35*E)}
  else if(gk==='shrug'){A('L',-.2*E,-.75*E);A('R',-.2*E,-.75*E);for(const [s,sg] of [['L',1],['R',-1]])rotW(B['forearm'+s],fw,sg*.4*E)}
- else if(gk==='hip'){A('R',-.1*E,-.4*E);rotW(B.upper_armR,fw,-.5*E)}
+ else if(gk==='hip'){A('R',.05*E,-.2*E);rotW(B.upper_armR,fw,-.5*E);rotW(B.forearmR,fw,1.15*E)}
  else if(gk==='hey'){const e=E*Math.min(1,(1-gp)*3);A('R',-.35*e,-1.15*e);rotW(B.forearmR,fw,Math.sin(t*9)*.12*e)}
  g.position.y=walkPose(pe,B,rt,fw,up);posePP(pe,k,B,t,dt,rt,fw,up,A,me,work||!!G_)}
 /* ---------------- moving around the shop ----------------
@@ -19065,9 +19071,9 @@ const LD_on=()=>!!(LD&&LD.classList.contains('on')&&!LD.classList.contains('rdy'
 function roam(pe,k,dt){if(!pe.home)roamInit(pe,k);const g=pe.g,me=UI.who===k;
  /* talking to them, or Nina needed at the car: drop the routine where they stand */
  if(me&&(pe.task||pe.path)){pe.task=null;pe.path=null;pe.then=null;pe.qPh=0;pe.nxR=Math.max(pe.nxR,4+Math.random()*4)}
- if(k==='red'&&onCar()&&g.position.distanceTo(pe.home)>.12&&!(pe.path&&pe.then==='home')){pe.task=null;pe.qPh=0;goTo(pe,k,pe.home,'home')}
+ if(false){pe.task=null;pe.qPh=0;goTo(pe,k,pe.home,'home')}
  /* the next outing */
- if(!pe.task&&!pe.path&&free_(k)){pe.nxR-=dt;if(pe.nxR<=0){const away=g.position.distanceTo(pe.home)>.3;
+ if(false&&!pe.task&&!pe.path&&free_(k)){pe.nxR-=dt;if(pe.nxR<=0){const away=g.position.distanceTo(pe.home)>.3;
    if(away&&Math.random()<.6){goTo(pe,k,pe.home,'home');pe.nxR=9+Math.random()*10}else{startTask(pe,k,rnd(STN[k]));pe.nxR=(k==='red'?10:14)+Math.random()*10}}}
  /* walking */
  let tgtSp=0,ryT=null;pe.mv=false;
@@ -19125,7 +19131,7 @@ function routine(a,k,tt,t){const H=Object.assign;switch(a.k){
  return PZ.N}
 function posePP(pe,k,B,t,dt,rt,fw,up,A,me,busy){if(!pe.pp){pe.pp={};for(const q of PK)pe.pp[q]=0}const pp=pe.pp,ac=pe.ac&&!pe.mv&&!me?pe.ac:null;
  let tg=ac?routine(ac,k,ac.t||0,t):PZ[pe.pz||'N']||PZ.N;if(pe.mv)tg=PZ.N;
- const kk=Math.min(1,dt*2.4);for(const q of PK){let v=tg[q]||0;if(busy&&q!=='sw'&&q!=='ln'&&q!=='hd')v=0;pp[q]+=(v-pp[q])*kk}
+ const kk=Math.min(1,dt*1.5);for(const q of PK){let v=tg[q]||0;if(busy&&q!=='sw'&&q!=='ln'&&q!=='hd')v=0;pp[q]+=(v-pp[q])*kk}
  const st=1-pe.wk;
  /* weight on one leg: the other knee eases, the shoulders tilt back over the standing leg */
  const a=Math.abs(pp.sw)*st,fr=pp.sw>0?'R':'L';rotW(B['thigh'+fr],rt,-.05*a);rotW(B['shin'+fr],rt,.2*a);rotW(B['foot'+fr],rt,-.14*a);
@@ -19139,22 +19145,27 @@ function posePP(pe,k,B,t,dt,rt,fw,up,A,me,busy){if(!pe.pp){pe.pp={};for(const q 
  if(tg_&&tg_._pat&&pe.aw>.05)rotW(B.forearmR,rt,-Math.max(0,Math.sin(t*4.2))*.3*pe.aw);
  pe.lkH=tg_&&tg_._hand&&B.handR?B.handR.getWorldPosition(V3()):null}
 /* the hover label: a rounded pill with the name ("Change car" on the car) */
-function tags(){const t=$('gcTag');if(!t)return;const k=!UI.who&&!onCar()&&GS.ok&&!UI.menu&&GS.hov!==BUB.who?GS.hov:null;t.classList.toggle('on',!!k);if(!k)return;
- const p=k==='car'?V3(SPOT.car.x,(GS.carBox?GS.carBox.max.y:1.3)+.3,SPOT.car.z):headOf(k).add(V3(0,.36,0));p.project(GS.cam);
- if(t.dataset.k!==k){t.dataset.k=k;t.style.setProperty('--c',k==='car'?'#cfe2f5':k==='red'?RED.col:VIN.col);t.innerHTML=k==='car'?'Change car':k==='red'?RED.n:VIN.n}
+function tags(){const t=$('gcTag');if(!t)return;const k=!UI.who&&!onCar()&&UI.view!=='pc'&&GS.ok&&!UI.menu&&GS.hov!==BUB.who?GS.hov:null;t.classList.toggle('on',!!k);if(!k)return;
+ const p=k==='car'?V3(SPOT.car.x,(GS.carBox?GS.carBox.max.y:1.3)+.3,SPOT.car.z):k==='pc'?GS.laptop.position.clone().add(V3(0,.5,0)):headOf(k).add(V3(0,.36,0));p.project(GS.cam);
+ if(t.dataset.k!==k){t.dataset.k=k;t.style.setProperty('--c',k==='car'||k==='pc'?'#cfe2f5':k==='red'?RED.col:VIN.col);t.innerHTML=k==='car'?'Change car':k==='pc'?'Marketplace':k==='red'?RED.n:VIN.n}
  t.style.left=((p.x*.5+.5)*innerWidth).toFixed(1)+'px';t.style.top=((-p.y*.5+.5)*innerHeight).toFixed(1)+'px'}
 /* what's under the cursor: people first (thin boxes around them), then the car */
 const RC=new THREE.Raycaster(),MV=new THREE.Vector2();
-function pickAt(cx,cy){if(!GS.ok)return null;MV.set(cx/innerWidth*2-1,-(cy/innerHeight)*2+1);RC.setFromCamera(MV,GS.cam);let best=null,bd=1e9;
- for(const k of ['red','vin']){const pe=GS[k];if(!pe||!pe.g)continue;const p=pe.g.position,b=new THREE.Box3(V3(p.x-.4,0,p.z-.4),V3(p.x+.4,(pe.hy||1.6)+.28,p.z+.4)),hit=RC.ray.intersectBox(b,V3());
-  if(hit){const d=hit.distanceTo(RC.ray.origin);if(d<bd){bd=d;best=k}}}
- if(!best&&GS.carBox&&RC.ray.intersectBox(GS.carBox,V3()))best='car';
- if(best&&best!=='car')GS.cur=RC.ray.at(GS.cam.position.distanceTo(headOf(best)),V3());return best}
+function pickAt(cx,cy){if(!GS.ok)return null;MV.set(cx/innerWidth*2-1,-(cy/innerHeight)*2+1);RC.setFromCamera(MV,GS.cam);let best=null,bd=1e9;const hit=(k,d)=>{if(d!=null&&d<bd){bd=d;best=k}};
+ /* people: a box around where the body actually is right now (from the bones), a little padded, so leaning or a hand out still counts */
+ for(const k of ['red','vin']){const pe=GS[k];if(!pe||!pe.g)continue;const b=new THREE.Box3();let n=0;if(pe.rig)for(const r in pe.rig){const bn=pe.rig[r];if(!bn||!bn.getWorldPosition)continue;b.expandByPoint(bn.getWorldPosition(V3()));n++}
+  if(!n){const p=pe.g.position;b.set(V3(p.x-.3,0,p.z-.3),V3(p.x+.3,(pe.hy||1.6)+.2,p.z+.3))}else{b.min.y=0;b.max.y+=.2;b.expandByVector(V3(.13,0,.13))}
+  const h=RC.ray.intersectBox(b,V3());if(h)hit(k,h.distanceTo(RC.ray.origin))}
+ /* the car: its real surface, not its bounding box */
+ if(GS.car){const I=RC.intersectObject(GS.car,true).filter(x=>!x.object.userData.noOL);if(I.length)hit('car',I[0].distance)}
+ /* the computer: the laptop and the top of the cart it sits on */
+ if(GS.laptop){const b=new THREE.Box3().setFromObject(GS.laptop).expandByVector(V3(.12,.08,.12));const h=RC.ray.intersectBox(b,V3());if(h)hit('pc',h.distanceTo(RC.ray.origin)-.15)}
+ if(best&&best!=='car'&&best!=='pc')GS.cur=RC.ray.at(GS.cam.position.distanceTo(headOf(best)),V3());return best}
 {const f0=frame;let vis=false;const MENU_BG=['menu','s8cards','s8quick','s8pick','s8setup','s8career','s8res'];
  frame=function(n){if(scr==='s8career'&&GS.ok&&sec.classList.contains('gcOn')){requestAnimationFrame(frame);const dt=Math.min(.05,Math.max(0,(n-last)/1000));last=n;dtf=dt;T0+=dt;
    /* other screens (split-screen races, the bike mode, the menu previews) leave a viewport or scissor of their own behind, and the adaptive
       resolution resizes the canvas under it: start every garage frame from the full canvas so the picture never ends up in a corner */
-   {const pr=R.getPixelRatio()||1;R.setRenderTarget(null);R.setScissorTest(false);R.setViewport(0,0,R.domElement.width/pr,R.domElement.height/pr);R.setScissor(0,0,R.domElement.width/pr,R.domElement.height/pr)}
+   {const pr=R.getPixelRatio()||1;R.shadowMap.enabled=true;R.shadowMap.autoUpdate=true;R.setRenderTarget(null);R.setScissorTest(false);R.setViewport(0,0,R.domElement.width/pr,R.domElement.height/pr);R.setScissor(0,0,R.domElement.width/pr,R.domElement.height/pr)}
    try{tick(dt);renderGarage();olRender(dt)}catch(e){if(!GS.err){GS.err=1;console.warn('career frame',e)}}
    if(!vis){vis=true;R.domElement.style.visibility='';document.body.classList.add('gcG')}return}
   if(vis){vis=false;document.body.classList.remove('gcG');R.domElement.style.visibility=MENU_BG.includes(scr)&&!(RACE&&scr==='s8res')?'hidden':''}
@@ -19185,7 +19196,6 @@ body.gcG #v8Bg{opacity:0!important}
 #s8career.gcOn .gcDlg{position:absolute;right:5vw;top:calc(50% - 10px);max-height:calc(100vh - 230px);display:flex;flex-direction:column;transform:translate(50px,-50%) perspective(1400px) rotateY(-9deg);transform-origin:right center;width:clamp(360px,31vw,540px);z-index:3;opacity:0;pointer-events:none;
  padding:clamp(12px,1.1vw,20px);box-sizing:border-box;border-radius:14px;background:linear-gradient(180deg,#2a2e33ec,#141619f2);box-shadow:inset 0 1px 0 #ffffff35,0 0 0 1px #000,0 24px 50px #000c;transition:opacity .35s,transform .5s cubic-bezier(.16,.85,.25,1)}
 #s8career.gcOn .gcDlg.on{opacity:1;transform:translate(0,-50%) perspective(1400px) rotateY(-9deg);pointer-events:auto}
-body.gcPhone #s8career.gcOn .gcDlg.on{opacity:0;pointer-events:none}
 #s8career.gcOn .gcDlg h6:empty{display:none}
 #s8career.gcOn .gcDlg h6{margin:2px 8px 10px;font:600 11px var(--gt);letter-spacing:.24em;color:var(--c);text-transform:uppercase;display:flex;align-items:center;gap:10px}
 #s8career.gcOn .gcDlg h6 span{margin-left:auto;color:#9aa4b0;letter-spacing:.14em}
@@ -19206,6 +19216,7 @@ body.gcPhone #s8career.gcOn .gcDlg.on{opacity:0;pointer-events:none}
 #s8career.gcOn .gcO{position:relative;flex:none;overflow:hidden;display:grid;grid-template-columns:96px 1fr auto;gap:14px;align-items:center;padding:7px 12px;margin-bottom:0;border-radius:12px;cursor:pointer;background:#ffffff08;box-shadow:inset 0 1px 0 #ffffff24,0 0 0 1px #00000080;transition:box-shadow .15s,background .15s}
 #s8career.gcOn .gcO.on{background:var(--gxa,linear-gradient(180deg,#4f7eabd0,#33608cd8));box-shadow:inset 0 1px 0 #ffffffa0,0 0 0 1px #00000080,0 0 14px #4f7eab60}#s8career.gcOn .gcO.on em,#s8career.gcOn .gcO.on small,#s8career.gcOn .gcO.on .pz u{color:#e8f0f7}
 #s8career.gcOn .gcO canvas{width:96px;height:52px;border-radius:6px;background:#07090c}
+#s8career.gcOn.pcv .gcCarI,#s8career.gcOn.pcv .gcTier,#s8career.gcOn.pcv #gcTag{opacity:0!important;pointer-events:none!important}
 #s8career.gcOn .gcO .sw{width:96px;height:52px;border-radius:6px;background:#07090c center/cover no-repeat;display:grid;place-items:center;font:600 10px var(--gt);letter-spacing:.14em;color:#9aa4b0}
 #s8career.gcOn .gcO em{font:600 9px var(--gt);letter-spacing:.2em;color:#8fb4d8;font-style:normal}
 #s8career.gcOn .gcO em.bad{color:#ff9d90}
@@ -19287,32 +19298,42 @@ body.gcPhone #s8career.gcOn .gcDlg.on{opacity:0;pointer-events:none}
 #gcAnn .pic{flex:none;width:48px;height:48px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:#22262c;box-shadow:0 0 0 2px #7fb6ff;font:300 22px var(--gt)}#gcAnn .pic img{width:100%;height:100%;object-fit:cover;transform:scale(1.25)}
 #gcAnn .tx{flex:1;min-width:0}#gcAnn small{display:block;font:700 9px var(--gt);letter-spacing:.22em}#gcAnn small.ok{color:#7ee3a0}#gcAnn small.no{color:#ff9d90}
 #gcAnn b{display:block;font:500 16px var(--gt);margin:2px 0}#gcAnn p{margin:0;font:400 12.5px/1.35 var(--gt);color:#b8c0c8}#gcAnn .cr{flex:none;font:700 17px var(--gt);color:#7ee3a0}#gcAnn .cr.neg{color:#ff9d90}
-#gcTxt{position:fixed;left:5vw;top:calc(50% - 50px);z-index:99991;transform:translate(-30px,-50%) rotate(-3deg);opacity:0;transition:transform .5s cubic-bezier(.16,.9,.25,1.1),opacity .3s;pointer-events:none;font-family:Tahoma,Verdana,"Segoe UI",sans-serif}
-#gcTxt.on{transform:translate(0,-50%) rotate(0);opacity:1;pointer-events:auto}
-#gcTxt .ph{width:286px;padding:14px 12px 12px;border-radius:30px;background:linear-gradient(160deg,#3a3f46 0%,#17191c 40%,#0c0d0f 100%);box-shadow:inset 0 1px 0 #ffffff40,inset 0 0 0 1px #ffffff14,0 0 0 1px #000,0 26px 60px #000c}
-#gcTxt .top{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:9px}#gcTxt .ear{width:52px;height:5px;border-radius:3px;background:#050506;box-shadow:inset 0 1px 1px #000,0 1px 0 #ffffff1a}#gcTxt .cam{width:7px;height:7px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#4a6d9c,#05070a 60%)}
-#gcTxt .scr{height:min(400px,calc(100vh - 395px));min-height:220px;display:flex;flex-direction:column;border-radius:6px;overflow:hidden;background:#eef1f5;box-shadow:0 0 0 2px #000,inset 0 0 0 1px #0004;font-size:12px;line-height:1.3;color:#1b2430}
-#gcTxt .sb{display:flex;align-items:center;gap:6px;padding:2px 7px;background:linear-gradient(#2b2f36,#16181c);color:#e9edf2;font:700 10px Tahoma,sans-serif}#gcTxt .sb b{flex:1;text-align:center;font-weight:700}
-#gcTxt .sig{display:flex;align-items:flex-end;gap:1px;height:9px}#gcTxt .sig i{width:3px;background:#e9edf2}#gcTxt .sig i:nth-child(1){height:3px}#gcTxt .sig i:nth-child(2){height:5px}#gcTxt .sig i:nth-child(3){height:7px}#gcTxt .sig i:nth-child(4){height:9px}
-#gcTxt .bat{width:16px;height:8px;border:1px solid #e9edf2;border-radius:2px;padding:1px}#gcTxt .bat i{display:block;height:100%;width:70%;background:#7be37b}
-#gcTxt .hd{display:flex;align-items:center;gap:8px;padding:6px 9px;background:linear-gradient(#6ea7e8,#2f6fbf 55%,#245fab);color:#fff;text-shadow:0 1px 0 #0005;box-shadow:inset 0 1px 0 #ffffff70,0 1px 0 #0003}
-#gcTxt .av{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(#f4f7fb,#c9d3df);color:#2f6fbf;font:700 13px Tahoma,sans-serif;text-shadow:none;box-shadow:0 1px 2px #0006}
-#gcTxt .hd b{display:block;font:700 13px Tahoma,sans-serif}#gcTxt .hd small{display:block;font-size:9.5px;opacity:.85}
-#gcTxt .px{display:flex;background:#fff;border-bottom:1px solid #c3ccd7}#gcTxt .px span{flex:1;min-width:0;padding:3px 6px;border-right:1px solid #dde3ea;text-align:center}#gcTxt .px span:last-child{border:0;background:#eef5ff}#gcTxt .px u{display:block;text-decoration:none;font:700 8px Tahoma,sans-serif;letter-spacing:.08em;color:#7a8698}#gcTxt .px b{display:block;font:700 11px Tahoma,sans-serif;color:#1b2430;white-space:nowrap;transition:color .3s}#gcTxt .px b.up{color:#2f8f2f}#gcTxt .px b.dn{color:#c9483f}
-#gcTxt .msgs{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;display:flex;flex-direction:column;gap:6px;padding:8px 7px;background:linear-gradient(#f6f8fb,#e3e8ef)}
-#gcTxt .m{max-width:82%;padding:5px 9px;border-radius:12px;white-space:pre-wrap;word-break:break-word;box-shadow:0 1px 1px #0002}#gcTxt .m s{display:none}
-#gcTxt .m.them{align-self:flex-start;background:linear-gradient(#ffffff,#eceff3);border:1px solid #c7ced8;border-bottom-left-radius:3px}
-#gcTxt .m.me{align-self:flex-end;background:linear-gradient(#8fd06a,#5fb03d);border:1px solid #4b9a2c;color:#fff;text-shadow:0 1px 0 #0003;border-bottom-right-radius:3px}
-#gcTxt .m.typing{color:#8692a0;animation:gcTxBlink .6s steps(2) infinite}
-@keyframes gcTxBlink{50%{opacity:.3}}
-#gcTxt .m.note{align-self:center;max-width:none;padding:2px 9px;border-radius:9px;background:#c9d2de;box-shadow:none;color:#3d4a5a;font-size:10px;font-weight:700;letter-spacing:.05em}
-#gcTxt .opts{display:flex;flex-direction:column;gap:3px;padding:6px;background:linear-gradient(#dfe5ec,#cdd5df);border-top:1px solid #aab4c1}#gcTxt .opts:empty{display:none}
-#gcTxt .opts div{display:flex;align-items:center;gap:7px;cursor:pointer;padding:4px 8px;border-radius:7px;background:linear-gradient(#fdfdfe,#e8ecf1);border:1px solid #b5bfcc;font-size:11.5px;color:#1b2430}
-#gcTxt .opts div:hover{background:linear-gradient(#6ea7e8,#2f6fbf);border-color:#245fab;color:#fff}#gcTxt .opts em{flex:none;width:15px;height:15px;border-radius:50%;display:grid;place-items:center;font:700 9.5px Tahoma,sans-serif;font-style:normal;background:#2f6fbf;color:#fff}
-#gcTxt .opts div:hover em{background:#fff;color:#2f6fbf}
-#gcTxt .keys{display:flex;align-items:center;justify-content:space-between;margin:11px 6px 2px}#gcTxt .keys u{width:58px;height:16px;border-radius:9px;background:linear-gradient(#2c3036,#15171a);box-shadow:inset 0 1px 0 #ffffff26,0 1px 0 #000}
-#gcTxt .keys u.g{box-shadow:inset 0 1px 0 #ffffff26,inset 0 -2px 0 #3fa34d}#gcTxt .keys u.r{box-shadow:inset 0 1px 0 #ffffff26,inset 0 -2px 0 #c9483f}
-#gcTxt .keys .nav{width:44px;height:44px;border-radius:50%;background:radial-gradient(circle at 50% 40%,#3b4048,#15171a 70%);box-shadow:inset 0 1px 0 #ffffff30,0 0 0 2px #0a0b0c;display:grid;place-items:center}#gcTxt .keys .nav i{width:16px;height:16px;border-radius:50%;background:linear-gradient(#4a5058,#24282d);box-shadow:inset 0 1px 0 #ffffff30}
+#gcPC{position:fixed;left:0;top:0;width:960px;height:610px;transform-origin:0 0;z-index:5;opacity:0;pointer-events:none;overflow:hidden;background:#f3f5f8;color:#1c2633;font:15px/1.35 Tahoma,Verdana,"Segoe UI",sans-serif;box-sizing:border-box}
+#gcPC.live{pointer-events:auto}#gcPC *{box-sizing:border-box}
+#gcPC .glare{position:absolute;inset:0;pointer-events:none;background:linear-gradient(118deg,#ffffff1f 0%,#ffffff08 32%,transparent 46%),repeating-linear-gradient(0deg,#00000008 0 1px,transparent 1px 3px);box-shadow:inset 0 0 0 2px #0006}
+#gcPC .app{position:absolute;inset:0;display:flex;flex-direction:column}
+#gcPC .tb{flex:none;display:flex;align-items:center;gap:18px;height:56px;padding:0 18px;background:linear-gradient(#2d6bc0,#1f4f93);color:#fff;box-shadow:0 2px 0 #163c72}
+#gcPC .logo{font:400 22px Tahoma,sans-serif;letter-spacing:-.01em}#gcPC .logo b{font-weight:700;color:#ffd75a}
+#gcPC nav{display:flex;gap:6px;flex:1}#gcPC nav u{text-decoration:none;cursor:pointer;padding:7px 16px;border-radius:6px;font-weight:700;color:#d8e6fa}#gcPC nav u:hover{background:#ffffff1f;color:#fff}#gcPC nav u.on{background:#f3f5f8;color:#1f4f93}
+#gcPC nav i{font-style:normal;display:inline-block;min-width:20px;margin-left:7px;padding:0 6px;border-radius:10px;background:#e2463b;color:#fff;font-size:12px;text-align:center}
+#gcPC .cr{font-weight:700;color:#ffd75a}#gcPC .x{width:34px;height:34px;border:0;border-radius:6px;background:#ffffff1a;color:#fff;font-size:22px;cursor:pointer}#gcPC .x:hover{background:#e2463b}
+#gcPC .bd{flex:1;min-height:0;overflow-y:auto;padding:16px 20px;scrollbar-width:thin}
+#gcPC h2{margin:0 0 12px;font:700 20px Tahoma,sans-serif;color:#1f4f93}#gcPC h2 small{font-size:13px;font-weight:400;color:#6b7788;margin-left:8px}#gcPC h3{margin:16px 0 8px;font-size:14px;color:#6b7788;text-transform:uppercase;letter-spacing:.08em}
+#gcPC .list{display:flex;flex-direction:column;gap:8px}
+#gcPC .it{display:flex;align-items:center;gap:14px;padding:8px 12px;background:#fff;border:1px solid #d3dae4;border-radius:8px}
+#gcPC .it.conv{cursor:pointer}#gcPC .it.conv:hover{border-color:#2d6bc0;background:#f6f9fe}#gcPC .it.conv.new{border-left:4px solid #e2463b}
+#gcPC .th{flex:none;width:112px;height:62px;border-radius:5px;background:#0b0d10 center/cover no-repeat}
+#gcPC .nf{flex:1;min-width:0}#gcPC .nf b{display:block;font-size:16px}#gcPC .nf small{display:block;color:#5d6a7c;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#gcPC .nf em{color:#c0392b;font-style:normal}#gcPC .nf .nw{color:#8a95a5}
+#gcPC .cls{display:inline-block;margin-left:6px;padding:0 6px;border-radius:4px;background:#1c2633;color:#fff;font-size:11px;vertical-align:2px}
+#gcPC .pr{flex:none;text-align:right;min-width:120px}#gcPC .pr b{display:block;font-size:18px;color:#1c2633}#gcPC .pr s{display:block;color:#8a95a5;font-size:13px}#gcPC .pr em{display:block;font-style:normal;font-size:11px;font-weight:700;color:#2e8b3a;text-transform:uppercase}#gcPC .pr small{display:block;color:#8a95a5;font-size:11px;text-transform:uppercase}
+#gcPC .bt{flex:none;display:flex;flex-direction:column;gap:5px}
+#gcPC button{font:700 14px Tahoma,sans-serif;cursor:pointer;padding:7px 16px;border-radius:6px;border:1px solid #1f4f93;background:linear-gradient(#3b7fd6,#2459a8);color:#fff}#gcPC button:hover{background:linear-gradient(#4b8fe6,#2d69bb)}
+#gcPC button.ghost{background:#fff;color:#1f4f93;border-color:#aebbd0}#gcPC button.ghost:hover{background:#eef4fd}#gcPC button:disabled{opacity:.45;cursor:default}
+#gcPC .empty{color:#6b7788;padding:30px;text-align:center}
+#gcPC .av{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(#5d97e0,#2459a8);color:#fff;font:700 20px Tahoma,sans-serif}
+#gcPC .chat{display:flex;flex-direction:column;height:100%;margin:-16px -20px;}
+#gcPC .ch{display:flex;align-items:center;gap:12px;padding:10px 16px;background:#fff;border-bottom:1px solid #d3dae4}#gcPC .ch b{display:block;font-size:17px}#gcPC .ch small{color:#5d6a7c}#gcPC .ch .back{padding:5px 10px;margin-right:6px}
+#gcPC .px{display:flex;background:#fff;border-bottom:1px solid #d3dae4}#gcPC .px span{flex:1;padding:6px 10px;text-align:center;border-right:1px solid #e3e8ee}#gcPC .px span.on{background:#eef5ff}#gcPC .px u{display:block;text-decoration:none;font-size:10px;font-weight:700;letter-spacing:.1em;color:#7a8698}#gcPC .px b{font-size:16px}
+#gcPC .msgs{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:12px 16px;background:#e9edf2;scrollbar-width:thin}
+#gcPC .m{max-width:72%;padding:8px 13px;border-radius:14px;white-space:pre-wrap}#gcPC .m.them{align-self:flex-start;background:#fff;border:1px solid #cfd6df;border-bottom-left-radius:4px}
+#gcPC .m.me{align-self:flex-end;background:linear-gradient(#3b7fd6,#2459a8);color:#fff;border-bottom-right-radius:4px}#gcPC .m.note{align-self:center;padding:3px 12px;background:#c9d2de;color:#3d4a5a;font-size:12px;font-weight:700;letter-spacing:.05em}
+#gcPC .m.typing{color:#8692a0;font-style:italic;animation:gcTxBlink .8s steps(2) infinite}@keyframes gcTxBlink{50%{opacity:.35}}
+#gcPC .opts{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px;background:#fff;border-top:1px solid #d3dae4}#gcPC .opts:empty{display:none}#gcPC .opts button em{font-style:normal;display:inline-block;width:18px;height:18px;margin-right:7px;border-radius:50%;background:#fff;color:#2459a8;font-size:11px;line-height:18px;text-align:center}
+#gcPC .form{display:flex;flex-direction:column;gap:12px;max-width:640px}#gcPC .row label{display:block;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7788;margin-bottom:4px}
+#gcPC input,#gcPC textarea{width:100%;font:15px Tahoma,sans-serif;padding:8px 10px;border:1px solid #aebbd0;border-radius:6px;background:#fff;color:#1c2633;resize:none;outline:0}#gcPC input:focus,#gcPC textarea:focus{border-color:#2d6bc0;box-shadow:0 0 0 2px #2d6bc033}
+#gcPC .ask{display:flex;align-items:center;gap:10px;flex-wrap:wrap}#gcPC .ask b{font-size:22px;min-width:150px;text-align:center}#gcPC .ask small{width:100%;color:#6b7788}#gcPC .ask button{width:40px;padding:5px 0;font-size:18px}
+#gcPC .meter{display:flex;align-items:center;gap:12px}#gcPC .meter span{font-size:13px;color:#6b7788}#gcPC .meter i{flex:1;height:12px;border-radius:6px;background:#d6dde6;overflow:hidden}#gcPC .meter u{display:block;height:100%;background:#2e8b3a;transition:width .3s}
+#gcPC .meter[data-l=ok] u{background:#d9a21b}#gcPC .meter[data-l=bad] u{background:#c0392b}#gcPC .meter b{font-size:18px;min-width:50px}#gcPC .form .bt{flex-direction:row}
 @keyframes gcLdIn{from{opacity:0}}
 @keyframes gcLdPan{to{transform:translateX(8%)}}
 @keyframes gcLdT{from{letter-spacing:.4em;opacity:0}}@keyframes gcSheen{0%{background-position:100% 0}60%,100%{background-position:-60% 0}}
@@ -19327,7 +19348,7 @@ const sec=$('s8career');
 /* who: null (overview), 'red' or 'vin'. view: talk, offers, mkt, cars, tune. ch: a one-off list of answers (a question she asked), f: focused row,
    tag: keyboard focus in the overview (0 Nina, 1 the car, 2 Vince) */
 const UI={who:null,view:'talk',f:0,tag:1,line:'',res:null,ch:null,menu:null};
-const TAGK=['red','car','vin'];
+const TAGK=['red','car','vin','pc'];
 function hdr(){const g=G(),T=TIERS[tierOf(g.rep)];return `<div class="hdr"><h2>CAREER <em>${T.n}</em></h2><small>${g.wins} cleared &middot; ${fmtCr(g.earned)} earned</small><div class="sp"></div><div class="crbox"><small>CREDITS</small><b class="crv">${fmtCr(P.SV().cr)}</b></div></div>`}
 const carInfo=()=>{const c=curCar(),w=wearOf(c.id);let th='';try{th=P.carThumb?P.carThumb(c.id):''}catch(e){}return `<div class="th" style="${th?'background-image:url('+th+')':''}"></div><div><small>CURRENT CAR</small><b>${c.car.name} <span class="cls ${c.car.cls}">${c.car.cls}</span></b><div class="cd${w>.2?' bad':''}"><i><u style="width:${pctOK(c.id)}%"></u></i>Condition ${pctOK(c.id)}%</div></div>`};
 function render(){P.gcRun=null;sec.classList.add('gcOn');buildScene().then(()=>{setCar()});setCar();const g=G();fillOffers();mktFill();const ti=tierOf(g.rep),T=TIERS[ti],nx=TIERS[ti+1];
@@ -19340,7 +19361,7 @@ function render(){P.gcRun=null;sec.classList.add('gcOn');buildScene().then(()=>{
  if(UI.who)talk(UI.who,true,UI.line);else{aim();hint()}}
 function hint(){const h=$('gcHint');if(!h)return;sec.classList.toggle('talk',!!UI.who||onCar());sec.classList.toggle('cars',UI.view==='cars');
  const k=(a,b)=>`<span><u>${a}</u>${b}</span>`;
- h.innerHTML=UI.menu?k('&uarr;&darr;','Choose')+k('Enter','Select')+k('Esc','Close'):!UI.who&&!onCar()?k('&larr;&rarr;','Look around')+k('Enter','Select')+k('Esc','Menu'):UI.view==='tune'?k('&uarr;&darr;','Choose')+k('&larr;&rarr;','Adjust')+k('Esc','Done'):k('&uarr;&darr;','Choose')+k('Enter','Select')+k('Esc','Back')}
+ sec.classList.toggle('pcv',UI.view==='pc');h.innerHTML=UI.view==='pc'?k('Click','Select')+k('1-4','Reply')+k('Esc','Back'):UI.menu?k('&uarr;&darr;','Choose')+k('Enter','Select')+k('Esc','Close'):!UI.who&&!onCar()?k('&larr;&rarr;','Look around')+k('Enter','Select')+k('Esc','Menu'):UI.view==='tune'?k('&uarr;&darr;','Choose')+k('&larr;&rarr;','Adjust')+k('Esc','Done'):k('&uarr;&darr;','Choose')+k('Enter','Select')+k('Esc','Back')}
 
 /* ---------------- talking ---------------- */
 const fixCost=id=>repairCost(id),tuneFee=()=>{const c=curCar().car;return Math.max(400,Math.round((c.price||30000)*.015/50)*50)};
@@ -19354,7 +19375,7 @@ function choices(){if(UI.ch)return UI.ch;const c=curCar();if(UI.who==='red'){con
    if(CLS.indexOf(c.car.cls)<CLS.indexOf(T.cl[0]))s+=` But it's a class ${c.car.cls} car, and the ${T.n} races are getting faster. Talk to Vince.`;else s+=` A tune would help more than you'd think.`;say(s)}});
   L.push({ic:'tip',t:'Any tips?',a:()=>say(rnd(TIPS))});L.push({ic:'bye',t:'See you later',a:()=>leave()});return L}
  return[{ic:'race',t:'What races have you got?',a:()=>{UI.view='offers';UI.f=0;const o=G().offers[0];if(o)setLine(pitch(o))}},
-  {ic:'shop',t:'Marketplace',pz:'USED',a:()=>{mktFill();UI.view='mkt';UI.f=0;const l=G().mkt[0];setLine(rnd([`Marketplace. Older stuff, cheap. Some of it even runs.`,`Got a few used ones. No refunds.`,`These need a bit of love. Nina likes that sort of thing.`])+(l?' ':''))}},
+  {ic:'shop',t:'Marketplace',pz:'COMPUTER',a:()=>{UI.ch=null;say(rnd([`It's all on the computer. Go have a look.`,`Laptop's on the cart. Knock yourself out.`]));setTimeout(()=>{if(UI.who==='vin'){leave();openPC('buy')}},900);return;const l=G().mkt[0];setLine(rnd([`Marketplace. Older stuff, cheap. Some of it even runs.`,`Got a few used ones. No refunds.`,`These need a bit of love. Nina likes that sort of thing.`])+(l?' ':''))}},
   {ic:'car',t:'Brand Central',pz:'NEW',a:()=>{UI.line='';P.ui.openShow('brand',{player:0,cap:null,ret:'s8career'})}},
   {ic:'chart',t:'How am I doing?',a:()=>{const g=G(),ti=tierOf(g.rep),nx=TIERS[ti+1];say(`${TIERS[ti].n}. ${g.wins} cleared, ${fmtCr(g.earned)} earned.`+(nx?` ${nx.rep-g.rep} more and the ${nx.n} people call.`:` Nobody's above you.`)+' '+moneyLine())}},
   {ic:'bye',t:'See you later',a:()=>leave()}]}
@@ -19423,15 +19444,14 @@ function sfWire(d){const f=UI.sf;if(!f)return;const ti=d.querySelector('.sfIn in
  const keys=(el,i)=>{el.oninput=()=>{if(i===1)f.title=el.value;else f.desc=el.value;sfPaint()};el.onfocus=()=>{UI.f=i;d.querySelectorAll('.gcCh .gcRow').forEach(e=>e.classList.toggle('on',+e.dataset.i===i))};
   el.onkeydown=e=>{if(e.key==='Escape'){el.blur();e.stopPropagation();e.preventDefault();return}if((e.key==='Enter'&&i===1)||(e.key==='ArrowDown'&&(i===1||el.selectionStart===el.value.length))){e.preventDefault();el.blur();focusC(i+1)}else if(e.key==='ArrowUp'&&(i===1||el.selectionStart===0)){e.preventDefault();el.blur();focusC(i-1)}e.stopPropagation()}};
  if(ti)keys(ti,1);if(ta)keys(ta,2);d.querySelectorAll('.sfAsk u[data-d]').forEach(u=>u.onclick=ev=>{ev.stopPropagation();sfAdj(+u.dataset.d)});sfPaint()}
-/* ---------------- texts: haggling on an old phone ----------------
-   Marketplace sellers can be texted for a lower price, and buyers sometimes text about your listings instead of just paying. Everybody is
-   stubborn: a seller never comes down more than 5,000 (less on cheap cars), a buyer never offers more than 5,000 under your price, and the
-   closer anyone gets to that line the less they move and the more they complain. A conversation is five texts at most; after the fifth it's
-   take it or leave it. The phone slides up from the bottom right like an old candybar handset: grey plastic, a green-lit screen, numbered
-   replies (keys 1 to 4 work too) */
-const TX={on:false,el:null,o:null};
-/* the strip under the contact: what the car costs new, what it was listed at, and the number currently on the table */
-function txPx(nw,base,cur,lbl){const e=TX.el;if(!e)return;e.querySelector('.pn').textContent=fmtCr(nw);e.querySelector('.pl').textContent=lbl||'LISTED';e.querySelector('.pb').textContent=fmtCr(base);const c=e.querySelector('.pc'),pv=+(c.dataset.v||0);c.textContent=fmtCr(cur);c.classList.toggle('up',!!pv&&cur>pv);c.classList.toggle('dn',!!pv&&cur<pv);c.dataset.v=cur}
+/* ---------------- the computer: Marketplace and messages ----------------
+   Click the laptop on the cart and the camera goes up to it; the Marketplace runs on its screen (the page is laid onto the screen's four
+   corners every frame, so it sits in the room in perspective). Three tabs: Buy (used listings, buy one or message the seller), Sell (list one of
+   yours with a price, a title and a description, pull a listing), Messages (every conversation, kept in the save, open any of them any time).
+   Haggling: everybody is stubborn. A seller never comes down more than 5,000 (less on cheap cars) and a buyer never offers more than 5,000
+   under your price; the closer they get to that line the less they move and the more they complain. Five texts at most per conversation.
+   Everyone gives reasons: buyers point at paint, wear and mileage, sellers at condition, original paint and what a new one costs. */
+const r50=v=>Math.round(v/50)*50;
 /* reasons: what's wrong with it (used by whoever is buying) and what's right with it (used by whoever is selling), from the car itself */
 function flaws(x){const L=[];if(x.bad)L.push(`The paint is a disaster, that's ${fmtCr(1200)} just to fix that.`,`Who painted it? I'd have to redo it.`);
  if(x.cond<.6)L.push(`It's at ${Math.round(x.cond*100)}%. That's a lot of work.`,`Condition's rough, ${Math.round(x.cond*100)}%. It needs a mechanic.`);else if(x.cond<.85)L.push(`It's not perfect, ${Math.round(x.cond*100)}% condition.`);
@@ -19440,62 +19460,138 @@ function flaws(x){const L=[];if(x.bad)L.push(`The paint is a disaster, that's ${
 function strengths(x){const L=[];if(x.cond>=.85)L.push(`It's in great shape, ${Math.round(x.cond*100)}%.`,`Nothing wrong with it. At all.`);if(!x.bad)L.push(`Original paint, never touched.`);
  if(x.price<x.nw*.6)L.push(`A new one is ${fmtCr(x.nw)}. This is already a steal.`);if(x.km&&x.km<60000)L.push(`Only ${Math.round(x.km/1000)}k km on it.`);
  L.push(`I've had other people asking.`,`It drives perfect.`,`I'm not giving it away.`);return L}
-const r50=v=>Math.round(v/50)*50;
-function txEl(){if(TX.el)return TX.el;const e=document.createElement('div');e.id='gcTxt';e.innerHTML='<div class="ph"><div class="top"><div class="ear"></div><div class="cam"></div></div><div class="scr"><div class="sb"><span class="sig"><i></i><i></i><i></i><i></i></span><b class="tm"></b><span class="bat"><i></i></span></div><div class="hd"><div class="av"></div><div><b></b><small>Marketplace</small></div></div><div class="px"><span><u>NEW</u><b class="pn"></b></span><span><u class="pl">LISTED</u><b class="pb"></b></span><span><u>ON THE TABLE</u><b class="pc"></b></span></div><div class="msgs"></div><div class="opts"></div></div><div class="keys"><u class="g"></u><span class="nav"><i></i></span><u class="r"></u></div></div>';document.body.appendChild(e);TX.el=e;
- e.querySelector('.opts').addEventListener('click',ev=>{const b=ev.target.closest('[data-o]');if(b)txPick(+b.dataset.o)});return e}
-function txOpen(o){TX.on=true;document.body.classList.add('gcPhone');TX.o=o;o.n=0;o.msgs=[];const e=txEl();e.querySelector('.hd b').textContent=o.who;e.querySelector('.av').textContent=o.who==='Unknown'?'?':o.who.replace(/^Big /,'')[0];{const d=new Date();e.querySelector('.sb .tm').textContent=d.getHours()+':'+String(d.getMinutes()).padStart(2,'0')}e.querySelector('.msgs').innerHTML='';e.querySelector('.opts').innerHTML='';{const pc=e.querySelector('.pc');pc.dataset.v='';pc.className='pc'}
- e.classList.remove('on');void e.offsetWidth;e.classList.add('on');P.sfx&&P.sfx('select')}
-function txClose(){TX.on=false;document.body.classList.remove('gcPhone');if(TX.el)TX.el.classList.remove('on');TX.o=null}
-function txMsg(me,t){const o=TX.o;if(!o)return;o.n++;const m=TX.el.querySelector('.msgs'),d=document.createElement('div');d.className='m '+(me?'me':'them');d.innerHTML=`<s>${me?'ME':esc_(o.who.toUpperCase())}</s>${esc_(t.replace(/Cr\.\./g,'Cr.'))}`;m.appendChild(d);m.scrollTop=m.scrollHeight;P.sfx&&P.sfx(me?'move':'select')}
-function txNote(t){const m=TX.el.querySelector('.msgs'),d=document.createElement('div');d.className='m note';d.textContent=t;m.appendChild(d);m.scrollTop=m.scrollHeight}
-function txOpts(L){const o=TX.o;if(!o)return;o.opts=L;TX.el.querySelector('.opts').innerHTML=L.map((x,i)=>`<div data-o="${i}"><em>${i+1}</em>${esc_(x.t)}</div>`).join('');const m=TX.el.querySelector('.msgs');m.scrollTop=m.scrollHeight}
-function txPick(i){const o=TX.o;if(!o||!o.opts||!o.opts[i])return;const x=o.opts[i];o.opts=null;TX.el.querySelector('.opts').innerHTML='';x.a()}
-/* the other side types for a moment before the answer lands */
-function txReply(t,then){const o=TX.o;if(!o)return;const m=TX.el.querySelector('.msgs'),d=document.createElement('div');d.className='m them typing';d.textContent='...';m.appendChild(d);m.scrollTop=m.scrollHeight;
- setTimeout(()=>{d.remove();if(TX.o!==o)return;txMsg(false,t);then&&then()},900+Math.random()*700)}
-/* the phone goes away during a race and comes back after */
-setInterval(()=>{if(TX.el)TX.el.classList.toggle('on',TX.on&&!inRace());document.body.classList.toggle('gcPhone',TX.on&&!inRace())},300);
-addEventListener('keydown',e=>{if(!TX.on||!TX.o||!TX.o.opts)return;const m=/^(Digit|Numpad)([1-4])$/.exec(e.code);if(!m)return;e.preventDefault();e.stopImmediatePropagation();txPick(+m[2]-1)},true);
 /* how far someone will move: most of the time a little, sometimes not at all, and hardly anything once they're near their limit */
 function budge(cur,lim,gap,dir){const room=Math.abs(cur-lim);if(room<50)return cur;const near=room<Math.max(600,Math.abs(lim-(dir>0?lim-5000:lim+5000))*.25)||false;
  if(Math.random()<(near?.55:.3))return cur;const step=Math.min(room,Math.max(100,Math.abs(gap)*(near?.15:.35)));return r50(cur+dir*step)}
-/* buying: you text the seller */
-function haggleBuy(l){const c=BYID[l.id],P0=l.price,D=Math.min(5000,r50(Math.max(250,P0*.15))),F=P0-D;l.tx=1;P.save();
- const o={who:rnd(['Dale','Marco','Steph','Big Mike','Ronnie','Trish','Gus','Lena']),ask:P0};txOpen(o);const x={cond:l.cond,km:l.km,bad:!!(l.L||l.bad),nw:c.price||P0,price:P0},why=()=>' '+rnd(flaws(x)),sure=()=>rnd(strengths(x))+' ';txPx(x.nw,P0,P0,'LISTED');
- const offers=()=>{const a=o.ask;return[a-r50(a*.05),a-r50(a*.1),a-r50(a*.2)].filter((v,i,A)=>v>0&&v<a&&A.indexOf(v)===i)};
- const done=v=>{if(v!=null){l.deal=v;P.save();txPx(x.nw,P0,v,'LISTED');txNote(`DEAL: ${fmtCr(v)}`)}else txNote('CONVERSATION ENDED');TX.el.querySelector('.opts').innerHTML='<div data-o="0"><em>1</em>Close</div>';o.opts=[{t:'Close',a:()=>{txClose();if(scr==='s8career'&&UI.who==='vin'){const i=G().mkt.indexOf(l);if(i>=0&&v!=null)mktPick(i);else{drawDlg();hint()}}}}]};
- const mine=()=>{if(o.n>=5){done(null);return}const L=offers().map(v=>({t:`Offer ${fmtCr(v)}`,a:()=>send(v)}));if(o.n>0)L.unshift({t:`OK, ${fmtCr(o.ask)}`,a:()=>{txMsg(true,`Ok. ${fmtCr(o.ask)} it is.`);done(o.ask)}});L.push({t:'Never mind',a:()=>{txMsg(true,'Never mind, thanks.');done(null)}});txOpts(L.slice(0,4))};
- const send=v=>{txMsg(true,(o.n===0?rnd([`Hey, is the ${c.name} still for sale? Would you take ${fmtCr(v)}?`,`Hi. Interested in the ${c.name}. ${fmtCr(v)} cash?`]):rnd([`How about ${fmtCr(v)}?`,`${fmtCr(v)}, then.`,`Come on. ${fmtCr(v)}?`]))+why());
-  const gap=o.ask-v,last=o.n>=4;let nx=v>=o.ask?o.ask:budge(o.ask,F,gap,-1);if(v>=nx){txReply(rnd([`Deal. Come get it.`,`Fine. ${fmtCr(v)}. Bring cash.`]),()=>done(v));return}
-  const moved=nx<o.ask,near=nx-F<D*.25;o.ask=Math.max(F,nx);txPx(x.nw,P0,o.ask,'LISTED');
-  const t=v<F-D?rnd([`Lol. No.`,`Are you serious? It's ${fmtCr(o.ask)}.`,`Don't waste my time. ${fmtCr(o.ask)}.`]):!moved?sure()+rnd([`Price is ${fmtCr(o.ask)}. Not moving on it.`,`Still ${fmtCr(o.ask)}.`,`It's worth every bit of ${fmtCr(o.ask)}, man.`]):near?rnd([`Ugh. ${fmtCr(o.ask)}. And that's me being nice. Not a cent less.`,`Man... fine. ${fmtCr(o.ask)}. That's it. I mean it.`,`${fmtCr(o.ask)}. I'm already losing money here.`]):(x.bad&&Math.random()<.5?`Yeah, ok, the paint's bad. `:x.cond<.7&&Math.random()<.5?`Fair, it needs some work. `:'')+rnd([`I could do ${fmtCr(o.ask)}.`,`Meet me at ${fmtCr(o.ask)}?`,`${fmtCr(o.ask)}, and you're picking it up today.`]);
-  txReply(last?t+' Take it or leave it.':t,()=>{if(o.n>=5){txOpts([{t:`Take it at ${fmtCr(o.ask)}`,a:()=>done(o.ask)},{t:'Leave it',a:()=>done(null)}])}else mine()})};
- mine()}
-/* selling: a buyer texts you about a listing */
-function haggleSell(s){const c=BYID[s.id],A=s.ask,D=Math.min(5000,r50(Math.max(250,A*.15))),floor=A-D;let off=Math.max(floor,A-r50(D*(.5+Math.random()*.5)));const cap=Math.min(A,r50(off+(A-off)*(.35+Math.random()*.4)));
- const o={who:rnd(['Unknown','Kev','Jordan','Priya','Tommo','Sal','Nadia','Rick']),bid:off};txOpen(o);const x={cond:1-wearOf(s.id),km:0,bad:!!paintOf(s.id),nw:(c&&c.price)||A,price:A},why=()=>' '+rnd(flaws(x)),sure=()=>' '+rnd(strengths(x));txPx(x.nw,A,off,'YOUR PRICE');
- const fin=v=>{const i=sales().indexOf(s);if(v!=null){if(i>=0)sales().splice(i,1);const sv=P.SV();sv.cr+=v;if(sv.owned)sv.owned[s.id]=(sv.owned[s.id]||0)&~1;const g=G();delete g.wear[s.id];try{setPaint(s.id,null)}catch(e){}
-   if(curCar().id===s.id){const q=owned().find(x=>x.id!==s.id);if(q)P.setSel(0,q.id,q.alt)}P.save();txPx(x.nw,A,v,'YOUR PRICE');txNote(`SOLD: ${fmtCr(v)}`);
-   setTimeout(()=>announce({ok:1,h:`Your ${c?c.name:'car'} sold`,p:`Haggled, but it's done. ${fmtCr(v)} is in your account.`,cr:v}),1800);if(scr==='s8career'){try{refreshCar();setCar()}catch(e){}}}
-  else{s.due=Date.now()+(20+Math.random()*40)*1000;P.save();txNote('CONVERSATION ENDED')}
-  o.opts=[{t:'Close',a:txClose}];TX.el.querySelector('.opts').innerHTML='<div data-o="0"><em>1</em>Close</div>'};
- const mine=()=>{const L=[{t:`Deal at ${fmtCr(o.bid)}`,a:()=>{txMsg(true,rnd([`Deal. ${fmtCr(o.bid)}.`,`Ok, ${fmtCr(o.bid)}. It's yours.`]));fin(o.bid)}}];
-  if(o.n<4){const mid=r50((o.bid+A)/2);if(mid>o.bid&&mid<A)L.push({t:`Counter ${fmtCr(mid)}`,a:()=>counter(mid)});L.push({t:`Price is ${fmtCr(A)}`,a:()=>counter(A)})}
-  L.push({t:'No thanks',a:()=>{txMsg(true,rnd([`No thanks.`,`Not that low. Sorry.`]));fin(null)}});txOpts(L)};
- const counter=v=>{txMsg(true,(v>=A?rnd([`Price is firm. ${fmtCr(A)}.`,`It's ${fmtCr(A)}. That's already fair.`]):rnd([`Meet me at ${fmtCr(v)}?`,`Can't go that low. ${fmtCr(v)}?`]))+sure());
-  if(v<=cap&&Math.random()<.5){txReply(rnd([`Fine. ${fmtCr(v)}. On my way.`,`Ok ok. ${fmtCr(v)}. Deal.`]),()=>fin(v));return}
-  const nb=Math.min(cap,budge(o.bid,cap,v-o.bid,1)),moved=nb>o.bid,near=cap-nb<Math.max(300,(cap-off)*.25);o.bid=nb;txPx(x.nw,A,o.bid,'YOUR PRICE');const last=o.n>=3;
-  const t=!moved?rnd([`${fmtCr(o.bid)}. That's what I've got.`,`Nah. ${fmtCr(o.bid)}.`,`Still ${fmtCr(o.bid)}.`])+why():near?rnd([`Ugh. ${fmtCr(o.bid)}. That's everything I have, man.`,`${fmtCr(o.bid)}. Seriously, that's my limit.`]):rnd([`I can do ${fmtCr(o.bid)}.`,`${fmtCr(o.bid)}?`,`How about ${fmtCr(o.bid)}, cash today?`]);
-  txReply(last?t+' Last offer.':t,()=>{if(o.n>=5)txOpts([{t:`Take ${fmtCr(o.bid)}`,a:()=>fin(o.bid)},{t:'Turn it down',a:()=>fin(null)}]);else mine()})};
- txReply(rnd([`Hey, saw your ${s.title?'"'+s.title+'"':c.name}. Would you take ${fmtCr(off)}?`,`Is the ${c.name} still available? I can do ${fmtCr(off)} cash.`,`${fmtCr(off)} for the ${c.name}? Can pick up today.`])+why(),mine)}
+const CV=()=>{const g=G();if(!Array.isArray(g.conv))g.conv=[];return g.conv};
+let cvSeq=0;const uid=()=>Date.now().toString(36)+(cvSeq++).toString(36);
+const NB=['Dale','Marco','Steph','Big Mike','Ronnie','Trish','Gus','Lena'],NS=['Kev','Jordan','Priya','Tommo','Sal','Nadia','Rick','Unknown'];
+const clean=t=>String(t).replace(/Cr\.\./g,'Cr.');
+function cvPost(cv,me,t,delay){cv.log.push({me:me?1:0,t:clean(t),at:Date.now()+(delay||0)});cv.n++;cv.ts=Date.now()+(delay||0);P.save()}
+function cvNote(cv,t,delay){cv.log.push({note:1,t:clean(t),at:Date.now()+(delay||0)});P.save()}
+const cvPending=cv=>cv.log.some(m=>m.at>Date.now());
+const cvSeen=cv=>cv.log.filter(m=>m.at<=Date.now()).length;
+const cvUnread=cv=>cv.log.some((m,i)=>!m.me&&m.at<=Date.now()&&i>=(cv.rd||0));
+const cvListing=cv=>G().mkt&&G().mkt.find(l=>l.uid===cv.lid);
+const cvSale=cv=>sales().find(s=>s.uid===cv.sid);
+const lagT=()=>1200+Math.random()*900;
+/* buying: you message the seller from the listing */
+function cvBuy(l){if(!l.uid)l.uid=uid();let cv=CV().find(c=>c.kind==='buy'&&c.lid===l.uid);if(cv)return cv;const c=BYID[l.id],P0=l.price,D=Math.min(5000,r50(Math.max(250,P0*.15)));
+ cv={id:uid(),kind:'buy',lid:l.uid,car:l.id,who:rnd(NB),nw:c.price||P0,base:P0,cur:P0,lim:P0-D,D,x:{cond:l.cond,km:l.km,bad:!!(l.L||l.bad),nw:c.price||P0,price:P0},log:[],n:0,st:'open',rd:0,ts:Date.now()};
+ CV().push(cv);l.tx=1;P.save();return cv}
+/* selling: a buyer messages you about a listing */
+function cvSell(s){if(!s.uid)s.uid=uid();const c=BYID[s.id],A=s.ask,D=Math.min(5000,r50(Math.max(250,A*.15))),off=Math.max(A-D,A-r50(D*(.5+Math.random()*.5))),cap=Math.min(A,r50(off+(A-off)*(.35+Math.random()*.4)));
+ const cv={id:uid(),kind:'sell',sid:s.uid,car:s.id,who:rnd(NS),nw:(c&&c.price)||A,base:A,cur:off,lim:cap,D,x:{cond:1-wearOf(s.id),km:0,bad:!!paintOf(s.id),nw:(c&&c.price)||A,price:A},log:[],n:0,st:'open',rd:0,ts:Date.now()};
+ CV().push(cv);cvPost(cv,0,rnd([`Hey, saw your ${s.title?'"'+s.title+'"':c.name}. Would you take ${fmtCr(off)}?`,`Is the ${c.name} still available? I can do ${fmtCr(off)} cash.`,`${fmtCr(off)} for the ${c.name}? Can pick up today.`])+' '+rnd(flaws(cv.x)));
+ while(CV().length>14){const i=CV().findIndex(q=>q.st!=='open');if(i<0)break;CV().splice(i,1)}
+ announce({ok:1,tag:'NEW MESSAGE',h:`${cv.who}, about your ${c.name}`,p:cv.log[0].t,cv:cv.id});P.save();if(PC.on)pcDraw()}
+/* what you can say next */
+function cvOpts(cv){if(cv.st!=='open'||cvPending(cv))return[];const L=[],A=cv.cur;
+ if(cv.kind==='buy'){const offs=[A-r50(A*.05),A-r50(A*.1),A-r50(A*.2)].filter((v,i,a)=>v>0&&v<A&&a.indexOf(v)===i);
+  if(cv.n===0)return offs.map(v=>({t:`Offer ${fmtCr(v)}`,a:()=>cvBuyOffer(cv,v)}));
+  if(cv.n>=4)return[{t:`OK, ${fmtCr(A)}`,a:()=>cvBuyDeal(cv,A,true)},{t:'No thanks',a:()=>cvEnd(cv,`No thanks. Good luck with it.`)}];
+  return[{t:`OK, ${fmtCr(A)}`,a:()=>cvBuyDeal(cv,A,true)}].concat(offs.slice(0,2).map(v=>({t:`Offer ${fmtCr(v)}`,a:()=>cvBuyOffer(cv,v)})),[{t:'Never mind',a:()=>cvEnd(cv,`Never mind, thanks.`)}])}
+ const B=cv.base;L.push({t:`Deal at ${fmtCr(A)}`,a:()=>cvSellDeal(cv,A,true)});
+ if(cv.n<3){const mid=r50((A+B)/2);if(mid>A&&mid<B)L.push({t:`Counter ${fmtCr(mid)}`,a:()=>cvSellCounter(cv,mid)});L.push({t:`Price is ${fmtCr(B)}`,a:()=>cvSellCounter(cv,B)})}
+ L.push({t:'No thanks',a:()=>cvEnd(cv,rnd([`No thanks.`,`Not that low. Sorry.`]))});return L}
+function cvEnd(cv,t){cvPost(cv,1,t);cv.st='closed';cvNote(cv,'CONVERSATION ENDED',300);
+ if(cv.kind==='sell'){const s=cvSale(cv);if(s)s.due=Date.now()+(20+Math.random()*40)*1000}P.save();pcDraw()}
+function cvBuyOffer(cv,v){const x=cv.x;cvPost(cv,1,(cv.n===0?rnd([`Hey, is the ${BYID[cv.car].name} still for sale? Would you take ${fmtCr(v)}?`,`Hi. Interested in the ${BYID[cv.car].name}. ${fmtCr(v)} cash?`]):rnd([`How about ${fmtCr(v)}?`,`${fmtCr(v)}, then.`,`Come on. ${fmtCr(v)}?`]))+' '+rnd(flaws(x)));
+ const nx=budge(cv.cur,cv.lim,cv.cur-v,-1),dl=lagT();
+ if(v>=nx){cvPost(cv,0,rnd([`Deal. Come get it.`,`Fine. ${fmtCr(v)}. Bring cash.`]),dl);cvBuyDeal(cv,v,false,dl);return}
+ const moved=nx<cv.cur,near=nx-cv.lim<cv.D*.25;cv.cur=Math.max(cv.lim,nx);const A=cv.cur;
+ let t=v<cv.lim-cv.D?rnd([`Lol. No.`,`Are you serious? It's ${fmtCr(A)}.`,`Don't waste my time. ${fmtCr(A)}.`]):!moved?rnd(strengths(x))+' '+rnd([`Price is ${fmtCr(A)}. Not moving on it.`,`Still ${fmtCr(A)}.`,`It's worth every bit of ${fmtCr(A)}, man.`]):near?rnd([`Ugh. ${fmtCr(A)}. And that's me being nice. Not a cent less.`,`Man... fine. ${fmtCr(A)}. That's it. I mean it.`,`${fmtCr(A)}. I'm already losing money here.`]):(x.bad&&Math.random()<.5?`Yeah, ok, the paint's bad. `:x.cond<.7&&Math.random()<.5?`Fair, it needs some work. `:'')+rnd([`I could do ${fmtCr(A)}.`,`Meet me at ${fmtCr(A)}?`,`${fmtCr(A)}, and you're picking it up today.`]);
+ cvPost(cv,0,cv.n>=3?t+' Take it or leave it.':t,dl);pcDraw()}
+function cvBuyDeal(cv,v,mine,dl){if(mine)cvPost(cv,1,rnd([`Ok. ${fmtCr(v)} it is.`,`Deal. ${fmtCr(v)}.`]));cv.st='deal';cv.cur=v;const l=cvListing(cv);if(l){l.deal=v}cvNote(cv,`DEAL: ${fmtCr(v)}. Buy it from the listing.`,(dl||0)+300);P.save();pcDraw()}
+function cvSellCounter(cv,v){const x=cv.x,B=cv.base;cvPost(cv,1,(v>=B?rnd([`Price is firm. ${fmtCr(B)}.`,`It's ${fmtCr(B)}. That's already fair.`]):rnd([`Meet me at ${fmtCr(v)}?`,`Can't go that low. ${fmtCr(v)}?`]))+' '+rnd(strengths(x)));const dl=lagT();
+ if(v<=cv.lim&&Math.random()<.5){cvPost(cv,0,rnd([`Fine. ${fmtCr(v)}. On my way.`,`Ok ok. ${fmtCr(v)}. Deal.`]),dl);cvSellDeal(cv,v,false,dl);return}
+ const nb=Math.min(cv.lim,budge(cv.cur,cv.lim,v-cv.cur,1)),moved=nb>cv.cur,near=cv.lim-nb<Math.max(300,cv.D*.2);cv.cur=nb;const A=nb;
+ const t=!moved?rnd([`${fmtCr(A)}. That's what I've got.`,`Nah. ${fmtCr(A)}.`,`Still ${fmtCr(A)}.`])+' '+rnd(flaws(x)):near?rnd([`Ugh. ${fmtCr(A)}. That's everything I have, man.`,`${fmtCr(A)}. Seriously, that's my limit.`]):rnd([`I can do ${fmtCr(A)}.`,`${fmtCr(A)}?`,`How about ${fmtCr(A)}, cash today?`]);
+ cvPost(cv,0,cv.n>=2?t+' Last offer.':t,dl);pcDraw()}
+function cvSellDeal(cv,v,mine,dl){if(mine)cvPost(cv,1,rnd([`Deal. ${fmtCr(v)}.`,`Ok, ${fmtCr(v)}. It's yours.`]));cv.st='deal';cv.cur=v;const s=cvSale(cv),c=BYID[cv.car];
+ if(s){sales().splice(sales().indexOf(s),1);const sv=P.SV();sv.cr+=v;if(sv.owned)sv.owned[s.id]=(sv.owned[s.id]||0)&~1;const g=G();delete g.wear[s.id];try{setPaint(s.id,null)}catch(e){}
+  if(curCar().id===s.id){const q=owned().find(x=>x.id!==s.id);if(q)P.setSel(0,q.id,q.alt)}try{refreshCar();setCar();$$crv()}catch(e){}
+  setTimeout(()=>announce({ok:1,h:`Your ${c?c.name:'car'} sold`,p:`Haggled, but it's done. ${fmtCr(v)} is in your account.`,cr:v}),(dl||0)+1200)}
+ cvNote(cv,`SOLD: ${fmtCr(v)}`,(dl||0)+300);P.save();pcDraw()}
+/* a conversation whose car went some other way is closed */
+function cvTidy(){for(const cv of CV()){if(cv.st!=='open')continue;if(cv.kind==='buy'&&!cvListing(cv)){cv.st='closed';cvNote(cv,'LISTING GONE')}if(cv.kind==='sell'&&!cvSale(cv)){cv.st='closed';cvNote(cv,'LISTING GONE')}}}
+
+/* ---- the screen ---- */
+const PC={on:false,tab:'buy',cv:null,sf:null,el:null,sig:''};
+/* the screen's corners in the laptop's own space (measured from the model: the lid's front face, inside the bezel) */
+const PC_Q=[V3(-.148,.206,-.0965),V3(.148,.206,-.0965),V3(.148,.018,-.0965),V3(-.148,.018,-.0965)],PC_W=960,PC_H=610;
+function pcCam(){const L=GS.laptop;if(!L)return null;L.updateMatrixWorld(true);const c=L.localToWorld(V3(0,.112,-.0965)),n=L.localToWorld(V3(0,.112,1)).sub(L.localToWorld(V3(0,.112,0))).normalize();
+ return{p:c.clone().addScaledVector(n,.44).add(V3(0,.035,0)),l:c}}
+function pcEl(){if(PC.el&&PC.el.isConnected)return PC.el;const e=document.createElement('div');e.id='gcPC';e.innerHTML='<div class="app"></div><div class="glare"></div>';document.body.appendChild(e);PC.el=e;
+ e.addEventListener('click',pcClick);e.addEventListener('input',pcInput);e.addEventListener('keydown',ev=>{if(ev.target.tagName==='INPUT'||ev.target.tagName==='TEXTAREA')ev.stopPropagation()});return e}
+/* map the page's rectangle onto the four projected corners (a projective transform) */
+function pcPlace(){const e=PC.el;if(!e||!GS.laptop)return;{const cp=pcCam(),k=cp?GS.cam.position.distanceTo(cp.p):9;if(!PC.on||k>.72){if(e.style.display!=='none')e.style.display='none';return}if(e.style.display==='none')e.style.display=''}const L=GS.laptop,q=PC_Q.map(v=>{const w=L.localToWorld(v.clone());w.project(GS.cam);return[(w.x*.5+.5)*innerWidth,(-w.y*.5+.5)*innerHeight]});
+ const [x0,y0]=q[0],[x1,y1]=q[1],[x2,y2]=q[2],[x3,y3]=q[3],dx1=x1-x2,dx2=x3-x2,dx3=x0-x1+x2-x3,dy1=y1-y2,dy2=y3-y2,dy3=y0-y1+y2-y3,den=dx1*dy2-dx2*dy1||1e-9;
+ const g=(dx3*dy2-dx2*dy3)/den,h=(dx1*dy3-dx3*dy1)/den,a=x1-x0+g*x1,b=x3-x0+h*x3,d=y1-y0+g*y1,f=y3-y0+h*y3,W=PC_W,H=PC_H;
+ const tf=`matrix3d(${(a/W).toFixed(6)},${(d/W).toFixed(6)},0,${(g/W).toFixed(8)},${(b/H).toFixed(6)},${(f/H).toFixed(6)},0,${(h/H).toFixed(8)},0,0,1,0,${x0.toFixed(2)},${y0.toFixed(2)},0,1)`;if(e._tf!==tf){e._tf=tf;e.style.transform=tf}
+ const cp=pcCam(),k=cp?GS.cam.position.distanceTo(cp.p):9;e.style.opacity=PC.on?Math.max(0,Math.min(1,1.6-k*2.2)):0;e.classList.toggle('live',PC.on&&k<.4)}
+function openPC(tab,cvId){if(!GS.laptop)return;PC.on=true;PC.tab=tab||PC.tab||'buy';PC.cv=cvId||null;if(cvId)PC.tab='msg';PC.sf=null;UI.who=null;UI.view='pc';UI.ch=null;UI.line='';GS.hov=null;
+ const d=$('gcDlg');if(d)d.classList.remove('on');const b=$('gcBox');if(b)b.classList.remove('on');mktFill();cvTidy();pcEl();aim();pcDraw();hint();P.sfx&&P.sfx('select')}
+function closePC(){if(!PC.on)return;PC.on=false;PC.sf=null;UI.view='talk';aim();hint();P.sfx&&P.sfx('back');if(document.activeElement&&PC.el&&PC.el.contains(document.activeElement))document.activeElement.blur()}
+const cls_=c=>`<span class="cls ${c.cls}">${c.cls}</span>`;
+function pcThumb(id){try{return P.carThumb?P.carThumb(id):''}catch(e){return''}}
+function pcDraw(){if(!PC.el)return;const a=PC.el.querySelector('.app');if(!a)return;cvTidy();const g=G(),sv=P.SV(),C=CV(),unread=C.filter(cvUnread).length;
+ const tab=(k,n,x)=>`<u class="${PC.tab===k?'on':''}" data-tab="${k}">${n}${x?`<i>${x}</i>`:''}</u>`;
+ let body='';
+ if(PC.tab==='buy'){const L=g.mkt||[];body=`<h2>Used cars near you <small>${L.length} listings</small></h2><div class="list">`+L.map((l,i)=>{const c=BYID[l.id],cv=C.find(q=>q.kind==='buy'&&q.lid===l.uid),pr=lPrice(l),th=pcThumb(l.id);
+   return`<div class="it"><div class="th"${th?` style="background-image:url(${th})"`:''}></div><div class="nf"><b>${esc_(c.name)} ${cls_(c)}</b><small>${Math.round(l.km/1000)}k km &middot; condition ${Math.round(l.cond*100)}%${l.bad||l.L?' &middot; <em>bad paint</em>':''}</small><small class="nw">New: ${fmtCr(c.price||0)}</small></div>
+   <div class="pr">${l.deal?`<s>${fmtCr(l.price)}</s>`:''}<b>${fmtCr(pr)}</b>${l.deal?'<em>agreed</em>':''}</div><div class="bt"><button data-buy="${i}"${sv.cr<pr?' disabled':''}>Buy</button>${cv?`<button class="ghost" data-open="${cv.id}">Messages</button>`:`<button class="ghost" data-msg="${i}">Message seller</button>`}</div></div>`}).join('')+(L.length?'':'<p class="empty">Nothing listed right now. Check back after a race.</p>')+'</div>'}
+ else if(PC.tab==='sell'){if(PC.sf){const f=PC.sf,c=BYID[f.id],v=carValue(f.id),p=Math.round(sellChance(f.id,f.ask,f.title,f.desc)*100),q=f.ask/v;
+   body=`<h2>New listing <small>${esc_(c.name)}</small></h2><div class="form"><div class="row"><label>Asking price</label><div class="ask"><button data-adj="-1">&minus;</button><b>${fmtCr(f.ask)}</b><button data-adj="1">+</button><small>Worth about ${fmtCr(v)} &middot; ${q>1.25?'way over value':q>1.05?'over value':q<.85?'under value':'about right'}</small></div></div>
+   <div class="row"><label>Title</label><input data-f="title" maxlength="60" value="${esc_(f.title)}" placeholder="e.g. Clean ${esc_(c.name.split(' ').slice(-1)[0])}, runs great"></div>
+   <div class="row"><label>Description</label><textarea data-f="desc" maxlength="400" rows="3" placeholder="Mileage, history, what's been done to it...">${esc_(f.desc)}</textarea></div>
+   <div class="meter" data-l="${p>=70?'good':p>=40?'ok':'bad'}"><span>Chance someone buys it</span><i><u style="width:${p}%"></u></i><b>${p}%</b></div>
+   <div class="bt"><button data-list="1">List it</button><button class="ghost" data-cancel="1">Cancel</button></div></div>`}
+  else{const L=sellable(),S=sales();body=`<h2>Sell a car <small>${L.length} in your garage</small></h2><div class="list">`+L.map(x=>{const th=pcThumb(x.id);return`<div class="it"><div class="th"${th?` style="background-image:url(${th})"`:''}></div><div class="nf"><b>${esc_(x.car.name)} ${cls_(x.car)}</b><small>${x.id===curCar().id?'Out now':'In storage'} &middot; condition ${pctOK(x.id)}%${paintOf(x.id)?' &middot; <em>bad paint</em>':''}</small></div><div class="pr"><small>worth</small><b>${fmtCr(carValue(x.id))}</b></div><div class="bt"><button data-sell="${x.id}"${L.length<2?' disabled title="You need something to drive"':''}>List it</button></div></div>`}).join('')+
+   (S.length?`<h3>Listed</h3>`+S.map(q=>{const c=BYID[q.id],th=pcThumb(q.id);return`<div class="it"><div class="th"${th?` style="background-image:url(${th})"`:''}></div><div class="nf"><b>${esc_(c?c.name:q.id)}</b><small>${q.title?esc_(q.title):'No title'} &middot; ${Math.round(q.ch*100)}% chance</small></div><div class="pr"><small>asking</small><b>${fmtCr(q.ask)}</b></div><div class="bt"><button class="ghost" data-pull="${q.uid||(q.uid=uid())}">Pull it</button></div></div>`}).join(''):'')+'</div>'}}
+ else{const cv=PC.cv&&C.find(q=>q.id===PC.cv);if(cv){cv.rd=cvSeen(cv);const c=BYID[cv.car],now=Date.now(),O=cvOpts(cv);
+   body=`<div class="chat"><div class="ch"><button class="ghost back" data-back="1">&lsaquo; All messages</button><div class="av">${cv.who==='Unknown'?'?':cv.who.replace(/^Big /,'')[0]}</div><div><b>${esc_(cv.who)}</b><small>${cv.kind==='buy'?'Selling':'Wants to buy'} your${cv.kind==='buy'?' &middot; their':''} ${esc_(c?c.name:'car')}</small></div></div>
+   <div class="px"><span><u>NEW</u><b>${fmtCr(cv.nw)}</b></span><span><u>${cv.kind==='buy'?'LISTED':'YOUR PRICE'}</u><b>${fmtCr(cv.base)}</b></span><span class="on"><u>ON THE TABLE</u><b>${fmtCr(cv.cur)}</b></span><span><u>TEXTS</u><b>${Math.min(5,cv.n)} / 5</b></span></div>
+   <div class="msgs">`+cv.log.filter(m=>m.at<=now).map(m=>m.note?`<div class="m note">${esc_(m.t)}</div>`:`<div class="m ${m.me?'me':'them'}">${esc_(m.t)}</div>`).join('')+(cvPending(cv)?'<div class="m them typing">typing...</div>':'')+`</div>
+   <div class="opts">${O.map((o,i)=>`<button data-o="${i}"><em>${i+1}</em>${esc_(o.t)}</button>`).join('')}${cv.st==='deal'&&cv.kind==='buy'&&cvListing(cv)?`<button data-buyl="${cv.lid}"><em>&#10003;</em>Buy it now for ${fmtCr(cv.cur)}</button>`:''}</div></div>`;PC.opts=O}
+  else{const L=C.slice().sort((a,b)=>(b.ts||0)-(a.ts||0));body=`<h2>Messages <small>${L.length?L.length+' conversations':''}</small></h2><div class="list">`+L.map(cv=>{const c=BYID[cv.car],last=cv.log.filter(m=>m.at<=Date.now()).slice(-1)[0];
+   return`<div class="it conv${cvUnread(cv)?' new':''}" data-open="${cv.id}"><div class="av">${cv.who==='Unknown'?'?':cv.who.replace(/^Big /,'')[0]}</div><div class="nf"><b>${esc_(cv.who)} <small>&middot; ${esc_(c?c.name:'')}</small></b><small>${last?esc_((last.me?'You: ':'')+last.t):'No messages yet'}</small></div><div class="pr"><small>${cv.st==='open'?(cvPending(cv)?'typing...':'open'):cv.st==='deal'?'deal':'closed'}</small><b>${fmtCr(cv.cur)}</b></div></div>`}).join('')+(L.length?'':'<p class="empty">No messages. Message a seller from a listing, or list a car and wait for buyers.</p>')+'</div>'}}
+ a.innerHTML=`<div class="tb"><div class="logo">Poly<b>Market</b></div><nav>${tab('buy','Buy')}${tab('sell','Sell')}${tab('msg','Messages',unread||'')}</nav><div class="cr">${fmtCr(sv.cr)}</div><button class="x" data-close="1">&times;</button></div><div class="bd">${body}</div>`;
+ const m=a.querySelector('.msgs');if(m)m.scrollTop=m.scrollHeight;PC.sig=pcSig()}
+const pcSig=()=>PC.tab+'|'+(PC.cv||'')+'|'+CV().map(c=>c.id+':'+cvSeen(c)+':'+cvPending(c)+':'+c.st).join(',')+'|'+sales().length+'|'+((G().mkt||[]).length);
+setInterval(()=>{if(PC.on&&scr!=='s8career'){PC.on=false;PC.sf=null;if(UI.view==='pc')UI.view='talk'}if(PC.el&&!PC.on&&scr!=='s8career')PC.el.style.opacity=0;if(PC.on&&!PC.sf&&pcSig()!==PC.sig)pcDraw()},400);
+function pcClick(ev){const t=ev.target.closest('[data-tab],[data-close],[data-buy],[data-msg],[data-open],[data-back],[data-o],[data-buyl],[data-sell],[data-pull],[data-adj],[data-list],[data-cancel]');if(!t)return;ev.stopPropagation();const D=t.dataset,g=G();P.sfx&&P.sfx('move');
+ if(D.tab){PC.tab=D.tab;PC.cv=null;PC.sf=null}
+ else if(D.close){closePC();return}
+ else if(D.buy!=null){const l=(g.mkt||[])[+D.buy];if(l)pcBuy(l);return}
+ else if(D.buyl){const l=(g.mkt||[]).find(x=>x.uid===D.buyl);if(l)pcBuy(l);return}
+ else if(D.msg!=null){const l=(g.mkt||[])[+D.msg];if(l){const cv=cvBuy(l);PC.tab='msg';PC.cv=cv.id}}
+ else if(D.open){PC.tab='msg';PC.cv=D.open}
+ else if(D.back){PC.cv=null}
+ else if(D.o!=null){const o=PC.opts&&PC.opts[+D.o];if(o){o.a();return}}
+ else if(D.sell){const v=carValue(D.sell);PC.sf={id:D.sell,ask:v,title:'',desc:''}}
+ else if(D.pull){const s=sales().find(x=>x.uid===D.pull);if(s){sales().splice(sales().indexOf(s),1);P.save()}}
+ else if(D.adj){const f=PC.sf;if(f){const v=carValue(f.id);f.ask=Math.max(250,Math.min(v*4,f.ask+(+D.adj)*sfStep(v)))}}
+ else if(D.list){pcList();return}
+ else if(D.cancel){PC.sf=null}
+ pcDraw()}
+function pcInput(ev){const f=PC.sf,k=ev.target.dataset&&ev.target.dataset.f;if(!f||!k)return;f[k]=ev.target.value;/* update the meter in place, so typing never re-renders the form */
+ const a=PC.el,p=Math.round(sellChance(f.id,f.ask,f.title,f.desc)*100),m=a.querySelector('.meter');if(m){m.dataset.l=p>=70?'good':p>=40?'ok':'bad';m.querySelector('u').style.width=p+'%';m.querySelector('b').textContent=p+'%'}}
+function pcList(){const f=PC.sf;if(!f)return;const p=sellChance(f.id,f.ask,f.title,f.desc),ok=Math.random()<p;
+ sales().push({id:f.id,uid:uid(),ask:f.ask,title:(f.title||'').trim().slice(0,60),ch:p,ok,due:Date.now()+(35+Math.random()*70)*1000*(ok?1:1.4)});P.save();
+ const id=f.id;PC.sf=null;if(curCar().id===id){const o=sellable().find(x=>x.id!==id);if(o)fadeDo(()=>{P.setSel(0,o.id,o.alt);setCar();refreshCar()},420)}P.sfx&&P.sfx('select');pcDraw()}
+function pcBuy(l){const g=G(),sv=P.SV(),c=BYID[l.id],pr=lPrice(l);if(sv.cr<pr)return;
+ fadeDo(()=>{sv.cr-=pr;sv.owned[l.id]=(sv.owned[l.id]||0)|1;g.wear[l.id]=Math.max(0,Math.min(1,1-l.cond));setPaint(l.id,l.L||null);P.setSel(0,l.id,0);const i=g.mkt.indexOf(l);if(i>=0)g.mkt.splice(i,1);P.save();$$crv();setCar();refreshCar();
+  closePC();GS.cp.copy(GS.tp);GS.cl.copy(GS.tl);announce({ok:1,tag:'BOUGHT',h:`You bought the ${c.name}`,p:l.deal?`Talked down to ${fmtCr(pr)}. It's in your garage.`:`It's in your garage. Nina's already looking at it.`,cr:-pr});
+  const id=l.id,bad=!!l.L;setTimeout(()=>{if(scr!=='s8career'||curCar().id!==id||UI.view==='pc')return;popIn(id,bad)},1500)},420)}
 /* the announcement */
 const inRace=()=>scr==='game'||scr==='bike';let ANN=null,annQ=[];
 function announce(o){annQ.push(o);if(!ANN||!ANN.classList.contains('on'))annNext()}
-function annNext(){const o=annQ.shift();if(!o)return;if(!ANN){ANN=document.createElement('div');ANN.id='gcAnn';document.body.appendChild(ANN);ANN.onclick=()=>{ANN.classList.remove('on');setTimeout(annNext,400)}}
- const pic=GS.vin&&GS.vin.pic;ANN.innerHTML=`<div class="pic">${pic?`<img src="${pic}" alt="">`:'V'}</div><div class="tx"><small class="${o.ok?'ok':'no'}">${o.tag||(o.ok?'SOLD':'NO BUYERS')} &middot; MARKETPLACE</small><b>${esc_(o.h)}</b><p>${esc_(o.p)}</p></div>${o.cr?`<div class="cr${o.cr<0?' neg':''}">${o.cr<0?'&minus;':'+'}${fmtCr(Math.abs(o.cr))}</div>`:''}`;
+function annNext(){const o=annQ.shift();if(!o)return;if(!ANN){ANN=document.createElement('div');ANN.id='gcAnn';document.body.appendChild(ANN);ANN.onclick=()=>{ANN.classList.remove('on');const c=ANN._cv;if(c&&scr==='s8career'&&GS.ok){if(UI.who)leave();openPC('msg',c)}setTimeout(annNext,400)}}
+ ANN._cv=o.cv||null;const pic=GS.vin&&GS.vin.pic;ANN.innerHTML=`<div class="pic">${pic?`<img src="${pic}" alt="">`:'V'}</div><div class="tx"><small class="${o.ok?'ok':'no'}">${o.tag||(o.ok?'SOLD':'NO BUYERS')} &middot; MARKETPLACE</small><b>${esc_(o.h)}</b><p>${esc_(o.p)}</p></div>${o.cr?`<div class="cr${o.cr<0?' neg':''}">${o.cr<0?'&minus;':'+'}${fmtCr(Math.abs(o.cr))}</div>`:''}`;
  ANN.classList.remove('on');void ANN.offsetWidth;ANN.classList.add('on');P.sfx&&P.sfx(o.ok?'select':'back');clearTimeout(ANN._t);ANN._t=setTimeout(()=>{ANN.classList.remove('on');setTimeout(annNext,450)},6000)}
 function salesTick(){let S;try{S=sales()}catch(e){return}if(!S.length||inRace()||document.hidden)return;const now=Date.now();
- for(const s of S.slice()){if(s.due>now||(s.tx&&TX.on))continue;if(!s.tx&&!TX.on&&s.ask>=1500&&Math.random()<.5){s.tx=1;haggleSell(s);continue}S.splice(S.indexOf(s),1);const c=BYID[s.id],nm=c?c.name:'car',sv=P.SV();
+ for(const s of S.slice()){if(!s.uid)s.uid=uid();if(s.due>now||(s.tx&&CV().some(c=>c.sid===s.uid&&c.st==='open')))continue;if(!s.tx&&s.ask>=1500&&Math.random()<.5){s.tx=1;cvSell(s);continue}S.splice(S.indexOf(s),1);const c=BYID[s.id],nm=c?c.name:'car',sv=P.SV();
   if(s.ok){sv.cr+=s.ask;if(sv.owned)sv.owned[s.id]=(sv.owned[s.id]||0)&~1;const g=G();delete g.wear[s.id];try{setPaint(s.id,null)}catch(e){}
    if(curCar().id===s.id){const o=owned().find(x=>x.id!==s.id);if(o)P.setSel(0,o.id,o.alt)}
    announce({ok:1,h:`Your ${nm} sold`,p:(s.title?`"${s.title}" `:'')+rnd([`went for the asking price. Vince took his cut out of the buyer, apparently.`,`is gone. Buyer paid cash. Vince didn't ask questions.`,`found a buyer. Money's in your account.`]),cr:s.ask})}
@@ -19515,7 +19611,7 @@ const lPrice=l=>l.deal||l.price;
 /* picking a listing: buy it at the price (or the price you talked them down to), or text the seller first */
 function mktPick(i){const l=G().mkt[i];if(!l)return;const c=BYID[l.id],pr=lPrice(l);UI.view='talk';UI.f=0;
  UI.ch=[{ic:'shop',t:l.deal?'Buy it at the agreed price':'Buy it',pz:fmtCr(pr),off:P.SV().cr<pr,a:()=>{UI.ch=null;buy(G().mkt.indexOf(l))}}];
- if(!l.tx)UI.ch.push({ic:'chat',t:'Text the seller',a:()=>{UI.ch=null;UI.view='mkt';UI.f=Math.max(0,G().mkt.indexOf(l));say(rnd([`Go ahead. They won't budge much.`,`Try it. Most of these guys are stubborn as hell.`]));haggleBuy(l)}});
+ if(!l.tx)UI.ch.push({ic:'chat',t:'Text the seller',a:()=>{UI.ch=null;UI.view='mkt';UI.f=Math.max(0,G().mkt.indexOf(l));openPC('msg',cvBuy(l).id)}});
  UI.ch.push({ic:'back',t:'Back to the list',a:()=>{UI.ch=null;UI.view='mkt';UI.f=Math.max(0,G().mkt.indexOf(l))}});
  say(l.deal?`You got them to ${fmtCr(pr)}. Still want it?`:rnd([`The ${c.name}. ${fmtCr(pr)}. Want it, or want to try your luck with the seller?`,`${fmtCr(pr)} for the ${c.name}. Buy it, or text the guy.`]));drawDlg();hint()}
 function buy(i){const g=G(),l=g.mkt[i],sv=P.SV();if(!l)return;const c=BYID[l.id],pr=lPrice(l);if(sv.cr<pr){say(`You're short. Come back with ${fmtCr(pr-sv.cr)} more.`);return}
@@ -19533,7 +19629,7 @@ function popIn(id,bad){const c=BYID[id],oil=Math.max(150,Math.round(fixCost(id)*
 function talk(who,keep,line){UI.who=who;if(!keep){UI.view='talk';UI.f=0;UI.ch=null}
  aim();if(!keep&&GS[who])gesture(GS[who],who==='red'?'hey':'nod');UI.line=String(line||UI.line||(who==='red'?redLine():vinLine())).replace(/Cr\.\./g,'Cr.');UI.ty=null;if(GS[who])GS[who].tk=2.5;if(who==='vin'){const g=G();if(!g.met){g.met=1;P.save()}}P.sfx&&!keep&&P.sfx('select');drawDlg();hint()}
 function leave(){UI.who=null;UI.line='';UI.view='talk';UI.ch=null;aim();const d=$('gcDlg');if(d)d.classList.remove('on');const b=$('gcBox');if(b)b.classList.remove('on');P.sfx&&P.sfx('back');hint()}
-function act(k){if(k==='car'){P.sfx&&P.sfx('select');openCars()}else if(k)talk(k)}
+function act(k){if(k==='pc'){openPC('buy');return}if(k==='car'){P.sfx&&P.sfx('select');openCars()}else if(k)talk(k)}
 function say(t){setLine(t)}
 function setLine(t){t=String(t).replace(/Cr\.\./g,'Cr.');UI.line=t;if(UI.view==='cars'&&UI.who){bubble(UI.who,t);return}UI.ty={t,i:0};const pe=GS[UI.who];if(pe)pe.tk=Math.min(3.5,t.length/26);paintType()}
 function paintType(){const p=sec.querySelector('#gcBox .tx');if(!p||!UI.ty)return;const n=Math.floor(UI.ty.i),done=n>=UI.ty.t.length;p.innerHTML=esc_(UI.ty.t.slice(0,n))+(done?'':'<i class="cur"></i>')+'<span class="ghost">'+esc_(UI.ty.t.slice(n))+'</span>';p.classList.toggle('done',done)}
@@ -19591,10 +19687,10 @@ function refreshCar(){const e=$('gcCarI');if(e)e.innerHTML=carInfo();$$crv()}
 function $$crv(){sec.querySelectorAll('.crv').forEach(e=>e.textContent=fmtCr(P.SV().cr))}
 P.gcRender=()=>{render();return true};
 /* hovering and clicking in the room */
-sec.addEventListener('mousemove',e=>{if(!sec.classList.contains('gcOn')||UI.who||onCar()||UI.menu){if(GS.hov){GS.hov=null;sec.classList.remove('hv')}return}
+sec.addEventListener('mousemove',e=>{if(!sec.classList.contains('gcOn')||UI.who||onCar()||UI.menu||UI.view==='pc'){if(GS.hov){GS.hov=null;sec.classList.remove('hv')}return}
  const k=e.target.closest&&e.target.closest('.gcDlg,.gcBox,.hdr,.foot8,.gcTier,.gcCarI')?null:pickAt(e.clientX,e.clientY);if(k!==GS.hov){GS.hov=k;if(k){UI.tag=TAGK.indexOf(k);P.sfx&&P.sfx('move')}}sec.classList.toggle('hv',!!k)});
 sec.addEventListener('mouseleave',()=>{GS.hov=null;sec.classList.remove('hv')});
-sec.addEventListener('click',e=>{if(!sec.classList.contains('gcOn')||UI.who||onCar()||UI.menu)return;if(e.target.closest&&e.target.closest('button,.gcDlg,.gcBox,.hdr,.foot8,.gcMenu,.gcCarI'))return;const k=pickAt(e.clientX,e.clientY);if(k){GS.hov=null;sec.classList.remove('hv');act(k)}});
+sec.addEventListener('click',e=>{if(!sec.classList.contains('gcOn')||UI.who||onCar()||UI.menu||UI.view==='pc')return;if(e.target.closest&&e.target.closest('button,.gcDlg,.gcBox,.hdr,.foot8,.gcMenu,.gcCarI'))return;const k=pickAt(e.clientX,e.clientY);if(k){GS.hov=null;sec.classList.remove('hv');act(k)}});
 
 /* ---------------- launching ---------------- */
 function start(i){const g=G(),o=g.offers[i];if(!o)return;const c=curCar(),T=TIERS[o.tier],nm=(P.SV().name||'').trim()||null;
@@ -19692,18 +19788,19 @@ function escBack(){if(UI.view==='sellForm'){UI.sf=null;openSell();return}if(UI.v
  if(UI.who&&(UI.view==='offers'||UI.view==='mkt')){UI.view='talk';UI.f=0;say(UI.who==='vin'?`Sure.`:`Something else, then?`);drawDlg();hint();return}
  if(UI.who&&UI.ch){UI.ch=null;UI.f=0;say(UI.who==='red'?`Fine. What else?`:`Okay.`);drawDlg();hint();return}
  leave()}
-{const fb=P.frBack;P.frBack=()=>{if(scr==='s8career'&&sec.classList.contains('gcOn')){if(LD&&LD.classList.contains('on')&&!LD.classList.contains('rdy'))return true;if(UI.menu){menuClose();return true}if(UI.who||onCar()){escBack();return true}menuOpen();return true}return fb?fb():false}}
+{const fb=P.frBack;P.frBack=()=>{if(scr==='s8career'&&sec.classList.contains('gcOn')){if(LD&&LD.classList.contains('on')&&!LD.classList.contains('rdy'))return true;if(UI.menu){menuClose();return true}if(UI.view==='pc'){if(PC.sf){PC.sf=null;pcDraw()}else if(PC.cv){PC.cv=null;pcDraw()}else closePC();return true}if(UI.who||onCar()){escBack();return true}menuOpen();return true}return fb?fb():false}}
 addEventListener('keydown',e=>{if(scr!=='s8career'||!sec.classList.contains('gcOn'))return;if(FD.on){e.preventDefault();e.stopImmediatePropagation();return}if(e.target&&(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'))return;const c=e.code;
  if(LD&&LD.classList.contains('on')&&!LD.classList.contains('rdy')){e.preventDefault();e.stopImmediatePropagation();return}
+ if(UI.view==='pc'){if(c==='Escape'||c==='Backspace'){e.preventDefault();e.stopImmediatePropagation();if(PC.sf){PC.sf=null;pcDraw()}else if(PC.cv){PC.cv=null;pcDraw()}else closePC()}else if(/^Digit[1-4]$/.test(c)&&PC.cv&&PC.opts&&PC.opts[+c[5]-1]){e.preventDefault();e.stopImmediatePropagation();PC.opts[+c[5]-1].a()}return}
  if(UI.menu){if(c==='ArrowDown'||c==='KeyS')menuFocus((UI.menu.f+1)%MENU.length);else if(c==='ArrowUp'||c==='KeyW')menuFocus((UI.menu.f+MENU.length-1)%MENU.length);else if(c==='Enter'||c==='Space')menuPick();else return;e.preventDefault();e.stopImmediatePropagation();return}
- if(!UI.who&&!onCar()){if(c==='ArrowLeft'||c==='KeyA'||c==='ArrowRight'||c==='KeyD'){const d=c==='ArrowLeft'||c==='KeyA'?-1:1;let t=UI.tag;for(let n=0;n<3;n++){t=(t+d+3)%3;if(TAGK[t]==='car'?GS.car:GS[TAGK[t]]&&GS[TAGK[t]].g)break}UI.tag=t;GS.hov=TAGK[t];P.sfx&&P.sfx('move')}
+ if(!UI.who&&!onCar()){if(c==='ArrowLeft'||c==='KeyA'||c==='ArrowRight'||c==='KeyD'){const d=c==='ArrowLeft'||c==='KeyA'?-1:1;let t=UI.tag;for(let n=0;n<TAGK.length;n++){t=(t+d+TAGK.length)%TAGK.length;if(TAGK[t]==='car'?GS.car:TAGK[t]==='pc'?GS.laptop:GS[TAGK[t]]&&GS[TAGK[t]].g)break}UI.tag=t;GS.hov=TAGK[t];P.sfx&&P.sfx('move')}
   else if(c==='Enter'||c==='Space'){act(GS.hov||TAGK[UI.tag]);GS.hov=null}else return;e.preventDefault();e.stopImmediatePropagation();return}
  const n=nC();if(c==='ArrowDown'||c==='KeyS')focusC((UI.f+1)%n);else if(c==='ArrowUp'||c==='KeyW')focusC((UI.f+n-1)%n);
  else if(UI.view==='tune'&&(c==='ArrowLeft'||c==='KeyA'||c==='ArrowRight'||c==='KeyD')){if(UI.f<P.TUNE.length)tuneAdj(UI.f,c==='ArrowLeft'||c==='KeyA'?-1:1)}
  else if(UI.view==='sellForm'&&UI.f===0&&(c==='ArrowLeft'||c==='KeyA'||c==='ArrowRight'||c==='KeyD'))sfAdj(c==='ArrowLeft'||c==='KeyA'?-1:1)
  else if(c==='Enter'||c==='Space')pickC();
  else if(/^Digit[1-9]$/.test(c)&&+c[5]<=n&&UI.view!=='tune'){focusC(+c[5]-1);finishType();pickC()}else return;e.preventDefault();e.stopImmediatePropagation()},true);
-P.gcDebug=()=>({G:G(),UI,GS,run:P.gcRun});P.gcHaggle=()=>{talk('vin');mktFill();haggleBuy(G().mkt[0])};P.gcTx=i=>txPick(i);P.gcHagSell=()=>{const x=owned()[0];sales().push({id:x.id,ask:20000,title:'Clean one',ch:.5,ok:true,due:0,tx:1});haggleSell(sales()[sales().length-1])};P.gcRoam=(k,i)=>{const pe=GS[k];if(pe){if(!pe.home)roamInit(pe,k);startTask(pe,k,STN[k][i]);pe.nxR=30}};P.gcNav=()=>NAV;P.gcSetCar=()=>setCar(true);P.gcSell=()=>{talk('vin');openSell()};P.gcSellPick=i=>pickSell(i);P.gcSellList=()=>sfList();P.gcPath=(k,x,z)=>navPath(GS[k].g.position,V3(x,0,z),null);P.gcTalk=talk;P.gcAct=act;P.gcPick=(x,y)=>pickAt(x,y);P.gcHover=k=>{GS.hov=k};P.gcPop=popIn;
+P.gcDebug=()=>({G:G(),UI,GS,run:P.gcRun});P.gcPC=(t,c)=>openPC(t,c);P.gcPCClick=sel=>{const e=PC.el&&PC.el.querySelector(sel);if(e)e.click();return !!e};P.gcCvBuy=()=>{mktFill();return cvBuy(G().mkt[0]).id};P.gcCvSell=()=>{const x=owned()[0];const s_={id:x.id,uid:uid(),ask:20000,title:'Clean one',ch:.5,ok:true,due:Date.now()+9e5,tx:1};sales().push(s_);cvSell(s_);return CV()[CV().length-1].id};P.gcCV=CV;P.gcRoam=(k,i)=>{const pe=GS[k];if(pe){if(!pe.home)roamInit(pe,k);startTask(pe,k,STN[k][i]);pe.nxR=30}};P.gcNav=()=>NAV;P.gcSetCar=()=>setCar(true);P.gcSell=()=>{talk('vin');openSell()};P.gcSellPick=i=>pickSell(i);P.gcSellList=()=>sfList();P.gcPath=(k,x,z)=>navPath(GS[k].g.position,V3(x,0,z),null);P.gcTalk=talk;P.gcAct=act;P.gcPick=(x,y)=>pickAt(x,y);P.gcHover=k=>{GS.hov=k};P.gcPop=popIn;
 })();
 
 </script><script>window.PT8_BP&&PT8_BP(0.500)</script><script>(function(){var fin=0;function done(){if(fin)return;fin=1;var b=document.getElementById("ptBoot"),c=document.getElementById("ptBootCss");if(window.PT8_BP)PT8_BP(1);if(c)c.remove();if(!b)return;b.classList.add("rdy");if(!document.getElementById("ptTitle")){b.style.opacity=0;setTimeout(function(){b.remove()},1050)}}function go(){var w=window.PT8_BOOT;(w&&w.then?w:Promise.resolve()).then(function(){requestAnimationFrame(function(){requestAnimationFrame(function(){setTimeout(done,350)})})})}if(document.readyState==="complete")go();else addEventListener("load",go);setTimeout(done,900000)})();</script></body></html>

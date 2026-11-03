@@ -135,7 +135,7 @@ BK.poseRider=(m,ps,gripW)=>{const R=m.rider,I=m.I;if(!R)return;if(!R.people)retu
  /* arms: IK from each upper arm to its hand target */
  const j=V(),e=V();
  for(let s=0;s<2;s++){const sg=s?-1:1,S=s?'R':'L';const sh=bodyAt('upper_arm'+S);let H;
-  if(ps.hands&&ps.hands[s])H=V(ps.hands[s][0]*sg,ps.hands[s][1],ps.hands[s][2]);
+  if(ps.hands&&ps.hands[s]){H=V(ps.hands[s][0]*sg,ps.hands[s][1],ps.hands[s][2]);/* a hand on its way to or from the grip turns with the bars, so it never leaves the bar behind when you steer mid-move */const G0=V(I.grip[0]*sg,I.grip[1],I.grip[2]),dg=H.distanceTo(G0),w=Math.max(0,1-dg/.45);if(w>0){const G1=G0.clone().sub(m.steer.position).applyQuaternion(m.steer.quaternion).add(m.steer.position);H.addScaledVector(G1.sub(G0),w)}}
   /* round 14: a gripping hand lies over the bar, palm down: fingers forward and down across the grip (turned with the bars), the wrist
      a palm's length behind and a little above it. A free hand: the wrist a palm short of its target */
   const grip=!(ps.hands&&ps.hands[s]),sq=m.steer.quaternion,dT=V(0,-.45,1).normalize().applyQuaternion(sq),nT=V(0,-1,-.45).normalize().applyQuaternion(sq);

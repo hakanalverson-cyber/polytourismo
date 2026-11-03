@@ -560,7 +560,7 @@ function step(dt){if(!B)return;const live=!B.paused;
   for(const p of B.pl){physStep(p,dt);if(!B)return;collide(p);scoreStep(p,dt)}collideRiders();
   trafficStep(dt);fxStep(dt);
   const sMin=Math.min(...B.pl.map(p=>p.s)),sMax=Math.max(...B.pl.map(p=>p.s));B.world.update(sMin,sMax);B.world.tick(dt,sMin,sMax);
-  for(const p of B.pl){if(!p.wipe)poseRiderFor(p,dt);placeBike(p,dt);if(p.eng)p.eng.set(p.rpm,p.th,p.v,!p.wipe&&B.state!=='done')}}
+  for(const p of B.pl){placeBike(p,dt);if(!p.wipe)poseRiderFor(p,dt);if(p.eng)p.eng.set(p.rpm,p.th,p.v,!p.wipe&&B.state!=='done')}}
  render(dt);hudStep(dt)}
 function render(dt){const W=R.domElement.width,H=R.domElement.height,n=B.pl.length;R.setScissorTest(true);
  for(let i=0;i<n;i++){const p=B.pl[i],cam=B.cams[i],x=n>1?(i*W/2)|0:0,w=n>1?(W/2)|0:W;camStep(p,cam,dt,w/H);
