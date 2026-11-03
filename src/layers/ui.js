@@ -563,7 +563,7 @@ P.addPlayer=addPlayer;P.removePlayer=removePlayer;
 const carReg=(box,np)=>{try{const h=box.querySelector('.gxHero'),t=h.querySelector('.gxTn b'),hr=h.getBoundingClientRect(),tr_=t.getBoundingClientRect();if(!hr.height)return[.04,.88,-.6,.6];
  /* round 30: the cars are centred in the space between the end of the car name and the picture's right edge */
  let tx=tr_.right;try{const rg=document.createRange();rg.selectNodeContents(t);tx=rg.getBoundingClientRect().right}catch(e){}const x0=Math.max(-.2,Math.min(.5,Math.round((2*((tx-hr.left)/hr.width)-1+.05)*50)/50)),x1=1.0;
- let yc=1-2*((tr_.top+tr_.height/2-hr.top)/hr.height);yc=Math.round(yc*50)/50;/* round 29: one car fills much more of the picture */if(np===1){const hh=1.02;yc=Math.max(-1.02+hh,Math.min(.96-hh,yc+.1));return[x0,x1,yc-hh,yc+hh]}const hh=np>2?.92:.95;/* round 31: bigger */yc=Math.max(-.98+hh,Math.min(.98-hh,yc));return[x0,x1,yc-hh,yc+hh]}catch(e){return[.04,.88,-.6,.6]}};
+ let yc=1-2*((tr_.top+tr_.height/2-hr.top)/hr.height);yc=Math.round(yc*50)/50;/* round 29: one car fills much more of the picture */if(np===1){const hh=1.02;yc=Math.max(-1.02+hh,Math.min(.96-hh,yc+.1));return[x0,x1,yc-hh,yc+hh]}const hh=np>2?.92:.95;/* round 32: the region may run past the picture edge so the cars always follow the name's height (the cars themselves are much shorter than the region) */yc=Math.max(-.62,Math.min(.62,yc));return[x0,x1,yc-hh,yc+hh]}catch(e){return[.04,.88,-.6,.6]}};
 /* the player being edited: their car glows in their colour, then fades after a few seconds; any change or typing for them lights it again */
 function gxHiPulse(){const h=document.getElementById('gxHi');if(!h)return;h.classList.remove('on');void h.offsetWidth;h.classList.add('on')}
 P.gxHiPulse=gxHiPulse;
