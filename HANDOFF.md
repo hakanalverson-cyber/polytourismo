@@ -154,3 +154,9 @@ Hakan bought "Cartoon Race Track Imola" and "Cartoon Race Track Atlanta" (Retro 
 - Quick Play pays QP_K = .25: P.racePay / P.raceBase wrapped (P.qpK()), bikes.js cut-up payout multiplied by P.qpK().
 - Tests: tests/career1.json (hub, talk, offers), tests/career2.json (forced race result, wear, Nina repair).
 - Ideas not done yet: Nina working on the car (pose), a rival, a career cut-up event, idle animations.
+- Rework (Nov 3, later): the garage is Hakan's Garage.zip, baked offline by tools/garage/bake.py into packs/garage_lp.bin (flat colour per face, uint16 positions; 'shell' + 'clutter' groups, ~1.9 MB) and embedded as window.GAR2_B64 in BIKES/PACKS builds. The old edge_garage props and flatten() are gone from career.js.
+- Overview: camera up in the door-side corner (SPOT.over). Hover (mouse ray vs boxes, or Left/Right) shows a white inverted-hull outline (outline()/olSet(), smoothed normals in an oN attribute; skinned people sized from bind-pose height) and the person's head follows the cursor. Idle focus: Nina looks at the car, Vince at his hands.
+- Click: camera moves in, fog closes in behind the person and the clutter mesh is hidden; they turn to face you and react (pe.re) on every answer. Text box at the bottom (#gcBox, portrait rendered once per person in portraits()), choices in the menu-style panel (#gcDlg) on the right.
+- Car click: owned cars (view 'cars'), one click brings it out and Nina says a GOT line. Nina's tuning costs tuneFee() (asked first via UI.ch), then view 'tune' edits P.tuneSet live while she works on the car.
+- Vince's Marketplace (view 'mkt', G().mkt): 4 used cars at 36-56% price with wear and sometimes a bad paint (G().paint[id], drawn by badPaint() in the garage and in races). After buying, Nina pops in (popIn) with a cheap oil-and-basics fix and a repaint. Nina swears now and then, Vince is short and dry.
+- ui.js exposes P.carThumb(id) (data URL of the menu thumbnails).

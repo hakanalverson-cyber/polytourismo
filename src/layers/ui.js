@@ -778,6 +778,7 @@ function thumbFor(id){if(THC.has(id))return THC.get(id);
  ctd.position.set(-ct.x,-bb.min.y,-ct.z);car_.scale.setScalar(k);car_.rotation.y=(sz.x>sz.z?Math.PI/2:0)+Math.PI;TH.sc.add(car_);
  TH.r.render(TH.sc,TH.cam);const cv=document.createElement('canvas');cv.width=336;cv.height=200;cv.getContext('2d').drawImage(TH.r.domElement,0,0);TH.sc.remove(car_);
  THC.set(id,cv);return cv}
+const THU=new Map();P.carThumb=id=>{if(THU.has(id))return THU.get(id);const c=thumbFor(id),d=c?c.toDataURL():null;if(d)THU.set(id,d);return d};
 function pumpThumbs(){if(thRun)return;thRun=1;const go=()=>{const j=THQ.shift();if(!j){thRun=0;return}try{if(j.cv.isConnected){const t=thumbFor(j.id);if(t){j.cv.getContext('2d').drawImage(t,0,0,j.cv.width,j.cv.height);j.cv.classList.add('rdy')}}}catch(e){}setTimeout(go,8)};setTimeout(go,10)}
 /* big tracks: the sky dome, sun and panorama ride along with the camera so they never run out */
 const SKC=new WeakMap();P.skyTrack=(sc,cm)=>{if(!sc||!cm||!sc.isScene)return;let L=SKC.get(sc);if(!L||L.n!==sc.children.length){L=[];L.n=sc.children.length;for(const o of sc.children){const g=o.geometry;if(!g||!o.isMesh)continue;const pr=g.parameters||{};if(g.type==='SphereGeometry'&&pr.radius===1500)L.push([o,0,null,0]);else if(g.type==='SphereGeometry'&&pr.radius===40&&o.material&&o.material.fog===false)L.push([o,'rel']);else if(g.type==='CylinderGeometry'&&pr.radiusTop===1300&&pr.openEnded)L.push([o,0,90,0])}SKC.set(sc,L)}
