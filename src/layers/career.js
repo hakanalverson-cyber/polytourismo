@@ -540,7 +540,7 @@ body.gcG #v8Bg{opacity:0!important}
 #s8career.gcOn .gcDlg{position:absolute;right:5vw;top:calc(50% - 10px);max-height:calc(100vh - 230px);display:flex;flex-direction:column;transform:translate(50px,-50%) perspective(1400px) rotateY(-9deg);transform-origin:right center;width:clamp(360px,31vw,540px);z-index:3;opacity:0;pointer-events:none;
  padding:clamp(12px,1.1vw,20px);box-sizing:border-box;border-radius:14px;background:linear-gradient(180deg,#2a2e33ec,#141619f2);box-shadow:inset 0 1px 0 #ffffff35,0 0 0 1px #000,0 24px 50px #000c;transition:opacity .35s,transform .5s cubic-bezier(.16,.85,.25,1)}
 #s8career.gcOn .gcDlg.on{opacity:1;transform:translate(0,-50%) perspective(1400px) rotateY(-9deg);pointer-events:auto}
-body.gcPhone #s8career.gcOn .gcBox.on{transform:translateX(262px)}
+body.gcPhone #s8career.gcOn .gcDlg.on{opacity:0;pointer-events:none}
 #s8career.gcOn .gcDlg h6:empty{display:none}
 #s8career.gcOn .gcDlg h6{margin:2px 8px 10px;font:600 11px var(--gt);letter-spacing:.24em;color:var(--c);text-transform:uppercase;display:flex;align-items:center;gap:10px}
 #s8career.gcOn .gcDlg h6 span{margin-left:auto;color:#9aa4b0;letter-spacing:.14em}
@@ -642,24 +642,32 @@ body.gcPhone #s8career.gcOn .gcBox.on{transform:translateX(262px)}
 #gcAnn .pic{flex:none;width:48px;height:48px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:#22262c;box-shadow:0 0 0 2px #7fb6ff;font:300 22px var(--gt)}#gcAnn .pic img{width:100%;height:100%;object-fit:cover;transform:scale(1.25)}
 #gcAnn .tx{flex:1;min-width:0}#gcAnn small{display:block;font:700 9px var(--gt);letter-spacing:.22em}#gcAnn small.ok{color:#7ee3a0}#gcAnn small.no{color:#ff9d90}
 #gcAnn b{display:block;font:500 16px var(--gt);margin:2px 0}#gcAnn p{margin:0;font:400 12.5px/1.35 var(--gt);color:#b8c0c8}#gcAnn .cr{flex:none;font:700 17px var(--gt);color:#7ee3a0}#gcAnn .cr.neg{color:#ff9d90}
-#gcTxt{position:fixed;left:22px;bottom:-30px;z-index:99991;transform:translateY(105%) rotate(-4deg);transition:transform .55s cubic-bezier(.16,.9,.25,1.1);pointer-events:none;font-family:"Courier New",ui-monospace,monospace}
-#gcTxt.on{transform:translateY(0) rotate(2deg);pointer-events:auto}
-#gcTxt .ph{width:250px;padding:16px 16px 22px;border-radius:38px 38px 46px 46px;background:linear-gradient(90deg,#4b5057 0%,#7a8088 18%,#6a7078 50%,#5a6068 82%,#3e4248 100%);box-shadow:inset 0 2px 0 #ffffff40,inset 0 -3px 6px #0006,0 0 0 2px #22252a,0 24px 50px #000c}
-#gcTxt .ear{width:46px;height:5px;margin:2px auto 8px;border-radius:3px;background:#2a2d31;box-shadow:inset 0 1px 2px #000}
-#gcTxt .brand{text-align:center;font:700 9px/1 Arial,sans-serif;letter-spacing:.32em;color:#d8dce0a0;margin-bottom:7px}
-#gcTxt .lcd{height:230px;display:flex;flex-direction:column;padding:6px 7px;border-radius:6px;background:linear-gradient(180deg,#a8c48c,#97b57c);box-shadow:inset 0 0 0 3px #1e2418,inset 0 3px 8px #0005;color:#1d2a14;font-size:12px;line-height:1.25;-webkit-font-smoothing:none;image-rendering:pixelated}
-#gcTxt .bar{display:flex;align-items:center;gap:6px;border-bottom:2px solid #1d2a14;padding-bottom:3px;margin-bottom:4px}#gcTxt .bar b{flex:1;text-align:center;font-size:11px;letter-spacing:.08em}
-#gcTxt .sig{display:flex;align-items:flex-end;gap:1px;height:9px}#gcTxt .sig i{width:2px;background:#1d2a14}#gcTxt .sig i:nth-child(1){height:3px}#gcTxt .sig i:nth-child(2){height:5px}#gcTxt .sig i:nth-child(3){height:7px}#gcTxt .sig i:nth-child(4){height:9px}
-#gcTxt .bat{width:14px;height:7px;border:1px solid #1d2a14;padding:1px}#gcTxt .bat i{display:block;height:100%;width:70%;background:#1d2a14}
-#gcTxt .msgs{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;display:flex;flex-direction:column;gap:5px}
-#gcTxt .m{max-width:88%;padding:2px 4px;border:1px solid #1d2a14;white-space:pre-wrap;word-break:break-word}#gcTxt .m s{display:block;text-decoration:none;font-size:9px;font-weight:700;letter-spacing:.1em;opacity:.75}
-#gcTxt .m.them{align-self:flex-start}#gcTxt .m.me{align-self:flex-end;background:#1d2a14;color:#a8c48c}#gcTxt .m.typing{animation:gcBlink .6s steps(2) infinite}
-#gcTxt .m.note{align-self:center;border:0;border-top:1px dashed #1d2a14;border-bottom:1px dashed #1d2a14;font-size:10px;font-weight:700;letter-spacing:.06em}
-#gcTxt .opts{border-top:2px solid #1d2a14;margin-top:4px;padding-top:3px;display:flex;flex-direction:column;gap:1px}#gcTxt .opts:empty{display:none}
-#gcTxt .opts div{cursor:pointer;padding:1px 3px;font-size:11px}#gcTxt .opts div:hover{background:#1d2a14;color:#a8c48c}#gcTxt .opts em{font-style:normal;font-weight:700;margin-right:5px}
-#gcTxt .keys{display:flex;justify-content:space-between;align-items:center;margin:12px 4px 10px}#gcTxt .keys u{width:44px;height:12px;border-radius:7px;background:#2f3338;box-shadow:inset 0 1px 0 #ffffff30}#gcTxt .keys u.nav{width:56px;height:26px;border-radius:50%}
-#gcTxt .pad{display:grid;grid-template-columns:repeat(3,1fr);gap:6px 10px;padding:0 6px}#gcTxt .pad i{font:700 12px/20px Arial,sans-serif;font-style:normal;text-align:center;border-radius:10px 10px 12px 12px;background:#2f3338;color:#c9ced3;box-shadow:inset 0 1px 0 #ffffff30,0 1px 0 #0008}
-@keyframes gcBlink{50%{opacity:.25}}
+#gcTxt{position:fixed;left:5vw;top:calc(50% - 50px);z-index:99991;transform:translate(-30px,-50%) rotate(-3deg);opacity:0;transition:transform .5s cubic-bezier(.16,.9,.25,1.1),opacity .3s;pointer-events:none;font-family:Tahoma,Verdana,"Segoe UI",sans-serif}
+#gcTxt.on{transform:translate(0,-50%) rotate(0);opacity:1;pointer-events:auto}
+#gcTxt .ph{width:286px;padding:14px 12px 12px;border-radius:30px;background:linear-gradient(160deg,#3a3f46 0%,#17191c 40%,#0c0d0f 100%);box-shadow:inset 0 1px 0 #ffffff40,inset 0 0 0 1px #ffffff14,0 0 0 1px #000,0 26px 60px #000c}
+#gcTxt .top{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:9px}#gcTxt .ear{width:52px;height:5px;border-radius:3px;background:#050506;box-shadow:inset 0 1px 1px #000,0 1px 0 #ffffff1a}#gcTxt .cam{width:7px;height:7px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#4a6d9c,#05070a 60%)}
+#gcTxt .scr{height:min(400px,calc(100vh - 395px));min-height:220px;display:flex;flex-direction:column;border-radius:6px;overflow:hidden;background:#eef1f5;box-shadow:0 0 0 2px #000,inset 0 0 0 1px #0004;font-size:12px;line-height:1.3;color:#1b2430}
+#gcTxt .sb{display:flex;align-items:center;gap:6px;padding:2px 7px;background:linear-gradient(#2b2f36,#16181c);color:#e9edf2;font:700 10px Tahoma,sans-serif}#gcTxt .sb b{flex:1;text-align:center;font-weight:700}
+#gcTxt .sig{display:flex;align-items:flex-end;gap:1px;height:9px}#gcTxt .sig i{width:3px;background:#e9edf2}#gcTxt .sig i:nth-child(1){height:3px}#gcTxt .sig i:nth-child(2){height:5px}#gcTxt .sig i:nth-child(3){height:7px}#gcTxt .sig i:nth-child(4){height:9px}
+#gcTxt .bat{width:16px;height:8px;border:1px solid #e9edf2;border-radius:2px;padding:1px}#gcTxt .bat i{display:block;height:100%;width:70%;background:#7be37b}
+#gcTxt .hd{display:flex;align-items:center;gap:8px;padding:6px 9px;background:linear-gradient(#6ea7e8,#2f6fbf 55%,#245fab);color:#fff;text-shadow:0 1px 0 #0005;box-shadow:inset 0 1px 0 #ffffff70,0 1px 0 #0003}
+#gcTxt .av{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(#f4f7fb,#c9d3df);color:#2f6fbf;font:700 13px Tahoma,sans-serif;text-shadow:none;box-shadow:0 1px 2px #0006}
+#gcTxt .hd b{display:block;font:700 13px Tahoma,sans-serif}#gcTxt .hd small{display:block;font-size:9.5px;opacity:.85}
+#gcTxt .px{display:flex;background:#fff;border-bottom:1px solid #c3ccd7}#gcTxt .px span{flex:1;min-width:0;padding:3px 6px;border-right:1px solid #dde3ea;text-align:center}#gcTxt .px span:last-child{border:0;background:#eef5ff}#gcTxt .px u{display:block;text-decoration:none;font:700 8px Tahoma,sans-serif;letter-spacing:.08em;color:#7a8698}#gcTxt .px b{display:block;font:700 11px Tahoma,sans-serif;color:#1b2430;white-space:nowrap;transition:color .3s}#gcTxt .px b.up{color:#2f8f2f}#gcTxt .px b.dn{color:#c9483f}
+#gcTxt .msgs{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;display:flex;flex-direction:column;gap:6px;padding:8px 7px;background:linear-gradient(#f6f8fb,#e3e8ef)}
+#gcTxt .m{max-width:82%;padding:5px 9px;border-radius:12px;white-space:pre-wrap;word-break:break-word;box-shadow:0 1px 1px #0002}#gcTxt .m s{display:none}
+#gcTxt .m.them{align-self:flex-start;background:linear-gradient(#ffffff,#eceff3);border:1px solid #c7ced8;border-bottom-left-radius:3px}
+#gcTxt .m.me{align-self:flex-end;background:linear-gradient(#8fd06a,#5fb03d);border:1px solid #4b9a2c;color:#fff;text-shadow:0 1px 0 #0003;border-bottom-right-radius:3px}
+#gcTxt .m.typing{color:#8692a0;animation:gcTxBlink .6s steps(2) infinite}
+@keyframes gcTxBlink{50%{opacity:.3}}
+#gcTxt .m.note{align-self:center;max-width:none;padding:2px 9px;border-radius:9px;background:#c9d2de;box-shadow:none;color:#3d4a5a;font-size:10px;font-weight:700;letter-spacing:.05em}
+#gcTxt .opts{display:flex;flex-direction:column;gap:3px;padding:6px;background:linear-gradient(#dfe5ec,#cdd5df);border-top:1px solid #aab4c1}#gcTxt .opts:empty{display:none}
+#gcTxt .opts div{display:flex;align-items:center;gap:7px;cursor:pointer;padding:4px 8px;border-radius:7px;background:linear-gradient(#fdfdfe,#e8ecf1);border:1px solid #b5bfcc;font-size:11.5px;color:#1b2430}
+#gcTxt .opts div:hover{background:linear-gradient(#6ea7e8,#2f6fbf);border-color:#245fab;color:#fff}#gcTxt .opts em{flex:none;width:15px;height:15px;border-radius:50%;display:grid;place-items:center;font:700 9.5px Tahoma,sans-serif;font-style:normal;background:#2f6fbf;color:#fff}
+#gcTxt .opts div:hover em{background:#fff;color:#2f6fbf}
+#gcTxt .keys{display:flex;align-items:center;justify-content:space-between;margin:11px 6px 2px}#gcTxt .keys u{width:58px;height:16px;border-radius:9px;background:linear-gradient(#2c3036,#15171a);box-shadow:inset 0 1px 0 #ffffff26,0 1px 0 #000}
+#gcTxt .keys u.g{box-shadow:inset 0 1px 0 #ffffff26,inset 0 -2px 0 #3fa34d}#gcTxt .keys u.r{box-shadow:inset 0 1px 0 #ffffff26,inset 0 -2px 0 #c9483f}
+#gcTxt .keys .nav{width:44px;height:44px;border-radius:50%;background:radial-gradient(circle at 50% 40%,#3b4048,#15171a 70%);box-shadow:inset 0 1px 0 #ffffff30,0 0 0 2px #0a0b0c;display:grid;place-items:center}#gcTxt .keys .nav i{width:16px;height:16px;border-radius:50%;background:linear-gradient(#4a5058,#24282d);box-shadow:inset 0 1px 0 #ffffff30}
 @keyframes gcLdIn{from{opacity:0}}
 @keyframes gcLdPan{to{transform:translateX(8%)}}
 @keyframes gcLdT{from{letter-spacing:.4em;opacity:0}}@keyframes gcSheen{0%{background-position:100% 0}60%,100%{background-position:-60% 0}}
@@ -777,10 +785,20 @@ function sfWire(d){const f=UI.sf;if(!f)return;const ti=d.querySelector('.sfIn in
    take it or leave it. The phone slides up from the bottom right like an old candybar handset: grey plastic, a green-lit screen, numbered
    replies (keys 1 to 4 work too) */
 const TX={on:false,el:null,o:null};
+/* the strip under the contact: what the car costs new, what it was listed at, and the number currently on the table */
+function txPx(nw,base,cur,lbl){const e=TX.el;if(!e)return;e.querySelector('.pn').textContent=fmtCr(nw);e.querySelector('.pl').textContent=lbl||'LISTED';e.querySelector('.pb').textContent=fmtCr(base);const c=e.querySelector('.pc'),pv=+(c.dataset.v||0);c.textContent=fmtCr(cur);c.classList.toggle('up',!!pv&&cur>pv);c.classList.toggle('dn',!!pv&&cur<pv);c.dataset.v=cur}
+/* reasons: what's wrong with it (used by whoever is buying) and what's right with it (used by whoever is selling), from the car itself */
+function flaws(x){const L=[];if(x.bad)L.push(`The paint is a disaster, that's ${fmtCr(1200)} just to fix that.`,`Who painted it? I'd have to redo it.`);
+ if(x.cond<.6)L.push(`It's at ${Math.round(x.cond*100)}%. That's a lot of work.`,`Condition's rough, ${Math.round(x.cond*100)}%. It needs a mechanic.`);else if(x.cond<.85)L.push(`It's not perfect, ${Math.round(x.cond*100)}% condition.`);
+ if(x.km>120000)L.push(`It's done ${Math.round(x.km/1000)}k km.`);
+ L.push(`I've seen cheaper ones around.`,`Cash, today, no messing around.`,`That's all I've got budgeted.`);return L}
+function strengths(x){const L=[];if(x.cond>=.85)L.push(`It's in great shape, ${Math.round(x.cond*100)}%.`,`Nothing wrong with it. At all.`);if(!x.bad)L.push(`Original paint, never touched.`);
+ if(x.price<x.nw*.6)L.push(`A new one is ${fmtCr(x.nw)}. This is already a steal.`);if(x.km&&x.km<60000)L.push(`Only ${Math.round(x.km/1000)}k km on it.`);
+ L.push(`I've had other people asking.`,`It drives perfect.`,`I'm not giving it away.`);return L}
 const r50=v=>Math.round(v/50)*50;
-function txEl(){if(TX.el)return TX.el;const e=document.createElement('div');e.id='gcTxt';e.innerHTML='<div class="ph"><div class="ear"></div><div class="brand">POLYFON</div><div class="lcd"><div class="bar"><span class="sig"><i></i><i></i><i></i><i></i></span><b></b><span class="bat"><i></i></span></div><div class="msgs"></div><div class="opts"></div></div><div class="keys"><u></u><u class="nav"></u><u></u></div><div class="pad">'+[1,2,3,4,5,6,7,8,9,'*',0,'#'].map(k=>`<i>${k}</i>`).join('')+'</div></div>';document.body.appendChild(e);TX.el=e;
+function txEl(){if(TX.el)return TX.el;const e=document.createElement('div');e.id='gcTxt';e.innerHTML='<div class="ph"><div class="top"><div class="ear"></div><div class="cam"></div></div><div class="scr"><div class="sb"><span class="sig"><i></i><i></i><i></i><i></i></span><b class="tm"></b><span class="bat"><i></i></span></div><div class="hd"><div class="av"></div><div><b></b><small>Marketplace</small></div></div><div class="px"><span><u>NEW</u><b class="pn"></b></span><span><u class="pl">LISTED</u><b class="pb"></b></span><span><u>ON THE TABLE</u><b class="pc"></b></span></div><div class="msgs"></div><div class="opts"></div></div><div class="keys"><u class="g"></u><span class="nav"><i></i></span><u class="r"></u></div></div>';document.body.appendChild(e);TX.el=e;
  e.querySelector('.opts').addEventListener('click',ev=>{const b=ev.target.closest('[data-o]');if(b)txPick(+b.dataset.o)});return e}
-function txOpen(o){TX.on=true;document.body.classList.add('gcPhone');TX.o=o;o.n=0;o.msgs=[];const e=txEl();e.querySelector('.bar b').textContent=o.who.toUpperCase();e.querySelector('.msgs').innerHTML='';e.querySelector('.opts').innerHTML='';
+function txOpen(o){TX.on=true;document.body.classList.add('gcPhone');TX.o=o;o.n=0;o.msgs=[];const e=txEl();e.querySelector('.hd b').textContent=o.who;e.querySelector('.av').textContent=o.who==='Unknown'?'?':o.who.replace(/^Big /,'')[0];{const d=new Date();e.querySelector('.sb .tm').textContent=d.getHours()+':'+String(d.getMinutes()).padStart(2,'0')}e.querySelector('.msgs').innerHTML='';e.querySelector('.opts').innerHTML='';{const pc=e.querySelector('.pc');pc.dataset.v='';pc.className='pc'}
  e.classList.remove('on');void e.offsetWidth;e.classList.add('on');P.sfx&&P.sfx('select')}
 function txClose(){TX.on=false;document.body.classList.remove('gcPhone');if(TX.el)TX.el.classList.remove('on');TX.o=null}
 function txMsg(me,t){const o=TX.o;if(!o)return;o.n++;const m=TX.el.querySelector('.msgs'),d=document.createElement('div');d.className='m '+(me?'me':'them');d.innerHTML=`<s>${me?'ME':esc_(o.who.toUpperCase())}</s>${esc_(t.replace(/Cr\.\./g,'Cr.'))}`;m.appendChild(d);m.scrollTop=m.scrollHeight;P.sfx&&P.sfx(me?'move':'select')}
@@ -798,33 +816,33 @@ function budge(cur,lim,gap,dir){const room=Math.abs(cur-lim);if(room<50)return c
  if(Math.random()<(near?.55:.3))return cur;const step=Math.min(room,Math.max(100,Math.abs(gap)*(near?.15:.35)));return r50(cur+dir*step)}
 /* buying: you text the seller */
 function haggleBuy(l){const c=BYID[l.id],P0=l.price,D=Math.min(5000,r50(Math.max(250,P0*.15))),F=P0-D;l.tx=1;P.save();
- const o={who:rnd(['Dale','Marco','Steph','Big Mike','Ronnie','Trish','Gus','Lena']),ask:P0};txOpen(o);
+ const o={who:rnd(['Dale','Marco','Steph','Big Mike','Ronnie','Trish','Gus','Lena']),ask:P0};txOpen(o);const x={cond:l.cond,km:l.km,bad:!!(l.L||l.bad),nw:c.price||P0,price:P0},why=()=>' '+rnd(flaws(x)),sure=()=>rnd(strengths(x))+' ';txPx(x.nw,P0,P0,'LISTED');
  const offers=()=>{const a=o.ask;return[a-r50(a*.05),a-r50(a*.1),a-r50(a*.2)].filter((v,i,A)=>v>0&&v<a&&A.indexOf(v)===i)};
- const done=v=>{if(v!=null){l.deal=v;P.save();txNote(`DEAL: ${fmtCr(v)}`)}else txNote('CONVERSATION ENDED');TX.el.querySelector('.opts').innerHTML='<div data-o="0"><em>1</em>Close</div>';o.opts=[{t:'Close',a:()=>{txClose();if(scr==='s8career'&&UI.who==='vin'){const i=G().mkt.indexOf(l);if(i>=0&&v!=null)mktPick(i);else{drawDlg();hint()}}}}]};
+ const done=v=>{if(v!=null){l.deal=v;P.save();txPx(x.nw,P0,v,'LISTED');txNote(`DEAL: ${fmtCr(v)}`)}else txNote('CONVERSATION ENDED');TX.el.querySelector('.opts').innerHTML='<div data-o="0"><em>1</em>Close</div>';o.opts=[{t:'Close',a:()=>{txClose();if(scr==='s8career'&&UI.who==='vin'){const i=G().mkt.indexOf(l);if(i>=0&&v!=null)mktPick(i);else{drawDlg();hint()}}}}]};
  const mine=()=>{if(o.n>=5){done(null);return}const L=offers().map(v=>({t:`Offer ${fmtCr(v)}`,a:()=>send(v)}));if(o.n>0)L.unshift({t:`OK, ${fmtCr(o.ask)}`,a:()=>{txMsg(true,`Ok. ${fmtCr(o.ask)} it is.`);done(o.ask)}});L.push({t:'Never mind',a:()=>{txMsg(true,'Never mind, thanks.');done(null)}});txOpts(L.slice(0,4))};
- const send=v=>{txMsg(true,o.n===0?rnd([`Hey, is the ${c.name} still for sale? Would you take ${fmtCr(v)}?`,`Hi. Interested in the ${c.name}. ${fmtCr(v)} cash?`]):rnd([`How about ${fmtCr(v)}?`,`${fmtCr(v)}. Final offer.`,`Come on. ${fmtCr(v)}?`]));
+ const send=v=>{txMsg(true,(o.n===0?rnd([`Hey, is the ${c.name} still for sale? Would you take ${fmtCr(v)}?`,`Hi. Interested in the ${c.name}. ${fmtCr(v)} cash?`]):rnd([`How about ${fmtCr(v)}?`,`${fmtCr(v)}, then.`,`Come on. ${fmtCr(v)}?`]))+why());
   const gap=o.ask-v,last=o.n>=4;let nx=v>=o.ask?o.ask:budge(o.ask,F,gap,-1);if(v>=nx){txReply(rnd([`Deal. Come get it.`,`Fine. ${fmtCr(v)}. Bring cash.`]),()=>done(v));return}
-  const moved=nx<o.ask,near=nx-F<D*.25;o.ask=Math.max(F,nx);
-  const t=v<F-D?rnd([`Lol. No.`,`Are you serious? It's ${fmtCr(o.ask)}.`,`Don't waste my time. ${fmtCr(o.ask)}.`]):!moved?rnd([`Price is ${fmtCr(o.ask)}. Not moving on it.`,`No. ${fmtCr(o.ask)}.`,`It's worth every bit of ${fmtCr(o.ask)}, man.`]):near?rnd([`Ugh. ${fmtCr(o.ask)}. And that's me being nice. Not a cent less.`,`Man... fine. ${fmtCr(o.ask)}. That's it. I mean it.`,`${fmtCr(o.ask)}. I'm already losing money here.`]):rnd([`I could do ${fmtCr(o.ask)}.`,`Meet me at ${fmtCr(o.ask)}?`,`${fmtCr(o.ask)}, and you're picking it up today.`]);
+  const moved=nx<o.ask,near=nx-F<D*.25;o.ask=Math.max(F,nx);txPx(x.nw,P0,o.ask,'LISTED');
+  const t=v<F-D?rnd([`Lol. No.`,`Are you serious? It's ${fmtCr(o.ask)}.`,`Don't waste my time. ${fmtCr(o.ask)}.`]):!moved?sure()+rnd([`Price is ${fmtCr(o.ask)}. Not moving on it.`,`Still ${fmtCr(o.ask)}.`,`It's worth every bit of ${fmtCr(o.ask)}, man.`]):near?rnd([`Ugh. ${fmtCr(o.ask)}. And that's me being nice. Not a cent less.`,`Man... fine. ${fmtCr(o.ask)}. That's it. I mean it.`,`${fmtCr(o.ask)}. I'm already losing money here.`]):(x.bad&&Math.random()<.5?`Yeah, ok, the paint's bad. `:x.cond<.7&&Math.random()<.5?`Fair, it needs some work. `:'')+rnd([`I could do ${fmtCr(o.ask)}.`,`Meet me at ${fmtCr(o.ask)}?`,`${fmtCr(o.ask)}, and you're picking it up today.`]);
   txReply(last?t+' Take it or leave it.':t,()=>{if(o.n>=5){txOpts([{t:`Take it at ${fmtCr(o.ask)}`,a:()=>done(o.ask)},{t:'Leave it',a:()=>done(null)}])}else mine()})};
  mine()}
 /* selling: a buyer texts you about a listing */
 function haggleSell(s){const c=BYID[s.id],A=s.ask,D=Math.min(5000,r50(Math.max(250,A*.15))),floor=A-D;let off=Math.max(floor,A-r50(D*(.5+Math.random()*.5)));const cap=Math.min(A,r50(off+(A-off)*(.35+Math.random()*.4)));
- const o={who:rnd(['Unknown','Kev','Jordan','Priya','Tommo','Sal','Nadia','Rick']),bid:off};txOpen(o);
+ const o={who:rnd(['Unknown','Kev','Jordan','Priya','Tommo','Sal','Nadia','Rick']),bid:off};txOpen(o);const x={cond:1-wearOf(s.id),km:0,bad:!!paintOf(s.id),nw:(c&&c.price)||A,price:A},why=()=>' '+rnd(flaws(x)),sure=()=>' '+rnd(strengths(x));txPx(x.nw,A,off,'YOUR PRICE');
  const fin=v=>{const i=sales().indexOf(s);if(v!=null){if(i>=0)sales().splice(i,1);const sv=P.SV();sv.cr+=v;if(sv.owned)sv.owned[s.id]=(sv.owned[s.id]||0)&~1;const g=G();delete g.wear[s.id];try{setPaint(s.id,null)}catch(e){}
-   if(curCar().id===s.id){const q=owned().find(x=>x.id!==s.id);if(q)P.setSel(0,q.id,q.alt)}P.save();txNote(`SOLD: ${fmtCr(v)}`);
+   if(curCar().id===s.id){const q=owned().find(x=>x.id!==s.id);if(q)P.setSel(0,q.id,q.alt)}P.save();txPx(x.nw,A,v,'YOUR PRICE');txNote(`SOLD: ${fmtCr(v)}`);
    setTimeout(()=>announce({ok:1,h:`Your ${c?c.name:'car'} sold`,p:`Haggled, but it's done. ${fmtCr(v)} is in your account.`,cr:v}),1800);if(scr==='s8career'){try{refreshCar();setCar()}catch(e){}}}
   else{s.due=Date.now()+(20+Math.random()*40)*1000;P.save();txNote('CONVERSATION ENDED')}
   o.opts=[{t:'Close',a:txClose}];TX.el.querySelector('.opts').innerHTML='<div data-o="0"><em>1</em>Close</div>'};
  const mine=()=>{const L=[{t:`Deal at ${fmtCr(o.bid)}`,a:()=>{txMsg(true,rnd([`Deal. ${fmtCr(o.bid)}.`,`Ok, ${fmtCr(o.bid)}. It's yours.`]));fin(o.bid)}}];
   if(o.n<4){const mid=r50((o.bid+A)/2);if(mid>o.bid&&mid<A)L.push({t:`Counter ${fmtCr(mid)}`,a:()=>counter(mid)});L.push({t:`Price is ${fmtCr(A)}`,a:()=>counter(A)})}
   L.push({t:'No thanks',a:()=>{txMsg(true,rnd([`No thanks.`,`Not that low. Sorry.`]));fin(null)}});txOpts(L)};
- const counter=v=>{txMsg(true,v>=A?rnd([`Price is firm. ${fmtCr(A)}.`,`It's ${fmtCr(A)}. That's already fair.`]):rnd([`Meet me at ${fmtCr(v)}?`,`Can't go that low. ${fmtCr(v)}?`]));
+ const counter=v=>{txMsg(true,(v>=A?rnd([`Price is firm. ${fmtCr(A)}.`,`It's ${fmtCr(A)}. That's already fair.`]):rnd([`Meet me at ${fmtCr(v)}?`,`Can't go that low. ${fmtCr(v)}?`]))+sure());
   if(v<=cap&&Math.random()<.5){txReply(rnd([`Fine. ${fmtCr(v)}. On my way.`,`Ok ok. ${fmtCr(v)}. Deal.`]),()=>fin(v));return}
-  const nb=Math.min(cap,budge(o.bid,cap,v-o.bid,1)),moved=nb>o.bid,near=cap-nb<Math.max(300,(cap-off)*.25);o.bid=nb;const last=o.n>=3;
-  const t=!moved?rnd([`${fmtCr(o.bid)}. That's what I've got.`,`Nah. ${fmtCr(o.bid)}.`,`I've seen cheaper. ${fmtCr(o.bid)}.`]):near?rnd([`Ugh. ${fmtCr(o.bid)}. That's everything I have, man.`,`${fmtCr(o.bid)}. Seriously, that's my limit.`]):rnd([`I can do ${fmtCr(o.bid)}.`,`${fmtCr(o.bid)}?`,`How about ${fmtCr(o.bid)}, cash today?`]);
+  const nb=Math.min(cap,budge(o.bid,cap,v-o.bid,1)),moved=nb>o.bid,near=cap-nb<Math.max(300,(cap-off)*.25);o.bid=nb;txPx(x.nw,A,o.bid,'YOUR PRICE');const last=o.n>=3;
+  const t=!moved?rnd([`${fmtCr(o.bid)}. That's what I've got.`,`Nah. ${fmtCr(o.bid)}.`,`Still ${fmtCr(o.bid)}.`])+why():near?rnd([`Ugh. ${fmtCr(o.bid)}. That's everything I have, man.`,`${fmtCr(o.bid)}. Seriously, that's my limit.`]):rnd([`I can do ${fmtCr(o.bid)}.`,`${fmtCr(o.bid)}?`,`How about ${fmtCr(o.bid)}, cash today?`]);
   txReply(last?t+' Last offer.':t,()=>{if(o.n>=5)txOpts([{t:`Take ${fmtCr(o.bid)}`,a:()=>fin(o.bid)},{t:'Turn it down',a:()=>fin(null)}]);else mine()})};
- txReply(rnd([`Hey, saw your ${s.title?'"'+s.title+'"':c.name}. Would you take ${fmtCr(off)}?`,`Is the ${c.name} still available? I can do ${fmtCr(off)} cash.`,`${fmtCr(off)} for the ${c.name}? Can pick up today.`]),mine)}
+ txReply(rnd([`Hey, saw your ${s.title?'"'+s.title+'"':c.name}. Would you take ${fmtCr(off)}?`,`Is the ${c.name} still available? I can do ${fmtCr(off)} cash.`,`${fmtCr(off)} for the ${c.name}? Can pick up today.`])+why(),mine)}
 /* the announcement */
 const inRace=()=>scr==='game'||scr==='bike';let ANN=null,annQ=[];
 function announce(o){annQ.push(o);if(!ANN||!ANN.classList.contains('on'))annNext()}
@@ -868,10 +886,10 @@ function popIn(id,bad){const c=BYID[id],oil=Math.max(150,Math.round(fixCost(id)*
  L.push({ic:'bye',t:'Later',a:()=>{UI.ch=null;say(rnd([`Suit yourself. It'll sound like a damn coffee grinder till then.`,`Your funeral.`]))}});
  UI.who='red';UI.view='talk';UI.f=0;UI.ch=L.length>1?L:null;aim();UI.line=line;UI.ty=null;if(GS.red){GS.red.tk=2.5;gesture(GS.red,'shrug')}drawDlg();hint()}
 function talk(who,keep,line){UI.who=who;if(!keep){UI.view='talk';UI.f=0;UI.ch=null}
- aim();if(!keep&&GS[who])gesture(GS[who],who==='red'?'hey':'nod');UI.line=line||UI.line||(who==='red'?redLine():vinLine());UI.ty=null;if(GS[who])GS[who].tk=2.5;if(who==='vin'){const g=G();if(!g.met){g.met=1;P.save()}}P.sfx&&!keep&&P.sfx('select');drawDlg();hint()}
+ aim();if(!keep&&GS[who])gesture(GS[who],who==='red'?'hey':'nod');UI.line=String(line||UI.line||(who==='red'?redLine():vinLine())).replace(/Cr\.\./g,'Cr.');UI.ty=null;if(GS[who])GS[who].tk=2.5;if(who==='vin'){const g=G();if(!g.met){g.met=1;P.save()}}P.sfx&&!keep&&P.sfx('select');drawDlg();hint()}
 function leave(){UI.who=null;UI.line='';UI.view='talk';UI.ch=null;aim();const d=$('gcDlg');if(d)d.classList.remove('on');const b=$('gcBox');if(b)b.classList.remove('on');P.sfx&&P.sfx('back');hint()}
 function act(k){if(k==='car'){P.sfx&&P.sfx('select');openCars()}else if(k)talk(k)}
-function say(t){setLine(t);UI.line=t}
+function say(t){setLine(t)}
 function setLine(t){t=String(t).replace(/Cr\.\./g,'Cr.');UI.line=t;if(UI.view==='cars'&&UI.who){bubble(UI.who,t);return}UI.ty={t,i:0};const pe=GS[UI.who];if(pe)pe.tk=Math.min(3.5,t.length/26);paintType()}
 function paintType(){const p=sec.querySelector('#gcBox .tx');if(!p||!UI.ty)return;const n=Math.floor(UI.ty.i),done=n>=UI.ty.t.length;p.innerHTML=esc_(UI.ty.t.slice(0,n))+(done?'':'<i class="cur"></i>')+'<span class="ghost">'+esc_(UI.ty.t.slice(n))+'</span>';p.classList.toggle('done',done)}
 function type(dt){const ty=UI.ty;if(!ty||ty.i>=ty.t.length)return;const n0=Math.floor(ty.i);ty.i=Math.min(ty.t.length,ty.i+dt*62);if(Math.floor(ty.i)!==n0)paintType()}

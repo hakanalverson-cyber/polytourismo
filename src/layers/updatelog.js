@@ -4,6 +4,7 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.03',d:'Nov 2, 2026',t:'Highway Cut-Up on bikes',items:[
+  'Career: the texting phone now sits where the list was, as a mid-2000s colour-screen phone, with what the car costs new, the listed price and the number on the table across the top. Everyone gives reasons now: buyers point at bad paint, wear and mileage, sellers at condition, original paint and what a new one costs.',
   'Career: haggling on an old phone. Text a Marketplace seller for a better price, and buyers sometimes text you about your listings with an offer. Five texts at most, nobody moves more than 5,000, and they get stubborn near their limit. You also get a notification when you buy a car.',
   'Career: a short black fade whenever the car changes (bringing one out, buying, selling, paint, repairs, tuning). Nina keeps her hands where they make sense (on her hips, her belt, the bench), no more holding nothing up or hammering the air while she tunes. Fewer lights in the garage for a smoother frame rate, and the selling form no longer jitters while you type.',
   'Races: the race now waits behind the black fade until the track is actually running smoothly, so the countdown starts as the picture comes up instead of running out in the dark. With damage on (always, in career) hitting a track wall hurts the car and riding along one wears it down.',
