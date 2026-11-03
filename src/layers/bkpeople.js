@@ -150,7 +150,7 @@ BK.poseRider=(m,ps,gripW)=>{const R=m.rider,I=m.I;if(!R)return;if(!R.people)retu
   /* turn the palm down onto the grip (the bind pose holds the palms inward) unless the hand is free */
   const qh=!grip?qf:swing(bF,V().copy(T.left).multiplyScalar(-sg),dT,nT,Q());put(R,X('hand'+S),e,qh,drv)}
  /* legs: IK from each hip joint to the foot target, knees forward and a little out */
- for(let s=0;s<2;s++){const sg=s?-1:1,S=s?'R':'L';const hj=bodyAt('thigh'+S);const F=V(ps.feet[s][0]*sg,ps.feet[s][1]+.07,ps.feet[s][2]-.05);
+ for(let s=0;s<2;s++){const sg=s?-1:1,S=s?'R':'L';const hj=bodyAt('thigh'+S);const F=V(ps.feet[s][0]*sg,ps.feet[s][1]+(ps.flat?Math.max(.04,T.bp[X('foot'+S)].y-T.bp[X('toe'+S)].y+.025):.07),ps.feet[s][2]-.05);/* flat: the ankle at its standing height */
   /* the inside knee opens out in a lean (lean + = right; +X is the rider's left) */const ko=Math.max(0,-sg*(ps.knee||0));F.x+=sg*ko*.08;
   const pole=hj.clone().add(V(.22*sg+sg*ko*1.6,.1-ko*.3,.9));ik(hj,F,T.len.th,T.len.sh,pole,j,e);
   const bT=V().subVectors(T.bp[X('shin'+S)],T.bp[X('thigh'+S)]),bS=V().subVectors(T.bp[X('foot'+S)],T.bp[X('shin'+S)]);
@@ -158,7 +158,8 @@ BK.poseRider=(m,ps,gripW)=>{const R=m.rider,I=m.I;if(!R)return;if(!R.people)retu
   put(R,X('thigh'+S),hj,swing(bT,nb,V().subVectors(j,hj),np,Q()),drv);
   const qs=swing(bS,nb,V().subVectors(e,j),np,Q());put(R,X('shin'+S),j,qs,drv);
   /* foot flat along the bike, toes forward */
-  const bFt=V().subVectors(T.bp[X('toe'+S)],T.bp[X('foot'+S)]);put(R,X('foot'+S),e,swing(bFt,T.left,V(0,-.25,1),left,Q()),drv)}};
+  const bFt=V().subVectors(T.bp[X('toe'+S)],T.bp[X('foot'+S)]);/* round 16: a standing pose (ps.flat) keeps the sole flat on the ground: the bind pose's own ankle-to-toe slope, turned forward */
+  const fd=ps.flat?V(0,bFt.y,Math.hypot(bFt.x,bFt.z)).normalize():V(0,-.25,1);put(R,X('foot'+S),e,swing(bFt,T.left,fd,left,Q()),drv)}};
 /* ---------------- wipeout ragdoll (people riders) ----------------
    Verlet particles on the joints: a stiff torso box (pelvis, neck, hips, shoulders), a neck to the head, and two-link arms and legs.
    Gravity, ground contact with sliding friction, and length constraints; then each bone is turned from its bind pose onto the particles. */

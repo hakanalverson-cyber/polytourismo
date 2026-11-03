@@ -785,7 +785,7 @@ function bikeShot(cv,list,only){if(!cv)return;list=Array.isArray(list)?list:[lis
  P.objShot(cv,key,()=>{const g=new THREE.Group();list.forEach((s,i)=>{if(only!=null&&i!==only)return;const d=BK.byId(s.id),m=BK.makeBike(s.id,BK.paintOf(d,s.paint),Object.assign({},RIDER_COL[i]||RIDER_COL[0],{who:s.who}));ms.push(m);
   const fake={m,d,trk_:null,lean:0,k:0};BK.poseBike(m,0,0,.18,0,0);const bp=basePose(fake),I=m.I,ppl=m.rider&&m.rider.people;
   /* round 15 (Hakan): player 1 stands beside the bike (on the camera side, one hand resting on the seat), any other rider sits on theirs */
-  if(ppl&&i===0){const T=m.rider.T,hy=(T.len.th+T.len.sh)*.98,S=I.seat;BK.poseRider(m,{hip:[-.62,hy,S[2]+.1],lean:0,side:0,look:-.05,turn:-.45,feet:[[-.5,0,S[2]+.02],[.76,0,S[2]+.16]],hands:[[-.2,S[1]+.06,S[2]+.3],[.86,hy-.02,S[2]+.12]]})}
+  if(ppl&&i===0){const T=m.rider.T,hy=(T.len.th+T.len.sh)*.98,S=I.seat;BK.poseRider(m,{flat:1,hip:[-.62,hy,S[2]+.1],lean:0,side:0,look:-.05,turn:-.45,feet:[[-.5,0,S[2]+.02],[.76,0,S[2]+.16]],hands:[[-.2,S[1]+.06,S[2]+.3],[.86,hy-.02,S[2]+.12]]})}
   else{if(ppl)bp.feet[0]=[I.peg[0]+.2,-.02,I.peg[2]+.18];BK.poseRider(m,Object.assign(bp,{look:-.05,turn:.35,side:ppl?-.06:0}))}
   m.g.position.set(list.length>1?(i?.75:-.75):0,0,list.length>1?(i?.9:-.9):0);g.add(m.g)});return g},{yaw:2.1,fy:list.length>1?1.45:1.3,fx:list.length>1?.8:.62,clear:true,
   /* round 13: the camera frames a fixed bike-sized box in each slot (2.2 m long, 1.5 m tall), so a small scooter is not blown up to a big bike's size */
