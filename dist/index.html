@@ -18557,7 +18557,8 @@ function bikeRender(){if(!PR)return;const two=PR.p[1].in,L=BK.list(),rows=[];
   rows.push({grp,dot,l:'Bike',v:d.name,opts:L.length,go:k=>{let j=L.findIndex(b=>b.id===s.id);s.id=L[(j+k+L.length)%L.length].id;PR.focus=i;re()}});
   rows.push({grp,dot,l:'Paint',v:PAINTN[s.paint]||'Paint',sw:rgb(BK.paintOf(d,s.paint)),opts:BK.PAINTS.length,go:k=>{s.paint=(s.paint+k+BK.PAINTS.length)%BK.PAINTS.length;PR.focus=i;re()}});
   rows.push({grp,l:'Keys',v:i?'Arrows &middot; tricks U I O P H J':'W A S D &middot; tricks E R F C Z X',opts:1})}
- /* like the car screen: rider 2's frame only appears once they are added (no empty frame, no stats panel) */
+ /* round 16: like the car screen, Add player is the next empty frame (dashed tile), not a button under the name */
+ if(step===2&&!two)rows.push({grp:1,add:1,pn:2,hint:'Arrow keys, tricks on U I O P H J',act:addRider});
  rows.forEach((r,j)=>{if(r.grp!=null&&step===2&&!r.add)r.pl=r.grp});
  if(step===1)for(const[k,l]of[['clock','Clock'],['traffic','Traffic'],['tod','Time of day']]){const Lo=OPTS[k],j=Math.max(0,Lo.findIndex(z=>String(z[0])===String(PR.opt[k])));
   rows.push({grp:/^(Traffic|Time of day)$/.test(l)?1:0,l,v:Lo[j][1],opts:Lo.length,go:dd=>{const n=(j+dd+Lo.length)%Lo.length;/* round 15: arrows wrap round */if(n!==j){PR.opt[k]=k==='clock'?+Lo[n][0]:Lo[n][0];re()}}})}
@@ -18566,7 +18567,7 @@ function bikeRender(){if(!PR)return;const two=PR.p[1].in,L=BK.list(),rows=[];
  const lineup=two?[PR.p[0],PR.p[1]]:[PR.p[0]];
  if(step===1)P.gxRender({kind:'Best score '+fmtN(SV().best||0),name:'Highway Cut-Up',facts:['Endless highway','Plains','Up to two riders, split screen'],rows,groups:['The ride','Conditions',''],shot:cv=>rideMap(cv),go:'Next: bikes'});
  else P.gxRender({kind:(two?'Player '+(fi+1)+' &middot; ':'')+esc(d.kind),name:esc(d.name),facts:[esc(d.kind),'Tricks on '+KEYS[fi].tkn.slice(0,TRICKS.length).join(' ')],side:'',rows,groups:['Player 1','Player 2'],grid:true,cols:PCOL,heroCls:'cars'+(PR.newP!=null?' fin':''),newP:PR.newP,rm:(p,go)=>{if(go){dropRider();return}return p===1&&two},
-  tnBtn:two?'':'<button class="gxAdd"><b>+</b> Add player</button>',onAdd:addRider,shot:cv=>{bikeShot(cv,lineup);/* round 15: the bike being edited glows for a moment, like the car screen */if(two&&P.gxHiPulse){const hc=document.createElement('canvas');hc.id='gxHi';hc.style.setProperty('--pc',PCOL[fi]);cv.after(hc);bikeShot(hc,lineup,fi);P.gxHiPulse()}},go:'Ride'});
+  onAdd:addRider,shot:cv=>{bikeShot(cv,lineup);/* round 15: the bike being edited glows for a moment, like the car screen */if(two&&P.gxHiPulse){const hc=document.createElement('canvas');hc.id='gxHi';hc.style.setProperty('--pc',PCOL[fi]);cv.after(hc);bikeShot(hc,lineup,fi);P.gxHiPulse()}},go:'Ride'});
  const g=$i('suGo');if(g)g.innerHTML='<span>'+(step===1?'Next: bikes &rsaquo;':'Ride')+'</span>'}
 function stopPrep(){if(!PR)return;const e=$i('bkPrep');if(e)e.style.display='none';if(PR.sc){for(const m of PR.bikes)if(m)BK.disposeBike(m);PR.world.dispose();PR.sky.dispose();R.toneMappingExposure=PR.exp0}PR=null}
 function leavePrep(){sfx.ui('back');stopPrep();document.body.classList.remove('bkOn');goMenu()}
