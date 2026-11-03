@@ -77,6 +77,13 @@ P.LOG=[
   'No more overpasses and sign gantries over the highway.',
   'The score plate sits right under the timer.',
   'Bike setup: no rider count up front. The bikes step has player frames, Add player brings rider 2 in (the x takes them out) just like the car screen, and the camera stays the same size for every bike.',
+  'Wheelies: the trick key pops the front up, then the throttle holds it and takes it deeper; ease off and it comes down.',
+  'Crash lines are vaguer (MISJUDGED THE GAP, BLINDSIDED, SQUEEZED OUT and so on) instead of naming the car you hit.',
+  'Traffic no longer drives through itself: cars sit centred on their own spot, a car that finds someone alongside mid lane change steers back, and nobody can overlap the car ahead. Your hitbox against traffic is the car body, not its mirrors.',
+  'Hands lie on top of the grips, palm down with the fingers wrapped over the bar, on every bike.',
+  'The Superbike\'s screen and dash turn with the bars, like the Sport 600\'s.',
+  'The bike preview shows the rider from the front.',
+  'Cut-Up HUD: time left at the top centre, the score top left, the skill chain top right, all on one line. Tab Pause sits right above player 1\'s guide key.',
 ]},
  {v:'0.02',d:'Oct 31, 2026',t:'Riviera island',items:[
   'Free Roam now takes place on the Riviera, a Mediterranean island about 5 km across that you can drive end to end: a coast road that loops the whole shore, a mountain pass that winds up through hairpins to a summit square with a stone parapet and a statue looking over the sea, and ridge roads branching off it. The island is generated from a seed, so it is the same every time.',

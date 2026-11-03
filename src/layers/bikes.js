@@ -133,10 +133,14 @@ function trafficStep(dt){const r=B.rngT,sMin=Math.min(...B.pl.map(p=>p.wipe?p.wi
   v.brk=acc<-1.2?1:0;v.v=Math.max(0,v.v+acc*dt);v.s+=v.v*dt*v.side;
   /* lane change in progress */
   if(v.chg){const c=v.chg;if(v.sigT>0){v.sigT-=dt;if(v.sigT<=0){/* look again before moving */if(!safe(v,c.to)){v.chg=null;v.sig=0;v.think=1+r()*2}}}
-   else{c.t+=dt;const u=ss(0,1,c.t/c.dur);v.d=v.side*lp(RD.laneD(c.from),RD.laneD(c.to),u);if(c.t>=c.dur){v.lane=c.to;v.d=v.side*RD.laneD(c.to);v.chg=null;v.offT=.6}}}
+   else{/* round 14: someone already alongside in the lane we are moving into: steer back */if(!c.back&&B.tr.some(u=>u!==v&&u.side===v.side&&u.ramp==null&&(u.lane===c.to&&!u.chg||u.chg&&u.chg.to===c.to&&u.chg.t>0)&&Math.abs(u.s-v.s)<(u.L+v.L)/2+1.5)){c.back=1;const f=c.from;c.from=c.to;c.to=f;c.t=Math.max(0,c.dur-c.t);v.sig=-v.sig}
+    c.t+=dt;const u=ss(0,1,c.t/c.dur);v.d=v.side*lp(RD.laneD(c.from),RD.laneD(c.to),u);if(c.t>=c.dur){v.lane=c.to;v.d=v.side*RD.laneD(c.to);v.chg=null;v.offT=.6}}}
   else{if(v.offT>0){v.offT-=dt;if(v.offT<=0)v.sig=0}
    v.think-=dt;if(v.think<=0&&v.side>0){v.think=1.2+r()*2.2;decide(v)}}
   placeVeh(v);lights(v,dt)}
+ /* round 14: no two vehicles share road. Anyone overlapping the car ahead in its lane drops back behind it */
+ for(const v of B.tr){if(v.hit>0||v.ramp!=null)continue;for(const u of B.tr){if(u===v||u.side!==v.side||u.ramp!=null)continue;const ahead=(u.s-v.s)*v.side;if(ahead<0)continue;
+  const near=Math.abs(u.d-v.d)<(u.W+v.W)/2-.15;if(!near)continue;const gap=ahead-(u.L+v.L)/2;if(gap<.4){v.s=u.s-v.side*((u.L+v.L)/2+.4);v.v=Math.min(v.v,u.v);placeVeh(v)}}}
  /* despawn / spawn */
  for(const v of B.tr)if(!v.dead&&(v.s<sMin-320||v.s>sMax+1500))v.dead=true;
  for(let i=B.tr.length-1;i>=0;i--)if(B.tr[i].dead){B.sc.remove(B.tr[i].m.g);B.tr.splice(i,1)}
@@ -347,7 +351,7 @@ function trickStep(p,dt,I){const t=p.trk_;
      lifts, braking drops). Getting it up takes the key and the throttle together and enough speed; past the balance point it goes over */
   const hk=p.hold?1:0;
   if(wh){const bp=t.twelve?1.3:t.stand?.95:1.06,spdK=ss(4,10,p.v)*(.55+.45*ss(70,20,p.v));
-   const gt=-3.3*Math.sin(bp-p.pitch),lift=(hk*(2.1+p.trk*.3)+th_*(1.45+p.trk*.35))*spdK-br_*5;
+   const gt=-3.3*Math.sin(bp-p.pitch),lift=((p.tt<.45?hk*(2.4+p.trk*.3):0)+th_*(3.05+p.trk*.4))*spdK-br_*5-(1-th_)*1.3/* off the gas it comes down */;/* round 14: the trick key pops it up, the throttle holds and deepens it */
    p.pv+=(lift+gt+p.wn*.9-p.pv*.8)*dt;p.pitch+=p.pv*dt;
    if(p.pitch<=0){p.pitch=0;p.pv=Math.max(0,p.pv);if(p.tt>.6&&(p.up||!hk)){endTrick(p,!!p.up);p.up=0;return}}
    if(p.pitch>.12)p.up=1;
@@ -418,13 +422,13 @@ function scoreStep(p,dt){if(p.wipe)return;p.comboT-=dt;if(p.comboT<=0&&p.chain>0
    const sd=Math.sign(v.d-p.d_)||1;if(other){p.splits++;bumpChain(p,1);p.score+=pts;skill(p,'LANE SPLIT',pts*2,sd)}else skill(p,close?'CLOSE CALL':'NEAR MISS',pts,sd);sfx.near()}
   v['ps'+p.k]=now}}
 function collide(p){if(p.wipe||p.ghost>0)return;const pd=p.d_,hw=.36+Math.abs(Math.sin(p.psi))*.9;
- for(const v of B.tr){if(v.side<0||v.ramp!=null)continue;const ds=p.s-v.s;if(Math.abs(ds)>v.L/2+1.1)continue;const dd=pd-v.d;if(Math.abs(dd)>v.W/2+hw)continue;
+ for(const v of B.tr){if(v.side<0||v.ramp!=null)continue;const ds=p.s-v.s;if(Math.abs(ds)>v.L/2+1.1)continue;const dd=pd-v.d,vw=v.W*.46;/* round 14: the body, not the mirrors */if(Math.abs(dd)>vw+hw)continue;
   /* inside the box: where from? */
-  const ox=v.L/2+1.1-Math.abs(ds),oy=v.W/2+hw-Math.abs(dd);const vrel=p.v*Math.cos(p.psi)-(v.hit>0?v.v*.5:v.v);
-  if(ox<oy){/* nose or tail: a rear-end */if(Math.abs(vrel)>4.5){hitVeh(v,p);wipeout(p,ds<0?'REAR-ENDED A '+vName(v):'HIT BY A '+vName(v));return}
+  const ox=v.L/2+1.1-Math.abs(ds),oy=vw+hw-Math.abs(dd);const vrel=p.v*Math.cos(p.psi)-(v.hit>0?v.v*.5:v.v);
+  if(ox<oy){/* nose or tail: a rear-end */if(Math.abs(vrel)>4.5){hitVeh(v,p);wipeout(p,ds<0?pick(['RAN OUT OF ROAD','MISJUDGED THE GAP','NO GAP LEFT','TOO CLOSE FOR COMFORT']):pick(['BLINDSIDED','CAUGHT FROM BEHIND']));return}
    p.s=v.s+Math.sign(ds||-1)*(v.L/2+1.12);p.v=Math.max(0,v.v*(ds<0?.95:1.05));p.pv=0;pen(p,'BUMP');sfx.scrape()}
-  else{const lat=p.v*Math.sin(p.psi)*Math.sign(-dd);if(lat>5.5||p.trk_&&p.trk_.k==='balance'){hitVeh(v,p);wipeout(p,'SIDESWIPED A '+vName(v));return}
-   p.d_=v.d+Math.sign(dd||1)*(v.W/2+hw+.02);p.psi=wrapA(p.psi*.3+Math.sign(dd)*.05);p.v*=.9;p.lean*=.5;if(p.scrape<=0){sfx.scrape();p.scrape=.35;spark(p,-Math.sign(dd))}
+  else{const lat=p.v*Math.sin(p.psi)*Math.sign(-dd);if(lat>5.5||p.trk_&&p.trk_.k==='balance'){hitVeh(v,p);wipeout(p,pick(['SQUEEZED OUT','SWAPPED PAINT','THREADED IT TOO FINE']));return}
+   p.d_=v.d+Math.sign(dd||1)*(vw+hw+.02);p.psi=wrapA(p.psi*.3+Math.sign(dd)*.05);p.v*=.9;p.lean*=.5;if(p.scrape<=0){sfx.scrape();p.scrape=.35;spark(p,-Math.sign(dd))}
    if(p.chain>0){pen(p,'TRADED PAINT');p.comboT=Math.min(p.comboT,.8)}}}}
 /* rider against rider (two players): the same box logic as traffic, but both bikes give way; a hard rear-end or a fast swipe drops whoever caused it */
 function collideRiders(){const P=B.pl;if(P.length<2)return;const a=P[0],b=P[1];if(a.wipe||b.wipe||a.ghost>0||b.ghost>0)return;
@@ -444,6 +448,7 @@ const vName=v=>({sedan:'CAR',hatch:'CAR',suv:'SUV',pickup:'PICKUP',van:'VAN',box
 function hitVeh(v,p){v.hit=4.5;v.haz=1;v.sig=0;v.chg=null;v.spin=(Math.random()-.5)*.08}
 
 /* ---------------- wipeouts ---------------- */
+const pick=a=>a[(Math.random()*a.length)|0];/* round 14: vaguer crash lines */
 function wipeout(p,why){if(p.wipe)return;p.why=why;p.liveSk=null;if(p.trk_)p.trk_=null;p.trOn=false;p.trQ=null;
  const m=p.m,R_=m.rider,vf=p.v,ps=p.psi;p.wipes++;
  endChain(p,false);
@@ -604,13 +609,13 @@ const CSS=`
 #bkHud .mn li.eq:after{content:"";width:7px;height:7px;border-radius:50%;background:#7fd68a;box-shadow:0 0 6px #7fd68a}
 #bkHud .mn p{margin:0;padding:10px 16px 14px;font-size:11px;line-height:1.5;color:#c9d2d8;border-top:1px solid #ffffff14}
 /* score and combo on one plate: score with the best under it, the combo beside it lit only while a chain is running, its bar the time left to keep it */
-#bkHud .cb{left:12px;top:calc(12px + 63px * var(--s));transform:scale(var(--s));transform-origin:left top;display:flex;align-items:stretch;padding:0;overflow:hidden}
+#bkHud .cb{left:16px;top:12px;transform:scale(var(--s));transform-origin:left top;display:flex;align-items:stretch;padding:0;overflow:hidden}
 #bkHud .cb small{display:block;font:600 9px var(--gt);letter-spacing:.24em;color:var(--gxd,#9aa3ab)}
 #bkHud .cb .sc{padding:8px 16px 9px;min-width:118px}#bkHud .cb .sc b{display:block;font:300 28px var(--gt);font-variant-numeric:tabular-nums;line-height:1.1;letter-spacing:.01em}
 #bkHud .cb .sc em{display:block;margin-top:2px;font:500 9px var(--gt);font-style:normal;letter-spacing:.18em;color:var(--gxd,#9aa3ab)}
 @keyframes bkBump{0%{transform:scale(1.45)}100%{transform:none}}
 /* skill chain, top centre: multiplier badge, chain total, the time left to keep it, and the moves in it (newest on top) */
-#bkHud .sk{position:absolute;right:18px;top:58px;transform:scale(var(--s));transform-origin:right top;min-width:250px;/* round 13: off the middle of the screen, top right under the pause chip */transition:opacity .25s;opacity:0}
+#bkHud .sk{position:absolute;right:16px;top:12px;transform:scale(var(--s));transform-origin:right top;min-width:250px;/* round 13: off the middle of the screen, top right under the pause chip */transition:opacity .25s;opacity:0}
 #bkHud .sk.live,#bkHud .sk.end{opacity:1}
 #bkHud .sk .skh{display:flex;align-items:stretch;background:var(--gx);border-radius:8px 8px 0 0;box-shadow:var(--gxhi),0 0 0 1px #000c,0 4px 14px #0009;overflow:hidden}
 #bkHud .sk .skm{min-width:62px;display:flex;align-items:center;justify-content:center;font:500 26px var(--gt);color:#fff;background:linear-gradient(180deg,#8fb4d8 0%,#4f7eab 48%,#33608c 52%,#4a77a3 100%);box-shadow:inset 0 1px 0 #ffffff80}
@@ -636,7 +641,9 @@ const CSS=`
 /* sense of speed: streaks rushing out from the middle of the view and a closing vignette, both from about 160 km/h */
 #bkHud .sl{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 #bkHud .vg{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 46%,transparent 52%,#000a 100%);opacity:0}
-#bkHud .hint.pz{left:auto;right:18px;bottom:auto;top:14px}
+#bkHud .hint.pz{left:18px;right:auto;top:auto;bottom:58px}/* round 14: right above player 1's guide key */
+/* round 14: time left at the top centre, score in its old spot top left, the chain top right, all on one top line */
+#bkHud .h8top{left:50%;top:12px;transform:translateX(-50%) scale(var(--s));transform-origin:top center}
 #bkHud .hint{left:18px;bottom:18px;padding:7px 12px;font-size:10px;letter-spacing:.16em;color:#c9d2d8;display:flex;gap:12px}
 #bkHud .hint kbd{background:#ffffff22;border-radius:4px;padding:1px 6px;font:500 10px var(--gt);color:#fff;margin-right:5px}
 body.bkOn #ptNowPlaying{display:none}
@@ -679,8 +686,8 @@ function buildHud(){ensureCss();let h=$i('bkHud');if(!h){h=document.createElemen
  <div class="h8spd"><canvas class="gx5" width="480" height="320"></canvas></div>
  <div class="pl hint"><span><kbd>${KEYS[i].mn}</kbd>GUIDE</span></div>
  <div class="pl bm"><i></i><u></u></div>
- <div class="tg"><h6>Tricks</h6><ul>${TRICKS.map((t,j)=>`<li data-t="${t.id}"><kbd>${KEYS[i].tkn[j]}</kbd><span>${t.n}</span><em>${t.k==='burnout'?'stopped':Math.round(spd(t.min))+'+'}</em></li>`).join('')}</ul><p>Hold wheelies &middot; tap the rest on and off</p></div>
- ${i===n-1?`<div class="pl hint pz"><span><kbd>TAB</kbd>PAUSE</span></div>`:''}
+ <div class="tg"><h6>Tricks</h6><ul>${TRICKS.map((t,j)=>`<li data-t="${t.id}"><kbd>${KEYS[i].tkn[j]}</kbd><span>${t.n}</span><em>${t.k==='burnout'?'stopped':Math.round(spd(t.min))+'+'}</em></li>`).join('')}</ul><p>Pop wheelies with the key, balance on the gas</p></div>
+ ${i===0?`<div class="pl hint pz"><span><kbd>TAB</kbd>PAUSE</span></div>`:''}
  <div class="pp"></div><div class="bkfade"></div></div>`).join('')+`<div class="cd"></div>`;
  B.pl.forEach(p=>guidePaint(p))}
 const hudOf=p=>$i('bkHud')&&$i('bkHud').querySelector('.pv[data-p="'+p.k+'"]');
@@ -777,7 +784,7 @@ const shotCache={};
 function bikeShot(cv,list){if(!cv)return;list=Array.isArray(list)?list:[list];const key='bk|'+list.map(s=>s.id+'.'+s.paint+'.'+s.who).join('|'),ms=[];
  P.objShot(cv,key,()=>{const g=new THREE.Group();list.forEach((s,i)=>{const d=BK.byId(s.id),m=BK.makeBike(s.id,BK.paintOf(d,s.paint),Object.assign({},RIDER_COL[i]||RIDER_COL[0],{who:s.who}));ms.push(m);
   const fake={m,d,trk_:null,lean:0,k:0};BK.poseBike(m,0,0,.18,0,0);const bp=basePose(fake),I=m.I;if(m.rider&&m.rider.people)bp.feet[0]=[I.peg[0]+.2,-.02,I.peg[2]+.18];BK.poseRider(m,Object.assign(bp,{look:-.05,turn:.35,side:m.rider&&m.rider.people?-.06:0}));
-  m.g.position.set(list.length>1?(i?-.75:.75):0,0,list.length>1?(i?-.9:.9):0);g.add(m.g)});return g},{yaw:-1.0,fy:list.length>1?1.45:1.3,fx:list.length>1?.8:.62,clear:true,
+  m.g.position.set(list.length>1?(i?-.75:.75):0,0,list.length>1?(i?-.9:.9):0);g.add(m.g)});return g},{yaw:-2.2,fy:list.length>1?1.45:1.3,fx:list.length>1?.8:.62,clear:true,
   /* round 13: the camera frames a fixed bike-sized box in each slot (2.2 m long, 1.5 m tall), so a small scooter is not blown up to a big bike's size */
   ref:(bx,yaw)=>{const b=new THREE.Box3(),v=new THREE.Vector3(),ax=new THREE.Vector3(0,1,0),n=list.length;for(let i=0;i<n;i++){const px=n>1?(i?-.75:.75):0,pz=n>1?(i?-.9:.9):0;for(const sx of[-.45,.45])for(const sz of[-1.1,1.1])for(const sy of[0,1.5]){v.set(px+sx,sy,pz+sz).applyAxisAngle(ax,yaw);b.expandByPoint(v)}}b.min.y=bx.min.y;b.max.y=bx.min.y+1.5;return b},dispose:()=>{for(const m of ms)BK.disposeBike(m)}})}
 const STATN=[['Top speed',d=>d.stats.top/300,d=>Math.round(kmh()?d.stats.top:d.stats.top/1.609)+(kmh()?' km/h':' mph')],['Acceleration',d=>d.stats.acc,d=>Math.round(d.stats.acc*100)],['Handling',d=>d.stats.hnd,d=>Math.round(d.stats.hnd*100)],['Tricks',d=>d.stats.trk,d=>Math.round(d.stats.trk*100)]];

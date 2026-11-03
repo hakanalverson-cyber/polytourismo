@@ -136,9 +136,11 @@ BK.poseRider=(m,ps,gripW)=>{const R=m.rider,I=m.I;if(!R)return;if(!R.people)retu
  const j=V(),e=V();
  for(let s=0;s<2;s++){const sg=s?-1:1,S=s?'R':'L';const sh=bodyAt('upper_arm'+S);let H;
   if(ps.hands&&ps.hands[s])H=V(ps.hands[s][0]*sg,ps.hands[s][1],ps.hands[s][2]);
-  else H=gT[s].clone();
-  /* the hand bone starts at the wrist: aim the wrist a palm short of the grip */
-  H.addScaledVector(V().subVectors(H,sh).normalize(),-.06);
+  /* round 14: a gripping hand lies over the bar, palm down: fingers forward and down across the grip (turned with the bars), the wrist
+     a palm's length behind and a little above it. A free hand: the wrist a palm short of its target */
+  const grip=!(ps.hands&&ps.hands[s]),sq=m.steer.quaternion,dT=V(0,-.45,1).normalize().applyQuaternion(sq),nT=V(0,-1,-.45).normalize().applyQuaternion(sq);
+  if(grip){H=gT[s].clone().addScaledVector(dT,-.075).add(V(0,.035,0).applyQuaternion(sq))}
+  else H.addScaledVector(V().subVectors(H,sh).normalize(),-.06);
   const pole=sh.clone().add(V(.55*sg,-.35,-.35).applyAxisAngle(V(0,0,1),roll));ik(sh,H,T.len.ua,T.len.fa,pole,j,e);
   const bU=V().subVectors(T.bp[X('forearm'+S)],T.bp[X('upper_arm'+S)]),bF=V().subVectors(T.bp[X('hand'+S)],T.bp[X('forearm'+S)]);
   const nb=V().crossVectors(bU,T.fwd),np=V().crossVectors(V().subVectors(j,sh),V().subVectors(e,j));if(np.lengthSq()<1e-6)np.crossVectors(V().subVectors(j,sh),V(0,0,1));
@@ -146,7 +148,7 @@ BK.poseRider=(m,ps,gripW)=>{const R=m.rider,I=m.I;if(!R)return;if(!R.people)retu
   const qf=swing(bF,nb,V().subVectors(e,j),np,Q());put(R,X('forearm'+S),j,qf,drv);
   /* hand: on from the forearm, a touch of wrist drop when gripping */
   /* turn the palm down onto the grip (the bind pose holds the palms inward) unless the hand is free */
-  const qh=(ps.hands&&ps.hands[s])?qf:Q().setFromAxisAngle(V().subVectors(e,j).normalize(),HT*sg).multiply(qf);put(R,X('hand'+S),e,qh,drv)}
+  const qh=!grip?qf:swing(bF,V().copy(T.left).multiplyScalar(-sg),dT,nT,Q());put(R,X('hand'+S),e,qh,drv)}
  /* legs: IK from each hip joint to the foot target, knees forward and a little out */
  for(let s=0;s<2;s++){const sg=s?-1:1,S=s?'R':'L';const hj=bodyAt('thigh'+S);const F=V(ps.feet[s][0]*sg,ps.feet[s][1]+.07,ps.feet[s][2]-.05);
   /* the inside knee opens out in a lean (lean + = right; +X is the rider's left) */const ko=Math.max(0,-sg*(ps.knee||0));F.x+=sg*ko*.08;

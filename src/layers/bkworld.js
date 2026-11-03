@@ -59,7 +59,7 @@ function partGeo(part,pal,paintRGB){const pos=new Int16Array(u8(part.pos).buffer
  for(let f=0;f<nf;f++){const cc=L[col[f]];if(!cc)paint.push(f);const c=cc||paintRGB;for(let k=0;k<3;k++){const v=idx[f*3+k];P[f*9+k*3]=pos[v*3]/15000;P[f*9+k*3+1]=pos[v*3+1]/15000;P[f*9+k*3+2]=pos[v*3+2]/15000;C[f*9+k*3]=c[0];C[f*9+k*3+1]=c[1];C[f*9+k*3+2]=c[2]}}
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(P,3));g.setAttribute('color',new THREE.BufferAttribute(C,3));g.computeVertexNormals();g.userData.paint=paint;return g}
 function gbGeo(gb,paintRGB){const g=gb.geo(),c=g.attributes.color,paint=[];for(let f=0;f<c.count/3;f++)if(c.getX(f*3)<0){paint.push(f);for(let k=0;k<3;k++)c.setXYZ(f*3+k,paintRGB[0],paintRGB[1],paintRGB[2])}g.userData.paint=paint;return g}
-const VISOR={sport600:.97};
+const VISOR={sport600:.97,superbike:.95};
 const GRIP={patrol:[.28,1.01,.255],fatscoot:[.37,1.09,.27],retroscoot:[.5,.975,.245],bobber:[.35,1.03,.255],dirt450:[.35,1.157,.25],scrambler:[.36,.975,.305]};
 const geoCache={};BK._geoCache=geoCache;
 function bikeGeos(d){if(geoCache[d.id])return geoCache[d.id];const lin=c=>c?c.map(s2l):[.5,.5,.5];let r;
@@ -441,7 +441,10 @@ function gameCar(kind,r){const C=P.C10;if(!C||!C.ready||!C.traffic||!CARPOOL[kin
  let bx=carBox[c.k10];if(!bx){src.updateMatrixWorld(true);bx=carBox[c.k10]=new THREE.Box3().setFromObject(src)}
  const sz=bx.getSize(new THREE.Vector3()),gl=src.userData.gl||4.5,sc=gl/Math.max(sz.x,sz.z,.01);
  const m=src,w=new THREE.Group();w.add(m);m.scale.setScalar(sc);m.rotation.y=sz.x>sz.z?-PI/2:PI;/* model front is -Z, traffic front is +Z */
- m.position.y=-bx.min.y*sc;m.traverse(o=>{if(o.isMesh)o.castShadow=false});
+ m.position.y=-bx.min.y*sc;
+ /* round 14: centre the model on the car's own position (some models sit off their origin, so cars looked to overlap and the hitbox missed the body) */
+ {const c=bx.getCenter(new THREE.Vector3()).multiplyScalar(sc);c.y=0;c.applyAxisAngle(new THREE.Vector3(0,1,0),m.rotation.y);m.position.x=-c.x;m.position.z=-c.z}
+ m.traverse(o=>{if(o.isMesh)o.castShadow=false});
  const L=Math.max(sz.x,sz.z)*sc,Wd=Math.min(sz.x,sz.z)*sc,H=sz.y*sc;return{g:w,model:m,lamps:src.userData.lamps,lift:src.userData.lift||0,L,W:Wd,H,name:c.name}}
 BK.makeVehicle=(kind,col,night,rnd)=>{const gc=gameCar(kind,rnd||Math.random);const t=gc?Object.assign({},VT[kind],{L:gc.L,W:gc.W,H:gc.H}):VT[kind],g=new THREE.Group();
  if(gc)g.add(gc.g);else{const body=new THREE.Mesh(vehGeo(kind,col),BK.vmat||(BK.vmat=new THREE.MeshLambertMaterial({vertexColors:true})));g.add(body)}
