@@ -1,0 +1,1 @@
+[["wait",3000],["js","PT8.SV().name=\"Hakan\";PT8.save();document.querySelectorAll(\"button\").forEach(b=>{if(/^OK$/i.test(b.textContent.trim()))b.click()})"],["wait",2000],["shot","menu"]]
