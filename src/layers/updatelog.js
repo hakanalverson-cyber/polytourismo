@@ -84,6 +84,7 @@ P.LOG=[
   'The Superbike\'s screen and dash turn with the bars, like the Sport 600\'s.',
   'The bike preview shows the rider from the front.',
   'Cut-Up HUD: time left at the top centre, the score top left, the skill chain top right, all on one line. Tab Pause sits right above player 1\'s guide key.',
+  'Bike setup: player 1 stands beside their bike with a hand on the seat, player 2 sits on theirs; adding a player fades their frame in and the bike being edited glows, like the car screen; the ride options wrap round when you reach the end.',
 ]},
  {v:'0.02',d:'Oct 31, 2026',t:'Riviera island',items:[
   'Free Roam now takes place on the Riviera, a Mediterranean island about 5 km across that you can drive end to end: a coast road that loops the whole shore, a mountain pass that winds up through hairpins to a summit square with a stone parapet and a statue looking over the sea, and ridge roads branching off it. The island is generated from a seed, so it is the same every time.',
