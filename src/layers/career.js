@@ -94,14 +94,17 @@ function moneyLine(){const sv=P.SV(),cr=sv.cr,own=sv.owned||{},cur=curCar().car;
 const TIPS=['Brake in a straight line, then turn. The car can only do one damn thing at a time.','Tyres and gearing make the biggest difference. Pay me and I\'ll sort them.',
  'A rally stage is one run. A small mistake costs less than a big crash.','In an elimination you only need to beat one car each lap. Stay out of the shit.',
  'If you keep hitting the wall, the car gets slower. I can fix it, but it costs.','On hot laps, a clean lap beats a fast messy one. Every time.'];
-function vinLine(state){const g=G(),r=state&&state.res,nm=(P.SV().name||'').trim();
+/* the name the player picked when the game asked them; both of them use it now and then */
+const pName=()=>(P.SV().name||'').trim();
+const withName=(t,p)=>{const n=pName();if(!n||Math.random()>(p==null?.45:p))return t;return /^[A-Z][^.!?]*[.!?]$/.test(t)&&t.length<40?t.replace(/([.!?])$/,`, ${n}$1`):`${n}. ${t}`};
+function vinLine(state){const g=G(),r=state&&state.res,nm=pName();
  if(r){const fix=wearOf(curCar().id)>.2?' Might want Nina to look at the car.':'';
   if(r.ok){const p=r.paid?` ${fmtCr(r.paid)}, as promised.`:'';return rnd([`Nice. ${r.what}.${p}`,`${r.what}. Not bad.${p}`,`Knew you had it. ${r.what}.${p}`])+(r.tierUp?` People are talking. You're ${TIERS[r.tierUp].n} level now.`:'')+fix}
   return rnd([`${r.what}. Happens. Offer's still there.`,`${r.what}. Eh. Go again.`,`${r.what}. Maybe get Nina to tune it.`])+fix}
  if(!g.met)return `${nm?nm+', right? ':''}I'm Vince. I get you races, and I know where the cheap cars are. Nina does the wrenching.`;
- return Math.random()<.4?moneyLine():rnd([`Hey.`,`What's up.`,`Yeah?`,`Oh, it's you. Good.`,`Got a few things going on.`])}
-function redLine(){const c=curCar(),w=wearOf(c.id);if(w>.35)return rnd([`What the hell did you do to my car? It's at ${pctOK(c.id)}%.`,`Jesus. The ${c.car.name} is at ${pctOK(c.id)}%. Let me fix it before you race again.`]);
- if(w>.02)return `A few scratches on the ${c.car.name}. It's at ${pctOK(c.id)}%.`;return rnd([`Hey. The ${c.car.name} is ready to go.`,`Need something? I'm here.`,`Car's clean. Want me to tune it?`,`Hell of a car, this one. What do you need?`])}
+ return Math.random()<.4?moneyLine():withName(rnd([`Hey.`,`What's up.`,`Yeah?`,`Oh, it's you. Good.`,`Got a few things going on.`].concat(nm?[`${nm}. Good timing.`,`There's ${nm}. What do you need?`]:[])),.5)}
+function redLine(){const c=curCar(),w=wearOf(c.id),nm=pName();if(w>.35)return rnd([`What the hell did you do to my car? It's at ${pctOK(c.id)}%.`,`Jesus. The ${c.car.name} is at ${pctOK(c.id)}%. Let me fix it before you race again.`]);
+ if(w>.02)return `A few scratches on the ${c.car.name}. It's at ${pctOK(c.id)}%.`;return withName(rnd([`Hey. The ${c.car.name} is ready to go.`,`Need something? I'm here.`,`Car's clean. Want me to tune it?`,`Hell of a car, this one. What do you need?`].concat(nm?[`${nm}! The ${c.car.name} is ready to go.`,`Hey ${nm}. Need something?`]:[])),.35)}
 const GOT=['Got the %s for you!','Got the %s for you! Keys are in it.','Got the %s for you! Try not to scratch this one.','Got the %s for you! Damn, I love this one.'];
 const TUNE_L={gear:[`Shorter gears. It'll jump off the line, but top speed takes a hit.`,`Longer gears. Faster on the straights, lazy out of the corners.`],
  tyre:[`Softer tyres. Loads of grip, but they wear quicker.`,`Harder compound. Lasts forever, slides a bit.`],
@@ -184,10 +187,13 @@ function rig(bones){const R={};for(const b of bones){const r=b.name.replace(/_\d
 const buildScene=()=>GS.bp||(GS.bp=buildScene_());
 async function buildScene_(){GS.busy=true;const pr=f=>{try{GS.onProg&&GS.onProg(f)}catch(e){}};
  try{const sc=new THREE.Scene();sc.background=new THREE.Color(0x10141a);sc.fog=new THREE.Fog(0x10141a,40,80);const cam=new THREE.PerspectiveCamera(56,16/9,.05,120);GS.sc=sc;GS.cam=cam;
-  sc.add(new THREE.HemisphereLight(0xe2ebff,0x464e5c,.95));
+  sc.add(new THREE.HemisphereLight(0xf4f1ea,0x2c313a,.42));
+  /* the strip lights in the ceiling: soft pools of cool white under each fitting, and a little warm bounce off the floor */
+  for(const [x,z] of [[-3.3,-3.6],[-0.4,-3.6],[-3.3,0.2],[-0.4,0.2],[-1.9,2.6]]){const pl=new THREE.PointLight(0xfff3e2,.85,6.5,2);pl.position.set(x,2.55,z);sc.add(pl)}
+  {const b=new THREE.PointLight(0xffd9b0,.2,6,1.5);b.position.set(-1.9,.25,-.9);sc.add(b)}
   const ks=(x,y,z,tx,tz,i,ang,c)=>{const l=new THREE.SpotLight(c||0xe6efff,i,26,ang,.7,1.2);l.position.set(x,y,z);l.target.position.set(tx,0,tz);sc.add(l,l.target);return l};
   ks(SPOT.car.x,5.2,SPOT.car.z+.6,SPOT.car.x,SPOT.car.z,1.6,.62);ks(SPOT.red.x+.4,4.8,SPOT.red.z+1.2,SPOT.red.x,SPOT.red.z,.8,.5);ks(SPOT.vin.x+.6,4.8,SPOT.vin.z+1.4,SPOT.vin.x,SPOT.vin.z,.8,.5);
-  const d=new THREE.DirectionalLight(0xf1f5ff,.5);d.position.set(4,9,7);sc.add(d);const rim=new THREE.DirectionalLight(0x8fb8ff,.5);rim.position.set(-3,4,-9);sc.add(rim);
+  const d=new THREE.DirectionalLight(0xf1f5ff,.32);d.position.set(4,9,7);sc.add(d);const rim=new THREE.DirectionalLight(0x8fb8ff,.5);rim.position.set(-3,4,-9);sc.add(rim);
   let gm=null;try{if(window.GAR2_B64)gm=garMesh(window.GAR2_B64)}catch(e){console.warn('career garage',e)}
   if(gm){for(const k in gm)sc.add(gm[k]);GS.clutter=gm.clutter||null;GS.gar=gm;try{navBuild(gm)}catch(e){console.warn('career map',e)}}
   else{const f=new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshStandardMaterial({color:0x8d9097,roughness:.9}));f.rotation.x=-Math.PI/2;sc.add(f);
@@ -393,7 +399,7 @@ const STN={
  red:[{k:'bench',p:V3(-1.2,0,-4.62),ry:Math.PI,look:V3(-1.2,.98,-5.45),d:[7,11]},
   {k:'bench',p:V3(-.6,0,-4.62),ry:Math.PI,look:V3(-.6,1.08,-5.4),d:[6,10]},
   {k:'shelf',p:V3(.22,0,-3.3),ry:Math.PI/2,look:V3(1.25,1.4,-3.3),d:[5,8]},
-  {k:'tires',p:V3(.55,0,-4.45),ry:Math.PI*.9,look:V3(.75,.7,-5.45),d:[6,10]},
+  {k:'bench',p:V3(-2.0,0,-4.62),ry:Math.PI,look:V3(-2.0,.98,-5.45),d:[6,10]},
   {k:'car',p:null,d:[6,10]}],
  vin:[{k:'type',p:V3(-4.36,0,-.3),ry:-Math.PI/2,look:V3(-5.0,1.25,-.3),d:[10,18]},
   {k:'type',p:V3(-4.36,0,-.3),ry:-Math.PI/2,look:V3(-5.0,1.25,-.3),d:[10,18]},
@@ -499,6 +505,9 @@ function pickAt(cx,cy){if(!GS.ok)return null;MV.set(cx/innerWidth*2-1,-(cy/inner
  if(best&&best!=='car')GS.cur=RC.ray.at(GS.cam.position.distanceTo(headOf(best)),V3());return best}
 {const f0=frame;let vis=false;const MENU_BG=['menu','s8cards','s8quick','s8pick','s8setup','s8career','s8res'];
  frame=function(n){if(scr==='s8career'&&GS.ok&&sec.classList.contains('gcOn')){requestAnimationFrame(frame);const dt=Math.min(.05,Math.max(0,(n-last)/1000));last=n;dtf=dt;T0+=dt;
+   /* other screens (split-screen races, the bike mode, the menu previews) leave a viewport or scissor of their own behind, and the adaptive
+      resolution resizes the canvas under it: start every garage frame from the full canvas so the picture never ends up in a corner */
+   {const pr=R.getPixelRatio()||1;R.setRenderTarget(null);R.setScissorTest(false);R.setViewport(0,0,R.domElement.width/pr,R.domElement.height/pr);R.setScissor(0,0,R.domElement.width/pr,R.domElement.height/pr)}
    try{tick(dt);renderGarage();olRender(dt)}catch(e){if(!GS.err){GS.err=1;console.warn('career frame',e)}}
    if(!vis){vis=true;R.domElement.style.visibility='';document.body.classList.add('gcG')}return}
   if(vis){vis=false;document.body.classList.remove('gcG');R.domElement.style.visibility=MENU_BG.includes(scr)&&!(RACE&&scr==='s8res')?'hidden':''}
@@ -663,6 +672,8 @@ function hint(){const h=$('gcHint');if(!h)return;sec.classList.toggle('talk',!!U
 const fixCost=id=>repairCost(id),tuneFee=()=>{const c=curCar().car;return Math.max(400,Math.round((c.price||30000)*.015/50)*50)};
 function choices(){if(UI.ch)return UI.ch;const c=curCar();if(UI.who==='red'){const cost=fixCost(c.id),L=[];
   if(cost)L.push({ic:'fix',t:'Fix the damage',pz:fmtCr(cost),off:P.SV().cr<cost,a:()=>{const sv=P.SV();if(sv.cr<cost){say(`That's ${fmtCr(cost)}. Win a race and come back.`);return}sv.cr-=cost;G().wear[c.id]=0;P.save();say(rnd([`Done. Good as new.`,`All fixed. Keep it off the walls this time.`]));refreshCar()}});
+  /* a bad respray can be stripped back to the factory colour. That's the only colour she does */
+  if(paintOf(c.id)){const pc=1200;L.push({ic:'paint',t:'Repaint it (factory colour)',pz:fmtCr(pc),off:P.SV().cr<pc,a:()=>{const sv=P.SV();if(sv.cr<pc){say(`Paint costs ${fmtCr(pc)}. You'll have to live with it for now.`);return}sv.cr-=pc;setPaint(c.id,null);$$crv();setCar(true);refreshCar();UI.ch=null;P.sfx&&P.sfx('select');say(rnd([`Back to the factory colour. Much better. My eyes thank you.`,`There. Now it looks like a car and not a crime scene.`,`Stripped that shit off and did it properly. Factory colour, nothing fancy.`]));drawDlg()}})}
   L.push({ic:'tune',t:'Tune my car',a:askTune});
   L.push({ic:'swap',t:'Bring out another car',a:openCars});
   L.push({ic:'look',t:'How is the car looking?',a:()=>{const w=wearOf(c.id),T=TIERS[tierOf(G().rep)];let s=w>.02?`It's at ${pctOK(c.id)}%. ${w>.3?'It\'ll feel slow until I fix it.':'Nothing serious.'}`:`It's in perfect shape.`;
@@ -688,7 +699,7 @@ function openCars(){UI.who='red';UI.view='cars';UI.ch=null;const L=owned(),cur=c
 function bringOut(i){const x=owned()[i];if(!x)return;const was=curCar().id;if(x.id!==was){P.setSel(0,x.id,x.alt);setCar();refreshCar()}
  /* back to the overview; Nina says it over her head. A car that looks like shit (bad paint, or worn out) gets an insult instead */
  const ugly=!!paintOf(x.id)||pctOK(x.id)<55;UI.who=null;UI.view='talk';UI.ch=null;UI.f=0;UI.line='';aim();const d=$('gcDlg');if(d)d.classList.remove('on');hint();P.sfx&&P.sfx('select');
- bubble('red',ugly?rnd(ROAST):rnd(GOT).replace('%s',x.car.name),ugly?3.4:3);gesture(GS.red,ugly?rnd(['point','shrug']):'hey')}
+ bubble('red',withName(ugly?rnd(ROAST):rnd(GOT).replace('%s',x.car.name),.4),ugly?3.4:3);gesture(GS.red,ugly?rnd(['point','shrug']):'hey')}
 const ROAST=[`What the FUCK is that?`,`Jesus Christ, that's ugly.`,`Oh hell no. Get that piece of shit out of here.`,`That is fucking disgusting.`,`Are you fucking kidding me?`,`What the hell did you drag in here?`,`God, that's hideous.`,`Ew. No. What the fuck.`,`That thing is a goddamn eyesore.`];
 /* ---------------- selling through Vince ----------------
    Marketplace > Sell one of yours: pick a car (not your last one), set the asking price, write a title and a description. The chance meter is
@@ -699,8 +710,9 @@ const sales=()=>{const g=G();if(!Array.isArray(g.sales))g.sales=[];return g.sale
 const listed=id=>sales().some(s=>s.id===id);
 const carValue=id=>{const c=BYID[id];if(!c)return 0;return Math.max(500,Math.round((c.price||30000)*(.33+.3*(1-wearOf(id)))*(paintOf(id)?.85:1)/50)*50)};
 function sellChance(id,ask,title,desc){const v=carValue(id),r=ask/Math.max(1,v);let p=1/(1+Math.exp((r-1.12)*8));
- const t=(title||'').trim(),w=(desc||'').trim().split(/\s+/).filter(x=>x.length>1).length;const bonus=(t.length>=4?.05:0)+(t.length>=14?.03:0)+Math.min(.14,w*.009);
- return Math.max(.02,Math.min(.97,p*(1+1.5*bonus)+bonus*.4))}
+ /* a title and a description add up to 10 points, no more */
+ const t=(title||'').trim(),w=(desc||'').trim().split(/\s+/).filter(x=>x.length>1).length;const b=(t.length>=4?.3:0)+(t.length>=14?.2:0)+Math.min(.5,w*.025);
+ return Math.max(.02,Math.min(.97,p+.1*b))}
 function sellable(){const cur=curCar().id;return owned().filter(x=>!listed(x.id))}
 function openSell(){UI.view='sell';UI.f=0;const n=sellable().length;say(n<2?rnd([`That's your only car. What are you gonna drive, a bus?`,`You need something to drive. Keep it.`]):rnd([`Which one's going?`,`Sure. Which one?`,`I'll put it on the lot. Which one?`]));drawDlg();hint()}
 function sellRows(){const L=sellable(),S=sales();return{L,S,n:L.length+S.length+1}}

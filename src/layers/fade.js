@@ -10,9 +10,16 @@ P.launchWithIntro=cfg=>{
  /* rally stages keep their own loading screen */
  if(busy||(cfg&&cfg.mode==='rally'&&!cfg.circuit))return lw(cfg);
  busy=true;el.style.transition='opacity .22s ease';el.style.pointerEvents='auto';el.style.opacity='1';
+ hold=true;wrap();
  setTimeout(()=>{try{lw(cfg)}finally{
-  /* hold black until a few frames of the race have drawn, then fade in */
-  let n=0;const tick=()=>{if(++n<8)return requestAnimationFrame(tick);setTimeout(()=>{el.style.transition='opacity .6s ease';el.style.opacity='0';el.style.pointerEvents='none';busy=false},120)};requestAnimationFrame(tick)}},240)};
+  /* the race stays frozen behind the black (no formation lap, no countdown) until frames come smoothly: the first frames of a new track
+     can take seconds while textures upload and shaders compile, and the countdown used to run out in the dark. Then let go and fade in */
+  let n=0,ok=0,last=performance.now();const t0=last;
+  const tick=()=>{const now=performance.now(),d=now-last;last=now;n++;ok=d<45?ok+1:0;if((n<8||ok<6)&&now-t0<6000)return requestAnimationFrame(tick);
+   hold=false;setTimeout(()=>{el.style.transition='opacity .6s ease';el.style.opacity='0';el.style.pointerEvents='none';busy=false},60)};requestAnimationFrame(tick)}},240)};
+/* the freeze: wrapped once at the first launch, when every layer has added its own step, so it sits outside all of them */
+let hold=false,wrapped=false;
+function wrap(){if(wrapped||typeof step!=='function')return;wrapped=true;const s0=step;step=function(){if(hold)return;return s0.apply(this,arguments)}}
 })();
 /* leaving Brand Central: fade the showroom out to black first, then switch (the menu then fades up from black) */
 (function ptBrandOut(){

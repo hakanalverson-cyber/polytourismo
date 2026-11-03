@@ -1,0 +1,4 @@
+[["key", "Enter"], ["wait", 3000], ["js", "document.getElementById('gxAsk')&&document.getElementById('gxAsk').remove();document.body.classList.remove('gxAsking');1"], ["js", "(()=>{const sv=PT8.SV();sv.gc={met:1};sv.cr=90000;PT8.careerEnter();return 1})()"], ["wait", 11000], ["shot", "overview"],
+ ["js", "(()=>{const g=PT8.gcDebug().G;g.paint=g.paint||{};for(const c of PT8.CARS){g.paint[c.id]='#5cff1a'}PT8.gcSetCar();PT8.gcTalk('red');return 1})()"], ["wait", 3000], ["shot", "menu"],
+ ["js", "(()=>{const r=[...document.querySelectorAll('#gcDlg .gcRow')].find(e=>/Repaint/.test(e.textContent));if(!r)return 'none';r.click();return PT8.SV().cr})()"], ["wait", 3500], ["shot", "after"],
+ ["js", "(()=>JSON.stringify([PT8.SV().cr,Object.keys(PT8.gcDebug().G.paint).length,[...document.querySelectorAll('#gcDlg .gcRow')].map(e=>e.textContent.trim().slice(0,30))]))()"]]

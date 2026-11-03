@@ -4,6 +4,8 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.03',d:'Nov 2, 2026',t:'Highway Cut-Up on bikes',items:[
+  'Races: the race now waits behind the black fade until the track is actually running smoothly, so the countdown starts as the picture comes up instead of running out in the dark. With damage on (always, in career) hitting a track wall hurts the car and riding along one wears it down.',
+  'Career: Nina can repaint a car with a bad paintjob back to its factory colour, warmer garage lighting, Nina and Vince call you by your name now and then, and the garage picture no longer shrinks into a corner. A title and a description add at most 10% to the selling chance.',
   'Career: worn cars now look worn, with scratches, chips, grime and rust in the paint, and the bad paintjobs are properly awful. Standing around, Nina and Vince shift their weight and change posture instead of fidgeting, they blend smoothly into walking, and they stay in view. The loading screen is the start-up screen again, with CAREER on it.',
   'Career: fixed the List it button in the selling form, and gave the form more room.',
   'Career: Nina and Vince now move around the shop. Nina sorts through the benches and shelves and checks the tyres; Vince walks over to his laptop and types. Click either of them and they stop and talk right where they are.',
