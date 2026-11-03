@@ -650,7 +650,7 @@ body.gcG #v8Bg{opacity:0!important}
 #gcAnn .pic{flex:none;width:48px;height:48px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:#22262c;box-shadow:0 0 0 2px #7fb6ff;font:300 22px var(--gt)}#gcAnn .pic img{width:100%;height:100%;object-fit:cover;transform:scale(1.25)}
 #gcAnn .tx{flex:1;min-width:0}#gcAnn small{display:block;font:700 9px var(--gt);letter-spacing:.22em}#gcAnn small.ok{color:#7ee3a0}#gcAnn small.no{color:#ff9d90}
 #gcAnn b{display:block;font:500 16px var(--gt);margin:2px 0}#gcAnn p{margin:0;font:400 12.5px/1.35 var(--gt);color:#b8c0c8}#gcAnn .cr{flex:none;font:700 17px var(--gt);color:#7ee3a0}#gcAnn .cr.neg{color:#ff9d90}
-#gcPC{position:fixed;left:0;top:0;width:960px;height:610px;transform-origin:0 0;z-index:5;opacity:0;pointer-events:none;overflow:hidden;background:#f3f5f8;color:#1c2633;font:15px/1.35 Tahoma,Verdana,"Segoe UI",sans-serif;box-sizing:border-box}
+#gcPC{position:fixed;left:0;top:0;width:960px;height:555px;transform-origin:0 0;z-index:9000;opacity:0;pointer-events:none;overflow:hidden;background:#f3f5f8;color:#1c2633;font:15px/1.35 Tahoma,Verdana,"Segoe UI",sans-serif;box-sizing:border-box}
 #gcPC.live{pointer-events:auto}#gcPC *{box-sizing:border-box}
 #gcPC .glare{position:absolute;inset:0;pointer-events:none;background:linear-gradient(118deg,#ffffff1f 0%,#ffffff08 32%,transparent 46%),repeating-linear-gradient(0deg,#00000008 0 1px,transparent 1px 3px);box-shadow:inset 0 0 0 2px #0006}
 #gcPC .app{position:absolute;inset:0;display:flex;flex-direction:column}
@@ -871,13 +871,14 @@ function cvTidy(){for(const cv of CV()){if(cv.st!=='open')continue;if(cv.kind===
 /* ---- the screen ---- */
 const PC={on:false,tab:'buy',cv:null,sf:null,el:null,sig:''};
 /* the screen's corners in the laptop's own space (measured from the model: the lid's front face, inside the bezel) */
-const PC_Q=[V3(-.148,.206,-.0965),V3(.148,.206,-.0965),V3(.148,.018,-.0965),V3(-.148,.018,-.0965)],PC_W=960,PC_H=610;
-function pcCam(){const L=GS.laptop;if(!L)return null;L.updateMatrixWorld(true);const c=L.localToWorld(V3(0,.112,-.0965)),n=L.localToWorld(V3(0,.112,1)).sub(L.localToWorld(V3(0,.112,0))).normalize();
+/* the laptop's white screen face, measured off the model (x +-.1547, y .0232-.2022, z -.1058), a hair in front of it */
+const PC_Q=[V3(-.1547,.2022,-.1052),V3(.1547,.2022,-.1052),V3(.1547,.0232,-.1052),V3(-.1547,.0232,-.1052)],PC_W=960,PC_H=555;
+function pcCam(){const L=GS.laptop;if(!L)return null;L.updateMatrixWorld(true);const c=L.localToWorld(V3(0,.1127,-.1052)),n=L.localToWorld(V3(0,.112,1)).sub(L.localToWorld(V3(0,.112,0))).normalize();
  return{p:c.clone().addScaledVector(n,.44).add(V3(0,.035,0)),l:c}}
 function pcEl(){if(PC.el&&PC.el.isConnected)return PC.el;const e=document.createElement('div');e.id='gcPC';e.innerHTML='<div class="app"></div><div class="glare"></div>';document.body.appendChild(e);PC.el=e;
  e.addEventListener('click',pcClick);e.addEventListener('input',pcInput);e.addEventListener('keydown',ev=>{if(ev.target.tagName==='INPUT'||ev.target.tagName==='TEXTAREA')ev.stopPropagation()});return e}
 /* map the page's rectangle onto the four projected corners (a projective transform) */
-function pcPlace(){const e=PC.el;if(!e||!GS.laptop)return;{const cp=pcCam(),k=cp?GS.cam.position.distanceTo(cp.p):9;if(!PC.on||k>.72){if(e.style.display!=='none')e.style.display='none';return}if(e.style.display==='none')e.style.display=''}const L=GS.laptop,q=PC_Q.map(v=>{const w=L.localToWorld(v.clone());w.project(GS.cam);return[(w.x*.5+.5)*innerWidth,(-w.y*.5+.5)*innerHeight]});
+function pcPlace(){const e=PC.el;if(!e||!GS.laptop)return;{const cp=pcCam(),k=cp?GS.cam.position.distanceTo(cp.p):9;if(!PC.on||k>.72){if(e.style.display!=='none')e.style.display='none';return}if(e.style.display==='none')e.style.display=''}PC.cr=R.domElement.getBoundingClientRect();const L=GS.laptop,q=PC_Q.map(v=>{const w=L.localToWorld(v.clone());w.project(GS.cam);const cr=PC.cr;return[cr.left+(w.x*.5+.5)*cr.width,cr.top+(-w.y*.5+.5)*cr.height]});
  const [x0,y0]=q[0],[x1,y1]=q[1],[x2,y2]=q[2],[x3,y3]=q[3],dx1=x1-x2,dx2=x3-x2,dx3=x0-x1+x2-x3,dy1=y1-y2,dy2=y3-y2,dy3=y0-y1+y2-y3,den=dx1*dy2-dx2*dy1||1e-9;
  const g=(dx3*dy2-dx2*dy3)/den,h=(dx1*dy3-dx3*dy1)/den,a=x1-x0+g*x1,b=x3-x0+h*x3,d=y1-y0+g*y1,f=y3-y0+h*y3,W=PC_W,H=PC_H;
  const tf=`matrix3d(${(a/W).toFixed(6)},${(d/W).toFixed(6)},0,${(g/W).toFixed(8)},${(b/H).toFixed(6)},${(f/H).toFixed(6)},0,${(h/H).toFixed(8)},0,0,1,0,${x0.toFixed(2)},${y0.toFixed(2)},0,1)`;if(e._tf!==tf){e._tf=tf;e.style.transform=tf}
