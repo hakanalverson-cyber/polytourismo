@@ -12413,6 +12413,7 @@ window.__optAction=k=>{if(k==='@tutorial')P.startTutorial()};
 const P=window.PT8;
 P.LOG=[
  {v:'0.03',d:'Nov 2, 2026',t:'Highway Cut-Up on bikes',items:[
+  'Lighting: every race now reflects its own sky. Car paint, glass and chrome pick up soft reflections, and the shading follows the time of day and weather instead of looking like flat plastic.',
   'Career Marketplace, round two: it is just "Marketplace" now, with a cleaner look, a grid of ten listings with titles, places and ages, and a search box. Chats are longer (ten texts) and slower, with typing dots and Seen receipts, questions you can ask (accidents, history, why they sell, test drives), and real characters: friendly, firm, chatty, rude ones who block you, flaky ones who leave you on read, and scammers on both sides (deposit and overpayment scams). Walk away from a seller and the listing goes, the chat stays in your Inbox. Replies that land while you are elsewhere pop up as a notification.',
   'Handling fix: normal corners no longer trigger an automatic drift, which cut grip to a quarter and felt like heavy understeer. Drifts now start from the handbrake (Space, Right Shift, U or Numpad 0, or pad X).',
   'Menus: every Quick Play mode has two pictures of its own now. Track shows GT race cars through a kerbed corner and a Mazda 787B at dusk, Rally a Subaru sideways on a forest gravel stage and a Polo WRC on snow, Highway Cut-Up the real highway with bikes in the traffic. The mode list now lines up with the picture, top and bottom.',
@@ -20103,6 +20104,56 @@ addEventListener('click',e=>{const el=e.target.closest&&e.target.closest(PICK);i
 addEventListener('keydown',e=>{if(e.code!=='Enter'&&e.code!=='Space')return;if(e.target&&e.target.tagName==='INPUT')return;
  const c=document.querySelector('#gxBot .gxm.on'),q=document.querySelector('#gxQp .qr.foc'),s=document.querySelector('#gxSu .gxr.on');
  for(const el of[q,s,c])if(vis(el)){pulse(el);break}},true);
+})();
+
+/* ===== Poly GT: image-based lighting (Hakan, Nov 7: "better lighting on EVERYTHING, so it doesn't look like the same flat plastic") =====
+   Every race scene gets an environment map made from its own sky: the hemisphere light's sky and ground colours, the fog/horizon colour and a
+   bright patch where the sun is. PBR materials then pick up soft reflections and sky-coloured fill from above, so paint, chrome and glass read
+   as paint, chrome and glass, and the shading follows the time of day and weather. Cars get the full reflection; the world gets a lighter
+   touch (and the hemisphere light is eased down to match) so tracks don't wash out. */
+(function lightfx(){
+'use strict';
+const P=window.PT8;if(!P||typeof THREE==='undefined'||typeof R==='undefined')return;
+const on=()=>!window.PTO||window.PTO.ibl!==false;
+let pm=null,envRT=null;
+function build(sc){
+ let sun=null,hemi=null;sc.traverse(o=>{if(o.isDirectionalLight&&!sun)sun=o;if(o.isHemisphereLight&&!hemi)hemi=o});
+ const lin=c=>c.clone();
+ const sky=hemi?lin(hemi.color).multiplyScalar(Math.min(1.6,hemi.intensity)):new THREE.Color(.55,.65,.8);
+ const gnd=hemi?lin(hemi.groundColor).multiplyScalar(Math.min(1.6,hemi.intensity)*.55):new THREE.Color(.18,.17,.15);
+ let hor=sc.fog&&sc.fog.color?lin(sc.fog.color):(sc.background&&sc.background.isColor?lin(sc.background):sky.clone().lerp(new THREE.Color(1,1,1),.3));
+ hor.lerp(sky,.35);
+ const sunC=sun?lin(sun.color).multiplyScalar(Math.min(2.5,sun.intensity)*.6):new THREE.Color(1,1,1);
+ const sd=sun?sun.position.clone().sub(sun.target?sun.target.position:new THREE.Vector3()).normalize():new THREE.Vector3(.3,.8,.4);
+ /* the sky dome as vertex colours on a sphere (a plain MeshBasicMaterial, the same kind the showroom's reflections are made from) */
+ const es=new THREE.Scene(),g=new THREE.SphereGeometry(10,64,32),pos=g.attributes.position,col=new Float32Array(pos.count*3),d=new THREE.Vector3(),c=new THREE.Color(),t=new THREE.Color();
+ for(let i=0;i<pos.count;i++){d.fromBufferAttribute(pos,i).normalize();const y=d.y;
+  if(y>0)c.copy(hor).lerp(sky,Math.pow(Math.min(1,y),.55));else c.copy(hor).lerp(gnd,Math.pow(Math.min(1,-y*3),.7));
+  const s_=Math.max(0,d.dot(sd));t.copy(sunC).multiplyScalar(Math.pow(s_,48)*5+Math.pow(s_,6)*.35);c.add(t);
+  if(y>.55)c.add(t.copy(sky).multiplyScalar(.25*Math.min(1,(y-.55)/.4)));
+  col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b}
+ g.setAttribute('color',new THREE.BufferAttribute(col,3));
+ const mat=new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.BackSide,depthWrite:false,fog:false}),m=new THREE.Mesh(g,mat);es.add(m);
+ if(!pm){pm=new THREE.PMREMGenerator(R)}
+ const rt=pm.fromScene(es,0,.1,100);g.dispose();mat.dispose();return rt}
+/* materials: the world keeps most of its look (a little env fill), cars get the reflections */
+const WORLD=.3,CAR=.6;
+function tuneWorld(sc){sc.traverse(o=>{if(!o.isMesh)return;const ms=Array.isArray(o.material)?o.material:[o.material];for(const x of ms){if(!x||!x.isMeshStandardMaterial||x.userData.iblC)continue;if(x.userData.ibl==null){x.userData.ibl=1;x.envMapIntensity=WORLD;x.needsUpdate=true}}})}
+function tuneCar(g){if(!g)return;g.traverse(o=>{if(!o.isMesh)return;const ms=Array.isArray(o.material)?o.material:[o.material];for(const x of ms){if(!x||!x.isMeshStandardMaterial||x.userData.iblC)continue;
+ x.userData.iblC=1;x.userData.ibl=1;x.envMapIntensity=CAR;
+ /* body paint and trim: a touch glossier so the sky runs along the panels; very rough parts (tyres, rubber) stay matte */
+ if(x.roughness<.8)x.roughness=Math.max(.22,x.roughness*.85);x.needsUpdate=true}})}
+function apply(sc){if(!sc||!on())return;try{
+ if(envRT){envRT.dispose();envRT=null}envRT=build(sc);sc.environment=envRT.texture;
+ sc.traverse(o=>{if(o.isHemisphereLight&&!o.userData.iblK){o.userData.iblK=1;o.intensity*=.8}});
+ tuneWorld(sc)}catch(e){console.warn('lightfx',e)}}
+P.iblApply=apply;
+const s0=P.shadeSetup;P.shadeSetup=function(sc){const r=s0?s0.apply(this,arguments):undefined;apply(sc);return r};
+/* cars arrive after the scene: tune them (and anything added later) once the grid exists, and again shortly after for late loads */
+const tuneRace=()=>{const Rc=typeof RACE!=='undefined'?RACE:null;if(!Rc||!Rc.cars||!on())return;for(const c of Rc.cars)if(c.m)tuneCar(c.m.g);if(Rc.scene)tuneWorld(Rc.scene)};
+const l0=P.launch;if(l0)P.launch=function(){const r=l0.apply(this,arguments);try{tuneRace();setTimeout(tuneRace,1500);setTimeout(tuneRace,5000)}catch(e){}return r};
+/* time of day / weather changes rebuild the sky, so rebuild the reflections too */
+const at=P.applyTod;if(at)P.applyTod=function(sc){const r=at.apply(this,arguments);if(sc&&sc.environment)apply(sc);return r};
 })();
 
 </script><script>window.PT8_BP&&PT8_BP(0.500)</script><script>(function(){var fin=0;function done(){if(fin)return;fin=1;var b=document.getElementById("ptBoot"),c=document.getElementById("ptBootCss");if(window.PT8_BP)PT8_BP(1);if(c)c.remove();if(!b)return;b.classList.add("rdy");if(!document.getElementById("ptTitle")){b.style.opacity=0;setTimeout(function(){b.remove()},1050)}}function go(){var w=window.PT8_BOOT;(w&&w.then?w:Promise.resolve()).then(function(){requestAnimationFrame(function(){requestAnimationFrame(function(){setTimeout(done,350)})})})}if(document.readyState==="complete")go();else addEventListener("load",go);setTimeout(done,900000)})();</script></body></html>
