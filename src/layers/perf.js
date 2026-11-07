@@ -133,6 +133,7 @@ let pendRes=0;setTimeout(()=>{const fi=frame;frame=function(){if(pendRes){pendRe
   if(now-t0<1200)return;const ingame=!document.hidden&&typeof scr!=='undefined'&&((scr==='game'&&typeof RACE!=='undefined'&&RACE&&RACE.state==='race')||scr==='bike'||MENUS_DYN.includes(scr));
   const fps=frames*1000/Math.max(1,acc),bad=slow/Math.max(1,frames);acc=0;frames=0;slow=0;t0=now;
   if(!ingame||O().adaptRes===false||frames<0)return;
+  /* P.dynHold: a planned camera move (Career's laptop) is not a reason to drop the resolution */if(P.dynHold&&now<P.dynHold){badRun=0;return}
   let nd=P.dynRes;
   if(fps<52||bad>.2){if(++badRun>=2){badRun=0;nd=Math.max(.5,nd-(fps<40?.18:.09));lastDn=now}}
   else{badRun=0;if(fps>58&&nd<1&&now-lastUp>20000&&now-lastDn>30000){nd=Math.min(1,nd+.05);lastUp=now}}

@@ -4,6 +4,8 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.03',d:'Nov 2, 2026',t:'Highway Cut-Up on bikes',items:[
+  'Marketplace: no more answer buttons in Messages. Type whatever you want (an offer like 12k or 20% off, ok, no thanks, a question about accidents, service history, mileage or why they are selling, a complaint about the paint, please and thanks, or an insult) and the seller or buyer answers in their own voice. Manners soften them, insults stiffen them, and the rude ones block you. Scammers still try to get a deposit or a refund out of you.',
+  'Marketplace: walking up to the laptop no longer glitches. The page waits until the camera arrives, then fades in, and the game no longer drops its resolution during the move.',
   'Lighting: every race now reflects its own sky. Car paint, glass and chrome pick up soft reflections, and the shading follows the time of day and weather instead of looking like flat plastic.',
   'Career Marketplace, round two: it is just "Marketplace" now, with a cleaner look, a grid of ten listings with titles, places and ages, and a search box. Chats are longer (ten texts) and slower, with typing dots and Seen receipts, questions you can ask (accidents, history, why they sell, test drives), and real characters: friendly, firm, chatty, rude ones who block you, flaky ones who leave you on read, and scammers on both sides (deposit and overpayment scams). Walk away from a seller and the listing goes, the chat stays in your Inbox. Replies that land while you are elsewhere pop up as a notification.',
   'Handling fix: normal corners no longer trigger an automatic drift, which cut grip to a quarter and felt like heavy understeer. Drifts now start from the handbrake (Space, Right Shift, U or Numpad 0, or pad X).',
