@@ -9,6 +9,13 @@ def rep(s,a,b,cnt=1):
     assert s.count(a)>=1,('missing',a[:60])
     return s.replace(a,b,cnt)
 
+# Drift: ordinary turn-in no longer starts a drift (it dropped grip to 24% on every keyboard corner, which read as heavy
+# understeer and scrubbed speed). A drift now starts only from the handbrake key (Space / Right Shift / U / Numpad 0, or pad X).
+src=rep(src,"return{th,br,st,hb:0}","return{th,br,st,hb}")
+src=rep(src,"""fw>o.driftSpeed/3.6&&Math.abs(st)>.76&&
+     Math.abs(prev)<.55&&Math.abs(st-prev)>.5&&
+     (c.ptBlend||0)<.2) {""","""fw>o.driftSpeed/3.6&&Math.abs(st)>.3&&c.in.hb&&
+     (c.ptBlend||0)<.2) {""")
 # Afterhours: warm-white window palette in the backdrop / slab textures (no neon)
 src=src.replace("['#ffd77a','#7af0ff','#ff7ad0','#fff6c0'][(r()*4)|0]","['#ffe2a8','#fff0c8','#ffd98a','#fff6dc'][(r()*4)|0]")
 src=src.replace("['#ffd77a','#7af0ff','#ff7ad0'][(i+j)%3]","['#ffe2a8','#fff0c8','#ffd98a'][(i+j)%3]")
