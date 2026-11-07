@@ -18904,6 +18904,12 @@ const SPOT={car:V3(-1.9,0,-.9),carRy:.25,red:V3(0,0,-1.95),vin:V3(-4.1,0,-1.7),o
 const b64u=s=>{const r=atob(s),u=new Uint8Array(r.length);for(let i=0;i<r.length;i++)u[i]=r.charCodeAt(i);return u.buffer};
 const parseGLB=b64=>new Promise(res=>{if(!b64||!THREE.GLTFLoader){res(null);return}const cib=window.createImageBitmap;window.createImageBitmap=undefined;
  try{new THREE.GLTFLoader().parse(b64u(b64),'',g=>res(g),e=>{console.warn('career glb',e);res(null)})}catch(e){console.warn('career glb',e);res(null)}finally{window.createImageBitmap=cib}});
+const GSHELL=/^(Walls|Floor_|Door|Poster|Shelves|Table_Work|Locker|Fridge_Body|PegBoard|LightHousing)/;
+async function garTex(b64){const gl=await parseGLB(b64);if(!gl)return null;const g=gl.scene;g.scale.multiplyScalar(.001);g.updateMatrixWorld(true);const cl=[],lights=[];
+ g.traverse(m=>{if(!m.isMesh)return;let n=m.name,o=m;while(o&&!GSHELL.test(n)&&o.parent&&o.parent!==g){o=o.parent;n=o.name+'|'+n}const shell=GSHELL.test(m.name)||GSHELL.test(n);
+  m.receiveShadow=true;m.castShadow=!shell;if(!shell)cl.push(m);if(/^LightHousing/.test(m.name)){lights.push(m);m.visible=false/* the hanging rig is a box around the camera's height: from inside it hides the room */}
+  const ms=Array.isArray(m.material)?m.material:[m.material];for(const x of ms){if(!x)continue;x.flatShading=false;if(x.roughness!=null)x.roughness=Math.max(.5,x.roughness);if(x.metalness!=null)x.metalness=Math.min(x.metalness,.5);x.envMapIntensity=.35;if(x.color)x.color.multiplyScalar(/Wall|Plaster/i.test(m.name)?.62:.8);x.needsUpdate=true}});
+ return{g,lights,clutter:{set visible(v){for(const m of cl)m.visible=v},get visible(){return!cl.length||cl[0].visible}}}}
 const yawTo=(from,to)=>Math.atan2(to.x-from.x,to.z-from.z);
 const wrapA=a=>Math.atan2(Math.sin(a),Math.cos(a)),lerpA=(a,b,k)=>a+wrapA(b-a)*k;
 function blob(r,op){const cv=document.createElement('canvas');cv.width=cv.height=64;const g=cv.getContext('2d'),gr=g.createRadialGradient(32,32,2,32,32,31);gr.addColorStop(0,'rgba(0,0,0,.55)');gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(0,0,64,64);
@@ -18931,18 +18937,22 @@ function rig(bones){const R={};for(const b of bones){const r=b.name.replace(/_\d
 const buildScene=()=>GS.bp||(GS.bp=buildScene_());
 async function buildScene_(){GS.busy=true;const pr=f=>{try{GS.onProg&&GS.onProg(f)}catch(e){}};
  try{const sc=new THREE.Scene();sc.background=new THREE.Color(0x10141a);sc.fog=new THREE.Fog(0x10141a,40,80);const cam=new THREE.PerspectiveCamera(56,16/9,.05,120);GS.sc=sc;GS.cam=cam;
-  sc.add(new THREE.HemisphereLight(0xf4f1ea,0x2c313a,.55));
+  sc.add(new THREE.HemisphereLight(0xd9cbb6,0x221d19,.2));
   /* the strip lights in the ceiling: soft pools of cool white under each fitting, and a little warm bounce off the floor */
   /* two lights, not five: every light costs every pixel of every mesh, and the five plus the floor bounce made the garage slow on laptops */
-  for(const [x,z] of [[-1.9,-3.4],[-1.9,0.6]]){const pl=new THREE.PointLight(0xfff3e2,1.0,8,1.6);pl.position.set(x,2.55,z);sc.add(pl)}
+  for(const [x,z] of [[-1.9,-3.4],[-1.9,0.6]]){const pl=new THREE.PointLight(0xffd7a4,.8,8,1.6);pl.position.set(x,2.55,z);sc.add(pl)}
   const ks=(x,y,z,tx,tz,i,ang,c)=>{const l=new THREE.SpotLight(c||0xe6efff,i,26,ang,.7,1.2);l.position.set(x,y,z);l.target.position.set(tx,0,tz);sc.add(l,l.target);return l};
   /* real shadows (the dark blobs under everyone looked like stains): the ceiling light over the car throws soft, nearly straight-down
      shadows of the car and both people onto the floor and benches. The room itself only receives, it never casts, so the ceiling
      above the light can't black everything out */
-  {const l=ks(SPOT.car.x+.3,5.2,SPOT.car.z+.2,SPOT.car.x,SPOT.car.z-.4,1.6,.78);l.castShadow=true;l.shadow.mapSize.set(1024,1024);l.shadow.bias=-.0004;l.shadow.normalBias=.02;l.shadow.radius=3;l.shadow.camera.near=1;l.shadow.camera.far=9;GS.shL=l}
-  const d=new THREE.DirectionalLight(0xf1f5ff,.32);d.position.set(4,9,7);sc.add(d);const rim=new THREE.DirectionalLight(0x8fb8ff,.5);rim.position.set(-3,4,-9);sc.add(rim);
+  {const l=ks(SPOT.car.x+.3,5.2,SPOT.car.z+.2,SPOT.car.x,SPOT.car.z-.4,1.7,.78,0xffe2b8);l.castShadow=true;l.shadow.mapSize.set(1024,1024);l.shadow.bias=-.0004;l.shadow.normalBias=.02;l.shadow.radius=3;l.shadow.camera.near=1;l.shadow.camera.far=9;GS.shL=l}
+  const d=new THREE.DirectionalLight(0xf1e8dc,.08);d.position.set(4,9,7);sc.add(d);const rim=new THREE.DirectionalLight(0x8fa8d0,.14);rim.position.set(-3,4,-9);sc.add(rim);
   let gm=null;try{if(window.GAR2_B64)gm=garMesh(window.GAR2_B64)}catch(e){console.warn('career garage',e)}
-  if(gm){for(const k in gm){gm[k].receiveShadow=true;gm[k].castShadow=false;sc.add(gm[k])}GS.clutter=gm.clutter||null;GS.gar=gm;try{navBuild(gm)}catch(e){console.warn('career map',e)}}
+  /* the textured garage (Hakan's Garage.glb with its own wood, plaster, pegboard and checker textures): drawn instead of the flat-colour bake,
+     which still gives the walking map. Small things go in the clutter set that hides while you talk */
+  let tg=null;try{if(window.GAR3_B64)tg=await garTex(window.GAR3_B64)}catch(e){console.warn('career garage tex',e)}
+  if(gm){for(const k in gm){gm[k].receiveShadow=true;gm[k].castShadow=false;if(!tg)sc.add(gm[k])}GS.clutter=gm.clutter||null;GS.gar=gm;try{navBuild(gm)}catch(e){console.warn('career map',e)}}
+  if(tg){sc.add(tg.g);GS.clutter=tg.clutter;GS.tex=tg}
   else{const f=new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshStandardMaterial({color:0x8d9097,roughness:.9}));f.rotation.x=-Math.PI/2;sc.add(f);
    const w=new THREE.Mesh(new THREE.PlaneGeometry(40,10),new THREE.MeshStandardMaterial({color:0xc9bba8,roughness:1}));w.position.set(0,5,-6.2);sc.add(w)}
   try{if(window.GPROP_B64){const pm=garMesh(window.GPROP_B64);if(pm.laptop){pm.laptop.position.copy(LAPTOP.p);pm.laptop.rotation.y=LAPTOP.ry;pm.laptop.scale.setScalar(1.35);pm.laptop.traverse(m=>{if(m.isMesh){m.castShadow=true;m.receiveShadow=true}});sc.add(pm.laptop);GS.laptop=pm.laptop}}}catch(e){console.warn('career props',e)}
@@ -19262,7 +19272,7 @@ function pickAt(cx,cy){if(!GS.ok)return null;MV.set(cx/innerWidth*2-1,-(cy/inner
    /* other screens (split-screen races, the bike mode, the menu previews) leave a viewport or scissor of their own behind, and the adaptive
       resolution resizes the canvas under it: start every garage frame from the full canvas so the picture never ends up in a corner */
    {const pr=R.getPixelRatio()||1;R.shadowMap.enabled=true;R.shadowMap.autoUpdate=true;R.setRenderTarget(null);R.setScissorTest(false);R.setViewport(0,0,R.domElement.width/pr,R.domElement.height/pr);R.setScissor(0,0,R.domElement.width/pr,R.domElement.height/pr)}
-   try{tick(dt);renderGarage();olRender(dt)}catch(e){if(!GS.err){GS.err=1;console.warn('career frame',e)}}
+   const ex0=R.toneMappingExposure;R.toneMappingExposure=GS.tex?.82:ex0;try{tick(dt);renderGarage();olRender(dt)}catch(e){R.toneMappingExposure=ex0;if(!GS.err){GS.err=1;console.warn('career frame',e)}}R.toneMappingExposure=ex0;
    if(!vis){vis=true;R.domElement.style.visibility='';document.body.classList.add('gcG')}return}
   if(vis){vis=false;document.body.classList.remove('gcG');R.domElement.style.visibility=MENU_BG.includes(scr)&&!(RACE&&scr==='s8res')?'hidden':''}
   return f0.apply(this,arguments)}}
