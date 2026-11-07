@@ -19040,7 +19040,7 @@ function tick(dt){GS.t+=dt;const k=1-Math.exp(-dt*3.4);GS.cp.lerp(GS.tp,k);GS.cl
  const cam=GS.cam,s=UI.view==='pc'?0:UI.who?.01:.04;cam.position.set(GS.cp.x+Math.sin(GS.t*.23)*s,GS.cp.y+Math.sin(GS.t*.31)*s*.4,GS.cp.z);cam.lookAt(GS.cl);
  const W=R.domElement.width,H=R.domElement.height;if(H&&Math.abs(cam.aspect-W/H)>1e-3){cam.aspect=W/H;cam.updateProjectionMatrix()}
  /* talking: the room fades into the dark behind whoever you're with, and the small clutter goes away once it can't be seen */
- const fo=(UI.who&&UI.view!=='cars')||UI.view==='tune'||UI.menu||LD_on();GS.fk+=((fo?1:0)-GS.fk)*Math.min(1,dt*(fo?3.4:9));
+ const fo=false;/* the room stays as it is when you talk to someone (Hakan) */GS.fk+=((fo?1:0)-GS.fk)*Math.min(1,dt*(fo?3.4:9));
  /* behind the loading screen: a slow drift round the car, like the title screen's drive-by */
  if(LD_on()){const a=GS.t*.09+.5;GS.tp.set(SPOT.car.x+Math.sin(a)*2.5,1.35,SPOT.car.z+Math.cos(a)*3.3);GS.tl.set(SPOT.car.x,.7,SPOT.car.z)}const tg=onCar()?SPOT.car:UI.who?headOf(UI.who):null,dd=tg?cam.position.distanceTo(tg):6;
  if(GS.clutter)GS.clutter.visible=GS.fk<.85;
