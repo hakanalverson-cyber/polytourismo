@@ -555,7 +555,8 @@ const _fr={},_g2=new THREE.Vector3();
 /* ---------------- main loop ---------------- */
 function step(dt){if(!B)return;const live=!B.paused;
  if(live){B.t+=dt;
-  if(B.state==='count'){B.cd-=dt;const n=Math.ceil(B.cd-.6);if(n!==B.cdn){B.cdn=n;if(n>0){sfx.tone(880,880,.16,'sine',1)}else{sfx.tone(1760,1760,.5,'sine',1.1)}showCount(n>0?n:'GO!')}if(B.cd<=.6){B.state='ride';}}
+  if(B.state==='count'&&P.cdStep){/* the game's countdown clip, same as the car races */const cs=P.cdStep(B,dt);if(cs.txt&&cs.txt!==B.cdn){B.cdn=cs.txt;showCount(cs.txt)}if(cs.go)B.state='ride'}
+  else if(B.state==='count'){B.cd-=dt;const n=Math.ceil(B.cd-.6);if(n!==B.cdn){B.cdn=n;if(n>0){sfx.tone(880,880,.16,'sine',1)}else{sfx.tone(1760,1760,.5,'sine',1.1)}showCount(n>0?n:'GO!')}if(B.cd<=.6){B.state='ride';}}
   if(B.state==='ride'&&B.clock>0){B.left-=dt;if(B.left<=0){B.left=0;finish();return}}
   for(const p of B.pl){physStep(p,dt);if(!B)return;collide(p);scoreStep(p,dt)}collideRiders();
   trafficStep(dt);fxStep(dt);
