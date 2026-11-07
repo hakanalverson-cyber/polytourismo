@@ -114,12 +114,19 @@ const TUNE_L={gear:[`Shorter gears. It'll jump off the line, but top speed takes
 
 /* ---------------- Vince's Marketplace: older cars, cheap, and they need work ---------------- */
 const BADPAL=[['#5cff1a'],['#ff2fa8'],['#8a2be2'],['#ff6a00'],['#00e5c8']];
+const LOCS=['Eastside','Docklands','Old Town','Riverside','Hillcrest','North End','Westgate','Harbour','Mill Lane','Southfield'];
+const mktPk=()=>{const r=Math.random();return r<.12?'scam':r<.3?'firm':r<.45?'rude':r<.58?'ghost':r<.72?'chatty':'chill'};
+/* a seller's ad title, in their own voice */
+function mktTitle(l,c){const n=c.name,last=n.split(' ').slice(-1)[0];if(l.pk==='scam')return rnd([`${n} MUST GO TODAY!!! like new`,`${n} urgent sale, moving abroad`,`Perfect ${n} low km cheap!!`]);
+ if(l.pk==='rude')return rnd([`${n}. No timewasters.`,`${last} for sale. Read the ad.`,`${n} - lowballers will be ignored`]);if(l.pk==='chatty')return rnd([`Much loved ${n} looking for a new home 😊`,`Our lovely ${last}, hate to see it go!`]);
+ if(l.pk==='firm')return rnd([`${n}, price firm`,`${n}. Serious buyers only.`]);return rnd([`${n}${l.bad||l.L?', needs paint':''}`,`${l.yr||''} ${n}`.trim(),`${n}, runs great`,`${n} - project`,`Clean ${last}`])}
 function mktFill(){const g=G();if(!Array.isArray(g.mkt))g.mkt=[];const own=P.SV().owned||{},bad=new Set([...(P.RALLY_CARS||[]),...(P.TRACK_CARS||[])]);
  g.mkt=g.mkt.filter(l=>BYID[l.id]&&!(own[l.id]&1));
  const pool=P.CARS.filter(c=>c.price&&c.price<150000&&!c.rallyOnly&&!bad.has(c.id)&&!(own[c.id]&1)&&!g.mkt.some(l=>l.id===c.id));
- while(g.mkt.length<4&&pool.length){const c=pool.splice(Math.random()*pool.length|0,1)[0],b=Math.random()<.4,pl=rnd(BADPAL);
-  g.mkt.push({id:c.id,price:Math.max(1500,Math.round(c.price*(.36+Math.random()*.2)/50)*50),cond:Math.round((.42+Math.random()*.38)*100)/100,yr:1988+(Math.random()*24|0),km:60000+(Math.random()*260000|0),
-   bad:b,L:b?pl[0]:null})}
+ while(g.mkt.length<10&&pool.length){const c=pool.splice(Math.random()*pool.length|0,1)[0],pk=mktPk(),sc=pk==='scam',b=!sc&&Math.random()<.35,pl=rnd(BADPAL);
+  const l={id:c.id,price:Math.max(1500,Math.round(c.price*(sc?.2+Math.random()*.08:.36+Math.random()*.2)/50)*50),cond:sc?Math.round((.93+Math.random()*.06)*100)/100:Math.round((.42+Math.random()*.38)*100)/100,yr:1988+(Math.random()*24|0),km:sc?18000+(Math.random()*20000|0):60000+(Math.random()*260000|0),
+   bad:b,L:b?pl[0]:null,pk,who:rnd(NB),loc:rnd(LOCS),at:Date.now()-(5+Math.random()*2800)*60000};l.title=mktTitle(l,c);g.mkt.push(l)}
+ for(const l of g.mkt){if(!l.pk){l.pk=mktPk();if(l.pk==='scam')l.pk='chill';l.who=l.who||rnd(NB);l.loc=rnd(LOCS);l.at=Date.now()-(5+Math.random()*2800)*60000;l.title=mktTitle(l,BYID[l.id])}}
  P.save()}
 /* a bad paintjob: the body paint swapped for a loud colour (saved per car in gc.paint until Nina repaints it) */
 const paintOf=id=>(G().paint||{})[id]||null;
@@ -650,42 +657,59 @@ body.gcG #v8Bg{opacity:0!important}
 #gcAnn .pic{flex:none;width:48px;height:48px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:#22262c;box-shadow:0 0 0 2px #7fb6ff;font:300 22px var(--gt)}#gcAnn .pic img{width:100%;height:100%;object-fit:cover;transform:scale(1.25)}
 #gcAnn .tx{flex:1;min-width:0}#gcAnn small{display:block;font:700 9px var(--gt);letter-spacing:.22em}#gcAnn small.ok{color:#7ee3a0}#gcAnn small.no{color:#ff9d90}
 #gcAnn b{display:block;font:500 16px var(--gt);margin:2px 0}#gcAnn p{margin:0;font:400 12.5px/1.35 var(--gt);color:#b8c0c8}#gcAnn .cr{flex:none;font:700 17px var(--gt);color:#7ee3a0}#gcAnn .cr.neg{color:#ff9d90}
-#gcPC{position:fixed;left:0;top:0;width:960px;height:555px;transform-origin:0 0;z-index:9000;opacity:0;pointer-events:none;overflow:hidden;background:#f3f5f8;color:#1c2633;font:15px/1.35 Tahoma,Verdana,"Segoe UI",sans-serif;box-sizing:border-box}
-#gcPC.live{pointer-events:auto}#gcPC *{box-sizing:border-box}
-#gcPC .glare{position:absolute;inset:0;pointer-events:none;background:linear-gradient(118deg,#ffffff1f 0%,#ffffff08 32%,transparent 46%),repeating-linear-gradient(0deg,#00000008 0 1px,transparent 1px 3px);box-shadow:inset 0 0 0 2px #0006}
+#gcPC{position:fixed;left:0;top:0;width:960px;height:555px;transform-origin:0 0;z-index:9000;opacity:0;pointer-events:none;overflow:hidden;background:#f0f2f5;color:#1c1e21;font:14px/1.35 "Segoe UI",Helvetica,Arial,sans-serif;box-sizing:border-box}
+#gcPC.live{pointer-events:auto}#gcPC *{box-sizing:border-box;text-transform:none;letter-spacing:normal}#gcPC{text-align:left}#gcPC [hidden]{display:none!important}
+#gcPC .glare{position:absolute;inset:0;pointer-events:none;background:linear-gradient(118deg,#ffffff24 0%,#ffffff08 30%,transparent 45%),radial-gradient(ellipse at 50% 50%,transparent 60%,#0000001a 100%);box-shadow:inset 0 0 0 1px #0004}
 #gcPC .app{position:absolute;inset:0;display:flex;flex-direction:column}
-#gcPC .tb{flex:none;display:flex;align-items:center;gap:18px;height:56px;padding:0 18px;background:linear-gradient(#2d6bc0,#1f4f93);color:#fff;box-shadow:0 2px 0 #163c72}
-#gcPC .logo{font:400 22px Tahoma,sans-serif;letter-spacing:-.01em}#gcPC .logo b{font-weight:700;color:#ffd75a}
-#gcPC nav{display:flex;gap:6px;flex:1}#gcPC nav u{text-decoration:none;cursor:pointer;padding:7px 16px;border-radius:6px;font-weight:700;color:#d8e6fa}#gcPC nav u:hover{background:#ffffff1f;color:#fff}#gcPC nav u.on{background:#f3f5f8;color:#1f4f93}
-#gcPC nav i{font-style:normal;display:inline-block;min-width:20px;margin-left:7px;padding:0 6px;border-radius:10px;background:#e2463b;color:#fff;font-size:12px;text-align:center}
-#gcPC .cr{font-weight:700;color:#ffd75a}#gcPC .x{width:34px;height:34px;border:0;border-radius:6px;background:#ffffff1a;color:#fff;font-size:22px;cursor:pointer}#gcPC .x:hover{background:#e2463b}
-#gcPC .bd{flex:1;min-height:0;overflow-y:auto;padding:16px 20px;scrollbar-width:thin}
-#gcPC h2{margin:0 0 12px;font:700 20px Tahoma,sans-serif;color:#1f4f93}#gcPC h2 small{font-size:13px;font-weight:400;color:#6b7788;margin-left:8px}#gcPC h3{margin:16px 0 8px;font-size:14px;color:#6b7788;text-transform:uppercase;letter-spacing:.08em}
+#gcPC .tb{flex:none;display:flex;align-items:center;gap:16px;height:52px;padding:0 14px;background:#fff;box-shadow:0 1px 2px #0000001f,0 1px 0 #dadde1;position:relative;z-index:1}
+#gcPC .logo{display:flex;align-items:center;gap:8px;color:#1877f2;font-weight:700;font-size:20px;letter-spacing:-.01em}#gcPC .logo svg{flex:none}
+#gcPC nav{display:flex;gap:4px;flex:1;justify-content:center}#gcPC nav u{text-decoration:none;cursor:pointer;padding:8px 18px;border-radius:8px;font-weight:600;color:#65676b;transition:background .15s}#gcPC nav u:hover{background:#f0f2f5}
+#gcPC nav u.on{color:#1877f2;background:#e7f0fd}#gcPC nav i{font-style:normal;display:inline-block;min-width:19px;margin-left:6px;padding:0 6px;border-radius:10px;background:#e41e3f;color:#fff;font-size:12px;line-height:19px;text-align:center}
+#gcPC .cr{font-weight:700;color:#1c1e21;background:#f0f2f5;padding:6px 12px;border-radius:16px}#gcPC .x{width:34px;height:34px;padding:0;border:0;border-radius:50%;background:#e4e6eb;color:#1c1e21;font-size:22px;line-height:1;cursor:pointer}#gcPC .x:hover{background:#d8dadf}
+#gcPC .bd{flex:1;min-height:0;overflow-y:auto;padding:14px 18px;scrollbar-width:thin}#gcPC .bd.msg{padding:0;overflow:hidden}
+#gcPC h2{margin:0 0 10px;font-size:20px;font-weight:700;color:#1c1e21}#gcPC h2 small{font-size:13px;font-weight:400;color:#65676b;margin-left:8px}#gcPC h3{margin:16px 0 8px;font-size:15px;color:#1c1e21}
+#gcPC .bh{display:flex;align-items:center;gap:16px;margin-bottom:10px}#gcPC .bh h2{margin:0;flex:1}
+#gcPC .sr{display:flex;align-items:center;gap:8px;width:300px;padding:0 12px;border-radius:20px;background:#f0f2f5;color:#65676b;border:1px solid #dadde1}#gcPC .sr input{border:0!important;background:none!important;box-shadow:none!important;padding:8px 0!important}
+#gcPC .mkg{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+#gcPC .mkc{display:flex;flex-direction:column;background:#fff!important;color:#1c1e21;text-align:left;padding:0;margin:0;border:0;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px #0000002a;transition:box-shadow .15s,transform .15s}#gcPC .mkc:hover{box-shadow:0 4px 14px #00000026;transform:translateY(-1px)}
+#gcPC .mkc .th{position:relative;height:118px;background:#18191a center/cover no-repeat}#gcPC .tag{position:absolute;left:8px;top:8px;font-style:normal;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:#f7b928;color:#1c1e21}#gcPC .tag.ok{background:#42b72a;color:#fff}
+#gcPC .mkc *{text-align:left!important}#gcPC .ci{padding:8px 10px 4px;display:flex;flex-direction:column;gap:1px;min-width:0}#gcPC .ci .p{font-size:17px}#gcPC .ci .p s{font-size:13px;font-weight:400;color:#8a8d91}#gcPC .ci .tt{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#gcPC .ci small{color:#65676b;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#gcPC .ci em,#gcPC .nf em{color:#e41e3f;font-style:normal}#gcPC .ci .lo{color:#8a8d91}
+#gcPC .mkc .bt{display:flex;gap:6px;padding:6px 10px 10px;margin-top:auto}#gcPC .mkc .bt button{flex:1}
 #gcPC .list{display:flex;flex-direction:column;gap:8px}
-#gcPC .it{display:flex;align-items:center;gap:14px;padding:8px 12px;background:#fff;border:1px solid #d3dae4;border-radius:8px}
-#gcPC .it.conv{cursor:pointer}#gcPC .it.conv:hover{border-color:#2d6bc0;background:#f6f9fe}#gcPC .it.conv.new{border-left:4px solid #e2463b}
-#gcPC .th{flex:none;width:112px;height:62px;border-radius:5px;background:#0b0d10 center/cover no-repeat}
-#gcPC .nf{flex:1;min-width:0}#gcPC .nf b{display:block;font-size:16px}#gcPC .nf small{display:block;color:#5d6a7c;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#gcPC .nf em{color:#c0392b;font-style:normal}#gcPC .nf .nw{color:#8a95a5}
-#gcPC .cls{display:inline-block;margin-left:6px;padding:0 6px;border-radius:4px;background:#1c2633;color:#fff;font-size:11px;vertical-align:2px}
-#gcPC .pr{flex:none;text-align:right;min-width:120px}#gcPC .pr b{display:block;font-size:18px;color:#1c2633}#gcPC .pr s{display:block;color:#8a95a5;font-size:13px}#gcPC .pr em{display:block;font-style:normal;font-size:11px;font-weight:700;color:#2e8b3a;text-transform:uppercase}#gcPC .pr small{display:block;color:#8a95a5;font-size:11px;text-transform:uppercase}
-#gcPC .bt{flex:none;display:flex;flex-direction:column;gap:5px}
-#gcPC button{font:700 14px Tahoma,sans-serif;cursor:pointer;padding:7px 16px;border-radius:6px;border:1px solid #1f4f93;background:linear-gradient(#3b7fd6,#2459a8);color:#fff}#gcPC button:hover{background:linear-gradient(#4b8fe6,#2d69bb)}
-#gcPC button.ghost{background:#fff;color:#1f4f93;border-color:#aebbd0}#gcPC button.ghost:hover{background:#eef4fd}#gcPC button:disabled{opacity:.45;cursor:default}
-#gcPC .empty{color:#6b7788;padding:30px;text-align:center}
-#gcPC .av{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(#5d97e0,#2459a8);color:#fff;font:700 20px Tahoma,sans-serif}
-#gcPC .chat{display:flex;flex-direction:column;height:100%;margin:-16px -20px;}
-#gcPC .ch{display:flex;align-items:center;gap:12px;padding:10px 16px;background:#fff;border-bottom:1px solid #d3dae4}#gcPC .ch b{display:block;font-size:17px}#gcPC .ch small{color:#5d6a7c}#gcPC .ch .back{padding:5px 10px;margin-right:6px}
-#gcPC .px{display:flex;background:#fff;border-bottom:1px solid #d3dae4}#gcPC .px span{flex:1;padding:6px 10px;text-align:center;border-right:1px solid #e3e8ee}#gcPC .px span.on{background:#eef5ff}#gcPC .px u{display:block;text-decoration:none;font-size:10px;font-weight:700;letter-spacing:.1em;color:#7a8698}#gcPC .px b{font-size:16px}
-#gcPC .msgs{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:12px 16px;background:#e9edf2;scrollbar-width:thin}
-#gcPC .m{max-width:72%;padding:8px 13px;border-radius:14px;white-space:pre-wrap}#gcPC .m.them{align-self:flex-start;background:#fff;border:1px solid #cfd6df;border-bottom-left-radius:4px}
-#gcPC .m.me{align-self:flex-end;background:linear-gradient(#3b7fd6,#2459a8);color:#fff;border-bottom-right-radius:4px}#gcPC .m.note{align-self:center;padding:3px 12px;background:#c9d2de;color:#3d4a5a;font-size:12px;font-weight:700;letter-spacing:.05em}
-#gcPC .m.typing{color:#8692a0;font-style:italic;animation:gcTxBlink .8s steps(2) infinite}@keyframes gcTxBlink{50%{opacity:.35}}
-#gcPC .opts{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px;background:#fff;border-top:1px solid #d3dae4}#gcPC .opts:empty{display:none}#gcPC .opts button em{font-style:normal;display:inline-block;width:18px;height:18px;margin-right:7px;border-radius:50%;background:#fff;color:#2459a8;font-size:11px;line-height:18px;text-align:center}
-#gcPC .form{display:flex;flex-direction:column;gap:12px;max-width:640px}#gcPC .row label{display:block;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7788;margin-bottom:4px}
-#gcPC input,#gcPC textarea{width:100%;font:15px Tahoma,sans-serif;padding:8px 10px;border:1px solid #aebbd0;border-radius:6px;background:#fff;color:#1c2633;resize:none;outline:0}#gcPC input:focus,#gcPC textarea:focus{border-color:#2d6bc0;box-shadow:0 0 0 2px #2d6bc033}
-#gcPC .ask{display:flex;align-items:center;gap:10px;flex-wrap:wrap}#gcPC .ask b{font-size:22px;min-width:150px;text-align:center}#gcPC .ask small{width:100%;color:#6b7788}#gcPC .ask button{width:40px;padding:5px 0;font-size:18px}
-#gcPC .meter{display:flex;align-items:center;gap:12px}#gcPC .meter span{font-size:13px;color:#6b7788}#gcPC .meter i{flex:1;height:12px;border-radius:6px;background:#d6dde6;overflow:hidden}#gcPC .meter u{display:block;height:100%;background:#2e8b3a;transition:width .3s}
-#gcPC .meter[data-l=ok] u{background:#d9a21b}#gcPC .meter[data-l=bad] u{background:#c0392b}#gcPC .meter b{font-size:18px;min-width:50px}#gcPC .form .bt{flex-direction:row}
+#gcPC .it{display:flex;align-items:center;gap:14px;padding:8px 12px;background:#fff;border-radius:10px;box-shadow:0 1px 2px #0000002a}
+#gcPC .it .th{flex:none;width:112px;height:62px;border-radius:6px;background:#18191a center/cover no-repeat}
+#gcPC .nf{flex:1;min-width:0}#gcPC .nf b{display:block;font-size:15px}#gcPC .nf small{display:block;color:#65676b;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#gcPC .cls{display:inline-block;margin-left:4px;padding:0 5px;border-radius:4px;background:#1c1e21;color:#fff;font-size:10.5px;font-weight:700;vertical-align:1px}
+#gcPC .pr{flex:none;text-align:right;min-width:110px}#gcPC .pr b{display:block;font-size:17px}#gcPC .pr small{display:block;color:#65676b;font-size:12px}
+#gcPC .bt{flex:none;display:flex;flex-direction:column;gap:5px}#gcPC .bt.row2{flex-direction:row}
+#gcPC button{font:600 14px "Segoe UI",Helvetica,Arial,sans-serif;cursor:pointer;padding:7px 14px;border-radius:7px;border:0;background:#1877f2;color:#fff;transition:background .15s}#gcPC button:hover{background:#166fe5}
+#gcPC button.ghost{background:#e4e6eb;color:#1c1e21}#gcPC button.ghost:hover{background:#d8dadf}#gcPC button:disabled{opacity:.45;cursor:default}
+#gcPC .empty{color:#65676b;padding:30px;text-align:center}
+#gcPC .av{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:17px;background:#8a8d91}
+#gcPC .av.h0{background:#e4585e}#gcPC .av.h1{background:#3b82f6}#gcPC .av.h2{background:#22a06b}#gcPC .av.h3{background:#a855f7}#gcPC .av.h4{background:#f59e0b}#gcPC .av.h5{background:#0ea5a4}
+#gcPC .inbox{display:flex;height:100%}#gcPC .side{flex:none;width:300px;display:flex;flex-direction:column;background:#fff;border-right:1px solid #dadde1}#gcPC .side h2{padding:12px 14px 6px;margin:0}
+#gcPC .cvs{flex:1;overflow-y:auto;padding:4px 6px;scrollbar-width:thin}#gcPC .cv{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;cursor:pointer}#gcPC .cv:hover{background:#f2f2f2}#gcPC .cv.on{background:#e7f0fd}
+#gcPC .cv .nf b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#gcPC .cv .nf b small{display:inline;margin-left:5px;font-weight:400;color:#8a8d91;font-size:12px}#gcPC .cv .nf small i{font-style:normal;color:#1877f2}
+#gcPC .cv.new .nf b,#gcPC .cv.new .nf small{color:#1c1e21;font-weight:700}#gcPC .cv.new::after{content:'';flex:none;width:10px;height:10px;border-radius:50%;background:#1877f2}
+#gcPC .main{flex:1;min-width:0;display:flex;flex-direction:column;background:#fff}#gcPC .pick{margin:auto;color:#65676b}
+#gcPC .chat{display:flex;flex-direction:column;height:100%}
+#gcPC .ch{flex:none;display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid #dadde1;box-shadow:0 1px 2px #0000000f}#gcPC .ch .nm{flex:1;min-width:0}#gcPC .ch b{display:block;font-size:15px}#gcPC .ch small{color:#65676b;font-size:12px}
+#gcPC .px{flex:none;display:flex;gap:4px}#gcPC .px span{padding:3px 8px;border-radius:6px;background:#f0f2f5;font-weight:700;font-size:13px;text-align:center;white-space:nowrap}#gcPC .px span.on{background:#e7f0fd;color:#1877f2}#gcPC .px u{display:block;text-decoration:none;font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#65676b}
+#gcPC .msgs{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:4px;padding:12px 14px;scrollbar-width:thin}
+#gcPC .m{max-width:70%;padding:7px 12px;border-radius:18px;white-space:pre-wrap;animation:gcPcIn .25s ease}#gcPC .m.them{align-self:flex-start;background:#e4e6eb}
+#gcPC .m.me{align-self:flex-end;background:#0084ff;color:#fff}#gcPC .m.note{align-self:center;max-width:none;padding:6px 0;background:none;color:#8a8d91;font-size:11.5px;font-weight:600;letter-spacing:.04em}
+#gcPC .rc{align-self:flex-end;font-size:11px;color:#8a8d91;margin:-1px 4px 2px}
+#gcPC .m.typing{display:flex;gap:4px;padding:11px 14px}#gcPC .m.typing i{width:7px;height:7px;border-radius:50%;background:#8a8d91;animation:gcPcDot 1.2s infinite}#gcPC .m.typing i:nth-child(2){animation-delay:.15s}#gcPC .m.typing i:nth-child(3){animation-delay:.3s}
+@keyframes gcPcDot{0%,60%,100%{opacity:.35;transform:none}30%{opacity:1;transform:translateY(-3px)}}@keyframes gcPcIn{from{opacity:0;transform:translateY(6px)}}
+#gcPC .opts{flex:none;display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;border-top:1px solid #dadde1}#gcPC .opts:empty{display:none}
+#gcPC .opts button{background:#e7f0fd;color:#1877f2;border-radius:16px;padding:6px 12px;font-size:13.5px}#gcPC .opts button:hover{background:#d5e5fc}#gcPC .opts button.q{background:#f0f2f5;color:#1c1e21}#gcPC .opts button.w{background:#fff;color:#65676b;box-shadow:inset 0 0 0 1px #dadde1}
+#gcPC .opts button em{font-style:normal;display:inline-block;margin-right:6px;font-size:11px;opacity:.6}#gcPC .opts .end{margin:2px 4px;color:#8a8d91;font-size:13px}
+#gcPC .form{display:flex;flex-direction:column;gap:12px;max-width:640px;background:#fff;padding:16px;border-radius:10px;box-shadow:0 1px 2px #0000002a}#gcPC .row label{display:block;font-size:12px;font-weight:600;color:#65676b;margin-bottom:4px}
+#gcPC input,#gcPC textarea{width:100%;font:14px "Segoe UI",Helvetica,Arial,sans-serif;padding:8px 10px;border:1px solid #ccd0d5;border-radius:6px;background:#fff;color:#1c1e21;resize:none;outline:0}#gcPC input:focus,#gcPC textarea:focus{border-color:#1877f2;box-shadow:0 0 0 2px #1877f233}
+#gcPC .ask{display:flex;align-items:center;gap:10px;flex-wrap:wrap}#gcPC .ask b{font-size:22px;min-width:150px;text-align:center}#gcPC .ask small{width:100%;color:#65676b}#gcPC .ask button{width:40px;padding:5px 0;font-size:18px}
+#gcPC .meter{display:flex;align-items:center;gap:12px}#gcPC .meter span{font-size:13px;color:#65676b}#gcPC .meter i{flex:1;height:10px;border-radius:5px;background:#e4e6eb;overflow:hidden}#gcPC .meter u{display:block;height:100%;background:#42b72a;transition:width .3s}
+#gcPC .meter[data-l=ok] u{background:#f7b928}#gcPC .meter[data-l=bad] u{background:#e41e3f}#gcPC .meter b{font-size:18px;min-width:50px}
 @keyframes gcLdIn{from{opacity:0}}
 @keyframes gcLdPan{to{transform:translateX(8%)}}
 @keyframes gcLdT{from{letter-spacing:.4em;opacity:0}}@keyframes gcSheen{0%{background-position:100% 0}60%,100%{background-position:-60% 0}}
@@ -713,7 +737,7 @@ function render(){P.gcRun=null;sec.classList.add('gcOn');buildScene().then(()=>{
  if(UI.who)talk(UI.who,true,UI.line);else{aim();hint()}}
 function hint(){const h=$('gcHint');if(!h)return;sec.classList.toggle('talk',!!UI.who||onCar());sec.classList.toggle('cars',UI.view==='cars');
  const k=(a,b)=>`<span><u>${a}</u>${b}</span>`;
- sec.classList.toggle('pcv',UI.view==='pc');h.innerHTML=UI.view==='pc'?k('Click','Select')+k('1-4','Reply')+k('Esc','Back'):UI.menu?k('&uarr;&darr;','Choose')+k('Enter','Select')+k('Esc','Close'):!UI.who&&!onCar()?k('&larr;&rarr;','Look around')+k('Enter','Select')+k('Esc','Menu'):UI.view==='tune'?k('&uarr;&darr;','Choose')+k('&larr;&rarr;','Adjust')+k('Esc','Done'):k('&uarr;&darr;','Choose')+k('Enter','Select')+k('Esc','Back')}
+ sec.classList.toggle('pcv',UI.view==='pc');h.innerHTML=UI.view==='pc'?k('Click','Select')+k('1-9','Reply')+k('Esc','Back'):UI.menu?k('&uarr;&darr;','Choose')+k('Enter','Select')+k('Esc','Close'):!UI.who&&!onCar()?k('&larr;&rarr;','Look around')+k('Enter','Select')+k('Esc','Menu'):UI.view==='tune'?k('&uarr;&darr;','Choose')+k('&larr;&rarr;','Adjust')+k('Esc','Done'):k('&uarr;&darr;','Choose')+k('Enter','Select')+k('Esc','Back')}
 
 /* ---------------- talking ---------------- */
 const fixCost=id=>repairCost(id),tuneFee=()=>{const c=curCar().car;return Math.max(400,Math.round((c.price||30000)*.015/50)*50)};
@@ -805,68 +829,142 @@ function sfWire(d){const f=UI.sf;if(!f)return;const ti=d.querySelector('.sfIn in
    Everyone gives reasons: buyers point at paint, wear and mileage, sellers at condition, original paint and what a new one costs. */
 const r50=v=>Math.round(v/50)*50;
 /* reasons: what's wrong with it (used by whoever is buying) and what's right with it (used by whoever is selling), from the car itself */
-function flaws(x){const L=[];if(x.bad)L.push(`The paint is a disaster, that's ${fmtCr(1200)} just to fix that.`,`Who painted it? I'd have to redo it.`);
+function flaws(x){const L=[];if(x.bad)L.push(`The paint is a disaster, that's ${fmtCr(1200)} just to fix that.`,`Who painted it? I'd have to redo it.`,`That paint job alone knocks it down.`);
  if(x.cond<.6)L.push(`It's at ${Math.round(x.cond*100)}%. That's a lot of work.`,`Condition's rough, ${Math.round(x.cond*100)}%. It needs a mechanic.`);else if(x.cond<.85)L.push(`It's not perfect, ${Math.round(x.cond*100)}% condition.`);
- if(x.km>120000)L.push(`It's done ${Math.round(x.km/1000)}k km.`);
+ if(x.km>120000)L.push(`It's done ${Math.round(x.km/1000)}k km.`,`${Math.round(x.km/1000)}k km is a lot of miles.`);
  L.push(`I've seen cheaper ones around.`,`Cash, today, no messing around.`,`That's all I've got budgeted.`);return L}
 function strengths(x){const L=[];if(x.cond>=.85)L.push(`It's in great shape, ${Math.round(x.cond*100)}%.`,`Nothing wrong with it. At all.`);if(!x.bad)L.push(`Original paint, never touched.`);
  if(x.price<x.nw*.6)L.push(`A new one is ${fmtCr(x.nw)}. This is already a steal.`);if(x.km&&x.km<60000)L.push(`Only ${Math.round(x.km/1000)}k km on it.`);
  L.push(`I've had other people asking.`,`It drives perfect.`,`I'm not giving it away.`);return L}
 /* how far someone will move: most of the time a little, sometimes not at all, and hardly anything once they're near their limit */
-function budge(cur,lim,gap,dir){const room=Math.abs(cur-lim);if(room<50)return cur;const near=room<Math.max(600,Math.abs(lim-(dir>0?lim-5000:lim+5000))*.25)||false;
- if(Math.random()<(near?.55:.3))return cur;const step=Math.min(room,Math.max(100,Math.abs(gap)*(near?.15:.35)));return r50(cur+dir*step)}
+function budge(cur,lim,gap,dir,soft){const room=Math.abs(cur-lim);if(room<50)return cur;const near=room<Math.max(600,Math.abs(lim-(dir>0?lim-5000:lim+5000))*.25)||false;
+ if(Math.random()<(near?.55:.3)*(soft||1))return cur;const step=Math.min(room,Math.max(100,Math.abs(gap)*(near?.15:.35)/(soft||1)));return r50(cur+dir*step)}
 const CV=()=>{const g=G();if(!Array.isArray(g.conv))g.conv=[];return g.conv};
 let cvSeq=0;const uid=()=>Date.now().toString(36)+(cvSeq++).toString(36);
-const NB=['Dale','Marco','Steph','Big Mike','Ronnie','Trish','Gus','Lena'],NS=['Kev','Jordan','Priya','Tommo','Sal','Nadia','Rick','Unknown'];
+const NB=['Dale','Marco','Steph','Big Mike','Ronnie','Trish','Gus','Lena','Wayne','Dmitri','Carla','Benny','Shaz','Old Pete','Kayla','Luis'],NS=['Kev','Jordan','Priya','Tommo','Sal','Nadia','Rick','Unknown','Jaz','Moe','Becca','T-Bone','Ash','Hector','Mel','Dev'];
 const clean=t=>String(t).replace(/Cr\.\./g,'Cr.');
-function cvPost(cv,me,t,delay){cv.log.push({me:me?1:0,t:clean(t),at:Date.now()+(delay||0)});cv.n++;cv.ts=Date.now()+(delay||0);P.save()}
-function cvNote(cv,t,delay){cv.log.push({note:1,t:clean(t),at:Date.now()+(delay||0)});P.save()}
+/* who you're talking to. Sellers and buyers each get a character that sets how fast they answer, how much they move, how they talk, how
+   often they leave you on read, and whether they're trying to rob you */
+const PKS={chill:{n:'Easygoing',soft:.7,read:.05,slow:1},firm:{n:'Firm',soft:1.5,read:.07,slow:1.2},rude:{n:'Rude',soft:1.2,read:.12,slow:.8},ghost:{n:'Flaky',soft:1,read:.45,slow:1.8},
+ chatty:{n:'Chatty',soft:.85,read:.03,slow:.7},scam:{n:'',soft:1,read:0,slow:.9},nice:{n:'Friendly',soft:.8,read:.05,slow:1},lowball:{n:'Lowballer',soft:1.3,read:.1,slow:1}};
+const pkOf=cv=>PKS[cv.pk]||PKS.chill;
+/* each line: the plain version first; the character colours it */
+const TONE={
+ rude:{hi:[`What.`,`yeah?`,`Speak.`],no:[`Lol no.`,`Are you dumb? No.`,`lmao. no.`,`Not happening, pal.`],firm:[`I said ${'$'}{A}. Learn to read.`,`${'$'}{A}. Stop wasting my time.`,`It's ${'$'}{A}. Take it or get lost.`],
+  move:[`Fine. ${'$'}{A}. Happy?`,`${'$'}{A}. And quit whining.`],near:[`${'$'}{A}. Last time I'm saying it.`,`${'$'}{A} or go bother someone else.`],deal:[`Fine. Whatever. Done.`,`Ok. Don't be late.`],
+  bye:[`Whatever. Blocked.`,`Don't message me again.`,`Time waster. Bye.`],nudge:[`I SAW it. Relax.`,`Chill. I'm busy.`]},
+ chatty:{hi:[`Hey hey! Yes it's still here, been a great car honestly 😊`,`Hiya! Thanks for messaging! Yes it's available!`],no:[`Ahh I can't go that low, sorry! I've put a lot into it.`,`Oof, that's a bit low for me, sorry!!`],
+  firm:[`Honestly ${'$'}{A} is the best I can do, I've already dropped it once!`,`I'd really like ${'$'}{A} for it, it's been looked after 🙏`],move:[`Ok ok you twisted my arm haha, ${'$'}{A}?`,`Tell you what, ${'$'}{A} and I'll throw in the floor mats!`],
+  near:[`${'$'}{A} is honestly my absolute floor, I promise!`,`I really can't go under ${'$'}{A}, sorry!!`],deal:[`Yay! Deal! It's a great car, you'll love it 😊`,`Brilliant! Deal!`],bye:[`No worries! Good luck with your search!`],nudge:[`Sorry sorry! Was at work. I'm here!`]},
+ firm:{hi:[`Yes. Available.`,`Still for sale.`],no:[`No.`,`No. Price is fair.`],firm:[`${'$'}{A}. Not moving.`,`Still ${'$'}{A}.`,`${'$'}{A}. That's the price.`],move:[`${'$'}{A}. That's a lot for me.`,`I could do ${'$'}{A}.`],near:[`${'$'}{A}. Final.`,`${'$'}{A}, and that's it.`],deal:[`Deal.`,`Ok. Deal.`],bye:[`Ok.`],nudge:[`Was busy.`]},
+ nice:{hi:[`Hi there!`,`Hello!`],no:[`Sorry, that's too low for me.`],firm:[`I think ${'$'}{A} is fair.`,`I'd like ${'$'}{A} if that's ok.`],move:[`I could meet you at ${'$'}{A}?`,`How about ${'$'}{A}?`],near:[`${'$'}{A} is really my limit, sorry.`],deal:[`Great, deal! Thanks!`],bye:[`No problem, good luck!`],nudge:[`Sorry, missed this!`]},
+ base:{hi:[`Hey.`,`Yeah, still got it.`],no:[`Lol. No.`,`Not a chance.`],firm:[`Price is ${'$'}{A}. Not moving on it.`,`Still ${'$'}{A}.`,`It's worth every bit of ${'$'}{A}, man.`],move:[`I could do ${'$'}{A}.`,`Meet me at ${'$'}{A}?`,`${'$'}{A}, and you're picking it up today.`],
+  near:[`Ugh. ${'$'}{A}. And that's me being nice. Not a cent less.`,`Man... fine. ${'$'}{A}. That's it. I mean it.`,`${'$'}{A}. I'm already losing money here.`],deal:[`Deal. Come get it.`,`Fine. Bring cash.`],bye:[`Ok, good luck.`],nudge:[`Sorry, was busy.`,`yeah yeah, here.`]}};
+function line(cv,k,A){const T=TONE[cv.pk]||{},L=(T[k]||TONE.base[k]||['...']);return rnd(L).replace(/\$\{A\}/g,A!=null?fmtCr(A):'')}
+/* messages land late: they read it, then type for a while. at = when it appears, ty = how long "typing..." shows before that */
+function cvPost(cv,me,t,delay){const at=Date.now()+(delay||0);cv.log.push({me:me?1:0,t:clean(t),at,ty:me?0:Math.min(4200,1400+String(t).length*40),ann:me?1:0});cv.n+=me?1:0;cv.ts=at;P.save()}
+function cvNote(cv,t,delay){cv.log.push({note:1,t:clean(t),at:Date.now()+(delay||0),ann:1});P.save()}
+const lagT=(cv,i)=>(5000+Math.random()*11000)*(cv?pkOf(cv).slow:1)+(i||0);
+/* they answer, or they read it and say nothing */
+function reply(cv,t,o){o=o||{};const now=Date.now(),d=o.d!=null?o.d:lagT(cv);
+ if(!o.must&&cv.n>0&&Math.random()<pkOf(cv).read){cv.st='read';cv.seenAt=now+1500+Math.random()*4000;cv.ts=cv.seenAt;P.save();return false}
+ cv.seenAt=now+Math.min(d*.5,2500+Math.random()*2000);cvPost(cv,0,t,d);return d}
 const cvPending=cv=>cv.log.some(m=>m.at>Date.now());
+const cvTyping=cv=>{const n=Date.now();return cv.log.some(m=>m.at>n&&m.at-(m.ty||2000)<=n)};
 const cvSeen=cv=>cv.log.filter(m=>m.at<=Date.now()).length;
-const cvUnread=cv=>cv.log.some((m,i)=>!m.me&&m.at<=Date.now()&&i>=(cv.rd||0));
+const cvUnread=cv=>cv.log.some((m,i)=>!m.me&&!m.note&&m.at<=Date.now()&&i>=(cv.rd||0));
 const cvListing=cv=>G().mkt&&G().mkt.find(l=>l.uid===cv.lid);
 const cvSale=cv=>sales().find(s=>s.uid===cv.sid);
-const lagT=()=>1200+Math.random()*900;
-/* buying: you message the seller from the listing */
+const MAXT=10;
+/* ---- buying: you message the seller from the listing ---- */
 function cvBuy(l){if(!l.uid)l.uid=uid();let cv=CV().find(c=>c.kind==='buy'&&c.lid===l.uid);if(cv)return cv;const c=BYID[l.id],P0=l.price,D=Math.min(5000,r50(Math.max(250,P0*.15)));
- cv={id:uid(),kind:'buy',lid:l.uid,car:l.id,who:rnd(NB),nw:c.price||P0,base:P0,cur:P0,lim:P0-D,D,x:{cond:l.cond,km:l.km,bad:!!(l.L||l.bad),nw:c.price||P0,price:P0},log:[],n:0,st:'open',rd:0,ts:Date.now()};
- CV().push(cv);l.tx=1;P.save();return cv}
-/* selling: a buyer messages you about a listing */
-function cvSell(s){if(!s.uid)s.uid=uid();const c=BYID[s.id],A=s.ask,D=Math.min(5000,r50(Math.max(250,A*.15))),off=Math.max(A-D,A-r50(D*(.5+Math.random()*.5))),cap=Math.min(A,r50(off+(A-off)*(.35+Math.random()*.4)));
- const cv={id:uid(),kind:'sell',sid:s.uid,car:s.id,who:rnd(NS),nw:(c&&c.price)||A,base:A,cur:off,lim:cap,D,x:{cond:1-wearOf(s.id),km:0,bad:!!paintOf(s.id),nw:(c&&c.price)||A,price:A},log:[],n:0,st:'open',rd:0,ts:Date.now()};
- CV().push(cv);cvPost(cv,0,rnd([`Hey, saw your ${s.title?'"'+s.title+'"':c.name}. Would you take ${fmtCr(off)}?`,`Is the ${c.name} still available? I can do ${fmtCr(off)} cash.`,`${fmtCr(off)} for the ${c.name}? Can pick up today.`])+' '+rnd(flaws(cv.x)));
- while(CV().length>14){const i=CV().findIndex(q=>q.st!=='open');if(i<0)break;CV().splice(i,1)}
- announce({ok:1,tag:'NEW MESSAGE',h:`${cv.who}, about your ${c.name}`,p:cv.log[0].t,cv:cv.id});P.save();if(PC.on)pcDraw()}
-/* what you can say next */
-function cvOpts(cv){if(cv.st!=='open'||cvPending(cv))return[];const L=[],A=cv.cur;
- if(cv.kind==='buy'){const offs=[A-r50(A*.05),A-r50(A*.1),A-r50(A*.2)].filter((v,i,a)=>v>0&&v<A&&a.indexOf(v)===i);
-  if(cv.n===0)return offs.map(v=>({t:`Offer ${fmtCr(v)}`,a:()=>cvBuyOffer(cv,v)}));
-  if(cv.n>=4)return[{t:`OK, ${fmtCr(A)}`,a:()=>cvBuyDeal(cv,A,true)},{t:'No thanks',a:()=>cvEnd(cv,`No thanks. Good luck with it.`)}];
-  return[{t:`OK, ${fmtCr(A)}`,a:()=>cvBuyDeal(cv,A,true)}].concat(offs.slice(0,2).map(v=>({t:`Offer ${fmtCr(v)}`,a:()=>cvBuyOffer(cv,v)})),[{t:'Never mind',a:()=>cvEnd(cv,`Never mind, thanks.`)}])}
- const B=cv.base;L.push({t:`Deal at ${fmtCr(A)}`,a:()=>cvSellDeal(cv,A,true)});
- if(cv.n<3){const mid=r50((A+B)/2);if(mid>A&&mid<B)L.push({t:`Counter ${fmtCr(mid)}`,a:()=>cvSellCounter(cv,mid)});L.push({t:`Price is ${fmtCr(B)}`,a:()=>cvSellCounter(cv,B)})}
- L.push({t:'No thanks',a:()=>cvEnd(cv,rnd([`No thanks.`,`Not that low. Sorry.`]))});return L}
-function cvEnd(cv,t){cvPost(cv,1,t);cv.st='closed';cvNote(cv,'CONVERSATION ENDED',300);
- if(cv.kind==='sell'){const s=cvSale(cv);if(s)s.due=Date.now()+(20+Math.random()*40)*1000}P.save();pcDraw()}
-function cvBuyOffer(cv,v){const x=cv.x;cvPost(cv,1,(cv.n===0?rnd([`Hey, is the ${BYID[cv.car].name} still for sale? Would you take ${fmtCr(v)}?`,`Hi. Interested in the ${BYID[cv.car].name}. ${fmtCr(v)} cash?`]):rnd([`How about ${fmtCr(v)}?`,`${fmtCr(v)}, then.`,`Come on. ${fmtCr(v)}?`]))+' '+rnd(flaws(x)));
- const nx=budge(cv.cur,cv.lim,cv.cur-v,-1),dl=lagT();
- if(v>=nx){cvPost(cv,0,rnd([`Deal. Come get it.`,`Fine. ${fmtCr(v)}. Bring cash.`]),dl);cvBuyDeal(cv,v,false,dl);return}
+ const pk=l.pk||'chill';cv={id:uid(),kind:'buy',lid:l.uid,car:l.id,who:l.who||rnd(NB),pk,nw:c.price||P0,base:P0,cur:P0,lim:pk==='firm'?P0-r50(D*.5):P0-D,D,x:{cond:l.cond,km:l.km,bad:!!(l.L||l.bad),nw:c.price||P0,price:P0},log:[],n:0,st:'open',rd:0,ts:Date.now(),q:{}};
+ CV().push(cv);l.tx=1;cvTrim();P.save();return cv}
+function cvTrim(){while(CV().length>24){const i=CV().findIndex(q=>q.st!=='open'&&q.st!=='read'&&q.st!=='deal');if(i<0)break;CV().splice(i,1)}}
+/* questions you can ask a seller, once each. The answers come from the car and the person */
+const QB={
+ why:{t:'Why are you selling?',a:cv=>cv.pk==='scam'?`I got a job overseas, I'm already gone. Need it sold fast.`:cv.pk==='rude'?`Does it matter? Do you want it or not.`:cv.pk==='chatty'?rnd([`Honestly the wife wants an SUV now we've got the twins on the way, so it has to go 😢`,`Got a company car with the new job so this one just sits there, shame really!`]):rnd([`Got something new.`,`Need the space.`,`Moving. Can't take it.`,`Don't drive it enough.`])},
+ acc:{t:'Any accidents?',a:cv=>cv.pk==='scam'?`No accident, perfect condition 100%, like new.`:cv.x.cond<.55?(cv.pk==='rude'?`Small one. It's fine. It drives.`:`One small one at the front. Nothing structural, all fixed.`):cv.pk==='rude'?`Read the ad.`:rnd([`Never. Not a scratch on the chassis.`,`No, never.`])},
+ hist:{t:'Any service history?',a:cv=>cv.pk==='scam'?`Yes all service, i will send papers with the car.`:cv.x.cond>=.75?rnd([`Full history, folder's in the glovebox.`,`Serviced every year, got the receipts.`]):cv.pk==='rude'?`It starts. That's the history.`:rnd([`Some of it. Lost a few receipts.`,`Not really, but it's been fine.`])},
+ drive:{t:'Can I test drive it?',a:cv=>cv.pk==='scam'?`I'm not in the country, the car is with a shipping company. They deliver once you pay the deposit.`:cv.pk==='rude'?`Cash first. Then drive it all you want.`:cv.pk==='firm'?`Serious buyers only. Bring cash and yes.`:`Sure, come by any evening.`},
+ low:{t:"What's the lowest you'd take?",a:cv=>cv.pk==='firm'?`Price is in the ad.`:cv.pk==='rude'?`Make an offer. I'm not haggling against myself.`:cv.pk==='scam'?`Price is already very low because I need it gone today.`:cv.pk==='chatty'?`Ooh hard to say! Make me an offer and we'll see 😉`:`Make me a sensible offer.`},
+ km:{t:'Is the mileage real?',a:cv=>cv.pk==='scam'?`Yes 100% real.`:cv.x.km>200000?(cv.pk==='rude'?`It's a car. They drive.`:`Yeah, it's been around. Mostly highway though.`):`All real. Never been clocked.`}};
+/* sellers who aren't real: the deal always ends up asking for money up front */
+function scamAsk(cv){const dep=r50(Math.max(500,cv.cur*.25));cv.dep=dep;cv.scam=1;return reply(cv,rnd([`I am out of the country right now. Send ${fmtCr(dep)} deposit and the shipping company brings the car to you tomorrow.`,`To hold it for you I need a ${fmtCr(dep)} deposit, lots of people want it. Send now and it's yours.`,`Ok. Send ${fmtCr(dep)} deposit first, my agent delivers the car and keys.`]),{must:1})}
+function cvAsk(cv,k){const q=QB[k];cv.q[k]=1;cvPost(cv,1,q.t);if(cv.pk==='scam'&&!cv.scam&&cv.n>=2){scamAsk(cv)}else reply(cv,q.a(cv));pcDraw()}
+function cvBuyOpts(cv){const A=cv.cur,L=[];if(cv.scam&&cv.st==='open'){return[{t:`Send the ${fmtCr(cv.dep)} deposit`,a:()=>scamPay(cv)},{t:`I'll pay when I see the car`,a:()=>scamPush(cv)},{t:`This is a scam. Bye.`,w:1,a:()=>scamCall(cv)}]}
+ const offs=[A-r50(A*.05),A-r50(A*.1),A-r50(A*.2)].filter((v,i,a)=>v>0&&v<A&&a.indexOf(v)===i);
+ if(cv.n>=MAXT)return[{t:`OK, ${fmtCr(A)}`,a:()=>cvBuyDeal(cv,A,true)},{t:'No thanks',w:1,a:()=>cvEnd(cv,`No thanks. Good luck with it.`)}];
+ if(cv.n===0)L.push({t:'Is it still available?',a:()=>{cvPost(cv,1,`Hi, is the ${BYID[cv.car].name} still available?`);cv.q.avail=1;reply(cv,line(cv,'hi'),{must:1});pcDraw()}});
+ else L.push({t:`OK, ${fmtCr(A)}`,a:()=>cvBuyDeal(cv,A,true)});
+ L.push(...offs.slice(0,cv.n===0?3:2).map(v=>({t:`Offer ${fmtCr(v)}`,a:()=>cvBuyOffer(cv,v)})));
+ const qs=Object.keys(QB).filter(k=>!cv.q[k]);for(const k of qs.slice(0,3))L.push({t:QB[k].t,q:1,a:()=>cvAsk(cv,k)});
+ if(cv.n>0)L.push({t:'Never mind',w:1,a:()=>cvEnd(cv,`Never mind, thanks.`)});return L}
+function cvBuyOffer(cv,v){const x=cv.x,nm=BYID[cv.car].name;cvPost(cv,1,(cv.n===0?rnd([`Hey, is the ${nm} still for sale? Would you take ${fmtCr(v)}?`,`Hi. Interested in the ${nm}. ${fmtCr(v)} cash?`]):rnd([`How about ${fmtCr(v)}?`,`${fmtCr(v)}, then.`,`Come on. ${fmtCr(v)}?`]))+' '+rnd(flaws(x)));
+ if(cv.pk==='scam'){if(!cv.scam){cv.cur=v;scamAsk(cv)}pcDraw();return}
+ if(cv.pk==='rude'&&v<cv.lim-cv.D*.6){reply(cv,rnd(TONE.rude.bye),{must:1});cv.st='closed';cvNote(cv,'THEY BLOCKED YOU',lagT(cv)+500);cvGone(cv);pcDraw();return}
+ const nx=budge(cv.cur,cv.lim,cv.cur-v,-1,pkOf(cv).soft);
+ if(v>=nx){const d=reply(cv,line(cv,'deal'),{must:1});cvBuyDeal(cv,v,false,d);return}
  const moved=nx<cv.cur,near=nx-cv.lim<cv.D*.25;cv.cur=Math.max(cv.lim,nx);const A=cv.cur;
- let t=v<cv.lim-cv.D?rnd([`Lol. No.`,`Are you serious? It's ${fmtCr(A)}.`,`Don't waste my time. ${fmtCr(A)}.`]):!moved?rnd(strengths(x))+' '+rnd([`Price is ${fmtCr(A)}. Not moving on it.`,`Still ${fmtCr(A)}.`,`It's worth every bit of ${fmtCr(A)}, man.`]):near?rnd([`Ugh. ${fmtCr(A)}. And that's me being nice. Not a cent less.`,`Man... fine. ${fmtCr(A)}. That's it. I mean it.`,`${fmtCr(A)}. I'm already losing money here.`]):(x.bad&&Math.random()<.5?`Yeah, ok, the paint's bad. `:x.cond<.7&&Math.random()<.5?`Fair, it needs some work. `:'')+rnd([`I could do ${fmtCr(A)}.`,`Meet me at ${fmtCr(A)}?`,`${fmtCr(A)}, and you're picking it up today.`]);
- cvPost(cv,0,cv.n>=3?t+' Take it or leave it.':t,dl);pcDraw()}
-function cvBuyDeal(cv,v,mine,dl){if(mine)cvPost(cv,1,rnd([`Ok. ${fmtCr(v)} it is.`,`Deal. ${fmtCr(v)}.`]));cv.st='deal';cv.cur=v;const l=cvListing(cv);if(l){l.deal=v}cvNote(cv,`DEAL: ${fmtCr(v)}. Buy it from the listing.`,(dl||0)+300);P.save();pcDraw()}
-function cvSellCounter(cv,v){const x=cv.x,B=cv.base;cvPost(cv,1,(v>=B?rnd([`Price is firm. ${fmtCr(B)}.`,`It's ${fmtCr(B)}. That's already fair.`]):rnd([`Meet me at ${fmtCr(v)}?`,`Can't go that low. ${fmtCr(v)}?`]))+' '+rnd(strengths(x)));const dl=lagT();
- if(v<=cv.lim&&Math.random()<.5){cvPost(cv,0,rnd([`Fine. ${fmtCr(v)}. On my way.`,`Ok ok. ${fmtCr(v)}. Deal.`]),dl);cvSellDeal(cv,v,false,dl);return}
- const nb=Math.min(cv.lim,budge(cv.cur,cv.lim,v-cv.cur,1)),moved=nb>cv.cur,near=cv.lim-nb<Math.max(300,cv.D*.2);cv.cur=nb;const A=nb;
- const t=!moved?rnd([`${fmtCr(A)}. That's what I've got.`,`Nah. ${fmtCr(A)}.`,`Still ${fmtCr(A)}.`])+' '+rnd(flaws(x)):near?rnd([`Ugh. ${fmtCr(A)}. That's everything I have, man.`,`${fmtCr(A)}. Seriously, that's my limit.`]):rnd([`I can do ${fmtCr(A)}.`,`${fmtCr(A)}?`,`How about ${fmtCr(A)}, cash today?`]);
- cvPost(cv,0,cv.n>=2?t+' Last offer.':t,dl);pcDraw()}
-function cvSellDeal(cv,v,mine,dl){if(mine)cvPost(cv,1,rnd([`Deal. ${fmtCr(v)}.`,`Ok, ${fmtCr(v)}. It's yours.`]));cv.st='deal';cv.cur=v;const s=cvSale(cv),c=BYID[cv.car];
+ let t=v<cv.lim-cv.D?line(cv,'no')+' '+line(cv,'firm',A):!moved?(cv.pk==='rude'?'':rnd(strengths(x))+' ')+line(cv,'firm',A):near?line(cv,'near',A):(x.bad&&Math.random()<.5&&cv.pk!=='rude'?`Yeah, ok, the paint's bad. `:x.cond<.7&&Math.random()<.5&&cv.pk!=='rude'?`Fair, it needs some work. `:'')+line(cv,'move',A);
+ reply(cv,cv.n>=MAXT-1?t+' Take it or leave it.':t);pcDraw()}
+function cvBuyDeal(cv,v,mine,dl){if(mine){cvPost(cv,1,rnd([`Ok. ${fmtCr(v)} it is.`,`Deal. ${fmtCr(v)}.`]));if(cv.pk==='scam'){cv.cur=v;scamAsk(cv);pcDraw();return}dl=reply(cv,line(cv,'deal'),{must:1})}
+ cv.st='deal';cv.cur=v;const l=cvListing(cv);if(l){l.deal=v}cvNote(cv,`DEAL: ${fmtCr(v)}. Buy it from here or the listing.`,(dl||0)+300);P.save();pcDraw()}
+function scamPay(cv){const sv=P.SV(),d=cv.dep;if(sv.cr<d){cvNote(cv,`YOU DON'T HAVE ${fmtCr(d)}`);pcDraw();return}sv.cr-=d;cvPost(cv,1,`Ok, sent ${fmtCr(d)}.`);const t=reply(cv,rnd([`Thank you! Shipping company will contact you.`,`Received. Car arrives tomorrow 👍`]),{must:1,d:4000});cv.st='closed';
+ cvNote(cv,'THIS ACCOUNT NO LONGER EXISTS',t+9000);cvGone(cv);setTimeout(()=>announce({ok:0,tag:'SCAMMED',h:`${cv.who} vanished with your deposit`,p:`There was never a car. ${fmtCr(d)} gone. If it's cheap and they won't meet you, walk away.`,cr:-d}),t+9500);P.save();$$crv&&$$crv();pcDraw()}
+function scamPush(cv){cvPost(cv,1,rnd([`I'll pay when I see the car.`,`No deposit. I pay in person.`]));cv.push=(cv.push||0)+1;
+ if(cv.push>=2){reply(cv,rnd([`Ok forget it. Other buyer is paying now.`,`You are wasting my time.`]),{must:1});cv.st='closed';cvNote(cv,'THEY BLOCKED YOU',lagT(cv)+600);cvGone(cv)}
+ else reply(cv,rnd([`It's safe 100%, shipping company has insurance. Other buyers are ready to pay today, so you must be quick.`,`I can't show it, I'm overseas. Deposit is refundable if you don't like it.`]),{must:1});pcDraw()}
+function scamCall(cv){cvPost(cv,1,rnd([`This is a scam. Bye.`,`Nice try. Reported.`]));const d=reply(cv,rnd([`??? your loss`,`Ok.`]),{must:1});cv.st='closed';cvNote(cv,'YOU SPOTTED A SCAM',(d||0)+500);cvGone(cv);pcDraw()}
+/* a seller you walked away from (or who walked away from you) takes the listing down: it lives on in Messages only */
+function cvGone(cv){if(cv.kind!=='buy')return;const g=G(),l=cvListing(cv);if(l){const i=g.mkt.indexOf(l);if(i>=0)g.mkt.splice(i,1)}P.save()}
+/* ---- selling: a buyer messages you about a listing ---- */
+function cvSell(s){if(!s.uid)s.uid=uid();const c=BYID[s.id],A=s.ask,D=Math.min(5000,r50(Math.max(250,A*.15)));const pk=rnd(['nice','nice','lowball','lowball','rude','ghost','chatty','scam','firm']);
+ const lowF=pk==='lowball'?1.6:pk==='rude'?1.4:1,off=pk==='scam'?r50(A*1.12):Math.max(A-D*Math.min(1.6,lowF),A-r50(D*(.5+Math.random()*.5)*lowF)),cap=Math.min(A,r50(Math.max(off,A-D)+(A-Math.max(off,A-D))*(.35+Math.random()*.4)));
+ const cv={id:uid(),kind:'sell',sid:s.uid,car:s.id,who:rnd(NS),pk,nw:(c&&c.price)||A,base:A,cur:off,lim:cap,D,x:{cond:1-wearOf(s.id),km:0,bad:!!paintOf(s.id),nw:(c&&c.price)||A,price:A},log:[],n:0,st:'open',rd:0,ts:Date.now(),q:{}};
+ CV().push(cv);const nm=s.title?'"'+s.title+'"':c.name;let t;
+ if(pk==='scam')t=rnd([`Hello I want your ${c.name}, I pay ${fmtCr(off)}, more than asking! I'm buying for my cousin.`,`Hi dear, I will buy the ${c.name} for ${fmtCr(off)} no questions. Is it ok?`]);
+ else if(Math.random()<.35){t=pk==='rude'?rnd([`still got the ${c.name}?`,`${c.name}. available?`]):rnd([`Hi, is the ${c.name} still available?`,`Hey! Saw your ${nm}. Still for sale?`]);cv.ask0=1}
+ else t=(pk==='rude'?rnd([`${fmtCr(off)}. Cash. Today.`,`I'll give you ${fmtCr(off)} for that ${c.name}, it's not worth more.`]):pk==='chatty'?rnd([`Hiya!! Love the ${c.name}, been after one for ages 😍 Would you take ${fmtCr(off)}?`]):rnd([`Hey, saw your ${nm}. Would you take ${fmtCr(off)}?`,`Is the ${c.name} still available? I can do ${fmtCr(off)} cash.`,`${fmtCr(off)} for the ${c.name}? Can pick up today.`]))+(pk==='chatty'||pk==='nice'?'':' '+rnd(flaws(cv.x)));
+ cvPost(cv,0,t);cv.log[0].ann=1;cvTrim();
+ announce({ok:1,tag:'NEW MESSAGE',h:`${cv.who}, about your ${c.name}`,p:t,cv:cv.id});P.save();if(PC.on)pcDraw()}
+function cvSellOpts(cv){const A=cv.cur,B=cv.base,L=[];
+ if(cv.ask0)return[{t:'Yes, still available',a:()=>{cv.ask0=0;cvPost(cv,1,rnd([`Yes, still available.`,`Yep, still got it.`]));reply(cv,(cv.pk==='rude'?rnd([`${fmtCr(A)}. cash.`,`I'll do ${fmtCr(A)}.`]):rnd([`Great. Would you take ${fmtCr(A)}?`,`Nice! I can do ${fmtCr(A)}.`]))+(cv.pk==='lowball'?' '+rnd(flaws(cv.x)):''),{must:1});pcDraw()}},
+  {t:'Sorry, sold',w:1,a:()=>{cv.ask0=0;cvEnd(cv,`Sorry, it's gone.`)}}];
+ if(cv.scam2)return[{t:`Refund them ${fmtCr(cv.over)}`,a:()=>scamRefund(cv)},{t:`I don't see any money`,a:()=>scamNoMoney(cv)},{t:'Block them',w:1,a:()=>scamCall(cv)}];
+ if(cv.pk==='scam')return[{t:`Deal at ${fmtCr(A)}`,a:()=>scamBuyer(cv)},{t:'Why more than asking?',q:1,a:()=>{cvPost(cv,1,`Why more than I'm asking?`);reply(cv,rnd([`It's ok, I'm generous, I just want the car fast! Deal?`,`My cousin really wants it. Deal?`]),{must:1});pcDraw()}},{t:'Sounds like a scam',w:1,a:()=>scamCall(cv)}];
+ L.push({t:`Deal at ${fmtCr(A)}`,a:()=>cvSellDeal(cv,A,true)});
+ if(cv.n<MAXT){const mid=r50((A+B)/2);if(mid>A&&mid<B)L.push({t:`Counter ${fmtCr(mid)}`,a:()=>cvSellCounter(cv,mid)});if(B>A)L.push({t:`Price is ${fmtCr(B)}`,a:()=>cvSellCounter(cv,B)});
+  if(!cv.q.why)L.push({t:"It's in great shape",q:1,a:()=>{cv.q.why=1;cvPost(cv,1,rnd(strengths(cv.x)));reply(cv,cv.pk==='rude'?`Everyone says that.`:cv.pk==='lowball'?rnd(flaws(cv.x))+` ${fmtCr(cv.cur)}.`:rnd([`Fair enough. Still, ${fmtCr(cv.cur)} is what I've got.`,`Sounds good. ${fmtCr(cv.cur)} though.`]));pcDraw()}})}
+ L.push({t:'No thanks',w:1,a:()=>cvEnd(cv,rnd([`No thanks.`,`Not that low. Sorry.`]))});return L}
+/* the overpayment scam: they "send" too much and want the difference back before the car goes */
+function scamBuyer(cv){cvPost(cv,1,`Deal at ${fmtCr(cv.cur)}.`);cv.over=r50(cv.cur*.3+500);const d=reply(cv,rnd([`Great!! I sent ${fmtCr(cv.cur+cv.over)} by mistake, too much. Please send back ${fmtCr(cv.over)} to my agent and he collects the car.`,`Payment sent! I sent extra ${fmtCr(cv.over)} for the shipping agent, please refund him the ${fmtCr(cv.over)} before pickup.`]),{must:1});cv.scam2=1;pcDraw()}
+function scamRefund(cv){const sv=P.SV(),d=cv.over;if(sv.cr<d){cvNote(cv,`YOU DON'T HAVE ${fmtCr(d)}`);pcDraw();return}sv.cr-=d;cvPost(cv,1,`Ok, sent you ${fmtCr(d)}.`);const t=reply(cv,`thanks`,{must:1,d:3500});cv.st='closed';cv.scam2=0;
+ cvNote(cv,'THIS ACCOUNT NO LONGER EXISTS',t+8000);setTimeout(()=>announce({ok:0,tag:'SCAMMED',h:`${cv.who} never paid`,p:`There was no overpayment. You sent them ${fmtCr(d)} of your own money. Your car is still listed.`,cr:-d}),t+8500);P.save();pcDraw()}
+function scamNoMoney(cv){cvPost(cv,1,`I don't see any money in my account.`);cv.push=(cv.push||0)+1;if(cv.push>=2){reply(cv,`ok forget it`,{must:1});cv.st='closed';cv.scam2=0;cvNote(cv,'THEY BLOCKED YOU',lagT(cv)+500)}
+ else reply(cv,rnd([`It takes 24 hours to show, bank rules. Please refund first so the agent can come.`,`It's pending, I have the screenshot. Refund the ${fmtCr(cv.over)} please, urgent.`]),{must:1});pcDraw()}
+function cvSellCounter(cv,v){const x=cv.x,B=cv.base;cvPost(cv,1,(v>=B?rnd([`Price is firm. ${fmtCr(B)}.`,`It's ${fmtCr(B)}. That's already fair.`]):rnd([`Meet me at ${fmtCr(v)}?`,`Can't go that low. ${fmtCr(v)}?`]))+' '+rnd(strengths(x)));
+ if(v<=cv.lim&&Math.random()<.5){const d=reply(cv,rnd([`Fine. ${fmtCr(v)}. On my way.`,`Ok ok. ${fmtCr(v)}. Deal.`]),{must:1});cvSellDeal(cv,v,false,d);return}
+ if(cv.pk==='rude'&&v>=B&&Math.random()<.5){reply(cv,rnd([`Lmao. Delusional. Bye.`,`For that heap? Good luck.`]),{must:1});cv.st='closed';cvNote(cv,'THEY LEFT THE CHAT',lagT(cv)+500);P.save();pcDraw();return}
+ const nb=Math.min(cv.lim,budge(cv.cur,cv.lim,v-cv.cur,1,pkOf(cv).soft)),moved=nb>cv.cur,near=cv.lim-nb<Math.max(300,cv.D*.2);cv.cur=nb;const A=nb;
+ const t=!moved?line(cv,'firm',A)+(cv.pk==='lowball'||cv.pk==='rude'?' '+rnd(flaws(x)):''):near?line(cv,'near',A):line(cv,'move',A);
+ reply(cv,cv.n>=MAXT-1?t+' Last offer.':t);pcDraw()}
+function cvSellDeal(cv,v,mine,dl){if(mine){cvPost(cv,1,rnd([`Deal. ${fmtCr(v)}.`,`Ok, ${fmtCr(v)}. It's yours.`]));dl=reply(cv,line(cv,'deal'),{must:1})}cv.st='deal';cv.cur=v;const s=cvSale(cv),c=BYID[cv.car];
  if(s){sales().splice(sales().indexOf(s),1);const sv=P.SV();sv.cr+=v;if(sv.owned)sv.owned[s.id]=(sv.owned[s.id]||0)&~1;const g=G();delete g.wear[s.id];try{setPaint(s.id,null)}catch(e){}
   if(curCar().id===s.id){const q=owned().find(x=>x.id!==s.id);if(q)P.setSel(0,q.id,q.alt)}try{refreshCar();setCar();$$crv()}catch(e){}
   setTimeout(()=>announce({ok:1,h:`Your ${c?c.name:'car'} sold`,p:`Haggled, but it's done. ${fmtCr(v)} is in your account.`,cr:v}),(dl||0)+1200)}
  cvNote(cv,`SOLD: ${fmtCr(v)}`,(dl||0)+300);P.save();pcDraw()}
+/* what you can say next */
+function cvOpts(cv){if(cvPending(cv))return[];
+ if(cv.st==='read'){const L=[];if(!cv.nudged)L.push({t:'Hello??',a:()=>{cv.nudged=1;cvPost(cv,1,rnd([`Hello??`,`?`,`Still there?`]));cv.st='open';if(Math.random()<.5){reply(cv,line(cv,'nudge'),{must:1,d:lagT(cv)*1.6})}else{cv.st='read';cv.seenAt=Date.now()+3000}pcDraw()}});
+  L.push({t:'Forget it',w:1,a:()=>{cvPost(cv,1,rnd([`Forget it.`,`Ok, never mind then.`]));cv.st='closed';cvNote(cv,'CONVERSATION ENDED',300);if(cv.kind==='sell'){const s=cvSale(cv);if(s)s.due=Date.now()+(20+Math.random()*40)*1000}cvGone(cv);pcDraw()}});return L}
+ if(cv.st!=='open')return[];return cv.kind==='buy'?cvBuyOpts(cv):cvSellOpts(cv)}
+function cvEnd(cv,t){cvPost(cv,1,t);cv.st='closed';const d=Math.random()<.6?reply(cv,line(cv,'bye'),{must:1}):0;cvNote(cv,'CONVERSATION ENDED',(d||0)+300);
+ if(cv.kind==='sell'){const s=cvSale(cv);if(s)s.due=Date.now()+(20+Math.random()*40)*1000}cvGone(cv);P.save();pcDraw()}
 /* a conversation whose car went some other way is closed */
-function cvTidy(){for(const cv of CV()){if(cv.st!=='open')continue;if(cv.kind==='buy'&&!cvListing(cv)){cv.st='closed';cvNote(cv,'LISTING GONE')}if(cv.kind==='sell'&&!cvSale(cv)){cv.st='closed';cvNote(cv,'LISTING GONE')}}}
+function cvTidy(){for(const cv of CV()){if(cv.st!=='open'&&cv.st!=='read')continue;if(cv.kind==='buy'&&!cvListing(cv)&&!cvPending(cv)){cv.st='closed';cvNote(cv,'LISTING GONE')}if(cv.kind==='sell'&&!cvSale(cv)&&!cvPending(cv)){cv.st='closed';cvNote(cv,'LISTING GONE')}}}
+/* replies that land while you're elsewhere pop up as a notification */
+let annInit=0;setInterval(()=>{const now=Date.now();if(!annInit){annInit=1;try{for(const cv of CV())for(const m of cv.log)if(m.at<=now)m.ann=1}catch(e){}return}for(const cv of CV())for(const m of cv.log){if(m.ann||m.at>now)continue;m.ann=1;if(m.me||m.note)continue;if(PC.on&&PC.tab==='msg'&&PC.cv===cv.id)continue;const c=BYID[cv.car];announce({ok:1,tag:'NEW MESSAGE',h:`${cv.who}${c?', '+c.name:''}`,p:m.t,cv:cv.id})}},700);
 
 /* ---- the screen ---- */
 const PC={on:false,tab:'buy',cv:null,sf:null,el:null,sig:''};
@@ -888,35 +986,45 @@ function openPC(tab,cvId){if(!GS.laptop)return;PC.on=true;PC.tab=tab||PC.tab||'b
 function closePC(){if(!PC.on)return;PC.on=false;PC.sf=null;UI.view='talk';aim();hint();P.sfx&&P.sfx('back');if(document.activeElement&&PC.el&&PC.el.contains(document.activeElement))document.activeElement.blur()}
 const cls_=c=>`<span class="cls ${c.cls}">${c.cls}</span>`;
 function pcThumb(id){try{return P.carThumb?P.carThumb(id):''}catch(e){return''}}
-function pcDraw(){if(!PC.el)return;const a=PC.el.querySelector('.app');if(!a)return;cvTidy();const g=G(),sv=P.SV(),C=CV(),unread=C.filter(cvUnread).length;
+const ICO_M='<svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M3 9.5 4.6 4h14.8L21 9.5a3 3 0 0 1-5.5 1.6A3 3 0 0 1 12 12.5a3 3 0 0 1-3.5-1.4A3 3 0 0 1 3 9.5zM5 13.6V20h5v-4h4v4h5v-6.4a4.6 4.6 0 0 1-3.5-.9 4.9 4.9 0 0 1-3.5 1.2 4.9 4.9 0 0 1-3.5-1.2 4.6 4.6 0 0 1-3.5.9z"/></svg>';
+const avOf=cv=>{const w=cv.who==='Unknown'?'?':cv.who.replace(/^(Big|Old) /,'')[0];const h=[...cv.who].reduce((a,c)=>a+c.charCodeAt(0),0)%6;return`<div class="av h${h}">${w}</div>`};
+const agoT=ms=>{const m=Math.max(1,Math.round(ms/60000));return m<60?m+' min':m<1440?Math.round(m/60)+' h':Math.round(m/1440)+' d'};
+function pcLst(l,i,C,sv){const c=BYID[l.id],cv=C.find(q=>q.kind==='buy'&&q.lid===l.uid),pr=lPrice(l),th=pcThumb(l.id),q=(PC.q||'').trim().toLowerCase(),hit=!q||(c.name+' '+(l.title||'')).toLowerCase().includes(q);
+ return`<div class="mkc" data-n="${esc_((c.name+' '+(l.title||'')).toLowerCase())}"${hit?'':' hidden'}><div class="th"${th?` style="background-image:url(${th})"`:''}>${l.deal?'<i class="tag ok">Agreed</i>':pr<(c.price||0)*.32?'<i class="tag">Great price</i>':''}</div>
+ <div class="ci"><b class="p">${l.deal?`<s>${fmtCr(l.price)}</s> `:''}${fmtCr(pr)}</b><span class="tt">${esc_(l.title||c.name)}</span><small>${esc_(c.name)} ${cls_(c)} &middot; ${l.yr||''}</small><small>${Math.round(l.km/1000)}k km &middot; ${Math.round(l.cond*100)}%${l.bad||l.L?' &middot; <em>bad paint</em>':''}</small><small class="lo">${esc_(l.loc||'Nearby')} &middot; ${agoT(Date.now()-(l.at||Date.now()))} ago</small></div>
+ <div class="bt"><button data-buy="${i}"${sv.cr<pr?' disabled':''}>Buy</button>${cv?`<button class="ghost" data-open="${cv.id}">Chat</button>`:`<button class="ghost" data-msg="${i}">Message</button>`}</div></div>`}
+function pcConvRow(cv){const c=BYID[cv.car],last=cv.log.filter(m=>m.at<=Date.now()&&!m.note).slice(-1)[0],st=cvTyping(cv)?'typing...':cv.st==='deal'?'Deal':cv.st==='closed'?'Closed':'';
+ return`<div class="cv${cvUnread(cv)?' new':''}${PC.cv===cv.id?' on':''}" data-open="${cv.id}">${avOf(cv)}<div class="nf"><b>${esc_(cv.who)}<small>${cv.kind==='buy'?'Selling':'Buying'} &middot; ${esc_(c?c.name:'')}</small></b><small>${st?`<i>${st}</i> `:''}${last?esc_((last.me?'You: ':'')+last.t):''}</small></div></div>`}
+function pcChat(cv){cv.rd=cvSeen(cv);const c=BYID[cv.car],now=Date.now(),O=cvOpts(cv);PC.opts=O;const vis=cv.log.filter(m=>m.at<=now);let lastMe=-1;vis.forEach((m,i)=>{if(!m.note)lastMe=m.me?i:-1});
+ const seen=lastMe>=0&&!vis.slice(lastMe+1).some(m=>!m.me&&!m.note)&&cv.seenAt&&cv.seenAt<=now;
+ return`<div class="chat"><div class="ch">${avOf(cv)}<div class="nm"><b>${esc_(cv.who)}</b><small>${cvTyping(cv)?'typing...':cv.st==='closed'?'Offline':cv.st==='read'?'Active '+agoT(now-(cv.seenAt||now))+' ago':'Active now'} &middot; ${cv.kind==='buy'?'selling the':'wants your'} ${esc_(c?c.name:'car')}</small></div>
+ <div class="px"><span><u>New</u>${fmtCr(cv.nw)}</span><span><u>${cv.kind==='buy'?'Listed':'Your price'}</u>${fmtCr(cv.base)}</span><span class="on"><u>On the table</u>${fmtCr(cv.cur)}</span><span><u>Texts</u>${Math.min(MAXT,cv.n)}/${MAXT}</span></div></div>
+ <div class="msgs">${vis.map((m,i)=>m.note?`<div class="m note">${esc_(m.t)}</div>`:`<div class="m ${m.me?'me':'them'}">${esc_(m.t)}</div>${i===lastMe&&!cvTyping(cv)?`<div class="rc">${seen?'Seen':'Delivered'}</div>`:''}`).join('')}${cvTyping(cv)?'<div class="m them typing"><i></i><i></i><i></i></div>':''}</div>
+ <div class="opts">${O.map((o,i)=>`<button class="${o.q?'q':o.w?'w':''}" data-o="${i}"><em>${i+1}</em>${esc_(o.t)}</button>`).join('')}${cv.st==='deal'&&cv.kind==='buy'&&cvListing(cv)?`<button data-buyl="${cv.lid}"><em>&#10003;</em>Buy it now for ${fmtCr(cv.cur)}</button>`:''}${!O.length&&cv.st!=='deal'&&!cvPending(cv)&&cv.st!=='read'?'<p class="end">This conversation is over.</p>':''}${cvPending(cv)&&!cvTyping(cv)?`<p class="end">${seen?'Seen. Waiting for a reply...':'Delivered.'}</p>`:''}</div></div>`}
+function pcDraw(){if(!PC.el)return;const a=PC.el.querySelector('.app');if(!a)return;cvTidy();{const o=PC.tab==='msg'&&PC.cv&&CV().find(q=>q.id===PC.cv);if(o)o.rd=cvSeen(o)}const g=G(),sv=P.SV(),C=CV(),unread=C.filter(cvUnread).length;
  const tab=(k,n,x)=>`<u class="${PC.tab===k?'on':''}" data-tab="${k}">${n}${x?`<i>${x}</i>`:''}</u>`;
+ const ae=document.activeElement,foc=ae&&PC.el.contains(ae)&&ae.dataset&&ae.dataset.f==='q'?[ae.selectionStart,ae.selectionEnd]:null;
  let body='';
- if(PC.tab==='buy'){const L=g.mkt||[];body=`<h2>Used cars near you <small>${L.length} listings</small></h2><div class="list">`+L.map((l,i)=>{const c=BYID[l.id],cv=C.find(q=>q.kind==='buy'&&q.lid===l.uid),pr=lPrice(l),th=pcThumb(l.id);
-   return`<div class="it"><div class="th"${th?` style="background-image:url(${th})"`:''}></div><div class="nf"><b>${esc_(c.name)} ${cls_(c)}</b><small>${Math.round(l.km/1000)}k km &middot; condition ${Math.round(l.cond*100)}%${l.bad||l.L?' &middot; <em>bad paint</em>':''}</small><small class="nw">New: ${fmtCr(c.price||0)}</small></div>
-   <div class="pr">${l.deal?`<s>${fmtCr(l.price)}</s>`:''}<b>${fmtCr(pr)}</b>${l.deal?'<em>agreed</em>':''}</div><div class="bt"><button data-buy="${i}"${sv.cr<pr?' disabled':''}>Buy</button>${cv?`<button class="ghost" data-open="${cv.id}">Messages</button>`:`<button class="ghost" data-msg="${i}">Message seller</button>`}</div></div>`}).join('')+(L.length?'':'<p class="empty">Nothing listed right now. Check back after a race.</p>')+'</div>'}
+ if(PC.tab==='buy'){const L=g.mkt||[];body=`<div class="bh"><h2>Cars for sale <small>${L.length} listings near you</small></h2><label class="sr"><svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M10 3a7 7 0 0 1 5.6 11.2l4.6 4.6-1.4 1.4-4.6-4.6A7 7 0 1 1 10 3zm0 2a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"/></svg><input data-f="q" placeholder="Search Marketplace" value="${esc_(PC.q||'')}"></label></div><div class="mkg">`+L.map((l,i)=>pcLst(l,i,C,sv)).join('')+'</div>'+(L.length?'<p class="empty nores" hidden>No cars match your search.</p>':'<p class="empty">Nothing listed right now. Check back after a race.</p>')}
  else if(PC.tab==='sell'){if(PC.sf){const f=PC.sf,c=BYID[f.id],v=carValue(f.id),p=Math.round(sellChance(f.id,f.ask,f.title,f.desc)*100),q=f.ask/v;
    body=`<h2>New listing <small>${esc_(c.name)}</small></h2><div class="form"><div class="row"><label>Asking price</label><div class="ask"><button data-adj="-1">&minus;</button><b>${fmtCr(f.ask)}</b><button data-adj="1">+</button><small>Worth about ${fmtCr(v)} &middot; ${q>1.25?'way over value':q>1.05?'over value':q<.85?'under value':'about right'}</small></div></div>
    <div class="row"><label>Title</label><input data-f="title" maxlength="60" value="${esc_(f.title)}" placeholder="e.g. Clean ${esc_(c.name.split(' ').slice(-1)[0])}, runs great"></div>
    <div class="row"><label>Description</label><textarea data-f="desc" maxlength="400" rows="3" placeholder="Mileage, history, what's been done to it...">${esc_(f.desc)}</textarea></div>
    <div class="meter" data-l="${p>=70?'good':p>=40?'ok':'bad'}"><span>Chance someone buys it</span><i><u style="width:${p}%"></u></i><b>${p}%</b></div>
-   <div class="bt"><button data-list="1">List it</button><button class="ghost" data-cancel="1">Cancel</button></div></div>`}
+   <div class="bt row2"><button data-list="1">Publish listing</button><button class="ghost" data-cancel="1">Cancel</button></div></div>`}
   else{const L=sellable(),S=sales();body=`<h2>Sell a car <small>${L.length} in your garage</small></h2><div class="list">`+L.map(x=>{const th=pcThumb(x.id);return`<div class="it"><div class="th"${th?` style="background-image:url(${th})"`:''}></div><div class="nf"><b>${esc_(x.car.name)} ${cls_(x.car)}</b><small>${x.id===curCar().id?'Out now':'In storage'} &middot; condition ${pctOK(x.id)}%${paintOf(x.id)?' &middot; <em>bad paint</em>':''}</small></div><div class="pr"><small>worth</small><b>${fmtCr(carValue(x.id))}</b></div><div class="bt"><button data-sell="${x.id}"${L.length<2?' disabled title="You need something to drive"':''}>List it</button></div></div>`}).join('')+
-   (S.length?`<h3>Listed</h3>`+S.map(q=>{const c=BYID[q.id],th=pcThumb(q.id);return`<div class="it"><div class="th"${th?` style="background-image:url(${th})"`:''}></div><div class="nf"><b>${esc_(c?c.name:q.id)}</b><small>${q.title?esc_(q.title):'No title'} &middot; ${Math.round(q.ch*100)}% chance</small></div><div class="pr"><small>asking</small><b>${fmtCr(q.ask)}</b></div><div class="bt"><button class="ghost" data-pull="${q.uid||(q.uid=uid())}">Pull it</button></div></div>`}).join(''):'')+'</div>'}}
- else{const cv=PC.cv&&C.find(q=>q.id===PC.cv);if(cv){cv.rd=cvSeen(cv);const c=BYID[cv.car],now=Date.now(),O=cvOpts(cv);
-   body=`<div class="chat"><div class="ch"><button class="ghost back" data-back="1">&lsaquo; All messages</button><div class="av">${cv.who==='Unknown'?'?':cv.who.replace(/^Big /,'')[0]}</div><div><b>${esc_(cv.who)}</b><small>${cv.kind==='buy'?'Selling':'Wants to buy'} your${cv.kind==='buy'?' &middot; their':''} ${esc_(c?c.name:'car')}</small></div></div>
-   <div class="px"><span><u>NEW</u><b>${fmtCr(cv.nw)}</b></span><span><u>${cv.kind==='buy'?'LISTED':'YOUR PRICE'}</u><b>${fmtCr(cv.base)}</b></span><span class="on"><u>ON THE TABLE</u><b>${fmtCr(cv.cur)}</b></span><span><u>TEXTS</u><b>${Math.min(5,cv.n)} / 5</b></span></div>
-   <div class="msgs">`+cv.log.filter(m=>m.at<=now).map(m=>m.note?`<div class="m note">${esc_(m.t)}</div>`:`<div class="m ${m.me?'me':'them'}">${esc_(m.t)}</div>`).join('')+(cvPending(cv)?'<div class="m them typing">typing...</div>':'')+`</div>
-   <div class="opts">${O.map((o,i)=>`<button data-o="${i}"><em>${i+1}</em>${esc_(o.t)}</button>`).join('')}${cv.st==='deal'&&cv.kind==='buy'&&cvListing(cv)?`<button data-buyl="${cv.lid}"><em>&#10003;</em>Buy it now for ${fmtCr(cv.cur)}</button>`:''}</div></div>`;PC.opts=O}
-  else{const L=C.slice().sort((a,b)=>(b.ts||0)-(a.ts||0));body=`<h2>Messages <small>${L.length?L.length+' conversations':''}</small></h2><div class="list">`+L.map(cv=>{const c=BYID[cv.car],last=cv.log.filter(m=>m.at<=Date.now()).slice(-1)[0];
-   return`<div class="it conv${cvUnread(cv)?' new':''}" data-open="${cv.id}"><div class="av">${cv.who==='Unknown'?'?':cv.who.replace(/^Big /,'')[0]}</div><div class="nf"><b>${esc_(cv.who)} <small>&middot; ${esc_(c?c.name:'')}</small></b><small>${last?esc_((last.me?'You: ':'')+last.t):'No messages yet'}</small></div><div class="pr"><small>${cv.st==='open'?(cvPending(cv)?'typing...':'open'):cv.st==='deal'?'deal':'closed'}</small><b>${fmtCr(cv.cur)}</b></div></div>`}).join('')+(L.length?'':'<p class="empty">No messages. Message a seller from a listing, or list a car and wait for buyers.</p>')+'</div>'}}
- a.innerHTML=`<div class="tb"><div class="logo">Poly<b>Market</b></div><nav>${tab('buy','Buy')}${tab('sell','Sell')}${tab('msg','Messages',unread||'')}</nav><div class="cr">${fmtCr(sv.cr)}</div><button class="x" data-close="1">&times;</button></div><div class="bd">${body}</div>`;
- const m=a.querySelector('.msgs');if(m)m.scrollTop=m.scrollHeight;PC.sig=pcSig()}
-const pcSig=()=>PC.tab+'|'+(PC.cv||'')+'|'+CV().map(c=>c.id+':'+cvSeen(c)+':'+cvPending(c)+':'+c.st).join(',')+'|'+sales().length+'|'+((G().mkt||[]).length);
+   (S.length?`<h3>Your listings</h3>`+S.map(q=>{const c=BYID[q.id],th=pcThumb(q.id),n=C.filter(v=>v.sid===q.uid).length;return`<div class="it"><div class="th"${th?` style="background-image:url(${th})"`:''}></div><div class="nf"><b>${esc_(c?c.name:q.id)}</b><small>${q.title?esc_(q.title):'No title'} &middot; ${Math.round(q.ch*100)}% chance${n?` &middot; ${n} chat${n>1?'s':''}`:''}</small></div><div class="pr"><small>asking</small><b>${fmtCr(q.ask)}</b></div><div class="bt"><button class="ghost" data-pull="${q.uid||(q.uid=uid())}">Take down</button></div></div>`}).join(''):'')+'</div>'}}
+ else{const L=C.slice().sort((a,b)=>(b.ts||0)-(a.ts||0)),cv=PC.cv&&C.find(q=>q.id===PC.cv);
+  body=`<div class="inbox"><div class="side"><h2>Chats <small>${unread?unread+' unread':''}</small></h2><div class="cvs">${L.map(pcConvRow).join('')||'<p class="empty">No chats yet. Message a seller, or list a car and wait for buyers.</p>'}</div></div><div class="main">${cv?pcChat(cv):'<p class="pick">Pick a chat on the left.</p>'}</div></div>`;if(!cv)PC.opts=null}
+ a.innerHTML=`<div class="tb"><div class="logo">${ICO_M}<span>Marketplace</span></div><nav>${tab('buy','Browse')}${tab('sell','Selling')}${tab('msg','Inbox',unread||'')}</nav><div class="cr">${fmtCr(sv.cr)}</div><button class="x" data-close="1" title="Close">&times;</button></div><div class="bd ${PC.tab}">${body}</div>`;
+ const m=a.querySelector('.msgs');if(m)m.scrollTop=m.scrollHeight;if(foc){const i=a.querySelector('[data-f=q]');if(i){i.focus();try{i.setSelectionRange(foc[0],foc[1])}catch(e){}}}pcFilter();PC.sig=pcSig()}
+function pcFilter(){const a=PC.el;if(!a)return;const q=(PC.q||'').trim().toLowerCase();let n=0,k=0;a.querySelectorAll('.mkc').forEach(e=>{const h=!q||e.dataset.n.includes(q);e.hidden=!h;n++;if(h)k++});const r=a.querySelector('.nores');if(r)r.hidden=!(n&&!k)}
+const pcSig=()=>PC.tab+'|'+(PC.cv||'')+'|'+CV().map(c=>c.id+':'+cvSeen(c)+':'+cvPending(c)+':'+cvTyping(c)+':'+c.st+':'+(c.seenAt&&c.seenAt<=Date.now())).join(',')+'|'+sales().length+'|'+((G().mkt||[]).length);
 setInterval(()=>{if(PC.on&&scr!=='s8career'){PC.on=false;PC.sf=null;if(UI.view==='pc')UI.view='talk'}if(PC.el&&!PC.on&&scr!=='s8career')PC.el.style.opacity=0;if(PC.on&&!PC.sf&&pcSig()!==PC.sig)pcDraw()},400);
 function pcClick(ev){const t=ev.target.closest('[data-tab],[data-close],[data-buy],[data-msg],[data-open],[data-back],[data-o],[data-buyl],[data-sell],[data-pull],[data-adj],[data-list],[data-cancel]');if(!t)return;ev.stopPropagation();const D=t.dataset,g=G();P.sfx&&P.sfx('move');
  if(D.tab){PC.tab=D.tab;PC.cv=null;PC.sf=null}
  else if(D.close){closePC();return}
- else if(D.buy!=null){const l=(g.mkt||[])[+D.buy];if(l)pcBuy(l);return}
+ else if(D.buy!=null){const l=(g.mkt||[])[+D.buy];if(!l)return;if(l.pk==='scam'){const cv=cvBuy(l);PC.tab='msg';PC.cv=cv.id;if(cv.st==='open'&&!cv.scam&&!cvPending(cv))cvBuyDeal(cv,l.price,true)}else{pcBuy(l);return}}
  else if(D.buyl){const l=(g.mkt||[]).find(x=>x.uid===D.buyl);if(l)pcBuy(l);return}
  else if(D.msg!=null){const l=(g.mkt||[])[+D.msg];if(l){const cv=cvBuy(l);PC.tab='msg';PC.cv=cv.id}}
  else if(D.open){PC.tab='msg';PC.cv=D.open}
@@ -928,7 +1036,7 @@ function pcClick(ev){const t=ev.target.closest('[data-tab],[data-close],[data-bu
  else if(D.list){pcList();return}
  else if(D.cancel){PC.sf=null}
  pcDraw()}
-function pcInput(ev){const f=PC.sf,k=ev.target.dataset&&ev.target.dataset.f;if(!f||!k)return;f[k]=ev.target.value;/* update the meter in place, so typing never re-renders the form */
+function pcInput(ev){const f=PC.sf,k=ev.target.dataset&&ev.target.dataset.f;if(k==='q'){PC.q=ev.target.value;pcFilter();return}if(!f||!k)return;f[k]=ev.target.value;/* update the meter in place, so typing never re-renders the form */
  const a=PC.el,p=Math.round(sellChance(f.id,f.ask,f.title,f.desc)*100),m=a.querySelector('.meter');if(m){m.dataset.l=p>=70?'good':p>=40?'ok':'bad';m.querySelector('u').style.width=p+'%';m.querySelector('b').textContent=p+'%'}}
 function pcList(){const f=PC.sf;if(!f)return;const p=sellChance(f.id,f.ask,f.title,f.desc),ok=Math.random()<p;
  sales().push({id:f.id,uid:uid(),ask:f.ask,title:(f.title||'').trim().slice(0,60),ch:p,ok,due:Date.now()+(35+Math.random()*70)*1000*(ok?1:1.4)});P.save();
@@ -1144,7 +1252,7 @@ function escBack(){if(UI.view==='sellForm'){UI.sf=null;openSell();return}if(UI.v
 {const fb=P.frBack;P.frBack=()=>{if(scr==='s8career'&&sec.classList.contains('gcOn')){if(LD&&LD.classList.contains('on')&&!LD.classList.contains('rdy'))return true;if(UI.menu){menuClose();return true}if(UI.view==='pc'){if(PC.sf){PC.sf=null;pcDraw()}else if(PC.cv){PC.cv=null;pcDraw()}else closePC();return true}if(UI.who||onCar()){escBack();return true}menuOpen();return true}return fb?fb():false}}
 addEventListener('keydown',e=>{if(scr!=='s8career'||!sec.classList.contains('gcOn'))return;if(FD.on){e.preventDefault();e.stopImmediatePropagation();return}if(e.target&&(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'))return;const c=e.code;
  if(LD&&LD.classList.contains('on')&&!LD.classList.contains('rdy')){e.preventDefault();e.stopImmediatePropagation();return}
- if(UI.view==='pc'){if(c==='Escape'||c==='Backspace'){e.preventDefault();e.stopImmediatePropagation();if(PC.sf){PC.sf=null;pcDraw()}else if(PC.cv){PC.cv=null;pcDraw()}else closePC()}else if(/^Digit[1-4]$/.test(c)&&PC.cv&&PC.opts&&PC.opts[+c[5]-1]){e.preventDefault();e.stopImmediatePropagation();PC.opts[+c[5]-1].a()}return}
+ if(UI.view==='pc'){const tg=e.target;if(tg&&(tg.tagName==='INPUT'||tg.tagName==='TEXTAREA')){if(c==='Escape'){e.preventDefault();e.stopImmediatePropagation();tg.blur()}return}if(c==='Escape'||c==='Backspace'){e.preventDefault();e.stopImmediatePropagation();if(PC.sf){PC.sf=null;pcDraw()}else if(PC.cv){PC.cv=null;pcDraw()}else closePC()}else if(/^Digit[1-9]$/.test(c)&&PC.cv&&PC.opts&&PC.opts[+c[5]-1]){e.preventDefault();e.stopImmediatePropagation();PC.opts[+c[5]-1].a()}return}
  if(UI.menu){if(c==='ArrowDown'||c==='KeyS')menuFocus((UI.menu.f+1)%MENU.length);else if(c==='ArrowUp'||c==='KeyW')menuFocus((UI.menu.f+MENU.length-1)%MENU.length);else if(c==='Enter'||c==='Space')menuPick();else return;e.preventDefault();e.stopImmediatePropagation();return}
  if(!UI.who&&!onCar()){if(c==='ArrowLeft'||c==='KeyA'||c==='ArrowRight'||c==='KeyD'){const d=c==='ArrowLeft'||c==='KeyA'?-1:1;let t=UI.tag;for(let n=0;n<TAGK.length;n++){t=(t+d+TAGK.length)%TAGK.length;if(TAGK[t]==='car'?GS.car:TAGK[t]==='pc'?GS.laptop:GS[TAGK[t]]&&GS[TAGK[t]].g)break}UI.tag=t;GS.hov=TAGK[t];P.sfx&&P.sfx('move')}
   else if(c==='Enter'||c==='Space'){act(GS.hov||TAGK[UI.tag]);GS.hov=null}else return;e.preventDefault();e.stopImmediatePropagation();return}
