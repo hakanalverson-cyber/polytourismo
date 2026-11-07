@@ -12413,6 +12413,7 @@ window.__optAction=k=>{if(k==='@tutorial')P.startTutorial()};
 const P=window.PT8;
 P.LOG=[
  {v:'0.03',d:'Nov 2, 2026',t:'Highway Cut-Up on bikes',items:[
+  'Career garage runs smoother: the menu pictures that get rendered in the background after an update now wait while you are in the garage (they were eating its frames), the garage\'s shadows follow the Shadow update rate option, and they are drawn once per frame at most. Hovering a Marketplace listing no longer darkens its text.',
   'Marketplace: no more answer buttons in Messages. Type whatever you want (an offer like 12k or 20% off, ok, no thanks, a question about accidents, service history, mileage or why they are selling, a complaint about the paint, please and thanks, or an insult) and the seller or buyer answers in their own voice. Manners soften them, insults stiffen them, and the rude ones block you. Scammers still try to get a deposit or a refund out of you.',
   'Marketplace: walking up to the laptop no longer glitches. The page waits until the camera arrives, then fades in, and the game no longer drops its resolution during the move.',
   'Lighting: every race now reflects its own sky. Car paint, glass and chrome pick up soft reflections, and the shading follows the time of day and weather instead of looking like flat plastic.',
@@ -16977,7 +16978,9 @@ window.PT8_BOOT=new Promise(res=>{const run=()=>setTimeout(async()=>{try{const B
  }catch(e){console.error('boot warm-up',e)}res();
  /* behind the title: the pictures that had to be rendered, one at a time, never while a race is running */
  setTimeout(async()=>{REST.sort((a,b)=>a[0]-b[0]);const sl=ms=>new Promise(r=>setTimeout(r,ms));
-  for(const j of REST){while(typeof scr!=='undefined'&&(scr==='game'||scr==='pause'))await sl(1500);try{await Promise.race([j[2](false),sl(120000)])}catch(e){console.error('picture',j[1],e)}await sl(1400)}P.picsDone=1},1200)},400);if(document.readyState==='complete')run();else addEventListener('load',run)});
+  /* Nov 7: also never while the Career garage or a bike ride is on screen (the render, the JPEG encode and the shader builds were eating the garage's frames) */
+  const busy=()=>typeof scr!=='undefined'&&(scr==='game'||scr==='pause'||scr==='bike'||scr==='bikeprep'||scr==='s8career');
+  for(const j of REST){while(busy())await sl(1500);try{await Promise.race([j[2](false),sl(120000)])}catch(e){console.error('picture',j[1],e)}await sl(1400)}P.picsDone=1},1200)},400);if(document.readyState==='complete')run();else addEventListener('load',run)});
 window.PT8_BOOT.then(()=>{P.bootDone=1});window.PT8_BOOT.then(()=>setTimeout(()=>{d.classList.add('on');if(!BT)slide()},400));
 let done=false;
 function go(e){/* the boot warning cards take the first presses: each one skips a card */{const w=document.getElementById('ptWarn');if(w&&getComputedStyle(w).visibility!=='hidden'&&getComputedStyle(w).opacity>.05){w.classList.add(w.classList.contains('s1')?'s2':'s1');if(e){try{e.preventDefault();e.stopImmediatePropagation()}catch(x){}}return}}
@@ -19275,7 +19278,7 @@ function pickAt(cx,cy){if(!GS.ok)return null;MV.set(cx/innerWidth*2-1,-(cy/inner
  frame=function(n){if(scr==='s8career'&&GS.ok&&sec.classList.contains('gcOn')){requestAnimationFrame(frame);const dt=Math.min(.05,Math.max(0,(n-last)/1000));last=n;dtf=dt;T0+=dt;
    /* other screens (split-screen races, the bike mode, the menu previews) leave a viewport or scissor of their own behind, and the adaptive
       resolution resizes the canvas under it: start every garage frame from the full canvas so the picture never ends up in a corner */
-   {const pr=R.getPixelRatio()||1;R.shadowMap.enabled=true;R.shadowMap.autoUpdate=true;R.setRenderTarget(null);R.setScissorTest(false);R.setViewport(0,0,R.domElement.width/pr,R.domElement.height/pr);R.setScissor(0,0,R.domElement.width/pr,R.domElement.height/pr)}
+   {const pr=R.getPixelRatio()||1,po=window.PTO||{};GS.fr=(GS.fr||0)+1;R.shadowMap.enabled=true;/* Nov 7: the shadow map follows the Shadow update rate option (it was redrawn every frame whatever the setting) */R.shadowMap.autoUpdate=false;R.shadowMap.needsUpdate=GS.fr%Math.max(1,Math.min(4,po.shadowRate||2))===0;/* once per frame at most, even when the frame draws the scene more than once (talking blur, hover outline) */R.setRenderTarget(null);R.setScissorTest(false);R.setViewport(0,0,R.domElement.width/pr,R.domElement.height/pr);R.setScissor(0,0,R.domElement.width/pr,R.domElement.height/pr)}
    const ex0=R.toneMappingExposure;R.toneMappingExposure=GS.tex?.82:ex0;try{tick(dt);renderGarage();olRender(dt)}catch(e){R.toneMappingExposure=ex0;if(!GS.err){GS.err=1;console.warn('career frame',e)}}R.toneMappingExposure=ex0;
    if(!vis){vis=true;R.domElement.style.visibility='';document.body.classList.add('gcG')}return}
   if(vis){vis=false;document.body.classList.remove('gcG');R.domElement.style.visibility=MENU_BG.includes(scr)&&!(RACE&&scr==='s8res')?'hidden':''}

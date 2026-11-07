@@ -104,7 +104,9 @@ window.PT8_BOOT=new Promise(res=>{const run=()=>setTimeout(async()=>{try{const B
  }catch(e){console.error('boot warm-up',e)}res();
  /* behind the title: the pictures that had to be rendered, one at a time, never while a race is running */
  setTimeout(async()=>{REST.sort((a,b)=>a[0]-b[0]);const sl=ms=>new Promise(r=>setTimeout(r,ms));
-  for(const j of REST){while(typeof scr!=='undefined'&&(scr==='game'||scr==='pause'))await sl(1500);try{await Promise.race([j[2](false),sl(120000)])}catch(e){console.error('picture',j[1],e)}await sl(1400)}P.picsDone=1},1200)},400);if(document.readyState==='complete')run();else addEventListener('load',run)});
+  /* Nov 7: also never while the Career garage or a bike ride is on screen (the render, the JPEG encode and the shader builds were eating the garage's frames) */
+  const busy=()=>typeof scr!=='undefined'&&(scr==='game'||scr==='pause'||scr==='bike'||scr==='bikeprep'||scr==='s8career');
+  for(const j of REST){while(busy())await sl(1500);try{await Promise.race([j[2](false),sl(120000)])}catch(e){console.error('picture',j[1],e)}await sl(1400)}P.picsDone=1},1200)},400);if(document.readyState==='complete')run();else addEventListener('load',run)});
 window.PT8_BOOT.then(()=>{P.bootDone=1});window.PT8_BOOT.then(()=>setTimeout(()=>{d.classList.add('on');if(!BT)slide()},400));
 let done=false;
 function go(e){/* the boot warning cards take the first presses: each one skips a card */{const w=document.getElementById('ptWarn');if(w&&getComputedStyle(w).visibility!=='hidden'&&getComputedStyle(w).opacity>.05){w.classList.add(w.classList.contains('s1')?'s2':'s1');if(e){try{e.preventDefault();e.stopImmediatePropagation()}catch(x){}}return}}

@@ -4,6 +4,7 @@
 const P=window.PT8;
 P.LOG=[
  {v:'0.03',d:'Nov 2, 2026',t:'Highway Cut-Up on bikes',items:[
+  'Career garage runs smoother: the menu pictures that get rendered in the background after an update now wait while you are in the garage (they were eating its frames), the garage\'s shadows follow the Shadow update rate option, and they are drawn once per frame at most. Hovering a Marketplace listing no longer darkens its text.',
   'Marketplace: no more answer buttons in Messages. Type whatever you want (an offer like 12k or 20% off, ok, no thanks, a question about accidents, service history, mileage or why they are selling, a complaint about the paint, please and thanks, or an insult) and the seller or buyer answers in their own voice. Manners soften them, insults stiffen them, and the rude ones block you. Scammers still try to get a deposit or a refund out of you.',
   'Marketplace: walking up to the laptop no longer glitches. The page waits until the camera arrives, then fades in, and the game no longer drops its resolution during the move.',
   'Lighting: every race now reflects its own sky. Car paint, glass and chrome pick up soft reflections, and the shading follows the time of day and weather instead of looking like flat plastic.',
