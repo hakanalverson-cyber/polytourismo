@@ -13,7 +13,7 @@
 'use strict';
 const P=window.PT8;if(!P||typeof THREE==='undefined'||typeof R==='undefined')return;
 const O=()=>window.PTO||{};
-const dofOn=()=>O().dof!==false,aoOn=()=>O().ao!==false;
+const dofOn=()=>O().dof!==false&&!(P.fxShed>=2),aoOn=()=>O().ao!==false&&!(P.fxShed>=1);
 let rt=null,qa=null,qb=null,Q=null;const V4=new THREE.Vector4(),V2=new THREE.Vector2(),CW=new THREE.Vector3();
 const VS='varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}';
 const LZ='float lz(vec2 uv){float d=texture2D(tD,uv).x;return cn*cf/(cf-d*(cf-cn));}';
@@ -27,9 +27,9 @@ function init(){const sc=new THREE.Scene(),cam=new THREE.OrthographicCamera(-1,1
   fragmentShader:`uniform sampler2D tC,tD,tB;uniform vec2 px;uniform float cn,cf,f0,f1,dofK,aoK,hz,hzK;uniform vec3 hzC,sunC,sunD;uniform mat4 pInv,cW;varying vec2 vUv;${LZ}
   void main(){vec2 uv=vUv;vec3 c=texture2D(tC,uv).rgb;float d=texture2D(tD,uv).x;float z=lz(uv);bool sky=d>.99999;
    if(aoK>0.&&!sky){float ic=1./z,occ=0.,r=clamp(40./z,1.5,8.),rng=.35+z*.06;
-    for(int i=0;i<8;i++){float fi=float(i),a=fi*.3927+.17;vec2 o=vec2(cos(a),sin(a))*px*r*(.45+.55*fract(fi*.618+.3));
+    for(int i=0;i<6;i++){float fi=float(i),a=fi*.5236+.17;vec2 o=vec2(cos(a),sin(a))*px*r*(.45+.55*fract(fi*.618+.3));
      float za=lz(uv+o),zb=lz(uv-o);if(abs(za-z)>rng||abs(zb-z)>rng)continue;float m=(1./za+1./zb)*.5;occ+=clamp(((m-ic)/ic-.02)*9.,0.,1.);}
-    c*=1.-aoK*min(1.,occ/8.*1.3)*(1.-smoothstep(25.,60.,z));}
+    c*=1.-aoK*min(1.,occ/6.*1.3)*(1.-smoothstep(25.,60.,z));}
    if(dofK>0.){float k=smoothstep(f0,f1,z)*dofK;c=mix(c,texture2D(tB,uv).rgb,k);}
    if(hzK>0.){vec4 vp=pInv*vec4(uv*2.-1.,1.,1.);vec3 vd=normalize((cW*vec4(normalize(vp.xyz/vp.w),0.)).xyz);float s=max(0.,dot(vd,sunD));
     vec3 h=hzC+sunC*(pow(s,6.)*.45+pow(s,40.)*.4);float f=sky?pow(s,6.)*.25:(1.-exp(-z*hz))*hzK;c=mix(c,h,clamp(f,0.,1.));}

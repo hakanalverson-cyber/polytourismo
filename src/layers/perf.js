@@ -135,8 +135,9 @@ let pendRes=0;setTimeout(()=>{const fi=frame;frame=function(){if(pendRes){pendRe
   if(!ingame||O().adaptRes===false||frames<0)return;
   /* P.dynHold: a planned camera move (Career's laptop) is not a reason to drop the resolution */if(P.dynHold&&now<P.dynHold){badRun=0;return}
   let nd=P.dynRes;
-  if(fps<52||bad>.2){if(++badRun>=2){badRun=0;nd=Math.max(.5,nd-(fps<40?.18:.09));lastDn=now}}
-  else{badRun=0;if(fps>58&&nd<1&&now-lastUp>20000&&now-lastDn>30000){nd=Math.min(1,nd+.05);lastUp=now}}
+  if(fps<52||bad>.2){if(++badRun>=2){badRun=0;lastDn=now;/* shed the post effects first (ambient occlusion, then depth of field): cheaper than a blurrier picture */
+   if((P.fxShed||0)<2&&(O().ao!==false||O().dof!==false)){P.fxShed=(P.fxShed||0)+1;if(P.fxShed===1&&O().ao===false)P.fxShed=2}else nd=Math.max(.5,nd-(fps<40?.18:.09))}}
+  else{badRun=0;if(fps>58&&now-lastUp>20000&&now-lastDn>30000){if(nd<1){nd=Math.min(1,nd+.05);lastUp=now}else if(P.fxShed>0){P.fxShed--;lastUp=now}}}
   if(Math.abs(nd-P.dynRes)>.01){P.dynRes=nd;pendRes=1}})(performance.now())}
 rs();
 })();

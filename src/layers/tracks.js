@@ -115,8 +115,8 @@ function buildRally(T){const d=T.d,sc=new THREE.Scene(),r=rngf(d.id*91+13),N=T.N
  mesh(new THREE.BoxGeometry(T.hw[0]*2+3.4,2,.5),new THREE.MeshBasicMaterial({map:ctex(64,8,(x,w,h)=>{x.fillStyle='#d9382a';x.fillRect(0,0,w,h);x.fillStyle='#fff';for(let i=0;i<w;i+=8)x.fillRect(i,0,4,h);x.fillStyle='#111';x.fillRect(0,3,w,2)})}),0,7.2,0,ar);
  const sl=mesh(new THREE.PlaneGeometry(T.hw[0]*2,1.6),new THREE.MeshBasicMaterial({map:ctex(16,2,(x,w,h)=>{for(let i=0;i<16;i++){x.fillStyle=i&1?'#fff':'#111';x.fillRect(i,0,1,1);x.fillStyle=i&1?'#111':'#fff';x.fillRect(i,1,1,1)}})}),T.x[0],T.y[0]+.09,T.z[0],sc);sl.rotation.set(-PI/2,0,0);sl.rotation.order='YXZ';sl.rotation.y=T.psi[0];
  /* scatter helper */
- const scatter=(cnt,minR,maxR,fn)=>{const out=[];for(let t=0;t<cnt*14&&out.length<cnt;t++){const x=lerp(x0+12,x1-12,r()),z=lerp(z0+12,z1-12,r()),rd=roadDistFar(T,x,z);if(rd<minR||rd>=maxR)continue;const h=T.terr(x,z);if(fn(x,h,z,out,rd))continue}return out};
- const side=(i,l)=>{i=((i%N)+N)%N;const s=Math.sin(T.psi[i]),c=Math.cos(T.psi[i]);{const x=T.x[i]+c*l,z=T.z[i]-s*l;return[x,Math.abs(l)>T.hw[i]+.8?T.terr(x,z):T.y[i]-l*T.bank[i],z,T.psi[i]]}};
+ const scatter=(cnt,minR,maxR,fn)=>{const out=[];for(let t=0;t<cnt*14&&out.length<cnt;t++){const x=lerp(x0+12,x1-12,r()),z=lerp(z0+12,z1-12,r()),rd=roadDistFar(T,x,z);if(rd<minR||rd>=maxR)continue;const h=GB(T,x,z);if(fn(x,h,z,out,rd))continue}return out};
+ const side=(i,l)=>{i=((i%N)+N)%N;const s=Math.sin(T.psi[i]),c=Math.cos(T.psi[i]);{const x=T.x[i]+c*l,z=T.z[i]-s*l;return[x,Math.abs(l)>T.hw[i]+.8?GB(T,x,z):T.y[i]-l*T.bank[i],z,T.psi[i]]}};
  if(d.biome==='forest'){
   const tl=scatter(900,T.hw[0]+3.5,150,(x,h,z,o,rd)=>{if(h>95)return 1;if(rd>45&&r()<.25)return 1;o.push([x,h,z,.8+r()*1.3,0,0,r()*6]);return 0});
   instC(sc,new THREE.CylinderGeometry(.25,.4,2.8,5),flat(0x4d3523),tl.map(p=>[p[0],p[1]+1.4*p[3],p[2],p[3],p[4]]),[0x4d3523,0x5a4029]);
@@ -136,14 +136,14 @@ function buildRally(T){const d=T.d,sc=new THREE.Scene(),r=rngf(d.id*91+13),N=T.N
   instC(sc,new THREE.CylinderGeometry(.34,.34,4.2,6),flat(0x7a5a38),lg.map(p=>[p[0],p[1],p[2],1,1,1,p[6],PI/2]));
   instC(sc,new THREE.CylinderGeometry(.34,.34,4.2,6),flat(0x6a4c30),lg.map(p=>[p[0]+.2,p[1]+.72,p[2]+.4,1,1,1,p[6]+.1,PI/2]));
  }else if(d.biome==='desert'){
-  const ms=scatter(34,60,300,(x,h,z,o)=>{const H=22+r()*60,rot=r()*6,rx=14+r()*46,rz=10+r()*34,R_=Math.max(rx,rz)*.98;let mn=h;for(let a=0;a<16;a++){const an=a/16*6.2832;mn=Math.min(mn,T.terr(x+Math.cos(an)*R_,z+Math.sin(an)*R_))}const base=Math.min(h-4,mn-3),top=h-4+H;o.push([x,base,z,1,top-base,1,rot,0,rx,rz]);return 0});
+  const ms=scatter(34,60,300,(x,h,z,o)=>{const H=22+r()*60,rot=r()*6,rx=14+r()*46,rz=10+r()*34,R_=Math.max(rx,rz)*.98;let mn=h;for(let a=0;a<16;a++){const an=a/16*6.2832;mn=Math.min(mn,GB(T,x+Math.cos(an)*R_,z+Math.sin(an)*R_))}const base=Math.min(h-4,mn-3),top=h-4+H;o.push([x,base,z,1,top-base,1,rot,0,rx,rz]);return 0});
   const mc=[0xb4552f,0xc46a3e,0xa8482a,0xbf7a4a];
   const mg=new THREE.CylinderGeometry(.8,1,1,8,1),mm=flat(0xffffff);
   const im=new THREE.InstancedMesh(mg,mm,ms.length),oo=new THREE.Object3D(),cc=new THREE.Color();ms.forEach((p,i)=>{oo.position.set(p[0],p[1]+p[4]/2,p[2]);oo.scale.set(p[8],p[4],p[9]);oo.rotation.set(0,p[6],0);oo.updateMatrix();im.setMatrixAt(i,oo.matrix);cc.setHex(mc[i%4]);cc.offsetHSL(0,0,(r()-.5)*.06);im.setColorAt(i,cc)});im.frustumCulled=false;sc.add(im);
   /* caps */
   const cp=new THREE.InstancedMesh(new THREE.CylinderGeometry(.82,.8,.05,8),flat(0xd8956a),ms.length);ms.forEach((p,i)=>{oo.position.set(p[0],p[1]+p[4]+.1,p[2]);oo.scale.set(p[8]*1.02,3,p[9]*1.02);oo.rotation.set(0,p[6],0);oo.updateMatrix();cp.setMatrixAt(i,oo.matrix)});cp.frustumCulled=false;sc.add(cp);
   const hd=scatter(70,T.hw[0]+6,160,(x,h,z,o)=>{o.push([x,h,z,.7+r()*1.4,0,0,r()*6]);return 0});
-  {const hb=hd.map(p=>{const s=p[3];let mn=p[1];for(let a=0;a<10;a++){const an=a/10*6.2832;mn=Math.min(mn,T.terr(p[0]+Math.cos(an)*2.1*s,p[2]+Math.sin(an)*2.1*s))}const base=mn-1.2,top=p[1]+6.45*s;return[p[0],(base+top)/2,p[2],s,(top-base)/6.5,s,p[6]]});
+  {const hb=hd.map(p=>{const s=p[3];let mn=p[1];for(let a=0;a<10;a++){const an=a/10*6.2832;mn=Math.min(mn,GB(T,p[0]+Math.cos(an)*2.1*s,p[2]+Math.sin(an)*2.1*s))}const base=mn-1.2,top=p[1]+6.45*s;return[p[0],(base+top)/2,p[2],s,(top-base)/6.5,s,p[6]]});
   instC(sc,new THREE.CylinderGeometry(.9,2.0,6.5,6),flat(0xffffff),hb,[0xa8482a,0xb4552f,0x9a4326])}
   instC(sc,new THREE.SphereGeometry(1.7,6,4),flat(0xffffff),hd.map(p=>[p[0],p[1]+7*p[3],p[2],p[3],p[3]*.8,p[3],p[6]]),[0xb4552f,0xc46a3e]);
   const cx=scatter(110,T.hw[0]+4,120,(x,h,z,o)=>{o.push([x,h,z,.8+r()*.7,0,0,r()*6]);return 0});
@@ -178,7 +178,7 @@ function buildRally(T){const d=T.d,sc=new THREE.Scene(),r=rngf(d.id*91+13),N=T.N
   instC(sc,new THREE.BoxGeometry(1.0,.25,6.4),flat(0x6a6a64),wl.map(p=>[p[0],p[1]+.65,p[2],1,1,1,p[6]]));
   /* cottages */
   for(let q=0;q<4;q++){let x,z;for(let t=0;t<200;t++){x=lerp(x0+40,x1-40,r());z=lerp(z0+40,z1-40,r());const rd=roadDistFar(T,x,z);if(rd>22&&rd<70)break}
-   const y=T.terr(x,z),g=new THREE.Group();g.position.set(x,y,z);g.rotation.y=r()*6;sc.add(g);mesh(new THREE.BoxGeometry(9,4,5.5),flat(0xd5cfc0),0,2,0,g);const rf=mesh(new THREE.CylinderGeometry(0.01,3.7,3,4,1),flat(0x5a5048),0,5.4,0,g);rf.rotation.y=PI/4;rf.scale.set(1.45,1,.95);mesh(new THREE.BoxGeometry(.8,2.4,.8),flat(0x6a6058),2.6,5.6,0,g);mesh(new THREE.BoxGeometry(1.2,2,.1),flat(0x3a2a1c),-1.5,1,2.78,g)}
+   const y=GB(T,x,z),g=new THREE.Group();g.position.set(x,y,z);g.rotation.y=r()*6;sc.add(g);mesh(new THREE.BoxGeometry(9,4,5.5),flat(0xd5cfc0),0,2,0,g);const rf=mesh(new THREE.CylinderGeometry(0.01,3.7,3,4,1),flat(0x5a5048),0,5.4,0,g);rf.rotation.y=PI/4;rf.scale.set(1.45,1,.95);mesh(new THREE.BoxGeometry(.8,2.4,.8),flat(0x6a6058),2.6,5.6,0,g);mesh(new THREE.BoxGeometry(1.2,2,.1),flat(0x3a2a1c),-1.5,1,2.78,g)}
  }
  /* rally furniture common to all stages: tape, chevrons, spectators, hay, flags */
  const chev=[],tape=[],hay=[],peeps=[],flags=[];
@@ -186,7 +186,7 @@ function buildRally(T){const d=T.d,sc=new THREE.Scene(),r=rngf(d.id*91+13),N=T.N
    /* a left turn (psi increasing) has its outside on the right: psi sign convention checked by test */
    const p=side(i,-sgn*(T.hw[i]+2.6));if(i%9===0)chev.push([p[0],p[1]+1.5,p[2],p[3]+PI,sgn]);if(i%6===0){tape.push([p[0],p[1]+.55,p[2]])}
    if(k>.016&&i%12===0){const hp=side(i,-sgn*(T.hw[i]+4.4));hay.push([hp[0],hp[1]+.55,hp[2],hp[3]])}
-   if(k>.012&&i%15===0&&r()<.8){const pp=side(i,-sgn*(T.hw[i]+7+r()*3));for(let q=0;q<4+(r()*5|0);q++)peeps.push([pp[0]+(r()-.5)*5,T.terr(pp[0],pp[2])+.9,pp[2]+(r()-.5)*5,r()*6])}}}
+   if(k>.012&&i%15===0&&r()<.8){const pp=side(i,-sgn*(T.hw[i]+7+r()*3));for(let q=0;q<4+(r()*5|0);q++)peeps.push([pp[0]+(r()-.5)*5,GB(T,pp[0],pp[2])+.9,pp[2]+(r()-.5)*5,r()*6])}}}
  for(let i=20;i<N;i+=40){const p=side(i,(i%80?1:-1)*(T.hw[i]+2));flags.push([p[0],p[1]+2,p[2],i%80?0:1])}
  if(chev.length){const ct=chevronTex(),cm=new THREE.MeshBasicMaterial({map:ct,side:THREE.DoubleSide});const im=new THREE.InstancedMesh(new THREE.PlaneGeometry(2.6,1.3),cm,chev.length),oo=new THREE.Object3D();chev.forEach((p,i)=>{oo.position.set(p[0],p[1],p[2]);oo.rotation.set(0,p[3],0);oo.scale.set(p[4]>0?-1:1,1,1);oo.updateMatrix();im.setMatrixAt(i,oo.matrix)});im.frustumCulled=false;sc.add(im);instC(sc,new THREE.CylinderGeometry(.06,.06,2.4,4),flat(0x555555),chev.map(p=>[p[0],p[1]-.4,p[2],1]))}
  if(tape.length)instC(sc,new THREE.CylinderGeometry(.05,.05,1.1,4),flat(0xffffff),tape,[0xd9382a,0xf2f2f2]);

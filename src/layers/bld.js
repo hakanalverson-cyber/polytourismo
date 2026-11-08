@@ -56,13 +56,13 @@ function farms(T,sc){const nF=FARMS[T.d&&T.d.name]||0,n=nF+(HAM[T.d&&T.d.name]||
  for(let i=0;i<N;i++){x0=Math.min(x0,T.x[i]);x1=Math.max(x1,T.x[i]);z0=Math.min(z0,T.z[i]);z1=Math.max(z1,T.z[i]);lo=Math.min(lo,T.y[i]);if(i%2===0){px.push(T.x[i]);pz.push(T.z[i]);ph.push(T.hw[i])}}
  const near=(x,z)=>{let b=1e9,bi=0;for(let i=0;i<px.length;i++){const d=Math.hypot(x-px[i],z-pz[i])-ph[i];if(d<b){b=d;bi=i}}return[b,bi]};
  const log=sc.userData.props||(sc.userData.props=[]),bn=P.barnInfo&&P.barnInfo(),groups={};
- const wet=(x,z)=>T.d.sea&&T.terr(x,z)<lo-2;
+ const wet=(x,z)=>T.d.sea&&GB(T,x,z)<lo-2;
  const free=(x,z,fr)=>{if(wet(x,z))return false;for(const p of log)if(Math.hypot(p.x-x,p.z-z)<(p.fr||2)+fr)return false;if(bn&&Math.hypot(bn.x-x,bn.z-z)<50)return false;return true};
- const put=(name,x,z,yaw,fr,slope)=>{const q=GEO[name];if(!q)return false;if(!free(x,z,fr))return false;let mn=1e9,mx=-1e9;for(const[dx,dz]of[[0,0],[1,1],[-1,1],[1,-1],[-1,-1]]){const h=T.terr(x+dx*fr*.6,z+dz*fr*.6);mn=Math.min(mn,h);mx=Math.max(mx,h)}if(mx-mn>slope)return false;
+ const put=(name,x,z,yaw,fr,slope)=>{const q=GEO[name];if(!q)return false;if(!free(x,z,fr))return false;let mn=1e9,mx=-1e9;for(const[dx,dz]of[[0,0],[1,1],[-1,1],[1,-1],[-1,-1]]){const h=GB(T,x+dx*fr*.6,z+dz*fr*.6);mn=Math.min(mn,h);mx=Math.max(mx,h)}if(mx-mn>slope)return false;
   (groups[name]=groups[name]||[]).push([x,mn,z,yaw]);log.push({n:name,x,z,y:mn,fr,sk:.5,s:1});return true};
  for(let f=0;f<n;f++){let site=null;
   for(let t=0;t<260&&!site;t++){const x=R(x0-120,x1+120),z=R(z0-120,z1+120),[d,bi]=near(x,z);if(d<34||d>120)continue;
-   let mn=1e9,mx=-1e9;for(let a=0;a<12;a++){const h=T.terr(x+Math.cos(a*.5236)*16,z+Math.sin(a*.5236)*16);mn=Math.min(mn,h);mx=Math.max(mx,h)}if(mx-mn>2.2||wet(x,z))continue;
+   let mn=1e9,mx=-1e9;for(let a=0;a<12;a++){const h=GB(T,x+Math.cos(a*.5236)*16,z+Math.sin(a*.5236)*16);mn=Math.min(mn,h);mx=Math.max(mx,h)}if(mx-mn>2.2||wet(x,z))continue;
    if(!free(x,z,14))continue;site={x,z,yaw:Math.atan2(T.x[bi*2]-x,T.z[bi*2]-z)}}
   if(!site)continue;const{x,z,yaw}=site,s_=Math.sin(yaw),c_=Math.cos(yaw),W=(lx,lz)=>[x+c_*lx+s_*lz,z-s_*lx+c_*lz];
   if(f>=nF){/* hamlet: a ring of houses around a well, with trees, bushes and hay */

@@ -122,7 +122,7 @@ function decorate(T,sc){const d=T.d,N=T.N,name=d.name,plan=PLAN[name];if(!plan)r
  /* sea level (coast) / harbor water */
  let seaY=-1e9,lo=1e9;if(d.sea){for(let i=0;i<N;i+=4)lo=Math.min(lo,T.y[i]);seaY=lo-4}
  const H=!!d.harbor,WATER=(x,z)=>(x>215&&z>5)||z>315,WY=-1.3;
- const gnd=(x,z)=>H?0:T.terr(x,z);
+ const gnd=(x,z)=>H?0:(typeof terrainBed==='function'?terrainBed(T,x,z):T.terr(x,z));/* the drawn ground (road bed carved in), not the raw terrain function */
  let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;for(let i=0;i<N;i++){x0=Math.min(x0,T.x[i]);x1=Math.max(x1,T.x[i]);z0=Math.min(z0,T.z[i]);z1=Math.max(z1,T.z[i])}
  const px=[],pz=[],ph=[];for(let i=0;i<N;i+=2){px.push(T.x[i]);pz.push(T.z[i]);ph.push(T.hw[i])}
  const near=(x,z)=>{let b=1e9,bi=0;for(let i=0;i<px.length;i++){const dd=Math.hypot(x-px[i],z-pz[i])-ph[i];if(dd<b){b=dd;bi=i}}return[b,bi*2]};

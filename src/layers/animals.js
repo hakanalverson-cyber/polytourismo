@@ -53,11 +53,11 @@ function spawn(sc,T){AN=null;const plan=HERDS[T.d&&T.d.name];if(!plan||!P.animal
  for(let i=0;i<N;i++){x0=Math.min(x0,T.x[i]);x1=Math.max(x1,T.x[i]);z0=Math.min(z0,T.z[i]);z1=Math.max(z1,T.z[i]);lo=Math.min(lo,T.y[i]);if(i%2===0){px.push(T.x[i]);pz.push(T.z[i]);ph.push(T.hw[i])}}
  const road=(x,z)=>{let b=1e9;for(let i=0;i<px.length;i++){const d=Math.hypot(x-px[i],z-pz[i])-ph[i];if(d<b)b=d}return b};
  const props=sc.userData.props||[],bn=P.barnInfo&&P.barnInfo();
- const ok=(x,z,rad)=>{const y=T.terr(x,z);if(T.d.sea&&y<lo-2)return null;if(T.d.harbor||T.d.flat)return null;
-  let sl=0;for(const[dx,dz]of[[1.6,0],[-1.6,0],[0,1.6],[0,-1.6]])sl=Math.max(sl,Math.abs(T.terr(x+dx,z+dz)-y));if(sl>.7)return null;
+ const ok=(x,z,rad)=>{const y=GB(T,x,z);if(T.d.sea&&y<lo-2)return null;if(T.d.harbor||T.d.flat)return null;
+  let sl=0;for(const[dx,dz]of[[1.6,0],[-1.6,0],[0,1.6],[0,-1.6]])sl=Math.max(sl,Math.abs(GB(T,x+dx,z+dz)-y));if(sl>.7)return null;
   if(road(x,z)<rad)return null;for(const p of props)if(Math.hypot(p.x-x,p.z-z)<(p.fr||2)+2.5)return null;
   if(bn&&Math.hypot(bn.x-x,bn.z-z)<45)return null;
-  for(let k=0;k<12;k++){const a=k*.5236;if(T.d.sea&&T.terr(x+Math.cos(a)*3,z+Math.sin(a)*3)<lo-2)return null}
+  for(let k=0;k<12;k++){const a=k*.5236;if(T.d.sea&&GB(T,x+Math.cos(a)*3,z+Math.sin(a)*3)<lo-2)return null}
   return y};
  const list=[];
  for(const[name,herds,mn,mx]of plan){const sp=SP[name];if(!sp)continue;
@@ -92,7 +92,7 @@ function tick(dt){if(!AN||!RACE||RACE.T!==AN.T||dt<=0)return;const T=AN.T,cars=R
     /* never step onto the road */
     let rd=1e9;const ib=((T.N*((nx-T.x[0])*0))|0);{let bd=1e9;for(let i=0;i<T.N;i+=3){const q=Math.hypot(nx-T.x[i],nz-T.z[i])-T.hw[i];if(q<bd)bd=q}rd=bd}
     if(rd>6){a.x=nx;a.z=nz}else{a.st='idle';a.t=2}}}
-  a.g.position.set(a.x,T.terr(a.x,a.z),a.z);a.g.rotation.y=a.yaw;
+  a.g.position.set(a.x,GB(T,a.x,a.z),a.z);a.g.rotation.y=a.yaw;
   play(a,a.st==='flee'?'Gallop':a.st==='walk'?'Walk':a.st==='graze'?'Eating':'Idle');
   if(a.cur==='Gallop')a.act.Gallop.timeScale=Math.max(.6,v/Math.max(4,a.run)*1.1);else if(a.cur==='Walk')a.act.Walk.timeScale=1;
   a.mx.update(step)}}

@@ -1,7 +1,7 @@
 /* ===== Poly Tourismo v9 layer: world cleanup (start line, stray props) ===== */
 (function v9clean(){
 'use strict';
-const P=window.PT8;
+const P=window.PT8;window.GB=window.GB||((T,x,z)=>typeof terrainBed==="function"?terrainBed(T,x,z):T.terr(x,z));
 /* minimal scrollbars everywhere (replaces the default browser bars) */
 {const st=document.createElement('style');st.id='ptScroll';st.textContent='*{scrollbar-width:thin;scrollbar-color:rgba(170,195,190,.38) transparent}*::-webkit-scrollbar{width:5px;height:5px;background:transparent}*::-webkit-scrollbar-track{background:transparent}*::-webkit-scrollbar-thumb{background:rgba(170,195,190,.34);border-radius:5px;border:0}*::-webkit-scrollbar-thumb:hover{background:rgba(205,225,220,.62)}*::-webkit-scrollbar-corner{background:transparent}*::-webkit-scrollbar-button{display:none;width:0;height:0}';document.head.appendChild(st)}
 
@@ -34,10 +34,10 @@ function lamps(sc,T){
  const N=T.N,K=P.PROPKIT,log=sc.userData.props||[],have=log.filter(p=>p.n==='lamp'&&isFinite(p.yaw)),L=[];
  const grp=new THREE.Group();grp.visible=false;grp.userData.noChunk=1;sc.add(grp);sc.userData.lamps=grp;
  const AX=3.7,HY=6.8;
- if(have.length){for(const p of have){const y=isFinite(p.y)?p.y:T.terr(p.x,p.z);L.push({hx:p.x+Math.sin(p.yaw)*AX,hy:y+HY,hz:p.z+Math.cos(p.yaw)*AX})}}
+ if(have.length){for(const p of have){const y=isFinite(p.y)?p.y:GB(T,p.x,p.z);L.push({hx:p.x+Math.sin(p.yaw)*AX,hy:y+HY,hz:p.z+Math.cos(p.yaw)*AX})}}
  else if(!T.d.gravel&&K&&P.lampParts){const st=Math.max(2,Math.round(40/(T.sp||6)));let side=1;const own=[];
   const HB=T.d.harbor&&T.hbr,hb=i=>HB&&((i>=HB.rest[0]&&i<=HB.rest[1])||HB.tuns.some(a=>i>=a[0]-1&&i<=a[1]+1)),inAl=i=>HB&&HB.alleys.some(a=>i>=a[0]&&i<=a[1]),onPier=i=>HB&&i>=HB.pier[0]&&i<=HB.pier[1];
-  for(let i=Math.floor(st/2);i<N;i+=st){if(HB){if(hb(i))continue}else if((T.gap&&T.gap[i])||(T.tn&&T.tn[i])||(T.d.span&&T.sg&&T.sg[i]===3)||(!T.d.city&&!T.d.span&&T.wall&&T.wall[i]&&!(T.br&&T.br[i])))continue;side=-side;const c=Math.cos(T.psi[i]),s_=Math.sin(T.psi[i]),lo=side*(HB?(onPier(i)?T.hw[i]-.25:inAl(i)?T.hw[i]+1.1:T.hw[i]+3.4):T.lampOff?T.hw[i]+T.lampOff[i]:T.hw[i]+3.2),x=T.x[i]+c*lo,z=T.z[i]-s_*lo,y=HB?(inAl(i)?.2:onPier(i)?.09:.12)+T.y[i]:T.d.span?T.y[i]+(T.sg[i]===2?.12:0):T.br&&T.br[i]?T.y[i]-lo*T.bank[i]:T.terr(x,z),yaw=Math.atan2(-c*side,s_*side);
+  for(let i=Math.floor(st/2);i<N;i+=st){if(HB){if(hb(i))continue}else if((T.gap&&T.gap[i])||(T.tn&&T.tn[i])||(T.d.span&&T.sg&&T.sg[i]===3)||(!T.d.city&&!T.d.span&&T.wall&&T.wall[i]&&!(T.br&&T.br[i])))continue;side=-side;const c=Math.cos(T.psi[i]),s_=Math.sin(T.psi[i]),lo=side*(HB?(onPier(i)?T.hw[i]-.25:inAl(i)?T.hw[i]+1.1:T.hw[i]+3.4):T.lampOff?T.hw[i]+T.lampOff[i]:T.hw[i]+3.2),x=T.x[i]+c*lo,z=T.z[i]-s_*lo,y=HB?(inAl(i)?.2:onPier(i)?.09:.12)+T.y[i]:T.d.span?T.y[i]+(T.sg[i]===2?.12:0):T.br&&T.br[i]?T.y[i]-lo*T.bank[i]:GB(T,x,z),yaw=Math.atan2(-c*side,s_*side);
    own.push([x,y,z,yaw]);L.push({hx:x+Math.sin(yaw)*AX,hy:y+HY,hz:z+Math.cos(yaw)*AX})}
   if(own.length){const im=new THREE.InstancedMesh(K.mk(P.lampParts()),K.MAT,own.length),dm=new THREE.Object3D();const wc=new THREE.Color(1,1,1);own.forEach((q,i)=>{dm.position.set(q[0],q[1],q[2]);dm.rotation.set(0,q[3],0);dm.updateMatrix();im.setMatrixAt(i,dm.matrix);im.setColorAt(i,wc)});im.frustumCulled=false;im.userData.ptProp='lamp';sc.add(im)}}
  if(!L.length)return;
@@ -103,14 +103,14 @@ function city(sc,T){
  const clear=(x,z,rad)=>{for(const q of placed)if(Math.hypot(q[0]-x,q[1]-z)<q[2]+rad)return false;for(const p of log)if(Math.hypot(p.x-x,p.z-z)<(p.fr||2)+rad)return false;return true};
  const tryPlace=(list,sMin,sMax,dMin,dMax,tries,cnt,box)=>{let n=0;for(let t=0;t<tries&&n<cnt;t++){const x=x0-box+r()*(x1-x0+2*box),z=z0-box+r()*(z1-z0+2*box),d=near(x,z);if(d<dMin||d>dMax)continue;
    const nm=list[Math.floor(r()*list.length)],g=P.BLD[nm];if(!g)continue;const s=sMin+r()*(sMax-sMin),rad=Math.max(g.w,g.d)*s*.52+1.5;if(!clear(x,z,rad))continue;
-   const k=nearest(x,z),yaw=Math.atan2(rx[k]-x,rz[k]-z),y=T.terr(x,z);placed.push([x,z,rad]);(out[nm]=out[nm]||[]).push([x,y,z,yaw,s]);log.push({n:nm,x,z,y,fr:rad,sk:.5,s});n++}return n};
+   const k=nearest(x,z),yaw=Math.atan2(rx[k]-x,rz[k]-z),y=GB(T,x,z);placed.push([x,z,rad]);(out[nm]=out[nm]||[]).push([x,y,z,yaw,s]);log.push({n:nm,x,z,y,fr:rad,sk:.5,s});n++}return n};
  /* street wall: continuous front line of normal-size buildings along both sides, then a second row, then towers that grow with distance */
  const row=(list,sMin,sMax,off,gapMin,gapMax,keepRoad)=>{for(const side of[-1,1]){let nextS=0,acc=0,px=T.x[0],pz=T.z[0];for(let i=0;i<T.N;i+=1){acc+=Math.hypot(T.x[i]-px,T.z[i]-pz);px=T.x[i];pz=T.z[i];if(acc<nextS)continue;
    const nm=list[Math.floor(r()*list.length)],g=P.BLD[nm];if(!g)continue;const s=sMin+r()*(sMax-sMin),wd=Math.max(g.w,g.d)*s;
    const l=side*(T.hw[i]+off+wd*.5),c=Math.cos(T.psi[i]),sn=Math.sin(T.psi[i]),x=T.x[i]+c*l,z=T.z[i]-sn*l;
    if(near(x,z)<T.hw[i]+off*.8+wd*.35){acc=nextS-1;continue}
    if(!clear(x,z,wd*.42)){continue}
-   const k=nearest(x,z),yaw=Math.atan2(rx[k]-x,rz[k]-z),y=T.terr(x,z);placed.push([x,z,wd*.42]);(out[nm]=out[nm]||[]).push([x,y,z,yaw,s]);log.push({n:nm,x,z,y,fr:wd*.42,sk:.5,s});
+   const k=nearest(x,z),yaw=Math.atan2(rx[k]-x,rz[k]-z),y=GB(T,x,z);placed.push([x,z,wd*.42]);(out[nm]=out[nm]||[]).push([x,y,z,yaw,s]);log.push({n:nm,x,z,y,fr:wd*.42,sk:.5,s});
    nextS=acc+wd*.9+gapMin+r()*(gapMax-gapMin)}}};
  row(LOW,.8,1.1,12,.5,2.5);
  row(LOW.concat(TOW.slice(4)),1.0,1.4,12+14,1,4);
@@ -122,7 +122,7 @@ function city(sc,T){
    for(const side of[-1,1]){open=false;for(let i=0;i<T.N;i++){const bad=(T.gap&&T.gap[i])||(T.br&&T.br[i])||(T.tn&&T.tn[i]);const c=Math.cos(T.psi[i]),sn=Math.sin(T.psi[i]);let xa,za,xb,zb;
      if(!bad){const la=side*(T.hw[i]+W0),lb=side*(T.hw[i]+W1);xa=T.x[i]+c*la;za=T.z[i]-sn*la;xb=T.x[i]+c*lb;zb=T.z[i]-sn*lb;if(near(xb,zb)<T.hw[i]+W1*.55)open=open&&false,xa=null}
      if(bad||xa===null){open=false;continue}
-     const ya=T.terr(xa,za)+.06,yb=T.terr(xb,zb)+.06,j=(Math.sin(i*.9)+Math.sin(i*.37+side))*.05;c0.setHSL(.29+j*.2,.42,.34+j);pos.push(xa,ya,za,xb,yb,zb);col.push(c0.r,c0.g,c0.b,c0.r*.92,c0.g*.92,c0.b*.92);
+     const ya=GB(T,xa,za)+.06,yb=GB(T,xb,zb)+.06,j=(Math.sin(i*.9)+Math.sin(i*.37+side))*.05;c0.setHSL(.29+j*.2,.42,.34+j);pos.push(xa,ya,za,xb,yb,zb);col.push(c0.r,c0.g,c0.b,c0.r*.92,c0.g*.92,c0.b*.92);
      if(open){const q=vi-2;idx.push(q,q+1,vi,q+1,vi+1,vi);if(side>0)idx.push(),0}
      open=true;vi+=2}}
    if(idx.length){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.setIndex(idx);g.computeVertexNormals();
@@ -130,17 +130,17 @@ function city(sc,T){
    /* street trees and hedges along the verge */
    const ST=['Tree_02','Tree_04','Tree_05','Tree_07'].filter(n=>P.BLD[n]),HB=['Bush_01','Bush_02'].filter(n=>P.BLD[n]);let acc=0;
    for(const side of[-1,1])for(let i=0;i<T.N;i+=3){if((T.gap&&T.gap[i])||(T.br&&T.br[i])||(T.tn&&T.tn[i]))continue;const c=Math.cos(T.psi[i]),sn=Math.sin(T.psi[i]);
-    if(ST.length&&i%9===(side>0?0:4)){const l=side*(T.hw[i]+W0+3+r()*3),x=T.x[i]+c*l,z=T.z[i]-sn*l;if(near(x,z)>T.hw[i]+W0+1.5&&clear(x,z,1.2)){const nm=ST[Math.floor(r()*ST.length)],sc_=1.0+r()*.6;(out[nm]=out[nm]||[]).push([x,T.terr(x,z),z,r()*6.28,sc_,1]);placed.push([x,z,1.2])}}
-    if(HB.length&&i%3===0&&r()<.8){const l=side*(T.hw[i]+W0+.9),x=T.x[i]+c*l,z=T.z[i]-sn*l;if(near(x,z)>T.hw[i]+W0*.5){const nm=HB[Math.floor(r()*HB.length)];(out[nm]=out[nm]||[]).push([x,T.terr(x,z),z,r()*6.28,1.0+r()*.5,1])}}}}
-  const lawn=(cx,cz,R)=>{for(let gx=-R;gx<=R;gx+=gt*.9)for(let gz=-R;gz<=R;gz+=gt*.9){const x=cx+gx,z=cz+gz;if(Math.hypot(gx,gz)>R||near(x,z)<T.hw[nearest(x,z)]+3)continue;(out[GL]=out[GL]||[]).push([x,T.terr(x,z),z,r()*6.28,gs,1])}};
+    if(ST.length&&i%9===(side>0?0:4)){const l=side*(T.hw[i]+W0+3+r()*3),x=T.x[i]+c*l,z=T.z[i]-sn*l;if(near(x,z)>T.hw[i]+W0+1.5&&clear(x,z,1.2)){const nm=ST[Math.floor(r()*ST.length)],sc_=1.0+r()*.6;(out[nm]=out[nm]||[]).push([x,GB(T,x,z),z,r()*6.28,sc_,1]);placed.push([x,z,1.2])}}
+    if(HB.length&&i%3===0&&r()<.8){const l=side*(T.hw[i]+W0+.9),x=T.x[i]+c*l,z=T.z[i]-sn*l;if(near(x,z)>T.hw[i]+W0*.5){const nm=HB[Math.floor(r()*HB.length)];(out[nm]=out[nm]||[]).push([x,GB(T,x,z),z,r()*6.28,1.0+r()*.5,1])}}}}
+  const lawn=(cx,cz,R)=>{for(let gx=-R;gx<=R;gx+=gt*.9)for(let gz=-R;gz<=R;gz+=gt*.9){const x=cx+gx,z=cz+gz;if(Math.hypot(gx,gz)>R||near(x,z)<T.hw[nearest(x,z)]+3)continue;(out[GL]=out[GL]||[]).push([x,GB(T,x,z),z,r()*6.28,gs,1])}};
   P._lawn=lawn}
  /* parks: small forests between the blocks */
  const TREES=['Tree_02','Tree_04','Tree_05','Tree_07','Bush_01','Bush_02'].filter(n=>P.BLD[n]);
  if(TREES.length){const nP=40;let pk=0;for(let t=0;t<900&&pk<nP;t++){const cx=x0-80+r()*(x1-x0+160),cz=z0-80+r()*(z1-z0+160),d=near(cx,cz);if(d<26||d>170||!clear(cx,cz,16))continue;
-   const R_=18+r()*22,n=26+Math.floor(r()*30);placed.push([cx,cz,R_*.55]);if(P._lawn)P._lawn(cx,cz,R_*.9);if(r()<.3&&P.BLD.WaterLand_05){(out.WaterLand_05=out.WaterLand_05||[]).push([cx,T.terr(cx,cz)-.15,cz,r()*6.28,1.5,0])}let c=0;for(let q=0;q<n*3&&c<n;q++){const a=r()*6.283,rr=Math.sqrt(r())*R_,x=cx+Math.cos(a)*rr,z=cz+Math.sin(a)*rr;if(near(x,z)<T.hw[nearest(x,z)]+9)continue;let bad=false;for(const p of log)if(p.n.indexOf('Tree')<0&&p.n.indexOf('Bush')<0&&Math.hypot(p.x-x,p.z-z)<(p.fr||2)+1.5){bad=true;break}if(bad)continue;
-     const nm=TREES[Math.floor(r()*TREES.length)],big=nm.indexOf('Tree')==0,sc_=big?1.0+r()*.8:1.1+r()*.6;(out[nm]=out[nm]||[]).push([x,T.terr(x,z),z,r()*6.28,sc_,1]);log.push({n:nm,x,z,y:0,fr:1.4,sk:.3,s:sc_});c++}pk++}}
+   const R_=18+r()*22,n=26+Math.floor(r()*30);placed.push([cx,cz,R_*.55]);if(P._lawn)P._lawn(cx,cz,R_*.9);if(r()<.3&&P.BLD.WaterLand_05){(out.WaterLand_05=out.WaterLand_05||[]).push([cx,GB(T,cx,cz)-.15,cz,r()*6.28,1.5,0])}let c=0;for(let q=0;q<n*3&&c<n;q++){const a=r()*6.283,rr=Math.sqrt(r())*R_,x=cx+Math.cos(a)*rr,z=cz+Math.sin(a)*rr;if(near(x,z)<T.hw[nearest(x,z)]+9)continue;let bad=false;for(const p of log)if(p.n.indexOf('Tree')<0&&p.n.indexOf('Bush')<0&&Math.hypot(p.x-x,p.z-z)<(p.fr||2)+1.5){bad=true;break}if(bad)continue;
+     const nm=TREES[Math.floor(r()*TREES.length)],big=nm.indexOf('Tree')==0,sc_=big?1.0+r()*.8:1.1+r()*.6;(out[nm]=out[nm]||[]).push([x,GB(T,x,z),z,r()*6.28,sc_,1]);log.push({n:nm,x,z,y:0,fr:1.4,sk:.3,s:sc_});c++}pk++}}
  /* pack-themed lots: community gardens (FarmLand grid + greenhouse + fences + crates), well plazas and fenced ponds */
- {const B=P.BLD,add_=(nm,x,z,yaw,sc_,y)=>{if(!B[nm])return;(out[nm]=out[nm]||[]).push([x,y===undefined?T.terr(x,z):y,z,yaw,sc_,2]);},
+ {const B=P.BLD,add_=(nm,x,z,yaw,sc_,y)=>{if(!B[nm])return;(out[nm]=out[nm]||[]).push([x,y===undefined?GB(T,x,z):y,z,yaw,sc_,2]);},
   fence=(cx,cz,R,gap,sf)=>{const len=3*sf,n=Math.max(8,Math.floor(6.283*R/len));for(let k=0;k<n;k++){const a=k/n*6.283;if(Math.abs(((a-gap+9.42)%6.283)-3.14)>3.14-.22)continue;const x=cx+Math.cos(a)*R,z=cz+Math.sin(a)*R;if(near(x,z)<T.hw[nearest(x,z)]+5)continue;(add_('WoodFence_02',x,z,-(a+1.5708),sf),P.addSeg&&P.addSeg(T,x+Math.sin(a)*1.5*sf,z-Math.cos(a)*1.5*sf,x-Math.sin(a)*1.5*sf,z+Math.cos(a)*1.5*sf,.2))}},
   FL=Object.keys(B).filter(n=>/^FarmLand_/.test(n));
   let lots=0;for(let t=0;t<1500&&lots<34;t++){const cx=x0-90+r()*(x1-x0+180),cz=z0-90+r()*(z1-z0+180),d=near(cx,cz);if(d<24||d>150||!clear(cx,cz,17))continue;const kind=lots%3,R=kind===0?15:kind===1?11:12;
@@ -149,7 +149,7 @@ function city(sc,T){
    if(kind===0&&FL.length){for(let gx=-1;gx<=0;gx++)for(let gz=-1;gz<=0;gz++){const x=cx+gx*8.4+4.2-3,z=cz+gz*8.4+4.2-3;add_(FL[Math.floor(r()*FL.length)],x,z,Math.floor(r()*4)*1.5708,1.6)}
     add_('GreenMouse',cx+R*.55*Math.cos(gap+3.14),cz+R*.55*Math.sin(gap+3.14),gap+1.57,1.1);add_('WoodenCrates_01',cx+R*.5,cz-R*.3,r()*6,1.3);add_('WoodenCrates_01',cx+R*.55,cz-R*.18,r()*6,1.1);add_('Haystack_04',cx-R*.5,cz+R*.4,r()*6,1.3);add_('Well_02',cx+3,cz+R*.45,0,1.3);fence(cx,cz,R,gap,1.35)}
    else if(kind===1){add_('Well_02',cx,cz,0,2.2);for(let q=0;q<5;q++){const a=q/5*6.283+r();add_(['Bush_01','Bush_02'][q&1],cx+Math.cos(a)*5,cz+Math.sin(a)*5,r()*6,1.6)}add_('WoodenCrates_01',cx+3.4,cz+2,r()*6,1.3);add_('AnimalFeeder_01',cx-4.5,cz+1,r()*6,1.4);for(let q=0;q<4;q++){const a=q/4*6.283+.7;add_(['Tree_02','Tree_04','Tree_05','Tree_07'][q],cx+Math.cos(a)*9,cz+Math.sin(a)*9,r()*6,1.3)}fence(cx,cz,R,gap,1.1)}
-   else{add_('WaterLand_05',cx,cz,r()*6,1.8,T.terr(cx,cz)-.12);for(let q=0;q<9;q++){const a=q/9*6.283+r()*.4;add_(['Bush_01','Bush_02','Tree_04','Tree_02'][q&3],cx+Math.cos(a)*(6.5+r()*2),cz+Math.sin(a)*(6.5+r()*2),r()*6,q&2?1.3:1.5)}add_('AnimalFeeder_01',cx+7,cz-4,.6,1.3);fence(cx,cz,R,gap,1.2)}
+   else{add_('WaterLand_05',cx,cz,r()*6,1.8,GB(T,cx,cz)-.12);for(let q=0;q<9;q++){const a=q/9*6.283+r()*.4;add_(['Bush_01','Bush_02','Tree_04','Tree_02'][q&3],cx+Math.cos(a)*(6.5+r()*2),cz+Math.sin(a)*(6.5+r()*2),r()*6,q&2?1.3:1.5)}add_('AnimalFeeder_01',cx+7,cz-4,.6,1.3);fence(cx,cz,R,gap,1.2)}
    for(const nm of['Tree_02'])void 0;
   }}
  tryPlace(TOW,1.6,2.4,60,110,700,70,140);
@@ -212,14 +212,14 @@ function lotsAll(sc,T){
  let lo=1e9;for(let i=0;i<N;i++)lo=Math.min(lo,T.y[i]);
  const log=sc.userData.props||[],placed=[],out={},bs=T.barnSite;
  const clear=(x,z,rad)=>{for(const q of placed)if(Math.hypot(q[0]-x,q[1]-z)<q[2]+rad)return false;for(const p of log)if(Math.hypot(p.x-x,p.z-z)<(p.fr||2)+rad)return false;return true};
- const add_=(nm,x,z,yaw,sc_,sink)=>{if(!B[nm])return;(out[nm]=out[nm]||[]).push([x,T.terr(x,z)-(sink||0),z,yaw,sc_,2])};
+ const add_=(nm,x,z,yaw,sc_,sink)=>{if(!B[nm])return;(out[nm]=out[nm]||[]).push([x,GB(T,x,z)-(sink||0),z,yaw,sc_,2])};
  const fence=(cx,cz,R,gap,sf)=>{const len=3*sf,n=Math.max(8,Math.floor(6.283*R/len));for(let k=0;k<n;k++){const a=k/n*6.283;if(Math.abs(((a-gap+9.42)%6.283)-3.14)>3.14-.2)continue;const x=cx+Math.cos(a)*R,z=cz+Math.sin(a)*R;if(near(x,z)<6)continue;(add_('WoodFence_02',x,z,-(a+1.5708),sf,.1),P.addSeg&&P.addSeg(T,x+Math.sin(a)*1.5*sf,z-Math.cos(a)*1.5*sf,x-Math.sin(a)*1.5*sf,z+Math.cos(a)*1.5*sf,.2))}};
  const FL=Object.keys(B).filter(n=>/^FarmLand_/.test(n)),TR=['Tree_02','Tree_04','Tree_05','Tree_07'].filter(n=>B[n]);
  let n=0;const want=cfg[0],kinds=cfg[1];
  for(let t=0;t<2500&&n<want;t++){const k=kinds[n%kinds.length],R=k==='f'?14:k==='h'?13:k==='o'?15:11,i=Math.floor(r()*rx.length),side=r()<.5?-1:1,off=rh[i]+R+7+r()*60,c=Math.cos(T.psi[i*2]),sn=Math.sin(T.psi[i*2]),cx=rx[i]+c*side*off,cz=rz[i]-sn*side*off;
   if(near(cx,cz)<R+6||!clear(cx,cz,R+2))continue;if(bs&&Math.hypot(bs.x-cx,bs.z-cz)<R+38)continue;
   let bad=false;for(let q=-8;q<=8&&!bad;q++){const j=(nearest(cx,cz)+q+rx.length)%rx.length;if(rf[j]&&Math.hypot(rx[j]-cx,rz[j]-cz)<R+40)bad=true}if(bad)continue;
-  const h0=T.terr(cx,cz);if(T.d.sea&&h0<lo-1.5)continue;let mn=1e9,mx=-1e9;for(let a=0;a<6;a++){const h=T.terr(cx+Math.cos(a)*R*.8,cz+Math.sin(a)*R*.8);mn=Math.min(mn,h);mx=Math.max(mx,h)}if(mx-mn>2.4)continue;
+  const h0=GB(T,cx,cz);if(T.d.sea&&h0<lo-1.5)continue;let mn=1e9,mx=-1e9;for(let a=0;a<6;a++){const h=GB(T,cx+Math.cos(a)*R*.8,cz+Math.sin(a)*R*.8);mn=Math.min(mn,h);mx=Math.max(mx,h)}if(mx-mn>2.4)continue;
   if(T.fords&&T.fords.some(f=>Math.hypot(T.x[f.i%N]-cx,T.z[f.i%N]-cz)<R+70))continue;
   const kk=nearest(cx,cz),gap=Math.atan2(rz[kk]-cz,rx[kk]-cx),face=Math.atan2(rx[kk]-cx,rz[kk]-cz);placed.push([cx,cz,R+1]);log.push({n:'lot',x:cx,z:cz,y:h0,fr:R+1,sk:0,s:1});n++;
   if(k==='f'&&FL.length){for(let gx=0;gx<2;gx++)for(let gz=0;gz<3;gz++)add_(FL[Math.floor(r()*FL.length)],cx+(gx-.5)*8.4,cz+(gz-1)*8.4,Math.floor(r()*4)*1.5708,1.6);fence(cx,cz,R,gap,1.35);add_('GreenMouse',cx-R*.8*Math.cos(gap),cz-R*.8*Math.sin(gap),face,1.0);add_('WoodenCrates_01',cx+R*.55,cz-R*.4,r()*6,1.3);add_('Haystack_04',cx-R*.5,cz+R*.55,r()*6,1.4);add_('Well_02',cx+R*.6,cz+R*.5,0,1.3)}
@@ -250,7 +250,7 @@ const COVER={
 function cover(sc,T){
  const cfg=COVER[T.d&&T.d.name];if(!cfg)return;const N=T.N,log=sc.userData.props||[];let lo=1e9;for(let i=0;i<N;i++)lo=Math.min(lo,T.y[i]);
  let seed=T.d.id*2654435+7;const r=()=>((seed=(seed*1664525+1013904223)>>>0)/4294967296);
- const spot=(maxL)=>{for(let t=0;t<8;t++){const i=Math.floor(r()*N),side=r()<.5?-1:1,l=side*(T.hw[i]+3+Math.pow(r(),1.25)*maxL),c=Math.cos(T.psi[i]),s=Math.sin(T.psi[i]),x=T.x[i]+c*l,z=T.z[i]-s*l,y=T.terr(x,z);
+ const spot=(maxL)=>{for(let t=0;t<8;t++){const i=Math.floor(r()*N),side=r()<.5?-1:1,l=side*(T.hw[i]+3+Math.pow(r(),1.25)*maxL),c=Math.cos(T.psi[i]),s=Math.sin(T.psi[i]),x=T.x[i]+c*l,z=T.z[i]-s*l,y=GB(T,x,z);
    if(T.d.sea&&y<lo-1.5)continue;const sf=T.surf?T.surf(x,z,y+4):null;if(sf&&sf.road)continue;const bs=T.barnSite;if(bs&&Math.hypot(bs.x-x,bs.z-z)<30)continue;let bad=false;for(const p of log){if(Math.abs(p.x-x)<(p.fr||2)&&Math.abs(p.z-z)<(p.fr||2)){bad=true;break}}if(bad)continue;return[x,y,z]}return null};
  const dm=new THREE.Object3D(),col=new THREE.Color(),mk=(geo,n,pal,smin,smax,lift)=>{const pts=[];for(let q=0;q<n;q++){const p=spot(95);if(p)pts.push(p)}if(!pts.length)return;
   const im=new THREE.InstancedMesh(geo,new THREE.MeshStandardMaterial({color:0xffffff,roughness:1,flatShading:true}),pts.length);
