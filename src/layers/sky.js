@@ -36,7 +36,7 @@ function shape(kind,r,h,rand){
  let g;
  if(kind==='mesa'){g=new THREE.CylinderGeometry(r*(.55+.2*rand()),r,h,7,2,false);g.translate(0,h/2,0)}
  else if(kind==='cliff'){g=new THREE.CylinderGeometry(r*.5,r,h,6,2,false);g.translate(0,h/2,0)}
- else if(kind==='hill'){g=new THREE.SphereGeometry(r,9,5,0,Math.PI*2,0,Math.PI/2);g.scale(1,h/r,1)}
+ else if(kind==='hill'){g=new THREE.CylinderGeometry(r*.3,r,h,10,2,false);g.translate(0,h/2,0)}
  else{g=new THREE.ConeGeometry(r,h,6+((rand()*3)|0),3,false);g.translate(0,h/2,0)}
  g=g.toNonIndexed();
  /* jitter so no two read the same */

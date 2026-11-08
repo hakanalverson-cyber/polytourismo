@@ -1684,3 +1684,14 @@ body.gxAsking #tutOffer{display:none!important}
 #gxSu.g2 .gxCards.g4>.gxCard.pf:not(.empty):last-child:nth-child(odd) .gxr.wide{grid-column:span 2}
 /* the pause menu always draws on top while a race is paused */
 body.ptPause #pause{visibility:visible!important;opacity:1!important;z-index:2147483000!important;position:fixed!important;inset:0!important}
+
+/* ===== one prompt style everywhere: the barn find prompt (dark panel, thin light border, wide-tracked mono capitals, keycap keys) ===== */
+#tut,#tutOffer{background:#0a0d11e6;border:1px solid #f1f3f5;border-left:1px solid #f1f3f5;font-family:var(--mn,monospace);text-transform:uppercase;letter-spacing:.14em;color:#f1f3f5;backdrop-filter:none;border-radius:0}
+#tut .th{font-family:var(--mn,monospace);letter-spacing:.3em;font-size:10px;color:#f2c76b}#tut .th b{color:#f2c76b}
+#tut .tt{font-size:15px;font-weight:700;letter-spacing:.2em;margin:8px 0 6px}#tut.ok .tt{color:#7fd68a}
+#tut .tx,#tutOffer span{font-size:11.5px;line-height:1.7;letter-spacing:.12em;color:#c9d0d6;text-transform:uppercase}#tut .tx b{color:#f1f3f5}
+#tutOffer b{font-size:12px;letter-spacing:.24em;color:#f2c76b}
+#tut button,#tutOffer button{font:700 11px var(--mn,monospace);letter-spacing:.2em;border:1px solid #f1f3f5;border-bottom-width:3px;border-radius:4px;background:#f1f3f51a;color:#f1f3f5;padding:5px 12px}
+#tut button:hover,#tutOffer button:hover{background:#f1f3f530;color:#fff}
+#tut button.pri,#tutOffer button.pri{background:#f1f3f5;color:#0a0d11}
+kbd{font:700 12px var(--mn,monospace);padding:4px 9px;border:1px solid #f1f3f5;border-bottom-width:3px;border-radius:4px;background:#f1f3f51a;color:#f1f3f5;letter-spacing:.08em}
