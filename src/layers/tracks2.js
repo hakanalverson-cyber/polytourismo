@@ -15,7 +15,7 @@ const span={id:8,name:'Grand Valley',desc:'suspension bridge / island city / for
  sky:[0x3a82d6,0xb6dcf4],fog:0xbcd6e8,sun:0xfff4de,hemi:[0xdcecff,0x6a6a60],road:'#3b3e44',dust:0x8c6a42,dirt:0x4e3a22,walls:[],ice:[],boost:[],jumps:[],pts:sp};
 const frost={id:9,look:4,name:'Frostline Stage',desc:'frozen forest / ice ruts / hairpins',hw:5.5,bank:8,shoulder:6,gravel:1,ice:[],walls:[],boost:[],off:'snow',idw:.86,offs:0,amp:6.5,up:36,biome:'forest',frost:1,tod0:'dawn',
  sky:[0x8fb0d0,0xe9f1f8],fog:0xd6e3ee,sun:0xfff4e0,hemi:[0xe6f0fa,0x7a8a9a],road:'#a3a9b0',dust:0xf2f6fa,dirt:0xdfe6ee,
- pts:[[-120,-240,10],[0,-255,14],[110,-225,22],[200,-250,30],[290,-190,36],[310,-100,30],[250,-40,24],[160,-70,28],[100,-10,34],[150,60,40],[250,90,36],[300,160,28],[250,230,20],[150,250,14],[60,200,10],[-30,240,6],[-120,215,8],[-190,150,14],[-140,80,20],[-210,20,26],[-290,-30,22],[-290,-120,16],[-220,-190,12]],tunnels:0};
+ pts:[[-250,-230,30],[-130,-250,34],[0,-235,38],[110,-250,42],[210,-220,44],[270,-150,40],[240,-90,36],[150,-80,32],[80,-120,28],[20,-80,24],[-50,-30,20],[10,30,16],[100,40,12],[190,70,8],[245,140,6],[190,205,4],[100,185,3],[30,230,3],[-70,250,5],[-170,215,8],[-240,150,14],[-210,70,20],[-290,0,24],[-300,-90,28],[-290,-170,30]],tunnels:0};
 D.push(coast,span,frost);
 [7,9].forEach(i=>{const j=P.pickJumps(D[i],1,i===9?{l:50,a:.75,t:1.6,r:100,f:.12}:undefined);D[i].jumps=j.length?j:[]});
 /* snowier gravel stage: bigger hills like the other rally stages */
