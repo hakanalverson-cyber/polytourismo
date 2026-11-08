@@ -19,6 +19,9 @@ src=src.replace("color:d.id==3?0x7af0ff:0xfff0c8","color:d.id==3?0xffe2a8:0xfff0
 # real circuits (Road Atlanta, Imola): no centre line, and the grey/white full-lap edge strip becomes plain asphalt run-off (kerbs live only at corners)
 # suspension damper: measure the body's vertical speed relative to the ground under it (c._gv, set in grip.js), not absolute. With the
 # absolute speed a car descending a hill had its damper pushing it up, so on downhills the tyres barely touched and grip vanished.
+# Afterhours Loop: a more technical figure-eight (extra harmonics: esses and a tighter hairpin pair), 56 control points
+src=rep(src,"for(let i=0;i<40;i++){const t=.9+i/40*2*PI,dt=Math.abs(wr(t-PI));cityPts.push([260*Math.sin(t),130*Math.sin(2*t),","for(let i=0;i<56;i++){const t=.9+i/56*2*PI,dt=Math.abs(wr(t-PI));cityPts.push([Math.round(260*Math.sin(t)+40*Math.sin(3*t+.6)),Math.round(130*Math.sin(2*t)+24*Math.cos(4*t)),")
+src=rep(src,"boost:[[2,.5,0],[10,.5,3],[22,.5,-3],[30,.5,0]]","boost:[[3,.5,0],[14,.5,3],[31,.5,-3],[42,.5,0]]")
 src=rep(src,"vf=Math.max(vf-REV*br*dt,-14)","vf=Math.max(vf-REV*br*dt,-8)")  # round 19: reverse tops out at 18 mph (was 31: with full lock it ran tight circles fast enough to look like spins)
 # round 21: screen shake belongs to the car that crashed (c.shk), not to every screen (RACE.shake shook all split-screen views)
 src=rep(src,"if(c.human)RACE.shake=Math.min(1,vn/20)","c.shk=Math.min(1,vn/20)")
