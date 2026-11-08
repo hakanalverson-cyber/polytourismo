@@ -228,6 +228,7 @@ const DM=v=>v*2.237*P.dialK(),HG=v=>(1+.45*Math.min(1,Math.max(0,(DM(v)-60)/50))
 /* round 25 (first gear +5%) was too sensitive: back to round 24, which Hakan called perfect */
 const SFP=[[0,1.03],[20,1.03],[30,.84],[60,.84],[80,.87],[100,.92],[120,1]],SFP0=[[0,.95],[20,.95],[30,.75],[60,.75],[80,1]]/* v0.18, outside Track Mode */,SF=m=>{const p=TM()?SFP:SFP0;if(m<=p[0][0])return p[0][1];for(let i=1;i<p.length;i++)if(m<=p[i][0]){const a=p[i-1],b=p[i];return a[1]+(b[1]-a[1])*(m-a[0])/(b[0]-a[0])}return p[p.length-1][1]};
 const gripAt=(c,mt)=>{const v=c.sp||0;return ALAT*Math.min(DFMAX,1+DFK*(v/35)*(v/35))*((c.cs&&c.cs.grip)||1)*(P.lawn&&P.lawn(c)?1:(mt.grip||1))/* round 23: grass slows the player but never cuts the steering */*(c.human&&!c.forceAI?(c.in&&c.in.br>0&&c.in.th<=0?1.15:1)*HG(v)*(TM()?.95:1)/* round 24: Track Mode handling 5% down (Hakan: too good) */:1)/* round 20: trail braking, the weight on the fronts gives 15% more bite (player only, so the CPU laps and gold times stay put) */};
+P.simGrip=gripAt;/* Nov 8: the Sim handling layer (sim.js) uses the same tyre budget */
 {const ip0=P.inPost;P.inPost=(c,dt)=>{if(ip0)ip0(c,dt);if(!TRK()||!c.in||c.exp>0)return;const vf=c.vx*Math.sin(c.yaw)+c.vz*Math.cos(c.yaw);if(vf<6)return;
  const mt=c.mt||{grip:1},a=gripAt(c,mt),sr=2.5-Math.min(c.sp,40)*.03,hk=Math.min(1.45,Math.max(.85,1+(((c.cs&&c.cs.grip)||1)-1)*2.6)),mx=a/(vf*sr)*(c.human&&!c.forceAI?1.4*hk:1.25)/* CPU drivers keep the old line, so their lap times and the gold times stay put */;
  /* the nose turns in up to 1.4x what the tyres hold (was 1.25x, before that 1.7x): asking for more pushes the car wide. The Handling rating
@@ -236,10 +237,12 @@ const gripAt=(c,mt)=>{const v=c.sp||0;return ALAT*Math.min(DFMAX,1+DFK*(v/35)*(v
  /* round 20: full lock now asks for a turn rate, not a fraction of the old one. It is the tighter of a fixed smallest turn (6.5 m radius,
     grown with the drawn car size) and what the tyres hold (x1.1, more with Handling). The old speed curve shrank the steering as the car
     slowed (60% at 30 mph), so braking into a corner made it turn wider than it did at speed: the understeer under braking */
- const hm=c.human&&!c.forceAI;if(hm){const sb=(2.25-.033*Math.min(c.sp,42))*Math.min(1,vf/6),w=Math.min(vf/(6.5*K()),a*1.1*hk/vf);const lo=SF(DM(vf));c.in.st=clamp(c.in.st||0,-1,1)*w*lo/sb}const st=c.in.st||0;
+ const hm=c.human&&!c.forceAI;if(hm){const sb=(2.25-.033*Math.min(c.sp,42))*Math.min(1,vf/6),w=Math.min(vf/(6.5*K()),a*(P.simOn&&P.simOn(c)?1.35:1.1)*hk/vf);const lo=SF(DM(vf));c.in.st=clamp(c.in.st||0,-1,1)*w*lo/sb}const st=c.in.st||0;
  const mx2=hm?1e9:mx;if(Math.abs(st)>mx2){c.in.st=Math.sign(st)*mx2;/* understeer scrub: steering far past the limit (turning in too fast) bleeds speed as the fronts push */if(hm&&Math.abs(st)>mx2*1.35){const e=Math.min(1,Math.abs(st)/mx2-1.35),k=1-e*.5*(dt||.016);c.vx*=k;c.vz*=k}}}}
-{const sg0=stepCar;stepCar=function(c,dt){const vx0=c.vx,vz0=c.vz,y0=c.yaw,r=sg0.apply(this,arguments);
+{const sg0=stepCar;stepCar=function(c,dt){const vx0=c.vx,vz0=c.vz,y0=c.yaw,yr0=c.yr,r=sg0.apply(this,arguments);
  if(!TRK()||c.exp>0||!(dt>0))return r;
+ /* Nov 8: Sim handling takes over the sideways motion and the yaw (sim.js); it hands back to the arcade code below at walking pace */
+ if(P.simOn&&P.simPost&&P.simOn(c)&&P.simPost(c,dt,vx0,vz0,y0,yr0))return r;
  /* minimum turning circle at low speed (about 5.5 m for a road car, grown with the drawn size): below about 40 km/h the grip limit below
     does not apply and the arcade steering pivoted the car almost on the spot */
  {const vf=Math.abs(c.vx*Math.sin(c.yaw)+c.vz*Math.cos(c.yaw));if(vf<12&&!(c.respT>0)&&c.m&&c.m.wheels.some(w=>w.g)){const mx=(vf+.25)*dt/(5.5*K()),d=wr(c.yaw-y0);

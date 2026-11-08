@@ -465,7 +465,7 @@ const defaults = {
   garageRotate:true,mapOrbit:true,
   master:.7,engine:.55,sfx:.65,sound:true,
   steering:1,driftAssist:.7,drifts:true,driftMph:47,
-  hillHold:true,autoShift:false,shortcutPenalty:true,p2numpad:false,perfPreset:'MEDIUM',dof:true,ao:true,maxDensity:1.25,shadowRate:2,shadowRes:1024,showFps:false,cameraDistance:1,fov:58,shake:true,
+  hillHold:true,autoShift:false,shortcutPenalty:true,p2numpad:false,handling:'SIM',abs:true,tc:true,perfPreset:'MEDIUM',dof:true,ao:true,maxDensity:1.25,shadowRate:2,shadowRes:1024,showFps:false,cameraDistance:1,fov:58,shake:true,
   boostFov:true,minimap:true,timer:true,hudScale:1,
   units:'mph',showroom:true,splitAlways:true
 };
@@ -1069,6 +1069,9 @@ const pages={
   ['hillHold','HILL HOLD'],
   ['autoShift','AUTO SHIFT'],
   ['p2numpad','PLAYER 2 NUMPAD KEYS'],
+  ['handling','HANDLING',['ARCADE','SIM']],
+  ['abs','ABS BRAKES'],
+  ['tc','TRACTION CONTROL'],
   ['shortcutPenalty','SHORTCUT PENALTY'],
   ['@tutorial','TUTORIAL','@btn','PLAY']
  ],
@@ -12042,6 +12045,7 @@ const DM=v=>v*2.237*P.dialK(),HG=v=>(1+.45*Math.min(1,Math.max(0,(DM(v)-60)/50))
 /* round 25 (first gear +5%) was too sensitive: back to round 24, which Hakan called perfect */
 const SFP=[[0,1.03],[20,1.03],[30,.84],[60,.84],[80,.87],[100,.92],[120,1]],SFP0=[[0,.95],[20,.95],[30,.75],[60,.75],[80,1]]/* v0.18, outside Track Mode */,SF=m=>{const p=TM()?SFP:SFP0;if(m<=p[0][0])return p[0][1];for(let i=1;i<p.length;i++)if(m<=p[i][0]){const a=p[i-1],b=p[i];return a[1]+(b[1]-a[1])*(m-a[0])/(b[0]-a[0])}return p[p.length-1][1]};
 const gripAt=(c,mt)=>{const v=c.sp||0;return ALAT*Math.min(DFMAX,1+DFK*(v/35)*(v/35))*((c.cs&&c.cs.grip)||1)*(P.lawn&&P.lawn(c)?1:(mt.grip||1))/* round 23: grass slows the player but never cuts the steering */*(c.human&&!c.forceAI?(c.in&&c.in.br>0&&c.in.th<=0?1.15:1)*HG(v)*(TM()?.95:1)/* round 24: Track Mode handling 5% down (Hakan: too good) */:1)/* round 20: trail braking, the weight on the fronts gives 15% more bite (player only, so the CPU laps and gold times stay put) */};
+P.simGrip=gripAt;/* Nov 8: the Sim handling layer (sim.js) uses the same tyre budget */
 {const ip0=P.inPost;P.inPost=(c,dt)=>{if(ip0)ip0(c,dt);if(!TRK()||!c.in||c.exp>0)return;const vf=c.vx*Math.sin(c.yaw)+c.vz*Math.cos(c.yaw);if(vf<6)return;
  const mt=c.mt||{grip:1},a=gripAt(c,mt),sr=2.5-Math.min(c.sp,40)*.03,hk=Math.min(1.45,Math.max(.85,1+(((c.cs&&c.cs.grip)||1)-1)*2.6)),mx=a/(vf*sr)*(c.human&&!c.forceAI?1.4*hk:1.25)/* CPU drivers keep the old line, so their lap times and the gold times stay put */;
  /* the nose turns in up to 1.4x what the tyres hold (was 1.25x, before that 1.7x): asking for more pushes the car wide. The Handling rating
@@ -12050,10 +12054,12 @@ const gripAt=(c,mt)=>{const v=c.sp||0;return ALAT*Math.min(DFMAX,1+DFK*(v/35)*(v
  /* round 20: full lock now asks for a turn rate, not a fraction of the old one. It is the tighter of a fixed smallest turn (6.5 m radius,
     grown with the drawn car size) and what the tyres hold (x1.1, more with Handling). The old speed curve shrank the steering as the car
     slowed (60% at 30 mph), so braking into a corner made it turn wider than it did at speed: the understeer under braking */
- const hm=c.human&&!c.forceAI;if(hm){const sb=(2.25-.033*Math.min(c.sp,42))*Math.min(1,vf/6),w=Math.min(vf/(6.5*K()),a*1.1*hk/vf);const lo=SF(DM(vf));c.in.st=clamp(c.in.st||0,-1,1)*w*lo/sb}const st=c.in.st||0;
+ const hm=c.human&&!c.forceAI;if(hm){const sb=(2.25-.033*Math.min(c.sp,42))*Math.min(1,vf/6),w=Math.min(vf/(6.5*K()),a*(P.simOn&&P.simOn(c)?1.35:1.1)*hk/vf);const lo=SF(DM(vf));c.in.st=clamp(c.in.st||0,-1,1)*w*lo/sb}const st=c.in.st||0;
  const mx2=hm?1e9:mx;if(Math.abs(st)>mx2){c.in.st=Math.sign(st)*mx2;/* understeer scrub: steering far past the limit (turning in too fast) bleeds speed as the fronts push */if(hm&&Math.abs(st)>mx2*1.35){const e=Math.min(1,Math.abs(st)/mx2-1.35),k=1-e*.5*(dt||.016);c.vx*=k;c.vz*=k}}}}
-{const sg0=stepCar;stepCar=function(c,dt){const vx0=c.vx,vz0=c.vz,y0=c.yaw,r=sg0.apply(this,arguments);
+{const sg0=stepCar;stepCar=function(c,dt){const vx0=c.vx,vz0=c.vz,y0=c.yaw,yr0=c.yr,r=sg0.apply(this,arguments);
  if(!TRK()||c.exp>0||!(dt>0))return r;
+ /* Nov 8: Sim handling takes over the sideways motion and the yaw (sim.js); it hands back to the arcade code below at walking pace */
+ if(P.simOn&&P.simPost&&P.simOn(c)&&P.simPost(c,dt,vx0,vz0,y0,yr0))return r;
  /* minimum turning circle at low speed (about 5.5 m for a road car, grown with the drawn size): below about 40 km/h the grip limit below
     does not apply and the arcade steering pivoted the car almost on the spot */
  {const vf=Math.abs(c.vx*Math.sin(c.yaw)+c.vz*Math.cos(c.yaw));if(vf<12&&!(c.respT>0)&&c.m&&c.m.wheels.some(w=>w.g)){const mx=(vf+.25)*dt/(5.5*K()),d=wr(c.yaw-y0);
@@ -12416,6 +12422,7 @@ window.__optAction=k=>{if(k==='@tutorial')P.startTutorial()};
 const P=window.PT8;
 P.LOG=[
  {v:'0.03',d:'Nov 2, 2026',t:'Highway Cut-Up on bikes',items:[
+  'Sim handling (Options > Gameplay > Handling: Sim or Arcade), first version, for Track Mode and the circuit tracks. The player\'s car now runs on a tyre model: each axle makes sideways grip from its slip angle (it builds up, peaks, then eases off when the tyre slides), weight shifts forward under braking and backward under power, the more a tyre is used for braking or pulling the less it has for cornering, and each car\'s drive layout matters (rear-wheel-drive cars kick the tail out on the exit, all-wheel-drive cars hook up and pull). Full lock at speed now pushes wide instead of being clamped; steering gets finer for small inputs. ABS Brakes and Traction Control are options (on by default): switch traction control off in a mid-engined rear-drive car and flooring it mid-corner will spin you. Engine, gears, top speeds and brakes are unchanged, and Arcade is the old handling. Quick Play modes and Rally keep their arcade handling for now.',
   'Atmosphere, round two: no more dark bands beside walls or lines along the grass (ambient occlusion now only marks real creases near your car), the blur starts much further away and stays light, and Quarry Circuit and Pinewood lose the yellow-green tint.',
   'Atmosphere in races: depth of field (your car and the road near it stay sharp, the distance softens), ambient occlusion (soft darkening where things meet: tyres on the road, kerbs, fences, the foot of a pillar), a light haze that thickens with distance and glows warmer toward the sun, and richer colours, bluer skies and matching fog on the pale maps (Quarry Circuit, Canyon Viaduct, Pinewood, Alpine Pass, Frostline, Grand Valley). Options > Performance has switches for Depth of Field and Ambient Occlusion (off on the Minimum and Low presets).',
   'Lighting on every race map, after the garage: a stronger, warmer sun brought down to late-afternoon height so shadows are long and every shape has a lit side and a shadow side, a dimmer and cooler sky fill, fog that starts further out, a colour grade (gentle contrast curve, cool shadows, warm highlights) and a soft vignette. Dawn, sunset and night keep their own sun.',
@@ -20381,6 +20388,90 @@ R.render=function(scene,cam){if(bad>3||!want(scene,cam))return prev(scene,cam);
   cam.updateMatrixWorld();u.pInv.value.copy(cam.projectionMatrixInverse);u.cW.value.copy(cam.matrixWorld);
   Q.q.material=c;R.setRenderTarget(null);prev(Q.sc,Q.cam);bad=0}
  catch(e){bad++;console.warn('post',e);R.setRenderTarget(null);return prev(scene,cam)}};
+})();
+
+/* ===== Poly GT layer: Sim handling (Hakan, Nov 8: "I want Gran Turismo physics"). Options > Gameplay > HANDLING: ARCADE | SIM.
+   The arcade code turns the car at a rate set by the steering and speed and lets sideways speed die away at a fixed rate. In SIM the player's car
+   (circuit and model tracks: Track Mode, Road Atlanta, Imola and the rest) is run as a bicycle model instead, with the tyre budget the game
+   already tuned (P.simGrip: ALAT, downforce, the car's grip rating, the surface) as each axle's peak force:
+   - each axle makes sideways force from its slip angle (a Pacejka-style curve: it builds up to about 9 degrees, then falls to about 76% when the
+     tyre slides), so grip is progressive: push (understeer), then slide, then recovery, not a wall
+   - weight moves forward under braking and backward under power (and so does grip): trail braking turns the car in, power on the exit unloads the fronts
+   - friction circle: the more a tyre is used for braking or driving, the less is left for cornering
+   - the drive layout of each car (RWD, AWD) decides which axle carries the power: RWD kicks the tail out when you ask too much on the exit,
+     AWD hooks up and pulls; mid-engined cars have the weight at the back (sharper turn-in, snappier tail)
+   - ABS and traction control (Options): off, a locked or spinning tyre loses grip and the braking or pull is lower; on, the pedal is held just
+     under the limit (traction control at 75% of the tyre, ABS at 92%)
+   The longitudinal side (engine, gears, top speed, brakes, drag) is still the arcade layer's: this takes over sideways motion and yaw only,
+   above walking pace, and hands back to the arcade code below it. Walls and other solid things are still handled by the code around it. ===== */
+(function sim(){
+'use strict';
+const P=window.PT8;if(!P)return;
+const O=()=>window.PTO||{};
+const clamp=(x,a,b)=>x<a?a:x>b?b:x,wr=a=>{a%=6.283185307179586;if(a>3.141592653589793)a-=6.283185307179586;if(a<-3.141592653589793)a+=6.283185307179586;return a};
+P.simOn=c=>!!(c&&c.human&&!c.forceAI&&!c.cool&&O().handling==='SIM'&&P.trkPhys&&P.trkPhys()&&typeof RACE!=='undefined'&&RACE&&RACE.T);
+/* tyre curve (magic formula, no curvature term): peak at AP radians, falls to sin(C*pi/2) of the peak */
+const DS=1.5,DSB=1.15,SIMK=.86,C_=1.45,AP=.155,B_=Math.tan(Math.PI/(2*C_))/AP;
+const tyre=a=>Math.sin(C_*Math.atan(B_*a));
+/* per car: weight on the front axle, and how power and brakes are shared between the axles */
+function spec(c){const cs=c.cs||{};if(cs._sim)return cs._sim;const d=cs.drive||'RWD',t=((cs.cat||'')+' '+(cs.type||'')).toUpperCase();
+ let wf=d==='FWD'?.6:d==='AWD'?.53:.5;if(/SUPERCAR|HYPERCAR/.test(t))wf=.43;else if(/MUSCLE/.test(t))wf=.55;else if(/SUV|WAGON/.test(t))wf=.54;
+ const dr=d==='FWD'?[1,0]:d==='AWD'?[.38,.62]:[0,1];
+ return cs._sim={wf,dr,br:[.62,.38]}}
+const wallNear=(c,T)=>{try{const sc=T.surf(c.x,c.z,c.y);return !!(sc.road&&T.wall&&T.wall[sc.i]&&Math.abs(sc.lat)>T.hw[sc.i]-.95)}catch(e){return false}};
+P.simPost=function(c,dt,vx0,vz0,y0,yr0){
+ const R=RACE,T=R.T;
+ if(R.state!=='race'||c.fin||c.respT>0||!c.m||!c.m.wheels||!(dt>0)){c._simOn=0;return false}
+ let ng=0;for(const w of c.m.wheels)if(w.g)ng++;if(ng<3){c._simOn=0;return false}
+ const s0=Math.hypot(vx0,vz0),sy0=Math.sin(y0),cy0=Math.cos(y0);let u=vx0*sy0+vz0*cy0,v=vx0*cy0-vz0*sy0;
+ /* walking pace and reversing: the arcade code */
+ if(u<6||s0<6){c._simOn=0;return false}
+ /* a wall this step: the arcade response (and the solid code around us) decides, and we re-seed from what comes out */
+ if(wallNear(c,T)){c._simOn=0;return false}
+ const mt=c.mt||{grip:1},A=Math.max(6,(P.simGrip?P.simGrip(c,mt):23)*SIMK),K=(T.d&&T.d.cartoon&&T.d.cartoon.carScale)||1,L=3.3*K,sp=spec(c);
+ const vx1=c.vx,vz1=c.vz,yaw1=c.yaw,yrA=c.yr||0;
+ /* the acceleration the arcade layer gave along the car's nose this step (engine, brakes, drag), smoothed */
+ const axr=((vx1-vx0)*Math.sin(yaw1)+(vz1-vz0)*Math.cos(yaw1))/dt;
+ c._sax=c._simOn&&isFinite(c._sax)?c._sax+(axr-c._sax)*Math.min(1,dt*30):axr;
+ let ax=clamp(c._sax,-2.2*A,2.2*A);
+ const wf0=sp.wf,a=L*(1-wf0),b=L*wf0,Iz=1.05*a*b,abs=O().abs!==false,tc=O().tc!==false;
+ /* the steering angle that gives the yaw rate the arcade steering asked for (kinematic, bicycle) */
+ /* steering angle: the driver's (already smoothed) steering times a lock that shrinks with speed, like a real car's effective steering ratio:
+ about 26 degrees at walking pace, 14 at 30 m/s, 6 at 60: full lock gives about 1.3x what the tyres can use at any speed (small inputs are finer: the input is raised to the power 1.35). Full lock at speed asks for more than the tyres give, so it pushes wide (understeer) instead of being clamped */
+ const sr_=clamp(c.st||0,-1,1),stI=Math.sign(sr_)*Math.pow(Math.abs(sr_),1.35),lock=.45/(1+(u/34)*(u/34)),del=clamp(stI*lock*K,-.62,.62);
+ /* weight transfer: braking loads the front, power loads the rear (about 15% of the weight at the grip limit) */
+ const tr=clamp(ax/A,-1.3,1.3),wf=clamp(wf0-.15*tr,.22,.78),wrr=1-wf;
+ const sh=ax>=0?sp.dr:sp.br,drive=ax>=0;
+ /* the arcade engine and brakes are tuned gentler than real ones, so the pull on the tyres is scaled up (1.5x power, 1.15x brakes) to make traction and lock-up matter */
+ const dsx=drive?DS:DSB;
+ let dF=dsx*Math.abs(ax)*sh[0]/(A*wf),dR=dsx*Math.abs(ax)*sh[1]/(A*wrr),um=Math.max(dF,dR);
+ let axE=ax,uF=dF,uR=dR;
+ /* with the assist the pedal is held where the axle still has some sideways grip left (traction control: 75% of the tyre, ABS: 92%);
+    without it the saturated axle is spinning or locked: less pull or braking, and almost no sideways grip on that axle */
+ {const assist=drive?tc:abs,cap=drive?.75:.92;
+  if(assist){if(um>cap){const k=cap/um;axE=ax*k;uF=dF*k;uR=dR*k}}
+  else if(um>1){const k=.82/um;axE=ax*k;uF=dF>1?1:dF*k;uR=dR>1?1:dR*k}}
+ const lF=Math.sqrt(Math.max(.1,1-Math.min(1,uF)*Math.min(1,uF))),lR=Math.sqrt(Math.max(.1,1-Math.min(1,uR)*Math.min(1,uR)));
+ const DF=A*wf*.97*lF,DR=A*wrr*1.03*lR;
+ /* integrate in small steps (the tyre forces are stiff) */
+ const n=Math.max(1,Math.ceil(dt/.004)),h=dt/n;let r=c._simOn&&isFinite(c._sr)?c._sr:yr0,psi=0,uu=u,vv=v,fzF=0,fzR=0,saF=0,saR=0;
+ for(let i=0;i<n;i++){const ue=Math.max(3,uu);
+  const af=del-Math.atan2(vv+a*r,ue),ar=-Math.atan2(vv-b*r,ue);
+  const Ff=DF*tyre(af),Fr=DR*tyre(ar);
+  vv+=((Ff+Fr)-uu*r)*h;r+=(a*Ff-b*Fr)/Iz*h;
+  /* cornering drag: the sideways force has a little of its length along the car's path */
+  uu+=(axE+vv*r-.6*(Math.abs(Ff*Math.sin(af))+Math.abs(Fr*Math.sin(ar))))*h;psi+=r*h;saF=af;saR=ar;fzF=Ff;fzR=Fr}
+ /* far past the limit the nose is eased back toward where the car is going, so a slide never ends in endless spinning */
+ let beta=Math.atan2(vv,Math.max(1,uu));if(Math.abs(beta)>.75){const e=(Math.abs(beta)-.75)*Math.min(1,dt*5);psi-=Math.sign(beta)*e;r*=1-Math.min(.3,dt*4)}
+ const ps=y0+psi,sP=Math.sin(ps),cP=Math.cos(ps),vxS=sP*uu+cP*vv,vzS=cP*uu-sP*vv;
+ if(!isFinite(vxS)||!isFinite(vzS)||!isFinite(r)){c._simOn=0;return false}
+ /* blend in over 6..11 m/s so the hand-over from the arcade steering is smooth */
+ const k=clamp((u-6)/5,0,1),kk=k*k*(3-2*k);
+ c.vx=vx1+(vxS-vx1)*kk;c.vz=vz1+(vzS-vz1)*kk;c.yaw=yaw1+wr(ps-yaw1)*kk;c.yr=yrA+(r-yrA)*kk;
+ /* the arcade step moved the car with its own velocity: swap in the difference */
+ c.x+=(c.vx-vx1)*dt;c.z+=(c.vz-vz1)*dt;c.sp=Math.hypot(c.vx,c.vz);
+ c._sr=c.yr;c._simOn=1;c.sim={af:saF,ar:saR,wf,uF,uR,ax:axE,A,beta};
+ return true};
 })();
 
 </script><script>window.PT8_BP&&PT8_BP(0.500)</script><script>(function(){var fin=0;function done(){if(fin)return;fin=1;var b=document.getElementById("ptBoot"),c=document.getElementById("ptBootCss");if(window.PT8_BP)PT8_BP(1);if(c)c.remove();if(!b)return;b.classList.add("rdy");if(!document.getElementById("ptTitle")){b.style.opacity=0;setTimeout(function(){b.remove()},1050)}}function go(){var w=window.PT8_BOOT;(w&&w.then?w:Promise.resolve()).then(function(){requestAnimationFrame(function(){requestAnimationFrame(function(){setTimeout(done,350)})})})}if(document.readyState==="complete")go();else addEventListener("load",go);setTimeout(done,900000)})();</script></body></html>
