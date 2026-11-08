@@ -153,7 +153,7 @@ function aiInput(c,dt){const Rc=RACE,T=Rc.T,N=T.N,a=c.ai||(c.ai={skill:.9,lat:0,
 PT8.aiInput=aiInput;PT8.kappa=kappa;PT8.autoGear=autoGear;PT8.steerLimit=steerLimit;
 
 /* ---------------- physics wrapper ---------------- */
-const innerStepCar=stepCar;
+const innerStepCar=stepCar;PT8._aiIn=(c,dt)=>aiInput(c,dt);/* test hook: lets a test drive the player's physics with the CPU's pedals */
 stepCar=(c,dt)=>{const Rc=RACE,T=Rc.T,st=c.cs||(c.cs=BYID.merc);
  const live=Rc.state==='race'&&!c.fin&&c.respT<=0&&!(c.exp>0);
  if(c.cool||!c.human||c.forceAI){c.in=(PT8.aiInput||aiInput)(c,dt);if(PT8.aiPost)PT8.aiPost(c,dt)}

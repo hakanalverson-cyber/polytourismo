@@ -5,7 +5,7 @@
 (function rallyui(){
 'use strict';
 const P=window.PT8;if(!P)return;
-const GOLD='#f2c76b',INK='#0a0d11',PAPER='#f1f3f5',DIM='#8a949c';
+const GOLD='#9cc3e8',INK='#0a0d11',PAPER='#f1f3f5',DIM='#8a949c';
 const pack=i=>{const d=D[i];return d&&d.cartoon&&d.cartoon.stage?d.cartoon:null};
 P.stageInfo=i=>{const pk=pack(i);if(!pk)return null;const st=pk.stage,r=st.route;let lo=1e9,hi=-1e9,up=0;for(let k=0;k<r.length;k++){lo=Math.min(lo,r[k][2]);hi=Math.max(hi,r[k][2]);if(k&&r[k][2]>r[k-1][2])up+=r[k][2]-r[k-1][2]}
  return{km:st.len/1000,lo,hi,climb:up,fords:(st.fords||[]).length,surface:pk.look&&pk.look.gravel===0?'TARMAC':(pk.id==='se-frozen-lake'?'SNOW':'GRAVEL'),name:pk.name,desc:pk.desc||''}};
@@ -42,7 +42,7 @@ P.rallyProfile=(i,cv)=>{const pk=pack(i);if(!pk)return false;const[g,W,H]=fit(cv
  g.strokeStyle='#ffffff10';g.fillStyle=DIM;g.font='700 9px "PT Inter",monospace';g.textAlign='right';g.textBaseline='middle';
  for(let q=0;q<=3;q++){const h=lo+(hi-lo)*q/3,y=Y(h);g.beginPath();g.moveTo(L0,y);g.lineTo(W-8,y);g.stroke();g.fillText(Math.round(h)+'',L0-6,y)}
  g.textAlign='center';for(let k=0;k<=L;k+=1000){g.fillText(k/1000+'',X(k),H-8)}
- const gr=g.createLinearGradient(0,T0,0,H-B);gr.addColorStop(0,'#f2c76b55');gr.addColorStop(1,'#f2c76b00');g.fillStyle=gr;g.beginPath();g.moveTo(X(0),H-B);r.forEach((p,j)=>g.lineTo(X(dist[j]),Y(p[2])));g.lineTo(X(L),H-B);g.closePath();g.fill();
+ const gr=g.createLinearGradient(0,T0,0,H-B);gr.addColorStop(0,'#9cc3e855');gr.addColorStop(1,'#9cc3e800');g.fillStyle=gr;g.beginPath();g.moveTo(X(0),H-B);r.forEach((p,j)=>g.lineTo(X(dist[j]),Y(p[2])));g.lineTo(X(L),H-B);g.closePath();g.fill();
  g.strokeStyle=GOLD;g.lineWidth=2;g.lineJoin='round';g.beginPath();r.forEach((p,j)=>j?g.lineTo(X(dist[j]),Y(p[2])):g.moveTo(X(dist[j]),Y(p[2])));g.stroke();
  return true};
 /* ---- no lag spikes: nothing on a stage is built, decoded or uploaded while you drive ----

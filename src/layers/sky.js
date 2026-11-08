@@ -20,9 +20,12 @@ const LK={
  5:{kind:'mesa',c:0xc07044,cap:0,n:24,h:[100,260],cl:[5,.6,0xffe8cc]},
  6:{kind:'hill',c:0x7b8a72,cap:0,n:20,h:[100,260],cl:[18,.8,0xe4e8ea]},
  7:{kind:'hill',c:0x6f8794,cap:0,n:18,h:[40,110],cl:[12,.9,0xffd8b0]},
- 9:{kind:'peak',c:0xcfdceb,cap:1,n:24,h:[200,480],cl:[16,.9,0xf4f8ff]}};
+ 9:{kind:'peak',c:0xcfdceb,cap:1,n:24,h:[200,480],cl:[16,.9,0xf4f8ff]},
+ /* the four rally stages (stage files) */
+ 21:{kind:'hill',c:0x587a62,cap:0,n:22,h:[120,280],cl:[12,.8,0xffffff]},22:{kind:'peak',c:0x7c8ea6,cap:1,n:26,h:[260,560],cl:[14,.9,0xffffff]},
+ 23:{kind:'mesa',c:0xb88a5c,cap:0,n:22,h:[90,210],cl:[6,.6,0xffe8cc]},24:{kind:'hill',c:0x9aaabc,cap:1,n:20,h:[80,210],cl:[0,.8,0xe8eef5]}};
 /* stage worlds reuse another map's id as their look, so the map is found by name */
-const NM={'Quarry Circuit':0,'Canyon Viaduct':1,'Alpine Pass':2,'Pinewood Stage':4,'Redrock Stage':5,'Highmoor Stage':6,'Coastal Run':7,'Frostline Stage':9};
+const NM={'Quarry Circuit':0,'Canyon Viaduct':1,'Alpine Pass':2,'Pinewood Stage':4,'Redrock Stage':5,'Highmoor Stage':6,'Coastal Run':7,'Frostline Stage':9,'Finland':21,'France':22,'Portugal':23,'Sweden':24};
 const lin=h=>new THREE.Color(h).convertSRGBToLinear();
 const rng=s=>()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296};
 let cloudTex=null;
@@ -66,9 +69,13 @@ function build(sc,T){
  const [cn,co,ct]=L.cl,sun=d.sun?lin(d.sun):new THREE.Color(1,1,1),tint=lin(ct).lerp(sun,.35),tex=cloudTexture(),clouds=[];
  for(let i=0;i<cn;i++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,color:tint,transparent:true,opacity:co*(.7+rand()*.3),depthWrite:false,fog:false}));
   const w=300+rand()*340;s.scale.set(w,w*(.34+rand()*.14),1);s.userData={a:rand()*6.28,r:620+rand()*640,y:base+360+rand()*300,sp:(.0012+rand()*.0016)*(rand()<.5?1:-1)};s.renderOrder=-1;s.frustumCulled=false;s.userData.shd=1;s.castShadow=false;sc.add(s);clouds.push(s)}
- sc.userData.skyFx={cx,cz,clouds}}
+ sc.userData.skyFx={cx,cz,clouds,ring:m,ymid:ys,ride:!!T.stage}}
+P.skyBuild=build;
 const bw=buildWorld;buildWorld=function(T){const sc=bw.apply(this,arguments);try{build(sc,T)}catch(e){console.warn('sky',e)}return sc};
 /* drift */
 const r0=R.render.bind(R);
-R.render=function(scene){const f=scene&&scene.userData&&scene.userData.skyFx;if(f){const t=performance.now();for(const s of f.clouds){const u=s.userData,a=u.a+t*u.sp*.001;s.position.set(f.cx+Math.cos(a)*u.r,u.y,f.cz+Math.sin(a)*u.r)}}return r0.apply(this,arguments)};
+R.render=function(scene,cam){const f=scene&&scene.userData&&scene.userData.skyFx;if(f){const t=performance.now();
+  /* stages are kilometres long: the far shapes and clouds travel with the camera (a little slower, so they still slide against the sky) */
+  let ox=0,oz=0;if(f.ride&&cam&&cam.position){ox=(cam.position.x-f.cx)*.94;oz=(cam.position.z-f.cz)*.94;f.ring.position.set(ox,(cam.position.y-f.ymid)*.9,oz)}
+  for(const s of f.clouds){const u=s.userData,a=u.a+t*u.sp*.001;s.position.set(f.cx+ox+Math.cos(a)*u.r,u.y+(f.ride&&cam&&cam.position?cam.position.y-f.ymid:0),f.cz+oz+Math.sin(a)*u.r)}}return r0.apply(this,arguments)};
 })();

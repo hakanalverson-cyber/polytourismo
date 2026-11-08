@@ -14,7 +14,7 @@ const ow0=P.owns;P.owns=(id,alt)=>P._ro&&P.RALLY_CARS.includes(id)?true:ow0(id,a
 P.rallySel=p=>{const sv=P.SV();sv.rsel=sv.rsel||[];let s=sv.rsel[p];if(!s||!(P.RALLY_CARS.includes(s.id)||(sv.owned[s.id]||0)>0))s=sv.rsel[p]={id:P.RALLY_CARS[p%P.RALLY_CARS.length],alt:0};return s};
 /* water: grip / speed drag */
 const mul0=P.mul;
-P.mul=c=>{const m=mul0(c);if(c.human&&RACE&&RACE.cfg&&RACE.cfg.rally){const o=(c.cs&&c.cs.off)||0;if(!RACE.cfg.circuit){if(o<.9){m.grip*=(.5+.45*.9)/(.5+.45*o);m.top*=(.78+.22*.9)/(.78+.22*o);m.acc*=(.6+.37*.9)/(.6+.37*o)}m.grip*=.72;m.top*=1.06;m.acc*=1.1;m.brk*=.52}{const dm=c.dmg||0;if(dm>0){m.acc*=1-.5*Math.pow(dm,1.2);m.top*=1-.32*dm;m.grip*=1-.14*dm;m.brk*=1-.3*dm}}if(c._hb){m.grip*=.3;m.brk*=.85;m.acc*=.8}}if(c._wet>0){const k=Math.min(1,c._wet);m.top*=1-.1*k;m.acc*=1-.18*k;m.brk*=1-.12*k}return m};
+P.mul=c=>{const m=mul0(c);if(c.human&&RACE&&RACE.cfg&&RACE.cfg.rally){const o=(c.cs&&c.cs.off)||0;if(!RACE.cfg.circuit){if(o<.9){m.grip*=(.5+.45*.9)/(.5+.45*o);m.top*=(.78+.22*.9)/(.78+.22*o);m.acc*=(.6+.37*.9)/(.6+.37*o)}{const dd=RACE.T&&RACE.T.d;m.grip*=dd&&dd.cartoon&&dd.cartoon.stage?(dd.gravel===0?.95:dd._key==='autumn'?.74:.8):.72}m.top*=1.06;m.acc*=1.1;m.brk*=.52}{const dm=c.dmg||0;if(dm>0){m.acc*=1-.5*Math.pow(dm,1.2);m.top*=1-.32*dm;m.grip*=1-.14*dm;m.brk*=1-.3*dm}}if(c._hb){m.grip*=.3;m.brk*=.85;m.acc*=.8}}if(c._wet>0){const k=Math.min(1,c._wet);m.top*=1-.1*k;m.acc*=1-.18*k;m.brk*=1-.12*k}return m};
 function waterDepth(T,c){const F=T.fords;if(!F||!F.length)return 0;
  for(const f of F){const dx=c.x-f.x,dz=c.z-f.z,s=dx*f.s+dz*f.c;if(s>f.w+3||s<-f.w-3)continue;const l=dx*f.c-dz*f.s;if(Math.abs(l)>f.L*.8)continue;
   const g=T.terr?T.terr(c.x,c.z):f.y;const d=f.yw-Math.min(g,c.onRoad&&c.idx!=null?T.y[c.idx]:g);if(d>.1&&c.y-f.yw<1.1)return Math.min(1,d/.6)}
@@ -22,6 +22,16 @@ function waterDepth(T,c){const F=T.fords;if(!F||!F.length)return 0;
 
 /* ---------------- effects ---------------- */
 const WLp=()=>WL;
+/* rally handling on the stage files (Nov 8, "make the handling more realistic and tuned to rally so you aren't flying all over the place"): the player's car
+   follows where it points (sideways speed dies off faster than the arcade core leaves it, a big slide is pulled in harder, the handbrake still lets go),
+   a tap on the steering no longer spins the car round, and bumps in the road cannot throw it into the air */
+{const sg=stepCar;stepCar=function(c,dt){const r=sg.apply(this,arguments);const Rc=RACE;
+ if(!c.human||c.forceAI||!Rc||!Rc.T||!Rc.T.stage||!Rc.cfg||!Rc.cfg.rally||!(dt>0)||c.exp>0||Rc.state!=='race')return r;
+ const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);let vf=c.vx*sy+c.vz*cy,vl=c.vx*cy-c.vz*sy;
+ if(Math.abs(vf)>5&&!c._hb){const slip=Math.abs(vl)/Math.abs(vf),k=Math.min(.45,dt*(1.8+4*Math.max(0,1-slip*2.2)+(slip>.7?6:0)));vl*=1-k;c.vx=vf*sy+vl*cy;c.vz=vf*cy-vl*sy}
+ if(c.yr&&!c._hb)c.yr*=1-Math.min(.3,dt*(.9+Math.min(c.sp,50)*.025));
+ if(c.vy>4.5)c.vy=4.5+(c.vy-4.5)*.25;
+ return r}}
 function wheelPos(c,wi){const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw),w=WL[wi];return[c.x+cy*w[0]+sy*w[1],c.z-sy*w[0]+cy*w[1]]}
 function splash(c,T,dt,dep){const sp=c.sp,rate=Math.min(1,sp/12)*(46+sp*2.4)*dep;c._wA=(c._wA||0)+rate*dt;
  const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw),f=T.fords[0],yw=T.fords.reduce((b,q)=>Math.hypot(q.x-c.x,q.z-c.z)<Math.hypot(b.x-c.x,b.z-c.z)?q:b,f).yw;

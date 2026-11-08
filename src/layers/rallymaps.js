@@ -42,11 +42,37 @@ const st0=step;
 step=function(dt){const Rc=RACE;if(Rc&&Rc.T&&Rc.T.stage&&!Rc._stg){Rc._stg=1;if(Rc.cfg&&Rc.cfg.rally)Rc.laps=Rc.T.finI/Rc.T.N}return st0.apply(this,arguments)};
 
 /* ---- the world: sky, fog and light only; the stage model (cartoon.js) is added on top ---- */
+/* surface brightness per stage (a multiplier on each material of the model: the dirt roads were blown out, the tarmac and the banks nearly black) */
+const TINT={
+ mangrove:[[/ROADS_FINLAND/,.72],[/GRAVEL_FINLAND/,.8],[/GRASS_FINLAND/,1.45],[/LAKE_BOTTOM/,1.2],[/^ct_c$/,1.5],[/ATLAS/,1.25]],
+ terr:[[/TARMAC_PLAIN/,2.6],[/ROADS_FRANCE/,2.1],[/GRASS_FRANCE/,1.3],[/SNOW_FRANCE/,.9],[/^ct_c$/,1.3]],
+ ash:[[/ROADS_PORTUGAL/,2.7],[/GRAVEL_PORTUGAL/,1.1],[/GRASS_PORTUGAL/,1.35],[/^ct_c$/,2.1]],
+ autumn:[[/SNOW_SWEDEN/,.86],[/ICE_SURFACE/,.95],[/STONE/,1.3],[/^ct_c$/,1.5]]};
+function tintStage(sc,key){const tb=TINT[key];if(!tb)return;sc.traverse(o=>{const m=o.isMesh&&o.material;if(!m||!m.color||!/^ct_/.test(o.name))return;if(!m.userData._c0)m.userData._c0=m.color.clone();let k=1;for(const[re,v]of tb)if(re.test(o.name)){k=v;break}m.color.copy(m.userData._c0).multiplyScalar(k)})}
+/* falling snow: a box of flakes that rides along with the camera (one draw call) */
+function snowAdd(sc){const N=1400,pos=new Float32Array(N*3),seed=new Float32Array(N*3);for(let i=0;i<N*3;i++)seed[i]=Math.random();
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+ const cv=document.createElement('canvas');cv.width=cv.height=32;const c2=cv.getContext('2d'),q=c2.createRadialGradient(16,16,0,16,16,15);q.addColorStop(0,'rgba(255,255,255,1)');q.addColorStop(.5,'rgba(255,255,255,.55)');q.addColorStop(1,'rgba(255,255,255,0)');c2.fillStyle=q;c2.fillRect(0,0,32,32);
+ const m=new THREE.Points(g,new THREE.PointsMaterial({size:.55,map:new THREE.CanvasTexture(cv),transparent:true,opacity:.9,depthWrite:false,sizeAttenuation:true,fog:false}));
+ m.frustumCulled=false;m.renderOrder=6;m.userData.noMerge=1;m.userData.noChunk=1;m.userData.shd=1;sc.add(m);sc.userData.snow={m,seed,N}}
+const rr0=R.render.bind(R);
+R.render=function(scene,cam){const f=scene&&scene.userData&&scene.userData.snow;if(f&&cam&&cam.position&&scene.userData.snowOn!==false){const t=performance.now()*.001,p=f.m.geometry.attributes.position.array,s=f.seed,W=70,H=38;
+  for(let i=0;i<f.N;i++){const k=i*3,x=((s[k]*W*2+Math.sin(t*.6+s[k+1]*9)*1.6)%(W*2)+W*2)%(W*2)-W,y=(((s[k+1]*H*2-t*(2.2+s[k+2]*1.6))%(H*2))+H*2)%(H*2)-H*.5,z=((s[k+2]*W*2+t*.8*s[k]+Math.cos(t*.5+s[k]*7)*1.2)%(W*2)+W*2)%(W*2)-W;p[k]=x;p[k+1]=y;p[k+2]=z}
+  f.m.geometry.attributes.position.needsUpdate=true;f.m.position.set(cam.position.x,cam.position.y,cam.position.z)}
+ return rr0.apply(this,arguments)};
 const hex=n=>'#'+(n>>>0).toString(16).padStart(6,'0');
 function gradTex(a,b){const cv=document.createElement('canvas');cv.width=2;cv.height=64;const g=cv.getContext('2d'),q=g.createLinearGradient(0,0,0,64);q.addColorStop(0,hex(a));q.addColorStop(.5,hex(b));q.addColorStop(1,hex(b));g.fillStyle=q;g.fillRect(0,0,2,64);const t=new THREE.CanvasTexture(cv);t.encoding=THREE.sRGBEncoding;return t}
-function stageScene(T){const d=T.d,sc=new THREE.Scene();
- sc.fog=new THREE.Fog(d.fog,150,620);sc.add(new THREE.HemisphereLight(d.hemi[0],d.hemi[1],1.1));const sun=new THREE.DirectionalLight(d.sun,1.0);sun.position.set(-150,250,100);sc.add(sun);
- const dm=new THREE.Mesh(new THREE.SphereGeometry(1500,16,12),new THREE.MeshBasicMaterial({map:gradTex(d.sky[0],d.sky[1]),side:THREE.BackSide,fog:false}));dm.frustumCulled=false;dm.userData.skyAt=[0,null,0];sc.userData.skyRide=1;sc.add(dm);
+/* the look of each stage (Nov 8, "make rally's shaders look beautiful and atmospheric"): sky from deep blue overhead to a warm haze at the horizon, a fog
+   that is the same colour as that haze, a low warm sun against a cool fill (the light that gives shapes a lit and a shadow side) */
+const ATM={
+ mangrove:{sky:[0x4f86c6,0xe8dcc2],fog:0xd9d6c4,near:140,far:640,sun:0xffd9a6,sunI:.78,sunAt:[-260,150,120],hemi:[0xa9c6e6,0x56703f],hemiI:1.7},/* Finland: morning mist through the pines */
+ terr:{sky:[0x3f7fcf,0xcfe2f2],fog:0xd3e1ee,near:200,far:900,sun:0xfff0d8,sunI:.82,sunAt:[200,210,-120],hemi:[0xb4cdea,0x8a98a6],hemiI:1.8},/* France: clear alpine air */
+ ash:{sky:[0x4a82c8,0xf5d6a4],fog:0xe8cfa6,near:130,far:720,sun:0xffc07a,sunI:.8,sunAt:[-300,110,160],hemi:[0xc8d4e4,0x8f7248],hemiI:1.8},/* Portugal: warm late afternoon dust */
+ autumn:{sky:[0x5f7fa6,0xc9d5e0],fog:0xc3ced9,near:70,far:480,sun:0xe6eeff,sunI:.62,sunAt:[120,90,-200],hemi:[0xb8cbe4,0x9aa6b4],hemiI:1.9,snow:1}};/* Sweden: soft grey light, falling snow */
+function stageScene(T){const d=T.d,sc=new THREE.Scene(),A=ATM[d._key]||{};
+ sc.fog=new THREE.Fog(A.fog!=null?A.fog:d.fog,A.near||150,A.far||620);const hm=A.hemi||d.hemi;sc.add(new THREE.HemisphereLight(hm[0],hm[1],A.hemiI||1.1));const sun=new THREE.DirectionalLight(A.sun!=null?A.sun:d.sun,A.sunI||1.0);sun.position.set(...(A.sunAt||[-150,250,100]));sc.add(sun);
+ const sk=A.sky||d.sky;
+ const dm=new THREE.Mesh(new THREE.SphereGeometry(1500,16,12),new THREE.MeshBasicMaterial({map:gradTex(sk[0],sk[1]),side:THREE.BackSide,fog:false}));dm.frustumCulled=false;dm.userData.skyAt=[0,null,0];sc.userData.skyRide=1;sc.add(dm);
  styleScene(sc);return sc}
 const bw=buildWorld;
 buildWorld=function(T){if(T.d&&T.d.stage&&T.d.cartoon){if(!T.bounds)T.bounds=[-500,500,-500,500];return stageScene(T)}return bw.apply(this,arguments)};
@@ -65,5 +91,5 @@ function gate(sc,T,i,txt){const hw=T.hw[i]+1.3,g=new THREE.Group();g.position.se
  const bm=new THREE.MeshBasicMaterial({map:bannerTex(txt),side:THREE.DoubleSide,fog:false}),w=Math.min(hw*1.8,13);const sg=new THREE.Mesh(new THREE.PlaneGeometry(w,w*96/512),bm);sg.position.set(0,7.6,.02);g.add(sg);
  const ck=new THREE.Mesh(new THREE.PlaneGeometry(hw*2-.4,1.8),new THREE.MeshBasicMaterial({map:checkTex(),fog:false}));ck.rotation.x=-Math.PI/2;ck.position.set(0,.14,0);g.add(ck);
  g.userData.noMerge=1;sc.add(g)}
-setTimeout(()=>{const bw2=buildWorld;buildWorld=function(T){const sc=bw2.apply(this,arguments);try{if(T.d&&T.d.stage&&T.d.cartoon&&T.finI){gate(sc,T,2,'START');gate(sc,T,T.finI,'FINISH')}}catch(e){console.warn('gates',e)}return sc}},0);
+setTimeout(()=>{const bw2=buildWorld;buildWorld=function(T){const sc=bw2.apply(this,arguments);try{if(T.d&&T.d.stage&&T.d.cartoon&&T.finI){gate(sc,T,2,'START');gate(sc,T,T.finI,'FINISH');/* far mountains and clouds, and the snow: added here, after cartoon.js has cleared the stock scenery */try{if(P.skyBuild)P.skyBuild(sc,T)}catch(e){console.warn('sky',e)}const A=ATM[T.d._key];if(A&&A.snow)snowAdd(sc);tintStage(sc,T.d._key)}}catch(e){console.warn('gates',e)}return sc}},0);
 })();
