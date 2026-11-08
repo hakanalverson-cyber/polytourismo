@@ -27,7 +27,7 @@ P.rallyMap=(i,cv)=>{const pk=pack(i);if(!pk)return false;const[g,W,H]=fit(cv),st
  /* fords */
  for(const f of st.fords||[]){const x=X(f.x),y=Y(f.z);g.fillStyle='#1b5a7a';g.strokeStyle='#bfe8ff';g.lineWidth=1.6;g.beginPath();g.rect(x-12,y-7,24,14);g.fill();g.stroke();g.fillStyle='#fff';g.font='700 8px "PT Inter",monospace';g.fillText('FORD',x,y+.5)}
  /* start and finish */
- const lab=(p,t,dx,dy)=>{const x=X(p[0]),y=Y(p[1]);g.font='700 10px "PT Inter",monospace';g.textAlign='left';const w=g.measureText(t).width+14;g.fillStyle='#0a0d11e6';g.strokeStyle=PAPER;g.lineWidth=1;g.fillRect(x+dx,y+dy-9,w,18);g.strokeRect(x+dx+.5,y+dy-8.5,w-1,17);g.fillStyle=GOLD;g.fillText(t.split('').join(' '),x+dx+7,y+dy+.5)};
+ const lab=(p,t,dx,dy)=>{const x=X(p[0]),y=Y(p[1]);g.font='700 10px "PT Inter",monospace';g.textAlign='left';const w=g.measureText(t.split('').join(' ')).width+14;if(x+dx+w>W-6)dx=-12-w;if(y+dy+9>H-6)dy=-Math.abs(dy);g.fillStyle='#0a0d11e6';g.strokeStyle=PAPER;g.lineWidth=1;g.fillRect(x+dx,y+dy-9,w,18);g.strokeRect(x+dx+.5,y+dy-8.5,w-1,17);g.fillStyle=GOLD;g.fillText(t.split('').join(' '),x+dx+7,y+dy+.5)};
  {const a=r[0],b=r[r.length-1];
   for(const[p,c]of[[a,'#7fd68a'],[b,PAPER]]){g.fillStyle=INK;g.beginPath();g.arc(X(p[0]),Y(p[1]),8,0,7);g.fill();g.fillStyle=c;g.beginPath();g.arc(X(p[0]),Y(p[1]),5,0,7);g.fill()}
   /* finish: chequer */{const x=X(b[0]),y=Y(b[1]);for(let u=0;u<2;u++)for(let v=0;v<2;v++){g.fillStyle=(u+v)&1?INK:PAPER;g.fillRect(x-4+u*4,y-4+v*4,4,4)}}
