@@ -37,7 +37,14 @@ const s0=P.shadeSetup;P.shadeSetup=function(sc){try{apply(sc)}catch(e){console.w
 /* the grade is set per drawn scene: race scenes carry theirs, everything else (menus, showroom, garage) draws neutral */
 const U=window.TODU,r0=R.render.bind(R);let cur=null;
 const setG=g=>{if(!U||!U.grC||g===cur)return;cur=g;U.grC.value=g.c;U.grS.value.set(g.s[0],g.s[1],g.s[2]);U.grH.value.set(g.h[0],g.h[1],g.h[2]);if(U.grSat)U.grSat.value=g.sat||1};
-R.render=function(scene){setG(scene&&scene.userData&&scene.userData.grade&&on()?scene.userData.grade:NEUTRAL);return r0.apply(this,arguments)};
+/* the pale maps: bluer sky, a fog that matches it, and a stronger grade (deeper greens and earth instead of washed-out mint and grey) */
+const PAL={'Quarry Circuit':{c:1.4,sat:1.5,h:[.9,.95,.85],sky:0xa4c4ff,fog:[0xbfd3ee,.55]},'Canyon Viaduct':{c:1.26,sat:1.22,sky:0xb4ccf6,fog:[0xcfdcef,.45]},'Pinewood Stage':{c:1.36,sat:1.4,h:[.93,.96,.9],sky:0xaac8f6,fog:[0xc6d8ea,.45]},
+ 'Alpine Pass':{c:1.26,sat:1.12,sky:0xb8d0f8,fog:[0xd4e0f0,.35]},'Frostline Stage':{c:1.26,sat:1.14},'Grand Valley':{c:1.24,sat:1.18}};
+function pal(sc){sc.userData.pal=1;const Rc=typeof RACE!=='undefined'?RACE:null,n=Rc&&Rc.T&&Rc.T.d&&Rc.T.d.name,p=PAL[n];if(!p||(sc.userData.tod&&sc.userData.tod!=='day')||!sc.userData.grade)return;
+ sc.userData.grade=Object.assign({},sc.userData.grade,{c:p.c,sat:p.sat},p.h?{h:p.h}:{});
+ if(p.sky)for(const o of sc.children)if(o.geometry&&o.geometry.type==='SphereGeometry'&&o.geometry.parameters.radius===1500&&o.material&&o.material.color)o.material.color.multiply(C(p.sky).lerp(C(0xffffff),.35));
+ if(p.fog&&sc.fog){sc.fog.color.lerp(C(p.fog[0]),p.fog[1]);if(sc.userData.ptFog)sc.userData.ptFog.color.copy(sc.fog.color);if(sc.background&&sc.background.isColor)sc.background.copy(sc.fog.color)}}
+R.render=function(scene){if(scene&&scene.userData&&scene.userData.grade&&!scene.userData.pal&&typeof RACE!=='undefined'&&RACE&&RACE.scene===scene)try{pal(scene)}catch(e){};setG(scene&&scene.userData&&scene.userData.grade&&on()?scene.userData.grade:NEUTRAL);return r0.apply(this,arguments)};
 /* vignette over the race view (under the HUD) */
 const st=document.createElement('style');st.textContent=`#ptMoodV{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity .4s;background:radial-gradient(ellipse 75% 70% at 50% 52%,transparent 55%,#05070c55 100%)}
 body.ptMood #ptMoodV{opacity:1}`;document.head.appendChild(st);

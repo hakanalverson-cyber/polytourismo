@@ -3,11 +3,11 @@
 'use strict';
 const P=window.PT8,cv=R.domElement,dpr=devicePixelRatio||1,O=()=>window.PTO||{};
 const PRE={
- MINIMUM:{maxDensity:1,resolution:.75,shadows:true,shadowRate:4,shadowRes:512,effects:1},
- LOW:{maxDensity:1,resolution:.9,shadows:true,shadowRate:3,shadowRes:1024,effects:1},
- MEDIUM:{maxDensity:1.25,resolution:1,shadows:true,shadowRate:2,shadowRes:1024,effects:2},
- HIGH:{maxDensity:1.5,resolution:1,shadows:true,shadowRate:2,shadowRes:1536,effects:2},
- ULTRA:{maxDensity:2,resolution:1,shadows:true,shadowRate:1,shadowRes:2048,effects:2}};
+ MINIMUM:{dof:false,ao:false,maxDensity:1,resolution:.75,shadows:true,shadowRate:4,shadowRes:512,effects:1},
+ LOW:{dof:false,ao:false,maxDensity:1,resolution:.9,shadows:true,shadowRate:3,shadowRes:1024,effects:1},
+ MEDIUM:{dof:true,ao:true,maxDensity:1.25,resolution:1,shadows:true,shadowRate:2,shadowRes:1024,effects:2},
+ HIGH:{dof:true,ao:true,maxDensity:1.5,resolution:1,shadows:true,shadowRate:2,shadowRes:1536,effects:2},
+ ULTRA:{dof:true,ao:true,maxDensity:2,resolution:1,shadows:true,shadowRate:1,shadowRes:2048,effects:2}};
 let lastPP=O().perfPreset;P.dynRes=1;
 /* Nov 2: adaptive resolution also covers the bike mode and the menus (both were left at full size) */
 const MENUS_DYN=['menu','s8cards','s8quick','s8pick','s8setup','s8career','s8res'],DYN=['game','bike'].concat(MENUS_DYN);
