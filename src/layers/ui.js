@@ -4,7 +4,7 @@
 const P=window.PT8,CARS=P.CARS,BYID=P.BYID,CLS=P.CLS,fmtCr=P.fmtCr,fmtT=P.fmtT,ord=P.ord,SORTED=P.SORTED;
 const $$=(s,r)=>[...(r||document).querySelectorAll(s)];
 const root=document.createElement('div');root.id='v8';document.body.appendChild(root);
-const SCREENS=['s8cards','s8quick','s8pick','s8setup','s8career','s8show','s8res'];
+const SCREENS=['s8cards','s8quick','s8pick','s8rally','s8setup','s8career','s8show','s8res'];
 const ST={mode:'ta',track:0,laps:3,rlaps:1,players:1,cpus:3,diff:1,time:120,traffic:'light',todUser:null,ret:'s8cards',cev:null,crank:null};
 const SR={cat:'ALL',kind:'garage',player:0,cap:null,ret:'s8setup',id:'merc',alt:0,ang:.6,vel:0,drag:false,rally:false};P.SR=SR;
 const crHTML='<div class="crbox"><small>CREDITS</small><b class="crv"></b></div>';
@@ -98,6 +98,10 @@ root.innerHTML=`
 <section class="v8s" id="s8pick"><div class="hdr"><h2 id="pkTitle"></h2><div class="sp"></div>${crHTML}</div><div class="pkGrid" id="pkGrid"></div>
 <div class="foot8"><button class="btn" data-a="back"><span>&lt; Back</span></button><div class="hint8">Arrows select &middot; Enter next &middot; Esc back</div><button class="btn go" id="pkGo"><span>Next: Setup &gt;</span></button></div></section>
 
+<section class="v8s" id="s8rally"><div class="hdr"><h2><em>RALLY</em> STAGE SELECT</h2><div class="sp"></div>${crHTML}</div>
+<div class="rbWrap"><div class="rbList" id="rbList"></div><div class="rbMain"><div class="rbMap"><canvas id="rbCv"></canvas><em class="rbTag" id="rbTag"></em></div><div class="rbSide"><div class="rbHead"><small id="rbCountry"></small><h3 id="rbName"></h3><p id="rbDesc"></p></div><div class="rbStats" id="rbStats"></div><div class="rbProf"><small>ELEVATION</small><canvas id="rbProf"></canvas></div><div class="rbBest" id="rbBest"></div></div></div></div>
+<div class="foot8"><button class="btn" data-a="back"><span>&lt; Back</span></button><div class="hint8">Arrows select &middot; Enter next &middot; Esc back</div><button class="btn go" id="rbGo"><span>Next: Setup &gt;</span></button></div></section>
+
 <section class="v8s" id="s8setup"><div class="hdr"><h2 id="suTitle">TIME <em>ATTACK</em></h2><div class="sp"></div>${crHTML}</div>
 <div class="cols"><div class="pnl"><h4>Track</h4><div id="trkList"></div></div>
 <div class="pnl"><div class="prev"><canvas id="trkPrev" width="480" height="320"></canvas></div><div class="tinfo" id="trkInfo"></div><div id="trkExtra"></div></div>
@@ -118,17 +122,17 @@ $$('.ico',root).forEach(e=>{e.appendChild(IC[e.dataset.i]())});
 /* ================= screen switching ================= */
 const rawShow=show;let prevScr='menu';
 const WP=document.createElement('div');WP.id='ptWipe';document.body.appendChild(WP);
-const MENUS=['menu','s8cards','s8quick','s8pick','s8setup','s8career','s8show','s8res'];let wipeT=0;
+const MENUS=['menu','s8cards','s8quick','s8pick','s8rally','s8setup','s8career','s8show','s8res'];let wipeT=0;
 function wipe(){try{WP.classList.remove('go');void WP.offsetWidth;WP.classList.add('go');clearTimeout(wipeT);wipeT=setTimeout(()=>WP.classList.remove('go'),600)}catch(e){}}
-show=n=>{const was=scr;if(n!=='s8setup'&&n!=='ptOptions'&&ST.custom){const c=ST.custom;ST.custom=null;if(c.leave)c.leave()}if(was&&was!==n&&MENUS.includes(n)&&was!=='game'&&was!=='pause')wipe();rawShow(n);if(was!==n&&['s8cards','s8quick','s8pick','s8setup','s8career','s8show'].includes(n)){const e=$(n);e.classList.add('enter');clearTimeout(e._en);e._en=setTimeout(()=>e.classList.remove('enter'),900)}if(was!==n&&P.sfx&&['s8cards','s8quick','s8pick','s8setup','s8career','s8show','s8res','menu'].includes(n))P.sfx('whoosh');for(const id of SCREENS)$(id).classList.toggle('on',id===n);
- {const b=$('v8Bg');if(b){const on=['s8cards','s8pick','s8career','s8setup'].includes(n),was=b.classList.contains('on');b.classList.toggle('on',on);if(on&&!was&&P.v8Bg){b.textContent='';P.v8Bg()}}}
+show=n=>{const was=scr;if(n!=='s8setup'&&n!=='ptOptions'&&ST.custom){const c=ST.custom;ST.custom=null;if(c.leave)c.leave()}if(was&&was!==n&&MENUS.includes(n)&&was!=='game'&&was!=='pause')wipe();rawShow(n);if(was!==n&&['s8cards','s8quick','s8pick','s8rally','s8setup','s8career','s8show'].includes(n)){const e=$(n);e.classList.add('enter');clearTimeout(e._en);e._en=setTimeout(()=>e.classList.remove('enter'),900)}if(was!==n&&P.sfx&&['s8cards','s8quick','s8pick','s8rally','s8setup','s8career','s8show','s8res','menu'].includes(n))P.sfx('whoosh');for(const id of SCREENS)$(id).classList.toggle('on',id===n);
+ {const b=$('v8Bg');if(b){const on=['s8cards','s8pick','s8rally','s8career','s8setup'].includes(n),was=b.classList.contains('on');b.classList.toggle('on',on);if(on&&!was&&P.v8Bg){b.textContent='';P.v8Bg()}}}
  $$('.crv',root).forEach(e=>e.textContent=fmtCr(P.SV().cr));
  if(was==='s8show'&&n!=='s8show')studioOff();
- if(['menu','s8cards','s8quick','s8pick','s8setup','s8career','s8res'].includes(n))refreshMenuCars();
+ if(['menu','s8cards','s8quick','s8pick','s8rally','s8setup','s8career','s8res'].includes(n))refreshMenuCars();
  if(n==='menu'&&P.menuStats)P.menuStats();
  /* the start-line card belongs to the race: never leave it over a menu */if(n!=='game'&&n!=='pause'&&n!=='ptOptions'){const e=document.getElementById('rlPrep');if(e)e.style.display='none';document.body.classList.remove('rprep')}};
 function refreshMenuCars(){const sv=P.SV();for(let i=0;i<4;i++){const s=sv.sel[i];carChoices[i]=P.modelOf(s.id,s.alt)}}
-const goBack={s8cards:()=>show('menu'),s8quick:()=>show('menu'),s8pick:()=>show(ST.ret),s8setup:()=>{if(ST.custom){const c=ST.custom;ST.custom=null;c.back();return}if(GXS.step===2){GXS.step=1;GXS.f=0;if(isRL(ST.mode))ST.rstep=1;renderSetup();return}if(ST.fromPick&&ST.mode==='track'){openPick(true);return}show(ST.ret)},s8career:()=>{if(P.frBack&&P.frBack())return;show('s8cards')},s8res:()=>resContinue()};
+const goBack={s8cards:()=>show('menu'),s8quick:()=>show('menu'),s8pick:()=>show(ST.ret),s8rally:()=>show('s8cards'),s8setup:()=>{if(ST.custom){const c=ST.custom;ST.custom=null;c.back();return}if(GXS.step===2){GXS.step=1;GXS.f=0;if(isRL(ST.mode))ST.rstep=1;renderSetup();return}if(ST.fromRally&&ST.mode==='rally'){openRally(true);return}if(ST.fromPick&&ST.mode==='track'){openPick(true);return}show(ST.ret)},s8career:()=>{if(P.frBack&&P.frBack())return;show('s8cards')},s8res:()=>resContinue()};
 const leaveShow=()=>{const r=SR.ret;if(r==='s8res_back'){renderSetup();show('s8setup');return}show(r);if(r==='s8setup')renderSetup();if(r==='s8career')renderCareer()};
 function fadeTo(fn){const f=$('shFade');f.classList.add('on');setTimeout(()=>{try{fn()}catch(e){console.error('fadeTo',e&&e.stack||e)}setTimeout(()=>f.classList.remove('on'),260)},230)}
 const inGrid=()=>CARDS()&&SR.view==='grid',inCar=()=>CARDS()&&SR.view==='car';
@@ -161,7 +165,7 @@ $$('#s8quick .qr',root).forEach((c,k)=>{c.onmouseenter=()=>setQf(k,1);c.onclick=
 const barnIcon=d=>{const b=P.BARNS&&P.BARNS[d.name];if(!b||d.gravel)return '';const f=P.barnFound&&P.barnFound(b.car);return `<span class="bnh ${f?'got':''}" title="${f?'Barn find collected':'Barn find hidden here'}"><svg viewBox="0 0 16 16" width="15" height="15" shape-rendering="crispEdges"><path d="M8 1.5 1.5 7.5h2V14h3.6v-3.8h1.8V14h3.6V7.5h2z" fill="currentColor"/></svg></span>`};const isStg=i=>P.STAGES.indexOf(i)>=0,isTrk=i=>(P.TRK_TRACKS||[]).indexOf(i)>=0,gone=i=>!!D[i]&&(!!D[i].ring||(D[i].ra||D[i].imola||D[i].packOnly)&&!D[i].cartoon)/* the old hand-built Road Atlanta and Imola are gone: these slots only show a loaded track file; the Nordschleife was swapped for the Nürburgring GP model (round 17) */,okTrack=(m,i)=>gone(i)?false:m==='rally'?isStg(i):m==='track'?isTrk(i):!isStg(i)&&!isTrk(i)/* circuits are Track-mode exclusives */,firstTrack=m=>m==='rally'?P.STAGES[0]:m==='track'?(P.TRK_TRACKS.find(i=>!gone(i))??P.TRK_TRACKS[0]):0,isRL=m=>m==='rally'||(m==='track'&&ST.trkType==='tt');
 /* the Quickplay tracks, so the boot screen can render their setup previews up front */
 P.quickTracks=()=>D.map((d,i)=>okTrack('mp',i)?i:-1).filter(i=>i>=0);/* a Track race picks cars on the setup page, like Quick Play */
-function pickMode(m){if(m==='quick'){P.sfx&&P.sfx('select');show('s8quick');setQf(0)}else{ST.mode=m;GXS.step=1;GXS.last=null;P._to=m==='track';P._ro=m==='rally';if(isRL(m)||m==='track')ST.rstep=1;if(!okTrack(m,ST.track))ST.track=firstTrack(m);ST.ret='s8cards';if(m==='rally'&&P.rallyIntro){ST.fromPick=false;P.rallyIntro(()=>{renderSetup();show('s8setup');if(P.prewarmStages)setTimeout(P.prewarmStages,1500)},ST.track)}else if(m==='track')openPick();else{ST.fromPick=false;renderSetup();show('s8setup')}}}
+function pickMode(m){if(m==='quick'){P.sfx&&P.sfx('select');show('s8quick');setQf(0)}else{ST.mode=m;GXS.step=1;GXS.last=null;P._to=m==='track';P._ro=m==='rally';if(isRL(m)||m==='track')ST.rstep=1;if(!okTrack(m,ST.track))ST.track=firstTrack(m);ST.ret='s8cards';if(m==='rally'&&P.rallyIntro){ST.fromPick=false;ST.fromRally=false;P.rallyIntro(()=>{if(hasStages()){if(P.warmStagePacks)P.warmStagePacks();openRally();if(P.prewarmStages)setTimeout(P.prewarmStages,1500);return}renderSetup();show('s8setup');if(P.prewarmStages)setTimeout(P.prewarmStages,1500)},ST.track)}else if(m==='track')openPick();else{ST.fromPick=false;renderSetup();show('s8setup')}}}
 /* ================= TRACK PICK (Track Mode step 1): big cards with a trackside shot of a corner of each circuit, then the setup screen with room
    for the options. The shots (P.trackShot, cartoon.js) are made once per session behind a black loading fade */
 const PK={list:[],cols:4,fail:{}};
@@ -189,6 +193,26 @@ function renderPick(){const m=ST.mode;$('pkTitle').innerHTML='<em>TRACK</em> SEL
  $('pkGo').onclick=()=>pickNext();
  requestAnimationFrame(()=>{const cs=$$('#pkGrid .pk',root);if(cs.length>1)PK.cols=Math.max(1,cs.filter(c=>c.offsetTop===cs[0].offsetTop).length);const s=g.querySelector('.pk.sel');if(s)s.scrollIntoView({block:'nearest'})})}
 function pickSel(i,scroll){ST.track=i;P.sfx&&P.sfx('move');$$('#pkGrid .pk',root).forEach(e=>e.classList.toggle('sel',+e.dataset.i===i));if(scroll){const s=$('pkGrid').querySelector('.pk.sel');if(s)s.scrollIntoView({block:'nearest'})}}
+/* ================= RALLY STAGE SELECT (Nov 8): its own screen, not a copy of the circuit cards. The map is drawn from the stage file itself (P.rallyMap),
+   the height profile and stats come from the same data, and the stage's best time sits underneath. ===== */
+const hasStages=()=>!!P.rallyMap&&D.some((d,i)=>okTrack('rally',i)&&d.cartoon&&d.cartoon.stage);
+const stLen=i=>{const T=tr(i);return T.stage?T.stage.len:T.L};
+const RB={list:[]};
+function openRally(back){ST.mode='rally';if(!okTrack('rally',ST.track))ST.track=firstTrack('rally');ST.fromRally=true;RB.list=D.map((d,i)=>okTrack('rally',i)?i:-1).filter(i=>i>=0);renderRally();show('s8rally')}
+function renderRally(){const sv=P.SV(),L=$('rbList');
+ L.innerHTML=RB.list.map((i,n)=>{const d=D[i],inf=P.stageInfo&&P.stageInfo(i),r=sv.ral&&sv.ral[i+':1'];return `<div class="rb${i===ST.track?' sel':''}" data-i="${i}"><i>${String(n+1).padStart(2,'0')}</i><div><b>${d.name}</b><small>${inf?inf.surface+' &middot; '+inf.km.toFixed(1)+' km':P.TRACK_INFO[i].s+' &middot; '+(stLen(i)/1000).toFixed(1)+' km'}</small></div><span>${r?fmtT(r.t):'--'}</span></div>`}).join('');
+ $$('#rbList .rb',root).forEach(e=>{const i=+e.dataset.i;e.onclick=()=>rbSel(i);e.ondblclick=()=>{rbSel(i);rallyNext()}});
+ rbPaint();requestAnimationFrame(rbPaint)}
+function rbPaint(){const i=ST.track,inf=P.stageInfo&&P.stageInfo(i),sv=P.SV(),r=sv.ral&&sv.ral[i+':1'],d=D[i];if(!d)return;
+ $('rbName').textContent=d.name;$('rbDesc').textContent=(inf&&inf.desc)||d.desc||'';$('rbCountry').textContent=(inf?inf.surface:P.TRACK_INFO[i].s)+' stage';
+ const st=(a,b)=>`<div><small>${a}</small><b>${b}</b></div>`;
+ $('rbStats').innerHTML=inf?st('Length',inf.km.toFixed(1)+' km')+st('Climb',Math.round(inf.climb)+' m')+st('Low / high',Math.round(inf.lo)+' / '+Math.round(inf.hi)+' m')+st('Water fords',inf.fords||'none'):st('Length',(stLen(i)/1000).toFixed(1)+' km');
+ $('rbBest').innerHTML=`<small>Best time</small><b>${r?fmtT(r.t):'not set yet'}</b>`;
+ const ok=P.rallyMap&&P.rallyMap(i,$('rbCv'));if(!ok){const cv=$('rbCv'),g=cv.getContext('2d');g.fillStyle='#0c1218';g.fillRect(0,0,cv.width,cv.height)}
+ if(P.rallyProfile){const c=$('rbProf');if(!P.rallyProfile(i,c)){const g=c.getContext('2d');g.clearRect(0,0,c.width,c.height)}}
+ $('rbTag').textContent=inf?inf.name:''}
+function rbSel(i){if(i===ST.track)return;ST.track=i;P.sfx&&P.sfx('move');$$('#rbList .rb',root).forEach(e=>e.classList.toggle('sel',+e.dataset.i===i));rbPaint()}
+function rallyNext(){P.sfx&&P.sfx('select');ST.rstep=1;GXS.step=1;ST.fromRally=true;renderSetup();show('s8setup')}
 function pickNext(){if(!PK.list.includes(ST.track))return;P.sfx&&P.sfx('select');ST.fromPick=true;renderSetup();show('s8setup')}
 
 /* ---- main menu ---- */
@@ -393,8 +417,8 @@ function trackRaceCfg(){if(ST.players+(ST.cpus||0)>8)ST.cpus=8-ST.players;
  +`<div class="row8"><b>CPU class</b><span class="seg" id="cCc">${seg([['auto','Auto'],['C','C'],['B','B'],['A','A'],['S','S']],ST.cc||'auto')}</span></div>`
  +`<div class="row8"><b>CPU cars</b><span class="seg" id="cCpuCar">${seg([['any','Any'],['track','Track cars']],ST.cpuCar||'any')}</span></div>`
  +`<div class="row8"><b>Start</b><span class="seg" id="cStart">${seg([['standing','Standing'],['rolling','Rolling']],ST.start||'standing')}</span></div>`}
-function renderSetup(){const m=ST.mode;$('s8setup').classList.toggle('pkMode',m==='track');$('suTitle').innerHTML=m==='mp'?(ST.players>1?'VERSUS':'QUICK RACE'):MODE_NAME[m];
- $('trkList').innerHTML=D.map((d,i)=>!okTrack(m,i)?'':`<div class="trk ${i===ST.track?'sel':''}" data-i="${i}"><canvas width="56" height="42"></canvas><div><b>${d.name}</b><small>${P.TRACK_INFO[i].s} &middot; ${Math.round(tr(i).L)} m${d.cartoon?' &middot; 3D model':''}</small></div>${barnIcon(d)}</div>`).join('')
+function renderSetup(){const m=ST.mode;$('s8setup').classList.toggle('pkMode',m==='track'||(m==='rally'&&hasStages()&&!!ST.fromRally));$('suTitle').innerHTML=m==='mp'?(ST.players>1?'VERSUS':'QUICK RACE'):MODE_NAME[m];
+ $('trkList').innerHTML=D.map((d,i)=>!okTrack(m,i)?'':`<div class="trk ${i===ST.track?'sel':''}" data-i="${i}"><canvas width="56" height="42"></canvas><div><b>${d.name}</b><small>${P.TRACK_INFO[i].s} &middot; ${Math.round(stLen(i))} m${d.cartoon?' &middot; 3D model':''}</small></div>${barnIcon(d)}</div>`).join('')
   +(m==='track'&&P.loadTrackFile?`<div class="trk trkAdd" id="trkAdd"><div style="width:56px;text-align:center;font-size:26px;line-height:42px">+</div><div><b>Add track file</b><small id="trkAddMsg">${Object.keys(P.trackPacks||{}).length?'Loaded: '+Object.values(P.trackPacks).map(p=>p.name).join(', '):'Load a .ptrack file from your computer'}</small></div><input type="file" accept=".ptrack,.json,.gz" style="display:none"></div>`:'');
  $$('#trkList .trk',root).forEach(e=>{if(e.id==='trkAdd')return;const i=+e.dataset.i;drawTrack(e.querySelector('canvas'),i,false);e.onclick=()=>{ST.track=i;renderSetup()}});
  {const a=$('trkAdd');if(a){const inp=a.querySelector('input'),msg=a.querySelector('#trkAddMsg');a.onclick=e=>{if(e.target!==inp)inp.click()};
@@ -402,18 +426,19 @@ function renderSetup(){const m=ST.mode;$('s8setup').classList.toggle('pkMode',m=
    try{const r=await P.loadTrackFile(f);ST.track=r.i;renderSetup()}catch(e){console.error(e);msg.textContent='Could not load: '+(e&&e.message||e)}}}}
  if(!okTrack(m,ST.track))ST.track=firstTrack(m);
  const T=tr(ST.track);
- if(m==='rally'&&P.stageRender){const want=ST.track,cv=$('trkPrev'),g=cv.getContext('2d'),paint=img=>{g.fillStyle='#0c1218';g.fillRect(0,0,cv.width,cv.height);if(img){const h=cv.width*img.height/img.width;g.drawImage(img,0,(cv.height-h)/2,cv.width,h)}else{g.fillStyle='#8a949c';g.font='12px monospace';g.textAlign='center';g.fillText('RENDERING STAGE MAP...',cv.width/2,cv.height/2)}},c0=P.stageCached&&P.stageCached(want);
+ if(m==='rally'&&P.rallyMap&&P.rallyMap(ST.track,$('trkPrev'))){}else if(m==='rally'&&P.stageRender){const want=ST.track,cv=$('trkPrev'),g=cv.getContext('2d'),paint=img=>{g.fillStyle='#0c1218';g.fillRect(0,0,cv.width,cv.height);if(img){const h=cv.width*img.height/img.width;g.drawImage(img,0,(cv.height-h)/2,cv.width,h)}else{g.fillStyle='#8a949c';g.font='12px monospace';g.textAlign='center';g.fillText('RENDERING STAGE MAP...',cv.width/2,cv.height/2)}},c0=P.stageCached&&P.stageCached(want);
   if(c0)paint(c0);else{paint(null);P.stageRender(want).then(img=>{if(img&&ST.track===want&&ST.mode==='rally'&&cv.isConnected)paint(img)})}}
  else drawTrack($('trkPrev'),ST.track,true);
  let y0=1e9,y1=-1e9;for(let k=0;k<T.N;k++){y0=Math.min(y0,T.y[k]);y1=Math.max(y1,T.y[k])}
- $('trkInfo').innerHTML=`<span class="chip">${P.TRACK_INFO[ST.track].s}</span><span class="chip">${Math.round(T.L)} m</span><span class="chip">Climb ${Math.round(y1-y0)} m</span>`+(T.jumps&&T.jumps.length&&m!=='cutup'?'<span class="chip">Jump</span>':'')+(T.fords&&T.fords.length?`<span class="chip hot">${T.fords.length} water ford${T.fords.length>1?'s':''}</span>`:'')+(P.STAGES.includes(ST.track)?'<span class="chip hot">New stage</span>':'')+(isTrk(ST.track)?'<span class="chip hot">New circuit</span>':'')+((P.BARNS&&P.BARNS[D[ST.track].name]&&!D[ST.track].gravel)?'<span class="chip bn">Barn find</span>':'');
+ const sinf=P.stageInfo&&P.stageInfo(ST.track);if(sinf){y0=0;y1=sinf.climb}
+ $('trkInfo').innerHTML=`<span class="chip">${sinf?sinf.surface:P.TRACK_INFO[ST.track].s}</span><span class="chip">${Math.round(stLen(ST.track))} m</span><span class="chip">Climb ${Math.round(y1-y0)} m</span>`+(T.jumps&&T.jumps.length&&m!=='cutup'?'<span class="chip">Jump</span>':'')+(T.fords&&T.fords.length?`<span class="chip hot">${T.fords.length} water ford${T.fords.length>1?'s':''}</span>`:'')+(P.STAGES.includes(ST.track)?'<span class="chip hot">New stage</span>':'')+(isTrk(ST.track)?'<span class="chip hot">New circuit</span>':'')+((P.BARNS&&P.BARNS[D[ST.track].name]&&!D[ST.track].gravel)?'<span class="chip bn">Barn find</span>':'');
  const car=BYID[selCar(0).id];let ex='';
  if(m==='ta'){const tk=ST.rev?'r'+ST.track:ST.track,rec=P.SV().ta[tk]||{};ex=`<h4 style="margin:8px 0 4px">Medal times &middot; ${car.name}</h4><div class="medals">`+P.MEDALS.map((md,i)=>`<div class="${rec.medal!=null&&rec.medal<=i?'got':''}"><b style="color:${md.col}">${md.n}</b>${fmtT(P.medalTime(tk,car,i))}</div>`).join('')+`</div><div style="font-size:10px;letter-spacing:.16em;color:var(--dim)">BEST LAP <b style="color:var(--ac)">${fmtT(rec.best)}</b></div>`}
  $('trkExtra').innerHTML=ex;if(m==='rally'&&P.poiStrip){const eh=document.createElement('h4');eh.style.margin='10px 0 4px';eh.textContent='Points of interest';const ph=document.createElement('div');ph.className='rl-poi';$('trkExtra').append(eh,ph);P.poiStrip(ST.track,ph)}
  let cfg='';
  if(m==='elim')cfg+=`<div class="row8"><b>Knockout every</b><span class="seg" id="cIv">${seg([[20,'20s'],[30,'30s'],[45,'45s']],ST.iv||30)}</span></div><div class="row8"><b>Direction</b><span class="seg" id="cRev">${seg([['0','Forward'],['1','Reverse']],ST.rev?'1':'0')}</span></div>`;
  if(m==='ta'||m==='mp')cfg+=`<div class="row8"><b>Laps</b><span class="seg" id="cLaps">${seg([[2,'2'],[3,'3'],[4,'4'],[5,'5'],[8,'8'],[10,'10']],ST.laps)}</span></div><div class="row8"><b>Direction</b><span class="seg" id="cRev">${seg([['0','Forward'],['1','Reverse']],ST.rev?'1':'0')}</span></div>`;
- if(m==='rally'){const Tn=tr(ST.track),dist=Tn.L*(ST.rlaps||1),wxn=(P.WX[ST.wx||'clear']||{n:'CLEAR'}).n;cfg+=`<div class="rcfg"><h4>Stage configuration</h4><div class="row8"><b>Stage laps</b><span class="seg" id="cRL">${seg([[1,'1'],[2,'2'],[3,'3']],ST.rlaps)}</span></div><div class="row8"><b>Drivers</b><span class="seg" id="cPl">${seg([[1,'1'],[2,'2'],[3,'3'],[4,'4']],ST.players)}</span></div><div class="row8"><b>Weather</b><span class="seg" id="cWx">${seg(P.WX_ORDER.map(k=>[k,P.WX[k].n[0]+P.WX[k].n.slice(1).toLowerCase()]),ST.wx||'clear')}</span></div><div class="rsum"><div><small>Distance</small><b>${(dist/1000).toFixed(1)} km</b></div><div><small>Drivers</small><b>${ST.players}</b></div><div><small>Conditions</small><b>${wxn} &middot; ${(P.TOD[effTod()]||{n:''}).n}</b></div></div><small class="rnote">Drivers take turns, one car on the stage at a time. Fastest total wins.</small></div>`}
+ if(m==='rally'){const isPk=!!(D[ST.track].cartoon&&D[ST.track].cartoon.stage);if(isPk)ST.rlaps=1;const dist=stLen(ST.track)*(ST.rlaps||1),wxn=(P.WX[ST.wx||'clear']||{n:'CLEAR'}).n;cfg+=`<div class="rcfg"><h4>Stage configuration</h4>${isPk?'':`<div class="row8"><b>Stage laps</b><span class="seg" id="cRL">${seg([[1,'1'],[2,'2'],[3,'3']],ST.rlaps)}</span></div>`}<div class="row8"><b>Drivers</b><span class="seg" id="cPl">${seg([[1,'1'],[2,'2'],[3,'3'],[4,'4']],ST.players)}</span></div><div class="row8"><b>Weather</b><span class="seg" id="cWx">${seg(P.WX_ORDER.map(k=>[k,P.WX[k].n[0]+P.WX[k].n.slice(1).toLowerCase()]),ST.wx||'clear')}</span></div><div class="rsum"><div><small>Distance</small><b>${(dist/1000).toFixed(1)} km</b></div><div><small>Drivers</small><b>${ST.players}</b></div><div><small>Conditions</small><b>${wxn} &middot; ${(P.TOD[effTod()]||{n:''}).n}</b></div></div><small class="rnote">Drivers are released 15 s apart, one after the other. Earlier runs are driven again on the stage as ghost cars (no collisions), so you can catch them. Fastest time wins.</small></div>`}
  if(m==='track'&&trkRace())cfg+=trackRaceCfg();
  if(m==='track'&&!trkRace()){const Tn=tr(ST.track),dist=Tn.L*(ST.rlaps||1),wxn=(P.WX[ST.wx||'clear']||{n:'CLEAR'}).n;cfg+=`<div class="rcfg"><h4>Circuit configuration</h4>${fmtRow()}<div class="row8"><b>Race laps</b><span class="seg" id="cRL">${seg([[1,'1'],[2,'2'],[3,'3'],[5,'5']],ST.rlaps)}</span></div><div class="row8"><b>Drivers</b><span class="seg" id="cPl">${seg([[1,'1'],[2,'2'],[3,'3'],[4,'4']],ST.players)}</span></div><div class="row8"><b>Weather</b><span class="seg" id="cWx">${seg(P.WX_ORDER.map(k=>[k,P.WX[k].n[0]+P.WX[k].n.slice(1).toLowerCase()]),ST.wx||'clear')}</span></div><div class="rsum"><div><small>Distance</small><b>${(dist/1000).toFixed(1)} km</b></div><div><small>Drivers</small><b>${ST.players}</b></div><div><small>Conditions</small><b>${wxn} &middot; ${(P.TOD[effTod()]||{n:''}).n}</b></div></div><small class="rnote">Drivers take turns, one car on the circuit at a time. Fastest total wins. Medal times follow your car.</small></div>`}
  if(m==='mp'||m==='cutup'||m==='elim')cfg+=`<div class="row8"><b>Drivers</b><span class="seg" id="cPl">${seg([[1,'1'],[2,'2'],[3,'3'],[4,'4']],ST.players)}</span></div>`;
@@ -448,8 +473,8 @@ function renderSetup(){const m=ST.mode;$('s8setup').classList.toggle('pkMode',m=
   st.style.display=isRL(m)?'':'none';st.innerHTML=`<i class="${r2?'':'on'}">1 &middot; ${m==='track'?'Circuit':'Stage'}</i><i class="${r2?'on':''}">2 &middot; Car</i>`;
   if(m==='rally')$('suTitle').innerHTML='<em>RALLY</em> '+(r2?'CAR SELECTION':'STAGE SETUP');if(m==='track')$('suTitle').innerHTML='<em>TRACK</em> '+(r2?'CAR SELECTION':'CIRCUIT SETUP');
   $('suGo').querySelector('span').textContent=isRL(m)&&!r2?'Next: Car >':'Start';
-  if(r2){const wxn=(P.WX[ST.wx||'clear']||{n:'CLEAR'}).n;$('suDrv').insertAdjacentHTML('afterbegin',`<div class="rrecap"><b>${D[ST.track].name}</b><small>${(Math.round(T.L)*(ST.rlaps||1)/1000).toFixed(1)} km &middot; ${m==='track'?ST.laps:(ST.rlaps||1)} lap${(ST.rlaps||1)>1?'s':''} &middot; ${wxn} &middot; ${(P.TOD[effTod()]||{n:''}).n}</small></div>`)}}
- $('suHint').textContent=m==='track'&&trkRace()?'P1 WASD &middot; P2 '+P.p2Name()+' &middot; P3 IJKL &middot; P4 TFGH':m==='track'?'One car on the circuit at a time &middot; pass the controller between runs &middot; fastest total wins':m==='rally'?'One car on the stage at a time &middot; pass the controller between runs &middot; fastest total wins':m==='ta'?'W / S + A / D &middot; Q / E shift (or double-tap W / S)':'P1 WASD &middot; P2 '+P.p2Name()+' &middot; P3 IJKL &middot; P4 TFGH';$('suHint').innerHTML=$('suHint').textContent}
+  if(r2){const wxn=(P.WX[ST.wx||'clear']||{n:'CLEAR'}).n;$('suDrv').insertAdjacentHTML('afterbegin',`<div class="rrecap"><b>${D[ST.track].name}</b><small>${(Math.round(stLen(ST.track))*(ST.rlaps||1)/1000).toFixed(1)} km &middot; ${m==='track'?ST.laps:(ST.rlaps||1)} lap${(ST.rlaps||1)>1?'s':''} &middot; ${wxn} &middot; ${(P.TOD[effTod()]||{n:''}).n}</small></div>`)}}
+ $('suHint').textContent=m==='track'&&trkRace()?'P1 WASD &middot; P2 '+P.p2Name()+' &middot; P3 IJKL &middot; P4 TFGH':m==='track'?'One car on the circuit at a time &middot; pass the controller between runs &middot; fastest total wins':m==='rally'?'Staggered release, 15 s apart &middot; earlier runs drive again as ghost cars &middot; fastest time wins':m==='ta'?'W / S + A / D &middot; Q / E shift (or double-tap W / S)':'P1 WASD &middot; P2 '+P.p2Name()+' &middot; P3 IJKL &middot; P4 TFGH';$('suHint').innerHTML=$('suHint').textContent}
 /* ===== 0.02: race setup, GT5 dark chrome: the track shot large on the left with its reflection under it, and one row per setting on the
    right. Up / Down pick a row, Left / Right change it, Enter starts. The setup above still builds every option (hidden): each row's arrows
    press its buttons, so every setting keeps working exactly as before. Rarely used settings fold away under More options ===== */
@@ -487,7 +512,7 @@ function gxSetup(){const sec=$('s8setup');if(!sec)return;if(ST.custom){ST.custom
  GXS.rows=rows;GXS.f=Math.max(0,Math.min(rows.length-1,GXS.f));
  const T=tr(ST.track),info=[...$('trkInfo').querySelectorAll('.chip')].map(c=>c.textContent.trim()).filter(Boolean);
  const ta=$('trkExtra').querySelector('.medals');
- gxRender(box,{kind:m==='rally'?'Stage':m==='track'?'Circuit':'Track',name:D[ST.track].name,facts:info,extra:ta?ta.outerHTML:'',shot:()=>gxShot(ST.track),map:cv=>drawTrack(cv,ST.track,false),rows,go:'Next: car'})}
+ gxRender(box,{kind:m==='rally'?'Stage':m==='track'?'Circuit':'Track',name:D[ST.track].name,facts:info,extra:ta?ta.outerHTML:'',shot:()=>{if(m==='rally'&&P.rallyMap&&D[ST.track].cartoon&&D[ST.track].cartoon.stage){const cv=$('gxShot'),oc=document.createElement('canvas');oc.width=960;oc.height=540;cv.classList.add('map','rl');P.rallyMap(ST.track,oc);cv.getContext('2d').drawImage(oc,0,0,cv.width,cv.height);const rf=$('gxRefl');if(rf){const r=rf.getContext('2d');r.clearRect(0,0,rf.width,rf.height);r.drawImage(cv,0,0,rf.width,rf.height)}}else gxShot(ST.track)},map:cv=>{if(m==='rally'&&P.rallyProfile&&D[ST.track].cartoon&&D[ST.track].cartoon.stage)P.rallyProfile(ST.track,cv);else drawTrack(cv,ST.track,false)},rows,go:'Next: car'})}
 /* Nov 2: the setup screen in a new arrangement (same blue, rounded look): a wide picture banner with the name and facts, the layout
    inset top right, and the options split into three cards underneath (race / conditions / car). Also used by the bike setup (ST.custom). */
 const GX_GRP=r=>r.grp!=null?r.grp:(r.car||r.more||r.sub||r.l==='Drivers')?2:/^(Weather|Time of day|Damage|Clock|Traffic)$/.test(r.l)?1:0;
@@ -613,6 +638,7 @@ P.gxSuKey=e=>{if(!GXS.rows||!$('s8setup').classList.contains('gxOn'))return fals
 {const rs0=renderSetup;renderSetup=function(){if(ST.custom){gxSetup();return}rs0.apply(this,arguments);try{gxSetup()}catch(er){console.error('gxSetup',er)}}}
 /* custom driver names: trimmed, 12 chars, unique across players */
 function cleanName(p,np){const nm=(ST.names||[])[p];let v=(nm||'').replace(/[<>&"]/g,'').trim().slice(0,12);if(!v)return null;for(let q=0;q<p;q++){const o=((ST.names||[])[q]||'').trim().slice(0,12);if(o&&o.toLowerCase()===v.toLowerCase())v=v.slice(0,10)+(p+1)}return v}
+$('rbGo').onclick=rallyNext;
 $('suGo').onclick=()=>{if(ST.custom){ST.custom.go();return}if(GXS.step!==2){P.sfx('select');GXS.step=2;GXS.f=0;GXS.cf=0;if(isRL(ST.mode))ST.rstep=2;renderSetup();return}
  const m=ST.mode,d=D[ST.track],np=m==='ta'?1:ST.players,humans=[];for(let p=0;p<np;p++){const s=selCar(p);humans.push({id:s.id,alt:s.alt,name:cleanName(p)})}
  const tod=effTod();let cfg;
@@ -1009,13 +1035,14 @@ addEventListener('keydown',e=>{
   if(CARDS()){if(inGrid()){if(e.code==='ArrowLeft'||e.code==='ArrowUp'){e.preventDefault();gridMove(-1)}else if(e.code==='ArrowRight'||e.code==='ArrowDown'){e.preventDefault();gridMove(1)}else if(e.code==='Enter'){if((P.SV().owned[SR.id]||0)>0)openCar(SR.id)}return}
    if(e.code==='ArrowLeft'||e.code==='KeyQ')flipCar(-1);else if(e.code==='ArrowRight'||e.code==='KeyE')flipCar(1);else if(e.code==='Enter')$('shAct').click();return}
   const list=(CARDS()&&SR.order)?SR.order.map(id=>BYID[id]):showList().filter(c=>!SR.sec||SR.cat==='ALL'||(SR.cat==='OWNED'?(P.SV().owned[c.id]||0)>0:((SR.rally||SR.trk)&&SR.kind==='garage'?(SR.trk?c.tdiv:c.rdiv):c.cat)===SR.cat)),i=Math.max(0,list.findIndex(c=>c.id===SR.id));if(!list.length)return;if(e.code==='ArrowDown'){SR.id=list[Math.min(list.length-1,i+1)].id;SR.alt=P.owns(SR.id,SR.alt)?SR.alt:0;renderShow()}else if(e.code==='ArrowUp'){SR.id=list[Math.max(0,i-1)].id;SR.alt=P.owns(SR.id,SR.alt)?SR.alt:0;renderShow()}else if(e.code==='ArrowLeft')SR.vel-=3;else if(e.code==='ArrowRight')SR.vel+=3;else if(e.code==='Enter')$('shAct').click();return}
+ if(scr==='s8rally'){const n=RB.list.length;if(!n)return;let k=Math.max(0,RB.list.indexOf(ST.track));if(e.code==='ArrowDown'||e.code==='KeyS'||e.code==='ArrowRight'||e.code==='KeyD')k=(k+1)%n;else if(e.code==='ArrowUp'||e.code==='KeyW'||e.code==='ArrowLeft'||e.code==='KeyA')k=(k+n-1)%n;else if(e.code==='Enter'){rallyNext();return}else return;e.preventDefault();rbSel(RB.list[k]);return}
  if(scr==='s8pick'){const n=PK.list.length;if(!n)return;let k=Math.max(0,PK.list.indexOf(ST.track));if(e.code==='ArrowRight'||e.code==='KeyD')k=(k+1)%n;else if(e.code==='ArrowLeft'||e.code==='KeyA')k=(k+n-1)%n;else if(e.code==='ArrowDown'||e.code==='KeyS')k=Math.min(n-1,k+PK.cols);else if(e.code==='ArrowUp'||e.code==='KeyW')k=Math.max(0,k-PK.cols);else if(e.code==='Enter'){pickNext();return}else return;e.preventDefault();pickSel(PK.list[k],true);return}
  if(scr==='s8setup'){if(P.gxSuKey&&P.gxSuKey(e))return;if(e.code==='Enter'&&!(e.target&&e.target.tagName==='INPUT')){$('suGo').click()}return}
  if(scr==='menu'&&P.menuKey&&P.menuKey(e)){return}
  if(scr==='s8res'&&e.code==='Enter'){if(P.resHook){const h=P.resHook;P.resHook=null;h();return}resContinue()}});
 
 /* ================= frame loop ================= */
-const MENU_BG=['menu','s8cards','s8quick','s8pick','s8setup','s8career','s8res'];let CVH=false;
+const MENU_BG=['menu','s8cards','s8quick','s8pick','s8rally','s8setup','s8career','s8res'];let CVH=false;
 frame=function(n){requestAnimationFrame(frame);const dt=Math.min(.05,Math.max(0,(n-last)/1000));last=n;dtf=dt;T0+=dt;
  {const mn=MENU_BG.includes(scr)&&!(RACE&&scr==='s8res');if(mn!==CVH){CVH=mn;R.domElement.style.visibility=mn?'hidden':''}}
  if(RACE&&(scr==='game'||scr==='pause'||scr==='s8res')){if(!paused)step(dt);drawRace(dt);if(scr==='game')hudUpdate()}
@@ -1031,7 +1058,7 @@ frame=function(n){requestAnimationFrame(frame);const dt=Math.min(.05,Math.max(0,
    Only the menu itself and the full-screen fades/vignette stay */
 (function(){const st=document.createElement('style');st.textContent='body.ptPause>div:not(#pause):not(#ptOptions):not(#v8):not(#fade):not(#ptWipe):not(#rlFade):not(#rlDip){visibility:hidden!important}';document.head.appendChild(st);
  const sh=show;show=n=>{sh(n);if(n==='pause')document.body.classList.add('ptPause');else if(n!=='ptOptions')document.body.classList.remove('ptPause')}})();
-P.studioDbg=()=>S;P.okTrack=(m,i)=>okTrack(m,i);P.ui={openCards,openShow,renderSetup,renderCareer,ST,SR,drawTrack,trLen:i=>tr(i).L,trClear:i=>P.trClear(i),refreshTracks:()=>{const e=document.getElementById('s8setup');if(e&&e.offsetParent)renderSetup()}};
+P.studioDbg=()=>S;P.okTrack=(m,i)=>okTrack(m,i);P.ui={openRally,openCards,openShow,renderSetup,renderCareer,ST,SR,drawTrack,trLen:i=>tr(i).L,trClear:i=>P.trClear(i),refreshTracks:()=>{const e=document.getElementById('s8setup');if(e&&e.offsetParent)renderSetup()}};
 document.title='Poly Tourismo v9';
 refreshMenuCars();MS=null;
 })();

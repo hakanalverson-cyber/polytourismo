@@ -252,7 +252,7 @@ src=rep(src,"let bi=c.idx,bd=1e9;for(let k=-6;k<=30;k++){","let bi=c.idx,bd=1e9;
 src=rep(src,"c.wrong=hd<-3&&live?c.wrong+dt:0;","c.wrong=!T.free&&hd<-3&&live?c.wrong+dt:0;")
 src=rep(src,"if(live&&(c.y<T.y[c.idx]-12||Math.abs(c.roll)>.68","if(live&&((!T.free&&c.y<T.y[c.idx]-12)||Math.abs(c.roll)>.68")
 src=rep(src," if(!live)return;\n const sf=T.surf(c.x,c.z,c.y);"," if(!live||T.free)return;\n const sf=T.surf(c.x,c.z,c.y);")
-parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','frmodels','frdress','frtown','frisland','frisdress','frworld','frwater','freeroam','cars10','audio','modes','tracks','hpack','tracks2','extra','race2','elim','tod','bridge','props','bld','stages','trees_q','propkit','scenery','ra_data','tracks3','imola_data','tracks4','ring_data','ring_forest','tracks5','tracks6','cartoon','logos','weather','ambience','menuaudio','tutorial','updatelog','hud2','shade','ui','promo','cinema','rally','trackmode','realspeed','barn','animals','franimals','frlife','frrock','clean','solid','damage','grip','airline','ride','snap','perf','econ','frhud','title','brandbg','uifx','fade','arcade','drivelab','bkworld','bkpeople','bikes','career','menufx','lightfx','mood','post','sim','sky']  if os.path.exists(f'{SRC}/layers/{n}.js')]
+parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','frmodels','frdress','frtown','frisland','frisdress','frworld','frwater','freeroam','cars10','audio','modes','tracks','hpack','tracks2','extra','race2','elim','tod','bridge','props','bld','stages','trees_q','propkit','scenery','ra_data','tracks3','imola_data','tracks4','ring_data','ring_forest','tracks5','tracks6','cartoon','logos','weather','ambience','menuaudio','tutorial','updatelog','hud2','shade','ui','promo','cinema','rally','trackmode','realspeed','barn','animals','franimals','frlife','frrock','clean','solid','damage','grip','airline','ride','snap','perf','econ','frhud','title','brandbg','uifx','fade','arcade','drivelab','bkworld','bkpeople','bikes','career','menufx','lightfx','mood','post','sim','sky','rallymaps','rallyui']  if os.path.exists(f'{SRC}/layers/{n}.js')]
 # track files (bought cartoon models of Imola / Road Atlanta, made by tools/cartoon_track, kept out of the public repo in project files).
 # PACKS=1 builds them in (Artifact, full build); otherwise players load them with "+ Add track file" so the lite file stays small.
 # DRIVE=1: the Drive Lab test build (src/layers/drivelab.js): lite assets plus only the packs named in DRIVE_TRACKS (default the Nurburgring)
@@ -264,6 +264,13 @@ if os.environ.get('PACKS') or DRIVE:
     if DRIVE and os.path.basename(f)[:-7] not in DRV_T:continue
     parts.insert(k,'window.PT8_PACKS=window.PT8_PACKS||[];PT8_PACKS.push('+gzip.decompress(open(f,'rb').read()).decode()+');\n')
     print('built in',os.path.basename(f))
+# rally stage files (the bought Cartoon Rally Track maps, tools/cartoon_track/stage.py): PACKS or RALLY=1 builds; kept out of the public repo
+if os.environ.get('PACKS') or os.environ.get('RALLY'):
+  import glob as _g2,gzip as _gz2
+  _k=[i for i,p in enumerate(parts) if p.startswith('/* ===== Poly GT layer: cartoon')][0]
+  for _f in sorted(_g2.glob('/mnt/project-files/poly-gt/tracks/rally/*.ptrack')):
+    parts.insert(_k,'window.PT8_PACKS=window.PT8_PACKS||[];PT8_PACKS.push('+_gz2.decompress(open(_f,'rb').read()).decode()+');\n')
+    print('built in rally',os.path.basename(_f))
 css=open(f'{SRC}/style.css').read()
 # one typeface everywhere: Inter (SIL OFL, assets/Inter-OFL.txt) built in, so every mode and every computer draws the same letters (the
 # stack used to fall back to whatever the machine had, and some screens named their own fonts)

@@ -237,7 +237,7 @@ hudUpdate=()=>{const Rc=RACE,T=Rc.T;
   const cut=Rc.mode==='cutup',lap=clamp(Math.floor(c.unw/T.N)+1,1,Rc.laps);
   q('.h8pos').style.display=cut?'none':'';
   if(!cut){const pl=order.indexOf(c)+1,fp=c.fin?c.place:pl;q('.h8pos b').textContent=fp;q('.h8pos i').textContent=ord(fp).replace(/\d/g,'');q('.h8pos span').textContent='/'+Rc.cars.length}
-  q('.lap').textContent=cut?'CUT-UP':(c.fin?'FINISHED':'LAP '+lap+'/'+Rc.laps);
+  q('.lap').textContent=cut?'CUT-UP':(c.fin?'FINISHED':T.stage?'STAGE':'LAP '+lap+'/'+Rc.laps);
   q('.raceTime').textContent=cut?fmtT(Rc.timeLeft):fmtT(Rc.t);
   const bl=c.lapT&&c.lapT.length?Math.min(...c.lapT):null;q('.bl').textContent=cut?(c.score?'':''):('BEST '+fmtT(bl));q('.bl').style.display=cut?'none':'';
   /* mode panel */
@@ -264,16 +264,19 @@ hudUpdate=()=>{const Rc=RACE,T=Rc.T;
  });
  /* minimap */
  const cv=$('mm'),m=cv.getContext('2d'),S_=cv.width;m.clearRect(0,0,S_,S_);
- let x0=Infinity,x1=-Infinity,z0=Infinity,z1=-Infinity;for(let i=0;i<T.N;i++){x0=Math.min(x0,T.x[i]);x1=Math.max(x1,T.x[i]);z0=Math.min(z0,T.z[i]);z1=Math.max(z1,T.z[i])}
+
+ /* a rally stage is a line, not a loop: only the part up to the finish is drawn (the road back to the start is hidden) */
+ const NM=T.stage&&T.finI?T.finI+1:T.N;
+ let x0=Infinity,x1=-Infinity,z0=Infinity,z1=-Infinity;for(let i=0;i<NM;i++){x0=Math.min(x0,T.x[i]);x1=Math.max(x1,T.x[i]);z0=Math.min(z0,T.z[i]);z1=Math.max(z1,T.z[i])}
  const rr=S_/Math.max(60,cv.clientWidth||S_),D=22*rr,scale=Math.min((S_-D-6*rr)/(x1-x0),(S_-D-6*rr)/(z1-z0)),ox=S_-D-x1*scale,oz=D-z0*scale;
  /* section classes, built once per race: 1 medium, 2 hard, 3 hairpin corner, 4 jump */
  if(!Rc.mmCls){const K=P.kappa(T),cl=new Uint8Array(T.N);for(let i=0;i<T.N;i++){const R=1/Math.max(K[i],1e-4);cl[i]=R<35?3:R<55?2:R<80?1:0}
   for(const j of (T.jumps||[])){const a0=j-Math.round(26/T.sp),a1=j+Math.round(22/T.sp);for(let k=a0;k<=a1;k++)cl[((k%T.N)+T.N)%T.N]=4}Rc.mmCls=cl}
  const cl=Rc.mmCls,pt=i=>{i=((i%T.N)+T.N)%T.N;return[T.x[i]*scale+ox,T.z[i]*scale+oz]};
- m.lineJoin='round';m.lineCap='round';m.strokeStyle='#000000b0';m.lineWidth=8;m.beginPath();for(let i=0;i<T.N;i++){const [x,z]=pt(i);i?m.lineTo(x,z):m.moveTo(x,z)}m.closePath();m.stroke();
+ m.lineJoin='round';m.lineCap='round';m.strokeStyle='#000000b0';m.lineWidth=8;m.beginPath();for(let i=0;i<NM;i++){const [x,z]=pt(i);i?m.lineTo(x,z):m.moveTo(x,z)}if(NM===T.N)m.closePath();m.stroke();
  m.strokeStyle='#e9ecef';m.lineWidth=3.4;m.stroke();
  const COL=['','#ffd23f','#ff9a2f','#ff3b30','#ff3b30'];m.lineWidth=3.8;
- for(let i=0;i<T.N;){const c0=cl[i];if(!c0){i++;continue}let j=i;while(j+1<T.N&&cl[j+1]===c0)j++;m.strokeStyle=COL[c0];m.beginPath();for(let k=i;k<=j+1;k++){const [x,z]=pt(k);k===i?m.moveTo(x,z):m.lineTo(x,z)}m.stroke();i=j+1}
+ for(let i=0;i<NM;){const c0=cl[i];if(!c0){i++;continue}let j=i;while(j+1<NM&&cl[j+1]===c0)j++;m.strokeStyle=COL[c0];m.beginPath();for(let k=i;k<=j+1;k++){const [x,z]=pt(k);k===i?m.moveTo(x,z):m.lineTo(x,z)}m.stroke();i=j+1}
  for(const j of (T.jumps||[])){const [x,z]=pt(j);m.fillStyle='#ff3b30';m.strokeStyle='#fff';m.lineWidth=1.6;m.beginPath();m.moveTo(x,z-5);m.lineTo(x+5,z);m.lineTo(x,z+5);m.lineTo(x-5,z);m.closePath();m.fill();m.stroke()}
  m.fillStyle='#fff';m.fillRect(T.x[0]*scale+ox-3,T.z[0]*scale+oz-3,6,6);
  for(const c of Rc.cars){const x=c.x*scale+ox,z=c.z*scale+oz;m.fillStyle=c.human?CS[c.k]:'#8a909a';m.strokeStyle='#05070a';m.lineWidth=2;m.beginPath();m.arc(x,z,c.human?6:3.6,0,PI*2);m.fill();m.stroke();if(c.human){m.fillStyle='#05070a';m.font='bold 8px monospace';m.textAlign='center';m.textBaseline='middle';m.fillText(String(c.k+1),x,z+.5);m.textAlign='left';m.textBaseline='alphabetic'}}

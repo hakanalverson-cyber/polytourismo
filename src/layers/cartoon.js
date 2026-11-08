@@ -23,7 +23,7 @@ P.trackPacks={};
    this much longer: 95.5 -> 107.6 s at Road Atlanta, 98.4 -> 114.7 s at Imola */
 /* round 19: each x the CPU lap ratio after/before the slowdown; nurburg also for the longer lap (hairpin + Arena) */const MEDK={ra:.815,imola:.827,laguna:.796,suzuka:1.061,hungaroring:.884,spa:1.217,bathurst:1.036,nurburg:.849},ALAT=23,DFK=.35,DFMAX=1.5;/* tyre grip (16, then +20% and +20% more turning by request) limit on these tracks, m/s² (see the steering cap below) */
 /* newest file wins (pack.rev = build time): an older copy saved in this browser never replaces a newer built-in one */
-P.addTrackPack=pack=>{const i=baseOf(pack);if(i<0)throw new Error('This track file is for a track this game does not have ('+pack.replaces+')');const d=D[i];
+P.addTrackPack=pack=>{if(pack.stage){/* a rally stage file (rallymaps.js loads after this layer) */if(P.addStagePack)return P.addStagePack(pack);(P._stageQueue=P._stageQueue||[]).push(pack);return -1}const i=baseOf(pack);if(i<0)throw new Error('This track file is for a track this game does not have ('+pack.replaces+')');const d=D[i];
  /* the small download has no track built in, so it also knows the newest file's build time: an old copy saved in the browser (Road Atlanta's first
     file drove through the coned loops and had no grid boxes) is turned away and deleted instead of quietly coming back */
  {const nr=(window.PT8_PACKREV||{})[pack.replaces]||0;if((pack.rev||0)<nr){const e=new Error('This '+pack.name+' file is an older version: add the new '+({ra:'road-atlanta',suzuka:'suzuka',laguna:'laguna-seca',hungaroring:'hungaroring',bathurst:'bathurst',spa:'spa',nurburg:'nurburgring'}[pack.replaces]||pack.replaces)+'.ptrack');e.older=true;throw e}}
@@ -49,7 +49,7 @@ const ss=sampleTrack;sampleTrack=d=>{const T=ss(d);if(!d.cartoon)return T;const 
  return T};
 /* scenery: tiles of the model, built once per track file */
 function meshes(pack){if(pack._m)return pack._m;const tx={},mats={},lut=new Float32Array(256),alpha=new Set(pack.alpha||[]);for(let i=0;i<256;i++){const c=i/255;lut[i]=c<.04045?c/12.92:Math.pow((c+.055)/1.055,2.4)}
- const tex=k=>tx[k]||(tx[k]=(()=>{const im=new Image(),t=new THREE.Texture(im);im.onload=()=>{t.needsUpdate=true};im.src=pack.tex[k];t.wrapS=t.wrapT=THREE.RepeatWrapping;t.encoding=THREE.sRGBEncoding;t.anisotropy=4;return t})());
+ const tex=k=>tx[k]||(tx[k]=(()=>{const im=new Image(),t=new THREE.Texture(im);im.onload=()=>{t.needsUpdate=true};im.src=pack.tex[k];/* decode now and put the picture on the graphics card now, not when the road first comes into view */if(im.decode)im.decode().then(()=>{t.needsUpdate=true;try{if(window.R&&R.initTexture)R.initTexture(t)}catch(e){}}).catch(()=>{});t.wrapS=t.wrapT=THREE.RepeatWrapping;t.encoding=THREE.sRGBEncoding;t.anisotropy=4;return t})());
  const mat=k=>mats[k]||(mats[k]=k==='c'?new THREE.MeshLambertMaterial({vertexColors:true,side:THREE.DoubleSide}):k[0]==='#'?new THREE.MeshLambertMaterial({color:new THREE.Color(k).convertSRGBToLinear(),side:THREE.DoubleSide}):
   new THREE.MeshLambertMaterial({map:tex(k),side:THREE.DoubleSide,alphaTest:alpha.has(k)?.5:0}));
  const out=[];
@@ -66,6 +66,7 @@ function meshes(pack){if(pack._m)return pack._m;const tx={},mats={},lut=new Floa
      where they are a few pixels in the haze */
   me.userData.fogCull=1;if(g.boundingSphere.radius<40){me.userData.lodLo=0;me.userData.lodHi=420}out.push(me)}
  return pack._m=out}
+P.warmPack=pack=>{try{meshes(pack)}catch(e){console.warn('warm',e)}};
 /* wrap buildWorld last (after every other layer has loaded) so whatever they add to the world is removed too */
 setTimeout(()=>{const bw=buildWorld;buildWorld=T=>{const sc=bw(T),pack=T.d&&T.d.cartoon;if(!pack)return sc;
  try{const rm=[];sc.traverse(o=>{if(o===sc||!(o.isMesh||o.isInstancedMesh||o.isPoints||o.isLine||o.isSprite))return;const g=o.geometry;if(g&&!g.boundingSphere&&g.computeBoundingSphere)g.computeBoundingSphere();
