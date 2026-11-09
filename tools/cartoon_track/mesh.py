@@ -124,7 +124,9 @@ for n in names:
   seen.add(_k)
   v=d[n+'_v'].astype(np.float64)*S+[0,LIFT.get(n,0),0];f=d[n+'_f'];uv=d[n+'_uv'].astype(np.float64)
   if CT is not None:
-    f=f[CT.query(v[f].mean(1)[:,[0,2]])[0]<clipr(n)]
+    # keep a triangle when ANY corner is near the route (the low-poly mountains have huge faces: a centroid test dropped faces that reach into view, leaving holes)
+    dm=np.min([CT.query(v[f[:,k]][:,[0,2]])[0] for k in range(3)],axis=0)
+    f=f[dm<clipr(n)]
     if not len(f):continue
   if re.search(C['bake'],n) and TREEP.search(n) and not TREEX.search(n):
     treemesh(n,t,v,f,uv)
@@ -132,6 +134,11 @@ for n in names:
     if t.startswith('#'):fc=np.tile([int(t[1:3],16),int(t[3:5],16),int(t[5:7],16)],(len(f),1))
     else:im=img(t);c=uv[f].mean(1);fc=im[((1-np.mod(c[:,1],1))*511).astype(int),(np.mod(c[:,0],1)*511).astype(int)]
     fc=satc(fc,t)
+    if C.get('mshade') and re.search(C['mshade'],n):   # the model's mountains are a few huge flat faces of one pale colour: shade each face by its slope and its light so they read as rock and snow
+      p0,p1,p2=v[f[:,0]],v[f[:,1]],v[f[:,2]];nn=np.cross(p1-p0,p2-p0);nn=nn/np.maximum(np.linalg.norm(nn,axis=1,keepdims=True),1e-9);nn=nn*np.where(nn[:,1:2]<0,-1,1)
+      k=np.clip((nn[:,1]-.3)/.5,0,1)[:,None];rock=np.array([112,126,146]);snow=np.array([238,242,248]);base=rock*(1-k)+snow*k
+      lit=.72+.42*np.clip(nn@np.array([-.55,.65,.35]),-.2,1)[:,None];rr=np.random.RandomState(len(f)).uniform(.93,1.07,(len(f),1))
+      fc=np.clip(base*lit*rr*.8+fc*.2,0,255)
     if re.search('log',n,re.I) and not re.search('collider',n,re.I):   # logs and log piles sampled the green of the tree atlas: bark brown, cut ends pale wood
       lr=np.random.RandomState(len(f)).randint(-7,8,(len(f),1));fc=np.clip(np.where((fc.mean(1)>125)[:,None],np.array([203,164,112]),np.array([96,68,45]))+lr,0,255)
     vk,inv=np.unique(np.round(v,2),axis=0,return_inverse=True);ff=inv.ravel()[f];ff=ff[(ff[:,0]!=ff[:,1])&(ff[:,1]!=ff[:,2])&(ff[:,0]!=ff[:,2])]

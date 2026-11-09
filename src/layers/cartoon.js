@@ -172,6 +172,8 @@ P.menuShot=k=>MNS[k]||(MNS[k]=new Promise(res=>setTimeout(async()=>{let sc=null;
 /* the bought models are built at their real size, which dwarfs our cars: on these tracks the cars are drawn bigger (carScale), and the
    chase camera, wall contact and car-to-car contact grow with them. Physics speeds are unchanged. */
 const K=()=>{const R=typeof RACE!=="undefined"?RACE:null,d=R&&R.T&&R.T.d;return d&&d.cartoon&&d.cartoon.carScale||1};
+/* the car as drawn: on the bought rally stages it is only a little above real size (Nov 9: "the cars are WAYY too big"); K() still scales the physics, the AI and the camera model */
+const VK=()=>{const R=typeof RACE!=="undefined"?RACE:null,d=R&&R.T&&R.T.d;return d&&d.cartoon&&d.cartoon.stage?(P.stageCarK||1.1):K()};
 /* Track mode on any circuit (the Nordschleife too) gets the same handling as the model tracks: grip that builds with speed, harder brakes,
    the steering feel and the smoothed camera. Top speed, pickup, time scale and the dial factor stay model-track only (those make up for
    the models' size; the Nordschleife is real size) */
@@ -182,13 +184,13 @@ const TM=()=>{const R=typeof RACE!=="undefined"?RACE:null,f=R&&R.cfg;return !!(f
 /* Track Mode steering sensitivity: the slider's 1.0 here is the old 0.55 (Hakan's sweet spot); other modes keep the slider as it is */
 P.tmSteer=c=>c&&c.human&&!c.forceAI&&TM()?.55:1;
 const TRK=()=>{if(K()>1)return true;const R=typeof RACE!=="undefined"?RACE:null,f=R&&R.cfg;return !!(f&&(f.trackRace||f.circuit))};P.trkPhys=TRK;
-const uv=updateVisual;updateVisual=function(c,T,t){const m=c&&c.m,k=K();if(m&&m.g)m.g.scale.setScalar(1);const r=uv.apply(this,arguments);
+const uv=updateVisual;updateVisual=function(c,T,t){const m=c&&c.m,k=VK();if(m&&m.g)m.g.scale.setScalar(1);const r=uv.apply(this,arguments);
  if(m&&m.g&&k!==1&&m.g.visible!==false){m.g.scale.setScalar(k);m.g.position.y+=(k-1)*.95;if(m.sh){m.sh.scale.x*=k;m.sh.scale.y*=k}}return r};
 /* chase camera: pulled back less than the car grew (the car fills more of the screen and the camera sits nearer the road, so the ground
    streams past faster), plus a wider view and a light buzz at speed: the big tracks otherwise feel slow with big cars */
 /* the camera reads a smoothed speed: c.sp twitches by up to 0.8 m/s per frame on the hills and the camera's height, distance and view
    width all follow speed, which made the picture jitter while the car itself moved smoothly */
-const so=soloCam;soloCam=function(c,dt,out){const sp0=c.sp||0;c._csp=c._csp==null?sp0:c._csp+(sp0-c._csp)*Math.min(1,(dt||.016)*3);const dk=P.dialK(),cap=150/(2.237*dk)/* round 17: past 150 on the dial the view stops widening and the camera stops pulling back (it felt unreal) */;c.sp=TRK()?Math.min(c._csp,cap):c._csp;try{so.apply(this,arguments)}finally{c.sp=sp0}const k=K();if(c.fin||!TRK())return;const f=1+(k-1)*.5,y=c.camY==null?c.y:c.camY;
+const so=soloCam;soloCam=function(c,dt,out){const sp0=c.sp||0;c._csp=c._csp==null?sp0:c._csp+(sp0-c._csp)*Math.min(1,(dt||.016)*3);const dk=P.dialK(),cap=150/(2.237*dk)/* round 17: past 150 on the dial the view stops widening and the camera stops pulling back (it felt unreal) */;c.sp=TRK()?Math.min(c._csp,cap):c._csp;try{so.apply(this,arguments)}finally{c.sp=sp0}const k=VK();if(c.fin||!TRK())return;const f=1+(k-1)*.5,y=c.camY==null?c.y:c.camY;
  out.p.set(c.x+(out.p.x-c.x)*f,y+(out.p.y-y)*f,c.z+(out.p.z-c.z)*f);out.l.set(c.x+(out.l.x-c.x)*f,y+(out.l.y-y)*f,c.z+(out.l.z-c.z)*f);
  const v=Math.max(0,Math.min(1,((c._csp||0)*2.237*dk-40)/110)),hb0=c.camMode?1:Math.min(1,c.tnB||0),hk_=hb0*hb0*(3-2*hb0);out.f=Math.min(out.f+v*(5-2*hk_),((window.PTO&&PTO.fov)||58)+16-4*hk_);/* round 21: the hood view's narrower widening blends in with the camera (it switched at the halfway point and the view popped 4 degrees) */
  /* hood view on these tracks: the stock one sat 1 m up inside a car drawn 1.8x and tilted the view with the raw body pitch, so crests and dips
@@ -275,7 +277,7 @@ P.gridHook=(T,c,slot)=>{const pk=T.d&&T.d.cartoon;let s=pk&&pk.slots&&pk.slots[s
 /* car-to-car contact (every track): boxes the size of the drawn car (grown with carScale here), not a circle, so cars side by side no
    longer touch at a car's width apart; a softer bounce so two cars don't ping-pong off each other, and one knock gives one set of sparks
    (a pair can't spark/shake again for 0.6 s while they are still rubbing) */
-carCollide=function(a,b){if(a.out||b.out)return;const k=K(),dx=b.x-a.x,dz=b.z-a.z,HX=.95*k,HZ=2.1*k,R2=(HX+HZ)*(HX+HZ)*4;if(dx*dx+dz*dz>R2||Math.abs(a.y-b.y)>1.6*k)return;
+carCollide=function(a,b){if(a.out||b.out)return;const k=VK(),dx=b.x-a.x,dz=b.z-a.z,HX=.95*k,HZ=2.1*k,R2=(HX+HZ)*(HX+HZ)*4;if(dx*dx+dz*dz>R2||Math.abs(a.y-b.y)>1.6*k)return;
  const sa=Math.sin(a.yaw),ca=Math.cos(a.yaw),sb=Math.sin(b.yaw),cb=Math.cos(b.yaw);let best=1e9,bx=0,bz=0;
  for(const[nx,nz]of[[ca,-sa],[sa,ca],[cb,-sb],[sb,cb]]){const ra=HX*Math.abs(nx*ca-nz*sa)+HZ*Math.abs(nx*sa+nz*ca),rb=HX*Math.abs(nx*cb-nz*sb)+HZ*Math.abs(nx*sb+nz*cb),pr=dx*nx+dz*nz,ov=ra+rb-Math.abs(pr);if(ov<=0)return;if(ov<best){best=ov;const sg=pr<0?-1:1;bx=nx*sg;bz=nz*sg}}
  const ov=best/2+.01;a.x-=bx*ov;a.z-=bz*ov;b.x+=bx*ov;b.z+=bz*ov;const rv=(b.vx-a.vx)*bx+(b.vz-a.vz)*bz;if(!(rv<0))return;
@@ -285,7 +287,7 @@ carCollide=function(a,b){if(a.out||b.out)return;const k=K(),dx=b.x-a.x,dz=b.z-a.
 /* a chase camera that ends up inside the car behind (close racing, formation laps) used to fill the screen with that car's paint: cars whose
    body the camera is inside are skipped for that view */
 {const rd=R.render.bind(R);R.render=function(sc,cam){const Rc=typeof RACE!=='undefined'?RACE:null;if(!Rc||!Rc.cars||sc!==Rc.scene||!cam||!cam.isPerspectiveCamera)return rd(sc,cam);
-  const k=K(),r2=(2.4*k)*(2.4*k),hid=[];for(const c of Rc.cars){const g=c.m&&c.m.g;if(!g||!g.visible)continue;const dx=cam.position.x-c.x,dy=cam.position.y-(c.y+.5*k),dz=cam.position.z-c.z;if(dx*dx+dy*dy+dz*dz<r2&&c.cam!==cam){g.visible=false;hid.push(g)}}
+  const k=VK(),r2=(2.4*k)*(2.4*k),hid=[];for(const c of Rc.cars){const g=c.m&&c.m.g;if(!g||!g.visible)continue;const dx=cam.position.x-c.x,dy=cam.position.y-(c.y+.5*k),dz=cam.position.z-c.z;if(dx*dx+dy*dy+dz*dz<r2&&c.cam!==cam){g.visible=false;hid.push(g)}}
   try{return rd(sc,cam)}finally{for(const g of hid)g.visible=true}}}
 P.carK=K},0);
 /* ---- track files: built in, loaded from disk, remembered ---- */

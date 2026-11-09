@@ -38,10 +38,10 @@ setTimeout(()=>{const ipx=P.inPost;P.inPost=(c,dt)=>{const Rc=RACE,on=c.human&&!
   let vf=c.vx*sy1+c.vz*cy1;const vfp=vx0*sy0+vz0*cy0,ax=(vf-vfp)/dt;
   let vl=c._vl===undefined?(vx0*cy0-vz0*sy0):c._vl,rr=c._r===undefined?r0:c._r;
   /* grip: what the arcade core already works out for this surface, damage and so on, as the friction of both axles */
-  const mm=P.mul?P.mul(c):{grip:1},dd=T.d,key=dd._key,surf=dd.gravel===0?(c.onRoad?1.0:.55):key==='autumn'?(c.onRoad?.42:.32):(c.onRoad?.74:.56),pkS=dd.gravel===0?(c.onRoad?.12:.2):key==='autumn'?.27:(c.onRoad?.2:.24);
-  let mu=surf*Math.max(.55,Math.min(1.35,(mm.grip||1)/(c.onRoad?(dd.gravel===0?.95:key==='autumn'?.74:.8):1)));
+  const mm=P.mul?P.mul(c):{grip:1},dd=T.d,key=dd._key,surf=dd.gravel===0?(c.onRoad?1.15:.62):key==='autumn'?(c.onRoad?.5:.38):(c.onRoad?.9:.66),pkS=dd.gravel===0?(c.onRoad?.12:.2):key==='autumn'?.27:(c.onRoad?.2:.24);
+  let mu=surf*Math.max(.55,Math.min(1.35,(mm.grip||1)/(c.onRoad?(dd.gravel===0?.95:key==='autumn'?.74:.8):1)));mu*=1+.25*Math.min(1,Math.abs(c.sp||0)/40);/* a little aero and a settled chassis at speed */
   const st=Math.max(-1,Math.min(1,stRaw)),th=Math.max(0,Math.min(1,(c.in&&c.in.th)||0)),br=Math.max(0,Math.min(1,(c.in&&c.in.br)||0)),hb=(c.in&&c.in.hb)?1:0;
-  const sp=Math.abs(vf),dmax=.55/(1+Math.pow(sp/12,1.5)),beta=Math.atan2(vl,Math.max(2,Math.abs(vf))),del=st*dmax+(sp>6?Math.max(-.42,Math.min(.42,beta*.8)):0);/* counter-steer help: the wheel follows the slide */
+  const sp=Math.abs(vf),dmax=.55/(1+Math.pow(sp/19,1.5)),beta=Math.atan2(vl,Math.max(2,Math.abs(vf))),del=st*dmax+(sp>6?Math.max(-.42,Math.min(.42,beta*.8)):0);/* counter-steer help: the wheel follows the slide */
   if(sp<1.8){/* parking speeds: the wheels roll where they point */
    rr+=(vf*del/L-rr)*Math.min(1,dt*9);vl*=Math.max(0,1-dt*10)}
   else{
@@ -50,11 +50,11 @@ setTimeout(()=>{const ipx=P.inPost;P.inPost=(c,dt)=>{const Rc=RACE,on=c.human&&!
     const vfa=Math.max(1,Math.abs(vf))*(vf<0?-1:1),af=del-Math.atan2(vl+A*rr,vfa),ar=-Math.atan2(vl-B*rr,vfa);
     /* load transfer: braking and lifting load the nose (the tail gets light and swings out), power loads the tail */
     const lt=Math.max(-.15,Math.min(.15,-ax*.15/G))+(th<.12&&!br?.04:0),wf=Math.max(.3,Math.min(.72,.5+lt)),wr=1-wf;
-    let muF=mu*(1+.04*br),muR=mu*(hb?.17:1);
+    let muF=mu*(1+.04*br),muR=mu*1.1*(hb?.17:1);
     muR*=1-.06*th*Math.min(1,Math.max(0,1.2-sp/38));/* power in the rear tyres uses some of their grip */
-    const FF=muF*G*wf*Math.sin(1.5*Math.atan(af/pk*1.6)),FR=muR*G*wr*Math.sin(1.5*Math.atan(ar/(pk*1.3)*1.6));/* per unit of mass, the whole axle */
+    const FF=muF*G*wf*Math.sin(1.5*Math.atan(af/pk*1.6)),FR=muR*G*wr*Math.sin(1.5*Math.atan(ar/(pk*1.5)*1.6));/* per unit of mass, the whole axle */
     vl+=(FF*Math.cos(del)+FR-vfa*rr)*h;rr+=(A*FF*Math.cos(del)-B*FR)/(.8*A*B)*h;
-    rr*=1-Math.min(.25,.7*h+Math.max(0,Math.abs(beta)-.5)*3*h)}/* past ~30 deg of slip the car settles instead of spinning *//* the chassis does not spin for ever */
+    rr*=1-Math.min(.25,.7*h+Math.max(0,Math.abs(beta)-.3)*4*h)}/* past ~30 deg of slip the car settles instead of spinning *//* the chassis does not spin for ever */
   }
   rr=Math.max(-2.4,Math.min(2.4,rr));vl=Math.max(-26,Math.min(26,vl));
   /* sliding costs speed */
@@ -136,10 +136,11 @@ function note(c,T){const N=T.N,sp=T.sp,i0=c.idx||0;let ev=null;
  for(const f of T.fords||[]){const d=((f.i-i0-Math.round(f.w/sp)+N)%N)*sp;if(d<170&&(!ev||d<ev.d))ev={d,t:'WATER',s:'FORD'}}
  for(const j of T.jumps||[]){const d=((j-i0-Math.round(10/sp)+N)%N)*sp;if(d<170&&(!ev||d<ev.d))ev={d,t:'JUMP',s:'CREST'}}
  for(const q of T.pinch||[]){const a=(q.i-i0+N)%N,d=Math.max(0,a-Math.round(q.core/2/sp+4))*sp,past=((i0-q.i+N)%N)*sp;if(a>N/2&&past>q.core/2+10)continue;if(d<170&&(!ev||d<ev.d))ev={d:a>N/2?0:d,t:'NARROW',s:'PINCH'}}
- let cor=null;for(const k of corners(T)){const fw=(k.s-i0+N)%N,inside=(i0-k.s+N)%N,prog=inside/k.len;let d;
-  if(inside<k.len*.75&&inside<N/2)d=0;else if(fw*sp<=180)d=fw*sp;else continue;
-  if(!cor||d<cor.d){const R=k.R,g=R<15?'HAIRPIN':R<26?'1':R<40?'2':R<60?'3':R<85?'4':'5';cor={d,t:g==='HAIRPIN'?'HAIRPIN':'TURN '+g,g,dir:k.dir}}}
- return{ev,cor}}
+ const cs=[];for(const k of corners(T)){const fw=(k.s-i0+N)%N,inside=(i0-k.s+N)%N;let d;
+  if(inside<k.len*.75&&inside<N/2)d=0;else if(fw*sp<=320)d=fw*sp;else continue;
+  const R=k.R,g=R<15?'HAIRPIN':R<26?'1':R<40?'2':R<60?'3':R<85?'4':'5';cs.push({d,t:g==='HAIRPIN'?'HAIRPIN':'TURN '+g,g,dir:k.dir})}
+ cs.sort((x,y)=>x.d-y.d);const cor=cs.length&&cs[0].d<=180?cs[0]:null,nxt=cor?cs.find(q=>q!==cor&&q.d>cor.d+8):(cs[0]||null);
+ return{ev,cor,nxt:nxt&&nxt.d<=320?nxt:null}}
 /* arrow bends the way the corner turns; angle and colour follow severity (hairpin = hot red, grade 5 = cool green) */
 const GR={HAIRPIN:[150,'#ff3b30'],1:[115,'#ff5a2a'],2:[88,'#ff9a2a'],3:[62,'#f2c76b'],4:[42,'#c8dc6a'],5:[26,'#8fd68a']};
 function arrow(g,dir){const [ang,col]=GR[g]||GR[3],a=ang*PI/180,sx=dir==='L'?-1:1,x0=20,y0=36,y1=22,L=15,ex=x0+sx*Math.sin(a)*L,ey=y1-Math.cos(a)*L,dx=sx*Math.sin(a),dy=-Math.cos(a),px=-dy,py=dx,hx=ex+dx*5,hy=ey+dy*5;
@@ -151,14 +152,23 @@ hudUpdate=()=>{hu0();const Rc=RACE;if(!Rc||!Rc.cfg||!Rc.cfg.rally)return;
   if(Rc.state==='count'||Rc.cfg.circuit){el.style.opacity=0;if(el._t){el._t='';el.innerHTML=''}return}
   const n=note(c,Rc.T);let d=null;
   if(n.ev&&(!n.cor||n.ev.d<n.cor.d+15)){d={l:n.ev.t==='WATER'?'WATER':n.ev.t==='JUMP'?'JUMP':'NARROW',v:Math.round(n.ev.d/10)*10+' M',s:n.ev.t==='WATER'?'FORD':n.ev.t==='JUMP'?'CREST':'PINCH',col:n.ev.t==='NARROW'?'#ef9a5a':n.ev.t==='JUMP'?'#f2c76b':'#8fd3f2',svg:''}}
-  else if(n.cor){const g=n.cor.t==='HAIRPIN'?'HAIRPIN':n.cor.g,col=(GR[g]||GR[3])[1];d={l:n.cor.t,v:Math.round(n.cor.d/10)*10+' M',s:n.cor.dir==='L'?'LEFT':'RIGHT',col,svg:arrow(g,n.cor.dir)}}
+  else if(n.cor){const g=n.cor.t==='HAIRPIN'?'HAIRPIN':n.cor.g,col=(GR[g]||GR[3])[1];d={l:n.cor.t,v:Math.round(n.cor.d/10)*10+' M',s:n.cor.dir==='L'?'LEFT':'RIGHT',col,svg:arrow(g,n.cor.dir),g,dir:n.cor.dir,dist:n.cor.d}}
+  if(d&&n.nxt){const g2=n.nxt.t==='HAIRPIN'?'HAIRPIN':n.nxt.g;d.nx={txt:(n.nxt.t==='HAIRPIN'?'HAIRPIN ':'')+(n.nxt.dir==='L'?'LEFT':'RIGHT')+(n.nxt.t==='HAIRPIN'?'':' '+n.nxt.g),dist:Math.round(n.nxt.d/10)*10,col:(GR[g2]||GR[3])[1],svg:arrow(g2,n.nxt.dir)}}
+  if(d&&n.ev&&!n.cor)d.dist=n.ev.d;
   el.style.display='none';paceCard(Rc,d)})};
-/* the pace note is a card like the stage clock and the damage plate (top left, under the clock): corner name small, distance big, direction under it, the bent arrow on the left */
+/* pace note (Nov 9, "in the center of the screen, spice them up in a dirt 3 style, keep it similar to the surrounding ui"): a wide call-out plate at the top centre in the
+   same dark plate and light edge as the clock card: a big bent arrow in the severity colour, the call ("RIGHT 4", "HAIRPIN LEFT") big, the distance big on the right, a bar
+   that fills as the corner comes up, and the next call small underneath. It pulses in the last 40 m and slides in when the call changes. */
 let pcEl=null;setInterval(()=>{if(pcEl&&pcEl.style.display!=='none'&&(typeof scr==='undefined'||scr!=='game'||!RACE||!RACE.cfg||!RACE.cfg.rally))pcEl.style.display='none'},300);/* the pace note card never outlives the stage */
+const EVI={JUMP:'<svg viewBox="0 0 40 40" width="46" height="46"><path d="M5 30L20 12L35 30" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>',NARROW:'<svg viewBox="0 0 40 40" width="46" height="46"><path d="M6 8L16 20L6 32M34 8L24 20L34 32" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>',WATER:'<svg viewBox="0 0 40 40" width="46" height="46"><path d="M4 16Q10 8 16 16T28 16T40 16M4 28Q10 20 16 28T28 28T40 28" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>'};
 function paceCard(Rc,d){if(!pcEl){pcEl=document.createElement('div');pcEl.id='rlPace';document.body.appendChild(pcEl)}
  if(!d||Rc.state==='count'||Rc.cfg.circuit){pcEl.style.display='none';pcEl._k='';return}
- const k=d.l+'|'+d.v+'|'+d.s;if(pcEl._k!==k){pcEl._k=k;pcEl.innerHTML=`<div class="h8top"><div class="h8plate"><i class="pcA">${d.svg}</i><div class="pcT"><div class="lap">${d.l}</div><div class="raceTime" style="color:${d.col}">${d.v}</div><div class="bl" style="color:${d.col}">${d.s}</div></div></div></div>`}
- const ht=document.querySelector('#h0 .h8top');if(ht){const rc=ht.getBoundingClientRect();pcEl.style.left=rc.left+'px';pcEl.style.top=(rc.bottom+8)+'px';pcEl.style.setProperty('--pw',ht.offsetWidth+'px');pcEl.style.setProperty('--ph',ht.offsetHeight+'px');const pv=ht.parentNode.style.getPropertyValue('--s');if(pv)pcEl.style.setProperty('--s',pv)}else{pcEl.style.left='12px';pcEl.style.top='96px'}
+ const hp=d.l==='HAIRPIN',call=d.g?(hp?'HAIRPIN '+d.s:d.s+' '+d.g):d.l,ic=d.svg||(EVI[d.l]||''),sig=d.l+'|'+d.s;
+ if(pcEl._k!==sig){pcEl._k=sig;pcEl.classList.remove('in');void pcEl.offsetWidth;pcEl.classList.add('in');
+  pcEl.innerHTML=`<div class="pcP"><i class="pcA">${ic}</i><div class="pcT"><small>${d.g?'PACE NOTE':d.l}</small><b>${call}</b></div><div class="pcD"><b></b><small>M</small></div><u class="pcB"><s></s></u></div><div class="pcN"></div>`}
+ pcEl.style.setProperty('--c',d.col);const near=d.dist!=null&&d.dist<45;pcEl.classList.toggle('near',near);
+ pcEl.querySelector('.pcD b').textContent=d.v.replace(' M','');pcEl.querySelector('.pcB s').style.width=Math.max(0,Math.min(100,(1-(d.dist==null?170:d.dist)/180)*100))+'%';
+ const nx=pcEl.querySelector('.pcN');if(d.nx){const k=d.nx.txt+'|'+d.nx.dist;if(nx._k!==k){nx._k=k;nx.style.setProperty('--n',d.nx.col);nx.innerHTML=`<small>THEN</small><i>${d.nx.svg}</i><b>${d.nx.txt}</b><em>${d.nx.dist} M</em>`}nx.style.display='flex'}else nx.style.display='none';
  pcEl.style.display='block'}
 
 /* ---------------- rally controls: real gearboxes (shift keys), handbrake, camera ---------------- */
