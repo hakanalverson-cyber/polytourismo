@@ -101,6 +101,10 @@ function cycleBuf(a,name,k){if(EBUF[name])return EBUF[name];const sr=a.sampleRat
  return EBUF[name]=b}
 const SAT={};function satCurve(dr){const key=dr.toFixed(2);if(SAT[key])return SAT[key];const n=1024,c=new Float32Array(n);for(let i=0;i<n;i++){const x=i/(n-1)*2-1;c[i]=Math.tanh(x*dr)/Math.tanh(dr)}return SAT[key]=c}
 function mkEng(car){const a=ctx(),name=EK[EPID[car.id]]?EPID[car.id]:EK[car.eng]?car.eng:'v8',k=EK[name],e={id:car.id,k,name};
+ if(P.engWkLoad)P.engWkLoad(a);const w=P.engWkNode&&P.engWkNode(a,name,null);
+ /* engwk.js: the modelled engine when the worklet is loaded */
+ if(w){e.wk=w;e.src={stop(){w.stop()}};e.hp=a.createBiquadFilter();e.hp.type='highpass';e.hp.frequency.value=24;e.g=a.createGain();e.g.gain.value=0;w.node.connect(e.hp);e.hp.connect(e.g);e.g.connect(MG)}
+ else{
  e.src=a.createBufferSource();e.src.buffer=cycleBuf(a,name,k);e.src.loop=true;
  e.ex=a.createBiquadFilter();e.ex.type='lowpass';e.ex.Q.value=.9;
  e.body=a.createBiquadFilter();e.body.type='peaking';e.body.frequency.value=k.res;e.body.Q.value=1.4;e.body.gain.value=7;
@@ -109,7 +113,7 @@ function mkEng(car){const a=ctx(),name=EK[EPID[car.id]]?EPID[car.id]:EK[car.eng]
  e.hp=a.createBiquadFilter();e.hp.type='highpass';e.hp.frequency.value=28;
  e.g=a.createGain();e.g.gain.value=0;
  e.src.connect(e.ex);e.ex.connect(e.body);e.body.connect(e.pre);e.pre.connect(e.sh);e.sh.connect(e.hp);
- e.src.connect(e.inF);e.inF.connect(e.inG);e.inG.connect(e.hp);e.hp.connect(e.g);e.g.connect(MG);e.src.start(0,Math.random()*e.src.buffer.duration);
+ e.src.connect(e.inF);e.inF.connect(e.inG);e.inG.connect(e.hp);e.hp.connect(e.g);e.g.connect(MG);e.src.start(0,Math.random()*e.src.buffer.duration)}
  if(k.turbo){e.tb=a.createOscillator();e.tb.type='sine';e.tbG=a.createGain();e.tbG.gain.value=0;e.tb.connect(e.tbG);e.tbG.connect(MG);e.tb.start();e.boost=0}
  e.sq=a.createBufferSource();e.sq.buffer=NB;e.sq.loop=true;e.sf=a.createBiquadFilter();e.sf.type='bandpass';e.sf.frequency.value=1900;e.sf.Q.value=7;e.sg=a.createGain();e.sg.gain.value=0;e.sq.connect(e.sf);e.sf.connect(e.sg);e.sg.connect(MG);e.sq.start();
  e.os=[];e.lfo={stop(){}};e.rpm=.2;e.th=0;e.popT=0;e.last={gear:0,nm:0,combo:0,crash:0,lap:0,vy:0,fin:0,drift:0};return e}
@@ -118,17 +122,18 @@ function liftFx(e,r){const k=e.k;if(k.turbo&&e.boost>.35)hiss(.28,.16*e.boost*k.
  if(r>.55&&(k.cyl>=8||name6(e))){const n=2+(Math.random()*4|0);for(let i=0;i<n;i++){const dl=.05+i*(.05+Math.random()*.09);hiss(.05,.22+Math.random()*.2,700+Math.random()*900,200,.7,'lowpass',dl);tone(70+Math.random()*40,40,.05,'sine',.5,dl)}}}
 const name6=e=>e.name==='f6'||e.name==='v6h';
 function voice(e,c,th,live,t){const k=e.k,rpm=k.idle+e.rpm*(k.red-k.idle),rate=rpm/R0,lo=Math.min(1,th);
- e.src.playbackRate.setTargetAtTime(rate,t,.03);
  const rr=(rpm-k.idle)/(k.red-k.idle);
+ if(e.wk){const W=e.wk.k,wr_=W.idle+e.rpm*(W.red-W.idle);e.wk.set(wr_,lo,1);e.g.gain.setTargetAtTime(live?(.5+lo*.25)*O().master*O().engine*1.6:0,t,.05)}else{
+ e.src.playbackRate.setTargetAtTime(rate,t,.03);
  e.ex.frequency.setTargetAtTime(k.cut[0]+(k.cut[1]-k.cut[0])*(.25*rr+.75*rr*lo)+lo*180,t,.05);
  e.pre.gain.setTargetAtTime(.35+lo*.9+rr*.25,t,.05);
  e.inF.frequency.setTargetAtTime(500+rr*2600,t,.05);e.inG.gain.setTargetAtTime(k.int*(.12+lo*.88)*(.3+rr*.7),t,.05);
- const ev=live?(.07+lo*.07+rr*.05)*O().master*O().engine*2.1:0;e.g.gain.setTargetAtTime(ev,t,.05);
+ const ev=live?(.07+lo*.07+rr*.05)*O().master*O().engine*2.1:0;e.g.gain.setTargetAtTime(ev,t,.05)}
  if(e.tb){e.boost+=((lo>.5&&rr>.25?1:0)*Math.min(1,rr*1.4)-e.boost)*(lo>.5?.04:.25);e.tb.frequency.setTargetAtTime(2400+e.boost*4200+rr*900,t,.08);e.tbG.gain.setTargetAtTime(live?e.boost*.018*k.turbo*O().master*O().engine*2:0,t,.08)}
  if(live&&e.th>.6&&th<.15&&rr>.35&&t>e.popT){e.popT=t+.6;liftFx(e,rr)}e.th=th}
 function killEng(e){try{e.src.stop();if(e.tb){e.tb.stop();e.tbG.disconnect()}e.sq.stop();e.g.disconnect();e.sg.disconnect()}catch(er){}}
 function tick(c,i){if(!on()){return}
- try{ctx();let e=eng[i];const car0=c.cs||P.BYID.merc;if(e&&e.id!==car0.id){const old=e;eng[i]=null;killEng(old);e=null}if(!e)e=eng[i]=mkEng(car0);const a=AC,t=a.currentTime,live=RACE&&scr==='game'&&!paused;
+ try{ctx();let e=eng[i];const car0=c.cs||P.BYID.merc;if(e&&(e.id!==car0.id||(!e.wk&&AC&&AC._ptEng&&P.engWkNode))){const old=e;eng[i]=null;killEng(old);e=null}if(!e)e=eng[i]=mkEng(car0);const a=AC,t=a.currentTime,live=RACE&&scr==='game'&&!paused;
  const car=c.cs||P.BYID.merc,gi=c.gear|0,ceil=Math.max(8,car.top*P.GT(car)[Math.min(gi,P.GT(car).length-1)].top*.92),r=Math.min(1.05,c.sp/ceil),th=c.in?c.in.th:0;
  const cnt=RACE&&RACE.state==='count'&&c.human&&!c.cool;const rpm=cnt?Math.min(1,.16+th*.72+(th>.5?Math.sin(t*38)*.03:0)):Math.max(.14,Math.min(1,.14+r*.86+(c.shiftT>0?-.18:0)+th*.04));e.rpm+=(rpm-e.rpm)*.35;
  voice(e,c,th,live,t);

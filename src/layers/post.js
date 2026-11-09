@@ -25,9 +25,9 @@ function init(){const sc=new THREE.Scene(),cam=new THREE.OrthographicCamera(-1,1
   fragmentShader:`uniform sampler2D tC,tD;uniform vec2 dir;uniform float cn,cf,f0,f1,w;varying vec2 vUv;${LZ}
   void main(){vec3 s=vec3(0.);float t=0.;for(int i=-4;i<=4;i++){float fi=float(i);vec2 u=vUv+dir*fi;float k=exp(-fi*fi/8.);if(w>.5)k*=.03+smoothstep(f0,f1,lz(u));s+=texture2D(tC,u).rgb*k;t+=k;}gl_FragColor=vec4(s/t,1.);}`,depthTest:false,depthWrite:false,toneMapped:false});
  const bright=new THREE.ShaderMaterial({uniforms:{tC:{value:null},thr:{value:.9}},vertexShader:VS,fragmentShader:`uniform sampler2D tC;uniform float thr;varying vec2 vUv;void main(){vec3 c=texture2D(tC,vUv).rgb;float l=max(c.r,max(c.g,c.b));float k=clamp((l-thr)/(1.-thr+.0001),0.,1.);gl_FragColor=vec4(c*k*k,1.);}`,depthTest:false,depthWrite:false,toneMapped:false});
- const comp=new THREE.ShaderMaterial({uniforms:{tC:{value:null},tD:{value:null},tB:{value:null},tBl:{value:null},blK:{value:0},sunP:{value:new THREE.Vector2()},sunV:{value:0},sunCol:{value:new THREE.Color()},asp:{value:1.7},px:{value:new THREE.Vector2()},cn:{value:.1},cf:{value:1000},f0:{value:40},f1:{value:250},dofK:{value:.7},aoK:{value:.5},
+ const comp=new THREE.ShaderMaterial({uniforms:{tC:{value:null},tD:{value:null},tB:{value:null},tBl:{value:null},blK:{value:0},sunP:{value:new THREE.Vector2()},sunV:{value:0},sunCol:{value:new THREE.Color()},asp:{value:1.7},px:{value:new THREE.Vector2()},cn:{value:.1},cf:{value:1000},f0:{value:40},f1:{value:250},dofK:{value:.7},aoK:{value:.5},ray:{value:0},ocK:{value:0},sunR:{value:new THREE.Vector2()},
   hz:{value:.0035},hzK:{value:.3},hzC:{value:new THREE.Color()},sunC:{value:new THREE.Color()},sunD:{value:new THREE.Vector3(0,1,0)},pInv:{value:new THREE.Matrix4()},cW:{value:new THREE.Matrix4()}},vertexShader:VS,
-  fragmentShader:`uniform sampler2D tC,tD,tB,tBl;uniform vec2 px,sunP;uniform float cn,cf,f0,f1,dofK,aoK,hz,hzK,blK,sunV,asp;uniform vec3 hzC,sunC,sunD,sunCol;uniform mat4 pInv,cW;varying vec2 vUv;${LZ}
+  fragmentShader:`uniform sampler2D tC,tD,tB,tBl;uniform vec2 px,sunP;uniform float cn,cf,f0,f1,dofK,aoK,hz,hzK,blK,sunV,asp,ray,ocK;uniform vec2 sunR;uniform vec3 hzC,sunC,sunD,sunCol;uniform mat4 pInv,cW;varying vec2 vUv;${LZ}
   float sunVis(){float v=0.;for(int i=0;i<9;i++){float a=float(i)*2.39996;vec2 o=vec2(cos(a),sin(a))*px*(2.+float(i)*2.2);v+=step(.99999,texture2D(tD,sunP+o).x);}return v/9.;}
   vec3 ghost(vec2 uv,float k,float rad,vec3 col){vec2 g=sunP+(vec2(.5)-sunP)*k;float d=length((uv-g)*vec2(asp,1.));return col*smoothstep(rad,rad*.55,d)+col*.6*exp(-pow((d-rad)*90.,2.));}
   void main(){vec2 uv=vUv;vec3 c=texture2D(tC,uv).rgb;float d=texture2D(tD,uv).x;float z=lz(uv);bool sky=d>.99999;
@@ -39,6 +39,13 @@ function init(){const sc=new THREE.Scene(),cam=new THREE.OrthographicCamera(-1,1
    if(hzK>0.){vec4 vp=pInv*vec4(uv*2.-1.,1.,1.);vec3 vd=normalize((cW*vec4(normalize(vp.xyz/vp.w),0.)).xyz);float s=max(0.,dot(vd,sunD));
     vec3 h=hzC+sunC*(pow(s,6.)*.45+pow(s,40.)*.4);float f=sky?pow(s,6.)*.25:(1.-exp(-z*hz))*hzK;c=mix(c,h,clamp(f,0.,1.));}
    if(blK>0.)c+=texture2D(tBl,uv).rgb*blK;
+   /* Nov 9 (Hakan: "if it is sunny, there should be sun rays"): light shafts. March from the pixel toward the sun on screen and count the
+      open sky on the way (depth = far plane), weighted toward the sun, so trees, hills and buildings cut dark shafts through the glow */
+   if(ray>0.){vec2 dl=(sunR-uv);float n=0.,w=1.,tw=0.;float jit=fract(sin(dot(uv,vec2(12.9898,78.233)))*43758.5453);vec2 st=dl/24.;vec2 p=uv+st*jit;
+    for(int i=0;i<24;i++){n+=step(.99999,texture2D(tD,clamp(p,0.,1.)).x)*w;tw+=w;w*=.94;p+=st;}
+    float fall=exp(-length(dl*vec2(asp,1.))*2.2);c+=sunCol*(n/tw)*fall*ray;}
+   /* overcast: a darker, flatter, cooler day */
+   if(ocK>0.){float l=dot(c,vec3(.2126,.7152,.0722));c=mix(c,vec3(l)*vec3(.94,.98,1.04),.22*ocK);c*=1.-.2*ocK;c=mix(c,c*c*1.35,.18*ocK);}
    /* sun glare: a soft halo and a thin horizontal streak around the sun, a ring, ghosts mirrored through the middle of the frame (the
       reflections between lens elements), and a veil of light over the whole picture when you look into it. All of it scaled by how much of
       the sun is actually visible (the depth around it reads as open sky) */
@@ -82,7 +89,12 @@ R.render=function(scene,cam){if(bad>3||!want(scene,cam))return prev(scene,cam);
   if(fog&&fog.color){u.hzC.value.copy(lin2srgb(fog.color));u.hzK.value=night?.08:.12;u.hz.value=fog.isFog?Math.min(.01,2.2/Math.max(200,fog.far)):.004}else u.hzK.value=0;
   if(sun){u.sunC.value.copy(lin2srgb(sun.color)).multiplyScalar(night?.15:Math.min(1,.45*sun.intensity));CW.copy(sun.position).sub(sun.target.position).normalize();u.sunD.value.copy(CW)}else u.sunC.value.setRGB(0,0,0);
   cam.updateMatrixWorld();u.pInv.value.copy(cam.projectionMatrixInverse);u.cW.value.copy(cam.matrixWorld);
-  u.tBl.value=qc.texture;u.blK.value=G?(night?.35:.16):0;u.asp.value=W/H;u.sunV.value=0;
+  /* the day's mood: overcast (heavy cloud on the map, or rain, storm, fog) or sunny (clear sky, sun up) */
+  const sx=scene.userData.skyx,cov=sx&&sx.uniforms?sx.uniforms.cov.value:.35,wx=P.wxOf?P.wxOf(RACE):null,oc=night?0:Math.max(wx?1:0,Math.min(1,Math.max(0,(cov-.45)/.2))),sunny=night||!sun?0:(1-oc)*Math.min(1,Math.max(0,(sun.position.y-sun.target.position.y)/Math.max(1,sun.position.distanceTo(sun.target.position))*4));
+  u.ocK.value=O().mood===false?0:oc;Q.bright.uniforms.thr.value=.9-.08*sunny;
+  u.tBl.value=qc.texture;u.blK.value=G?(night?.35:.16+.1*sunny-.08*oc):0;u.asp.value=W/H;u.sunV.value=0;u.ray.value=0;u.aoK.value=aoOn()?.4+.25*oc:0;
+  if(G&&sun&&!night&&sunny>0){const sp=CW.clone().multiplyScalar(1000).add(cam.position).project(cam),fw=CW.dot(new THREE.Vector3(0,0,-1).applyQuaternion(cam.quaternion));
+   if(fw>.05&&Math.abs(sp.x)<2.2&&Math.abs(sp.y)<2.2){u.sunR.value.set(sp.x*.5+.5,sp.y*.5+.5);u.ray.value=.26*sunny*Math.min(1,fw*3)*(1-Math.max(0,Math.max(Math.abs(sp.x),Math.abs(sp.y))-1)/1.2);if(!u.sunV.value)u.sunCol.value.copy(lin2srgb(sun.color)).lerp(new THREE.Color(1,1,1),.35)}}
   if(G&&sun&&!night){SP.copy(CW);const el=SP.y;SP.multiplyScalar(1000).add(cam.position);SP.project(cam);const fwd=CW.dot(new THREE.Vector3(0,0,-1).applyQuaternion(cam.quaternion));
    if(fwd>0&&el>-.03&&Math.abs(SP.x)<1.25&&Math.abs(SP.y)<1.25){u.sunP.value.set(SP.x*.5+.5,SP.y*.5+.5);const edge=1-Math.max(0,Math.max(Math.abs(SP.x),Math.abs(SP.y))-.9)/.35;
     u.sunV.value=Math.max(0,edge)*Math.min(1,(el+.03)/.08)*(scene.fog&&scene.fog.far<500?.6:1);u.sunCol.value.copy(lin2srgb(sun.color)).lerp(new THREE.Color(1,1,1),.35)}}

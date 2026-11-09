@@ -35,7 +35,28 @@ function fix(sc,T){if(sc.userData.tnFix)return;sc.userData.tnFix=1;const d=T.d;i
   /* the portal mouths stay open: no face joins the roof to the road outside */
   for(let r=0;r<rows-1;r++)for(let j=0;j<LS;j++){const p=r*(LS+1)+j,q=p+LS+1;if(ins[r]!==ins[r+1]&&(band[p]||band[p+1]||band[q]||band[q+1]))continue;if(!ins[r]&&!ins[r+1]&&(band[p]||band[p+1]))continue;idx.push(p,q,p+1,p+1,q,q+1)}
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.setIndex(idx);g.computeVertexNormals();
-  const m=new THREE.Mesh(g,tm?tm.material:new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true}));m.receiveShadow=true;m.castShadow=true;m.userData.tnHill=1;sc.add(m)}}
+  const m=new THREE.Mesh(g,tm?tm.material:new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true}));m.receiveShadow=true;m.castShadow=true;m.userData.tnHill=1;sc.add(m);liner(sc,T,a,b)}}
+/* Nov 9 (Hakan: "the tunnels don't have enough shadow"): the hill is one-sided land, so from inside it you saw the sky. Each tunnel now
+   gets a lining (concrete walls and a vaulted roof, darker toward the top, casting the shadow onto the road), a row of warm lamps along
+   the roof, and the road inside is darkened (a multiply layer that fades in over the first few metres past each portal) */
+const LP=[[-1,-.4],[-1,3.6],[-.86,5.3],[-.55,6.5],[-.2,7],[.2,7],[.55,6.5],[.86,5.3],[1,3.6],[1,-.4]];
+let LM=null,DM=null,LAMP=null;
+function liner(sc,T,a,b){const N=T.N,pos=[],col=[],idx=[],dp=[],dc=[],di=[],lamps=[],np=LP.length,E=5;let rows=0;
+ if(!LM){LM=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.92,metalness:0,side:THREE.DoubleSide});
+  DM=new THREE.MeshBasicMaterial({vertexColors:true,blending:THREE.MultiplyBlending,premultipliedAlpha:true,transparent:true,depthWrite:false,fog:false,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3});
+  LAMP=new THREE.MeshBasicMaterial({color:0xffe2a8})}
+ for(let kk=a;kk<=b;kk++){const k=((kk%N)+N)%N,hw=T.hw[k],W=hw+1.3,c=Math.cos(T.psi[k]),s=Math.sin(T.psi[k]);
+  for(let j=0;j<np;j++){const l=LP[j][0]*W,h=LP[j][1],x=T.x[k]+c*l,z=T.z[k]-s*l,y=T.y[k]-l*T.bank[k]+h;pos.push(x,y,z);const v=.17-Math.max(0,h-3.6)*.022+(j===0||j===np-1?.02:0);col.push(v,v*.98,v*.95)}
+  /* the road shade: full inside, fading out over E samples at each portal */
+  const f=Math.min(1,Math.min(kk-a,b-kk)/E),sh=1-.62*f;for(const u of[-1,1]){const l=u*(hw+1.1),x=T.x[k]+c*l,z=T.z[k]-s*l,y=T.y[k]-l*T.bank[k]+.05;dp.push(x,y,z);dc.push(sh,sh,sh*1.02)}
+  if((kk-a)%6===3)lamps.push([T.x[k],T.y[k]+6.92,T.z[k],T.psi[k]]);rows++}
+ for(let r=0;r<rows-1;r++){for(let j=0;j<np-1;j++){const p=r*np+j,q=p+np;idx.push(p,p+1,q,p+1,q+1,q)}const p=r*2,q=p+2;di.push(p,q,p+1,p+1,q,q+1)}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.setIndex(idx);g.computeVertexNormals();
+ const m=new THREE.Mesh(g,LM);m.castShadow=true;m.receiveShadow=true;m.userData.tnHill=1;sc.add(m);
+ const g2=new THREE.BufferGeometry();g2.setAttribute('position',new THREE.Float32BufferAttribute(dp,3));g2.setAttribute('color',new THREE.Float32BufferAttribute(dc,3));g2.setIndex(di);
+ const d=new THREE.Mesh(g2,DM);d.renderOrder=2;d.userData.tnHill=1;d.userData.noChunk=1;sc.add(d);
+ if(lamps.length){const im=new THREE.InstancedMesh(new THREE.BoxGeometry(.5,.08,2.2),LAMP,lamps.length),M=new THREE.Matrix4(),Q=new THREE.Quaternion(),S=new THREE.Vector3(1,1,1),V=new THREE.Vector3(),Y=new THREE.Vector3(0,1,0);
+  lamps.forEach((l,i)=>{Q.setFromAxisAngle(Y,l[3]);M.compose(V.set(l[0],l[1],l[2]),Q,S);im.setMatrixAt(i,M)});im.userData.tnHill=1;sc.add(im)}}
 P.tunnelFix=fix;
 const bw=buildWorld;buildWorld=function(T){const sc=bw.apply(this,arguments);try{fix(sc,T)}catch(e){console.warn('tunnelfix',e)}return sc};
 })();

@@ -18,13 +18,13 @@ const st=document.createElement('style');st.textContent=`
 #prepCv{position:absolute;inset:0;width:100%;height:100%;z-index:0;opacity:0;transition:opacity .5s ease;pointer-events:none;display:block}
 #s8setup.prepLive #prepCv{opacity:1}
 #s8setup.prepLive #prepCv.cut{opacity:0;transition:opacity .22s ease}
-#prepVig{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;transition:opacity .5s;background:radial-gradient(ellipse 90% 80% at 60% 35%,#0000 40%,#0006 100%),linear-gradient(0deg,#000c 0%,#0007 30%,#0000 55%)}
+#prepVig{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;transition:opacity .5s;background:radial-gradient(ellipse 90% 80% at 60% 35%,#0000 40%,#0006 100%),linear-gradient(90deg,#0008 0%,#0003 30%,#0000 50%),linear-gradient(0deg,#000c 0%,#0007 30%,#0000 55%)}
 #s8setup.prepLive #prepVig{opacity:1}
 #s8setup.prepLive::before{opacity:0!important}
 #s8setup.prepLive #gxSu.g2 .gxHero{background:transparent!important;box-shadow:none!important;cursor:grab}
 #s8setup.prepLive #gxSu.g2 .gxHero:active{cursor:grabbing}
 #s8setup.prepLive #gxSu.g2 #gxShot,#s8setup.prepLive #gxHi{visibility:hidden}
-#s8setup.prepLive #gxSu.g2 .gxHero:after{background:linear-gradient(90deg,#0009 0%,#0004 30%,#0000 55%)!important}
+#s8setup.prepLive #gxSu.g2 .gxHero:after{display:none}
 #s8setup.prepLive #gxSu.g2 .gxTn b{text-shadow:0 2px 24px #000a}
 #s8setup.prepLive #gxSu.g2 .gxCard{background:linear-gradient(180deg,#1d2228a6,#0d1014bf)!important;backdrop-filter:blur(18px) saturate(1.2);-webkit-backdrop-filter:blur(18px) saturate(1.2);box-shadow:inset 0 1px 0 #ffffff2e,0 0 0 1px #0008,0 18px 40px #0008!important}
 #s8setup.prepLive #gxSu.g2 .gxCard.pf.empty,#s8setup.prepLive #gxSu.g2 .gxCard.pf.idle{background:#0a0d1066!important;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
@@ -38,7 +38,7 @@ const cam=new THREE.PerspectiveCamera(46,16/9,.3,6000),key=new THREE.Directional
 const U=()=>window.TODU;
 /* ---- the world ---- */
 function free(){if(!S)return;const s=S;S=null;try{for(const c of s.cars)s.sc.remove(c);s.sc.remove(key);s.sc.remove(key.target);disposeWorld(s.sc);if(R2)R2.renderLists.dispose()}catch(e){console.warn('prep free',e)}const sec=$('s8setup');if(sec)sec.classList.remove('prepLive')}
-P.prepFree=free;
+P.prepFree=free;let lastErr='';P.prepDbg=()=>({S:!!S,track:S&&S.track,cars:S&&S.cars.length,cv:!!cv,cvOn:!!(cv&&cv.isConnected),cls:($('s8setup')||{}).className,w:JSON.stringify(want()&&{t:want().track,s:want().step}),err:lastErr,building,cam:cam.position.toArray().map(Math.round)});
 function build(track,tod){free();const d=D[track];if(!d)return null;
  const T=sampleTrack(Object.assign({},d)),sc=buildWorld(T);
  /* time of day: P.applyTod writes the shared grade uniforms and the main exposure; take what it wants for this view and put the game's back */
@@ -66,7 +66,7 @@ function carsFor(s,list){const k=list.map(c=>c.id+'.'+c.alt).join('|');if(s.carK
   m.position.set(T.x[i]+cs*lat,T.y[i]-lat*T.bank[i]-bx.min.y+.01,T.z[i]-sn*lat);m.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});s.sc.add(m);s.cars.push(m)})}
 /* ---- the camera ---- */
 const SHOTS=['fly','pan','low','high'];
-function nextShot(s){const T=s.T,N=T.N,sp=T.sp||2;s.sh++;const kind=s.sh===1?'aerial':SHOTS[(s.sh-2)%SHOTS.length];
+function nextShot(s){const T=s.T,N=T.N,sp=T.sp||2;s.sh++;if(s.sh===0&&s.open)s.sh=1;const kind=s.sh===1&&!s.open?'aerial':SHOTS[(s.sh-2+SHOTS.length)%SHOTS.length];
  const k0=s.open?Math.random()*(N*.8)+N*.05:Math.random()*N;s.shot={kind,k0,side:Math.random()<.5?-1:1,t0:performance.now(),dur:kind==='aerial'?9:kind==='pan'?6.5:7.5,sp}}
 function camRace(s,now){const T=s.T;if(!s.shot)nextShot(s);let sh=s.shot,t=(now-sh.t0)/1000;
  if(t>sh.dur&&!pend){pend=1;cv.classList.add('cut');setTimeout(()=>{if(S===s){nextShot(s)}pend=null;setTimeout(()=>cv&&cv.classList.remove('cut'),40)},230)}
@@ -79,10 +79,10 @@ function camRace(s,now){const T=s.T;if(!s.shot)nextShot(s);let sh=s.shot,t=(now-
   else{/* pan: a fixed camera by the road that follows a point running past it */const o=at(T,sh.k0,s.open),co=Math.cos(o.psi),so=Math.sin(o.psi),a=at(T,sh.k0+(-60+v*t)/sp,s.open);P_.set(o.x+co*side*(o.hw+13),o.y+3.2,o.z-so*side*(o.hw+13));L.set(a.x,a.y+1,a.z)}}
  const g=GBf(T,P_.x,P_.z);if(isFinite(g)&&P_.y<g+2)P_.y=g+2;
  cam.position.copy(P_);cam.lookAt(L);s.look=L;return sh.kind==='aerial'?b2(s):null}
-const b2=s=>s.box.e*1.6+400;
+const b2=s=>s.box.e*2.4+700;
 let drag=0,dragX=null;
 function camCar(s,dt){const n=s.cars.length;if(!n)return;const C=new THREE.Vector3();for(const c of s.cars)C.add(c.position);C.divideScalar(n);
- if(dragX==null)s.ang+=dt*.13;s.ang+=drag;drag=0;const ps=s.cars[0].rotation.y,r=5.6+2.3*(n-1)+(n>2?1.6:0),h=1.25+.45*(n-1),a=ps+.95+s.ang;
+ if(dragX==null)s.ang+=dt*.13;s.ang+=drag;drag=0;const ps=s.cars[0].rotation.y,r=7.4+2.6*(n-1)+(n>2?1.6:0),h=1.35+.45*(n-1),a=ps+.95+s.ang;
  cam.position.set(C.x+Math.sin(a)*r,C.y+h,C.z+Math.cos(a)*r);const g=GBf(s.T,cam.position.x,cam.position.z);if(isFinite(g)&&cam.position.y<g+.7)cam.position.y=g+.7;
  const L=C.clone();L.y+=.45;cam.lookAt(L);s.look=L}
 /* ---- what the setup screen shows right now ---- */
@@ -91,7 +91,7 @@ function want(){const sec=$('s8setup');if(!on()||!sec||!sec.classList.contains('
  const tod=ST.todUser||(D[ST.track]&&D[ST.track].tod0)||'day',np=ST.mode==='ta'?1:Math.max(1,Math.min(4,ST.players||1)),cars=[];
  if(step===2&&u.selCar)for(let p=0;p<np;p++){try{const c=u.selCar(p);if(c)cars.push({id:c.id,alt:c.alt|0})}catch(e){}}
  return{sec,track:ST.track,tod,step,cars}}
-function size(sec){const dpr=Math.min(1.5,devicePixelRatio||1),w=sec.clientWidth|0,h=sec.clientHeight|0;if(!w||!h)return false;
+function size(sec){const dpr=Math.min(1.25,devicePixelRatio||1),w=sec.clientWidth|0,h=sec.clientHeight|0;if(!w||!h)return false;
  if(R2.getPixelRatio()!==dpr)R2.setPixelRatio(dpr);const v=R2.getSize(new THREE.Vector2());if(v.x!==w||v.y!==h)R2.setSize(w,h,false);cam.aspect=w/h;return true}
 function ensure(sec){if(!cv||!cv.isConnected){cv=document.createElement('canvas');cv.id='prepCv';vig=document.createElement('div');vig.id='prepVig';wait=document.createElement('div');wait.id='prepWait';wait.textContent='LOADING TRACK';sec.insertBefore(wait,sec.firstChild);sec.insertBefore(vig,sec.firstChild);sec.insertBefore(cv,sec.firstChild);
   if(R2){try{R2.dispose()}catch(e){}}R2=new THREE.WebGLRenderer({canvas:cv,antialias:true,powerPreference:'high-performance'});R2.outputEncoding=THREE.sRGBEncoding;R2.toneMapping=THREE.ACESFilmicToneMapping;R2.physicallyCorrectLights=R.physicallyCorrectLights;R2.shadowMap.enabled=true;R2.shadowMap.type=THREE.PCFSoftShadowMap}}
@@ -101,13 +101,13 @@ function frame(now){raf=requestAnimationFrame(frame);const w=want();
  if(document.hidden)return;ensure(w.sec);
  if(!S||S.track!==w.track||S.tod!==w.tod){if(building)return;building=1;w.sec.classList.add('prepBuild');w.sec.classList.remove('prepLive');
   /* let the fade show, then build (a second or so on the big maps) */
-  setTimeout(()=>{try{const s=build(w.track,w.tod);S=s}catch(e){console.warn('prep build',e);S=null;if(window.PTO)window.PTO.prepLive=false}building=0;w.sec.classList.remove('prepBuild')},60);return}
+  setTimeout(()=>{try{const s=build(w.track,w.tod);S=s}catch(e){console.warn('prep build',e);lastErr=String(e&&e.stack||e).slice(0,300);S=null;if(window.PTO)window.PTO.prepLive=false}building=0;w.sec.classList.remove('prepBuild')},60);return}
  const s=S,dt=Math.min(.05,(now-(lastT||now))/1000);lastT=now;if(!size(w.sec))return;
  if(w.step===2){carsFor(s,w.cars);for(const c of s.cars)c.visible=true}else for(const c of s.cars)c.visible=false;
  if(s.step!==w.step){s.step=w.step;s.shot=null;s.sh=0;s.ang=0;cv.classList.remove('cut');pend=null}
  let far=null;if(w.step===2&&s.cars.length)camCar(s,dt);else far=camRace(s,now);
  /* the subject sits in the open part of the picture (above the cards, right of the name) */
- const W=1000,H=Math.round(1000/cam.aspect),cars=w.step===2;cam.setViewOffset(W,H,cars?-W*.12:-W*.04,H*(cars?.17:.1),W,H);cam.updateProjectionMatrix();
+ const W=1000,H=Math.round(1000/cam.aspect),cars=w.step===2;cam.setViewOffset(W,H,cars?-W*.12:-W*.04,H*(cars?.13:.1),W,H);cam.updateProjectionMatrix();
  if(s.fog&&s.sc.fog){const f=far||s.fog.far;s.sc.fog.far=f;s.sc.fog.near=far?Math.min(far*.4,s.fog.near+far*.2):s.fog.near}
  if(s.dome)s.dome.position.copy(cam.position);const m=s.sc.userData.skyx;if(m&&m.uniforms)m.uniforms.t.value=(now-s.t0)/1000+40;
  if(s.sun&&s.look){const L=s.look,ext=cars?16:far?Math.min(600,s.box.e*.7):90;s.sun.target.position.copy(L);s.sun.position.copy(L).addScaledVector(s.sd,Math.max(200,ext*1.5));s.sun.target.updateMatrixWorld();const sc_=s.sun.shadow.camera;
@@ -117,7 +117,7 @@ function frame(now){raf=requestAnimationFrame(frame);const w=want();
  const u=U(),sv=u&&s.grade?{mul:u.mul.value.clone(),add:u.add.value.clone(),sat:u.sat.value}:null;
  if(sv){u.mul.value.copy(s.grade.mul);u.add.value.copy(s.grade.add);u.sat.value=s.grade.sat}
  R2.toneMappingExposure=s.expo||1.05;
- try{R2.render(s.sc,cam)}catch(e){console.warn('prep render',e);if(window.PTO)window.PTO.prepLive=false;free()}
+ try{R2.render(s.sc,cam)}catch(e){console.warn('prep render',e);lastErr='R '+String(e&&e.stack||e).slice(0,300);if(window.PTO)window.PTO.prepLive=false;free()}
  if(sv){u.mul.value.copy(sv.mul);u.add.value.copy(sv.add);u.sat.value=sv.sat}
  w.sec.classList.add('prepLive')}
 raf=requestAnimationFrame(frame);

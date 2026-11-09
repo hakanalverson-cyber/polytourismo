@@ -65,9 +65,11 @@ function upgrade(sc,dd){if(sc.userData.skyx!==undefined)return;sc.userData.skyx=
  const fog=sc.fog&&sc.fog.color?sc.fog.color.clone():hor.clone();
  const sun=sunOf(sc),sd=new THREE.Vector3(.4,.5,-.7);if(sun){sd.copy(sun.position).sub(sun.target?sun.target.position:new THREE.Vector3());if(sd.lengthSq()<1e-6)sd.set(.4,.5,-.7)}sd.normalize();
  const sc0=sun?sun.color.clone():new THREE.Color(1,.95,.85),cl=CL[d.name]||[.35,0xffffff,1];
+ /* round 2 (Hakan: an overcast map should be darker): heavy cloud greys and dims the sky, and the clouds get heavier undersides */
+ const oc=Math.max(0,Math.min(1,(cl[0]-.45)/.2));if(oc>0&&!night){const g=c=>{const l=(c.r+c.g+c.b)/3;c.lerp(new THREE.Color(l,l,l*1.04),.55*oc).multiplyScalar(1-.28*oc)};g(zen);g(hor);g(fog);if(sc.fog&&sc.fog.color)g(sc.fog.color);sc.traverse(o=>{if(o.isHemisphereLight)o.intensity*=1-.3*oc;else if(o.isDirectionalLight)o.intensity*=1-.3*oc})}
  const midC=zen.clone().lerp(hor,.45),gndC=fog.clone().lerp(hor,.3);
  const m=new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,depthTest:true,fog:false,uniforms:{zen:{value:zen},mid:{value:midC},hor:{value:hor.clone().lerp(fog,.35)},gnd:{value:gndC},sunC:{value:sc0.clone().multiplyScalar(night?.25:1)},sunD:{value:sd},
-  clC:{value:lin(cl[1]).multiply(night?new THREE.Color(.35,.38,.5):new THREE.Color(1,1,1))},t:{value:0},cov:{value:cl[0]},csc:{value:cl[2]},night:{value:night},warm:{value:low?1:sd.y<.3?.4:.1},sunK:{value:night?0:1}},
+  clC:{value:lin(cl[1]).multiply(night?new THREE.Color(.35,.38,.5):new THREE.Color(1,1,1)).multiplyScalar(1-.3*oc)},t:{value:0},cov:{value:cl[0]},csc:{value:cl[2]},night:{value:night},warm:{value:low?1:sd.y<.3?.4:.1},sunK:{value:night?0:1-.75*oc}},
   vertexShader:VS,fragmentShader:FS});
  dome.material=m;dome.renderOrder=-20;dome.frustumCulled=false;dome.userData.skyx=1;
  for(const o of discs)o.visible=false;
