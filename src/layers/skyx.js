@@ -57,11 +57,11 @@ const T0=performance.now();
 function texCols(m){/* the old gradient texture: top colour and the horizon colour (sRGB pixels) */const im=m&&m.map&&m.map.image;if(!im||!im.getContext)return null;try{const g=im.getContext('2d'),h=im.height,a=g.getImageData(0,0,1,1).data,b=g.getImageData(0,Math.floor(h*.62),1,1).data;
  const f=x=>new THREE.Color(x[0]/255,x[1]/255,x[2]/255).convertSRGBToLinear();return[f(a),f(b)]}catch(e){return null}}
 function sunOf(sc){let s=sc.userData.sun;if(!s)sc.traverse(o=>{if(!s&&o.isDirectionalLight)s=o});return s}
-function upgrade(sc){if(sc.userData.skyx!==undefined)return;sc.userData.skyx=0;let dome=null;const discs=[];
+function upgrade(sc,dd){if(sc.userData.skyx!==undefined)return;sc.userData.skyx=0;let dome=null;const discs=[];
  for(const o of sc.children){const g=o.geometry;if(!g||!o.isMesh)continue;const pr=g.parameters||{};if(g.type==='SphereGeometry'&&pr.radius===1500&&!dome&&o.material&&!o.material.isShaderMaterial)dome=o;else if(g.type==='SphereGeometry'&&pr.radius===40&&o.material&&o.material.fog===false)discs.push(o)}
  if(!dome)return;const cols=texCols(dome.material);if(!cols)return;
  const tint=dome.material.color?dome.material.color.clone():new THREE.Color(1,1,1),zen=cols[0].clone().multiply(tint),hor=cols[1].clone().multiply(tint);
- const Rc=typeof RACE!=='undefined'?RACE:null,d=Rc&&Rc.T&&Rc.T.d||{},tod=sc.userData.tod||P.curTod||'day',night=tod==='night'||d.id===3?1:0,low=tod==='dawn'||tod==='sunset';
+ const Rc=typeof RACE!=='undefined'?RACE:null,d=dd||Rc&&Rc.T&&Rc.T.d||{},tod=sc.userData.tod||P.curTod||'day',night=tod==='night'||d.id===3?1:0,low=tod==='dawn'||tod==='sunset';
  const fog=sc.fog&&sc.fog.color?sc.fog.color.clone():hor.clone();
  const sun=sunOf(sc),sd=new THREE.Vector3(.4,.5,-.7);if(sun){sd.copy(sun.position).sub(sun.target?sun.target.position:new THREE.Vector3());if(sd.lengthSq()<1e-6)sd.set(.4,.5,-.7)}sd.normalize();
  const sc0=sun?sun.color.clone():new THREE.Color(1,.95,.85),cl=CL[d.name]||[.35,0xffffff,1];

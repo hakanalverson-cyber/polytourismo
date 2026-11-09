@@ -1769,3 +1769,6 @@ body.rprep #rlPace,body.rreplay #rlPace{display:none!important}
 #rlPace .pcN b{font-size:11px!important}
 #rlPace .pcN small{display:none!important}
 #rlPace .pcN em{font-size:9px!important}
+/* Nov 9: the layout's shape over every track and stage card */
+#s8pick .pk canvas.pkShape{position:absolute;left:12px;top:12px;width:clamp(72px,22%,140px);height:auto;aspect-ratio:22/15;pointer-events:none;filter:drop-shadow(0 2px 8px #000c);opacity:.92;transition:opacity .2s,transform .2s}
+#s8pick .pk.sel canvas.pkShape{opacity:1;transform:scale(1.06);transform-origin:0 0}
