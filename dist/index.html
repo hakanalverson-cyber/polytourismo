@@ -6845,7 +6845,8 @@ kbd{font:700 12px var(--mn,monospace);padding:4px 9px;border:1px solid #f1f3f5;b
 /* pace note: top centre call-out (Nov 9) */
 #rlPace{position:fixed;left:50%;top:12.5vh;transform:translateX(-50%);z-index:30;pointer-events:none;display:none;width:min(560px,92vw);--c:#f2c76b;--n:#8fd68a}
 body.rprep #rlPace,body.rreplay #rlPace{display:none!important}
-#rlPace .pcP{position:relative;display:flex;align-items:center;gap:clamp(12px,1.4vw,24px);background:#080a0de6;border:1px solid #ffffff2e;border-left:4px solid var(--c);padding:clamp(8px,.9vw,14px) clamp(14px,1.5vw,26px) clamp(12px,1.2vw,18px) clamp(12px,1.2vw,20px);box-shadow:0 8px 30px #0008;overflow:hidden}
+#rlPace .pcP{position:relative;display:flex;align-items:center;gap:clamp(12px,1.4vw,24px);background:var(--gx,#080a0de6);border:0;border-radius:10px;padding:clamp(8px,.9vw,14px) clamp(14px,1.5vw,26px) clamp(12px,1.2vw,18px) clamp(18px,1.6vw,28px);box-shadow:var(--gxhi,none),0 0 0 1px #000c,0 6px 22px #0009;overflow:hidden}
+#rlPace .pcP::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--c);box-shadow:0 0 12px var(--c)}
 #rlPace .pcA{display:flex;color:var(--c);font-style:normal;filter:drop-shadow(0 0 10px var(--c))}
 #rlPace .pcA svg{width:clamp(46px,4.4vw,78px);height:clamp(46px,4.4vw,78px);display:block}
 #rlPace .pcT{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
@@ -6855,7 +6856,7 @@ body.rprep #rlPace,body.rreplay #rlPace{display:none!important}
 #rlPace .pcD b{font-size:clamp(30px,3.3vw,58px);line-height:1;font-weight:300;letter-spacing:.03em;font-variant-numeric:tabular-nums}
 #rlPace .pcB{position:absolute;left:0;right:0;bottom:0;height:clamp(4px,.4vw,6px);background:#ffffff1c}
 #rlPace .pcB s{display:block;height:100%;background:var(--c);text-decoration:none;box-shadow:0 0 12px var(--c)}
-#rlPace .pcN{display:none;align-items:center;justify-content:center;gap:10px;margin:6px auto 0;width:max-content;max-width:100%;background:#080a0dcc;border:1px solid #ffffff22;padding:3px 14px 3px 10px;--s:1}
+#rlPace .pcN{display:none;align-items:center;justify-content:center;gap:10px;margin:6px auto 0;width:max-content;max-width:100%;background:var(--gx,#080a0dcc);border:0;border-radius:999px;box-shadow:var(--gxhi,none),0 0 0 1px #000c,0 4px 14px #0009;padding:4px 16px 4px 12px}
 #rlPace .pcN small{font:700 clamp(8px,.6vw,10px) var(--mn);letter-spacing:.24em;color:var(--dim)}
 #rlPace .pcN i{display:flex;font-style:normal}#rlPace .pcN i svg{width:22px;height:22px;display:block}
 #rlPace .pcN b{font-size:clamp(11px,.95vw,16px);font-weight:500;letter-spacing:.14em;color:#fff}
@@ -6863,8 +6864,9 @@ body.rprep #rlPace,body.rreplay #rlPace{display:none!important}
 #rlPace.in .pcP{animation:pcIn .32s cubic-bezier(.2,.9,.3,1)}
 @keyframes pcIn{from{opacity:0;transform:translateY(-14px) scale(.96)}to{opacity:1;transform:none}}
 #rlPace.near .pcP{animation:pcPulse .45s ease-in-out infinite alternate}
-@keyframes pcPulse{from{box-shadow:0 8px 30px #0008,0 0 0 0 transparent}to{box-shadow:0 8px 30px #0008,0 0 26px 2px var(--c)}}
+@keyframes pcPulse{from{box-shadow:0 0 0 1px #000c,0 6px 22px #0009,0 0 0 0 transparent}to{box-shadow:0 0 0 1px #000c,0 6px 22px #0009,0 0 24px 2px var(--c)}}
 @media (prefers-reduced-motion:reduce){#rlPace.in .pcP,#rlPace.near .pcP{animation:none}}
+#rlPace .pcP{border-radius:10px!important}#rlPace .pcN{border-radius:999px!important}/* the global square reset needs !important to be beaten */
 
 :root{--gt:"PT Inter","Inter","Segoe UI","Helvetica Neue",Arial,sans-serif!important;--mn:var(--gt)!important;--hd:var(--gt)!important}
 *:not(svg):not(svg *){font-family:var(--gt)!important}
