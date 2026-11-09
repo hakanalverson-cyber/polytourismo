@@ -227,6 +227,29 @@ function drawGauge(cv,o){const g=cv.getContext('2d'),w=cv.width,h=cv.height,cx=w
  g.font='500 9px monospace';g.fillText('GEAR',cx,cy+R*.62-14);g.font='300 38px monospace';g.fillStyle='#fff';g.fillText(o.gear,cx,cy+R*.62+22);
  for(let i=0;i<o.NG;i++){const x=cx+(i-(o.NG-1)/2)*11,y=cy+R*.62+34;g.fillStyle=i===o.gi?'#fff':i<o.gi?'rgba(255,255,255,.4)':'rgba(255,255,255,.14)';g.fillRect(x-3.5,y-(i===o.gi?7:4),7,i===o.gi?7:4)}
  if(o.shift){const px=cx,py=cy-R*.5,pu=.75+.25*Math.sin(performance.now()/260);g.fillStyle='rgba(255,60,48,'+(.22*pu)+')';g.beginPath();g.arc(px,py,13,0,7);g.fill();g.fillStyle='#ff3b30';g.beginPath();g.arc(px,py,6.5,0,7);g.fill();g.strokeStyle='rgba(255,255,255,.85)';g.lineWidth=1.2;g.beginPath();g.arc(px,py,6.5,0,7);g.stroke()}}
+/* ---------------- Dirt 3 style stage HUD (Nov 9, "make rally have a dirt 3 ui setup"): a round rev ring with the gear and speed in a card at the bottom right, a tall
+   stage-progress bar with checkpoint marks down the left, the next checkpoint as a card under it. Same card look as the clock (dark plate, light edge), only shown on
+   stage files (body.rallyhud); the old centre dash is hidden there. ---------------- */
+let d3=null;
+function mkD3(){if(d3)return d3;d3={tach:document.createElement('div'),bar:document.createElement('div'),cp:document.createElement('div'),T:null};
+ d3.tach.id='rlTach';d3.tach.innerHTML='<canvas id="rtG" width="460" height="460"></canvas><div class="rtP"><b id="rtGear">1</b><span><b id="rtSpd">0</b><small>MPH</small></span></div>';
+ d3.bar.id='rlBar';d3.bar.innerHTML='<i class="rbT"><u id="rbF"></u></i><div id="rbTk"></div><s id="rbM"></s>';d3.cp.id='rlCpc';
+ document.body.append(d3.tach,d3.bar,d3.cp);return d3}
+function drawTach(cv,o){const g=cv.getContext('2d'),w=cv.width,cx=w/2,cy=w/2,R=w*.385,a0=Math.PI*.75,sw=Math.PI*1.5,lw=w*.07;g.clearRect(0,0,w,w);
+ g.fillStyle='rgba(8,10,13,.62)';g.beginPath();g.arc(cx,cy,R+lw*.95,0,7);g.fill();g.strokeStyle='rgba(255,255,255,.28)';g.lineWidth=2;g.beginPath();g.arc(cx,cy,R+lw*.95,0,7);g.stroke();
+ g.lineWidth=lw;g.lineCap='butt';g.strokeStyle='rgba(255,255,255,.13)';g.beginPath();g.arc(cx,cy,R,a0,a0+sw);g.stroke();
+ const r=Math.max(0,Math.min(1,o.rev)),rz=.86;g.strokeStyle='#f1f3f5';g.beginPath();g.arc(cx,cy,R,a0,a0+sw*Math.min(r,rz));g.stroke();
+ if(r>rz){g.strokeStyle='#ef4b3f';g.beginPath();g.arc(cx,cy,R,a0+sw*rz,a0+sw*r);g.stroke()}
+ g.strokeStyle='rgba(239,75,63,.7)';g.lineWidth=3;g.beginPath();g.arc(cx,cy,R+lw*.62,a0+sw*rz,a0+sw);g.stroke();
+ g.font='600 '+Math.round(w*.062)+'px '+getComputedStyle(document.body).fontFamily;g.textAlign='center';g.textBaseline='middle';
+ for(let i=1;i<=9;i++){const u=i/9*.97,a=a0+sw*u,rr=R-lw*.98;g.fillStyle=u>=rz?'#ef6a5a':(u<=r?'#ffffff':'rgba(255,255,255,.55)');g.fillText(i,cx+Math.cos(a)*rr,cy+Math.sin(a)*rr)}
+ if(o.shift){const pu=.5+.5*Math.sin(performance.now()/130);g.strokeStyle='rgba(239,75,63,'+(.25+.45*pu)+')';g.lineWidth=5;g.beginPath();g.arc(cx,cy,R+lw*.95+4,0,7);g.stroke()}}
+function d3Update(Rc,c,o){const d=mkD3();drawTach(q$('rtG'),o);q$('rtGear').textContent=c.gear<0?'R':o.gear;q$('rtSpd').textContent=String(o.kmh).padStart(3,'0');
+ if(d.T!==Rc.T||d.n!==o.cps.length){d.T=Rc.T;d.n=o.cps.length;q$('rbTk').innerHTML=o.cps.map((ci,k)=>`<i class="tk" data-f="${Math.min(.98,ci/o.tot)}" style="bottom:${Math.min(98,ci/o.tot*100)}%"><b>${k+1}</b></i>`).join('')}
+ const pr=o.pr;q$('rbF').style.height=(pr*100)+'%';q$('rbM').style.bottom=(pr*100)+'%';$$d('#rbTk .tk').forEach(e=>e.classList.toggle('on',pr>=+e.dataset.f));
+ const key=o.cpT+'|'+Math.round(o.cd/10);if(d.cp._k!==key){d.cp._k=key;d.cp.innerHTML=`<div class="h8top"><div class="h8plate"><div class="lap">NEXT CHECKPOINT</div><div class="raceTime">${Math.max(0,Math.round(o.cd/10)*10)} M</div><div class="bl">${o.cpT}</div></div></div>`}
+ const ht=document.querySelector('#h0 .h8top');if(ht){d.cp.style.setProperty('--pw',ht.offsetWidth+'px');d.cp.style.setProperty('--ph',ht.offsetHeight+'px');const pv=ht.parentNode.style.getPropertyValue('--s');if(pv)d.cp.style.setProperty('--s',pv)}}
+const $$d=sel=>document.querySelectorAll(sel);
 /* damage and penalty plates sit right of the top-left clock: damage first, penalty under it (or at the top when there is no damage) */
 let stEl=null;
 function statUpdate(Rc,c){if(!stEl){stEl=document.createElement('div');stEl.id='rlStat';document.body.appendChild(stEl)}
@@ -242,6 +265,7 @@ function dashUpdate(Rc,c){const d=mkDash(),on=scr==='game'&&!Rc.prep&&!Rc.replay
  const cps=P.cpsOf(T),K=cps.length,n=(Rc.splits||[]).length,lapI=Math.floor(n/K);let cpT='FINISH',cd=(Rc.laps*N-c.unw)*T.sp;if(lapI<Rc.laps&&K&&n<K*Rc.laps){cpT='CP '+(n%K+1)+' / '+(K+1);cd=(lapI*N+cps[n%K]-c.unw)*T.sp}q$('rdCp').textContent=cpT+'  '+Math.max(0,Math.round(cd))+' m';
  const i0=c.idx||0;q$('rdAl').textContent=Math.round(c.y)+' m';
  q$('rdLbl').textContent=W('STAGE','RACE');q$('rdSf').textContent=c._wet>0?'WET':c.onRoad?W('GRAVEL','TARMAC'):W('OFF ROAD','GRASS');q$('rdCm').textContent='CAM / '+CAMS[c.camMode||0]+'  GRIP '+Math.round(((c.mt&&c.mt.grip)||1)*100)+'%';
+ d3Update(Rc,c,{rev,kmh,gear:gi+1,shift:rev>.9&&gi<G.length-1&&Rc.state==='race'&&!P.isAuto(c),pr,cpT,cd,cps,tot});
  q$('rdTh').style.width=(c.in&&c.in.th||0)*100+'%';q$('rdBr').style.width=(c.in&&c.in.br||0)*100+'%';q$('rdHk').style.width=(c._hb?100:0)+'%';{const st=c.in?c.in.st:0;const u=q$('rdSt');u.style.width=Math.abs(st)*50+'%';u.style.left=st>=0?(50-Math.abs(st)*50)+'%':'50%'}
  statUpdate(Rc,c);
 }
