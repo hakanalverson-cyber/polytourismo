@@ -1,5 +1,5 @@
 [["wait",2000],["js","(()=>{const t=document.getElementById('ptTitle');if(t)t.click();return 1})()"],["wait",2500],
 ["js","document.getElementById('gxAsk')&&document.getElementById('gxAsk').remove();document.body.classList.remove('gxAsking');try{PT8.SV().name='Hakan'}catch(e){}1"],
 ["js","(()=>{const U=PT8.ui;U.ST.mode='rally';U.openRally();return D.map((d,i)=>i+d.name).join()})()"],["wait",1500],["shot","a"],
-["js","document.querySelectorAll('#rbList .rb')[1].click();1"],["wait",600],["shot","b"],
+["js","document.querySelectorAll('#rbGrid .rb')[1].click();1"],["wait",600],["shot","b"],
 ["click","#rbGo"],["wait",1500],["shot","c"]]

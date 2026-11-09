@@ -1696,32 +1696,23 @@ body.ptPause #pause{visibility:visible!important;opacity:1!important;z-index:214
 #tut button.pri,#tutOffer button.pri{background:#f1f3f5;color:#0a0d11}
 kbd{font:700 12px var(--mn,monospace);padding:4px 9px;border:1px solid #f1f3f5;border-bottom-width:3px;border-radius:4px;background:#f1f3f51a;color:#f1f3f5;letter-spacing:.08em}
 
-/* ===== rally stage select (Nov 8): same look as the setup screens: grey gradient cards with a thin black ring, blue selected row, Inter ===== */
-#s8rally .rbWrap{position:absolute;left:3.4vw;right:3.4vw;top:13vh;bottom:11vh;display:grid;grid-template-columns:minmax(250px,26%) 1fr;gap:clamp(12px,1.4vw,26px);z-index:2;font-family:var(--gt)}
-#s8rally .rbList,#s8rally .rbSide,#s8rally .rbMap{border-radius:12px!important;background:linear-gradient(180deg,#2a2e33f5,#16181bf5);box-shadow:inset 0 1px 0 #ffffff30,0 0 0 1px #000,0 18px 40px #000c}
-#s8rally .rbList{display:flex;flex-direction:column;gap:6px;overflow-y:auto;scrollbar-width:thin;padding:14px 8px 10px}
-#s8rally .rbList:before{content:"STAGES";display:block;margin:0 14px 6px;font:600 10px var(--gt);letter-spacing:.26em;color:#8fb4d8}
-#s8rally .rb{display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:12px;min-height:clamp(54px,7vh,72px);padding:0 clamp(14px,1vw,20px);cursor:pointer;border-radius:7px!important;color:#c9d2d8;user-select:none}
-#s8rally .rb:hover{background:#ffffff0f}
-#s8rally .rb.sel{color:#fff;background:linear-gradient(180deg,#8fb4d8 0%,#4f7eab 48%,#33608c 52%,#4a77a3 100%);box-shadow:inset 0 1px 0 #ffffffa0,inset 0 -1px 0 #0004,0 0 16px #4f7eab90;text-shadow:0 1px 1px #0005}
-#s8rally .rb i{font:600 15px var(--gt);font-style:normal;opacity:.7}
-#s8rally .rb b{display:block;font:500 clamp(15px,1.9vh,19px) var(--gt);letter-spacing:0;text-transform:none;color:inherit}
-#s8rally .rb small{display:block;margin-top:2px;font:400 12px var(--gt);letter-spacing:.04em;color:inherit;opacity:.7;text-transform:none}
-#s8rally .rb span{font:500 13px var(--gt);letter-spacing:.02em;color:inherit;opacity:.85}
-#s8rally .rbMain{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(260px,1fr);gap:clamp(12px,1.4vw,26px);min-height:0}
-#s8rally .rbMap{position:relative;min-height:0;overflow:hidden;background:#0c1218}
+/* ===== rally stage select (Nov 8): four stages, four cards (2 x 2), same look as the setup screens: grey gradient cards with a thin black ring, blue for the selected one, Inter ===== */
+#s8rally .rbGrid{position:absolute;left:3.4vw;right:3.4vw;top:13vh;bottom:11vh;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:clamp(12px,1.4vw,24px);z-index:2;font-family:var(--gt)}
+#s8rally .rb{position:relative;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:clamp(10px,1vw,18px);min-height:0;padding:clamp(10px,1.2vh,16px);cursor:pointer;border-radius:12px!important;background:linear-gradient(180deg,#2a2e33f5,#16181bf5);box-shadow:inset 0 1px 0 #ffffff30,0 0 0 1px #000,0 18px 40px #000c;color:#c9d2d8;transition:transform .15s,box-shadow .15s}
+#s8rally .rb:hover{transform:translateY(-2px)}
+#s8rally .rb.sel{box-shadow:inset 0 1px 0 #ffffffa0,0 0 0 2px #8fb4d8,0 0 22px #4f7eab90,0 18px 40px #000c;background:linear-gradient(180deg,#34414f,#1b2128)}
+#s8rally .rbMap{position:relative;min-height:0;border-radius:8px!important;overflow:hidden;background:#0c1218;box-shadow:0 0 0 1px #000}
 #s8rally .rbMap canvas{position:absolute;inset:0;width:100%;height:100%}
-#s8rally .rbTag{position:absolute;left:14px;top:12px;font:600 10px var(--gt);letter-spacing:.2em;font-style:normal;color:#e8eef4;background:#ffffff1c;padding:4px 10px;border-radius:9px;text-transform:uppercase}
-#s8rally .rbSide{display:flex;flex-direction:column;gap:14px;min-height:0;padding:16px 22px 18px}
-#s8rally .rbHead small,#s8rally .rbProf small,#s8rally .rbBest small,#s8rally .rbStats small{display:block;font:600 10px var(--gt);letter-spacing:.26em;color:#8fb4d8;text-transform:uppercase}
-#s8rally .rbHead h3{margin:4px 0 6px;font:400 clamp(26px,3vh,38px) var(--gt);letter-spacing:0;color:#fff;text-transform:none}
-#s8rally .rbHead p{margin:0;font:400 14px/1.5 var(--gt);color:#c9d2d8}
-#s8rally .rbStats{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}
-#s8rally .rbStats b,#s8rally .rbBest b{display:block;margin-top:3px;font:400 18px var(--gt);letter-spacing:0;color:#fff}
-#s8rally .rbProf{flex:1;min-height:90px;display:flex;flex-direction:column}
-#s8rally .rbProf canvas{flex:1;width:100%;min-height:0}
-#s8rally .rbBest b{color:#fff}
-@media (max-width:900px){#s8rally .rbWrap{grid-template-columns:1fr;top:11vh;overflow-y:auto}#s8rally .rbList{flex-direction:row}#s8rally .rbMain{grid-template-columns:1fr}#s8rally .rbMap{height:46vh}}
+#s8rally .rbNo{position:absolute;left:10px;top:8px;font:600 11px var(--gt);font-style:normal;letter-spacing:.2em;color:#e8eef4;background:#ffffff1c;padding:3px 9px;border-radius:9px}
+#s8rally .rbInfo{display:flex;flex-direction:column;gap:clamp(6px,1vh,12px);min-height:0;padding:clamp(2px,.6vh,8px) clamp(2px,.4vw,8px)}
+#s8rally .rbKind,#s8rally .rbStats small{display:block;font:600 10px var(--gt);letter-spacing:.26em;color:#8fb4d8;text-transform:uppercase}
+#s8rally .rbInfo h3{margin:0;font:400 clamp(24px,3.2vh,36px) var(--gt);letter-spacing:0;color:#fff;text-transform:none}
+#s8rally .rbInfo p{margin:0;font:400 clamp(11px,1.5vh,14px)/1.45 var(--gt);color:#c9d2d8;opacity:.85}
+#s8rally .rbStats{display:grid;grid-template-columns:repeat(3,auto);gap:8px 16px;justify-content:start}
+#s8rally .rbStats b{display:block;margin-top:2px;font:400 clamp(14px,2vh,18px) var(--gt);letter-spacing:0;color:#fff}
+#s8rally .rbProf{flex:1;min-height:36px;position:relative}
+#s8rally .rbProf canvas{position:absolute;inset:0;width:100%;height:100%}
+@media (max-width:900px){#s8rally .rbGrid{grid-template-columns:1fr;grid-template-rows:none;overflow-y:auto;top:11vh}#s8rally .rb{height:46vh}}
 #gxSu.g2 #gxShot.map.rl{opacity:.95}
 #rlGap{position:fixed;left:50%;top:27%;transform:translateX(-50%);display:flex;gap:10px;align-items:center;padding:8px 14px;background:#0a0d11e6;border:1px solid #f1f3f5;color:#f1f3f5;font:700 12px var(--mn,monospace);letter-spacing:.2em;text-transform:uppercase;z-index:45;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
 #rlGap i{width:9px;height:9px;display:inline-block}

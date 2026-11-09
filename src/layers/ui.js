@@ -99,7 +99,7 @@ root.innerHTML=`
 <div class="foot8"><button class="btn" data-a="back"><span>&lt; Back</span></button><div class="hint8">Arrows select &middot; Enter next &middot; Esc back</div><button class="btn go" id="pkGo"><span>Next: Setup &gt;</span></button></div></section>
 
 <section class="v8s" id="s8rally"><div class="hdr"><h2><em>RALLY</em> STAGE SELECT</h2><div class="sp"></div>${crHTML}</div>
-<div class="rbWrap"><div class="rbList" id="rbList"></div><div class="rbMain"><div class="rbMap"><canvas id="rbCv"></canvas><em class="rbTag" id="rbTag"></em></div><div class="rbSide"><div class="rbHead"><small id="rbCountry"></small><h3 id="rbName"></h3><p id="rbDesc"></p></div><div class="rbStats" id="rbStats"></div><div class="rbProf"><small>ELEVATION</small><canvas id="rbProf"></canvas></div><div class="rbBest" id="rbBest"></div></div></div></div>
+<div class="rbGrid" id="rbGrid"></div>
 <div class="foot8"><button class="btn" data-a="back"><span>&lt; Back</span></button><div class="hint8">Arrows select &middot; Enter next &middot; Esc back</div><button class="btn go" id="rbGo"><span>Next: Setup &gt;</span></button></div></section>
 
 <section class="v8s" id="s8setup"><div class="hdr"><h2 id="suTitle">TIME <em>ATTACK</em></h2><div class="sp"></div>${crHTML}</div>
@@ -199,19 +199,18 @@ const hasStages=()=>!!P.rallyMap&&D.some((d,i)=>okTrack('rally',i)&&d.cartoon&&d
 const stLen=i=>{const T=tr(i);return T.stage?T.stage.len:T.L};
 const RB={list:[]};
 function openRally(back){ST.mode='rally';if(!okTrack('rally',ST.track))ST.track=firstTrack('rally');ST.fromRally=true;RB.list=D.map((d,i)=>okTrack('rally',i)?i:-1).filter(i=>i>=0);renderRally();show('s8rally')}
-function renderRally(){const sv=P.SV(),L=$('rbList');
- L.innerHTML=RB.list.map((i,n)=>{const d=D[i],inf=P.stageInfo&&P.stageInfo(i),r=sv.ral&&sv.ral[i+':1'];return `<div class="rb${i===ST.track?' sel':''}" data-i="${i}"><i>${String(n+1).padStart(2,'0')}</i><div><b>${d.name}</b><small>${inf?inf.surface+' &middot; '+inf.km.toFixed(1)+' km':P.TRACK_INFO[i].s+' &middot; '+(stLen(i)/1000).toFixed(1)+' km'}</small></div><span>${r?fmtT(r.t):'--'}</span></div>`}).join('');
- $$('#rbList .rb',root).forEach(e=>{const i=+e.dataset.i;e.onclick=()=>rbSel(i);e.ondblclick=()=>{rbSel(i);rallyNext()}});
- rbPaint();requestAnimationFrame(rbPaint)}
-function rbPaint(){const i=ST.track,inf=P.stageInfo&&P.stageInfo(i),sv=P.SV(),r=sv.ral&&sv.ral[i+':1'],d=D[i];if(!d)return;
- $('rbName').textContent=d.name;$('rbDesc').textContent=(inf&&inf.desc)||d.desc||'';$('rbCountry').textContent=(inf?inf.surface:P.TRACK_INFO[i].s)+' stage';
- const st=(a,b)=>`<div><small>${a}</small><b>${b}</b></div>`;
- $('rbStats').innerHTML=inf?st('Length',inf.km.toFixed(1)+' km')+st('Climb',Math.round(inf.climb)+' m')+st('Low / high',Math.round(inf.lo)+' / '+Math.round(inf.hi)+' m')+st('Water fords',inf.fords||'none'):st('Length',(stLen(i)/1000).toFixed(1)+' km');
- $('rbBest').innerHTML=`<small>Best time</small><b>${r?fmtT(r.t):'not set yet'}</b>`;
- const ok=P.rallyMap&&P.rallyMap(i,$('rbCv'));if(!ok){const cv=$('rbCv'),g=cv.getContext('2d');g.fillStyle='#0c1218';g.fillRect(0,0,cv.width,cv.height)}
- if(P.rallyProfile){const c=$('rbProf');if(!P.rallyProfile(i,c)){const g=c.getContext('2d');g.clearRect(0,0,c.width,c.height)}}
- $('rbTag').textContent=inf?inf.name:''}
-function rbSel(i){if(i===ST.track)return;ST.track=i;P.sfx&&P.sfx('move');$$('#rbList .rb',root).forEach(e=>e.classList.toggle('sel',+e.dataset.i===i));rbPaint()}
+function renderRally(){const sv=P.SV(),G=$('rbGrid');
+ G.innerHTML=RB.list.map((i,n)=>{const d=D[i],inf=P.stageInfo&&P.stageInfo(i),r=sv.ral&&sv.ral[i+':1'],st=(a,b)=>`<div><small>${a}</small><b>${b}</b></div>`;
+  return `<div class="rb${i===ST.track?' sel':''}" data-i="${i}"><div class="rbMap"><canvas class="rbCv"></canvas><em class="rbNo">${String(n+1).padStart(2,'0')}</em></div>
+  <div class="rbInfo"><small class="rbKind">${inf?inf.surface:P.TRACK_INFO[i].s} stage</small><h3>${d.name}</h3><p>${(inf&&inf.desc)||d.desc||''}</p>
+  <div class="rbStats">${inf?st('Length',inf.km.toFixed(1)+' km')+st('Climb',Math.round(inf.climb)+' m')+st('Best',r?fmtT(r.t):'--'):st('Length',(stLen(i)/1000).toFixed(1)+' km')+st('Best',r?fmtT(r.t):'--')}</div>
+  <div class="rbProf"><canvas class="rbPf"></canvas></div></div></div>`}).join('');
+ $$('#rbGrid .rb',root).forEach(e=>{const i=+e.dataset.i;e.onclick=()=>rbSel(i);e.ondblclick=()=>{rbSel(i);rallyNext()}});
+ requestAnimationFrame(()=>requestAnimationFrame(rbPaint));setTimeout(rbPaint,350)}
+function rbPaint(){$$('#rbGrid .rb',root).forEach(e=>{const i=+e.dataset.i,a=e.querySelector('.rbCv'),b=e.querySelector('.rbPf');if(!(a.clientWidth>8))return;
+  if(!(P.rallyMap&&P.rallyMap(i,a))){const g=a.getContext('2d');g.fillStyle='#0c1218';g.fillRect(0,0,a.width,a.height)}
+  if(P.rallyProfile){if(!P.rallyProfile(i,b)){const g=b.getContext('2d');g.clearRect(0,0,b.width,b.height)}}})}
+function rbSel(i){if(i===ST.track)return;ST.track=i;P.sfx&&P.sfx('move');$$('#rbGrid .rb',root).forEach(e=>e.classList.toggle('sel',+e.dataset.i===i))}
 function rallyNext(){P.sfx&&P.sfx('select');ST.rstep=1;GXS.step=1;ST.fromRally=true;renderSetup();show('s8setup')}
 function pickNext(){if(!PK.list.includes(ST.track))return;P.sfx&&P.sfx('select');ST.fromPick=true;renderSetup();show('s8setup')}
 
@@ -1035,7 +1034,7 @@ addEventListener('keydown',e=>{
   if(CARDS()){if(inGrid()){if(e.code==='ArrowLeft'||e.code==='ArrowUp'){e.preventDefault();gridMove(-1)}else if(e.code==='ArrowRight'||e.code==='ArrowDown'){e.preventDefault();gridMove(1)}else if(e.code==='Enter'){if((P.SV().owned[SR.id]||0)>0)openCar(SR.id)}return}
    if(e.code==='ArrowLeft'||e.code==='KeyQ')flipCar(-1);else if(e.code==='ArrowRight'||e.code==='KeyE')flipCar(1);else if(e.code==='Enter')$('shAct').click();return}
   const list=(CARDS()&&SR.order)?SR.order.map(id=>BYID[id]):showList().filter(c=>!SR.sec||SR.cat==='ALL'||(SR.cat==='OWNED'?(P.SV().owned[c.id]||0)>0:((SR.rally||SR.trk)&&SR.kind==='garage'?(SR.trk?c.tdiv:c.rdiv):c.cat)===SR.cat)),i=Math.max(0,list.findIndex(c=>c.id===SR.id));if(!list.length)return;if(e.code==='ArrowDown'){SR.id=list[Math.min(list.length-1,i+1)].id;SR.alt=P.owns(SR.id,SR.alt)?SR.alt:0;renderShow()}else if(e.code==='ArrowUp'){SR.id=list[Math.max(0,i-1)].id;SR.alt=P.owns(SR.id,SR.alt)?SR.alt:0;renderShow()}else if(e.code==='ArrowLeft')SR.vel-=3;else if(e.code==='ArrowRight')SR.vel+=3;else if(e.code==='Enter')$('shAct').click();return}
- if(scr==='s8rally'){const n=RB.list.length;if(!n)return;let k=Math.max(0,RB.list.indexOf(ST.track));if(e.code==='ArrowDown'||e.code==='KeyS'||e.code==='ArrowRight'||e.code==='KeyD')k=(k+1)%n;else if(e.code==='ArrowUp'||e.code==='KeyW'||e.code==='ArrowLeft'||e.code==='KeyA')k=(k+n-1)%n;else if(e.code==='Enter'){rallyNext();return}else return;e.preventDefault();rbSel(RB.list[k]);return}
+ if(scr==='s8rally'){const n=RB.list.length;if(!n)return;let k=Math.max(0,RB.list.indexOf(ST.track));if(e.code==='ArrowRight'||e.code==='KeyD')k=(k+1)%n;else if(e.code==='ArrowLeft'||e.code==='KeyA')k=(k+n-1)%n;else if(e.code==='ArrowDown'||e.code==='KeyS')k=(k+2)%n;else if(e.code==='ArrowUp'||e.code==='KeyW')k=(k+n-2)%n;else if(e.code==='Enter'){rallyNext();return}else return;e.preventDefault();rbSel(RB.list[k]);return}
  if(scr==='s8pick'){const n=PK.list.length;if(!n)return;let k=Math.max(0,PK.list.indexOf(ST.track));if(e.code==='ArrowRight'||e.code==='KeyD')k=(k+1)%n;else if(e.code==='ArrowLeft'||e.code==='KeyA')k=(k+n-1)%n;else if(e.code==='ArrowDown'||e.code==='KeyS')k=Math.min(n-1,k+PK.cols);else if(e.code==='ArrowUp'||e.code==='KeyW')k=Math.max(0,k-PK.cols);else if(e.code==='Enter'){pickNext();return}else return;e.preventDefault();pickSel(PK.list[k],true);return}
  if(scr==='s8setup'){if(P.gxSuKey&&P.gxSuKey(e))return;if(e.code==='Enter'&&!(e.target&&e.target.tagName==='INPUT')){$('suGo').click()}return}
  if(scr==='menu'&&P.menuKey&&P.menuKey(e)){return}
