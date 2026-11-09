@@ -22,7 +22,7 @@ const LK={
  7:{kind:'hill',c:0x6f8794,cap:0,n:18,h:[40,110],cl:[12,.9,0xffd8b0]},
  9:{kind:'peak',c:0xcfdceb,cap:1,n:24,h:[200,480],cl:[16,.9,0xf4f8ff]},
  /* the four rally stages (stage files) */
- 21:{kind:'hill',c:0x587a62,cap:0,n:22,h:[120,280],cl:[12,.8,0xffffff]},22:{kind:'peak',c:0x7c8ea6,cap:1,n:26,h:[260,560],cl:[14,.9,0xffffff]},
+ 21:{kind:'hill',c:0x587a62,cap:0,n:22,h:[120,280],cl:[12,.8,0xffffff]},22:{kind:'peak',c:0x6f829f,cap:1,n:26,h:[190,430],cl:[14,.9,0xffffff]},
  23:{kind:'mesa',c:0xb88a5c,cap:0,n:22,h:[90,210],cl:[6,.6,0xffe8cc]},24:{kind:'hill',c:0x9aaabc,cap:1,n:20,h:[80,210],cl:[0,.8,0xe8eef5]}};
 /* stage worlds reuse another map's id as their look, so the map is found by name */
 const NM={'Quarry Circuit':0,'Canyon Viaduct':1,'Alpine Pass':2,'Pinewood Stage':4,'Redrock Stage':5,'Highmoor Stage':6,'Coastal Run':7,'Frostline Stage':9,'Finland':21,'France':22,'Portugal':23,'Sweden':24};
@@ -53,7 +53,8 @@ function build(sc,T){
  let ys=0;for(let i=0;i<T.N;i++)ys+=T.y[i];ys/=T.N;let ymin=1e9;for(let i=0;i<T.N;i++)ymin=Math.min(ymin,T.y[i]);
  const base=Math.min(ymin-70,ys-90),fog=sc.fog&&sc.fog.color?sc.fog.color.clone():lin(d.fog||0xaaaaaa),col=lin(L.c),top=col.clone().lerp(new THREE.Color(1,1,1),.18),snow=lin(0xf6f9ff);
  const pos=[],cols=[];
- for(let i=0;i<L.n;i++){const a=(i+rand()*.8)/L.n*Math.PI*2,rd=820+rand()*260,h=L.h[0]+rand()*(L.h[1]-L.h[0]),r=h*(L.kind==='hill'?1.9:L.kind==='mesa'?.9:1.0)*(.8+rand()*.5);
+ const NN=d.cartoon&&L.kind==='peak'?Math.round(L.n*1.5):L.n;/* the bought stages: slimmer, more numerous peaks (the stock cones read as giant pale slabs) */
+ for(let i=0;i<NN;i++){const a=(i+rand()*.8)/NN*Math.PI*2,rd=820+rand()*260,h=L.h[0]+rand()*(L.h[1]-L.h[0]),r=h*(L.kind==='hill'?1.9:L.kind==='mesa'?.9:d.cartoon?.6:1.0)*(.8+rand()*.5);
   const g=shape(L.kind,r,h,rand),p=g.attributes.position,x0=cx+Math.cos(a)*rd,z0=cz+Math.sin(a)*rd,yaw=rand()*6.28,cy=Math.cos(yaw),sy=Math.sin(yaw),shade=.82+rand()*.3;
   for(let v=0;v<p.count;v++){const x=p.getX(v),y=p.getY(v),z=p.getZ(v),t=Math.min(1,y/h);
    pos.push(x0+x*cy+z*sy,base+y,z0-x*sy+z*cy);

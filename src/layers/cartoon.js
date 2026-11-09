@@ -75,6 +75,7 @@ setTimeout(()=>{const bw=buildWorld;buildWorld=T=>{const sc=bw(T),pack=T.d&&T.d.
   const grp=new THREE.Group();grp.name='cartoonTrack';for(const m of meshes(pack))grp.add(m);sc.add(grp);
   T._bx={segs:[],pts:[]};T._bg=null;/* the removed stock props must not collide */
   if(P.addSeg){const s=new Float32Array(dec(pack.segs).buffer);for(let i=0;i<s.length;i+=4)P.addSeg(T,s[i],s[i+1],s[i+2],s[i+3],.35)}
+  if(pack.cpts&&P.addPt){const s=new Float32Array(dec(pack.cpts).buffer);for(let i=0;i<s.length;i+=3)P.addPt(T,s[i],s[i+1],s[i+2])}/* tree trunks */
  }catch(e){console.error('cartoon track',e)}
  return sc};
 /* Track Mode card art: a trackside shot of one corner of the bought model (outside of the corner, looking back up the approach).

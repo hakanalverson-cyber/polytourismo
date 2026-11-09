@@ -22,16 +22,55 @@ function waterDepth(T,c){const F=T.fords;if(!F||!F.length)return 0;
 
 /* ---------------- effects ---------------- */
 const WLp=()=>WL;
-/* rally handling on the stage files (Nov 8, "make the handling more realistic and tuned to rally so you aren't flying all over the place"): the player's car
-   follows where it points (sideways speed dies off faster than the arcade core leaves it, a big slide is pulled in harder, the handbrake still lets go),
-   a tap on the steering no longer spins the car round, and bumps in the road cannot throw it into the air */
-{const sg=stepCar;stepCar=function(c,dt){const r=sg.apply(this,arguments);const Rc=RACE;
- if(!c.human||c.forceAI||!Rc||!Rc.T||!Rc.T.stage||!Rc.cfg||!Rc.cfg.rally||!(dt>0)||c.exp>0||Rc.state!=='race')return r;
- const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);let vf=c.vx*sy+c.vz*cy,vl=c.vx*cy-c.vz*sy;
- if(Math.abs(vf)>5&&!c._hb){const slip=Math.abs(vl)/Math.abs(vf),k=Math.min(.45,dt*(1.8+4*Math.max(0,1-slip*2.2)+(slip>.7?6:0)));vl*=1-k;c.vx=vf*sy+vl*cy;c.vz=vf*cy-vl*sy}
- if(c.yr&&!c._hb)c.yr*=1-Math.min(.3,dt*(.9+Math.min(c.sp,50)*.025));
- if(c.vy>4.5)c.vy=4.5+(c.vy-4.5)*.25;
- return r}}
+/* rally handling on the stage files (Nov 9, "the driving is STILL trash, make it feel like Dirt 3"). The arcade core steers like a car on rails (measured: full lock
+   at 15 to 35 m/s gives 45-65 deg/s and 0-6 deg of slip, lifting off or braking changes nothing). For the player on a stage file the sideways motion and the turning are
+   now a real two-axle model (bicycle model, Pacejka-style tyres): front and rear tyres each have a slip angle and a limited grip, the load moves forward under braking
+   and back under power (so lifting off in a corner tucks the nose in, power pushes the tail out), the handbrake all but frees the rear, gravel and snow give less grip
+   and a softer, wider peak than tarmac. The core still does the engine, brakes, drag and gears: its forward speed is kept, its sideways speed and yaw are replaced. */
+setTimeout(()=>{const ipx=P.inPost;P.inPost=(c,dt)=>{const Rc=RACE,on=c.human&&!c.forceAI&&c.in&&Rc&&Rc.T&&Rc.T.stage&&Rc.cfg&&Rc.cfg.rally;if(on)c._stRaw=c.in.st||0;if(ipx)ipx(c,dt);if(on)c.in.st=0};
+ const sg=stepCar,L=3.1,A=1.5,B=1.6,G=9.81;/* installed last, so nothing wrapped after this file can put the arcade steering back */
+ stepCar=function(c,dt){const Rc=RACE,on=c.human&&!c.forceAI&&Rc&&Rc.T&&Rc.T.stage&&Rc.cfg&&Rc.cfg.rally&&dt>0&&Rc.state==='race';
+  let yaw0,vx0,vz0,r0,stRaw=0;if(on){yaw0=c.yaw;vx0=c.vx;vz0=c.vz;r0=c.yr||0;stRaw=c._stRaw||0}/* the core drives straight: its steering scrub must not eat the speed, the tyre model does the turning */
+  const r=sg.apply(this,arguments);if(on&&c.in)c.in.st=stRaw;/* back for the wheels and the camera */
+  if(!on||c.exp>0||c.respT>0||c.fin)return r;
+  const T=Rc.T,gy=T.terr?T.terr(c.x,c.z):c.y;if(c.y-gy>1.6){c._vl=undefined;c._r=undefined;return r}/* in the air the core keeps it */
+  const sy0=Math.sin(yaw0),cy0=Math.cos(yaw0),sy1=Math.sin(c.yaw),cy1=Math.cos(c.yaw);
+  let vf=c.vx*sy1+c.vz*cy1;const vfp=vx0*sy0+vz0*cy0,ax=(vf-vfp)/dt;
+  let vl=c._vl===undefined?(vx0*cy0-vz0*sy0):c._vl,rr=c._r===undefined?r0:c._r;
+  /* grip: what the arcade core already works out for this surface, damage and so on, as the friction of both axles */
+  const mm=P.mul?P.mul(c):{grip:1},dd=T.d,key=dd._key,surf=dd.gravel===0?(c.onRoad?1.0:.55):key==='autumn'?(c.onRoad?.42:.32):(c.onRoad?.74:.56),pkS=dd.gravel===0?(c.onRoad?.12:.2):key==='autumn'?.27:(c.onRoad?.2:.24);
+  let mu=surf*Math.max(.55,Math.min(1.35,(mm.grip||1)/(c.onRoad?(dd.gravel===0?.95:key==='autumn'?.74:.8):1)));
+  const st=Math.max(-1,Math.min(1,stRaw)),th=Math.max(0,Math.min(1,(c.in&&c.in.th)||0)),br=Math.max(0,Math.min(1,(c.in&&c.in.br)||0)),hb=(c.in&&c.in.hb)?1:0;
+  const sp=Math.abs(vf),dmax=.55/(1+Math.pow(sp/12,1.5)),beta=Math.atan2(vl,Math.max(2,Math.abs(vf))),del=st*dmax+(sp>6?Math.max(-.42,Math.min(.42,beta*.8)):0);/* counter-steer help: the wheel follows the slide */
+  if(sp<1.8){/* parking speeds: the wheels roll where they point */
+   rr+=(vf*del/L-rr)*Math.min(1,dt*9);vl*=Math.max(0,1-dt*10)}
+  else{
+   const n=2,h=dt/n,pk=pkS;
+   for(let k=0;k<n;k++){
+    const vfa=Math.max(1,Math.abs(vf))*(vf<0?-1:1),af=del-Math.atan2(vl+A*rr,vfa),ar=-Math.atan2(vl-B*rr,vfa);
+    /* load transfer: braking and lifting load the nose (the tail gets light and swings out), power loads the tail */
+    const lt=Math.max(-.15,Math.min(.15,-ax*.15/G))+(th<.12&&!br?.04:0),wf=Math.max(.3,Math.min(.72,.5+lt)),wr=1-wf;
+    let muF=mu*(1+.04*br),muR=mu*(hb?.17:1);
+    muR*=1-.06*th*Math.min(1,Math.max(0,1.2-sp/38));/* power in the rear tyres uses some of their grip */
+    const FF=muF*G*wf*Math.sin(1.5*Math.atan(af/pk*1.6)),FR=muR*G*wr*Math.sin(1.5*Math.atan(ar/(pk*1.3)*1.6));/* per unit of mass, the whole axle */
+    vl+=(FF*Math.cos(del)+FR-vfa*rr)*h;rr+=(A*FF*Math.cos(del)-B*FR)/(.8*A*B)*h;
+    rr*=1-Math.min(.25,.7*h+Math.max(0,Math.abs(beta)-.5)*3*h)}/* past ~30 deg of slip the car settles instead of spinning *//* the chassis does not spin for ever */
+  }
+  rr=Math.max(-2.4,Math.min(2.4,rr));vl=Math.max(-26,Math.min(26,vl));
+  /* sliding costs speed */
+  if(sp>3)vf*=1-Math.min(.5,dt*.3*Math.min(1,Math.abs(vl)/9)*(sp>8?1:.4));
+  c._vl=vl;c._r=rr;
+  const yaw=yaw0+rr*dt,sy=Math.sin(yaw),cy=Math.cos(yaw),nvx=vf*sy+vl*cy,nvz=vf*cy-vl*sy;
+  c.x+=(nvx-c.vx)*dt;c.z+=(nvz-c.vz)*dt;c.vx=nvx;c.vz=nvz;c.yaw=yaw;c.yr=rr;c.sp=Math.hypot(nvx,nvz);
+  if(c.vy>4.5)c.vy=4.5+(c.vy-4.5)*.25;
+  return r}},120);
+/* speed feel on the stages (Nov 9, "speed should feel like Dirt 3"): the view opens up with speed (about +6 deg at 48 m/s), the camera buzzes on gravel and
+   snow in proportion to speed, kicks on a handbrake and swings a little to the side the car is sliding to */
+setTimeout(()=>{const sc=soloCam;let ph=0;soloCam=function(c,dt,out){sc.apply(this,arguments);const Rc=RACE;if(!(c.human&&Rc&&Rc.T&&Rc.T.stage&&Rc.cfg&&Rc.cfg.rally)||c.fin||c.camMode)return;
+  const d=dt||.016,v=Math.max(0,Math.min(1,((c._csp||c.sp||0)-12)/36));out.f+=v*v*(3-2*v)*6;
+  const loose=c.onRoad===false?1:.7,a=v*loose*.012;ph+=d*37;
+  if(a>.001){const n1=Math.sin(ph)*.6+Math.sin(ph*2.31+1.3)*.4,n2=Math.sin(ph*1.7+.4)*.6+Math.sin(ph*3.1)*.4;out.p.y+=n1*a;out.p.x+=n2*a*.6;out.l.y+=n1*a*.5}
+  const sl=Math.max(-.6,Math.min(.6,c._vl===undefined?0:c._vl/Math.max(8,c.sp||0)));if(Math.abs(sl)>.02&&v>0){const rx=Math.cos(c.yaw),rz=-Math.sin(c.yaw),k=sl*.8*v;out.l.x+=rx*k;out.l.z+=rz*k}}},140);
 function wheelPos(c,wi){const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw),w=WL[wi];return[c.x+cy*w[0]+sy*w[1],c.z-sy*w[0]+cy*w[1]]}
 function splash(c,T,dt,dep){const sp=c.sp,rate=Math.min(1,sp/12)*(46+sp*2.4)*dep;c._wA=(c._wA||0)+rate*dt;
  const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw),f=T.fords[0],yw=T.fords.reduce((b,q)=>Math.hypot(q.x-c.x,q.z-c.z)<Math.hypot(b.x-c.x,b.z-c.z)?q:b,f).yw;
@@ -40,6 +79,15 @@ function splash(c,T,dt,dep){const sp=c.sp,rate=Math.min(1,sp/12)*(46+sp*2.4)*dep
   P.puff(p[0],yw+.08,p[1],lx*out+c.vx*.55,up,lz*out+c.vz*.55,[.9,.96,1],rnd(.4,.85),rnd(.6,1.1),.85,15);if(wi>1&&sp>14)P.puff(p[0],yw+.1,p[1],-sy*sp*.2+lx*1.5+c.vx*.4,up*1.25,-cy*sp*.2+lz*1.5+c.vz*.4,[.92,.97,1],rnd(.4,.8),rnd(.8,1.3),.8,16);
   if(Math.random()<.34)P.puff(p[0],yw+.15,p[1],lx*out*.5+c.vx*.3,rnd(.8,1.8),lz*out*.5+c.vz*.3,[.92,.97,.98],rnd(1.4,2.8),rnd(1.1,1.8),.3,-.5);
   if(sp>16&&wi<2&&Math.random()<.5)P.puff(p[0],yw+.1,p[1],sy*sp*.35+lx*2,rnd(3,6.5),cy*sp*.35+lz*2,[.88,.95,.98],rnd(.25,.5),rnd(.6,1),.75,18)}}
+/* stage wheel spray (Nov 9: "the dirt and snow particles don't look good, make them larger and more believable, not little trails"): few, big soft clouds that
+   billow out behind the rear wheels, rise and spread, plus a fan of clods on dirt; snow throws a pale powder that hangs longer */
+P.stageDust=(c,T,Rc,slide,base,dk,hex3)=>{const sp=c.sp,snow=T.d._key==='autumn',dt=typeof dtf!=='undefined'?dtf:1/60,sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);
+ const rate=clamp((sp-3)/12,0,1)*(c.onRoad?15:24)*(1+Math.min(2.2,slide*2.6)+(c.drifting?.7:0));c._sdA=(c._sdA||0)+dt*rate;
+ while(c._sdA>=1){c._sdA--;const wi=2+(Math.random()<.5?0:1),w=c.m&&c.m.wheels[wi];if(!w||!w.g)continue;const q=wheelPos(c,wi),y=(w.s?w.s.h:c.y-.9)+.25,b=.9+Math.random()*.2,wide=1.2+slide*2.4;
+  const col=snow?[.93*b,.96*b,1]:[base[0]*b,base[1]*b,base[2]*b],sz=rnd(1.9,3.5)*(snow?1.25:1)*(1+Math.min(1.1,slide*.5));
+  P.puff(q[0],y,q[1],-sy*sp*.1+rnd(-wide,wide)+c.vx*.14,rnd(1.2,3.1)+slide*1.6,-cy*sp*.1+rnd(-wide,wide)+c.vz*.14,col,sz,rnd(1.9,3.2)*(snow?1.2:1),rnd(.22,.4),-.28);
+  if(Math.random()<.6)P.puff(q[0],y-.1,q[1],-sy*sp*.06+rnd(-1,1),rnd(.1,.7),-cy*sp*.06+rnd(-1,1),col,sz*.62,rnd(1.2,2),rnd(.25,.38),0);
+  if(!snow&&Math.random()<.34)for(let k=0;k<2;k++)P.puff(q[0],y,q[1],-sy*sp*.24+rnd(-4,4),rnd(2.5,6),-cy*sp*.24+rnd(-4,4),dk,rnd(.24,.44),rnd(.5,.95),.9,15)}};
 function stageFx(c,T,dt){const nm=T.d.name,sc=RACE.scene,sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);
  if(nm==='Ashfall Stage'){c._fA=(c._fA||0)+dt*26;
   while(c._fA>=1){c._fA--;const a=rnd(0,6.283),r=rnd(4,34);P.puff(c.x+Math.cos(a)*r+sy*c.sp*.5,c.y+rnd(2,11),c.z+Math.sin(a)*r+cy*c.sp*.5,rnd(.5,1.8),0,rnd(-.6,.6),[.5,.47,.46],rnd(.1,.2),rnd(3,4.5),.5,1.8)}
@@ -101,10 +149,17 @@ hudUpdate=()=>{hu0();const Rc=RACE;if(!Rc||!Rc.cfg||!Rc.cfg.rally)return;
  Rc.cars.forEach((c,i)=>{if(!c.human)return;const e=document.getElementById('h'+i);if(!e||!e.dataset.b)return;let el=e.querySelector('.h8pace');if(!el){el=document.createElement('div');el.className='h8pace';e.appendChild(el)}
   try{dashUpdate(Rc,c)}catch(e){if(!P._rdErr){P._rdErr=1;console.error('dash',e)}}
   if(Rc.state==='count'||Rc.cfg.circuit){el.style.opacity=0;if(el._t){el._t='';el.innerHTML=''}return}
-  const n=note(c,Rc.T);let txt='',cls='';
-  if(n.ev&&(!n.cor||n.ev.d<n.cor.d+15)){txt=`<b>${n.ev.t}</b><span>${Math.round(n.ev.d/10)*10} m</span>`;cls=n.ev.t==='NARROW'?'ev nr':'ev'}
-  else if(n.cor){txt=`<i>${arrow(n.cor.t==='HAIRPIN'?'HAIRPIN':n.cor.g,n.cor.dir)}</i><b style="color:${(GR[n.cor.t==='HAIRPIN'?'HAIRPIN':n.cor.g]||GR[3])[1]}">${n.cor.t}</b><span>${Math.round(n.cor.d/10)*10} m</span>`;cls=n.cor.t==='HAIRPIN'?'hp':''}
-  if(el._t!==txt){el._t=txt;el.innerHTML=txt}el.className='h8pace '+cls;el.style.opacity=txt?1:0})};
+  const n=note(c,Rc.T);let d=null;
+  if(n.ev&&(!n.cor||n.ev.d<n.cor.d+15)){d={l:n.ev.t==='WATER'?'WATER':n.ev.t==='JUMP'?'JUMP':'NARROW',v:Math.round(n.ev.d/10)*10+' M',s:n.ev.t==='WATER'?'FORD':n.ev.t==='JUMP'?'CREST':'PINCH',col:n.ev.t==='NARROW'?'#ef9a5a':n.ev.t==='JUMP'?'#f2c76b':'#8fd3f2',svg:''}}
+  else if(n.cor){const g=n.cor.t==='HAIRPIN'?'HAIRPIN':n.cor.g,col=(GR[g]||GR[3])[1];d={l:n.cor.t,v:Math.round(n.cor.d/10)*10+' M',s:n.cor.dir==='L'?'LEFT':'RIGHT',col,svg:arrow(g,n.cor.dir)}}
+  el.style.display='none';paceCard(Rc,d)})};
+/* the pace note is a card like the stage clock and the damage plate (top left, under the clock): corner name small, distance big, direction under it, the bent arrow on the left */
+let pcEl=null;
+function paceCard(Rc,d){if(!pcEl){pcEl=document.createElement('div');pcEl.id='rlPace';document.body.appendChild(pcEl)}
+ if(!d||Rc.state==='count'||Rc.cfg.circuit){pcEl.style.display='none';pcEl._k='';return}
+ const k=d.l+'|'+d.v+'|'+d.s;if(pcEl._k!==k){pcEl._k=k;pcEl.innerHTML=`<div class="h8top"><div class="h8plate"><i class="pcA">${d.svg}</i><div class="pcT"><div class="lap">${d.l}</div><div class="raceTime" style="color:${d.col}">${d.v}</div><div class="bl" style="color:${d.col}">${d.s}</div></div></div></div>`}
+ const ht=document.querySelector('#h0 .h8top');if(ht){const rc=ht.getBoundingClientRect();pcEl.style.left=rc.left+'px';pcEl.style.top=(rc.bottom+8)+'px';pcEl.style.setProperty('--pw',ht.offsetWidth+'px');pcEl.style.setProperty('--ph',ht.offsetHeight+'px');const pv=ht.parentNode.style.getPropertyValue('--s');if(pv)pcEl.style.setProperty('--s',pv)}else{pcEl.style.left='12px';pcEl.style.top='96px'}
+ pcEl.style.display='block'}
 
 /* ---------------- rally controls: real gearboxes (shift keys), handbrake, camera ---------------- */
 const REAL0={lr:6,ford:6,merc:7,ster:7,art:8,ferr:7,zen:7,must:6,urus:8,m8:8,amg:9,gtr:6,por:7,p1:7};const REAL=new Proxy(REAL0,{get:(t,k)=>t[k]||(P.BYID[k]&&P.BYID[k].real)||6});

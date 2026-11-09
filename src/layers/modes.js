@@ -10,10 +10,10 @@ const NP=900;
 P.setupDust=Rc=>{
  const g=new THREE.BufferGeometry(),pos=new Float32Array(NP*3),col=new Float32Array(NP*4),siz=new Float32Array(NP);
  g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('aCol',new THREE.BufferAttribute(col,4));g.setAttribute('aSize',new THREE.BufferAttribute(siz,1));
- const u={uScale:{value:600}};
+ const u={uScale:{value:600},uMax:{value:Rc.cfg&&Rc.cfg.rally?230:44}};
  const m=new THREE.ShaderMaterial({uniforms:u,transparent:true,depthWrite:false,fog:false,
-  vertexShader:'attribute vec4 aCol;attribute float aSize;uniform float uScale;varying vec4 vC;void main(){vC=aCol;vec4 mv=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mv;float z=max(-mv.z,.1);gl_PointSize=min(aSize*uScale/z,44.);vC.a*=smoothstep(2.5,7.5,z);}',
-  fragmentShader:'varying vec4 vC;void main(){vec2 p=gl_PointCoord-.5;float d=length(p)*2.;float a=smoothstep(1.,.12,d);a*=a*1.4;gl_FragColor=vec4(vC.rgb,vC.a*a);if(gl_FragColor.a<.01)discard;}'});
+  vertexShader:'attribute vec4 aCol;attribute float aSize;uniform float uScale;uniform float uMax;varying vec4 vC;varying float vS;void main(){vC=aCol;vS=aSize;vec4 mv=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mv;float z=max(-mv.z,.1);gl_PointSize=min(aSize*uScale/z,uMax);vC.a*=smoothstep(2.5,7.5,z);}',
+  fragmentShader:'varying vec4 vC;varying float vS;float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}void main(){vec2 p=gl_PointCoord-.5;float d=length(p)*2.;float a=smoothstep(1.,.12,d);a*=a*1.4;float q=n(p*4.+vS*7.);float w=.75+.5*q;vec3 c=vC.rgb*(.86+.28*q);gl_FragColor=vec4(c,vC.a*a*w);if(gl_FragColor.a<.01)discard;}'});
  const pts=new THREE.Points(g,m);pts.frustumCulled=false;pts.renderOrder=5;
  const vp=new THREE.Vector4();
  pts.onBeforeRender=(r,sc,cam)=>{r.getViewport(vp);u.uScale.value=vp.w/(2*Math.tan(cam.fov*Math.PI/360))};
@@ -35,7 +35,8 @@ const prevVis=updateVisual;
 updateVisual=(c,T,t)=>{prevVis(c,T,t);const Rc=RACE;if(!Rc||!Rc.dust||c.exp>0||c.respT>0)return;
  const loose=((T.d.gravel||(T.gv&&T.gv[c.idx]))&&c.onRoad&&!T.ice[c.idx])||!c.onRoad;if(!loose||c.sp<4)return;
  const dcol=T.d.dust||0xb89c70,base=hex3(dcol),dk=hex3(T.d.dirt||0x5a4630);
- const slide=Math.abs(wr(Math.atan2(c.vx,c.vz)-c.yaw)),rate=clamp((c.sp-3)/13,0,1)*(c.onRoad?32:46)*(1+Math.min(1.8,slide*3)+(c.drifting?.6:0));
+ const slide=Math.abs(wr(Math.atan2(c.vx,c.vz)-c.yaw));if(T.stage&&P.stageDust){P.stageDust(c,T,Rc,slide,base,dk,hex3);return}
+ const rate=clamp((c.sp-3)/13,0,1)*(c.onRoad?32:46)*(1+Math.min(1.8,slide*3)+(c.drifting?.6:0));
  c.dAcc=(c.dAcc||0)+dtf*rate;const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);
  while(c.dAcc>=1){c.dAcc--;const wi=2+(Math.random()<.5?0:1),w=c.m.wheels[wi];if(!w||!w.g){continue}
   const x=c.x+cy*WL[wi][0]+sy*WL[wi][1],z=c.z-sy*WL[wi][0]+cy*WL[wi][1],y=(w.s?w.s.h:c.y-1)+.2,b=1+(Math.random()-.5)*.14;

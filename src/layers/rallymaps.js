@@ -49,7 +49,13 @@ const TINT={
  ash:[[/ROADS_PORTUGAL/,1.1],[/GRAVEL_PORTUGAL/,.9],[/GRASS_PORTUGAL/,1.35],[/^ct_c$/,2.1]],
  autumn:[[/SNOW_SWEDEN/,.86],[/ICE_SURFACE/,.95],[/STONE/,1.3],[/^ct_c$/,1.5]]};
 const EMIS={ash:[[/GRAVEL_PORTUGAL/,[.075,.048,.026]]],terr:[[/^ct_c$/,[.03,.035,.045]]],autumn:[[/^ct_c$/,[.03,.035,.045]]],mangrove:[[/^ct_c$/,[.02,.03,.02]]]};/* lifts the near-black rock and bank colours */
-function tintStage(sc,key){const em=EMIS[key]||[];const tb=TINT[key];if(!tb)return;sc.traverse(o=>{const m=o.isMesh&&o.material;if(!m||!m.color||!/^ct_/.test(o.name))return;if(!m.userData._c0)m.userData._c0=m.color.clone();let k=1;for(const[re,v]of tb)if(re.test(o.name)){k=v;break}m.color.copy(m.userData._c0);if(Array.isArray(k))m.color.multiply(new THREE.Color(k[0],k[1],k[2]));else m.color.multiplyScalar(k);if(m.emissive){let e=null;for(const[re,v]of em)if(re.test(o.name)){e=v;break}if(e)m.emissive.setRGB(e[0],e[1],e[2]);else m.emissive.setRGB(0,0,0)}})}
+/* Portugal's cut banks use the road gravel texture and, lit from above, came out as flat grey-brown slabs: blotches and strata (from world position) break them up */
+function bankNoise(m){if(m.userData._nz)return;m.userData._nz=1;m.onBeforeCompile=sh=>{
+ sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vWp;').replace('#include <begin_vertex>','#include <begin_vertex>\nvWp=(modelMatrix*vec4(transformed,1.0)).xyz;');
+ sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vWp;\nfloat h31(vec3 p){p=fract(p*.3183099+.1);p*=17.;return fract(p.x*p.y*p.z*(p.x+p.y+p.z));}\nfloat vn(vec3 x){vec3 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);return mix(mix(mix(h31(i),h31(i+vec3(1,0,0)),f.x),mix(h31(i+vec3(0,1,0)),h31(i+vec3(1,1,0)),f.x),f.y),mix(mix(h31(i+vec3(0,0,1)),h31(i+vec3(1,0,1)),f.x),mix(h31(i+vec3(0,1,1)),h31(i+vec3(1,1,1)),f.x),f.y),f.z);}')
+  .replace('#include <map_fragment>','#include <map_fragment>\nfloat nzN=vn(vWp*vec3(.3,.8,.3))*.6+vn(vWp*1.9)*.4;float nzS=.5+.5*sin(vWp.y*2.4+nzN*5.);float nzK=.55+.6*nzN+.25*nzS;diffuseColor.rgb*=nzK;diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(1.12,.94,.78),nzN);')
+  .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance*=nzK;')};m.needsUpdate=true}
+function tintStage(sc,key){const em=EMIS[key]||[];const tb=TINT[key];if(!tb)return;sc.traverse(o=>{const m=o.isMesh&&o.material;if(!m||!m.color||!/^ct_/.test(o.name))return;if(!m.userData._c0)m.userData._c0=m.color.clone();let k=1;for(const[re,v]of tb)if(re.test(o.name)){k=v;break}m.color.copy(m.userData._c0);if(Array.isArray(k))m.color.multiply(new THREE.Color(k[0],k[1],k[2]));else m.color.multiplyScalar(k);if(m.emissive){let e=null;for(const[re,v]of em)if(re.test(o.name)){e=v;break}if(e){m.emissive.setRGB(e[0],e[1],e[2]);if(key==='ash')bankNoise(m)}else m.emissive.setRGB(0,0,0)}})}
 /* ---- road surface detail (Nov 8: "the dirt paths look kinda weird, make them look more real"): one ribbon laid just above the road along the whole stage, with a
    texture made here: wheel ruts and a crown of loose gravel with grass at the edges on the dirt stages, white edge lines and a dashed centre line and worn
    tyre tracks on the tarmac, packed tyre tracks and slush on the snow. Lit and fogged like the rest of the world. ---- */
@@ -99,7 +105,7 @@ R.render=function(scene,cam){const f=scene&&scene.userData&&scene.userData.snow;
   f.m.geometry.attributes.position.needsUpdate=true;f.m.position.set(cam.position.x,cam.position.y,cam.position.z)}
  return rr0.apply(this,arguments)};
 const hex=n=>'#'+(n>>>0).toString(16).padStart(6,'0');
-function gradTex(a,b){const cv=document.createElement('canvas');cv.width=2;cv.height=64;const g=cv.getContext('2d'),q=g.createLinearGradient(0,0,0,64);q.addColorStop(0,hex(a));q.addColorStop(.5,hex(b));q.addColorStop(1,hex(b));g.fillStyle=q;g.fillRect(0,0,2,64);const t=new THREE.CanvasTexture(cv);t.encoding=THREE.sRGBEncoding;return t}
+function gradTex(a,b,soft){const cv=document.createElement('canvas');cv.width=2;cv.height=64;const g=cv.getContext('2d'),q=g.createLinearGradient(0,0,0,64);q.addColorStop(0,hex(a));if(soft){const A=new THREE.Color(a),B=new THREE.Color(b);for(const [t,m] of [[.2,.1],[.32,.38],[.4,.7],[.46,.92]])q.addColorStop(t,'#'+A.clone().lerp(B,m).getHexString())}q.addColorStop(.5,hex(b));q.addColorStop(1,hex(b));g.fillStyle=q;g.fillRect(0,0,2,64);const t=new THREE.CanvasTexture(cv);t.encoding=THREE.sRGBEncoding;return t}
 /* the look of each stage (Nov 8, "make rally's shaders look beautiful and atmospheric"): sky from deep blue overhead to a warm haze at the horizon, a fog
    that is the same colour as that haze, a low warm sun against a cool fill (the light that gives shapes a lit and a shadow side) */
 const ATM={
@@ -129,5 +135,36 @@ function gate(sc,T,i,txt){const hw=T.hw[i]+1.3,g=new THREE.Group();g.position.se
  const bm=new THREE.MeshBasicMaterial({map:bannerTex(txt),side:THREE.DoubleSide,fog:false}),w=Math.min(hw*1.8,13);const sg=new THREE.Mesh(new THREE.PlaneGeometry(w,w*96/512),bm);sg.position.set(0,7.6,.02);g.add(sg);
  const ck=new THREE.Mesh(new THREE.PlaneGeometry(hw*2-.4,1.8),new THREE.MeshBasicMaterial({map:checkTex(),fog:false}));ck.rotation.x=-Math.PI/2;ck.position.set(0,.14,0);g.add(ck);
  g.userData.noMerge=1;sc.add(g)}
-setTimeout(()=>{const bw2=buildWorld;buildWorld=function(T){const sc=bw2.apply(this,arguments);try{if(T.d&&T.d.stage&&T.d.cartoon&&T.finI){gate(sc,T,2,'START');gate(sc,T,T.finI,'FINISH');/* far mountains and clouds, and the snow: added here, after cartoon.js has cleared the stock scenery */try{if(P.skyBuild)P.skyBuild(sc,T)}catch(e){console.warn('sky',e)}const A=ATM[T.d._key];if(A&&A.snow)snowAdd(sc);tintStage(sc,T.d._key);roadRibbon(sc,T,T.d._key)}}catch(e){console.warn('gates',e)}return sc}},0);
+setTimeout(()=>{const bw2=buildWorld;buildWorld=function(T){const sc=bw2.apply(this,arguments);try{if(T.d&&T.d.stage&&T.d.cartoon&&T.finI){/* far mountains and clouds, and the snow: added here, after cartoon.js has cleared the stock scenery */try{if(P.skyBuild)P.skyBuild(sc,T)}catch(e){console.warn('sky',e)}const A=ATM[T.d._key];if(A&&A.snow)snowAdd(sc);tintStage(sc,T.d._key);roadRibbon(sc,T,T.d._key)}}catch(e){console.warn('gates',e)}return sc}},0);
+
+/* ---- time of day on the stages (Nov 9: "the sunset and other shaders still don't look good"). The generic time-of-day pass painted its own orange dome, fog and
+   lights over the stage's atmosphere and left the far mountains and clouds in their daytime colours. For stages it is replaced: every look is made from the
+   stage's own atmosphere (ATM) by a per-time table: dome top and horizon, fog warmth, sun colour / height / strength, fill, global grade, and the tint of
+   the far ring and the clouds, so a sunset is a warm low sun, a pink-orange horizon fading to dusk blue, and mountains that sit in the same haze. ---- */
+const TODK={
+ dawn:{glow:[0xfff0d8,0xffcfa0],top:0x5f7cb4,hor:0xf2c9a2,fogW:0xe8c8ac,fogM:.55,sun:0xffc08a,si:.92,hi:.59,el:.34,mul:[1.03,1,.96],add:[.01,.004,0],sat:1.02,exp:1,ring:[.97,.86,.86],cl:[1,.82,.78],near:.9,far:1},
+ sunset:{top:0x56649a,hor:0xf1bd94,fogW:0xd9b096,fogM:.55,sun:0xffa65e,si:1.1,hi:.6,el:.2,mul:[1.04,.98,.93],add:[.01,0,-.006],sat:1.02,exp:1.02,ring:[.96,.82,.78],cl:[.92,.78,.74],near:.85,far:1,glow:[0xffe9c4,0xffb878]},
+ night:{top:0x04070e,hor:0x1b2438,fogW:0x141b2b,fogM:.85,sun:0x8fa2ff,si:.33,hi:.26,el:.9,mul:[.7,.78,1.05],add:[0,.004,.02],sat:.85,exp:.95,ring:[.12,.14,.24],cl:[.15,.17,.28],near:.55,far:.8}};
+/* the low sun itself: a small bright disc inside stacked, faint additive spheres (the sky-tracker in ui.js carries 40-radius unfogged spheres with the camera), so the
+   horizon gets a soft glow around the sun like a real low sun instead of a flat orange band */
+function sunGlow(sc,A,K,key){const old=sc.userData.sunG;if(old){for(const o of old){sc.remove(o);o.geometry.dispose();o.material.dispose()}sc.userData.sunG=null}
+ if(!K.glow)return;const at=A.sunAt||[-150,250,100],hz=Math.hypot(at[0],at[2])||1,e=K.el,cx=Math.sqrt(1-e*e),D=1250,g=[];
+ [[1,K.glow[0],1],[2.6,K.glow[1],.5],[5,K.glow[1],.22],[9,K.glow[1],.12],[15,K.glow[1],.07]].forEach(([k,col,op],i)=>{const m=new THREE.Mesh(new THREE.SphereGeometry(40,16,10),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:op,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
+  m.scale.setScalar(k);m.position.set(at[0]/hz*D*cx,D*e,at[2]/hz*D*cx);m.renderOrder=-1+i*.01;m.frustumCulled=false;sc.add(m);g.push(m)});sc.userData.sunG=g}
+function stageTod(sc,T,key){const A=ATM[T.d._key]||{},K=TODK[key],U=window.TODU;P.curTod=key;sc.userData.tod=key;
+ {const ef={dawn:.85,sunset:.6,night:.1}[key]||1,wm=({dawn:[.96,.9,.86],sunset:[1,.8,.6]})[key]||[1,1,1],wc=new THREE.Color(wm[0],wm[1],wm[2]);sc.traverse(o=>{const m=o.isMesh&&o.material;if(!m||!m.emissive)return;if(!m.userData._e0)m.userData._e0=m.emissive.clone();m.emissive.copy(m.userData._e0).multiplyScalar(ef).multiply(wc)})}/* the daytime lifts must not glow at night */
+ if(!K){if(P.resetTod)P.resetTod();return}
+ for(const o of sc.children){
+  if(o.isHemisphereLight){const h=A.hemi||[0xb0c4e0,0x607040];o.color.setHex(key==='night'?0x3a4a80:h[0]);if(key!=='night')o.color.lerp(new THREE.Color(K.fogW),.3);o.groundColor.setHex(key==='night'?0x10141f:h[1]);if(key!=='night')o.groundColor.multiplyScalar(.8);o.intensity=(A.hemiI||1.1)*K.hi}
+  else if(o.isDirectionalLight){const at=A.sunAt||[-150,250,100],hz=Math.hypot(at[0],at[2])||1,L=330;o.color.setHex(K.sun);o.intensity=(A.sunI||1)*K.si;o.position.set(at[0]/hz*L*Math.sqrt(1-K.el*K.el),L*K.el,at[2]/hz*L*Math.sqrt(1-K.el*K.el))}
+  else if(o.geometry&&o.geometry.type==='SphereGeometry'&&o.geometry.parameters.radius===1500){o.material.map=gradTex(K.top,K.hor,1);o.material.needsUpdate=true}}
+ sunGlow(sc,A,K,key);
+ if(sc.fog){const f=new THREE.Color(A.fog!=null?A.fog:T.d.fog);f.lerp(new THREE.Color(K.fogW),K.fogM);sc.fog.color.copy(f);if(sc.userData.ptFog)sc.userData.ptFog.color.copy(f);if(sc.background&&sc.background.isColor)sc.background.copy(f);
+  sc.fog.near=(A.near||150)*K.near;sc.fog.far=(A.far||620)*K.far;if(sc.userData.ptFog){sc.userData.ptFog.near=sc.fog.near;sc.userData.ptFog.far=sc.fog.far}}
+ const fx=sc.userData.skyFx;if(fx){if(fx.ring)fx.ring.material.color.setRGB(K.ring[0],K.ring[1],K.ring[2]);
+  for(const c of fx.clouds||[]){const m=c.material;if(!m.userData.c0)m.userData.c0=m.color.clone();m.color.copy(m.userData.c0).multiply(new THREE.Color(K.cl[0],K.cl[1],K.cl[2]))}}
+ if(key==='night'&&!sc.userData.stars){sc.userData.stars=1;const st=[],r=Math.random;for(let i=0;i<420;i++){const a=r()*6.28,b=r()*1.25+.08;st.push(Math.cos(a)*Math.cos(b)*1400,Math.sin(b)*1400,Math.sin(a)*Math.cos(b)*1400)}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(st,3));sc.add(new THREE.Points(g,new THREE.PointsMaterial({color:0xffffff,size:2,sizeAttenuation:false,fog:false})))}
+ if(U){U.mul.value.set(K.mul[0],K.mul[1],K.mul[2]);U.add.value.set(K.add[0],K.add[1],K.add[2]);U.sat.value=K.sat}
+ P.baseExpo=P.baseExpo||R.toneMappingExposure;R.toneMappingExposure=P.baseExpo*K.exp}
+setTimeout(()=>{const at=P.applyTod;if(!at)return;P.applyTod=function(sc,T,key){if(sc&&T&&T.d&&T.d.stage&&T.d.cartoon&&T.d._key){try{stageTod(sc,T,key);return}catch(e){console.warn('stageTod',e)}}return at.apply(this,arguments)}},0);
 })();

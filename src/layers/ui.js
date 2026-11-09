@@ -132,7 +132,7 @@ show=n=>{const was=scr;if(n!=='s8setup'&&n!=='ptOptions'&&ST.custom){const c=ST.
  if(n==='menu'&&P.menuStats)P.menuStats();
  /* the start-line card belongs to the race: never leave it over a menu */if(n!=='game'&&n!=='pause'&&n!=='ptOptions'){const e=document.getElementById('rlPrep');if(e)e.style.display='none';document.body.classList.remove('rprep')}};
 function refreshMenuCars(){const sv=P.SV();for(let i=0;i<4;i++){const s=sv.sel[i];carChoices[i]=P.modelOf(s.id,s.alt)}}
-const goBack={s8cards:()=>show('menu'),s8quick:()=>show('menu'),s8pick:()=>show(ST.ret),s8rally:()=>show('s8cards'),s8setup:()=>{if(ST.custom){const c=ST.custom;ST.custom=null;c.back();return}if(GXS.step===2){GXS.step=1;GXS.f=0;if(isRL(ST.mode))ST.rstep=1;renderSetup();return}if(ST.fromRally&&ST.mode==='rally'){openRally(true);return}if(ST.fromPick&&ST.mode==='track'){openPick(true);return}show(ST.ret)},s8career:()=>{if(P.frBack&&P.frBack())return;show('s8cards')},s8res:()=>resContinue()};
+const goBack={s8cards:()=>show('menu'),s8quick:()=>show('menu'),s8pick:()=>show(ST.ret),s8rally:()=>show(ST.ret),s8setup:()=>{if(ST.custom){const c=ST.custom;ST.custom=null;c.back();return}if(GXS.step===2){GXS.step=1;GXS.f=0;if(isRL(ST.mode))ST.rstep=1;renderSetup();return}if(ST.fromRally&&ST.mode==='rally'){openRally(true);return}if(ST.fromPick&&ST.mode==='track'){openPick(true);return}show(ST.ret)},s8career:()=>{if(P.frBack&&P.frBack())return;show('s8cards')},s8res:()=>resContinue()};
 const leaveShow=()=>{const r=SR.ret;if(r==='s8res_back'){renderSetup();show('s8setup');return}show(r);if(r==='s8setup')renderSetup();if(r==='s8career')renderCareer()};
 function fadeTo(fn){const f=$('shFade');f.classList.add('on');setTimeout(()=>{try{fn()}catch(e){console.error('fadeTo',e&&e.stack||e)}setTimeout(()=>f.classList.remove('on'),260)},230)}
 const inGrid=()=>CARDS()&&SR.view==='grid',inCar=()=>CARDS()&&SR.view==='car';
@@ -200,16 +200,13 @@ const stLen=i=>{const T=tr(i);return T.stage?T.stage.len:T.L};
 const RB={list:[]};
 function openRally(back){ST.mode='rally';if(!okTrack('rally',ST.track))ST.track=firstTrack('rally');ST.fromRally=true;RB.list=D.map((d,i)=>okTrack('rally',i)?i:-1).filter(i=>i>=0);renderRally();show('s8rally')}
 function renderRally(){const sv=P.SV(),G=$('rbGrid');
- G.innerHTML=RB.list.map((i,n)=>{const d=D[i],inf=P.stageInfo&&P.stageInfo(i),r=sv.ral&&sv.ral[i+':1'],st=(a,b)=>`<div><small>${a}</small><b>${b}</b></div>`;
-  return `<div class="rb${i===ST.track?' sel':''}" data-i="${i}"><div class="rbMap"><canvas class="rbCv"></canvas><em class="rbNo">${String(n+1).padStart(2,'0')}</em></div>
-  <div class="rbInfo"><small class="rbKind">${inf?inf.surface:P.TRACK_INFO[i].s} stage</small><h3>${d.name}</h3><p>${(inf&&inf.desc)||d.desc||''}</p>
-  <div class="rbStats">${inf?st('Length',inf.km.toFixed(1)+' km')+st('Climb',Math.round(inf.climb)+' m')+st('Best',r?fmtT(r.t):'--'):st('Length',(stLen(i)/1000).toFixed(1)+' km')+st('Best',r?fmtT(r.t):'--')}</div>
-  <div class="rbProf"><canvas class="rbPf"></canvas></div></div></div>`}).join('');
- $$('#rbGrid .rb',root).forEach(e=>{const i=+e.dataset.i;e.onclick=()=>rbSel(i);e.ondblclick=()=>{rbSel(i);rallyNext()}});
- requestAnimationFrame(()=>requestAnimationFrame(rbPaint));setTimeout(rbPaint,350)}
-function rbPaint(){$$('#rbGrid .rb',root).forEach(e=>{const i=+e.dataset.i,a=e.querySelector('.rbCv'),b=e.querySelector('.rbPf');if(!(a.clientWidth>8))return;
-  if(!(P.rallyMap&&P.rallyMap(i,a))){const g=a.getContext('2d');g.fillStyle='#0c1218';g.fillRect(0,0,a.width,a.height)}
-  if(P.rallyProfile){if(!P.rallyProfile(i,b)){const g=b.getContext('2d');g.clearRect(0,0,b.width,b.height)}}})}
+ G.innerHTML=RB.list.map((i,n)=>{const d=D[i],inf=P.stageInfo&&P.stageInfo(i),r=sv.ral&&sv.ral[i+':1'];
+  return `<div class="rb${i===ST.track?' sel':''}" data-i="${i}"><canvas class="rbCv" width="1280" height="720"></canvas><em class="rbNo">${String(n+1).padStart(2,'0')}</em>${r?`<span class="rbBest">BEST ${fmtT(r.t)}</span>`:''}
+  <div class="rbI"><b>${d.name}</b><small>${inf?inf.surface+' STAGE &middot; '+inf.km.toFixed(1)+' KM &middot; '+Math.round(inf.climb)+' M CLIMB':P.TRACK_INFO[i].s+' &middot; '+(stLen(i)/1000).toFixed(1)+' KM'}</small></div></div>`}).join('');
+ $$('#rbGrid .rb',root).forEach(e=>{const i=+e.dataset.i;e.onclick=()=>rbSel(i);e.ondblclick=()=>{rbSel(i);rallyNext()}});rbPaint()}
+function rbPaint(){$$('#rbGrid .rb',root).forEach(e=>{const i=+e.dataset.i,a=e.querySelector('.rbCv'),g=a.getContext('2d'),draw=im=>{const W=a.width,H=a.height,s=Math.max(W/im.width,H/im.height),w=im.width*s,h=im.height*s;g.drawImage(im,(W-w)/2,(H-h)/2,w,h)};
+  const fall=()=>{g.fillStyle='#0c1218';g.fillRect(0,0,a.width,a.height);if(P.rallyMap)P.rallyMap(i,a)};
+  if(P.stageShot){P.stageShot(i,im=>{if(im&&e.isConnected)draw(im);else if(e.isConnected)fall()})}else fall()})}
 function rbSel(i){if(i===ST.track)return;ST.track=i;P.sfx&&P.sfx('move');$$('#rbGrid .rb',root).forEach(e=>e.classList.toggle('sel',+e.dataset.i===i))}
 function rallyNext(){P.sfx&&P.sfx('select');ST.rstep=1;GXS.step=1;ST.fromRally=true;renderSetup();show('s8setup')}
 function pickNext(){if(!PK.list.includes(ST.track))return;P.sfx&&P.sfx('select');ST.fromPick=true;renderSetup();show('s8setup')}

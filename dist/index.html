@@ -6809,23 +6809,18 @@ body.ptPause #pause{visibility:visible!important;opacity:1!important;z-index:214
 #tut button.pri,#tutOffer button.pri{background:#f1f3f5;color:#0a0d11}
 kbd{font:700 12px var(--mn,monospace);padding:4px 9px;border:1px solid #f1f3f5;border-bottom-width:3px;border-radius:4px;background:#f1f3f51a;color:#f1f3f5;letter-spacing:.08em}
 
-/* ===== rally stage select (Nov 8): four stages, four cards (2 x 2), same look as the setup screens: grey gradient cards with a thin black ring, blue for the selected one, Inter ===== */
-#s8rally .rbGrid{position:absolute;left:3.4vw;right:3.4vw;top:13vh;bottom:11vh;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:clamp(12px,1.4vw,24px);z-index:2;font-family:var(--gt)}
-#s8rally .rb{position:relative;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:clamp(10px,1vw,18px);min-height:0;padding:clamp(10px,1.2vh,16px);cursor:pointer;border-radius:12px!important;background:linear-gradient(180deg,#2a2e33f5,#16181bf5);box-shadow:inset 0 1px 0 #ffffff30,0 0 0 1px #000,0 18px 40px #000c;color:#c9d2d8;transition:transform .15s,box-shadow .15s}
+/* ===== rally stage select (Nov 9): the same cards as the circuit select (a picture of the track, name and facts over its foot, blue ring on the selected one), four of them, 2 x 2 ===== */
+#s8rally .rbGrid{position:absolute;left:3.4vw;right:3.4vw;top:12.5vh;bottom:10.5vh;display:grid;grid-template-columns:repeat(2,min(46vw,calc((77vh - 34px)/2*1.7778)));grid-template-rows:none;align-content:center;justify-content:center;gap:clamp(12px,1.2vw,24px);z-index:2;padding:4px 6px}
+#s8rally .rb{position:relative;cursor:pointer;background:#0a0d11;border:1px solid #ffffff14;overflow:hidden;transition:transform .15s,box-shadow .15s;min-height:0;width:100%;aspect-ratio:16/9}
 #s8rally .rb:hover{transform:translateY(-2px)}
-#s8rally .rb.sel{box-shadow:inset 0 1px 0 #ffffffa0,0 0 0 2px #8fb4d8,0 0 22px #4f7eab90,0 18px 40px #000c;background:linear-gradient(180deg,#34414f,#1b2128)}
-#s8rally .rbMap{position:relative;min-height:0;border-radius:8px!important;overflow:hidden;background:#0c1218;box-shadow:0 0 0 1px #000}
-#s8rally .rbMap canvas{position:absolute;inset:0;width:100%;height:100%}
-#s8rally .rbNo{position:absolute;left:10px;top:8px;font:600 11px var(--gt);font-style:normal;letter-spacing:.2em;color:#e8eef4;background:#ffffff1c;padding:3px 9px;border-radius:9px}
-#s8rally .rbInfo{display:flex;flex-direction:column;gap:clamp(6px,1vh,12px);min-height:0;padding:clamp(2px,.6vh,8px) clamp(2px,.4vw,8px)}
-#s8rally .rbKind,#s8rally .rbStats small{display:block;font:600 10px var(--gt);letter-spacing:.26em;color:#8fb4d8;text-transform:uppercase}
-#s8rally .rbInfo h3{margin:0;font:400 clamp(24px,3.2vh,36px) var(--gt);letter-spacing:0;color:#fff;text-transform:none}
-#s8rally .rbInfo p{margin:0;font:400 clamp(11px,1.5vh,14px)/1.45 var(--gt);color:#c9d2d8;opacity:.85}
-#s8rally .rbStats{display:grid;grid-template-columns:repeat(3,auto);gap:8px 16px;justify-content:start}
-#s8rally .rbStats b{display:block;margin-top:2px;font:400 clamp(14px,2vh,18px) var(--gt);letter-spacing:0;color:#fff}
-#s8rally .rbProf{flex:1;min-height:36px;position:relative}
-#s8rally .rbProf canvas{position:absolute;inset:0;width:100%;height:100%}
-@media (max-width:900px){#s8rally .rbGrid{grid-template-columns:1fr;grid-template-rows:none;overflow-y:auto;top:11vh}#s8rally .rb{height:46vh}}
+#s8rally .rb.sel{box-shadow:0 0 0 2px #8fb4d8,0 0 22px #4f7eab90}
+#s8rally .rb canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#s8rally .rbNo{position:absolute;left:13px;top:12px;font:800 clamp(9px,.64vw,12px) var(--mn);letter-spacing:.2em;font-style:normal;color:#e8eef4;background:#07090ccc;padding:4px 8px}
+#s8rally .rbBest{position:absolute;right:13px;top:12px;font:700 clamp(9px,.64vw,12px) var(--mn);letter-spacing:.18em;color:#f1f3f5;background:#07090ccc;padding:4px 8px}
+#s8rally .rbI{position:absolute;left:0;right:0;bottom:0;padding:48px 18px 14px;background:linear-gradient(transparent,#07090cee 55%)}
+#s8rally .rbI b{display:block;font:700 clamp(15px,1.3vw,26px) var(--mn);letter-spacing:.14em;color:#f1f3f5;text-transform:uppercase}
+#s8rally .rbI small{font:700 clamp(9px,.64vw,12px) var(--mn);letter-spacing:.2em;color:var(--dim);text-transform:uppercase}
+@media (max-width:900px){#s8rally .rbGrid{grid-template-columns:1fr;grid-template-rows:none;overflow-y:auto;top:11vh}#s8rally .rb{height:auto;width:100%}}
 #gxSu.g2 #gxShot.map.rl{opacity:.95}
 #rlGap{position:fixed;left:50%;top:27%;transform:translateX(-50%);display:flex;gap:10px;align-items:center;padding:8px 14px;background:#0a0d11e6;border:1px solid #f1f3f5;color:#f1f3f5;font:700 12px var(--mn,monospace);letter-spacing:.2em;text-transform:uppercase;z-index:45;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
 #rlGap i{width:9px;height:9px;display:inline-block}
@@ -6840,6 +6835,13 @@ kbd{font:700 12px var(--mn,monospace);padding:4px 9px;border:1px solid #f1f3f5;b
 .h8pace i svg{width:34px;height:34px;display:block}
 .h8pace.ev b{color:#8fd3f2}.h8pace.nr b{color:#ef9a5a}.h8pace.hp{border-color:#f2c76b!important}
 #rlCp .h8plate,#rlCp .h8top{border-radius:0}
+
+/* pace note card (Nov 9): same card as the stage clock, under it */
+#rlPace{position:fixed;z-index:30;pointer-events:none;transform-origin:0 0}
+#rlPace .h8top{position:static;transform:scale(var(--s,1));transform-origin:top left;width:var(--pw,auto);height:var(--ph,auto);box-sizing:border-box}
+#rlPace .h8plate{display:flex;align-items:center;gap:12px;min-width:0}
+#rlPace .pcA{display:flex;font-style:normal}#rlPace .pcA:empty{display:none}#rlPace .pcA svg{width:40px;height:40px;display:block}
+body.rprep #rlPace,body.rreplay #rlPace{display:none!important}
 
 :root{--gt:"PT Inter","Inter","Segoe UI","Helvetica Neue",Arial,sans-serif!important;--mn:var(--gt)!important;--hd:var(--gt)!important}
 *:not(svg):not(svg *){font-family:var(--gt)!important}
@@ -8817,10 +8819,10 @@ const NP=900;
 P.setupDust=Rc=>{
  const g=new THREE.BufferGeometry(),pos=new Float32Array(NP*3),col=new Float32Array(NP*4),siz=new Float32Array(NP);
  g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('aCol',new THREE.BufferAttribute(col,4));g.setAttribute('aSize',new THREE.BufferAttribute(siz,1));
- const u={uScale:{value:600}};
+ const u={uScale:{value:600},uMax:{value:Rc.cfg&&Rc.cfg.rally?230:44}};
  const m=new THREE.ShaderMaterial({uniforms:u,transparent:true,depthWrite:false,fog:false,
-  vertexShader:'attribute vec4 aCol;attribute float aSize;uniform float uScale;varying vec4 vC;void main(){vC=aCol;vec4 mv=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mv;float z=max(-mv.z,.1);gl_PointSize=min(aSize*uScale/z,44.);vC.a*=smoothstep(2.5,7.5,z);}',
-  fragmentShader:'varying vec4 vC;void main(){vec2 p=gl_PointCoord-.5;float d=length(p)*2.;float a=smoothstep(1.,.12,d);a*=a*1.4;gl_FragColor=vec4(vC.rgb,vC.a*a);if(gl_FragColor.a<.01)discard;}'});
+  vertexShader:'attribute vec4 aCol;attribute float aSize;uniform float uScale;uniform float uMax;varying vec4 vC;varying float vS;void main(){vC=aCol;vS=aSize;vec4 mv=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mv;float z=max(-mv.z,.1);gl_PointSize=min(aSize*uScale/z,uMax);vC.a*=smoothstep(2.5,7.5,z);}',
+  fragmentShader:'varying vec4 vC;varying float vS;float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}void main(){vec2 p=gl_PointCoord-.5;float d=length(p)*2.;float a=smoothstep(1.,.12,d);a*=a*1.4;float q=n(p*4.+vS*7.);float w=.75+.5*q;vec3 c=vC.rgb*(.86+.28*q);gl_FragColor=vec4(c,vC.a*a*w);if(gl_FragColor.a<.01)discard;}'});
  const pts=new THREE.Points(g,m);pts.frustumCulled=false;pts.renderOrder=5;
  const vp=new THREE.Vector4();
  pts.onBeforeRender=(r,sc,cam)=>{r.getViewport(vp);u.uScale.value=vp.w/(2*Math.tan(cam.fov*Math.PI/360))};
@@ -8842,7 +8844,8 @@ const prevVis=updateVisual;
 updateVisual=(c,T,t)=>{prevVis(c,T,t);const Rc=RACE;if(!Rc||!Rc.dust||c.exp>0||c.respT>0)return;
  const loose=((T.d.gravel||(T.gv&&T.gv[c.idx]))&&c.onRoad&&!T.ice[c.idx])||!c.onRoad;if(!loose||c.sp<4)return;
  const dcol=T.d.dust||0xb89c70,base=hex3(dcol),dk=hex3(T.d.dirt||0x5a4630);
- const slide=Math.abs(wr(Math.atan2(c.vx,c.vz)-c.yaw)),rate=clamp((c.sp-3)/13,0,1)*(c.onRoad?32:46)*(1+Math.min(1.8,slide*3)+(c.drifting?.6:0));
+ const slide=Math.abs(wr(Math.atan2(c.vx,c.vz)-c.yaw));if(T.stage&&P.stageDust){P.stageDust(c,T,Rc,slide,base,dk,hex3);return}
+ const rate=clamp((c.sp-3)/13,0,1)*(c.onRoad?32:46)*(1+Math.min(1.8,slide*3)+(c.drifting?.6:0));
  c.dAcc=(c.dAcc||0)+dtf*rate;const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);
  while(c.dAcc>=1){c.dAcc--;const wi=2+(Math.random()<.5?0:1),w=c.m.wheels[wi];if(!w||!w.g){continue}
   const x=c.x+cy*WL[wi][0]+sy*WL[wi][1],z=c.z-sy*WL[wi][0]+cy*WL[wi][1],y=(w.s?w.s.h:c.y-1)+.2,b=1+(Math.random()-.5)*.14;
@@ -11986,6 +11989,7 @@ setTimeout(()=>{const bw=buildWorld;buildWorld=T=>{const sc=bw(T),pack=T.d&&T.d.
   const grp=new THREE.Group();grp.name='cartoonTrack';for(const m of meshes(pack))grp.add(m);sc.add(grp);
   T._bx={segs:[],pts:[]};T._bg=null;/* the removed stock props must not collide */
   if(P.addSeg){const s=new Float32Array(dec(pack.segs).buffer);for(let i=0;i<s.length;i+=4)P.addSeg(T,s[i],s[i+1],s[i+2],s[i+3],.35)}
+  if(pack.cpts&&P.addPt){const s=new Float32Array(dec(pack.cpts).buffer);for(let i=0;i<s.length;i+=3)P.addPt(T,s[i],s[i+1],s[i+2])}/* tree trunks */
  }catch(e){console.error('cartoon track',e)}
  return sc};
 /* Track Mode card art: a trackside shot of one corner of the bought model (outside of the corner, looking back up the approach).
@@ -12519,6 +12523,9 @@ P.LOG=[
  {v:'0.03',d:'Nov 2, 2026',t:'Highway Cut-Up on bikes',items:[
  'Rally overhaul: the four rally stages are now real point-to-point stages cut from the Cartoon Rally Track models (Finland gravel 6.5 km, France tarmac and snow 7.8 km, Portugal gravel 4.7 km, Sweden snow 3.5 km). They take over the four old stage slots, so records and saves carry over; driving, dirt trails, damage, checkpoints and pace notes work as before. Start and finish gates, a minimap that only shows the stage, and invisible walls so side roads and fields are closed off.',
  'Rally look: every stage has its own sky, haze, light and surfaces (misty pines on Finland, clear alpine air on France, warm dusty afternoon on Portugal, soft grey light and falling snow on Sweden), far mountains and clouds that travel with you, richer greens, readable tarmac, dirt roads no longer blown out, no more black banks. Pace notes and the stage select use the same panel style as the rest of the game.',
+ 'Rally, round 3: stage select shows picture cards and Back returns to the right screen; the pace note is a card under the stage clock; no more invisible walls (only real barriers and solid trees collide); trees are brown-trunked and full detail; dirt roads have ruts and verges.',
+ 'Rally handling is now a real two-axle tyre model: lift off in a corner and the nose tucks in, power pushes the tail out, the handbrake frees the rear, gravel and snow give less grip with a softer peak. Speed feel: the view opens a few degrees with speed and gets a light buzz on loose surfaces. Dust and snow are big soft clouds instead of little trails.',
+ 'Rally time of day is rebuilt for the stages: a soft peach sunset with a low glowing sun, dusky clouds and hazy peaks (no more flat orange sky or pink car); dawn and night follow the same scheme. France now starts inside the map instead of at its edge.',
  'Rally handling: calmer and more stable on the stages. The car follows where it points (sideways speed dies off faster), a tap on the steering no longer spins it round, bumps cannot launch it, and grip is tuned per surface (tarmac high, gravel medium, snow low). The handbrake still lets the tail go.',
  'Rally stage select is its own screen: a map drawn from the stage itself (road network, your route in gold, kilometre marks, start and finish), the height profile, length, climb and your best time. Rally setup no longer asks for laps on a stage.',
  'Rally with 2 or more drivers: staggered release. Drivers go one after another, 15 s apart; earlier runs are driven again on the stage as translucent cars (no collisions) so a later driver can catch them, with a live \'ahead / behind\' readout. The start screen shows the release order and each driver\'s time, and the leaderboard at the end lists everyone.',
@@ -13181,7 +13188,7 @@ show=n=>{const was=scr;if(n!=='s8setup'&&n!=='ptOptions'&&ST.custom){const c=ST.
  if(n==='menu'&&P.menuStats)P.menuStats();
  /* the start-line card belongs to the race: never leave it over a menu */if(n!=='game'&&n!=='pause'&&n!=='ptOptions'){const e=document.getElementById('rlPrep');if(e)e.style.display='none';document.body.classList.remove('rprep')}};
 function refreshMenuCars(){const sv=P.SV();for(let i=0;i<4;i++){const s=sv.sel[i];carChoices[i]=P.modelOf(s.id,s.alt)}}
-const goBack={s8cards:()=>show('menu'),s8quick:()=>show('menu'),s8pick:()=>show(ST.ret),s8rally:()=>show('s8cards'),s8setup:()=>{if(ST.custom){const c=ST.custom;ST.custom=null;c.back();return}if(GXS.step===2){GXS.step=1;GXS.f=0;if(isRL(ST.mode))ST.rstep=1;renderSetup();return}if(ST.fromRally&&ST.mode==='rally'){openRally(true);return}if(ST.fromPick&&ST.mode==='track'){openPick(true);return}show(ST.ret)},s8career:()=>{if(P.frBack&&P.frBack())return;show('s8cards')},s8res:()=>resContinue()};
+const goBack={s8cards:()=>show('menu'),s8quick:()=>show('menu'),s8pick:()=>show(ST.ret),s8rally:()=>show(ST.ret),s8setup:()=>{if(ST.custom){const c=ST.custom;ST.custom=null;c.back();return}if(GXS.step===2){GXS.step=1;GXS.f=0;if(isRL(ST.mode))ST.rstep=1;renderSetup();return}if(ST.fromRally&&ST.mode==='rally'){openRally(true);return}if(ST.fromPick&&ST.mode==='track'){openPick(true);return}show(ST.ret)},s8career:()=>{if(P.frBack&&P.frBack())return;show('s8cards')},s8res:()=>resContinue()};
 const leaveShow=()=>{const r=SR.ret;if(r==='s8res_back'){renderSetup();show('s8setup');return}show(r);if(r==='s8setup')renderSetup();if(r==='s8career')renderCareer()};
 function fadeTo(fn){const f=$('shFade');f.classList.add('on');setTimeout(()=>{try{fn()}catch(e){console.error('fadeTo',e&&e.stack||e)}setTimeout(()=>f.classList.remove('on'),260)},230)}
 const inGrid=()=>CARDS()&&SR.view==='grid',inCar=()=>CARDS()&&SR.view==='car';
@@ -13249,16 +13256,13 @@ const stLen=i=>{const T=tr(i);return T.stage?T.stage.len:T.L};
 const RB={list:[]};
 function openRally(back){ST.mode='rally';if(!okTrack('rally',ST.track))ST.track=firstTrack('rally');ST.fromRally=true;RB.list=D.map((d,i)=>okTrack('rally',i)?i:-1).filter(i=>i>=0);renderRally();show('s8rally')}
 function renderRally(){const sv=P.SV(),G=$('rbGrid');
- G.innerHTML=RB.list.map((i,n)=>{const d=D[i],inf=P.stageInfo&&P.stageInfo(i),r=sv.ral&&sv.ral[i+':1'],st=(a,b)=>`<div><small>${a}</small><b>${b}</b></div>`;
-  return `<div class="rb${i===ST.track?' sel':''}" data-i="${i}"><div class="rbMap"><canvas class="rbCv"></canvas><em class="rbNo">${String(n+1).padStart(2,'0')}</em></div>
-  <div class="rbInfo"><small class="rbKind">${inf?inf.surface:P.TRACK_INFO[i].s} stage</small><h3>${d.name}</h3><p>${(inf&&inf.desc)||d.desc||''}</p>
-  <div class="rbStats">${inf?st('Length',inf.km.toFixed(1)+' km')+st('Climb',Math.round(inf.climb)+' m')+st('Best',r?fmtT(r.t):'--'):st('Length',(stLen(i)/1000).toFixed(1)+' km')+st('Best',r?fmtT(r.t):'--')}</div>
-  <div class="rbProf"><canvas class="rbPf"></canvas></div></div></div>`}).join('');
- $$('#rbGrid .rb',root).forEach(e=>{const i=+e.dataset.i;e.onclick=()=>rbSel(i);e.ondblclick=()=>{rbSel(i);rallyNext()}});
- requestAnimationFrame(()=>requestAnimationFrame(rbPaint));setTimeout(rbPaint,350)}
-function rbPaint(){$$('#rbGrid .rb',root).forEach(e=>{const i=+e.dataset.i,a=e.querySelector('.rbCv'),b=e.querySelector('.rbPf');if(!(a.clientWidth>8))return;
-  if(!(P.rallyMap&&P.rallyMap(i,a))){const g=a.getContext('2d');g.fillStyle='#0c1218';g.fillRect(0,0,a.width,a.height)}
-  if(P.rallyProfile){if(!P.rallyProfile(i,b)){const g=b.getContext('2d');g.clearRect(0,0,b.width,b.height)}}})}
+ G.innerHTML=RB.list.map((i,n)=>{const d=D[i],inf=P.stageInfo&&P.stageInfo(i),r=sv.ral&&sv.ral[i+':1'];
+  return `<div class="rb${i===ST.track?' sel':''}" data-i="${i}"><canvas class="rbCv" width="1280" height="720"></canvas><em class="rbNo">${String(n+1).padStart(2,'0')}</em>${r?`<span class="rbBest">BEST ${fmtT(r.t)}</span>`:''}
+  <div class="rbI"><b>${d.name}</b><small>${inf?inf.surface+' STAGE &middot; '+inf.km.toFixed(1)+' KM &middot; '+Math.round(inf.climb)+' M CLIMB':P.TRACK_INFO[i].s+' &middot; '+(stLen(i)/1000).toFixed(1)+' KM'}</small></div></div>`}).join('');
+ $$('#rbGrid .rb',root).forEach(e=>{const i=+e.dataset.i;e.onclick=()=>rbSel(i);e.ondblclick=()=>{rbSel(i);rallyNext()}});rbPaint()}
+function rbPaint(){$$('#rbGrid .rb',root).forEach(e=>{const i=+e.dataset.i,a=e.querySelector('.rbCv'),g=a.getContext('2d'),draw=im=>{const W=a.width,H=a.height,s=Math.max(W/im.width,H/im.height),w=im.width*s,h=im.height*s;g.drawImage(im,(W-w)/2,(H-h)/2,w,h)};
+  const fall=()=>{g.fillStyle='#0c1218';g.fillRect(0,0,a.width,a.height);if(P.rallyMap)P.rallyMap(i,a)};
+  if(P.stageShot){P.stageShot(i,im=>{if(im&&e.isConnected)draw(im);else if(e.isConnected)fall()})}else fall()})}
 function rbSel(i){if(i===ST.track)return;ST.track=i;P.sfx&&P.sfx('move');$$('#rbGrid .rb',root).forEach(e=>e.classList.toggle('sel',+e.dataset.i===i))}
 function rallyNext(){P.sfx&&P.sfx('select');ST.rstep=1;GXS.step=1;ST.fromRally=true;renderSetup();show('s8setup')}
 function pickNext(){if(!PK.list.includes(ST.track))return;P.sfx&&P.sfx('select');ST.fromPick=true;renderSetup();show('s8setup')}
@@ -14912,16 +14916,55 @@ function waterDepth(T,c){const F=T.fords;if(!F||!F.length)return 0;
 
 /* ---------------- effects ---------------- */
 const WLp=()=>WL;
-/* rally handling on the stage files (Nov 8, "make the handling more realistic and tuned to rally so you aren't flying all over the place"): the player's car
-   follows where it points (sideways speed dies off faster than the arcade core leaves it, a big slide is pulled in harder, the handbrake still lets go),
-   a tap on the steering no longer spins the car round, and bumps in the road cannot throw it into the air */
-{const sg=stepCar;stepCar=function(c,dt){const r=sg.apply(this,arguments);const Rc=RACE;
- if(!c.human||c.forceAI||!Rc||!Rc.T||!Rc.T.stage||!Rc.cfg||!Rc.cfg.rally||!(dt>0)||c.exp>0||Rc.state!=='race')return r;
- const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);let vf=c.vx*sy+c.vz*cy,vl=c.vx*cy-c.vz*sy;
- if(Math.abs(vf)>5&&!c._hb){const slip=Math.abs(vl)/Math.abs(vf),k=Math.min(.45,dt*(1.8+4*Math.max(0,1-slip*2.2)+(slip>.7?6:0)));vl*=1-k;c.vx=vf*sy+vl*cy;c.vz=vf*cy-vl*sy}
- if(c.yr&&!c._hb)c.yr*=1-Math.min(.3,dt*(.9+Math.min(c.sp,50)*.025));
- if(c.vy>4.5)c.vy=4.5+(c.vy-4.5)*.25;
- return r}}
+/* rally handling on the stage files (Nov 9, "the driving is STILL trash, make it feel like Dirt 3"). The arcade core steers like a car on rails (measured: full lock
+   at 15 to 35 m/s gives 45-65 deg/s and 0-6 deg of slip, lifting off or braking changes nothing). For the player on a stage file the sideways motion and the turning are
+   now a real two-axle model (bicycle model, Pacejka-style tyres): front and rear tyres each have a slip angle and a limited grip, the load moves forward under braking
+   and back under power (so lifting off in a corner tucks the nose in, power pushes the tail out), the handbrake all but frees the rear, gravel and snow give less grip
+   and a softer, wider peak than tarmac. The core still does the engine, brakes, drag and gears: its forward speed is kept, its sideways speed and yaw are replaced. */
+setTimeout(()=>{const ipx=P.inPost;P.inPost=(c,dt)=>{const Rc=RACE,on=c.human&&!c.forceAI&&c.in&&Rc&&Rc.T&&Rc.T.stage&&Rc.cfg&&Rc.cfg.rally;if(on)c._stRaw=c.in.st||0;if(ipx)ipx(c,dt);if(on)c.in.st=0};
+ const sg=stepCar,L=3.1,A=1.5,B=1.6,G=9.81;/* installed last, so nothing wrapped after this file can put the arcade steering back */
+ stepCar=function(c,dt){const Rc=RACE,on=c.human&&!c.forceAI&&Rc&&Rc.T&&Rc.T.stage&&Rc.cfg&&Rc.cfg.rally&&dt>0&&Rc.state==='race';
+  let yaw0,vx0,vz0,r0,stRaw=0;if(on){yaw0=c.yaw;vx0=c.vx;vz0=c.vz;r0=c.yr||0;stRaw=c._stRaw||0}/* the core drives straight: its steering scrub must not eat the speed, the tyre model does the turning */
+  const r=sg.apply(this,arguments);if(on&&c.in)c.in.st=stRaw;/* back for the wheels and the camera */
+  if(!on||c.exp>0||c.respT>0||c.fin)return r;
+  const T=Rc.T,gy=T.terr?T.terr(c.x,c.z):c.y;if(c.y-gy>1.6){c._vl=undefined;c._r=undefined;return r}/* in the air the core keeps it */
+  const sy0=Math.sin(yaw0),cy0=Math.cos(yaw0),sy1=Math.sin(c.yaw),cy1=Math.cos(c.yaw);
+  let vf=c.vx*sy1+c.vz*cy1;const vfp=vx0*sy0+vz0*cy0,ax=(vf-vfp)/dt;
+  let vl=c._vl===undefined?(vx0*cy0-vz0*sy0):c._vl,rr=c._r===undefined?r0:c._r;
+  /* grip: what the arcade core already works out for this surface, damage and so on, as the friction of both axles */
+  const mm=P.mul?P.mul(c):{grip:1},dd=T.d,key=dd._key,surf=dd.gravel===0?(c.onRoad?1.0:.55):key==='autumn'?(c.onRoad?.42:.32):(c.onRoad?.74:.56),pkS=dd.gravel===0?(c.onRoad?.12:.2):key==='autumn'?.27:(c.onRoad?.2:.24);
+  let mu=surf*Math.max(.55,Math.min(1.35,(mm.grip||1)/(c.onRoad?(dd.gravel===0?.95:key==='autumn'?.74:.8):1)));
+  const st=Math.max(-1,Math.min(1,stRaw)),th=Math.max(0,Math.min(1,(c.in&&c.in.th)||0)),br=Math.max(0,Math.min(1,(c.in&&c.in.br)||0)),hb=(c.in&&c.in.hb)?1:0;
+  const sp=Math.abs(vf),dmax=.55/(1+Math.pow(sp/12,1.5)),beta=Math.atan2(vl,Math.max(2,Math.abs(vf))),del=st*dmax+(sp>6?Math.max(-.42,Math.min(.42,beta*.8)):0);/* counter-steer help: the wheel follows the slide */
+  if(sp<1.8){/* parking speeds: the wheels roll where they point */
+   rr+=(vf*del/L-rr)*Math.min(1,dt*9);vl*=Math.max(0,1-dt*10)}
+  else{
+   const n=2,h=dt/n,pk=pkS;
+   for(let k=0;k<n;k++){
+    const vfa=Math.max(1,Math.abs(vf))*(vf<0?-1:1),af=del-Math.atan2(vl+A*rr,vfa),ar=-Math.atan2(vl-B*rr,vfa);
+    /* load transfer: braking and lifting load the nose (the tail gets light and swings out), power loads the tail */
+    const lt=Math.max(-.15,Math.min(.15,-ax*.15/G))+(th<.12&&!br?.04:0),wf=Math.max(.3,Math.min(.72,.5+lt)),wr=1-wf;
+    let muF=mu*(1+.04*br),muR=mu*(hb?.17:1);
+    muR*=1-.06*th*Math.min(1,Math.max(0,1.2-sp/38));/* power in the rear tyres uses some of their grip */
+    const FF=muF*G*wf*Math.sin(1.5*Math.atan(af/pk*1.6)),FR=muR*G*wr*Math.sin(1.5*Math.atan(ar/(pk*1.3)*1.6));/* per unit of mass, the whole axle */
+    vl+=(FF*Math.cos(del)+FR-vfa*rr)*h;rr+=(A*FF*Math.cos(del)-B*FR)/(.8*A*B)*h;
+    rr*=1-Math.min(.25,.7*h+Math.max(0,Math.abs(beta)-.5)*3*h)}/* past ~30 deg of slip the car settles instead of spinning *//* the chassis does not spin for ever */
+  }
+  rr=Math.max(-2.4,Math.min(2.4,rr));vl=Math.max(-26,Math.min(26,vl));
+  /* sliding costs speed */
+  if(sp>3)vf*=1-Math.min(.5,dt*.3*Math.min(1,Math.abs(vl)/9)*(sp>8?1:.4));
+  c._vl=vl;c._r=rr;
+  const yaw=yaw0+rr*dt,sy=Math.sin(yaw),cy=Math.cos(yaw),nvx=vf*sy+vl*cy,nvz=vf*cy-vl*sy;
+  c.x+=(nvx-c.vx)*dt;c.z+=(nvz-c.vz)*dt;c.vx=nvx;c.vz=nvz;c.yaw=yaw;c.yr=rr;c.sp=Math.hypot(nvx,nvz);
+  if(c.vy>4.5)c.vy=4.5+(c.vy-4.5)*.25;
+  return r}},120);
+/* speed feel on the stages (Nov 9, "speed should feel like Dirt 3"): the view opens up with speed (about +6 deg at 48 m/s), the camera buzzes on gravel and
+   snow in proportion to speed, kicks on a handbrake and swings a little to the side the car is sliding to */
+setTimeout(()=>{const sc=soloCam;let ph=0;soloCam=function(c,dt,out){sc.apply(this,arguments);const Rc=RACE;if(!(c.human&&Rc&&Rc.T&&Rc.T.stage&&Rc.cfg&&Rc.cfg.rally)||c.fin||c.camMode)return;
+  const d=dt||.016,v=Math.max(0,Math.min(1,((c._csp||c.sp||0)-12)/36));out.f+=v*v*(3-2*v)*6;
+  const loose=c.onRoad===false?1:.7,a=v*loose*.012;ph+=d*37;
+  if(a>.001){const n1=Math.sin(ph)*.6+Math.sin(ph*2.31+1.3)*.4,n2=Math.sin(ph*1.7+.4)*.6+Math.sin(ph*3.1)*.4;out.p.y+=n1*a;out.p.x+=n2*a*.6;out.l.y+=n1*a*.5}
+  const sl=Math.max(-.6,Math.min(.6,c._vl===undefined?0:c._vl/Math.max(8,c.sp||0)));if(Math.abs(sl)>.02&&v>0){const rx=Math.cos(c.yaw),rz=-Math.sin(c.yaw),k=sl*.8*v;out.l.x+=rx*k;out.l.z+=rz*k}}},140);
 function wheelPos(c,wi){const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw),w=WL[wi];return[c.x+cy*w[0]+sy*w[1],c.z-sy*w[0]+cy*w[1]]}
 function splash(c,T,dt,dep){const sp=c.sp,rate=Math.min(1,sp/12)*(46+sp*2.4)*dep;c._wA=(c._wA||0)+rate*dt;
  const sy=Math.sin(c.yaw),cy=Math.cos(c.yaw),f=T.fords[0],yw=T.fords.reduce((b,q)=>Math.hypot(q.x-c.x,q.z-c.z)<Math.hypot(b.x-c.x,b.z-c.z)?q:b,f).yw;
@@ -14930,6 +14973,15 @@ function splash(c,T,dt,dep){const sp=c.sp,rate=Math.min(1,sp/12)*(46+sp*2.4)*dep
   P.puff(p[0],yw+.08,p[1],lx*out+c.vx*.55,up,lz*out+c.vz*.55,[.9,.96,1],rnd(.4,.85),rnd(.6,1.1),.85,15);if(wi>1&&sp>14)P.puff(p[0],yw+.1,p[1],-sy*sp*.2+lx*1.5+c.vx*.4,up*1.25,-cy*sp*.2+lz*1.5+c.vz*.4,[.92,.97,1],rnd(.4,.8),rnd(.8,1.3),.8,16);
   if(Math.random()<.34)P.puff(p[0],yw+.15,p[1],lx*out*.5+c.vx*.3,rnd(.8,1.8),lz*out*.5+c.vz*.3,[.92,.97,.98],rnd(1.4,2.8),rnd(1.1,1.8),.3,-.5);
   if(sp>16&&wi<2&&Math.random()<.5)P.puff(p[0],yw+.1,p[1],sy*sp*.35+lx*2,rnd(3,6.5),cy*sp*.35+lz*2,[.88,.95,.98],rnd(.25,.5),rnd(.6,1),.75,18)}}
+/* stage wheel spray (Nov 9: "the dirt and snow particles don't look good, make them larger and more believable, not little trails"): few, big soft clouds that
+   billow out behind the rear wheels, rise and spread, plus a fan of clods on dirt; snow throws a pale powder that hangs longer */
+P.stageDust=(c,T,Rc,slide,base,dk,hex3)=>{const sp=c.sp,snow=T.d._key==='autumn',dt=typeof dtf!=='undefined'?dtf:1/60,sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);
+ const rate=clamp((sp-3)/12,0,1)*(c.onRoad?15:24)*(1+Math.min(2.2,slide*2.6)+(c.drifting?.7:0));c._sdA=(c._sdA||0)+dt*rate;
+ while(c._sdA>=1){c._sdA--;const wi=2+(Math.random()<.5?0:1),w=c.m&&c.m.wheels[wi];if(!w||!w.g)continue;const q=wheelPos(c,wi),y=(w.s?w.s.h:c.y-.9)+.25,b=.9+Math.random()*.2,wide=1.2+slide*2.4;
+  const col=snow?[.93*b,.96*b,1]:[base[0]*b,base[1]*b,base[2]*b],sz=rnd(1.9,3.5)*(snow?1.25:1)*(1+Math.min(1.1,slide*.5));
+  P.puff(q[0],y,q[1],-sy*sp*.1+rnd(-wide,wide)+c.vx*.14,rnd(1.2,3.1)+slide*1.6,-cy*sp*.1+rnd(-wide,wide)+c.vz*.14,col,sz,rnd(1.9,3.2)*(snow?1.2:1),rnd(.22,.4),-.28);
+  if(Math.random()<.6)P.puff(q[0],y-.1,q[1],-sy*sp*.06+rnd(-1,1),rnd(.1,.7),-cy*sp*.06+rnd(-1,1),col,sz*.62,rnd(1.2,2),rnd(.25,.38),0);
+  if(!snow&&Math.random()<.34)for(let k=0;k<2;k++)P.puff(q[0],y,q[1],-sy*sp*.24+rnd(-4,4),rnd(2.5,6),-cy*sp*.24+rnd(-4,4),dk,rnd(.24,.44),rnd(.5,.95),.9,15)}};
 function stageFx(c,T,dt){const nm=T.d.name,sc=RACE.scene,sy=Math.sin(c.yaw),cy=Math.cos(c.yaw);
  if(nm==='Ashfall Stage'){c._fA=(c._fA||0)+dt*26;
   while(c._fA>=1){c._fA--;const a=rnd(0,6.283),r=rnd(4,34);P.puff(c.x+Math.cos(a)*r+sy*c.sp*.5,c.y+rnd(2,11),c.z+Math.sin(a)*r+cy*c.sp*.5,rnd(.5,1.8),0,rnd(-.6,.6),[.5,.47,.46],rnd(.1,.2),rnd(3,4.5),.5,1.8)}
@@ -14991,10 +15043,17 @@ hudUpdate=()=>{hu0();const Rc=RACE;if(!Rc||!Rc.cfg||!Rc.cfg.rally)return;
  Rc.cars.forEach((c,i)=>{if(!c.human)return;const e=document.getElementById('h'+i);if(!e||!e.dataset.b)return;let el=e.querySelector('.h8pace');if(!el){el=document.createElement('div');el.className='h8pace';e.appendChild(el)}
   try{dashUpdate(Rc,c)}catch(e){if(!P._rdErr){P._rdErr=1;console.error('dash',e)}}
   if(Rc.state==='count'||Rc.cfg.circuit){el.style.opacity=0;if(el._t){el._t='';el.innerHTML=''}return}
-  const n=note(c,Rc.T);let txt='',cls='';
-  if(n.ev&&(!n.cor||n.ev.d<n.cor.d+15)){txt=`<b>${n.ev.t}</b><span>${Math.round(n.ev.d/10)*10} m</span>`;cls=n.ev.t==='NARROW'?'ev nr':'ev'}
-  else if(n.cor){txt=`<i>${arrow(n.cor.t==='HAIRPIN'?'HAIRPIN':n.cor.g,n.cor.dir)}</i><b style="color:${(GR[n.cor.t==='HAIRPIN'?'HAIRPIN':n.cor.g]||GR[3])[1]}">${n.cor.t}</b><span>${Math.round(n.cor.d/10)*10} m</span>`;cls=n.cor.t==='HAIRPIN'?'hp':''}
-  if(el._t!==txt){el._t=txt;el.innerHTML=txt}el.className='h8pace '+cls;el.style.opacity=txt?1:0})};
+  const n=note(c,Rc.T);let d=null;
+  if(n.ev&&(!n.cor||n.ev.d<n.cor.d+15)){d={l:n.ev.t==='WATER'?'WATER':n.ev.t==='JUMP'?'JUMP':'NARROW',v:Math.round(n.ev.d/10)*10+' M',s:n.ev.t==='WATER'?'FORD':n.ev.t==='JUMP'?'CREST':'PINCH',col:n.ev.t==='NARROW'?'#ef9a5a':n.ev.t==='JUMP'?'#f2c76b':'#8fd3f2',svg:''}}
+  else if(n.cor){const g=n.cor.t==='HAIRPIN'?'HAIRPIN':n.cor.g,col=(GR[g]||GR[3])[1];d={l:n.cor.t,v:Math.round(n.cor.d/10)*10+' M',s:n.cor.dir==='L'?'LEFT':'RIGHT',col,svg:arrow(g,n.cor.dir)}}
+  el.style.display='none';paceCard(Rc,d)})};
+/* the pace note is a card like the stage clock and the damage plate (top left, under the clock): corner name small, distance big, direction under it, the bent arrow on the left */
+let pcEl=null;
+function paceCard(Rc,d){if(!pcEl){pcEl=document.createElement('div');pcEl.id='rlPace';document.body.appendChild(pcEl)}
+ if(!d||Rc.state==='count'||Rc.cfg.circuit){pcEl.style.display='none';pcEl._k='';return}
+ const k=d.l+'|'+d.v+'|'+d.s;if(pcEl._k!==k){pcEl._k=k;pcEl.innerHTML=`<div class="h8top"><div class="h8plate"><i class="pcA">${d.svg}</i><div class="pcT"><div class="lap">${d.l}</div><div class="raceTime" style="color:${d.col}">${d.v}</div><div class="bl" style="color:${d.col}">${d.s}</div></div></div></div>`}
+ const ht=document.querySelector('#h0 .h8top');if(ht){const rc=ht.getBoundingClientRect();pcEl.style.left=rc.left+'px';pcEl.style.top=(rc.bottom+8)+'px';pcEl.style.setProperty('--pw',ht.offsetWidth+'px');pcEl.style.setProperty('--ph',ht.offsetHeight+'px');const pv=ht.parentNode.style.getPropertyValue('--s');if(pv)pcEl.style.setProperty('--s',pv)}else{pcEl.style.left='12px';pcEl.style.top='96px'}
+ pcEl.style.display='block'}
 
 /* ---------------- rally controls: real gearboxes (shift keys), handbrake, camera ---------------- */
 const REAL0={lr:6,ford:6,merc:7,ster:7,art:8,ferr:7,zen:7,must:6,urus:8,m8:8,amg:9,gtr:6,por:7,p1:7};const REAL=new Proxy(REAL0,{get:(t,k)=>t[k]||(P.BYID[k]&&P.BYID[k].real)||6});
@@ -20668,7 +20727,7 @@ const LK={
  7:{kind:'hill',c:0x6f8794,cap:0,n:18,h:[40,110],cl:[12,.9,0xffd8b0]},
  9:{kind:'peak',c:0xcfdceb,cap:1,n:24,h:[200,480],cl:[16,.9,0xf4f8ff]},
  /* the four rally stages (stage files) */
- 21:{kind:'hill',c:0x587a62,cap:0,n:22,h:[120,280],cl:[12,.8,0xffffff]},22:{kind:'peak',c:0x7c8ea6,cap:1,n:26,h:[260,560],cl:[14,.9,0xffffff]},
+ 21:{kind:'hill',c:0x587a62,cap:0,n:22,h:[120,280],cl:[12,.8,0xffffff]},22:{kind:'peak',c:0x6f829f,cap:1,n:26,h:[190,430],cl:[14,.9,0xffffff]},
  23:{kind:'mesa',c:0xb88a5c,cap:0,n:22,h:[90,210],cl:[6,.6,0xffe8cc]},24:{kind:'hill',c:0x9aaabc,cap:1,n:20,h:[80,210],cl:[0,.8,0xe8eef5]}};
 /* stage worlds reuse another map's id as their look, so the map is found by name */
 const NM={'Quarry Circuit':0,'Canyon Viaduct':1,'Alpine Pass':2,'Pinewood Stage':4,'Redrock Stage':5,'Highmoor Stage':6,'Coastal Run':7,'Frostline Stage':9,'Finland':21,'France':22,'Portugal':23,'Sweden':24};
@@ -20699,7 +20758,8 @@ function build(sc,T){
  let ys=0;for(let i=0;i<T.N;i++)ys+=T.y[i];ys/=T.N;let ymin=1e9;for(let i=0;i<T.N;i++)ymin=Math.min(ymin,T.y[i]);
  const base=Math.min(ymin-70,ys-90),fog=sc.fog&&sc.fog.color?sc.fog.color.clone():lin(d.fog||0xaaaaaa),col=lin(L.c),top=col.clone().lerp(new THREE.Color(1,1,1),.18),snow=lin(0xf6f9ff);
  const pos=[],cols=[];
- for(let i=0;i<L.n;i++){const a=(i+rand()*.8)/L.n*Math.PI*2,rd=820+rand()*260,h=L.h[0]+rand()*(L.h[1]-L.h[0]),r=h*(L.kind==='hill'?1.9:L.kind==='mesa'?.9:1.0)*(.8+rand()*.5);
+ const NN=d.cartoon&&L.kind==='peak'?Math.round(L.n*1.5):L.n;/* the bought stages: slimmer, more numerous peaks (the stock cones read as giant pale slabs) */
+ for(let i=0;i<NN;i++){const a=(i+rand()*.8)/NN*Math.PI*2,rd=820+rand()*260,h=L.h[0]+rand()*(L.h[1]-L.h[0]),r=h*(L.kind==='hill'?1.9:L.kind==='mesa'?.9:d.cartoon?.6:1.0)*(.8+rand()*.5);
   const g=shape(L.kind,r,h,rand),p=g.attributes.position,x0=cx+Math.cos(a)*rd,z0=cz+Math.sin(a)*rd,yaw=rand()*6.28,cy=Math.cos(yaw),sy=Math.sin(yaw),shade=.82+rand()*.3;
   for(let v=0;v<p.count;v++){const x=p.getX(v),y=p.getY(v),z=p.getZ(v),t=Math.min(1,y/h);
    pos.push(x0+x*cy+z*sy,base+y,z0-x*sy+z*cy);
@@ -20777,7 +20837,13 @@ const TINT={
  ash:[[/ROADS_PORTUGAL/,1.1],[/GRAVEL_PORTUGAL/,.9],[/GRASS_PORTUGAL/,1.35],[/^ct_c$/,2.1]],
  autumn:[[/SNOW_SWEDEN/,.86],[/ICE_SURFACE/,.95],[/STONE/,1.3],[/^ct_c$/,1.5]]};
 const EMIS={ash:[[/GRAVEL_PORTUGAL/,[.075,.048,.026]]],terr:[[/^ct_c$/,[.03,.035,.045]]],autumn:[[/^ct_c$/,[.03,.035,.045]]],mangrove:[[/^ct_c$/,[.02,.03,.02]]]};/* lifts the near-black rock and bank colours */
-function tintStage(sc,key){const em=EMIS[key]||[];const tb=TINT[key];if(!tb)return;sc.traverse(o=>{const m=o.isMesh&&o.material;if(!m||!m.color||!/^ct_/.test(o.name))return;if(!m.userData._c0)m.userData._c0=m.color.clone();let k=1;for(const[re,v]of tb)if(re.test(o.name)){k=v;break}m.color.copy(m.userData._c0);if(Array.isArray(k))m.color.multiply(new THREE.Color(k[0],k[1],k[2]));else m.color.multiplyScalar(k);if(m.emissive){let e=null;for(const[re,v]of em)if(re.test(o.name)){e=v;break}if(e)m.emissive.setRGB(e[0],e[1],e[2]);else m.emissive.setRGB(0,0,0)}})}
+/* Portugal's cut banks use the road gravel texture and, lit from above, came out as flat grey-brown slabs: blotches and strata (from world position) break them up */
+function bankNoise(m){if(m.userData._nz)return;m.userData._nz=1;m.onBeforeCompile=sh=>{
+ sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vWp;').replace('#include <begin_vertex>','#include <begin_vertex>\nvWp=(modelMatrix*vec4(transformed,1.0)).xyz;');
+ sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vWp;\nfloat h31(vec3 p){p=fract(p*.3183099+.1);p*=17.;return fract(p.x*p.y*p.z*(p.x+p.y+p.z));}\nfloat vn(vec3 x){vec3 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);return mix(mix(mix(h31(i),h31(i+vec3(1,0,0)),f.x),mix(h31(i+vec3(0,1,0)),h31(i+vec3(1,1,0)),f.x),f.y),mix(mix(h31(i+vec3(0,0,1)),h31(i+vec3(1,0,1)),f.x),mix(h31(i+vec3(0,1,1)),h31(i+vec3(1,1,1)),f.x),f.y),f.z);}')
+  .replace('#include <map_fragment>','#include <map_fragment>\nfloat nzN=vn(vWp*vec3(.3,.8,.3))*.6+vn(vWp*1.9)*.4;float nzS=.5+.5*sin(vWp.y*2.4+nzN*5.);float nzK=.55+.6*nzN+.25*nzS;diffuseColor.rgb*=nzK;diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(1.12,.94,.78),nzN);')
+  .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance*=nzK;')};m.needsUpdate=true}
+function tintStage(sc,key){const em=EMIS[key]||[];const tb=TINT[key];if(!tb)return;sc.traverse(o=>{const m=o.isMesh&&o.material;if(!m||!m.color||!/^ct_/.test(o.name))return;if(!m.userData._c0)m.userData._c0=m.color.clone();let k=1;for(const[re,v]of tb)if(re.test(o.name)){k=v;break}m.color.copy(m.userData._c0);if(Array.isArray(k))m.color.multiply(new THREE.Color(k[0],k[1],k[2]));else m.color.multiplyScalar(k);if(m.emissive){let e=null;for(const[re,v]of em)if(re.test(o.name)){e=v;break}if(e){m.emissive.setRGB(e[0],e[1],e[2]);if(key==='ash')bankNoise(m)}else m.emissive.setRGB(0,0,0)}})}
 /* ---- road surface detail (Nov 8: "the dirt paths look kinda weird, make them look more real"): one ribbon laid just above the road along the whole stage, with a
    texture made here: wheel ruts and a crown of loose gravel with grass at the edges on the dirt stages, white edge lines and a dashed centre line and worn
    tyre tracks on the tarmac, packed tyre tracks and slush on the snow. Lit and fogged like the rest of the world. ---- */
@@ -20827,7 +20893,7 @@ R.render=function(scene,cam){const f=scene&&scene.userData&&scene.userData.snow;
   f.m.geometry.attributes.position.needsUpdate=true;f.m.position.set(cam.position.x,cam.position.y,cam.position.z)}
  return rr0.apply(this,arguments)};
 const hex=n=>'#'+(n>>>0).toString(16).padStart(6,'0');
-function gradTex(a,b){const cv=document.createElement('canvas');cv.width=2;cv.height=64;const g=cv.getContext('2d'),q=g.createLinearGradient(0,0,0,64);q.addColorStop(0,hex(a));q.addColorStop(.5,hex(b));q.addColorStop(1,hex(b));g.fillStyle=q;g.fillRect(0,0,2,64);const t=new THREE.CanvasTexture(cv);t.encoding=THREE.sRGBEncoding;return t}
+function gradTex(a,b,soft){const cv=document.createElement('canvas');cv.width=2;cv.height=64;const g=cv.getContext('2d'),q=g.createLinearGradient(0,0,0,64);q.addColorStop(0,hex(a));if(soft){const A=new THREE.Color(a),B=new THREE.Color(b);for(const [t,m] of [[.2,.1],[.32,.38],[.4,.7],[.46,.92]])q.addColorStop(t,'#'+A.clone().lerp(B,m).getHexString())}q.addColorStop(.5,hex(b));q.addColorStop(1,hex(b));g.fillStyle=q;g.fillRect(0,0,2,64);const t=new THREE.CanvasTexture(cv);t.encoding=THREE.sRGBEncoding;return t}
 /* the look of each stage (Nov 8, "make rally's shaders look beautiful and atmospheric"): sky from deep blue overhead to a warm haze at the horizon, a fog
    that is the same colour as that haze, a low warm sun against a cool fill (the light that gives shapes a lit and a shadow side) */
 const ATM={
@@ -20857,7 +20923,38 @@ function gate(sc,T,i,txt){const hw=T.hw[i]+1.3,g=new THREE.Group();g.position.se
  const bm=new THREE.MeshBasicMaterial({map:bannerTex(txt),side:THREE.DoubleSide,fog:false}),w=Math.min(hw*1.8,13);const sg=new THREE.Mesh(new THREE.PlaneGeometry(w,w*96/512),bm);sg.position.set(0,7.6,.02);g.add(sg);
  const ck=new THREE.Mesh(new THREE.PlaneGeometry(hw*2-.4,1.8),new THREE.MeshBasicMaterial({map:checkTex(),fog:false}));ck.rotation.x=-Math.PI/2;ck.position.set(0,.14,0);g.add(ck);
  g.userData.noMerge=1;sc.add(g)}
-setTimeout(()=>{const bw2=buildWorld;buildWorld=function(T){const sc=bw2.apply(this,arguments);try{if(T.d&&T.d.stage&&T.d.cartoon&&T.finI){gate(sc,T,2,'START');gate(sc,T,T.finI,'FINISH');/* far mountains and clouds, and the snow: added here, after cartoon.js has cleared the stock scenery */try{if(P.skyBuild)P.skyBuild(sc,T)}catch(e){console.warn('sky',e)}const A=ATM[T.d._key];if(A&&A.snow)snowAdd(sc);tintStage(sc,T.d._key);roadRibbon(sc,T,T.d._key)}}catch(e){console.warn('gates',e)}return sc}},0);
+setTimeout(()=>{const bw2=buildWorld;buildWorld=function(T){const sc=bw2.apply(this,arguments);try{if(T.d&&T.d.stage&&T.d.cartoon&&T.finI){/* far mountains and clouds, and the snow: added here, after cartoon.js has cleared the stock scenery */try{if(P.skyBuild)P.skyBuild(sc,T)}catch(e){console.warn('sky',e)}const A=ATM[T.d._key];if(A&&A.snow)snowAdd(sc);tintStage(sc,T.d._key);roadRibbon(sc,T,T.d._key)}}catch(e){console.warn('gates',e)}return sc}},0);
+
+/* ---- time of day on the stages (Nov 9: "the sunset and other shaders still don't look good"). The generic time-of-day pass painted its own orange dome, fog and
+   lights over the stage's atmosphere and left the far mountains and clouds in their daytime colours. For stages it is replaced: every look is made from the
+   stage's own atmosphere (ATM) by a per-time table: dome top and horizon, fog warmth, sun colour / height / strength, fill, global grade, and the tint of
+   the far ring and the clouds, so a sunset is a warm low sun, a pink-orange horizon fading to dusk blue, and mountains that sit in the same haze. ---- */
+const TODK={
+ dawn:{glow:[0xfff0d8,0xffcfa0],top:0x5f7cb4,hor:0xf2c9a2,fogW:0xe8c8ac,fogM:.55,sun:0xffc08a,si:.92,hi:.59,el:.34,mul:[1.03,1,.96],add:[.01,.004,0],sat:1.02,exp:1,ring:[.97,.86,.86],cl:[1,.82,.78],near:.9,far:1},
+ sunset:{top:0x56649a,hor:0xf1bd94,fogW:0xd9b096,fogM:.55,sun:0xffa65e,si:1.1,hi:.6,el:.2,mul:[1.04,.98,.93],add:[.01,0,-.006],sat:1.02,exp:1.02,ring:[.96,.82,.78],cl:[.92,.78,.74],near:.85,far:1,glow:[0xffe9c4,0xffb878]},
+ night:{top:0x04070e,hor:0x1b2438,fogW:0x141b2b,fogM:.85,sun:0x8fa2ff,si:.33,hi:.26,el:.9,mul:[.7,.78,1.05],add:[0,.004,.02],sat:.85,exp:.95,ring:[.12,.14,.24],cl:[.15,.17,.28],near:.55,far:.8}};
+/* the low sun itself: a small bright disc inside stacked, faint additive spheres (the sky-tracker in ui.js carries 40-radius unfogged spheres with the camera), so the
+   horizon gets a soft glow around the sun like a real low sun instead of a flat orange band */
+function sunGlow(sc,A,K,key){const old=sc.userData.sunG;if(old){for(const o of old){sc.remove(o);o.geometry.dispose();o.material.dispose()}sc.userData.sunG=null}
+ if(!K.glow)return;const at=A.sunAt||[-150,250,100],hz=Math.hypot(at[0],at[2])||1,e=K.el,cx=Math.sqrt(1-e*e),D=1250,g=[];
+ [[1,K.glow[0],1],[2.6,K.glow[1],.5],[5,K.glow[1],.22],[9,K.glow[1],.12],[15,K.glow[1],.07]].forEach(([k,col,op],i)=>{const m=new THREE.Mesh(new THREE.SphereGeometry(40,16,10),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:op,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
+  m.scale.setScalar(k);m.position.set(at[0]/hz*D*cx,D*e,at[2]/hz*D*cx);m.renderOrder=-1+i*.01;m.frustumCulled=false;sc.add(m);g.push(m)});sc.userData.sunG=g}
+function stageTod(sc,T,key){const A=ATM[T.d._key]||{},K=TODK[key],U=window.TODU;P.curTod=key;sc.userData.tod=key;
+ {const ef={dawn:.85,sunset:.6,night:.1}[key]||1,wm=({dawn:[.96,.9,.86],sunset:[1,.8,.6]})[key]||[1,1,1],wc=new THREE.Color(wm[0],wm[1],wm[2]);sc.traverse(o=>{const m=o.isMesh&&o.material;if(!m||!m.emissive)return;if(!m.userData._e0)m.userData._e0=m.emissive.clone();m.emissive.copy(m.userData._e0).multiplyScalar(ef).multiply(wc)})}/* the daytime lifts must not glow at night */
+ if(!K){if(P.resetTod)P.resetTod();return}
+ for(const o of sc.children){
+  if(o.isHemisphereLight){const h=A.hemi||[0xb0c4e0,0x607040];o.color.setHex(key==='night'?0x3a4a80:h[0]);if(key!=='night')o.color.lerp(new THREE.Color(K.fogW),.3);o.groundColor.setHex(key==='night'?0x10141f:h[1]);if(key!=='night')o.groundColor.multiplyScalar(.8);o.intensity=(A.hemiI||1.1)*K.hi}
+  else if(o.isDirectionalLight){const at=A.sunAt||[-150,250,100],hz=Math.hypot(at[0],at[2])||1,L=330;o.color.setHex(K.sun);o.intensity=(A.sunI||1)*K.si;o.position.set(at[0]/hz*L*Math.sqrt(1-K.el*K.el),L*K.el,at[2]/hz*L*Math.sqrt(1-K.el*K.el))}
+  else if(o.geometry&&o.geometry.type==='SphereGeometry'&&o.geometry.parameters.radius===1500){o.material.map=gradTex(K.top,K.hor,1);o.material.needsUpdate=true}}
+ sunGlow(sc,A,K,key);
+ if(sc.fog){const f=new THREE.Color(A.fog!=null?A.fog:T.d.fog);f.lerp(new THREE.Color(K.fogW),K.fogM);sc.fog.color.copy(f);if(sc.userData.ptFog)sc.userData.ptFog.color.copy(f);if(sc.background&&sc.background.isColor)sc.background.copy(f);
+  sc.fog.near=(A.near||150)*K.near;sc.fog.far=(A.far||620)*K.far;if(sc.userData.ptFog){sc.userData.ptFog.near=sc.fog.near;sc.userData.ptFog.far=sc.fog.far}}
+ const fx=sc.userData.skyFx;if(fx){if(fx.ring)fx.ring.material.color.setRGB(K.ring[0],K.ring[1],K.ring[2]);
+  for(const c of fx.clouds||[]){const m=c.material;if(!m.userData.c0)m.userData.c0=m.color.clone();m.color.copy(m.userData.c0).multiply(new THREE.Color(K.cl[0],K.cl[1],K.cl[2]))}}
+ if(key==='night'&&!sc.userData.stars){sc.userData.stars=1;const st=[],r=Math.random;for(let i=0;i<420;i++){const a=r()*6.28,b=r()*1.25+.08;st.push(Math.cos(a)*Math.cos(b)*1400,Math.sin(b)*1400,Math.sin(a)*Math.cos(b)*1400)}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(st,3));sc.add(new THREE.Points(g,new THREE.PointsMaterial({color:0xffffff,size:2,sizeAttenuation:false,fog:false})))}
+ if(U){U.mul.value.set(K.mul[0],K.mul[1],K.mul[2]);U.add.value.set(K.add[0],K.add[1],K.add[2]);U.sat.value=K.sat}
+ P.baseExpo=P.baseExpo||R.toneMappingExposure;R.toneMappingExposure=P.baseExpo*K.exp}
+setTimeout(()=>{const at=P.applyTod;if(!at)return;P.applyTod=function(sc,T,key){if(sc&&T&&T.d&&T.d.stage&&T.d.cartoon&&T.d._key){try{stageTod(sc,T,key);return}catch(e){console.warn('stageTod',e)}}return at.apply(this,arguments)}},0);
 })();
 
 /* ===== Poly GT layer: rally stage select pictures (Nov 8: "track selection for rally should be unique ... map previews make sense").
@@ -20911,6 +21008,9 @@ P.rallyProfile=(i,cv)=>{const pk=pack(i);if(!pk)return false;const[g,W,H]=fit(cv
    P.warmStagePacks(): builds every stage's meshes and starts the texture decode; runs behind the rally loading screen.
    P.warmScene(Rc): draws the whole stage once at a tiny size with culling off (behind the black fade at the start), so every tile's geometry and
    texture is already on the graphics card when it first comes into view. */
+/* the picture of a stage for its card: a still rendered from the model itself (made with tests/stills.json, stored in the pack) */
+const SHI={};P.stageShot=(i,cb)=>{const pk=pack(i);if(!pk||!pk.shot){cb(null);return}let m=SHI[pk.id];if(!m){m=SHI[pk.id]=new Image();m._cb=[];m.onload=()=>{m._ok=1;m._cb.splice(0).forEach(f=>f(m))};m.onerror=()=>{m._cb.splice(0).forEach(f=>f(null))};m.src=pk.shot}
+ if(m._ok)cb(m);else m._cb.push(cb)};
 P.warmStagePacks=()=>{for(let i=0;i<D.length;i++){const pk=pack(i);if(pk&&P.warmPack)P.warmPack(pk)}};
 P.warmScene=Rc=>{try{if(!Rc||!Rc.scene||!Rc.T||!Rc.T.stage||typeof R==='undefined')return;const sc=Rc.scene,T=Rc.T,saved=[];
  sc.traverse(o=>{if(o.isMesh||o.isSprite||o.isPoints||o.isLine){saved.push([o,o.visible,o.frustumCulled]);o.visible=true;o.frustumCulled=false}});

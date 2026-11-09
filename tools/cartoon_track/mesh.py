@@ -66,6 +66,7 @@ used=set()
 from scipy.sparse import coo_matrix
 from scipy.sparse.csgraph import connected_components
 TREEP=re.compile(C.get('trees',r'prop_tree|tree_group|TREE_CLUSTER|TREE_BLOCK|TREE_\d'),re.I);TREEX=re.compile(r'log|collider|bush|vine|rose',re.I)
+TREEB=[]
 BROWNS=np.array([[92,64,40],[104,74,46],[80,57,38],[112,82,52],[86,60,44]]);BIRCH=np.array([206,201,190])
 def treemesh(n,t,v,f,uv):
   if t.startswith('#'):fc=np.tile([int(t[1:3],16),int(t[3:5],16),int(t[5:7],16)],(len(f),1))
@@ -82,10 +83,17 @@ def treemesh(n,t,v,f,uv):
     ix=order[a_:b_];fi=ff[ix];cc=fc[ix].copy();uv_=np.unique(fi);P_=vk[uv_];y0=P_[:,1].min();H=P_[:,1].max()-y0
     W=max(np.ptp(P_[:,0]),np.ptp(P_[:,2]))
     istr=False
+    if H>1.2 and len(ix)>=6:   # a tree you can hit: where its foot stands (a crown piece that floats above the ground is not one; its trunk piece is)
+      lw=P_[P_[:,1]<y0+.12*H+.05];bc=lw[:,[0,2]].mean(0);br=float(np.clip(np.median(np.hypot(lw[:,0]-bc[0],lw[:,2]-bc[1])),.3,.7))
+      gh=None
+      if GR is not None:
+        gi=int(round(bc[0]-gx0));gj=int(round(bc[1]-gz0))
+        if 0<=gi<gnx and 0<=gj<gnz and not np.isnan(GR[gj,gi]):gh=GR[gj,gi]
+      if gh is None or y0<gh+1.4:TREEB.append((bc[0],bc[1],br))
     if C.get('trunkfix',1) and H>1.2 and len(ix)>=8 and W/H<.3:
       cx=(P_[:,0].min()+P_[:,0].max())/2;cz=(P_[:,2].min()+P_[:,2].max())/2;rr=np.hypot(P_[:,0]-cx,P_[:,2]-cz);hh=(P_[:,1]-y0)/H
       lo_=rr[(hh>.08)&(hh<.35)];hi_=rr[(hh>.65)&(hh<.92)]
-      istr=len(lo_)>0 and len(hi_)>0 and lo_.max()>0 and hi_.max()/lo_.max()>=.38   # a trunk is a column: as wide at the top as at the bottom (a spruce crown is a cone)
+      istr=len(lo_)>0 and len(hi_)>0 and lo_.max()>0 and (hi_.max()/lo_.max()>=.38 or np.median(hi_)/np.median(lo_)>=.5 or W/H<.12)   # a trunk is a column: as wide at the top as at the bottom (a spruce crown is a cone)
     if istr:   # a thin, tall piece of the tree is its trunk (the crowns are separate wide pieces)
       col=BIRCH if birch else BROWNS[rng.randint(len(BROWNS))]
       cc[:]=np.clip(col+rng.randint(-8,9,(len(ix),1)),0,255);ntr+=1
@@ -124,6 +132,8 @@ for n in names:
     if t.startswith('#'):fc=np.tile([int(t[1:3],16),int(t[3:5],16),int(t[5:7],16)],(len(f),1))
     else:im=img(t);c=uv[f].mean(1);fc=im[((1-np.mod(c[:,1],1))*511).astype(int),(np.mod(c[:,0],1)*511).astype(int)]
     fc=satc(fc,t)
+    if re.search('log',n,re.I) and not re.search('collider',n,re.I):   # logs and log piles sampled the green of the tree atlas: bark brown, cut ends pale wood
+      lr=np.random.RandomState(len(f)).randint(-7,8,(len(f),1));fc=np.clip(np.where((fc.mean(1)>125)[:,None],np.array([203,164,112]),np.array([96,68,45]))+lr,0,255)
     vk,inv=np.unique(np.round(v,2),axis=0,return_inverse=True);ff=inv.ravel()[f];ff=ff[(ff[:,0]!=ff[:,1])&(ff[:,1]!=ff[:,2])&(ff[:,0]!=ff[:,2])]
     r=C['ratio'].get(next((k for k in C['ratio'] if k!='default' and re.search(k,n)),'default'))
     sim=pyfqmr.Simplify();sim.setMesh(vk,ff);sim.simplify_mesh(target_count=max(200,int(len(ff)*r)),aggressiveness=7,preserve_border=False,verbose=False)
@@ -136,7 +146,25 @@ for n in names:
     key=np.c_[np.round(v,3),np.round(uv,4)];_,first,inv=np.unique(key,axis=0,return_index=True,return_inverse=True);inv=inv.ravel()
     if not t.startswith('#'):used.add(t)
     emit(t,v[first],inv[f],U=None if t.startswith('#') else uv[first]);print(n,len(f))
+# the map's own start / finish dressing (arches, tents, banners): the exporter merges all the props into one mesh repeated under many (skipped) names, so the
+# pieces within "r" metres of the given points are cut out of it and drawn with its own texture
+for sp in C.get('pieces',[]):
+  n=sp['mesh'];m=meta.get(n,{});t=os.path.basename(m['tex']) if m.get('tex') else None
+  if not t:print('piece mesh has no texture',n);continue
+  v=d[n+'_v'].astype(np.float64)*S;f=d[n+'_f'];uv=d[n+'_uv'].astype(np.float64)
+  cf=v[f].mean(1)[:,[0,2]];sel=np.zeros(len(f),bool)
+  for q in sp['at']:sel|=np.hypot(cf[:,0]-q[0],cf[:,1]-q[1])<sp.get('r',40)
+  f=f[sel]
+  if not len(f):continue
+  key=np.c_[np.round(v,3),np.round(uv,4)];_,first,inv=np.unique(key,axis=0,return_index=True,return_inverse=True);inv=inv.ravel()
+  used.add(t);emit(t,v[first],inv[f],U=uv[first]);print('piece',n,len(f))
 print('total tris',tot,'meshes',len(meshes))
+# tree collision: every trunk within 45 m of the route is a small diamond the car can hit (the forest is solid, so the corridor wall can sit well back)
+CPTS=np.zeros((0,3),np.float32)
+if TREEB and C.get('treecol',1):
+  RR=np.array([[p[0],p[1]] for p in J['stage']['route']]);RK=cKDTree(RR);hwr=np.array(J['stage'].get('hw',[4]*len(RR)))
+  tb=np.array(TREEB);dd,ii=RK.query(tb[:,:2]);ok=(dd<45)&(dd>hwr[np.minimum(ii,len(hwr)-1)]+.8);tb=tb[ok]
+  tb=np.unique(np.round(tb,1),axis=0);CPTS=tb.astype(np.float32);print('tree colliders',len(tb))
 tex={}
 for t in sorted(used):
   im=Image.open(TX+t).convert('RGBA');big=any(re.search(p,t) for p in C.get('bigtex',[]));sz=TS if big else min(512,TS)
@@ -146,8 +174,9 @@ for t in sorted(used):
   else:rgb.save(b,'JPEG',quality=82);tex[t]='data:image/jpeg;base64,'+base64.b64encode(b.getvalue()).decode()
 g=J['grid'];g['h']=base64.b64encode(open(W+'/hf.i16','rb').read()).decode();g['k']=base64.b64encode(open(W+'/cls.rle','rb').read()).decode()
 import time
+SHP=C.get('shot');SHOT=('data:image/jpeg;base64,'+base64.b64encode(open(SHP,'rb').read()).decode()) if SHP and os.path.exists(SHP) else None
 out={'v':1,'rev':int(time.time()),'id':C['id'],'name':C['name'],'replaces':C['replaces'],'medal':C.get('medal'),'carScale':C.get('carScale',1),'alpha':[t for t in used if any(re.search(p,t) for p in C.get('alpha',[]))],'S':S,'pts':J['pts'],'grid':g,
- 'over':J.get('over',[]),'stage':J.get('stage'),'slots':J.get('slots',[]),'segs':b64(np.array(J['segs'],np.float32).reshape(-1,4)),'tex':tex,'meshes':meshes,'credit':C.get('credit',''),'look':C.get('look'),'desc':C.get('desc','')}
+ 'over':J.get('over',[]),'stage':J.get('stage'),'slots':J.get('slots',[]),'segs':b64(np.array(J['segs'],np.float32).reshape(-1,4)),'cpts':b64(CPTS.reshape(-1,3)),'shot':SHOT,'tex':tex,'meshes':meshes,'credit':C.get('credit',''),'look':C.get('look'),'desc':C.get('desc','')}
 raw=json.dumps(out,separators=(',',':')).encode()
 if OUT.endswith('.json'):open(OUT,'wb').write(raw)
 else:open(OUT,'wb').write(gzip.compress(raw,6))

@@ -49,6 +49,9 @@ P.rallyProfile=(i,cv)=>{const pk=pack(i);if(!pk)return false;const[g,W,H]=fit(cv
    P.warmStagePacks(): builds every stage's meshes and starts the texture decode; runs behind the rally loading screen.
    P.warmScene(Rc): draws the whole stage once at a tiny size with culling off (behind the black fade at the start), so every tile's geometry and
    texture is already on the graphics card when it first comes into view. */
+/* the picture of a stage for its card: a still rendered from the model itself (made with tests/stills.json, stored in the pack) */
+const SHI={};P.stageShot=(i,cb)=>{const pk=pack(i);if(!pk||!pk.shot){cb(null);return}let m=SHI[pk.id];if(!m){m=SHI[pk.id]=new Image();m._cb=[];m.onload=()=>{m._ok=1;m._cb.splice(0).forEach(f=>f(m))};m.onerror=()=>{m._cb.splice(0).forEach(f=>f(null))};m.src=pk.shot}
+ if(m._ok)cb(m);else m._cb.push(cb)};
 P.warmStagePacks=()=>{for(let i=0;i<D.length;i++){const pk=pack(i);if(pk&&P.warmPack)P.warmPack(pk)}};
 P.warmScene=Rc=>{try{if(!Rc||!Rc.scene||!Rc.T||!Rc.T.stage||typeof R==='undefined')return;const sc=Rc.scene,T=Rc.T,saved=[];
  sc.traverse(o=>{if(o.isMesh||o.isSprite||o.isPoints||o.isLine){saved.push([o,o.visible,o.frustumCulled]);o.visible=true;o.frustumCulled=false}});
