@@ -720,9 +720,24 @@ function hudStep(){if(!B)return;const h=$i('bkHud');if(!h)return;
 }
 function speedFx(p,cv,vg){const f=p.wipe?0:seg(p.v,42,68);p.sfx_=lp(p.sfx_||0,f,.1);const a=p.sfx_;vg.style.opacity=(a*.85).toFixed(3);
  if(!cv)return;const w=cv.clientWidth,h=cv.clientHeight;if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}const g=cv.getContext('2d');g.clearRect(0,0,w,h);if(a<.02)return;
- /* each streak lives on a fixed ray from the centre and slides outward, faster with speed */const cx=w/2,cy=h*.46,R0=Math.hypot(w,h)*.5,n=70,t_=B.t*(1.4+a*1.6);
- g.lineCap='round';for(let i=0;i<n;i++){const ang=i*2.39996,ph=(t_+i*.37)%1,r0=R0*(.28+ph*.9),len=R0*(.08+.22*a)*(.5+ph),c=Math.cos(ang),s_=Math.sin(ang);
-  g.strokeStyle='rgba(235,242,250,'+(a*.7*ph*(1-ph)*4).toFixed(3)+')';g.lineWidth=1.2+ph*3;g.beginPath();g.moveTo(cx+c*r0,cy+s_*r0);g.lineTo(cx+c*(r0+len),cy+s_*(r0+len));g.stroke()}}
+ /* Nov 9 ("make the cut up speed lines look better, they shouldn't just look like white lines"): wind streaks instead of strokes. Each one
+    is a thin tapered sliver (soft at both ends, brightest two thirds along) with a faint wide halo, drawn additively, so it reads as light
+    and air rushing past rather than a white line. Streaks are a pool with random angles that rush out from the vanishing point, faster and
+    longer with speed, kept out of the middle of the view; colour picks up a cool sky tint, some warmer, and the edge of the frame gets a
+    faint radial smear */
+ const cx=w/2,cy=h*.44,R0=Math.hypot(w,h)*.5,dt=Math.min(.05,Math.max(.001,B.t-(p._slT||B.t)));p._slT=B.t;
+ const S=p._sl||(p._sl=Array.from({length:46},()=>({ang:0,r:0,v:0,th:0,c:0,life:-1})));
+ const spawn=o=>{o.ang=Math.random()*Math.PI*2;/* fewer streaks straight up and down: the road and sky read better clear */if(Math.abs(Math.sin(o.ang))>.82&&Math.random()<.6)o.ang+=Math.PI/2;o.r=R0*(.3+Math.random()*.35);o.v=.6+Math.random()*.8;o.th=.6+Math.random()*1.6;o.c=Math.random();o.life=0};
+ g.save();g.globalCompositeOperation='lighter';g.lineCap='round';
+ for(const o of S){if(o.life<0||o.r>R0*1.25){if(Math.random()<a*1.5)spawn(o);else continue}
+  o.life+=dt;o.r+=R0*o.v*(.5+a*1.9)*dt*(.35+o.r/R0);const c=Math.cos(o.ang),s_=Math.sin(o.ang),len=R0*(.06+.3*a)*(o.r/R0+.15)*o.v,r1=o.r,r2=o.r+len;
+  const x1=cx+c*r1,y1=cy+s_*r1,x2=cx+c*r2,y2=cy+s_*r2,fade=Math.min(1,o.life*6)*Math.min(1,(R0*1.25-o.r)/(R0*.3)),al=a*fade*(.25+.45*Math.min(1,(o.r/R0-.25)*1.6));if(al<.01)continue;
+  const col=o.c<.62?'200,224,255':o.c<.85?'255,255,255':'255,226,190';
+  const gr=g.createLinearGradient(x1,y1,x2,y2);gr.addColorStop(0,'rgba('+col+',0)');gr.addColorStop(.68,'rgba('+col+','+al.toFixed(3)+')');gr.addColorStop(1,'rgba('+col+',0)');
+  g.strokeStyle=gr;g.lineWidth=o.th*(.6+o.r/R0)*4;g.globalAlpha=.16;g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();
+  g.globalAlpha=1;g.lineWidth=o.th*(.5+o.r/R0*.8);g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke()}
+ g.restore();
+ {const rg=g.createRadialGradient(cx,cy,R0*.55,cx,cy,R0*1.1);rg.addColorStop(0,'rgba(170,200,235,0)');rg.addColorStop(1,'rgba(170,200,235,'+(a*.10).toFixed(3)+')');g.fillStyle=rg;g.fillRect(0,0,w,h)}}
 function guidePaint(p){const e=hudOf(p);if(!e)return;const g=e.querySelector('.tg');if(!g)return;g.classList.toggle('off',p.guide===false);
  g.querySelectorAll('li').forEach(x=>{const t=TBY[x.dataset.t];x.classList.toggle('on',!!(p.trk_&&p.trk_.id===t.id));x.classList.toggle('off',!canStart(p,t))})}
 function runKey(code){if(B.paused){pauseKey(code);return}

@@ -49,11 +49,12 @@ function lamps(sc,T){
  const pp=[];L.forEach(l=>pp.push(l.hx,l.hy-.1,l.hz));const hg=new THREE.BufferGeometry();hg.setAttribute('position',new THREE.Float32BufferAttribute(pp,3));
  const hp=new THREE.Points(hg,new THREE.PointsMaterial({map:TXH,size:30,sizeAttenuation:false,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,fog:false,color:0xffe0a8}));hp.frustumCulled=false;grp.add(hp);
  /* light pools: one merged sheet per lamp, built from the actual road samples so it follows grade, bank and curvature exactly; soft gaussian falloff via vertex colour */
- const pos=[],col=[],idx=[];let vi=0;const LX=20,LW=5,SX=(T.sp||3);
+ /* Nov 9 (Hakan: the street lights look unnatural, all the light in one spot): wider, flatter pools with a long soft tail that overlap from lamp to lamp */
+ const pos=[],col=[],idx=[];let vi=0;const LX=26,LW=5,SX=(T.sp||3);
  for(const l of L){if(!(l.lat===l.lat)||Math.abs(l.lat)>T.hw[l.k]+1.5)continue;const jr=Math.max(2,Math.round(LX/SX)),rows=2*jr+1,cols=17,w=Math.min(T.hw[l.k]*1.15,8);
   for(let r=0;r<rows;r++){const j=((l.k-jr+r)%N+N)%N,c=Math.cos(T.psi[j]),s_=Math.sin(T.psi[j]),dx=(r-jr)*SX;
-   for(let q=0;q<cols;q++){const lt=-w+2*w*q/(cols-1),dl=lt-l.lat,u=Math.min(1,Math.abs(dx)/LX),I=(.6*Math.exp(-(dx*dx/(2*3.4*3.4)+dl*dl/(2*2.8*2.8)))+.4*Math.exp(-(dx*dx/(2*8.5*8.5)+dl*dl/(2*5.5*5.5))))*Math.pow(1-u*u,2.4);
-    pos.push(T.x[j]+c*lt,T.y[j]-lt*T.bank[j]+.045,T.z[j]-s_*lt);const v=I*.34;col.push(v,v*.78,v*.5)}}
+   for(let q=0;q<cols;q++){const lt=-w+2*w*q/(cols-1),dl=lt-l.lat,u=Math.min(1,Math.abs(dx)/LX),I=(.32*Math.exp(-(dx*dx/(2*6*6)+dl*dl/(2*4.5*4.5)))+.68*Math.exp(-(dx*dx/(2*13*13)+dl*dl/(2*8*8))))*Math.pow(1-u*u,1.6);
+    pos.push(T.x[j]+c*lt,T.y[j]-lt*T.bank[j]+.045,T.z[j]-s_*lt);const v=I*.2;col.push(v,v*.8,v*.55)}}
   for(let r=0;r<rows-1;r++)for(let q=0;q<cols-1;q++){const a=vi+r*cols+q;idx.push(a,a+cols,a+1,a+1,a+cols,a+cols+1)}vi+=rows*cols}
  if(idx.length){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.setIndex(idx);
   const pm=new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,fog:false}));pm.frustumCulled=false;grp.add(pm);sc.userData.lampPool=pm}
@@ -76,7 +77,7 @@ function setPano(sc,key){let m=null;sc.children.forEach(o=>{if(o.isMesh&&o.geome
  m.material.needsUpdate=true}
 
 const LTS=[];let lampSc=null;const NL=3;
-function ensureLights(sc){if(LTS.length&&lampSc===sc)return;LTS.length=0;lampSc=sc;for(let i=0;i<NL;i++){const l=new THREE.PointLight(0xffd29a,0,58,1.5);l.userData.lampLight=1;l.userData.li=-1;sc.add(l);LTS.push(l)}}
+function ensureLights(sc){if(LTS.length&&lampSc===sc)return;LTS.length=0;lampSc=sc;for(let i=0;i<NL;i++){const l=new THREE.PointLight(0xffd29a,0,46,.85);l.userData.lampLight=1;l.userData.li=-1;sc.add(l);LTS.push(l)}}
 /* lights keep their lamp until it falls out of range and has faded out, so nothing ever pops; intensity eases with distance */
 function lampFrame(){const Rc=RACE;if(!Rc||!Rc.scene)return;const sc=Rc.scene,g=sc.userData&&sc.userData.lamps,pos=sc.userData&&sc.userData.lampPos;
  if(!g||!pos||!LTS.length||lampSc!==sc)return;const on=g.visible,c0=Rc.cars.find(c=>c.human)||Rc.cars[0];if(!c0)return;
@@ -84,8 +85,8 @@ function lampFrame(){const Rc=RACE;if(!Rc||!Rc.scene)return;const sc=Rc.scene,g=
  const used=new Set();for(const l of LTS)if(l.userData.li>=0&&wset.has(l.userData.li))used.add(l.userData.li);
  for(const l of LTS){const li=l.userData.li;
   if(li>=0&&wset.has(li)){continue}
-  if(l.intensity<.03){const nx=want.find(w=>!used.has(w[1]));if(nx){l.userData.li=nx[1];used.add(nx[1]);const p=pos[nx[1]];l.position.set(p[0],p[1]-.4,p[2])}else l.userData.li=-1}}
- for(const l of LTS){const li=l.userData.li;let tgt=0;if(on&&li>=0&&wset.has(li)){const u=Math.max(0,1-wset.get(li)/R);tgt=4.4*u*u*(3-2*u)}l.intensity+=(tgt-l.intensity)*.1}
+  if(l.intensity<.03){const nx=want.find(w=>!used.has(w[1]));if(nx){l.userData.li=nx[1];used.add(nx[1]);const p=pos[nx[1]];l.position.set(p[0],p[1]+2.5,p[2])}else l.userData.li=-1}}
+ for(const l of LTS){const li=l.userData.li;let tgt=0;if(on&&li>=0&&wset.has(li)){const u=Math.max(0,1-wset.get(li)/R);tgt=1.5*u*u*(3-2*u)}l.intensity+=(tgt-l.intensity)*.1}
  }
 function leanShadow(c){const Rc=RACE;if(!Rc||!Rc.scene)return;const sc=Rc.scene,g=sc.userData&&sc.userData.lamps,pos=sc.userData&&sc.userData.lampPos;if(!g||!g.visible||!pos||!c.m||!c.m.sh||!c.m.sh.visible)return;
  let bd=1e9,bi=-1;for(let i=0;i<pos.length;i++){const d=Math.hypot(pos[i][0]-c.x,pos[i][2]-c.z);if(d<bd){bd=d;bi=i}}if(bi<0||bd>30)return;

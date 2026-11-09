@@ -1,14 +1,33 @@
-/* ===== Poly GT layer: arcade handling (Quickplay modes only: Quick Race, Time Attack, Elimination, Cut-Up, Versus) =====
-   Rally and Track Mode keep their own handling. For the player in these modes:
+/* ===== Poly GT layer: arcade handling (every car mode since Nov 9; was Quickplay only) ===== For the player in these modes:
    - grippier (sideways slip dies out 1.3x faster) and brakes twice as strong
    - the steering reaches the wheel quicker (patched in build.py through PT8.arcSnap)
    - walls take only the speed going into them and turn the car back along the road (patched in build.py through PT8.arcWall) */
 (function ptArcade(){
 'use strict';
 const P=window.PT8;
-const AM={mp:1,ta:1,elim:1,cutup:1};
-P.arcade=()=>{const R=typeof RACE!=='undefined'?RACE:null,f=R&&R.cfg;return !!(f&&AM[f.mode]&&!f.trackRace&&!f.circuit&&!f.rally&&!f.free)};
+/* Nov 9 (Hakan: "make every gamemode have the same handling style as the quick play options like elimination and versus, but rally should
+   be able to drift some"): this handling is now the player's in every car mode, Track Mode, the model circuits, Rally and Career included.
+   The Track Mode grip cap and steering curve (cartoon.js) and the rally tyre model (rally.js) step aside for the player (P.arcHum).
+   The SIM option in Options still swaps in sim.js on the circuits for players who pick it. */
+P.arcade=()=>{const R=typeof RACE!=='undefined'?RACE:null,f=R&&R.cfg;return !!(f&&!f.free)};
 const hu=c=>c&&c.human&&!c.forceAI;
+P.arcHum=c=>hu(c)&&P.arcade()&&!(P.simOn&&P.simOn(c));
+/* the model tracks are built about 2.4x real size, their dial reads dialK of the physics speed and the cars are drawn VK times bigger.
+   The steering here is scaled so that at the same speed on the dial the car turns the same circle, measured in car lengths, as in
+   Quick Play: k = sr(u)g(u) / (dialK * VK * sr(v)g(v)), v = physics speed, u = v*dialK (the Quick Play speed with the same dial reading),
+   sr = the core's speed-sensitive steering, g = the high-speed calming in rally.js */
+const SR=v=>2.25-.033*Math.min(Math.abs(v),42),GS=v=>v>40?Math.pow(40/v,.85):1;
+P.arcSteerK=c=>{const dk=P.dialK?P.dialK():1,vk=P.VK?P.VK():1;if(dk===1&&vk===1)return 1;const v=Math.max(2,c.sp||0),u=v*dk;return SR(u)*GS(u)/(dk*vk*SR(v)*GS(v))};
+/* rally: some drift. The core's drift mode (grip eased toward 24% of normal at the rear, an assist that holds the slide angle) is started on
+   a stage by lifting off or braking into a corner at speed, or by full lock on the power on a loose surface, and lasts while the wheel is
+   turned (counter-steer included). Its grip loss is capped at 75% of the full drift and it never pays the drift boost here */
+const rallyOn=c=>{const R=typeof RACE!=='undefined'?RACE:null;return !!(R&&R.cfg&&R.cfg.rally&&!R.cfg.circuit&&R.T&&P.arcHum(c))};
+const rallyHB=c=>{const i=c.in||{},st=Math.abs(i.st||0),v=c.sp||0;if(v<11)return false;
+ if(c.ptDrift)return st>.15||(c.ptNeutral||0)<.25;
+ if(v<15||st<.62)return false;const d=RACE.T.d||{},loose=d.gravel!==0||c.onRoad===false;
+ return (i.br>0&&v>15)||(!(i.th>0)&&v>17)||(loose&&i.th>0&&st>.9&&v>22)};
+setTimeout(()=>{const hb0=window.PT8_HB;window.PT8_HB=c=>rallyOn(c)?rallyHB(c):hb0?hb0(c):false},0);
+{const sc0=stepCar;stepCar=function(c,dt){const r=sc0.apply(this,arguments);if(rallyOn(c)){if(c.ptBlend>.75)c.ptBlend=.75;c.dts=0}return r}}
 {const m0=P.mul;P.mul=c=>{const m=m0?m0(c):{acc:1,top:1,grip:1,brk:1};if(hu(c)&&P.arcade()){m.grip*=1.3;m.brk*=2}return m}}
 /* steering ramp rate: 7 per second in the base game, 12 here */
 P.arcSnap=c=>hu(c)&&P.arcade()?12:7;

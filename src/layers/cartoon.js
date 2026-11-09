@@ -173,7 +173,7 @@ P.menuShot=k=>MNS[k]||(MNS[k]=new Promise(res=>setTimeout(async()=>{let sc=null;
    chase camera, wall contact and car-to-car contact grow with them. Physics speeds are unchanged. */
 const K=()=>{const R=typeof RACE!=="undefined"?RACE:null,d=R&&R.T&&R.T.d;return d&&d.cartoon&&d.cartoon.carScale||1};
 /* the car as drawn: on the bought rally stages it is only a little above real size (Nov 9: "the cars are WAYY too big"); K() still scales the physics, the AI and the camera model */
-const VK=()=>{const R=typeof RACE!=="undefined"?RACE:null,d=R&&R.T&&R.T.d;return d&&d.cartoon&&d.cartoon.stage?(P.stageCarK||1.1):K()};
+P.VK=()=>VK();const VK=()=>{const R=typeof RACE!=="undefined"?RACE:null,d=R&&R.T&&R.T.d;return d&&d.cartoon&&d.cartoon.stage?(P.stageCarK||1.1):K()};
 /* Track mode on any circuit (the Nordschleife too) gets the same handling as the model tracks: grip that builds with speed, harder brakes,
    the steering feel and the smoothed camera. Top speed, pickup, time scale and the dial factor stay model-track only (those make up for
    the models' size; the Nordschleife is real size) */
@@ -182,7 +182,7 @@ P.trkMedK=Object.assign(P.trkMedK||{},{[P.RING_IDX]:1.005});
 /* Track Mode itself (circuit time trials and track races), not just a model track: the v0.19 handling and steering feel apply only here */
 const TM=()=>{const R=typeof RACE!=="undefined"?RACE:null,f=R&&R.cfg;return !!(f&&(f.trackRace||f.circuit))};P.trackMode=TM;
 /* Track Mode steering sensitivity: the slider's 1.0 here is the old 0.55 (Hakan's sweet spot); other modes keep the slider as it is */
-P.tmSteer=c=>c&&c.human&&!c.forceAI&&TM()?.55:1;
+P.tmSteer=c=>P.arcHum&&P.arcHum(c)?P.arcSteerK(c):c&&c.human&&!c.forceAI&&TM()?.55:1;
 const TRK=()=>{if(K()>1)return true;const R=typeof RACE!=="undefined"?RACE:null,f=R&&R.cfg;return !!(f&&(f.trackRace||f.circuit))};P.trkPhys=TRK;
 const uv=updateVisual;updateVisual=function(c,T,t){const m=c&&c.m,k=VK();if(m&&m.g)m.g.scale.setScalar(1);const r=uv.apply(this,arguments);
  if(m&&m.g&&k!==1&&m.g.visible!==false){m.g.scale.setScalar(k);m.g.position.y+=(k-1)*.95;if(m.sh){m.sh.scale.x*=k;m.sh.scale.y*=k}}return r};
@@ -233,7 +233,7 @@ const DM=v=>v*2.237*P.dialK(),HG=v=>(1+.45*Math.min(1,Math.max(0,(DM(v)-60)/50))
 const SFP=[[0,1.03],[20,1.03],[30,.84],[60,.84],[80,.87],[100,.92],[120,1]],SFP0=[[0,.95],[20,.95],[30,.75],[60,.75],[80,1]]/* v0.18, outside Track Mode */,SF=m=>{const p=TM()?SFP:SFP0;if(m<=p[0][0])return p[0][1];for(let i=1;i<p.length;i++)if(m<=p[i][0]){const a=p[i-1],b=p[i];return a[1]+(b[1]-a[1])*(m-a[0])/(b[0]-a[0])}return p[p.length-1][1]};
 const gripAt=(c,mt)=>{const v=c.sp||0;return ALAT*Math.min(DFMAX,1+DFK*(v/35)*(v/35))*((c.cs&&c.cs.grip)||1)*(P.lawn&&P.lawn(c)?1:(mt.grip||1))/* round 23: grass slows the player but never cuts the steering */*(c.human&&!c.forceAI?(c.in&&c.in.br>0&&c.in.th<=0?1.15:1)*HG(v)*(TM()?.95:1)/* round 24: Track Mode handling 5% down (Hakan: too good) */:1)/* round 20: trail braking, the weight on the fronts gives 15% more bite (player only, so the CPU laps and gold times stay put) */};
 P.simGrip=gripAt;/* Nov 8: the Sim handling layer (sim.js) uses the same tyre budget */
-{const ip0=P.inPost;P.inPost=(c,dt)=>{if(ip0)ip0(c,dt);if(!TRK()||!c.in||c.exp>0)return;const vf=c.vx*Math.sin(c.yaw)+c.vz*Math.cos(c.yaw);if(vf<6)return;
+{const ip0=P.inPost;P.inPost=(c,dt)=>{if(ip0)ip0(c,dt);if(!TRK()||!c.in||c.exp>0)return;if(P.arcHum&&P.arcHum(c))return;/* Nov 9: the player drives the Quick Play handling everywhere (arcade.js) */const vf=c.vx*Math.sin(c.yaw)+c.vz*Math.cos(c.yaw);if(vf<6)return;
  const mt=c.mt||{grip:1},a=gripAt(c,mt),sr=2.5-Math.min(c.sp,40)*.03,hk=Math.min(1.45,Math.max(.85,1+(((c.cs&&c.cs.grip)||1)-1)*2.6)),mx=a/(vf*sr)*(c.human&&!c.forceAI?1.4*hk:1.25)/* CPU drivers keep the old line, so their lap times and the gold times stay put */;
  /* the nose turns in up to 1.4x what the tyres hold (was 1.25x, before that 1.7x): asking for more pushes the car wide. The Handling rating
     moves that line: about 1.2x for the softest road cars (0.96), 1.6x at 1.05, 2x for GT3 cars like the R8 LMS (1.16) */
@@ -249,8 +249,8 @@ P.simGrip=gripAt;/* Nov 8: the Sim handling layer (sim.js) uses the same tyre bu
  if(P.simOn&&P.simPost&&P.simOn(c)&&P.simPost(c,dt,vx0,vz0,y0,yr0))return r;
  /* minimum turning circle at low speed (about 5.5 m for a road car, grown with the drawn size): below about 40 km/h the grip limit below
     does not apply and the arcade steering pivoted the car almost on the spot */
- {const vf=Math.abs(c.vx*Math.sin(c.yaw)+c.vz*Math.cos(c.yaw));if(vf<12&&!(c.respT>0)&&c.m&&c.m.wheels.some(w=>w.g)){const mx=(vf+.25)*dt/(5.5*K()),d=wr(c.yaw-y0);
-  if(Math.abs(d)>mx){c.yaw=y0+Math.sign(d)*mx;if(Math.abs(c.yr||0)>mx/dt)c.yr=Math.sign(c.yr)*mx/dt}}}const s0=Math.hypot(vx0,vz0),s1=Math.hypot(c.vx,c.vz);if(s0<6||s1<6||!c.m||!c.m.wheels.some(w=>w.g))return r;
+ const ah_=P.arcHum&&P.arcHum(c);{const vf=Math.abs(c.vx*Math.sin(c.yaw)+c.vz*Math.cos(c.yaw));if(vf<12&&!(c.respT>0)&&c.m&&c.m.wheels.some(w=>w.g)){const mx=(vf+.25)*dt/(ah_?4.4*VK():5.5*K()),d=wr(c.yaw-y0);
+  if(Math.abs(d)>mx){c.yaw=y0+Math.sign(d)*mx;if(Math.abs(c.yr||0)>mx/dt)c.yr=Math.sign(c.yr)*mx/dt}}}if(ah_)return r;/* Nov 9: no grip cap or nose easing for the player: Quick Play handling */const s0=Math.hypot(vx0,vz0),s1=Math.hypot(c.vx,c.vz);if(s0<6||s1<6||!c.m||!c.m.wheels.some(w=>w.g))return r;
  const mt=c.mt||{grip:1},a=gripAt(c,mt),h0=Math.atan2(vx0,vz0),h1=Math.atan2(c.vx,c.vz),d=wr(h1-h0),mx=a*dt/s1;
  if(Math.abs(d)>mx){const h=h0+Math.sign(d)*mx;c.vx=Math.sin(h)*s1;c.vz=Math.cos(h)*s1}
  /* past about 35 degrees of slide the nose is eased back toward the travel direction, so a slide never turns into a spin */

@@ -27,9 +27,9 @@ const WLp=()=>WL;
    now a real two-axle model (bicycle model, Pacejka-style tyres): front and rear tyres each have a slip angle and a limited grip, the load moves forward under braking
    and back under power (so lifting off in a corner tucks the nose in, power pushes the tail out), the handbrake all but frees the rear, gravel and snow give less grip
    and a softer, wider peak than tarmac. The core still does the engine, brakes, drag and gears: its forward speed is kept, its sideways speed and yaw are replaced. */
-setTimeout(()=>{const ipx=P.inPost;P.inPost=(c,dt)=>{const Rc=RACE,on=c.human&&!c.forceAI&&c.in&&Rc&&Rc.T&&Rc.T.stage&&Rc.cfg&&Rc.cfg.rally;if(on&&!c._stZ){c._stRaw=c.in.st||0}/* the core can call this more than once per step: only the first call sees the player's steering */if(ipx)ipx(c,dt);if(on){c.in.st=0;c._stZ=1}};
+setTimeout(()=>{const ipx=P.inPost;P.inPost=(c,dt)=>{const Rc=RACE,on=c.human&&!c.forceAI&&c.in&&Rc&&Rc.T&&Rc.T.stage&&Rc.cfg&&Rc.cfg.rally&&!(P.arcHum&&P.arcHum(c));if(on&&!c._stZ){c._stRaw=c.in.st||0}/* the core can call this more than once per step: only the first call sees the player's steering */if(ipx)ipx(c,dt);if(on){c.in.st=0;c._stZ=1}};
  const sg=stepCar,L=3.1,A=1.5,B=1.6,G=9.81;/* installed last, so nothing wrapped after this file can put the arcade steering back */
- stepCar=function(c,dt){const Rc=RACE,on=c.human&&!c.forceAI&&Rc&&Rc.T&&Rc.T.stage&&Rc.cfg&&Rc.cfg.rally&&dt>0&&Rc.state==='race';
+ stepCar=function(c,dt){const Rc=RACE,on=c.human&&!c.forceAI&&Rc&&Rc.T&&Rc.T.stage&&Rc.cfg&&Rc.cfg.rally&&dt>0&&Rc.state==='race'&&!(P.arcHum&&P.arcHum(c));
   let yaw0,vx0,vz0,r0,stRaw=0;if(on){yaw0=c.yaw;vx0=c.vx;vz0=c.vz;r0=c.yr||0;stRaw=c._stRaw||0}/* the core drives straight: its steering scrub must not eat the speed, the tyre model does the turning */
   c._stZ=0;const r=sg.apply(this,arguments);c._stZ=0;if(on&&c.in)c.in.st=stRaw;/* back for the wheels and the camera */
   if(!on||c.exp>0||c.respT>0||c.fin)return r;

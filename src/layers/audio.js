@@ -67,23 +67,71 @@ const EP={
 };
 const EPID={lr:'i6',ford:'i4t',merc:'v8',ster:'v10',art:'v6h',ferr:'v12',zen:'v8t',must:'v8',urus:'v8t',m8:'v8t',amg:'v8t',gtr:'v6t',por:'f6',p1:'v8h'};
 const profOf=car=>EP[EPID[car.id]||car.eng||'v8'];
-function mkEng(car){const a=ctx(),pr=profOf(car),e={id:car.id,pr,os:[]};
- e.f=a.createBiquadFilter();e.f.type='lowpass';e.f.Q.value=pr.q;e.am=a.createGain();e.am.gain.value=1;e.g=a.createGain();e.g.gain.value=0;
- e.f.connect(e.am);e.am.connect(e.g);e.g.connect(MG);
- pr.w.forEach(w=>{const o=a.createOscillator(),g=a.createGain();o.type=w[0];g.gain.value=w[3]?0:w[2];o.connect(g);g.connect(e.f);o.start();e.os.push({o,g,w})});
- e.lfo=a.createOscillator();e.lfo.type='sine';e.lfo.frequency.value=pr.lr[0];e.ld=a.createGain();e.ld.gain.value=pr.lf*.5;e.lfo.connect(e.ld);e.ld.connect(e.am.gain);e.lfo.start();
+/* Nov 9 ("I also want better engine noise"): the engine is no longer a stack of plain oscillators. Each car gets a recorded-style firing
+   cycle built once per engine type: one 720 degree cycle holds every cylinder's exhaust pulse (a damped knock plus a burst of noise, with
+   a little cycle-to-cycle jitter so it never buzzes), the cross-plane V8 fires its banks unevenly (the burble), and 24 cycles are looped.
+   The loop's playback rate follows the rpm, so the pulse rate is the real firing frequency (cylinders x rpm / 120). It is then voiced like a car:
+   - exhaust: a low-pass that opens with rpm and throttle, a body resonance and soft saturation that grows under load (it growls on the
+     power and goes hollow off it)
+   - intake: the same pulses through a band-pass an octave and more up, mostly on the throttle
+   - turbo engines whistle with boost and chuff when you lift; high-revving engines crackle and pop on a lift from high rpm */
+const EK={
+ v8:{cyl:8,idle:800,red:6800,uneven:.32,res:95,cut:[260,2400],dr:2.6,nz:.22,int:.25},
+ v8t:{cyl:8,idle:850,red:7000,uneven:.22,res:105,cut:[280,2600],dr:2.2,nz:.2,int:.22,turbo:1},
+ v8h:{cyl:8,idle:950,red:8300,uneven:.1,res:130,cut:[320,3200],dr:2,nz:.16,int:.3,turbo:.6},
+ v10:{cyl:10,idle:1000,red:8700,uneven:.06,res:150,cut:[360,3800],dr:1.9,nz:.14,int:.36},
+ v12:{cyl:12,idle:1000,red:8900,uneven:.03,res:170,cut:[400,4200],dr:1.6,nz:.12,int:.4},
+ i4t:{cyl:4,idle:850,red:7000,uneven:.04,res:120,cut:[300,2600],dr:2.2,nz:.3,int:.3,turbo:1},
+ i6:{cyl:6,idle:750,red:6800,uneven:.03,res:110,cut:[300,2800],dr:1.8,nz:.18,int:.28},
+ v6t:{cyl:6,idle:850,red:7000,uneven:.12,res:120,cut:[320,3000],dr:2.1,nz:.22,int:.26,turbo:1},
+ v6h:{cyl:6,idle:950,red:8000,uneven:.08,res:140,cut:[340,3400],dr:1.9,nz:.18,int:.3,turbo:.7},
+ f6:{cyl:6,idle:900,red:8800,uneven:.18,res:135,cut:[340,3600],dr:2.4,nz:.2,int:.34}
+};
+const R0=3000,CYC=24,EBUF={};
+/* the firing cycle at R0 rpm (one cycle = two turns of the crank) */
+function cycleBuf(a,name,k){if(EBUF[name])return EBUF[name];const sr=a.sampleRate,cl=120/R0,n=Math.round(cl*sr),N=n*CYC,b=a.createBuffer(1,N,sr),d=b.getChannelData(0);
+ let seed=name.length*977+k.cyl*31;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647};
+ const iv=n/k.cyl,tau=iv*.34,tn=iv*.12,fr=k.res*3/(R0*k.cyl/120);/* knock ring: about 3x the body resonance, in pulse periods */
+ for(let c=0;c<CYC;c++){const amp=.88+rnd()*.24;
+  for(let q=0;q<k.cyl;q++){/* uneven firing: alternate banks a little early/late and louder/softer (cross-plane burble) */
+   const bank=(q*5+(q>>1))%2,off=(bank?1:-1)*k.uneven*iv*.5*(.6+rnd()*.4),A=amp*(1+(bank?1:-1)*k.uneven*.9)*(.9+rnd()*.2),st=Math.round(c*n+q*iv+off);
+   for(let t=0;t<iv*1.6;t++){const x=st+t;if(x<0||x>=N)continue;const e=Math.exp(-t/tau),ph=t/iv*fr*2*Math.PI;
+    d[x]+=A*(e*(Math.sin(ph)*.55+(t<iv*.18?1-t/(iv*.18):0)*.9)+Math.exp(-t/tn)*(rnd()*2-1)*k.nz*2)}}}
+ let m=0;for(let x=0;x<N;x++){d[x]-=0;m=Math.max(m,Math.abs(d[x]))}for(let x=0;x<N;x++)d[x]/=m||1;
+ return EBUF[name]=b}
+const SAT={};function satCurve(dr){const key=dr.toFixed(2);if(SAT[key])return SAT[key];const n=1024,c=new Float32Array(n);for(let i=0;i<n;i++){const x=i/(n-1)*2-1;c[i]=Math.tanh(x*dr)/Math.tanh(dr)}return SAT[key]=c}
+function mkEng(car){const a=ctx(),name=EK[EPID[car.id]]?EPID[car.id]:EK[car.eng]?car.eng:'v8',k=EK[name],e={id:car.id,k,name};
+ e.src=a.createBufferSource();e.src.buffer=cycleBuf(a,name,k);e.src.loop=true;
+ e.ex=a.createBiquadFilter();e.ex.type='lowpass';e.ex.Q.value=.9;
+ e.body=a.createBiquadFilter();e.body.type='peaking';e.body.frequency.value=k.res;e.body.Q.value=1.4;e.body.gain.value=7;
+ e.sh=a.createWaveShaper();e.sh.curve=satCurve(k.dr);e.sh.oversample='2x';e.pre=a.createGain();e.pre.gain.value=.6;
+ e.inF=a.createBiquadFilter();e.inF.type='bandpass';e.inF.Q.value=1.2;e.inG=a.createGain();e.inG.gain.value=0;
+ e.hp=a.createBiquadFilter();e.hp.type='highpass';e.hp.frequency.value=28;
+ e.g=a.createGain();e.g.gain.value=0;
+ e.src.connect(e.ex);e.ex.connect(e.body);e.body.connect(e.pre);e.pre.connect(e.sh);e.sh.connect(e.hp);
+ e.src.connect(e.inF);e.inF.connect(e.inG);e.inG.connect(e.hp);e.hp.connect(e.g);e.g.connect(MG);e.src.start(0,Math.random()*e.src.buffer.duration);
+ if(k.turbo){e.tb=a.createOscillator();e.tb.type='sine';e.tbG=a.createGain();e.tbG.gain.value=0;e.tb.connect(e.tbG);e.tbG.connect(MG);e.tb.start();e.boost=0}
  e.sq=a.createBufferSource();e.sq.buffer=NB;e.sq.loop=true;e.sf=a.createBiquadFilter();e.sf.type='bandpass';e.sf.frequency.value=1900;e.sf.Q.value=7;e.sg=a.createGain();e.sg.gain.value=0;e.sq.connect(e.sf);e.sf.connect(e.sg);e.sg.connect(MG);e.sq.start();
- e.rpm=.2;e.last={gear:0,nm:0,combo:0,crash:0,lap:0,vy:0,fin:0,drift:0};return e}
-function killEng(e){try{e.os.forEach(x=>{x.o.stop();x.o.disconnect()});e.lfo.stop();e.sq.stop();e.g.disconnect();e.sg.disconnect()}catch(er){}}
+ e.os=[];e.lfo={stop(){}};e.rpm=.2;e.th=0;e.popT=0;e.last={gear:0,nm:0,combo:0,crash:0,lap:0,vy:0,fin:0,drift:0};return e}
+/* lift-off: a turbo chuff, and pops from a hot exhaust */
+function liftFx(e,r){const k=e.k;if(k.turbo&&e.boost>.35)hiss(.28,.16*e.boost*k.turbo,2600,700,1.4,'bandpass');
+ if(r>.55&&(k.cyl>=8||name6(e))){const n=2+(Math.random()*4|0);for(let i=0;i<n;i++){const dl=.05+i*(.05+Math.random()*.09);hiss(.05,.22+Math.random()*.2,700+Math.random()*900,200,.7,'lowpass',dl);tone(70+Math.random()*40,40,.05,'sine',.5,dl)}}}
+const name6=e=>e.name==='f6'||e.name==='v6h';
+function voice(e,c,th,live,t){const k=e.k,rpm=k.idle+e.rpm*(k.red-k.idle),rate=rpm/R0,lo=Math.min(1,th);
+ e.src.playbackRate.setTargetAtTime(rate,t,.03);
+ const rr=(rpm-k.idle)/(k.red-k.idle);
+ e.ex.frequency.setTargetAtTime(k.cut[0]+(k.cut[1]-k.cut[0])*(.25*rr+.75*rr*lo)+lo*180,t,.05);
+ e.pre.gain.setTargetAtTime(.35+lo*.9+rr*.25,t,.05);
+ e.inF.frequency.setTargetAtTime(500+rr*2600,t,.05);e.inG.gain.setTargetAtTime(k.int*(.12+lo*.88)*(.3+rr*.7),t,.05);
+ const ev=live?(.07+lo*.07+rr*.05)*O().master*O().engine*2.1:0;e.g.gain.setTargetAtTime(ev,t,.05);
+ if(e.tb){e.boost+=((lo>.5&&rr>.25?1:0)*Math.min(1,rr*1.4)-e.boost)*(lo>.5?.04:.25);e.tb.frequency.setTargetAtTime(2400+e.boost*4200+rr*900,t,.08);e.tbG.gain.setTargetAtTime(live?e.boost*.018*k.turbo*O().master*O().engine*2:0,t,.08)}
+ if(live&&e.th>.6&&th<.15&&rr>.35&&t>e.popT){e.popT=t+.6;liftFx(e,rr)}e.th=th}
+function killEng(e){try{e.src.stop();if(e.tb){e.tb.stop();e.tbG.disconnect()}e.sq.stop();e.g.disconnect();e.sg.disconnect()}catch(er){}}
 function tick(c,i){if(!on()){return}
  try{ctx();let e=eng[i];const car0=c.cs||P.BYID.merc;if(e&&e.id!==car0.id){const old=e;eng[i]=null;killEng(old);e=null}if(!e)e=eng[i]=mkEng(car0);const a=AC,t=a.currentTime,live=RACE&&scr==='game'&&!paused;
  const car=c.cs||P.BYID.merc,gi=c.gear|0,ceil=Math.max(8,car.top*P.GT(car)[Math.min(gi,P.GT(car).length-1)].top*.92),r=Math.min(1.05,c.sp/ceil),th=c.in?c.in.th:0;
  const cnt=RACE&&RACE.state==='count'&&c.human&&!c.cool;const rpm=cnt?Math.min(1,.16+th*.72+(th>.5?Math.sin(t*38)*.03:0)):Math.max(.14,Math.min(1,.14+r*.86+(c.shiftT>0?-.18:0)+th*.04));e.rpm+=(rpm-e.rpm)*.35;
- const pr=e.pr,base=pr.f0+e.rpm*(pr.f1-pr.f0);
- e.os.forEach(x=>{x.o.frequency.setTargetAtTime(base*x.w[1],t,.04);if(x.w[3])x.g.gain.setTargetAtTime(x.w[2]*Math.pow(e.rpm,2)*(.4+th*.6),t,.06)});
- e.lfo.frequency.setTargetAtTime(pr.lr[0]+e.rpm*(pr.lr[1]-pr.lr[0]),t,.05);e.ld.gain.setTargetAtTime(pr.lf*.5*(1-th*.45),t,.06);
- e.f.frequency.setTargetAtTime(pr.c0+e.rpm*(pr.c1-pr.c0)+th*600,t,.05);
- const ev=live?(.05+th*.06+e.rpm*.03)*O().master*O().engine*2.2:0;e.g.gain.setTargetAtTime(ev,t,.06);
+ voice(e,c,th,live,t);
  /* squeal: only when truly sliding */
  const slide=Math.abs(wr(Math.atan2(c.vx,c.vz)-c.yaw)),sq=live&&c.sp>14&&c.onRoad!==false&&!c.exp?Math.max(0,Math.min(1,(slide-.2)*2.2))*Math.min(1,(c.sp-12)/20):0;
  e.sg.gain.setTargetAtTime(sq*.14*vol(),t,.05);e.sf.frequency.setTargetAtTime(1500+Math.min(1,c.sp/40)*900+slide*400,t,.08);
@@ -92,9 +140,9 @@ function tick(c,i){if(!on()){return}
   if(c.nm>L.nm)SFX.near();if(c.combo>L.combo&&c.combo>1)SFX.combo(c.combo);if(c.crashes>L.crash)SFX.crash();
   if(c.lapT&&c.lapT.length>L.lap&&!c.fin)SFX.lap();if(c.fin&&!L.fin)SFX.fin();
   if(L.vy<-7&&c.vy>L.vy+4)SFX.land(Math.min(1.2,-L.vy/18));}
- L.nm=c.nm||0;L.combo=c.combo||0;L.crash=c.crashes||0;L.lap=c.lapT?c.lapT.length:0;L.fin=c.fin?1:0;L.vy=c.vy||0}catch(er){}}
+ L.nm=c.nm||0;L.combo=c.combo||0;L.crash=c.crashes||0;L.lap=c.lapT?c.lapT.length:0;L.fin=c.fin?1:0;L.vy=c.vy||0}catch(er){if(!P._engErr){P._engErr=1;console.error('engine',er)}}}
 engineSnd=(c,i)=>{if(c.human)tick(c,i)};
-stopEng=()=>{eng.forEach(e=>{if(!e)return;try{const t=AC.currentTime;e.g.gain.setTargetAtTime(0,t,.03);e.sg.gain.setTargetAtTime(0,t,.03)}catch(er){}})};
+stopEng=()=>{eng.forEach(e=>{if(!e)return;try{const t=AC.currentTime;e.g.gain.setTargetAtTime(0,t,.03);e.sg.gain.setTargetAtTime(0,t,.03);if(e.tbG)e.tbG.gain.setTargetAtTime(0,t,.03)}catch(er){}})};
 
 /* ---------- UI sounds: every hover / click in the menus ---------- */
 const HOV='button,.card,.trk,.ci,.ev,.rk,.swb,.seg button,#pause .b button,.menuActions button,.mrow';

@@ -37,11 +37,13 @@ src=rep(src,"noise(.9,.7,900);Rc.shake=1}","noise(.9,.7,900);c.shk=1}")
 src=rep(src,"['steering','STEERING',.65,1.35,.05],","['steering','STEERING',.5,1.5,.05],")
 # Track Mode steering sensitivity
 # (the .55 is now built into Track Mode instead, see PT8.tmSteer: a slider moved to .55 by the short-lived default goes back to 1.0 once)
-src=rep(src,"Object.assign(o,JSON.parse(localStorage.getItem('pt7-options')||'{}'));","Object.assign(o,JSON.parse(localStorage.getItem('pt7-options')||'{}'));if(o.steerV2===1){if(o.steering===.55)o.steering=1;o.steerV2=2}")
+src=rep(src,"Object.assign(o,JSON.parse(localStorage.getItem('pt7-options')||'{}'));","Object.assign(o,JSON.parse(localStorage.getItem('pt7-options')||'{}'));if(o.steerV2===1){if(o.steering===.55)o.steering=1;o.steerV2=2}if(o.handV!==1){o.handling='ARCADE';o.handV=1}")
 # arcade handling (src/layers/arcade.js): quicker steering ramp, softer walls
 src=rep(src,"c.vx-=1.3*vn*nx;c.vz-=1.3*vn*nz;if(vn>4){fx(c.x+nx,","{const wk_=window.PT8&&PT8.arcWall?PT8.arcWall(c,T.psi[sc.i],dt):1.3;c.vx-=wk_*vn*nx;c.vz-=wk_*vn*nz}if(vn>4){fx(c.x+nx,")
 src=rep(src,"clamp(c.in.st*o.steering,-1.35,1.35)","clamp(c.in.st*o.steering*(window.PT8&&PT8.tmSteer?PT8.tmSteer(c):1),-1.6,1.6)")
 src=rep(src,"PT8.tmSteer(c):1),-1.6,1.6)-c.st)*(1-Math.exp(-dt*7));","PT8.tmSteer(c):1),-1.6,1.6)-c.st)*(1-Math.exp(-dt*(window.PT8&&PT8.arcSnap?PT8.arcSnap(c):7)));")
+# Nov 9: one handling everywhere. The steering factor (PT8.tmSteer) multiplies after the clamp, so the size match on the big model tracks is not cut off
+src=rep(src,"clamp(c.in.st*o.steering*(window.PT8&&PT8.tmSteer?PT8.tmSteer(c):1),-1.6,1.6)","(window.PT8&&PT8.tmSteer?PT8.tmSteer(c):1)*clamp(c.in.st*o.steering,-1.6,1.6)")
 src=rep(src,"*(1-Math.exp(-dt*(want?4:2.6)))","*(1-Math.exp(-dt*(want?(c.tnR||4):(c.tnR?c.tnR*.85:2.6))))")
 src=rep(src,"vi=c.vy-c.wpt*WL[i][1]+c.wrl*WL[i][0]","vi=c.vy-(c._gv||0)-c.wpt*WL[i][1]+c.wrl*WL[i][0]")
 src=rep(src,"x.fillStyle='#e8e8e8';x.fillRect(w/2-1,0,2,h/2)}","if(!(d.ra||d.imola)){x.fillStyle='#e8e8e8';x.fillRect(w/2-1,0,2,h/2)}else{/* real circuits: worn tarmac like the Nordschleife */const q=rngf(5);for(let i=0;i<120;i++){x.fillStyle=q()<.5?'rgba(0,0,0,.05)':'rgba(255,255,255,.035)';x.fillRect(q()*w|0,q()*h|0,1,1)}x.fillStyle='#ffffffc0';x.fillRect(1,0,1,h);x.fillRect(w-2,0,1,h)}}")
@@ -172,7 +174,7 @@ src=src[:j0]+newcc+src[j1:]
 
 
 # ---- v9e: auto-shift option, reverse tracks ----
-src=rep(src,"hillHold:true,cameraDistance:1,","hillHold:true,autoShift:false,handling:'SIM',abs:true,tc:true,perfPreset:'MEDIUM',dof:true,ao:false,maxDensity:1.25,shadowRate:2,shadowRes:1024,showFps:false,cameraDistance:1,")
+src=rep(src,"hillHold:true,cameraDistance:1,","hillHold:true,autoShift:false,handling:'ARCADE',abs:true,tc:true,perfPreset:'MEDIUM',dof:true,ao:false,maxDensity:1.25,shadowRate:2,shadowRes:1024,showFps:false,cameraDistance:1,")
 src=rep(src,"['hillHold','HILL HOLD']","['hillHold','HILL HOLD'],\n  ['autoShift','AUTO SHIFT'],\n  ['handling','HANDLING',['ARCADE','SIM']],\n  ['abs','ABS BRAKES'],\n  ['tc','TRACTION CONTROL'],\n  ['shortcutPenalty','SHORTCUT PENALTY'],\n  ['@tutorial','TUTORIAL','@btn','PLAY']")
 src=rep(src,"\n AUDIO:[","\n PERFORMANCE:[\n  ['perfPreset','PRESET',['MINIMUM','LOW','MEDIUM','HIGH','ULTRA','CUSTOM']],\n  ['maxDensity','MAX PIXEL DENSITY',1,2,.25],\n  ['resolution','RENDER SCALE',.5,1,.05],\n  ['shadows','SHADOWS'],\n  ['dof','DEPTH OF FIELD'],\n  ['ao','AMBIENT OCCLUSION'],\n  ['shadowRate','SHADOW UPDATE EVERY N FRAMES',1,4,1],\n  ['shadowRes','SHADOW QUALITY',[512,1024,1536,2048]],\n  ['effects','PARTICLES',[0,1,2]],\n  ['fogReach','FOG DISTANCE',350,1100,50],\n  ['showFps','SHOW FPS']\n ],\n AUDIO:[")
 src=rep(src,"function apply(){\n  rs();","function apply(){\n  if(window.PT8&&PT8.perfPre)PT8.perfPre();\n  rs();")
@@ -252,16 +254,18 @@ src=rep(src,"let bi=c.idx,bd=1e9;for(let k=-6;k<=30;k++){","let bi=c.idx,bd=1e9;
 src=rep(src,"c.wrong=hd<-3&&live?c.wrong+dt:0;","c.wrong=!T.free&&hd<-3&&live?c.wrong+dt:0;")
 src=rep(src,"if(live&&(c.y<T.y[c.idx]-12||Math.abs(c.roll)>.68","if(live&&((!T.free&&c.y<T.y[c.idx]-12)||Math.abs(c.roll)>.68")
 src=rep(src," if(!live)return;\n const sf=T.surf(c.x,c.z,c.y);"," if(!live||T.free)return;\n const sf=T.surf(c.x,c.z,c.y);")
-parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','frmodels','frdress','frtown','frisland','frisdress','frworld','frwater','freeroam','cars10','audio','modes','tracks','hpack','tracks2','extra','race2','elim','tod','bridge','props','bld','stages','trees_q','propkit','scenery','ra_data','tracks3','imola_data','tracks4','ring_data','ring_forest','tracks5','tracks6','cartoon','logos','weather','ambience','menuaudio','tutorial','updatelog','hud2','shade','ui','promo','cinema','rally','trackmode','realspeed','barn','animals','franimals','frlife','frrock','clean','solid','damage','grip','airline','ride','snap','perf','econ','frhud','title','brandbg','uifx','fade','arcade','drivelab','bkworld','bkpeople','bikes','career','menufx','lightfx','mood','post','sim','sky','rallymaps','rallyui']  if os.path.exists(f'{SRC}/layers/{n}.js')]
+parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','frmodels','frdress','frtown','frisland','frisdress','frworld','frwater','freeroam','cars10','audio','modes','tracks','hpack','tracks2','extra','race2','elim','tod','bridge','props','bld','stages','trees_q','propkit','scenery','ra_data','tracks3','imola_data','tracks4','ring_data','ring_forest','tracks5','tracks6','cartoon','logos','weather','ambience','menuaudio','tutorial','updatelog','hud2','shade','ui','promo','cinema','rally','trackmode','realspeed','barn','animals','franimals','frlife','frrock','clean','solid','damage','grip','airline','ride','snap','perf','econ','frhud','title','brandbg','uifx','fade','arcade','drivelab','bkworld','bkpeople','bikes','career','menufx','lightfx','mood','post','sim','sky','rallymaps','rallyui','skyx','tunnelfix','propsolid','mapfix']  if os.path.exists(f'{SRC}/layers/{n}.js')]
 # track files (bought cartoon models of Imola / Road Atlanta, made by tools/cartoon_track, kept out of the public repo in project files).
 # PACKS=1 builds them in (Artifact, full build); otherwise players load them with "+ Add track file" so the lite file stays small.
 # DRIVE=1: the Drive Lab test build (src/layers/drivelab.js): lite assets plus only the packs named in DRIVE_TRACKS (default the Nurburgring)
 DRIVE=os.environ.get('DRIVE');DRV_T=(os.environ.get('DRIVE_TRACKS') or 'nurburgring').split(',')
-if os.environ.get('PACKS') or DRIVE:
+# TRACKS=a,b (test builds): only these circuit packs
+if os.environ.get('TRACKS'):DRV_T=os.environ['TRACKS'].split(',')
+if os.environ.get('PACKS') or DRIVE or os.environ.get('TRACKS'):
   import glob,gzip
   k=[i for i,p in enumerate(parts) if p.startswith('/* ===== Poly GT layer: cartoon')][0]
   for f in sorted(glob.glob('/mnt/project-files/poly-gt/tracks/*.ptrack')):
-    if DRIVE and os.path.basename(f)[:-7] not in DRV_T:continue
+    if (DRIVE or os.environ.get('TRACKS')) and os.path.basename(f)[:-7] not in DRV_T:continue
     parts.insert(k,'window.PT8_PACKS=window.PT8_PACKS||[];PT8_PACKS.push('+gzip.decompress(open(f,'rb').read()).decode()+');\n')
     print('built in',os.path.basename(f))
 # rally stage files (the bought Cartoon Rally Track maps, tools/cartoon_track/stage.py): PACKS or RALLY=1 builds; kept out of the public repo
