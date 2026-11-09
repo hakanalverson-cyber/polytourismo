@@ -50,6 +50,43 @@ const TINT={
  autumn:[[/SNOW_SWEDEN/,.86],[/ICE_SURFACE/,.95],[/STONE/,1.3],[/^ct_c$/,1.5]]};
 const EMIS={ash:[[/GRAVEL_PORTUGAL/,[.075,.048,.026]]],terr:[[/^ct_c$/,[.03,.035,.045]]],autumn:[[/^ct_c$/,[.03,.035,.045]]],mangrove:[[/^ct_c$/,[.02,.03,.02]]]};/* lifts the near-black rock and bank colours */
 function tintStage(sc,key){const em=EMIS[key]||[];const tb=TINT[key];if(!tb)return;sc.traverse(o=>{const m=o.isMesh&&o.material;if(!m||!m.color||!/^ct_/.test(o.name))return;if(!m.userData._c0)m.userData._c0=m.color.clone();let k=1;for(const[re,v]of tb)if(re.test(o.name)){k=v;break}m.color.copy(m.userData._c0);if(Array.isArray(k))m.color.multiply(new THREE.Color(k[0],k[1],k[2]));else m.color.multiplyScalar(k);if(m.emissive){let e=null;for(const[re,v]of em)if(re.test(o.name)){e=v;break}if(e)m.emissive.setRGB(e[0],e[1],e[2]);else m.emissive.setRGB(0,0,0)}})}
+/* ---- road surface detail (Nov 8: "the dirt paths look kinda weird, make them look more real"): one ribbon laid just above the road along the whole stage, with a
+   texture made here: wheel ruts and a crown of loose gravel with grass at the edges on the dirt stages, white edge lines and a dashed centre line and worn
+   tyre tracks on the tarmac, packed tyre tracks and slush on the snow. Lit and fogged like the rest of the world. ---- */
+const ROADK={mangrove:'dirt',ash:'dirt',terr:'tarmac',autumn:'snow'},RTILE=14;
+function roadTex(kind){const W=256,H=512,cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');let seed=kind.length*7919+3;const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
+ const band=(u,w,col,a,soft)=>{const x0=(u-w/2)*W,x1=(u+w/2)*W,gr=g.createLinearGradient(x0-soft*W,0,x1+soft*W,0);const c=(al)=>`rgba(${col[0]},${col[1]},${col[2]},${al})`;gr.addColorStop(0,c(0));gr.addColorStop(soft/(w+2*soft),c(a));gr.addColorStop(1-soft/(w+2*soft),c(a));gr.addColorStop(1,c(0));g.fillStyle=gr;g.fillRect(x0-soft*W,0,x1-x0+2*soft*W,H)};
+ const dots=(n,xa,xb,cols,rmin,rmax)=>{for(let i=0;i<n;i++){const x=(xa+rnd()*(xb-xa))*W,y=rnd()*H,r=rmin+rnd()*(rmax-rmin),c=cols[(rnd()*cols.length)|0];g.fillStyle=c;g.beginPath();g.arc(x,y,r,0,7);g.fill()}};
+ if(kind==='dirt'){
+  band(.5,.9,[60,70,34],.0,.0);
+  band(.04,.07,[64,76,38],.5,.05);band(.96,.07,[64,76,38],.5,.05);                       /* grass and dirt at the verge */
+  band(.5,.2,[190,160,118],.2,.08);                                                      /* loose gravel on the crown */
+  band(.31,.085,[46,32,22],.46,.045);band(.69,.085,[46,32,22],.46,.045);                     /* the ruts */
+  band(.31,.025,[140,112,82],.16,.012);band(.69,.025,[140,112,82],.16,.012);             /* polished by the tyres */
+  dots(900,.12,.88,['rgba(120,104,84,.4)','rgba(48,38,30,.4)','rgba(180,158,124,.3)'],.6,1.6);
+  dots(160,.0,.1,['rgba(40,60,28,.55)','rgba(76,92,44,.5)'],1.4,3);dots(160,.9,1.0,['rgba(40,60,28,.55)','rgba(76,92,44,.5)'],1.4,3);
+  for(let i=0;i<14;i++){const x=(.44+rnd()*.12)*W,y=rnd()*H;g.strokeStyle='rgba(70,92,40,.5)';g.lineWidth=1.2;for(let k=0;k<4;k++){g.beginPath();g.moveTo(x,y);g.lineTo(x+(k-1.5)*2.2,y-5-rnd()*4);g.stroke()}}
+ }else if(kind==='tarmac'){
+  band(.31,.11,[0,0,0],.2,.05);band(.69,.11,[0,0,0],.2,.05);                              /* tyre wear */
+  dots(500,.05,.95,['rgba(255,255,255,.07)','rgba(0,0,0,.12)'],.5,1.3);
+  g.fillStyle='rgba(236,236,228,.86)';g.fillRect(.035*W,0,.02*W,H);g.fillRect(.945*W,0,.02*W,H);        /* edge lines */
+  g.fillStyle='rgba(236,236,228,.82)';g.fillRect(.49*W,0,.02*W,H*3/RTILE);                              /* dashed centre line: 3 m dash, 11 m gap */
+  g.strokeStyle='rgba(0,0,0,.28)';g.lineWidth=1;for(let i=0;i<6;i++){g.beginPath();let x=(.1+rnd()*.8)*W,y=rnd()*H;g.moveTo(x,y);for(let k=0;k<5;k++){x+=(rnd()-.5)*10;y+=4+rnd()*8;g.lineTo(x,y)}g.stroke()}
+ }else{
+  band(.31,.1,[110,124,140],.42,.045);band(.69,.1,[110,124,140],.42,.045);               /* packed tyre tracks */
+  band(.5,.16,[255,255,255],.16,.06);
+  band(.03,.08,[132,142,154],.35,.05);band(.97,.08,[132,142,154],.35,.05);              /* slush at the edge */
+  dots(260,.18,.82,['rgba(88,78,70,.5)','rgba(130,126,120,.45)'],.5,1.2);                /* grit */
+ }
+ const t=new THREE.CanvasTexture(cv);t.wrapS=THREE.ClampToEdgeWrapping;t.wrapT=THREE.RepeatWrapping;t.anisotropy=8;t.encoding=THREE.sRGBEncoding;return t}
+function roadRibbon(sc,T,key){const kind=ROADK[key];if(!kind||!T.finI)return;const C=10,n=T.finI+1,pos=new Float32Array(n*C*3),uv=new Float32Array(n*C*2),idx=[];let dist=0;
+ for(let i=0;i<n;i++){if(i)dist+=Math.hypot(T.x[i]-T.x[i-1],T.z[i]-T.z[i-1]);const c=Math.cos(T.psi[i]),s=Math.sin(T.psi[i]),hw=T.hw[i]*.97;
+  for(let k=0;k<C;k++){const l=(k/(C-1)*2-1)*hw,x=T.x[i]+c*l,z=T.z[i]-s*l;let h=T.y[i];try{const q=T.surf(x,z,T.y[i]+30);if(q&&q.h!=null&&Math.abs(q.h-T.y[i])<1.5)h=q.h}catch(e){}
+   const o=(i*C+k)*3;pos[o]=x;pos[o+1]=h+.05;pos[o+2]=z;uv[(i*C+k)*2]=k/(C-1);uv[(i*C+k)*2+1]=dist/RTILE}
+  if(i)for(let k=0;k<C-1;k++){const a=(i-1)*C+k,b=a+1,c2=i*C+k,d=c2+1;idx.push(a,c2,b,b,c2,d)}}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('uv',new THREE.BufferAttribute(uv,2));g.setIndex(idx);{const nn=new Float32Array(n*C*3);for(let q=0;q<n*C;q++)nn[q*3+1]=1;g.setAttribute('normal',new THREE.BufferAttribute(nn,3))}
+ const m=new THREE.Mesh(g,new THREE.MeshLambertMaterial({map:roadTex(kind),transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,side:THREE.DoubleSide}));
+ m.frustumCulled=false;m.renderOrder=1;m.name='roadDetail';m.userData.noMerge=1;m.userData.noChunk=1;sc.add(m)}
 /* falling snow: a box of flakes that rides along with the camera (one draw call) */
 function snowAdd(sc){const N=1400,pos=new Float32Array(N*3),seed=new Float32Array(N*3);for(let i=0;i<N*3;i++)seed[i]=Math.random();
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));
@@ -92,5 +129,5 @@ function gate(sc,T,i,txt){const hw=T.hw[i]+1.3,g=new THREE.Group();g.position.se
  const bm=new THREE.MeshBasicMaterial({map:bannerTex(txt),side:THREE.DoubleSide,fog:false}),w=Math.min(hw*1.8,13);const sg=new THREE.Mesh(new THREE.PlaneGeometry(w,w*96/512),bm);sg.position.set(0,7.6,.02);g.add(sg);
  const ck=new THREE.Mesh(new THREE.PlaneGeometry(hw*2-.4,1.8),new THREE.MeshBasicMaterial({map:checkTex(),fog:false}));ck.rotation.x=-Math.PI/2;ck.position.set(0,.14,0);g.add(ck);
  g.userData.noMerge=1;sc.add(g)}
-setTimeout(()=>{const bw2=buildWorld;buildWorld=function(T){const sc=bw2.apply(this,arguments);try{if(T.d&&T.d.stage&&T.d.cartoon&&T.finI){gate(sc,T,2,'START');gate(sc,T,T.finI,'FINISH');/* far mountains and clouds, and the snow: added here, after cartoon.js has cleared the stock scenery */try{if(P.skyBuild)P.skyBuild(sc,T)}catch(e){console.warn('sky',e)}const A=ATM[T.d._key];if(A&&A.snow)snowAdd(sc);tintStage(sc,T.d._key)}}catch(e){console.warn('gates',e)}return sc}},0);
+setTimeout(()=>{const bw2=buildWorld;buildWorld=function(T){const sc=bw2.apply(this,arguments);try{if(T.d&&T.d.stage&&T.d.cartoon&&T.finI){gate(sc,T,2,'START');gate(sc,T,T.finI,'FINISH');/* far mountains and clouds, and the snow: added here, after cartoon.js has cleared the stock scenery */try{if(P.skyBuild)P.skyBuild(sc,T)}catch(e){console.warn('sky',e)}const A=ATM[T.d._key];if(A&&A.snow)snowAdd(sc);tintStage(sc,T.d._key);roadRibbon(sc,T,T.d._key)}}catch(e){console.warn('gates',e)}return sc}},0);
 })();

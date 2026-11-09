@@ -61,6 +61,46 @@ if C.get('rock'):
   allv=np.concatenate([d[n+'_v'] for n in gl])*S;gx0,gz0=allv[:,[0,2]].min(0)-2;gnx,gnz=(np.ceil((allv[:,[0,2]].max(0)-[gx0,gz0]))+4).astype(int)
   for n in gl:GR=raster(d[n+'_v'].astype(np.float64)*S+[0,LIFT.get(n,0),0],d[n+'_f'],gx0,gz0,gnx,gnz,1.,GR)
 used=set()
+# ---- trees: one tree at a time. The decimation used to melt trunk and crown into one blob with one colour; now every tree (a connected piece of the
+# mesh) is simplified on its own and its trunk is painted wood brown: the thin faces round the tree's axis in the lower three quarters are the trunk.
+from scipy.sparse import coo_matrix
+from scipy.sparse.csgraph import connected_components
+TREEP=re.compile(C.get('trees',r'prop_tree|tree_group|TREE_CLUSTER|TREE_BLOCK|TREE_\d'),re.I);TREEX=re.compile(r'log|collider|bush|vine|rose',re.I)
+BROWNS=np.array([[92,64,40],[104,74,46],[80,57,38],[112,82,52],[86,60,44]]);BIRCH=np.array([206,201,190])
+def treemesh(n,t,v,f,uv):
+  if t.startswith('#'):fc=np.tile([int(t[1:3],16),int(t[3:5],16),int(t[5:7],16)],(len(f),1))
+  else:im=img(t);c=uv[f].mean(1);fc=im[((1-np.mod(c[:,1],1))*511).astype(int),(np.mod(c[:,0],1)*511).astype(int)]
+  fc=satc(fc,t)
+  vk,inv=np.unique(np.round(v,2),axis=0,return_inverse=True);ff=inv.ravel()[f];good=(ff[:,0]!=ff[:,1])&(ff[:,1]!=ff[:,2])&(ff[:,0]!=ff[:,2]);ff=ff[good];fc=fc[good]
+  nvx=len(vk);g=coo_matrix((np.ones(len(ff)*2),(np.r_[ff[:,0],ff[:,1]],np.r_[ff[:,1],ff[:,2]])),shape=(nvx,nvx))
+  _,lab=connected_components(g,directed=False);fl=lab[ff[:,0]]
+  r=C['ratio'].get(next((k for k in C['ratio'] if k!='default' and re.search(k,n)),'default'))
+  birch=re.search('birch',n,re.I) is not None;rng=np.random.RandomState(len(ff))
+  order=np.argsort(fl,kind='stable');fl_s=fl[order];cuts=np.r_[0,np.nonzero(np.diff(fl_s))[0]+1,len(fl_s)]
+  OV=[];OF=[];OC=[];off=0;ntr=0
+  for a_,b_ in zip(cuts[:-1],cuts[1:]):
+    ix=order[a_:b_];fi=ff[ix];cc=fc[ix].copy();uv_=np.unique(fi);P_=vk[uv_];y0=P_[:,1].min();H=P_[:,1].max()-y0
+    W=max(np.ptp(P_[:,0]),np.ptp(P_[:,2]))
+    istr=False
+    if C.get('trunkfix',1) and H>1.2 and len(ix)>=8 and W/H<.3:
+      cx=(P_[:,0].min()+P_[:,0].max())/2;cz=(P_[:,2].min()+P_[:,2].max())/2;rr=np.hypot(P_[:,0]-cx,P_[:,2]-cz);hh=(P_[:,1]-y0)/H
+      lo_=rr[(hh>.08)&(hh<.35)];hi_=rr[(hh>.65)&(hh<.92)]
+      istr=len(lo_)>0 and len(hi_)>0 and lo_.max()>0 and hi_.max()/lo_.max()>=.38   # a trunk is a column: as wide at the top as at the bottom (a spruce crown is a cone)
+    if istr:   # a thin, tall piece of the tree is its trunk (the crowns are separate wide pieces)
+      col=BIRCH if birch else BROWNS[rng.randint(len(BROWNS))]
+      cc[:]=np.clip(col+rng.randint(-8,9,(len(ix),1)),0,255);ntr+=1
+    # simplify this tree alone
+    rm,rinv=np.unique(fi,return_inverse=True);pv=vk[rm];pf=rinv.reshape(-1,3)
+    tgt=max(36,int(len(pf)*r));ncc=cc
+    if len(pf)>tgt*1.2:
+      sim=pyfqmr.Simplify();sim.setMesh(pv,pf);sim.simplify_mesh(target_count=tgt,aggressiveness=6,preserve_border=False,verbose=False);nv,nf,_=sim.getMesh()
+      if len(nf)<4:nv,nf=pv,pf
+      else:
+        _,ni=cKDTree(pv[pf].mean(1)).query(nv[nf].mean(1));ncc=cc[ni]
+    else:nv,nf=pv,pf
+    OV.append(nv);OF.append(nf+off);OC.append(ncc);off+=len(nv)
+  NV=np.concatenate(OV);NF=np.concatenate(OF);NC=np.concatenate(OC)
+  emit('c',NV,NF,Cl=NC);print(n,len(f),'->',len(NF),'trees',len(cuts)-1,'with trunks',ntr)
 # rally stages: only scenery near the stage route is kept (the maps are whole road networks)
 CLIP=C.get('clip');CT=None
 if CLIP:
@@ -78,7 +118,9 @@ for n in names:
   if CT is not None:
     f=f[CT.query(v[f].mean(1)[:,[0,2]])[0]<clipr(n)]
     if not len(f):continue
-  if re.search(C['bake'],n):
+  if re.search(C['bake'],n) and TREEP.search(n) and not TREEX.search(n):
+    treemesh(n,t,v,f,uv)
+  elif re.search(C['bake'],n):
     if t.startswith('#'):fc=np.tile([int(t[1:3],16),int(t[3:5],16),int(t[5:7],16)],(len(f),1))
     else:im=img(t);c=uv[f].mean(1);fc=im[((1-np.mod(c[:,1],1))*511).astype(int),(np.mod(c[:,0],1)*511).astype(int)]
     fc=satc(fc,t)
