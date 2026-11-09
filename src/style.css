@@ -455,7 +455,7 @@ body:after{background:repeating-linear-gradient(0deg,#00000010 0 1px,transparent
 .rl-med{display:inline-block;width:9px;height:9px;border-radius:50%;margin-left:6px;vertical-align:middle}
 
 /* rally v9: prep / replay / checkpoints */
-#rlFade{position:fixed;inset:0;background:#05080b;opacity:0;pointer-events:none;z-index:60;transition:opacity .5s}
+#rlFade{position:fixed;inset:0;background:#05080b;opacity:0;pointer-events:none;z-index:99999;transition:opacity .5s}
 #rlDip{position:fixed;inset:0;background:#05080b;opacity:0;pointer-events:none;z-index:55}
 #rlPrep{position:fixed;inset:0;display:none;z-index:30;justify-content:space-between;align-items:flex-end;padding:5vh 5vw;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.45),transparent 22%,transparent 62%,rgba(0,0,0,.65))}
 #rlPrep .rp-l small{letter-spacing:.2em;color:#cfd6dc;font-size:12px}
@@ -1729,3 +1729,8 @@ kbd{font:700 12px var(--mn,monospace);padding:4px 9px;border:1px solid #f1f3f5;b
 #rlPace .h8plate{display:flex;align-items:center;gap:12px;min-width:0}
 #rlPace .pcA{display:flex;font-style:normal}#rlPace .pcA:empty{display:none}#rlPace .pcA svg{width:40px;height:40px;display:block}
 body.rprep #rlPace,body.rreplay #rlPace{display:none!important}
+
+/* rally stage select: the circuit pick screen, two by two for the four stages (Nov 9) */
+#s8pick.rally4 .pkGrid{grid-template-columns:repeat(2,minmax(0,1fr));left:17vw;right:17vw;align-content:center;overflow:hidden}
+#s8pick.rally4 .pk canvas{aspect-ratio:16/10}
+@media (max-width:1000px){#s8pick.rally4 .pkGrid{left:3.4vw;right:3.4vw;overflow-y:auto}}

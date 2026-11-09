@@ -27,11 +27,11 @@ const WLp=()=>WL;
    now a real two-axle model (bicycle model, Pacejka-style tyres): front and rear tyres each have a slip angle and a limited grip, the load moves forward under braking
    and back under power (so lifting off in a corner tucks the nose in, power pushes the tail out), the handbrake all but frees the rear, gravel and snow give less grip
    and a softer, wider peak than tarmac. The core still does the engine, brakes, drag and gears: its forward speed is kept, its sideways speed and yaw are replaced. */
-setTimeout(()=>{const ipx=P.inPost;P.inPost=(c,dt)=>{const Rc=RACE,on=c.human&&!c.forceAI&&c.in&&Rc&&Rc.T&&Rc.T.stage&&Rc.cfg&&Rc.cfg.rally;if(on)c._stRaw=c.in.st||0;if(ipx)ipx(c,dt);if(on)c.in.st=0};
+setTimeout(()=>{const ipx=P.inPost;P.inPost=(c,dt)=>{const Rc=RACE,on=c.human&&!c.forceAI&&c.in&&Rc&&Rc.T&&Rc.T.stage&&Rc.cfg&&Rc.cfg.rally;if(on&&!c._stZ){c._stRaw=c.in.st||0}/* the core can call this more than once per step: only the first call sees the player's steering */if(ipx)ipx(c,dt);if(on){c.in.st=0;c._stZ=1}};
  const sg=stepCar,L=3.1,A=1.5,B=1.6,G=9.81;/* installed last, so nothing wrapped after this file can put the arcade steering back */
  stepCar=function(c,dt){const Rc=RACE,on=c.human&&!c.forceAI&&Rc&&Rc.T&&Rc.T.stage&&Rc.cfg&&Rc.cfg.rally&&dt>0&&Rc.state==='race';
   let yaw0,vx0,vz0,r0,stRaw=0;if(on){yaw0=c.yaw;vx0=c.vx;vz0=c.vz;r0=c.yr||0;stRaw=c._stRaw||0}/* the core drives straight: its steering scrub must not eat the speed, the tyre model does the turning */
-  const r=sg.apply(this,arguments);if(on&&c.in)c.in.st=stRaw;/* back for the wheels and the camera */
+  c._stZ=0;const r=sg.apply(this,arguments);c._stZ=0;if(on&&c.in)c.in.st=stRaw;/* back for the wheels and the camera */
   if(!on||c.exp>0||c.respT>0||c.fin)return r;
   const T=Rc.T,gy=T.terr?T.terr(c.x,c.z):c.y;if(c.y-gy>1.6){c._vl=undefined;c._r=undefined;return r}/* in the air the core keeps it */
   const sy0=Math.sin(yaw0),cy0=Math.cos(yaw0),sy1=Math.sin(c.yaw),cy1=Math.cos(c.yaw);
@@ -154,7 +154,7 @@ hudUpdate=()=>{hu0();const Rc=RACE;if(!Rc||!Rc.cfg||!Rc.cfg.rally)return;
   else if(n.cor){const g=n.cor.t==='HAIRPIN'?'HAIRPIN':n.cor.g,col=(GR[g]||GR[3])[1];d={l:n.cor.t,v:Math.round(n.cor.d/10)*10+' M',s:n.cor.dir==='L'?'LEFT':'RIGHT',col,svg:arrow(g,n.cor.dir)}}
   el.style.display='none';paceCard(Rc,d)})};
 /* the pace note is a card like the stage clock and the damage plate (top left, under the clock): corner name small, distance big, direction under it, the bent arrow on the left */
-let pcEl=null;
+let pcEl=null;setInterval(()=>{if(pcEl&&pcEl.style.display!=='none'&&(typeof scr==='undefined'||scr!=='game'||!RACE||!RACE.cfg||!RACE.cfg.rally))pcEl.style.display='none'},300);/* the pace note card never outlives the stage */
 function paceCard(Rc,d){if(!pcEl){pcEl=document.createElement('div');pcEl.id='rlPace';document.body.appendChild(pcEl)}
  if(!d||Rc.state==='count'||Rc.cfg.circuit){pcEl.style.display='none';pcEl._k='';return}
  const k=d.l+'|'+d.v+'|'+d.s;if(pcEl._k!==k){pcEl._k=k;pcEl.innerHTML=`<div class="h8top"><div class="h8plate"><i class="pcA">${d.svg}</i><div class="pcT"><div class="lap">${d.l}</div><div class="raceTime" style="color:${d.col}">${d.v}</div><div class="bl" style="color:${d.col}">${d.s}</div></div></div></div>`}
@@ -262,16 +262,16 @@ P.launch=cfg=>{
  if(cfg.mode==='rally'&&!cfg.rally){startSession(cfg);return}
  if(!cfg.rally){keysReset();S=null;leaveFx()}
  lh(cfg)};
-function leaveFx(){if(gapEl)gapEl.style.opacity=0;if(stEl)stEl.style.display='none';if(elC)elC.style.display='none';if(dash)dash.style.display='none';bodyCls('rallyhud',false);rallyGears(false);bodyCls('rprep',false);bodyCls('rreplay',false);const a=$i('rlPrep'),b=$i('rlRep'),c=$i('rlCp');if(a)a.style.display='none';if(b)b.style.display='none';if(c)c.style.opacity=0}
+function leaveFx(){if(pcEl){pcEl.style.display='none';pcEl._k=''}if(gapEl)gapEl.style.opacity=0;if(stEl)stEl.style.display='none';if(elC)elC.style.display='none';if(dash)dash.style.display='none';bodyCls('rallyhud',false);rallyGears(false);bodyCls('rprep',false);bodyCls('rreplay',false);const a=$i('rlPrep'),b=$i('rlRep'),c=$i('rlCp');if(a)a.style.display='none';if(b)b.style.display='none';if(c)c.style.opacity=0}
 function startSession(cfg){const hs=cfg.humans;
  S={cfg,drv:hs.map((h,i)=>({name:(h.name||'P'+(i+1)).slice(0,12),id:h.id,alt:h.alt,p:i,time:null,best:null,laps:[],medal:-1,splits:[]})),i:0,ref:null,refT:1e9};
  if(S.drv.length>1)briefing(0);else turn(0)}
-async function turn(i){S.i=i;const d=S.drv[i],cfg=S.cfg;keysFor(d.p);curP=0;rallyGears(true);
- await fadeTo(1,450);
+async function turn(i){S.i=i;const d=S.drv[i],cfg=S.cfg;keysFor(d.p);curP=0;rallyGears(true);P._turnBusy=1;/* the intro's own fade-out waits for this turn to finish (it used to lift the black halfway and show the car select again for a moment) */
+ try{await fadeTo(1,450);
  lh(Object.assign({},cfg,{mode:'mp',rally:true,rallyTurn:i,humans:[{id:d.id,alt:d.alt,name:d.name}],ai:[],grid:'fixed'}));
  enterPrep(d,i);ghostsInit(i);if(P.warmScene)P.warmScene(RACE);
  await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
- await fadeTo(0,800)}
+ await fadeTo(0,800)}finally{P._turnBusy=0;fade.style.pointerEvents='none'}}
 const box=()=>$i('resBox');
 const keyHint=p=>['W A S D',P.p2Keys==='numpad'?'numpad 8 4 5 6':'arrow keys','I J K L','T F G H'][p]||'';
 const quitRally=()=>{S=null;keysReset();leaveFx();P.cleanupRace();show('menu')};
@@ -632,7 +632,7 @@ P.rallyIntro=(open,track,o)=>{o=o||{};let e=$i('rlFade');
  /* black fade instead of a loading screen: fade to black, do the heavy work unseen, fade back in */
  if(!e){e=document.createElement('div');e.id='rlFade';e.style.cssText='position:fixed;inset:0;background:#000;z-index:99999;opacity:0;pointer-events:none;transition:opacity .35s ease';document.body.appendChild(e)}
  e.style.pointerEvents='auto';void e.offsetWidth;e.style.opacity='1';
- const finish=()=>{e.style.transition='opacity .7s ease';e.style.opacity='0';setTimeout(()=>{e.style.pointerEvents='none';e.style.transition='opacity .35s ease'},720)};
+ const finish=()=>{if(P._turnBusy)return;e.style.transition='opacity .7s ease';e.style.opacity='0';setTimeout(()=>{e.style.pointerEvents='none';e.style.transition='opacity .35s ease'},720)};
  setTimeout(()=>{requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(()=>{try{open()}catch(err){console.error(err)}
   (P.stageRender&&track!=null&&!o.noStage?P.stageRender(track):Promise.resolve()).catch(()=>{}).then(()=>setTimeout(finish,120))},40)))},380)};
 /* every mode gets the car loading screen */

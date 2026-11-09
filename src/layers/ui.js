@@ -184,8 +184,13 @@ function openPick(back){const m=ST.mode;if(!okTrack(m,ST.track))ST.track=firstTr
   const i=todo[k];lab.textContent=D[i].name.toUpperCase();pkRender(i).then(c=>{if(!c)PK.fail[i]=1;k++;bar.style.width=Math.round(k/todo.length*100)+'%';setTimeout(next,30)})};
  setTimeout(next,380)}
 function pkThumb(cv,i){const c=P.trackShotCached&&P.trackShotCached(i),g=cv.getContext('2d');if(c){const W=cv.width,H=cv.height,s=Math.max(W/c.width,H/c.height),w=c.width*s,h=c.height*s;g.drawImage(c,(W-w)/2,(H-h)/2,w,h)}else drawTrack(cv,i,false)}
-function renderPick(){const m=ST.mode;$('pkTitle').innerHTML='<em>TRACK</em> SELECT CIRCUIT';
- const g=$('pkGrid');g.innerHTML=PK.list.map(i=>{const d=D[i],T=tr(i);return `<div class="pk${i===ST.track?' sel':''}" data-i="${i}"><canvas width="960" height="600"></canvas><div class="pkI"><b>${d.name}</b><small>${P.TRACK_INFO[i].s} &middot; ${(T.L/1000).toFixed(1)} km${d.cartoon?' &middot; 3D model':''}</small></div>${barnIcon(d)}${isStg(i)||isTrk(i)?'<em class="pkNew">NEW</em>':''}</div>`}).join('')
+function renderPick(){const m=ST.mode,ry=m==='rally'&&hasStages();$('s8pick').classList.toggle('rally4',ry);$('pkTitle').innerHTML=ry?'<em>RALLY</em> SELECT STAGE':'<em>TRACK</em> SELECT CIRCUIT';
+ const g=$('pkGrid');if(ry){const sv=P.SV();g.innerHTML=PK.list.map(i=>{const d=D[i],inf=P.stageInfo&&P.stageInfo(i),r=sv.ral&&sv.ral[i+':1'];return `<div class="pk${i===ST.track?' sel':''}" data-i="${i}"><canvas width="1280" height="800"></canvas><div class="pkI"><b>${d.name}</b><small>${inf?inf.surface+' stage &middot; '+inf.km.toFixed(1)+' km &middot; '+Math.round(inf.climb)+' m climb':P.TRACK_INFO[i].s+' &middot; '+(stLen(i)/1000).toFixed(1)+' km'}${r?' &middot; best '+fmtT(r.t):''}</small></div></div>`}).join('');
+  $$('#pkGrid .pk',root).forEach(e=>{const i=+e.dataset.i,a=e.querySelector('canvas'),c2=a.getContext('2d');const fall=()=>{c2.fillStyle='#0c1218';c2.fillRect(0,0,a.width,a.height);if(P.rallyMap)P.rallyMap(i,a)};
+   if(P.stageShot)P.stageShot(i,im=>{if(!e.isConnected)return;if(!im){fall();return}const W=a.width,H=a.height,k=Math.max(W/im.width,H/im.height),w=im.width*k,h=im.height*k;c2.drawImage(im,(W-w)/2,(H-h)/2,w,h)});else fall();
+   e.onclick=()=>pickSel(i);e.ondblclick=()=>{pickSel(i);pickNext()}});
+  $('pkGo').onclick=()=>pickNext();requestAnimationFrame(()=>{const cs=$$('#pkGrid .pk',root);if(cs.length>1)PK.cols=Math.max(1,cs.filter(c=>c.offsetTop===cs[0].offsetTop).length)});return}
+ g.innerHTML=PK.list.map(i=>{const d=D[i],T=tr(i);return `<div class="pk${i===ST.track?' sel':''}" data-i="${i}"><canvas width="960" height="600"></canvas><div class="pkI"><b>${d.name}</b><small>${P.TRACK_INFO[i].s} &middot; ${(T.L/1000).toFixed(1)} km${d.cartoon?' &middot; 3D model':''}</small></div>${barnIcon(d)}${isStg(i)||isTrk(i)?'<em class="pkNew">NEW</em>':''}</div>`}).join('')
   +(m==='track'&&P.loadTrackFile?`<div class="pk pkAdd" id="pkAdd"><div class="pkPlus">+</div><div class="pkI"><b>Add track file</b><small id="pkAddMsg">Load a .ptrack file</small></div><input type="file" accept=".ptrack,.json,.gz" style="display:none"></div>`:'');
  $$('#pkGrid .pk',root).forEach(e=>{if(e.id==='pkAdd')return;const i=+e.dataset.i;pkThumb(e.querySelector('canvas'),i);if(!(P.trackShotCached&&P.trackShotCached(i))&&P.trackShot)P.trackShot(i).then(c=>{if(c&&e.isConnected){delete PK.fail[i];pkThumb(e.querySelector('canvas'),i)}});/* a slow shot swaps in when it is ready */e.onclick=()=>pickSel(i);e.ondblclick=()=>{pickSel(i);pickNext()}});
  {const a=$('pkAdd');if(a){const inp=a.querySelector('input'),msg=a.querySelector('#pkAddMsg');a.onclick=e=>{if(e.target!==inp)inp.click()};
@@ -198,7 +203,7 @@ function pickSel(i,scroll){ST.track=i;P.sfx&&P.sfx('move');$$('#pkGrid .pk',root
 const hasStages=()=>!!P.rallyMap&&D.some((d,i)=>okTrack('rally',i)&&d.cartoon&&d.cartoon.stage);
 const stLen=i=>{const T=tr(i);return T.stage?T.stage.len:T.L};
 const RB={list:[]};
-function openRally(back){ST.mode='rally';if(!okTrack('rally',ST.track))ST.track=firstTrack('rally');ST.fromRally=true;RB.list=D.map((d,i)=>okTrack('rally',i)?i:-1).filter(i=>i>=0);renderRally();show('s8rally')}
+function openRally(back){ST.mode='rally';if(!okTrack('rally',ST.track))ST.track=firstTrack('rally');ST.fromRally=true;ST.fromPick=false;PK.list=D.map((d,i)=>okTrack('rally',i)?i:-1).filter(i=>i>=0);renderPick();show('s8pick')}/* Nov 9: the stage select IS the circuit pick screen (same cards, same title bar), two by two for four maps */
 function renderRally(){const sv=P.SV(),G=$('rbGrid');
  G.innerHTML=RB.list.map((i,n)=>{const d=D[i],inf=P.stageInfo&&P.stageInfo(i),r=sv.ral&&sv.ral[i+':1'];
   return `<div class="rb${i===ST.track?' sel':''}" data-i="${i}"><canvas class="rbCv" width="1280" height="720"></canvas><em class="rbNo">${String(n+1).padStart(2,'0')}</em>${r?`<span class="rbBest">BEST ${fmtT(r.t)}</span>`:''}
@@ -209,7 +214,7 @@ function rbPaint(){$$('#rbGrid .rb',root).forEach(e=>{const i=+e.dataset.i,a=e.q
   if(P.stageShot){P.stageShot(i,im=>{if(im&&e.isConnected)draw(im);else if(e.isConnected)fall()})}else fall()})}
 function rbSel(i){if(i===ST.track)return;ST.track=i;P.sfx&&P.sfx('move');$$('#rbGrid .rb',root).forEach(e=>e.classList.toggle('sel',+e.dataset.i===i))}
 function rallyNext(){P.sfx&&P.sfx('select');ST.rstep=1;GXS.step=1;ST.fromRally=true;renderSetup();show('s8setup')}
-function pickNext(){if(!PK.list.includes(ST.track))return;P.sfx&&P.sfx('select');ST.fromPick=true;renderSetup();show('s8setup')}
+function pickNext(){if(!PK.list.includes(ST.track))return;if(ST.mode==='rally'&&hasStages()){rallyNext();return}P.sfx&&P.sfx('select');ST.fromPick=true;renderSetup();show('s8setup')}
 
 /* ---- main menu ---- */
 const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+({play:'<path d="M7 4.5v15l12-7.5z" fill="currentColor"/>',garage:'<path d="M3 15l2-5.5C5.4 8.5 6.2 8 7.2 8h9.6c1 0 1.8.5 2.2 1.5L21 15v3h-3v-1.5H6V18H3z"/><circle cx="7.5" cy="13.2" r=".6" fill="currentColor"/><circle cx="16.5" cy="13.2" r=".6" fill="currentColor"/>',brand:'<path d="M4 12.5V5h7.5l8.5 8.5-7 7z"/><circle cx="8.2" cy="8.7" r="1.2" fill="currentColor"/>',set:'<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',log:'<path d="M5 6h14M5 12h14M5 18h9"/>'})[n]+'</svg><span>'+l+'</span>';P.mi=mi;
@@ -1054,7 +1059,7 @@ frame=function(n){requestAnimationFrame(frame);const dt=Math.min(.05,Math.max(0,
    Only the menu itself and the full-screen fades/vignette stay */
 (function(){const st=document.createElement('style');st.textContent='body.ptPause>div:not(#pause):not(#ptOptions):not(#v8):not(#fade):not(#ptWipe):not(#rlFade):not(#rlDip){visibility:hidden!important}';document.head.appendChild(st);
  const sh=show;show=n=>{sh(n);if(n==='pause')document.body.classList.add('ptPause');else if(n!=='ptOptions')document.body.classList.remove('ptPause')}})();
-P.studioDbg=()=>S;P.okTrack=(m,i)=>okTrack(m,i);P.ui={openRally,openCards,openShow,renderSetup,renderCareer,ST,SR,drawTrack,trLen:i=>tr(i).L,trClear:i=>P.trClear(i),refreshTracks:()=>{const e=document.getElementById('s8setup');if(e&&e.offsetParent)renderSetup()}};
+P.studioDbg=()=>S;P.okTrack=(m,i)=>okTrack(m,i);P.ui={openPick,openRally,openCards,openShow,renderSetup,renderCareer,ST,SR,drawTrack,trLen:i=>tr(i).L,trClear:i=>P.trClear(i),refreshTracks:()=>{const e=document.getElementById('s8setup');if(e&&e.offsetParent)renderSetup()}};
 document.title='Poly Tourismo v9';
 refreshMenuCars();MS=null;
 })();
