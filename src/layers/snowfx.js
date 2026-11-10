@@ -56,13 +56,58 @@ R.render=function(scene,cam){const f=scene&&scene.userData&&scene.userData.snow2
   for(let i=0;i<f.N;i++){const k=i*3,wx=s[k]*W*2+t*1.3+Math.sin(t*.4+s[k+1]*9)*2.5,wy=s[k+1]*H*2-t*(1.1+s[k+2]*.9),wz=s[k+2]*W*2+t*.5;
    p[k]=cx+(((wx-cx)%(W*2))+W*2)%(W*2)-W;p[k+1]=cy+(((wy-cy)%(H*2))+H*2)%(H*2)-H*.4;p[k+2]=cz+(((wz-cz)%(W*2))+W*2)%(W*2)-W}
   f.m.geometry.attributes.position.needsUpdate=true}return r0.apply(this,arguments)};
+/* ---- the car in the snow (Nov 10, Hakan: "how can we make the car look better in that environment"). On the snow stage:
+   - its reflections come from a picture of this place: deep blue overhead, a bright horizon, the frosted tree line, white snow below and a
+     hard white sun, so the paint and glass carry the sky on top, the snow along the sills and a sun highlight on the shoulders
+   - the paint is a little glossier there, and reflects more
+   - snow packs onto the body from the road up: sills, arches and bumpers go white in a ragged line that climbs as you drive (PTO.snowCar===false: off) ---- */
+let pm=null,envRT=null;
+function snowEnv(sc){let sun=null;sc.traverse(o=>{if(o.isDirectionalLight&&!sun)sun=o});const sd=sun?sun.position.clone().sub(sun.target?sun.target.position:new THREE.Vector3()).normalize():new THREE.Vector3(.4,.4,-.8);
+ const es=new THREE.Scene(),g=new THREE.SphereGeometry(10,96,48),pos=g.attributes.position,col=new Float32Array(pos.count*3),d=new THREE.Vector3(),c=new THREE.Color(),t=new THREE.Color();
+ const zen=new THREE.Color(.05,.22,.8),hor=new THREE.Color(.8,.92,1.15),snw=new THREE.Color(1.25,1.28,1.36),shd=new THREE.Color(.55,.66,.95),tree=new THREE.Color(.42,.52,.56),frost=new THREE.Color(1.05,1.1,1.18);
+ for(let i=0;i<pos.count;i++){d.fromBufferAttribute(pos,i).normalize();const y=d.y,az=Math.atan2(d.z,d.x);
+  if(y>0)c.copy(hor).lerp(zen,Math.pow(Math.min(1,y*1.25),.6));else{/* the snow, with long blue shadow bands across it */const b=.5+.5*Math.sin(az*9+Math.sin(az*3)*2);c.copy(snw).lerp(shd,b*b*.55*Math.min(1,-y*4))}
+  /* the tree line: frosted tops over darker trunks, uneven in height */
+  const th=.1+.07*Math.sin(az*17)+.05*Math.sin(az*41+1.3);if(y>-.02&&y<th){const k=Math.min(1,(y+.02)/th);t.copy(tree).lerp(frost,k*k);c.lerp(t,.85)}
+  const s_=Math.max(0,d.dot(sd));t.setRGB(1,.97,.9).multiplyScalar(Math.pow(s_,90)*14+Math.pow(s_,10)*.5);c.add(t);
+  col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b}
+ g.setAttribute('color',new THREE.BufferAttribute(col,3));const mat=new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.BackSide,depthWrite:false,fog:false});es.add(new THREE.Mesh(g,mat));
+ if(!pm)pm=new THREE.PMREMGenerator(R);if(envRT)envRT.dispose();envRT=pm.fromScene(es,0,.1,100);g.dispose();mat.dispose();return envRT.texture}
+const CARU={v:new THREE.Vector4(0,0,0,0)};
+function carMat(m){if(!m||!m.isMeshStandardMaterial||m.userData.snowCar)return;m.userData.snowCar={e:m.envMapIntensity,r:m.roughness,obc:m.onBeforeCompile,key:m.customProgramCacheKey};
+ m.envMapIntensity=m.transparent?1.3:1.05;if(m.roughness<.8)m.roughness=Math.max(.13,m.roughness*.62);
+ const prev=m.onBeforeCompile,k0=m.customProgramCacheKey?m.customProgramCacheKey():'';
+ m.onBeforeCompile=function(sh,r){if(prev)prev.call(this,sh,r);sh.uniforms.snCar={value:CARU.v};
+  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vScW;varying vec3 vScL;').replace('#include <begin_vertex>','#include <begin_vertex>\nvScL=position;vScW=(modelMatrix*vec4(transformed,1.)).xyz;');
+  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vScW;varying vec3 vScL;uniform vec4 snCar;float scK=0.;\n'+NOISE)
+   .replace('#include <color_fragment>',`#include <color_fragment>
+{float h=vScW.y-snCar.y;float n=svn(vScL*7.)*.6+svn(vScL*19.)*.4;float top=.12+.5*snCar.w;
+ /* packed snow from the road up, a ragged edge, and a fine dusting of spray above it */
+ scK=smoothstep(top+.12,top-.1,h+(n-.5)*.34)*step(.001,snCar.w);float dust=smoothstep(top+.55,top,h)*smoothstep(.5,.8,svn(vScL*31.))*.5*snCar.w;
+ scK=clamp(scK*.92+dust,0.,1.);diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.93,.95,.99)*(.9+.1*n),scK);}`)
+   .replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\nroughnessFactor=mix(roughnessFactor,.95,scK);')
+   .replace('#include <metalnessmap_fragment>','#include <metalnessmap_fragment>\nmetalnessFactor*=1.-scK;')};
+ m.customProgramCacheKey=()=>k0+'|snowCar';m.needsUpdate=true}
+function carUndo(){const Rc=typeof RACE!=='undefined'?RACE:null;if(!Rc||!Rc.cars)return;for(const c of Rc.cars){if(!c.m||!c.m.g)continue;c.m.g.traverse(o=>{if(!o.isMesh)return;for(const m of Array.isArray(o.material)?o.material:[o.material]){const u=m&&m.userData.snowCar;if(!u)continue;
+   m.envMapIntensity=u.e;m.roughness=u.r;m.onBeforeCompile=u.obc;m.customProgramCacheKey=u.key;delete m.userData.snowCar;m.needsUpdate=true}})}}
+/* a new race starts: the last race's cars get their own paint back first (their materials can be reused) */
+const l0=P.launch;if(l0)P.launch=function(){try{carUndo()}catch(e){}return l0.apply(this,arguments)};
+const r1=R.render.bind(R);
+R.render=function(scene,cam){const u=scene&&scene.userData;if(u&&u.snowCar&&typeof RACE!=='undefined'&&RACE&&RACE.scene===scene&&on()&&!(window.PTO&&window.PTO.snowCar===false)){try{
+   if(u.snowCar===1&&scene.environment){scene.environment=snowEnv(scene);u.snowCar=2}
+   const me=RACE.cars.find(c=>c.human);if(me&&me.m&&me.m.g){if(me._snT!==scene||(P.frame%120)===0){me._snT=scene;me._snX=me.x;me._snZ=me.z;me._snD=me._snD||0;me.m.g.traverse(o=>{if(o.isMesh&&!o.userData.contact)for(const m of Array.isArray(o.material)?o.material:[o.material])carMat(m)})}
+    /* the snow climbs with the distance driven: a third of the way from the start, full after about 600 m */
+    const dd=Math.hypot(me.x-me._snX,me.z-me._snZ);if(dd<30)me._snD+=dd;me._snX=me.x;me._snZ=me.z;
+    let gy=me.y;const w=me.m.wheels&&me.m.wheels[0];if(w&&w.s&&w.s.h!=null)gy=w.s.h;else if(RACE.T&&RACE.T.terr){const h=RACE.T.terr(me.x,me.z);if(h!=null&&isFinite(h))gy=h}
+    CARU.v.set(me.x,gy,me.z,Math.min(1,.45+me._snD/900))}}catch(e){u.snowCar=0;console.warn('snowCar',e)}}
+  return r1.apply(this,arguments)};
 function dress(sc,T){const d=T.d;if(!d||!d.cartoon||!d.cartoon.stage||d._key!=='autumn')return;const t0=performance.now();seed=977;let n=0;
  sc.traverse(o=>{if(!(o.isMesh||o.isInstancedMesh)||!o.material||Array.isArray(o.material))return;
   if(/^ct_/.test(o.name)){if(/ICE_SURFACE/.test(o.name))return;
    /* the ground texture is snow already: there the shader adds the grain, the drifts and the glints, and whitens what is left bare */
    snowMat(o.material,/SNOW_SWEDEN/.test(o.name)?{lo:-1.,hi:.1,amt:.9}:/^ct_c$/.test(o.name)?{lo:-.3,hi:.42,amt:.9}/* hoarfrost: the trees and everything else of the model are white almost all over, only the undersides keep their colour */:{lo:.12,hi:.5,amt:.92});n++}
   else if(o.userData.rallyProp){/* the props share one material with every other map: this stage gets its own copy */if(o.userData.ptProp==='snowpole')return;o.material=snowMat(o.material.clone(),{lo:.35,hi:.65,amt:.92});n++}});
- sc.userData.sunStar=1;sc.userData.snowWhite=1;sc.traverse(o=>{if(o.isHemisphereLight)o.groundColor.lerp(new THREE.Color(0xeef3fb),.7)});const b=banks(sc,T);flakes(sc);/* a sunny morning: only a light drift of flakes in the air */const f=sc.userData.snow;if(f&&f.m&&f.m.material){f.m.material.size=.3;f.m.material.opacity=.7;f.m.geometry.setDrawRange(0,500)}if(sc.userData.snow2){sc.userData.snow2.m.material.opacity=.3;sc.userData.snow2.m.geometry.setDrawRange(0,300)}
+ sc.userData.sunStar=1;sc.userData.snowCar=1;sc.userData.snowWhite=1;sc.traverse(o=>{if(o.isHemisphereLight)o.groundColor.lerp(new THREE.Color(0xeef3fb),.7)});const b=banks(sc,T);flakes(sc);/* a sunny morning: only a light drift of flakes in the air */const f=sc.userData.snow;if(f&&f.m&&f.m.material){f.m.material.size=.3;f.m.material.opacity=.7;f.m.geometry.setDrawRange(0,500)}if(sc.userData.snow2){sc.userData.snow2.m.material.opacity=.3;sc.userData.snow2.m.geometry.setDrawRange(0,300)}
  sc.userData.snowFx={mats:n,bankTris:b,ms:Math.round(performance.now()-t0)}}
 /* after rallyprops.js has dressed the stage (it wraps buildWorld two ticks after load) */
 setTimeout(()=>setTimeout(()=>setTimeout(()=>{const bw=buildWorld;buildWorld=function(T){const sc=bw.apply(this,arguments);if(on())try{dress(sc,T)}catch(e){console.warn('snowfx',e)}return sc}},0),0),0);
