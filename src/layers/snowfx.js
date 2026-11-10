@@ -61,30 +61,39 @@ R.render=function(scene,cam){const f=scene&&scene.userData&&scene.userData.snow2
      hard white sun, so the paint and glass carry the sky on top, the snow along the sills and a sun highlight on the shoulders
    - the paint is a little glossier there, and reflects more
    - snow packs onto the body from the road up: sills, arches and bumpers go white in a ragged line that climbs as you drive (PTO.snowCar===false: off) ---- */
+/* Nov 10 (Hakan, on the snow car: "THIS IS PERFECT!! NOW DO THIS FOR DIRT PLEASE"): the same on the other stages, each with its own place in
+   the reflections and its own dirt. Finland: dark pine forest, green verges, brown forest mud. Portugal: warm sky, dry hills, pale dust.
+   France (tarmac): alpine sky and grey rock, only a light road film. zen/hor/gnd/shd/tree/top: the reflected place; th: height of the tree
+   line; dirt: its colour; k: how much; sp: how far the spatter reaches above the packed line; gl: paint gloss */
+const C3=(r,g,b)=>new THREE.Color(r,g,b);
+const CAR={autumn:{zen:C3(.05,.22,.8),hor:C3(.8,.92,1.15),gnd:C3(1.25,1.28,1.36),shd:C3(.55,.66,.95),tree:C3(.42,.52,.56),top:C3(1.05,1.1,1.18),th:.1,sun:C3(1,.97,.9),dirt:[.93,.95,.99],k:1,sp:.5,gl:1},
+ mangrove:{zen:C3(.1,.3,.78),hor:C3(.92,.9,.78),gnd:C3(.2,.3,.11),shd:C3(.07,.12,.05),tree:C3(.03,.07,.03),top:C3(.1,.22,.08),th:.34,sun:C3(1,.9,.72),dirt:[.3,.21,.13],k:.9,sp:.9,gl:.8},
+ ash:{zen:C3(.12,.33,.8),hor:C3(1.05,.86,.6),gnd:C3(.5,.36,.21),shd:C3(.26,.18,.11),tree:C3(.1,.14,.05),top:C3(.22,.32,.1),th:.16,sun:C3(1,.85,.6),dirt:[.56,.43,.29],k:.85,sp:1.2,gl:.75},
+ terr:{zen:C3(.08,.28,.82),hor:C3(.82,.92,1.08),gnd:C3(.2,.21,.23),shd:C3(.1,.11,.13),tree:C3(.3,.32,.36),top:C3(.75,.78,.84),th:.24,sun:C3(1,.95,.86),dirt:[.34,.33,.32],k:.3,sp:.7,gl:1}};
 let pm=null,envRT=null;
-function snowEnv(sc){let sun=null;sc.traverse(o=>{if(o.isDirectionalLight&&!sun)sun=o});const sd=sun?sun.position.clone().sub(sun.target?sun.target.position:new THREE.Vector3()).normalize():new THREE.Vector3(.4,.4,-.8);
+function snowEnv(sc,K){let sun=null;sc.traverse(o=>{if(o.isDirectionalLight&&!sun)sun=o});const sd=sun?sun.position.clone().sub(sun.target?sun.target.position:new THREE.Vector3()).normalize():new THREE.Vector3(.4,.4,-.8);
  const es=new THREE.Scene(),g=new THREE.SphereGeometry(10,96,48),pos=g.attributes.position,col=new Float32Array(pos.count*3),d=new THREE.Vector3(),c=new THREE.Color(),t=new THREE.Color();
- const zen=new THREE.Color(.05,.22,.8),hor=new THREE.Color(.8,.92,1.15),snw=new THREE.Color(1.25,1.28,1.36),shd=new THREE.Color(.55,.66,.95),tree=new THREE.Color(.42,.52,.56),frost=new THREE.Color(1.05,1.1,1.18);
+ const zen=K.zen,hor=K.hor,snw=K.gnd,shd=K.shd,tree=K.tree,frost=K.top,TH=K.th/.1;
  for(let i=0;i<pos.count;i++){d.fromBufferAttribute(pos,i).normalize();const y=d.y,az=Math.atan2(d.z,d.x);
   if(y>0)c.copy(hor).lerp(zen,Math.pow(Math.min(1,y*1.25),.6));else{/* the snow, with long blue shadow bands across it */const b=.5+.5*Math.sin(az*9+Math.sin(az*3)*2);c.copy(snw).lerp(shd,b*b*.55*Math.min(1,-y*4))}
   /* the tree line: frosted tops over darker trunks, uneven in height */
-  const th=.1+.07*Math.sin(az*17)+.05*Math.sin(az*41+1.3);if(y>-.02&&y<th){const k=Math.min(1,(y+.02)/th);t.copy(tree).lerp(frost,k*k);c.lerp(t,.85)}
-  const s_=Math.max(0,d.dot(sd));t.setRGB(1,.97,.9).multiplyScalar(Math.pow(s_,90)*14+Math.pow(s_,10)*.5);c.add(t);
+  const th=(.1+.07*Math.sin(az*17)+.05*Math.sin(az*41+1.3))*TH;if(y>-.02&&y<th){const k=Math.min(1,(y+.02)/th);t.copy(tree).lerp(frost,k*k);c.lerp(t,.85)}
+  const s_=Math.max(0,d.dot(sd));t.copy(K.sun).multiplyScalar(Math.pow(s_,90)*14+Math.pow(s_,10)*.5);c.add(t);
   col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b}
  g.setAttribute('color',new THREE.BufferAttribute(col,3));const mat=new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.BackSide,depthWrite:false,fog:false});es.add(new THREE.Mesh(g,mat));
  if(!pm)pm=new THREE.PMREMGenerator(R);if(envRT)envRT.dispose();envRT=pm.fromScene(es,0,.1,100);g.dispose();mat.dispose();return envRT.texture}
-const CARU={v:new THREE.Vector4(0,0,0,0)};
-function carMat(m){if(!m||!m.isMeshStandardMaterial||m.userData.snowCar)return;m.userData.snowCar={e:m.envMapIntensity,r:m.roughness,obc:m.onBeforeCompile,key:m.customProgramCacheKey};
- m.envMapIntensity=m.transparent?1.3:1.05;if(m.roughness<.8)m.roughness=Math.max(.13,m.roughness*.62);
+const CARU={v:new THREE.Vector4(0,0,0,0),c:new THREE.Vector4(.93,.95,.99,.5),gl:1};
+function carMat(m,U){if(!m||!m.isMeshStandardMaterial||m.userData.snowCar)return;m.userData.snowCar={e:m.envMapIntensity,r:m.roughness,obc:m.onBeforeCompile,key:m.customProgramCacheKey};
+ const gl=CARU.gl;m.envMapIntensity=(m.transparent?1.3:1.05)*(.6+.4*gl);if(m.roughness<.8)m.roughness=Math.max(.13,m.roughness*(1-.38*gl));
  const prev=m.onBeforeCompile,k0=m.customProgramCacheKey?m.customProgramCacheKey():'';
- m.onBeforeCompile=function(sh,r){if(prev)prev.call(this,sh,r);sh.uniforms.snCar={value:CARU.v};
+ m.onBeforeCompile=function(sh,r){if(prev)prev.call(this,sh,r);sh.uniforms.snCar={value:U};sh.uniforms.snCol={value:CARU.c};
   sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vScW;varying vec3 vScL;').replace('#include <begin_vertex>','#include <begin_vertex>\nvScL=position;vScW=(modelMatrix*vec4(transformed,1.)).xyz;');
-  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vScW;varying vec3 vScL;uniform vec4 snCar;float scK=0.;\n'+NOISE)
+  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vScW;varying vec3 vScL;uniform vec4 snCar;uniform vec4 snCol;float scK=0.;\n'+NOISE)
    .replace('#include <color_fragment>',`#include <color_fragment>
-{float h=vScW.y-snCar.y;float n=svn(vScL*7.)*.6+svn(vScL*19.)*.4;float top=.12+.5*snCar.w;
+{float h=vScW.y-snCar.y;float n=svn(vScL*7.)*.6+svn(vScL*19.)*.4;float top=.2+.5*snCar.w;
  /* packed snow from the road up, a ragged edge, and a fine dusting of spray above it */
- scK=smoothstep(top+.12,top-.1,h+(n-.5)*.34)*step(.001,snCar.w);float dust=smoothstep(top+.55,top,h)*smoothstep(.5,.8,svn(vScL*31.))*.5*snCar.w;
- scK=clamp(scK*.92+dust,0.,1.);diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.93,.95,.99)*(.9+.1*n),scK);}`)
+ scK=smoothstep(top+.12,top-.1,h+(n-.5)*.34)*step(.001,snCar.w);float dust=smoothstep(top+.55+snCol.w*.5,top,h)*smoothstep(.45,.8,svn(vScL*13.)*.65+svn(vScL*29.)*.35)*snCol.w*snCar.w;
+ scK=clamp(scK*.92+dust,0.,1.);diffuseColor.rgb=mix(diffuseColor.rgb,snCol.rgb*(.86+.2*n),scK);}`)
    .replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\nroughnessFactor=mix(roughnessFactor,.95,scK);')
    .replace('#include <metalnessmap_fragment>','#include <metalnessmap_fragment>\nmetalnessFactor*=1.-scK;')};
  m.customProgramCacheKey=()=>k0+'|snowCar';m.needsUpdate=true}
@@ -94,14 +103,17 @@ function carUndo(){const Rc=typeof RACE!=='undefined'?RACE:null;if(!Rc||!Rc.cars
 const l0=P.launch;if(l0)P.launch=function(){try{carUndo()}catch(e){}return l0.apply(this,arguments)};
 const r1=R.render.bind(R);
 R.render=function(scene,cam){const u=scene&&scene.userData;if(u&&u.snowCar&&typeof RACE!=='undefined'&&RACE&&RACE.scene===scene&&on()&&!(window.PTO&&window.PTO.snowCar===false)){try{
-   if(u.snowCar===1&&scene.environment){scene.environment=snowEnv(scene);u.snowCar=2}
-   const me=RACE.cars.find(c=>c.human);if(me&&me.m&&me.m.g){if(me._snT!==scene||(P.frame%120)===0){me._snT=scene;me._snX=me.x;me._snZ=me.z;me._snD=me._snD||0;me.m.g.traverse(o=>{if(o.isMesh&&!o.userData.contact)for(const m of Array.isArray(o.material)?o.material:[o.material])carMat(m)})}
-    /* the snow climbs with the distance driven: a third of the way from the start, full after about 600 m */
+   const K=u.carCfg||CAR.autumn;CARU.gl=K.gl;CARU.c.set(K.dirt[0],K.dirt[1],K.dirt[2],K.sp);
+   if(u.snowCar===1&&scene.environment){scene.environment=snowEnv(scene,K);u.snowCar=2}
+   /* every car on the stage, whatever the model (Hakan: "map this for every car too"): each has its own ground height and its own build-up */
+   for(const me of RACE.cars){if(!me.m||!me.m.g)continue;const U=me._snU||(me._snU=new THREE.Vector4());
+    if(me._snT!==scene||((P.frame+(me.gi|0)*7)%120)===0){if(me._snT!==scene)me._snD=0;me._snT=scene;me._snX=me.x;me._snZ=me.z;me.m.g.traverse(o=>{if(o.isMesh&&!o.userData.contact)for(const m of Array.isArray(o.material)?o.material:[o.material])carMat(m,U)})}
+    /* the dirt climbs with the distance driven: under half at the start, full after about 500 m */
     const dd=Math.hypot(me.x-me._snX,me.z-me._snZ);if(dd<30)me._snD+=dd;me._snX=me.x;me._snZ=me.z;
     let gy=me.y;const w=me.m.wheels&&me.m.wheels[0];if(w&&w.s&&w.s.h!=null)gy=w.s.h;else if(RACE.T&&RACE.T.terr){const h=RACE.T.terr(me.x,me.z);if(h!=null&&isFinite(h))gy=h}
-    CARU.v.set(me.x,gy,me.z,Math.min(1,.45+me._snD/900))}}catch(e){u.snowCar=0;console.warn('snowCar',e)}}
+    U.set(me.x,gy,me.z,Math.min(1,.5+me._snD/900)*K.k)}}catch(e){u.snowCar=0;console.warn('snowCar',e)}}
   return r1.apply(this,arguments)};
-function dress(sc,T){const d=T.d;if(!d||!d.cartoon||!d.cartoon.stage||d._key!=='autumn')return;const t0=performance.now();seed=977;let n=0;
+function dress(sc,T){const d=T.d;if(!d||!d.cartoon||!d.cartoon.stage)return;if(CAR[d._key]){sc.userData.snowCar=1;sc.userData.carCfg=CAR[d._key]}if(d._key!=='autumn')return;const t0=performance.now();seed=977;let n=0;
  sc.traverse(o=>{if(!(o.isMesh||o.isInstancedMesh)||!o.material||Array.isArray(o.material))return;
   if(/^ct_/.test(o.name)){if(/ICE_SURFACE/.test(o.name))return;
    /* the ground texture is snow already: there the shader adds the grain, the drifts and the glints, and whitens what is left bare */
