@@ -74,7 +74,7 @@ function init(){const sc=new THREE.Scene(),cam=new THREE.OrthographicCamera(-1,1
 let mt=null,mbuf=null,aeK=1,aeN=0,aeSc=null;const AE={m:0,k:1};P.aeDbg=AE;
 function meterRead(scene,night){const d=RACE.T&&RACE.T.d||{},mine=(d.id!=null&&d.id<14)||(d.cartoon&&d.cartoon.stage);/* not on the Track mode circuits */
  if(O().autoExpo===false||night||!mine){aeK=1;return}if(aeSc!==scene){aeSc=scene;aeK=1;aeN=0}
- if((aeN++)%12&&aeN>40)return;if(!mt){mt=new THREE.WebGLRenderTarget(32,18,{minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter,generateMipmaps:false,depthBuffer:false});mbuf=new Uint8Array(32*18*4)}
+ if((aeN++)%30&&aeN>40)return;/* Nov 10: metered every 30 frames, not 12 (the read-back stalls the GPU) */if(!mt){mt=new THREE.WebGLRenderTarget(32,18,{minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter,generateMipmaps:false,depthBuffer:false});mbuf=new Uint8Array(32*18*4)}
  const m=Q.meter;m.uniforms.tC.value=rt.texture;m.uniforms.tD.value=rt.depthTexture;m.uniforms.px.value.set(1/128,1/72);Q.q.material=m;R.setRenderTarget(mt);prev(Q.sc,Q.cam);R.readRenderTargetPixels(mt,0,0,32,18,mbuf);
  let sl=0,sw=0;for(let i=0;i<32*18;i++){const y=(i/32|0)/18,l=mbuf[i*4]/255,g=mbuf[i*4+1]/255,w=(.25+.75*g)*(.6+.4*(1-y));sl+=Math.log(Math.max(1e-3,l*l))*w;sw+=w}
  const ml=Math.exp(sl/sw);/* the log-average linear luminance as drawn now; step the exposure toward the middle grey target */
