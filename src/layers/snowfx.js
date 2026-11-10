@@ -67,9 +67,9 @@ R.render=function(scene,cam){const f=scene&&scene.userData&&scene.userData.snow2
    line; dirt: its colour; k: how much; sp: how far the spatter reaches above the packed line; gl: paint gloss */
 const C3=(r,g,b)=>new THREE.Color(r,g,b);
 const CAR={autumn:{zen:C3(.05,.22,.8),hor:C3(.8,.92,1.15),gnd:C3(1.25,1.28,1.36),shd:C3(.55,.66,.95),tree:C3(.42,.52,.56),top:C3(1.05,1.1,1.18),th:.1,sun:C3(1,.97,.9),dirt:[.93,.95,.99],k:1,sp:.5,gl:1},
- mangrove:{zen:C3(.1,.3,.78),hor:C3(.92,.9,.78),gnd:C3(.2,.3,.11),shd:C3(.07,.12,.05),tree:C3(.03,.07,.03),top:C3(.1,.22,.08),th:.34,sun:C3(1,.9,.72),dirt:[.3,.21,.13],k:.9,sp:.55,gl:.8},
- ash:{zen:C3(.12,.33,.8),hor:C3(1.05,.86,.6),gnd:C3(.5,.36,.21),shd:C3(.26,.18,.11),tree:C3(.1,.14,.05),top:C3(.22,.32,.1),th:.16,sun:C3(1,.85,.6),dirt:[.47,.37,.26],k:.85,sp:.55,gl:.75},
- terr:{zen:C3(.08,.28,.82),hor:C3(.82,.92,1.08),gnd:C3(.2,.21,.23),shd:C3(.1,.11,.13),tree:C3(.3,.32,.36),top:C3(.75,.78,.84),th:.24,sun:C3(1,.95,.86),dirt:[.34,.33,.32],k:.3,sp:.7,gl:1}};
+ mangrove:{zen:C3(.1,.3,.78),hor:C3(.92,.9,.78),gnd:C3(.2,.3,.11),shd:C3(.07,.12,.05),tree:C3(.03,.07,.03),top:C3(.1,.22,.08),th:.34,sun:C3(1,.9,.72),dirt:[.15,.1,.065],k:.9,sp:.55,gl:.8},
+ ash:{zen:C3(.12,.33,.8),hor:C3(1.05,.86,.6),gnd:C3(.5,.36,.21),shd:C3(.26,.18,.11),tree:C3(.1,.14,.05),top:C3(.22,.32,.1),th:.16,sun:C3(1,.85,.6),dirt:[.24,.18,.115],k:.85,sp:.55,gl:.75},
+ terr:{zen:C3(.08,.28,.82),hor:C3(.82,.92,1.08),gnd:C3(.2,.21,.23),shd:C3(.1,.11,.13),tree:C3(.3,.32,.36),top:C3(.75,.78,.84),th:.24,sun:C3(1,.95,.86),dirt:[.17,.165,.16],k:.3,sp:.7,gl:1}};
 let pm=null,envRT=null;
 function snowEnv(sc,K){let sun=null;sc.traverse(o=>{if(o.isDirectionalLight&&!sun)sun=o});const sd=sun?sun.position.clone().sub(sun.target?sun.target.position:new THREE.Vector3()).normalize():new THREE.Vector3(.4,.4,-.8);
  const es=new THREE.Scene(),g=new THREE.SphereGeometry(10,96,48),pos=g.attributes.position,col=new Float32Array(pos.count*3),d=new THREE.Vector3(),c=new THREE.Color(),t=new THREE.Color();
@@ -94,6 +94,8 @@ function carMat(m,U){if(!m||!m.isMeshStandardMaterial||m.userData.snowCar)return
  /* packed snow from the road up, a ragged edge, and a fine dusting of spray above it */
  scK=smoothstep(top+.12,top-.1,h+(n-.5)*.34)*step(.001,snCar.w);float dust=smoothstep(top+.55+snCol.w*.5,top,h)*smoothstep(.45,.8,svn(vScL*13.)*.65+svn(vScL*29.)*.35)*snCol.w*snCar.w;
  scK=clamp(scK*.92+dust,0.,1.);diffuseColor.rgb=mix(diffuseColor.rgb,snCol.rgb*(.86+.2*n),scK);}`)
+   /* Nov 10 (Hakan: "the dirt on the car should be dark and react with the shadows"): the dirt takes less of the sky fill and none of the sky shine, so in shade it goes properly dark and in sun it lights up (PTO.dirtShade===false: off) */
+   .replace('#include <lights_fragment_end>','#include <lights_fragment_end>\n{float dk=1.-smoothstep(.5,.75,dot(snCol.rgb,vec3(.333)));reflectedLight.indirectDiffuse*=mix(1.,.45,scK*dk);reflectedLight.indirectSpecular*=mix(1.,.05,scK*dk);}')
    .replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\nroughnessFactor=mix(roughnessFactor,.95,scK);')
    .replace('#include <metalnessmap_fragment>','#include <metalnessmap_fragment>\nmetalnessFactor*=1.-scK;')};
  m.customProgramCacheKey=()=>k0+'|snowCar';m.needsUpdate=true}
