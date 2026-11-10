@@ -23,6 +23,21 @@ const st=document.createElement('style');st.textContent=`
 #prepVig{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;transition:opacity .5s;background:radial-gradient(ellipse 90% 80% at 60% 35%,#0000 40%,#0006 100%),linear-gradient(90deg,#0008 0%,#0003 30%,#0000 50%),linear-gradient(0deg,#000c 0%,#0007 30%,#0000 55%)}
 #s8setup.prepLive #prepVig{opacity:1}
 #s8setup.prepLive::before{opacity:0!important}
+/* Nov 10 (Hakan: "the race preparation phase is the same terrible text boxes"): over the live track the three boxed cards become a row of glass pills
+   (small label over a big value) along the bottom edge, with no card frames and no list rows (PTO.prepPills===false: the old cards) */
+#s8setup.prepLive.pillOn #gxSu.g2 .gxCards:not(.g4){display:flex!important;flex-wrap:wrap;align-items:flex-end;gap:8px 10px;max-height:none!important;padding:0 clamp(22px,3vw,48px) clamp(10px,1.6vh,22px)}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxCards:not(.g4) .gxCard{display:contents!important}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxCards:not(.g4) .gxCard h5{display:none}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxCards:not(.g4) .gxOpts{display:contents!important}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxCards:not(.g4) .gxr{flex-direction:column;align-items:flex-start;justify-content:center;gap:1px;min-height:0!important;padding:8px 18px 9px!important;margin:0!important;border-radius:14px!important;background:#0a0e1480;backdrop-filter:blur(10px);box-shadow:inset 0 1px 0 #ffffff26,0 0 0 1px #ffffff1c,0 8px 20px #0006}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxCards:not(.g4) .gxr .l{font:600 10px var(--gt)!important;letter-spacing:.2em;text-transform:uppercase;color:#8fb4d8}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxCards:not(.g4) .gxr .v{margin:0!important;font:400 clamp(15px,2.1vh,22px) var(--gt);gap:8px}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxCards:not(.g4) .gxr.on{background:linear-gradient(180deg,#8fb4d8e0 0%,#4f7eabe8 48%,#33608ce8 52%,#4a77a3e8 100%)}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxCards:not(.g4) .gxr.on .l{color:#e6f0fa}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxTn b{font-size:clamp(30px,4.8vh,58px)}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxCards.g4 .gxCard{background:#0a0e1488!important;box-shadow:inset 0 1px 0 #ffffff26,0 0 0 1px #ffffff1c,0 10px 26px #0007!important}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxCards:not(.g4) .gxr.more{border-top:0;margin-top:0!important}
+
 #s8setup.prepLive #gxSu.g2 .gxHero{background:transparent!important;box-shadow:none!important;cursor:grab}
 #s8setup.prepLive #gxSu.g2 .gxHero:active{cursor:grabbing}
 #s8setup.prepLive #gxSu.g2 #gxShot,#s8setup.prepLive #gxHi{visibility:hidden}
@@ -84,7 +99,7 @@ function camRace(s,now){const T=s.T;if(!s.shot)nextShot(s);let sh=s.shot,t=(now-
 const b2=s=>s.box.e*2.4+700;
 let drag=0,dragX=null;
 function camCar(s,dt){const n=s.cars.length;if(!n)return;const C=new THREE.Vector3();for(const c of s.cars)C.add(c.position);C.divideScalar(n);
- if(dragX==null)s.ang+=dt*.13;s.ang+=drag;drag=0;const ps=s.cars[0].rotation.y,r=7.4+2.6*(n-1)+(n>2?1.6:0),h=1.35+.45*(n-1),a=ps+.95+s.ang;
+ if(dragX==null)s.ang+=dt*.13;s.ang+=drag;drag=0;const ps=s.cars[0].rotation.y,r=(FAST()?9.6:7.4)+2.6*(n-1)+(n>2?1.6:0),h=1.35+.45*(n-1),a=ps+.95+s.ang;
  cam.position.set(C.x+Math.sin(a)*r,C.y+h,C.z+Math.cos(a)*r);const g=GBf(s.T,cam.position.x,cam.position.z);if(isFinite(g)&&cam.position.y<g+.7)cam.position.y=g+.7;
  const L=C.clone();L.y+=.45;cam.lookAt(L);s.look=L}
 /* ---- what the setup screen shows right now ---- */
@@ -112,7 +127,7 @@ function frame(now){raf=requestAnimationFrame(frame);const w=want();
  if(s.step!==w.step){s.step=w.step;s.shot=null;s.sh=0;s.ang=0;cv.classList.remove('cut');pend=null}
  let far=null;if(w.step===2&&s.cars.length)camCar(s,dt);else far=camRace(s,now);
  /* the subject sits in the open part of the picture (above the cards, right of the name) */
- const W=1000,H=Math.round(1000/cam.aspect),cars=w.step===2;cam.setViewOffset(W,H,cars?-W*.12:-W*.04,H*(cars?.13:.1),W,H);cam.updateProjectionMatrix();
+ const W=1000,H=Math.round(1000/cam.aspect),cars=w.step===2;cam.setViewOffset(W,H,cars?-W*(FAST()?.24:.12):-W*.04,H*(cars?(FAST()?.1:.13):.1),W,H);cam.updateProjectionMatrix();
  if(s.fog&&s.sc.fog){const f=far||s.fog.far;s.sc.fog.far=f;s.sc.fog.near=far?Math.min(far*.4,s.fog.near+far*.2):s.fog.near}
  if(s.dome)s.dome.position.copy(cam.position);const m=s.sc.userData.skyx;if(m&&m.uniforms)m.uniforms.t.value=(now-s.t0)/1000+40;
  if(s.sun&&s.look){const L=s.look,ext=cars?16:far?Math.min(600,s.box.e*.7):90;s.sun.target.position.copy(L);s.sun.position.copy(L).addScaledVector(s.sd,Math.max(200,ext*1.5));s.sun.target.updateMatrixWorld();const sc_=s.sun.shadow.camera;
@@ -124,7 +139,7 @@ function frame(now){raf=requestAnimationFrame(frame);const w=want();
  R2.toneMappingExposure=s.expo||1.05;if(FAST()){R2.shadowMap.needsUpdate=(fcount%4===0)||!s.shadowed;s.shadowed=1;if(s.sun&&s.sun.shadow&&s.sun.shadow.mapSize.x>1024){s.sun.shadow.mapSize.set(1024,1024);if(s.sun.shadow.map){s.sun.shadow.map.dispose();s.sun.shadow.map=null}}}
  try{R2.render(s.sc,cam)}catch(e){console.warn('prep render',e);lastErr='R '+String(e&&e.stack||e).slice(0,300);if(window.PTO)window.PTO.prepLive=false;free()}
  if(sv){u.mul.value.copy(sv.mul);u.add.value.copy(sv.add);u.sat.value=sv.sat}
- w.sec.classList.add('prepLive')}
+ w.sec.classList.add('prepLive');w.sec.classList.toggle('pillOn',!(window.PTO&&window.PTO.prepPills===false))}
 raf=requestAnimationFrame(frame);
 /* drag on the picture turns the car */
 document.addEventListener('pointerdown',e=>{if(!S||!e.target.closest||!e.target.closest('#s8setup.prepLive .gxHero')||e.target.closest('.gxMapBox,.gxSide,button,input'))return;dragX=e.clientX;
