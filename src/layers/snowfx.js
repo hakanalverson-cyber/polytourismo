@@ -5,7 +5,7 @@
      steep and overhanging faces keep their own colour. The snow has a fine grain, slow drifts of slightly different white, a cold blue in the
      shade, and glints that come and go as you move (single crystals catching the light)
    - snow banks: a ploughed ridge along both edges of the road for the whole stage, set on the model's ground, uneven in height and width
-   - the falling snow is thicker and comes in two layers, fine flakes near the camera and big slow ones further out
+   - the falling snow comes in two layers, fine flakes near the camera and big slow ones further out (light, on a sunny morning)
    PTO.snowFx===false turns all of it off. ===== */
 (function snowfx(){
 'use strict';
@@ -62,7 +62,7 @@ function dress(sc,T){const d=T.d;if(!d||!d.cartoon||!d.cartoon.stage||d._key!=='
    /* the ground texture is snow already: there the shader adds the grain, the drifts and the glints, and whitens what is left bare */
    snowMat(o.material,/SNOW_SWEDEN/.test(o.name)?{lo:.05,hi:.4,amt:.8}:/^ct_c$/.test(o.name)?{lo:.22,hi:.5,amt:.95}:{lo:.3,hi:.62,amt:.92});n++}
   else if(o.userData.rallyProp){/* the props share one material with every other map: this stage gets its own copy */if(o.userData.ptProp==='snowpole')return;o.material=snowMat(o.material.clone(),{lo:.35,hi:.65,amt:.92});n++}});
- const b=banks(sc,T);flakes(sc);const f=sc.userData.snow;if(f&&f.m&&f.m.material){f.m.material.size=.42;f.m.material.opacity=.95}
+ const b=banks(sc,T);flakes(sc);/* a sunny morning: only a light drift of flakes in the air */const f=sc.userData.snow;if(f&&f.m&&f.m.material){f.m.material.size=.3;f.m.material.opacity=.7;f.m.geometry.setDrawRange(0,500)}if(sc.userData.snow2){sc.userData.snow2.m.material.opacity=.3;sc.userData.snow2.m.geometry.setDrawRange(0,300)}
  sc.userData.snowFx={mats:n,bankTris:b,ms:Math.round(performance.now()-t0)}}
 /* after rallyprops.js has dressed the stage (it wraps buildWorld two ticks after load) */
 setTimeout(()=>setTimeout(()=>setTimeout(()=>{const bw=buildWorld;buildWorld=function(T){const sc=bw.apply(this,arguments);if(on())try{dress(sc,T)}catch(e){console.warn('snowfx',e)}return sc}},0),0),0);

@@ -112,7 +112,7 @@ const ATM={
  mangrove:{sky:[0x4f86c6,0xe8dcc2],fog:0xd9d6c4,near:140,far:640,sun:0xffd9a6,sunI:.78,sunAt:[-260,150,120],hemi:[0xa9c6e6,0x56703f],hemiI:1.7},/* Finland: morning mist through the pines */
  terr:{sky:[0x3f7fcf,0xcfe2f2],fog:0xd3e1ee,near:200,far:900,sun:0xfff0d8,sunI:.82,sunAt:[200,210,-120],hemi:[0xb4cdea,0x8a98a6],hemiI:1.8},/* France: clear alpine air */
  ash:{sky:[0x4a82c8,0xf5d6a4],fog:0xe8cfa6,near:130,far:720,sun:0xffc07a,sunI:.8,sunAt:[-300,110,160],hemi:[0xc8d4e4,0x8f7248],hemiI:1.8},/* Portugal: warm late afternoon dust */
- autumn:{sky:[0x5f7fa6,0xc9d5e0],fog:0xc3ced9,near:70,far:480,sun:0xe6eeff,sunI:.62,sunAt:[120,90,-200],hemi:[0xb8cbe4,0x9aa6b4],hemiI:1.9,snow:1}};/* Sweden: soft grey light, falling snow */
+ autumn:{sky:[0x2f78d2,0xd4e6f6],fog:0xd8e6f4,near:150,far:820,sun:0xffe0b4,sunI:1.0,sunAt:[120,62,-200],hemi:[0xa6c6f2,0xb4c2d6],hemiI:1.75,snow:1}};/* Sweden (Nov 10, Hakan: "brighter, like a sunny winter morning"): clear blue sky, a low warm sun, long blue shadows on the snow, a few flakes drifting in the air */
 function stageScene(T){const d=T.d,sc=new THREE.Scene(),A=ATM[d._key]||{};
  sc.fog=new THREE.Fog(A.fog!=null?A.fog:d.fog,A.near||150,A.far||620);const hm=A.hemi||d.hemi;sc.add(new THREE.HemisphereLight(hm[0],hm[1],A.hemiI||1.1));const sun=new THREE.DirectionalLight(A.sun!=null?A.sun:d.sun,A.sunI||1.0);sun.position.set(...(A.sunAt||[-150,250,100]));sc.add(sun);
  const sk=A.sky||d.sky;
@@ -166,5 +166,5 @@ function stageTod(sc,T,key){const A=ATM[T.d._key]||{},K=TODK[key],U=window.TODU;
  if(key==='night'&&!sc.userData.stars){sc.userData.stars=1;const st=[],r=Math.random;for(let i=0;i<420;i++){const a=r()*6.28,b=r()*1.25+.08;st.push(Math.cos(a)*Math.cos(b)*1400,Math.sin(b)*1400,Math.sin(a)*Math.cos(b)*1400)}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(st,3));sc.add(new THREE.Points(g,new THREE.PointsMaterial({color:0xffffff,size:2,sizeAttenuation:false,fog:false})))}
  if(U){U.mul.value.set(K.mul[0],K.mul[1],K.mul[2]);U.add.value.set(K.add[0],K.add[1],K.add[2]);U.sat.value=K.sat}
  P.baseExpo=P.baseExpo||R.toneMappingExposure;R.toneMappingExposure=P.baseExpo*K.exp}
-setTimeout(()=>{const at=P.applyTod;if(!at)return;P.applyTod=function(sc,T,key){if(sc&&T&&T.d&&T.d.stage&&T.d.cartoon&&T.d._key){try{stageTod(sc,T,key);return}catch(e){console.warn('stageTod',e)}}return at.apply(this,arguments)}},0);
+setTimeout(()=>{const at=P.applyTod;if(!at)return;P.applyTod=function(sc,T,key){if(sc&&T&&T.d&&T.d.stage&&T.d.cartoon&&T.d._key){/* one look per stage (Nov 10) */if(!(window.PTO&&window.PTO.todLock===false))key='day';try{stageTod(sc,T,key);return}catch(e){console.warn('stageTod',e)}}return at.apply(this,arguments)}},0);
 })();

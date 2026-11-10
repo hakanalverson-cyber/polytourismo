@@ -17,7 +17,7 @@ const lin=h=>new THREE.Color(h).convertSRGBToLinear();
 /* per map: cloud cover (0..1), cloud tint, cloud scale, wind */
 const CL={'Quarry Circuit':[.42,0xffffff,1],'Canyon Viaduct':[.22,0xfff0dc,1.3],'Alpine Pass':[.5,0xffffff,.9],'Afterhours Loop':[.18,0x8a94b8,1.2],'Pinewood Stage':[.46,0xf4f8f4,1],
  'Redrock Stage':[.2,0xffe2c4,1.4],'Highmoor Stage':[.58,0xe4e8ea,.8],'Coastal Run':[.34,0xffd8b0,1.2],'Grand Valley':[.4,0xffffff,1],'Frostline Stage':[.55,0xf4f8ff,.9],
- 'Finland':[.4,0xffffff,1],'France':[.3,0xffffff,1.1],'Portugal':[.24,0xffe8cc,1.3],'Sweden':[.55,0xeef3fa,.8]};
+ 'Finland':[.4,0xffffff,1],'France':[.3,0xffffff,1.1],'Portugal':[.24,0xffe8cc,1.3],'Sweden':[.16,0xffffff,1.2]};
 const VS=`varying vec3 vD;void main(){vD=position;vec4 p=projectionMatrix*modelViewMatrix*vec4(position,1.);gl_Position=p.xyww;}`;
 const FS=`varying vec3 vD;uniform vec3 zen,mid,hor,gnd,sunC,sunD,clC;uniform float t,cov,csc,night,warm,sunK;
 float h2(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}

@@ -75,7 +75,7 @@ function meterRead(scene,night){const d=RACE.T&&RACE.T.d||{},mine=(d.id!=null&&d
  let sl=0,sw=0;for(let i=0;i<32*18;i++){const y=(i/32|0)/18,l=mbuf[i*4]/255,g=mbuf[i*4+1]/255,w=(.25+.75*g)*(.6+.4*(1-y));sl+=Math.log(Math.max(1e-3,l*l))*w;sw+=w}
  const ml=Math.exp(sl/sw);/* the log-average linear luminance as drawn now; step the exposure toward the middle grey target */
  /* the rally stages (Hakan, Nov 10: "they are WAYY too dark") are lifted much further than the other maps */
- const st=d.cartoon&&d.cartoon.stage,lo=st?.19:.13,tg=ml>.24?.24:ml<lo?lo:ml,r=Math.max(-.35,Math.min(.35,Math.log(tg/Math.max(.005,ml))));aeK=Math.max(st?(d._key==='autumn'?1.12:.95):.58,/* snow must stay white, not be metered down to grey */Math.min(st?1.6:1.06,aeK*Math.exp(r*(aeN<40?.6:.25))));AE.m=ml;AE.k=aeK}
+ const st=d.cartoon&&d.cartoon.stage,lo=st?.19:.13,tg=ml>.24?.24:ml<lo?lo:ml,r=Math.max(-.35,Math.min(.35,Math.log(tg/Math.max(.005,ml))));aeK=Math.max(st?(d._key==='autumn'?1.0:.95):.58,/* snow must stay white, not be metered down to grey */Math.min(st?1.6:1.06,aeK*Math.exp(r*(aeN<40?.6:.25))));AE.m=ml;AE.k=aeK}
 function size(W,H){if(rt&&rt.width===W&&rt.height===H)return;for(const r of[rt,qa,qb,qc,qd])if(r){if(r.depthTexture)r.depthTexture.dispose();r.dispose()}
  rt=new THREE.WebGLRenderTarget(W,H,{minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,generateMipmaps:false,stencilBuffer:false});rt.texture.encoding=R.outputEncoding;
  rt.depthTexture=new THREE.DepthTexture(W,H);rt.depthTexture.type=THREE.UnsignedIntType;

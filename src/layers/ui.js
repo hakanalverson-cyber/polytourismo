@@ -409,7 +409,9 @@ function drawTod(cv,trk,tod){const g=cv.getContext('2d'),W=cv.width,H=cv.height,
 const MODE_NAME={ta:'TIME <em>ATTACK</em>',mp:'LOCAL <em>MULTIPLAYER</em>',cutup:'CUT<em>-UP</em>',elim:'<em>ELIMINATION</em>',rally:'<em>RALLY</em>',track:'<em>TRACK</em>'};
 const selCar=p=>{if(ST.mode==='rally'&&P.rallySel)return P.rallySel(p);if(ST.mode==='track'&&P.trackSel)return P.trackSel(p);const sv=P.SV();let s=sv.sel[p]||sv.sel[0];if(!P.owns(s.id,s.alt)){const o=P.ownedList()[0]||BYID.merc;s={id:o.id,alt:P.owns(o.id,0)?0:1};P.setSel(p,s.id,s.alt)}return s};
 const dmgOf=m=>{const v=(ST.dmgBy||{})[m];return v!==undefined?v:(m==='rally'||m==='track'?'1':'0')};
-const effTod=()=>ST.todUser||D[ST.track].tod0||'day';
+/* Nov 10 (Hakan: "maybe there should only be 1 selectable time of day, so we can perfect one"): a rally stage has one look, its own tuned daytime; the selector is not shown there (PTO.todLock===false brings it back) */
+const todLock=()=>{const d=D[ST.track];return !!(d&&d.cartoon&&d.cartoon.stage)&&!(window.PTO&&window.PTO.todLock===false)};P.todLock=todLock;
+const effTod=()=>todLock()?'day':ST.todUser||D[ST.track].tod0||'day';
 const seg=(items,cur)=>items.map(([v,l])=>`<button class="btn sm ${v===cur?'sel':''}" data-v="${v}"><span>${l}</span></button>`).join('');
 /* Track mode has two formats: time trial (drivers take turns, the original) and race (everyone at once, split screen, CPU drivers) */
 const trkRace=()=>ST.trkType!=='tt';/* Race is the default */
@@ -458,7 +460,7 @@ function renderSetup(){const m=ST.mode;$('s8setup').classList.toggle('pkMode',m=
  if(isRL(m))cfg+=`<div class="row8"><b>Gearbox</b><span class="seg" id="cGb">${seg([['0','Manual'],['1','Automatic']],P.isAuto({human:true,k:0})?'1':'0')}</span></div>`;
  cfg+=`<div class="row8"><b>Damage</b><span class="seg" id="cDmg">${seg([['0','Off'],['1','On']],dmgOf(m))}</span></div>`;
  $('suCfg').innerHTML=cfg;
- const td=effTod();$('suTod').innerHTML=`<div class="tod"><h4 style="margin:0 0 7px;font:700 10px var(--mn);letter-spacing:.3em;color:var(--dim)">TIME OF DAY</h4><canvas id="todPrev" width="168" height="70"></canvas><span class="seg" id="cTod">${seg(P.TOD_ORDER.map(k=>[k,P.TOD[k].n]),td)}</span></div>`;
+ const td=effTod();$('suTod').style.display=todLock()?'none':'';$('suTod').innerHTML=`<div class="tod"><h4 style="margin:0 0 7px;font:700 10px var(--mn);letter-spacing:.3em;color:var(--dim)">TIME OF DAY</h4><canvas id="todPrev" width="168" height="70"></canvas><span class="seg" id="cTod">${seg(P.TOD_ORDER.map(k=>[k,P.TOD[k].n]),td)}</span></div>`;
  drawTod($('todPrev'),ST.track,td);
  /* setup options in four short groups (Race, Field, Conditions, Car rules) with equal-width buttons, time of day folded into Conditions */
  {const cf=$('suCfg'),G=[['Race',['cFmt','cLaps','cRL','cIv','cRev','cStart','cTr','cTime']],['Field',['cPl','cCpu','cDif','cCc','cCpuCar']],['Conditions',['cWx']],['Car rules',['cGb','cDmg']]];

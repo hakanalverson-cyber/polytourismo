@@ -13609,7 +13609,9 @@ function drawTod(cv,trk,tod){const g=cv.getContext('2d'),W=cv.width,H=cv.height,
 const MODE_NAME={ta:'TIME <em>ATTACK</em>',mp:'LOCAL <em>MULTIPLAYER</em>',cutup:'CUT<em>-UP</em>',elim:'<em>ELIMINATION</em>',rally:'<em>RALLY</em>',track:'<em>TRACK</em>'};
 const selCar=p=>{if(ST.mode==='rally'&&P.rallySel)return P.rallySel(p);if(ST.mode==='track'&&P.trackSel)return P.trackSel(p);const sv=P.SV();let s=sv.sel[p]||sv.sel[0];if(!P.owns(s.id,s.alt)){const o=P.ownedList()[0]||BYID.merc;s={id:o.id,alt:P.owns(o.id,0)?0:1};P.setSel(p,s.id,s.alt)}return s};
 const dmgOf=m=>{const v=(ST.dmgBy||{})[m];return v!==undefined?v:(m==='rally'||m==='track'?'1':'0')};
-const effTod=()=>ST.todUser||D[ST.track].tod0||'day';
+/* Nov 10 (Hakan: "maybe there should only be 1 selectable time of day, so we can perfect one"): a rally stage has one look, its own tuned daytime; the selector is not shown there (PTO.todLock===false brings it back) */
+const todLock=()=>{const d=D[ST.track];return !!(d&&d.cartoon&&d.cartoon.stage)&&!(window.PTO&&window.PTO.todLock===false)};P.todLock=todLock;
+const effTod=()=>todLock()?'day':ST.todUser||D[ST.track].tod0||'day';
 const seg=(items,cur)=>items.map(([v,l])=>`<button class="btn sm ${v===cur?'sel':''}" data-v="${v}"><span>${l}</span></button>`).join('');
 /* Track mode has two formats: time trial (drivers take turns, the original) and race (everyone at once, split screen, CPU drivers) */
 const trkRace=()=>ST.trkType!=='tt';/* Race is the default */
@@ -13658,7 +13660,7 @@ function renderSetup(){const m=ST.mode;$('s8setup').classList.toggle('pkMode',m=
  if(isRL(m))cfg+=`<div class="row8"><b>Gearbox</b><span class="seg" id="cGb">${seg([['0','Manual'],['1','Automatic']],P.isAuto({human:true,k:0})?'1':'0')}</span></div>`;
  cfg+=`<div class="row8"><b>Damage</b><span class="seg" id="cDmg">${seg([['0','Off'],['1','On']],dmgOf(m))}</span></div>`;
  $('suCfg').innerHTML=cfg;
- const td=effTod();$('suTod').innerHTML=`<div class="tod"><h4 style="margin:0 0 7px;font:700 10px var(--mn);letter-spacing:.3em;color:var(--dim)">TIME OF DAY</h4><canvas id="todPrev" width="168" height="70"></canvas><span class="seg" id="cTod">${seg(P.TOD_ORDER.map(k=>[k,P.TOD[k].n]),td)}</span></div>`;
+ const td=effTod();$('suTod').style.display=todLock()?'none':'';$('suTod').innerHTML=`<div class="tod"><h4 style="margin:0 0 7px;font:700 10px var(--mn);letter-spacing:.3em;color:var(--dim)">TIME OF DAY</h4><canvas id="todPrev" width="168" height="70"></canvas><span class="seg" id="cTod">${seg(P.TOD_ORDER.map(k=>[k,P.TOD[k].n]),td)}</span></div>`;
  drawTod($('todPrev'),ST.track,td);
  /* setup options in four short groups (Race, Field, Conditions, Car rules) with equal-width buttons, time of day folded into Conditions */
  {const cf=$('suCfg'),G=[['Race',['cFmt','cLaps','cRL','cIv','cRev','cStart','cTr','cTime']],['Field',['cPl','cCpu','cDif','cCc','cCpuCar']],['Conditions',['cWx']],['Car rules',['cGb','cDmg']]];
@@ -20827,7 +20829,7 @@ function meterRead(scene,night){const d=RACE.T&&RACE.T.d||{},mine=(d.id!=null&&d
  let sl=0,sw=0;for(let i=0;i<32*18;i++){const y=(i/32|0)/18,l=mbuf[i*4]/255,g=mbuf[i*4+1]/255,w=(.25+.75*g)*(.6+.4*(1-y));sl+=Math.log(Math.max(1e-3,l*l))*w;sw+=w}
  const ml=Math.exp(sl/sw);/* the log-average linear luminance as drawn now; step the exposure toward the middle grey target */
  /* the rally stages (Hakan, Nov 10: "they are WAYY too dark") are lifted much further than the other maps */
- const st=d.cartoon&&d.cartoon.stage,lo=st?.19:.13,tg=ml>.24?.24:ml<lo?lo:ml,r=Math.max(-.35,Math.min(.35,Math.log(tg/Math.max(.005,ml))));aeK=Math.max(st?(d._key==='autumn'?1.12:.95):.58,/* snow must stay white, not be metered down to grey */Math.min(st?1.6:1.06,aeK*Math.exp(r*(aeN<40?.6:.25))));AE.m=ml;AE.k=aeK}
+ const st=d.cartoon&&d.cartoon.stage,lo=st?.19:.13,tg=ml>.24?.24:ml<lo?lo:ml,r=Math.max(-.35,Math.min(.35,Math.log(tg/Math.max(.005,ml))));aeK=Math.max(st?(d._key==='autumn'?1.0:.95):.58,/* snow must stay white, not be metered down to grey */Math.min(st?1.6:1.06,aeK*Math.exp(r*(aeN<40?.6:.25))));AE.m=ml;AE.k=aeK}
 function size(W,H){if(rt&&rt.width===W&&rt.height===H)return;for(const r of[rt,qa,qb,qc,qd])if(r){if(r.depthTexture)r.depthTexture.dispose();r.dispose()}
  rt=new THREE.WebGLRenderTarget(W,H,{minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,generateMipmaps:false,stencilBuffer:false});rt.texture.encoding=R.outputEncoding;
  rt.depthTexture=new THREE.DepthTexture(W,H);rt.depthTexture.type=THREE.UnsignedIntType;
@@ -21155,7 +21157,7 @@ const ATM={
  mangrove:{sky:[0x4f86c6,0xe8dcc2],fog:0xd9d6c4,near:140,far:640,sun:0xffd9a6,sunI:.78,sunAt:[-260,150,120],hemi:[0xa9c6e6,0x56703f],hemiI:1.7},/* Finland: morning mist through the pines */
  terr:{sky:[0x3f7fcf,0xcfe2f2],fog:0xd3e1ee,near:200,far:900,sun:0xfff0d8,sunI:.82,sunAt:[200,210,-120],hemi:[0xb4cdea,0x8a98a6],hemiI:1.8},/* France: clear alpine air */
  ash:{sky:[0x4a82c8,0xf5d6a4],fog:0xe8cfa6,near:130,far:720,sun:0xffc07a,sunI:.8,sunAt:[-300,110,160],hemi:[0xc8d4e4,0x8f7248],hemiI:1.8},/* Portugal: warm late afternoon dust */
- autumn:{sky:[0x5f7fa6,0xc9d5e0],fog:0xc3ced9,near:70,far:480,sun:0xe6eeff,sunI:.62,sunAt:[120,90,-200],hemi:[0xb8cbe4,0x9aa6b4],hemiI:1.9,snow:1}};/* Sweden: soft grey light, falling snow */
+ autumn:{sky:[0x2f78d2,0xd4e6f6],fog:0xd8e6f4,near:150,far:820,sun:0xffe0b4,sunI:1.0,sunAt:[120,62,-200],hemi:[0xa6c6f2,0xb4c2d6],hemiI:1.75,snow:1}};/* Sweden (Nov 10, Hakan: "brighter, like a sunny winter morning"): clear blue sky, a low warm sun, long blue shadows on the snow, a few flakes drifting in the air */
 function stageScene(T){const d=T.d,sc=new THREE.Scene(),A=ATM[d._key]||{};
  sc.fog=new THREE.Fog(A.fog!=null?A.fog:d.fog,A.near||150,A.far||620);const hm=A.hemi||d.hemi;sc.add(new THREE.HemisphereLight(hm[0],hm[1],A.hemiI||1.1));const sun=new THREE.DirectionalLight(A.sun!=null?A.sun:d.sun,A.sunI||1.0);sun.position.set(...(A.sunAt||[-150,250,100]));sc.add(sun);
  const sk=A.sky||d.sky;
@@ -21209,7 +21211,7 @@ function stageTod(sc,T,key){const A=ATM[T.d._key]||{},K=TODK[key],U=window.TODU;
  if(key==='night'&&!sc.userData.stars){sc.userData.stars=1;const st=[],r=Math.random;for(let i=0;i<420;i++){const a=r()*6.28,b=r()*1.25+.08;st.push(Math.cos(a)*Math.cos(b)*1400,Math.sin(b)*1400,Math.sin(a)*Math.cos(b)*1400)}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(st,3));sc.add(new THREE.Points(g,new THREE.PointsMaterial({color:0xffffff,size:2,sizeAttenuation:false,fog:false})))}
  if(U){U.mul.value.set(K.mul[0],K.mul[1],K.mul[2]);U.add.value.set(K.add[0],K.add[1],K.add[2]);U.sat.value=K.sat}
  P.baseExpo=P.baseExpo||R.toneMappingExposure;R.toneMappingExposure=P.baseExpo*K.exp}
-setTimeout(()=>{const at=P.applyTod;if(!at)return;P.applyTod=function(sc,T,key){if(sc&&T&&T.d&&T.d.stage&&T.d.cartoon&&T.d._key){try{stageTod(sc,T,key);return}catch(e){console.warn('stageTod',e)}}return at.apply(this,arguments)}},0);
+setTimeout(()=>{const at=P.applyTod;if(!at)return;P.applyTod=function(sc,T,key){if(sc&&T&&T.d&&T.d.stage&&T.d.cartoon&&T.d._key){/* one look per stage (Nov 10) */if(!(window.PTO&&window.PTO.todLock===false))key='day';try{stageTod(sc,T,key);return}catch(e){console.warn('stageTod',e)}}return at.apply(this,arguments)}},0);
 })();
 
 /* ===== Poly GT layer: rally stage select pictures (Nov 8: "track selection for rally should be unique ... map previews make sense").
@@ -21296,7 +21298,7 @@ const lin=h=>new THREE.Color(h).convertSRGBToLinear();
 /* per map: cloud cover (0..1), cloud tint, cloud scale, wind */
 const CL={'Quarry Circuit':[.42,0xffffff,1],'Canyon Viaduct':[.22,0xfff0dc,1.3],'Alpine Pass':[.5,0xffffff,.9],'Afterhours Loop':[.18,0x8a94b8,1.2],'Pinewood Stage':[.46,0xf4f8f4,1],
  'Redrock Stage':[.2,0xffe2c4,1.4],'Highmoor Stage':[.58,0xe4e8ea,.8],'Coastal Run':[.34,0xffd8b0,1.2],'Grand Valley':[.4,0xffffff,1],'Frostline Stage':[.55,0xf4f8ff,.9],
- 'Finland':[.4,0xffffff,1],'France':[.3,0xffffff,1.1],'Portugal':[.24,0xffe8cc,1.3],'Sweden':[.55,0xeef3fa,.8]};
+ 'Finland':[.4,0xffffff,1],'France':[.3,0xffffff,1.1],'Portugal':[.24,0xffe8cc,1.3],'Sweden':[.16,0xffffff,1.2]};
 const VS=`varying vec3 vD;void main(){vD=position;vec4 p=projectionMatrix*modelViewMatrix*vec4(position,1.);gl_Position=p.xyww;}`;
 const FS=`varying vec3 vD;uniform vec3 zen,mid,hor,gnd,sunC,sunD,clC;uniform float t,cov,csc,night,warm,sunK;
 float h2(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
@@ -21806,7 +21808,7 @@ setTimeout(()=>setTimeout(()=>{const bw=buildWorld;buildWorld=function(T){const 
      steep and overhanging faces keep their own colour. The snow has a fine grain, slow drifts of slightly different white, a cold blue in the
      shade, and glints that come and go as you move (single crystals catching the light)
    - snow banks: a ploughed ridge along both edges of the road for the whole stage, set on the model's ground, uneven in height and width
-   - the falling snow is thicker and comes in two layers, fine flakes near the camera and big slow ones further out
+   - the falling snow comes in two layers, fine flakes near the camera and big slow ones further out (light, on a sunny morning)
    PTO.snowFx===false turns all of it off. ===== */
 (function snowfx(){
 'use strict';
@@ -21863,7 +21865,7 @@ function dress(sc,T){const d=T.d;if(!d||!d.cartoon||!d.cartoon.stage||d._key!=='
    /* the ground texture is snow already: there the shader adds the grain, the drifts and the glints, and whitens what is left bare */
    snowMat(o.material,/SNOW_SWEDEN/.test(o.name)?{lo:.05,hi:.4,amt:.8}:/^ct_c$/.test(o.name)?{lo:.22,hi:.5,amt:.95}:{lo:.3,hi:.62,amt:.92});n++}
   else if(o.userData.rallyProp){/* the props share one material with every other map: this stage gets its own copy */if(o.userData.ptProp==='snowpole')return;o.material=snowMat(o.material.clone(),{lo:.35,hi:.65,amt:.92});n++}});
- const b=banks(sc,T);flakes(sc);const f=sc.userData.snow;if(f&&f.m&&f.m.material){f.m.material.size=.42;f.m.material.opacity=.95}
+ const b=banks(sc,T);flakes(sc);/* a sunny morning: only a light drift of flakes in the air */const f=sc.userData.snow;if(f&&f.m&&f.m.material){f.m.material.size=.3;f.m.material.opacity=.7;f.m.geometry.setDrawRange(0,500)}if(sc.userData.snow2){sc.userData.snow2.m.material.opacity=.3;sc.userData.snow2.m.geometry.setDrawRange(0,300)}
  sc.userData.snowFx={mats:n,bankTris:b,ms:Math.round(performance.now()-t0)}}
 /* after rallyprops.js has dressed the stage (it wraps buildWorld two ticks after load) */
 setTimeout(()=>setTimeout(()=>setTimeout(()=>{const bw=buildWorld;buildWorld=function(T){const sc=bw.apply(this,arguments);if(on())try{dress(sc,T)}catch(e){console.warn('snowfx',e)}return sc}},0),0),0);
