@@ -45,10 +45,10 @@ step=function(dt){const Rc=RACE;if(Rc&&Rc.T&&Rc.T.stage&&!Rc._stg){Rc._stg=1;if(
 /* surface brightness per stage (a multiplier on each material of the model: the dirt roads were blown out, the tarmac and the banks nearly black) */
 const TINT={
  mangrove:[[/ROADS_FINLAND/,.5],[/GRAVEL_FINLAND/,.46],/* Nov 10 (Hakan: "the gravel is too bright and looks super out of place"): were .72 and .8 */[/GRASS_FINLAND/,1.45],[/LAKE_BOTTOM/,1.2],[/^ct_c$/,1.5],[/ATLAS/,1.25]],
- terr:[[/TARMAC_PLAIN/,2.6],[/ROADS_FRANCE/,2.1],[/GRASS_FRANCE/,1.3],[/SNOW_FRANCE/,.9],[/^ct_c$/,1.3]],
+ terr:[[/TARMAC_PLAIN/,2.6],[/ROADS_FRANCE/,2.1],[/GRASS_FRANCE/,1.3],[/SNOW_FRANCE/,.9],[/^ct_c$/,.82]],
  ash:[[/ROADS_PORTUGAL/,1.1],[/GRAVEL_PORTUGAL/,.9],[/GRASS_PORTUGAL/,1.35],[/^ct_c$/,2.1]],
  autumn:[[/SNOW_SWEDEN/,.86],[/ICE_SURFACE/,.95],[/STONE/,1.3],[/^ct_c$/,1.5]]};
-const EMIS={ash:[[/GRAVEL_PORTUGAL/,[.075,.048,.026]]],terr:[[/^ct_c$/,[.03,.035,.045]]],autumn:[[/^ct_c$/,[.03,.035,.045]]],mangrove:[[/^ct_c$/,[.02,.03,.02]]]};/* lifts the near-black rock and bank colours */
+const EMIS={ash:[[/GRAVEL_PORTUGAL/,[.075,.048,.026]]],terr:[[/^ct_c$/,[.012,.014,.018]]],autumn:[[/^ct_c$/,[.03,.035,.045]]],mangrove:[[/^ct_c$/,[.02,.03,.02]]]};/* lifts the near-black rock and bank colours */
 /* Portugal's cut banks use the road gravel texture and, lit from above, came out as flat grey-brown slabs: blotches and strata (from world position) break them up */
 function bankNoise(m){if(m.userData._nz)return;m.userData._nz=1;m.onBeforeCompile=sh=>{
  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vWp;').replace('#include <begin_vertex>','#include <begin_vertex>\nvWp=(modelMatrix*vec4(transformed,1.0)).xyz;');
