@@ -39,27 +39,30 @@ class PtEngine extends AudioWorkletProcessor{
    /* firings this sample */
    for(let q=0;q<cyl;q++){let f=this.off[q]+(this.banks[q]==='L'?-1:1)*(k.uneven||0)*.5/cyl;f-=Math.floor(f);
     const a=ph0-Math.floor(ph0),b=a+dph;if((f>=a&&f<b)||(f+1>=a&&f+1<b)){
-     const ld=cut?0:this.load,mis=(ld<.08&&rpm>2600&&this.rnd()<(k.pop||.06))||(cut&&this.rnd()<.25),amp=(cut&&!mis?.05:mis?1.6:(.22+.78*ld))*(1+(this.rnd()-.5)*(k.jit||.12))*(this.banks[q]==='L'?1:(k.bal||1));
+     const ld=cut?0:this.load,mis=(ld<.08&&rpm>2600&&this.rnd()<(k.pop||.06)*.5)||(cut&&this.rnd()<.25),amp=(cut&&!mis?.05:mis?1.2:(.22+.78*ld))*(1+(this.rnd()-.5)*(k.jit||.12)*.5)*(this.banks[q]==='L'?1:(k.bal||1));
      const iv=sr/(cyc*cyl),W=Math.max(sr*.00035,Math.min(sr*.0055,iv*(k.wid||.3)*.5))*(mis?.5:1);
-     this.pl.push({t:this.n+this.hd[q],a:amp,W,bk:this.banks[q]==='L'?0:1,nz:(k.nz||.25)*(mis?3:1)})}}
+     this.pl.push({t:this.n+this.hd[q],a:amp,W,bk:this.banks[q]==='L'?0:1,nz:(k.nz||.25)*(mis?.55:.3)})}}
    if(this.ph>1e6)this.ph-=Math.floor(this.ph);
    /* pulses into the banks */
+   /* Nov 10 (Hakan: "much less staticky"): the noise in each pulse is now soft (low-passed, a third of the level), the roar is a
+      narrow rumble at a third of the level instead of a hiss, and almost none of the unfiltered exhaust is let through */
+   this.sn=(this.sn||0)+.12*((Math.random()*2-1)*2.2-(this.sn||0));
    let e0=0,e1=0;for(let p=this.pl.length-1;p>=0;p--){const q=this.pl[p],t=this.n-q.t;if(t<0)continue;const u=t/q.W;if(u>7){this.pl.splice(p,1);continue}
-    const v=q.a*((1-Math.exp(-t*this.ta))*Math.exp(-u)*1.15+q.nz*(Math.random()*2-1)*Math.exp(-u*1.2));if(q.bk)e1+=v;else e0+=v}
+    const v=q.a*((1-Math.exp(-t*this.ta))*Math.exp(-u)*1.15+q.nz*this.sn*Math.exp(-u*1.2));if(q.bk)e1+=v;else e0+=v}
    this.n++;
    /* exhaust: pipe then muffler, per bank */
    const x0=this.comb(this.muf[0],this.comb(this.pipe[0],e0)),x1=this.comb(this.muf[1],this.comb(this.pipe[1],e1));
    let ex=x0+x1;
    /* brightness: opens with load and rpm */
    const rr=Math.min(1,(rpm-(k.idle||900))/((k.red||7000)-(k.idle||900))),fc=(k.cut0||420)*3+(k.cut1||3400)*1.6*(.25*rr+.75*rr*this.load)+this.load*500,al=1-Math.exp(-2*Math.PI*fc/sr);
-   this.lpo+=al*(ex-this.lpo);ex=this.lpo*(1-(k.raw||.05))+ex*(k.raw||.05);
+   this.lpo+=al*(ex-this.lpo);ex=this.lpo*(1-(k.raw||.05)*.3)+ex*(k.raw||.05)*.3;
    /* intake */
    const it=this.comb(this.intk,-(e0+e1));this.lpi+=.35*(it-this.lpi);const ig=(k.int||.3)*(.1+.9*this.load)*(.2+.8*rr);
    /* block clatter */
    const mx=(e0+e1)*.02+this.ma1*this.mr1+this.ma2*this.mr2;this.mr2=this.mr1;this.mr1=mx;
    /* the roar: turbulent gas in the pipe, noise riding on the pulses, under load */
-   this.env+=(Math.abs(e0+e1)-this.env)*.01;const rf=140+rpm*.045,rr2=.965,ra1=2*rr2*Math.cos(2*Math.PI*rf/sr),ry=(Math.random()*2-1)*.05+ra1*this.ry1-rr2*rr2*this.ry2;this.ry2=this.ry1;this.ry1=ry;
-   const roar=ry*this.env*(.15+this.load*.85)*(k.roar||.9);
+   this.env+=(Math.abs(e0+e1)-this.env)*.01;const rf=140+rpm*.045,rr2=.985,ra1=2*rr2*Math.cos(2*Math.PI*rf/sr),ry=(Math.random()*2-1)*.012+ra1*this.ry1-rr2*rr2*this.ry2;this.ry2=this.ry1;this.ry1=ry;
+   const roar=ry*this.env*(.15+this.load*.85)*(k.roar||.9)*.5;
    /* in the cabin: the exhaust is muffled by the body, the intake and the block come forward */
    const cb=this.cb,exm=ex*(1-.45*cb)+this.lpo*.45*cb;
    let y=exm+roar+(it-this.lpi)*ig*(1+1.2*cb)+mx*(k.mk||.25)*(1-this.load*.5)*(1+1.5*cb);
@@ -96,6 +99,6 @@ P.engWkNode=(a,name,dest)=>{if(!ok()||!(a._ptEng||a._ptEngSP))return null;const 
  try{if(a._ptEng){const n=new AudioWorkletNode(a,'pt-engine',{numberOfInputs:0,numberOfOutputs:1,outputChannelCount:[1],processorOptions:k});if(dest)n.connect(dest);
    return{node:n,k,set(rpm,load,vol){n.port.postMessage({rpm,load,vol})},stop(){try{n.port.postMessage({vol:0});setTimeout(()=>{try{n.disconnect()}catch(e){}},120)}catch(e){}}}}
   const pr=new (spClass(a.sampleRate))({processorOptions:k});
-  const n=a.createScriptProcessor(1024,1,1);n.onaudioprocess=e=>{const o=e.outputBuffer.getChannelData(0);pr.process([],[[o]])};if(dest)n.connect(dest);
+  const n=a.createScriptProcessor(2048,1,1)/* a bigger block: on the main thread a small one drops out under load, which is heard as static */;n.onaudioprocess=e=>{const o=e.outputBuffer.getChannelData(0);pr.process([],[[o]])};if(dest)n.connect(dest);
   return{node:n,k,set(rpm,load,vol,x){pr.port.onmessage({data:Object.assign({rpm,load,vol},x||{})})},stop(){try{pr.port.onmessage({data:{vol:0}});setTimeout(()=>{try{n.onaudioprocess=null;n.disconnect()}catch(e){}},120)}catch(e){}}}}catch(e){console.warn('engine node',e);return null}};
 })();

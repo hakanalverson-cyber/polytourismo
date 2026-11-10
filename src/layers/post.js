@@ -56,7 +56,26 @@ function init(){const sc=new THREE.Scene(),cam=new THREE.OrthographicCamera(-1,1
     float face=1.-smoothstep(0.,.75,length((sunP-.5)*vec2(asp,1.)));
     c=c+g*vis+sunCol*vis*face*.04;c=mix(c,c*.92+sunCol*.08,vis*face*.15);}}
    gl_FragColor=vec4(c,1.);}`,depthTest:false,depthWrite:false,toneMapped:false});
- Q={sc,cam,q,blur,comp,bright}}
+ /* Nov 10: metering for the auto exposure: a 32x18 picture of the frame, each pixel the average of 16 taps, as sqrt(linear luminance)
+    in red and whether it is ground (not sky) in green */
+ const meter=new THREE.ShaderMaterial({uniforms:{tC:{value:null},tD:{value:null},px:{value:new THREE.Vector2()}},vertexShader:VS,
+  fragmentShader:`uniform sampler2D tC,tD;uniform vec2 px;varying vec2 vUv;void main(){float l=0.,g=0.;for(int i=0;i<4;i++)for(int j=0;j<4;j++){vec2 o=(vec2(float(i),float(j))-1.5)*px;
+   vec3 c=texture2D(tC,vUv+o).rgb;c=pow(c,vec3(2.2));l+=mix(dot(c,vec3(.2126,.7152,.0722)),max(c.r,max(c.g,c.b)),.45);g+=step(texture2D(tD,vUv+o).x,.99999);}gl_FragColor=vec4(sqrt(l/16.),g/16.,0.,1.);}`,depthTest:false,depthWrite:false,toneMapped:false});
+ Q={sc,cam,q,blur,comp,bright,meter}}
+/* Nov 10 (Hakan, on the maps: "the others need work"): auto exposure. The pale maps (sand, snow, chalk) were drawn so bright that the ground
+   clipped to white and lost its colour, while the sunset shots he liked sit in the middle of the range. Every 12 frames the frame is metered
+   (the ground counts four times as much as the sky) and the exposure eases toward the level that puts the ground in the middle band (a frame already inside it, like the sunsets, is left as it is): the bright
+   maps come down until the sand and snow show their colour; dark maps are never pushed up much, so a forest stays a forest. Night is left alone.
+   PTO.autoExpo===false turns it off. */
+let mt=null,mbuf=null,aeK=1,aeN=0,aeSc=null;const AE={m:0,k:1};P.aeDbg=AE;
+function meterRead(scene,night){const d=RACE.T&&RACE.T.d||{},mine=(d.id!=null&&d.id<14)||(d.cartoon&&d.cartoon.stage);/* not on the Track mode circuits */
+ if(O().autoExpo===false||night||!mine){aeK=1;return}if(aeSc!==scene){aeSc=scene;aeK=1;aeN=0}
+ if((aeN++)%12&&aeN>40)return;if(!mt){mt=new THREE.WebGLRenderTarget(32,18,{minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter,generateMipmaps:false,depthBuffer:false});mbuf=new Uint8Array(32*18*4)}
+ const m=Q.meter;m.uniforms.tC.value=rt.texture;m.uniforms.tD.value=rt.depthTexture;m.uniforms.px.value.set(1/128,1/72);Q.q.material=m;R.setRenderTarget(mt);prev(Q.sc,Q.cam);R.readRenderTargetPixels(mt,0,0,32,18,mbuf);
+ let sl=0,sw=0;for(let i=0;i<32*18;i++){const y=(i/32|0)/18,l=mbuf[i*4]/255,g=mbuf[i*4+1]/255,w=(.25+.75*g)*(.6+.4*(1-y));sl+=Math.log(Math.max(1e-3,l*l))*w;sw+=w}
+ const ml=Math.exp(sl/sw);/* the log-average linear luminance as drawn now; step the exposure toward the middle grey target */
+ /* the rally stages (Hakan, Nov 10: "they are WAYY too dark") are lifted much further than the other maps */
+ const st=d.cartoon&&d.cartoon.stage,lo=st?.19:.13,tg=ml>.24?.24:ml<lo?lo:ml,r=Math.max(-.35,Math.min(.35,Math.log(tg/Math.max(.005,ml))));aeK=Math.max(st?.95:.58,Math.min(st?1.6:1.06,aeK*Math.exp(r*(aeN<40?.6:.25))));AE.m=ml;AE.k=aeK}
 function size(W,H){if(rt&&rt.width===W&&rt.height===H)return;for(const r of[rt,qa,qb,qc,qd])if(r){if(r.depthTexture)r.depthTexture.dispose();r.dispose()}
  rt=new THREE.WebGLRenderTarget(W,H,{minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,generateMipmaps:false,stencilBuffer:false});rt.texture.encoding=R.outputEncoding;
  rt.depthTexture=new THREE.DepthTexture(W,H);rt.depthTexture.type=THREE.UnsignedIntType;
@@ -70,7 +89,8 @@ function want(scene,cam){if(!(dofOn()||aoOn()||glOn()))return false;if(typeof sc
 let bad=0;
 R.render=function(scene,cam){if(bad>3||!want(scene,cam))return prev(scene,cam);
  try{if(!Q)init();R.getDrawingBufferSize(V2);const W=V2.x|0,H=V2.y|0;size(W,H);
-  R.setRenderTarget(rt);R.clear();prev(scene,cam);
+  const e0=R.toneMappingExposure;R.toneMappingExposure=e0*aeK;R.setRenderTarget(rt);R.clear();try{prev(scene,cam)}finally{R.toneMappingExposure=e0}
+  try{const fc=scene.fog&&scene.fog.color;meterRead(scene,scene.userData.tod==='night'||(fc&&fc.r+fc.g+fc.b<.3))}catch(e){aeK=1}
   /* focus: the distance to the player's car */
   const me=RACE.cars.find(c=>c.human),fd=me&&me.m&&me.m.g?cam.position.distanceTo(me.m.g.position):10,f0=Math.max(70,fd*7),f1=Math.max(320,fd*30),cn=cam.near,cf=cam.far;
   const D=dofOn();

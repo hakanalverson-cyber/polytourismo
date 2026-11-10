@@ -80,7 +80,13 @@ buildWorld=T=>{const sc=bw0(T),d=T.d;
   sc.traverse(o=>{const g=o.geometry&&o.geometry.parameters;if(!g)return;if(o.geometry.type==='CylinderGeometry'&&g.radiusTop===1300)o.visible=false;if(o.geometry.type==='ConeGeometry'&&g.radius>=80&&g.height>=60)o.visible=false})}
  if(d.frost){const W=new THREE.Color(.9,.94,.99);
   sc.traverse(o=>{
-   if(o.isInstancedMesh&&o.instanceColor){const a=o.instanceColor.array,c=new THREE.Color();for(let i=0;i<a.length;i+=3){c.setRGB(a[i],a[i+1],a[i+2]).lerp(W,.62);a[i]=c.r;a[i+1]=c.g;a[i+2]=c.b}o.instanceColor.needsUpdate=true}
+   /* Nov 10 (round 4): the trees and rocks keep their own colour (a little colder) and the snow lies only where it can settle, on the
+      upward-facing faces, so a spruce reads as dark green under white tiers instead of a white cone (PTO.frostSnow===false: the old all-white) */
+   if(o.isInstancedMesh&&o.instanceColor){const a=o.instanceColor.array,c=new THREE.Color(),old=window.PTO&&window.PTO.frostSnow===false,CO=new THREE.Color(.62,.72,.8);
+    for(let i=0;i<a.length;i+=3){c.setRGB(a[i],a[i+1],a[i+2]);if(old)c.lerp(W,.62);else c.lerp(CO,.18).multiplyScalar(.9);a[i]=c.r;a[i+1]=c.g;a[i+2]=c.b}o.instanceColor.needsUpdate=true;
+    if(!old&&o.material&&!Array.isArray(o.material)){const m=o.material.clone();m.onBeforeCompile=sh=>{sh.uniforms.upV={value:new THREE.Vector3(0,1,0)};m.userData.upV=sh.uniforms.upV;
+      sh.fragmentShader='uniform vec3 upV;\n'+sh.fragmentShader.replace('#include <normal_fragment_begin>','#include <normal_fragment_begin>\n{float sn=smoothstep(.28,.42,dot(normal,upV));diffuseColor.rgb=mix(diffuseColor.rgb*.8,vec3(.86,.9,.96),sn);}')};
+     m.customProgramCacheKey=()=>'frostSnow';o.material=m;o.onBeforeRender=(r,s_,cam)=>{const u=m.userData.upV;if(u)u.value.set(0,1,0).transformDirection(cam.matrixWorldInverse)}}}
    else if(o.isMesh&&o.geometry&&o.geometry.attributes&&o.geometry.attributes.color&&o.geometry.attributes.position.count>2000){const a=o.geometry.attributes.color.array,c=new THREE.Color();for(let i=0;i<a.length;i+=3){c.setRGB(a[i],a[i+1],a[i+2]).lerp(W,.82);a[i]=c.r;a[i+1]=c.g;a[i+2]=c.b}o.geometry.attributes.color.needsUpdate=true}})}
  return sc};
 /* medal references: Mercedes AI first lap (tests/newtracks_laps.py) */

@@ -67,6 +67,13 @@ function upgrade(sc,dd){if(sc.userData.skyx!==undefined)return;sc.userData.skyx=
  const sc0=sun?sun.color.clone():new THREE.Color(1,.95,.85),cl=CL[d.name]||[.35,0xffffff,1];
  /* round 2 (Hakan: an overcast map should be darker): heavy cloud greys and dims the sky, and the clouds get heavier undersides */
  const oc=Math.max(0,Math.min(1,(cl[0]-.45)/.2));if(oc>0&&!night){const g=c=>{const l=(c.r+c.g+c.b)/3;c.lerp(new THREE.Color(l,l,l*1.04),.55*oc).multiplyScalar(1-.28*oc)};g(zen);g(hor);g(fog);if(sc.fog&&sc.fog.color)g(sc.fog.color);sc.traverse(o=>{if(o.isHemisphereLight)o.intensity*=1-.3*oc;else if(o.isDirectionalLight)o.intensity*=1-.3*oc})}
+ /* round 4 (Nov 10): a clear day reads as a clear day. The day domes were a pale grey-blue, and after the tone curve and the darker
+    exposure on the bright maps they looked overcast; the zenith now gets a deeper, cleaner blue that fades to the old pale horizon */
+ if(!night&&!low&&oc<.5&&!(window.PTO&&window.PTO.skyBlue===false)&&((d.id!=null&&d.id<14)||(d.cartoon&&d.cartoon.stage))){const k=1-oc*2;
+  zen.lerp(lin(0x3f86d8),.7*k);hor.lerp(lin(0xb4d0ea),.45*k)}
+ /* Nov 10 (Hakan: "the rally tracks are WAYY too dark"): the stage models sit under trees and banks, and with the dimmed sky fill their
+    shadow sides went near black. The sky fill on a stage is raised a lot and the sun a little (PTO.stageBright===false: as before) */
+ if(d.cartoon&&d.cartoon.stage&&!night&&!(window.PTO&&window.PTO.stageBright===false))sc.traverse(o=>{if(o.isHemisphereLight){o.intensity*=1.7;o.groundColor.lerp(o.color,.25)}else if(o.isDirectionalLight)o.intensity*=1.15});
  const midC=zen.clone().lerp(hor,.45),gndC=fog.clone().lerp(hor,.3);
  const m=new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,depthTest:true,fog:false,uniforms:{zen:{value:zen},mid:{value:midC},hor:{value:hor.clone().lerp(fog,.35)},gnd:{value:gndC},sunC:{value:sc0.clone().multiplyScalar(night?.25:1)},sunD:{value:sd},
   clC:{value:lin(cl[1]).multiply(night?new THREE.Color(.35,.38,.5):new THREE.Color(1,1,1)).multiplyScalar(1-.3*oc)},t:{value:0},cov:{value:cl[0]},csc:{value:cl[2]},night:{value:night},warm:{value:low?1:sd.y<.3?.4:.1},sunK:{value:night?0:1-.75*oc}},
