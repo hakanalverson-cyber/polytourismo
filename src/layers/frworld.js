@@ -53,7 +53,7 @@ const roadDist=(x,z)=>{const u=clamp(x/CELL,0,GX-1),v=clamp(z/CELL,0,GZ-1);retur
 /* ---------- ground colours: sand, grass, scrub and pine land, limestone ----------
    written as the sRGB colour you would paint; cc() turns it into what the lit, gamma-corrected material needs */
 const cc=h=>{const c=[(h>>16&255)/255,(h>>8&255)/255,(h&255)/255];return c.map(v=>Math.pow(v,2.2)/.72)};
-const COL={sand:cc(0xe9dcae),seaS:cc(0xd9d3a6),seaM:cc(0x6fb0a0),seaD:cc(0x1b4b60),grass:cc(0x6b9a3a),lush:cc(0x4f8a34),dry:cc(0xb2a95a),maquis:cc(0x5d7a38),olive:cc(0x7f9456),pine:cc(0x2c5a30),soil:cc(0xa9805a),
+const COL={sand:cc(0xe9dcae),seaS:cc(0xd9d3a6),seaM:cc(0x6fb0a0),seaD:cc(0x1b4b60),grass:cc(0x5c8836),lush:cc(0x437a2f),dry:cc(0xa59b55),maquis:cc(0x5d7a38),olive:cc(0x7f9456),pine:cc(0x2c5a30),soil:cc(0xa9805a),
  rock:cc(0x8f8573),rockD:cc(0x625a4d),cliff:cc(0xdccfb4),stone:cc(0xa8957a),stoneD:cc(0x85735c),lot:cc(0xa59c88),piazza:cc(0xcdb98f),foam:cc(0xf2f2ea)};
 const mixc=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
 function groundColor(x,z,h,sl,zn,d,nz,fo,dr){
