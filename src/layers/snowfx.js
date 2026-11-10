@@ -60,9 +60,9 @@ function dress(sc,T){const d=T.d;if(!d||!d.cartoon||!d.cartoon.stage||d._key!=='
  sc.traverse(o=>{if(!(o.isMesh||o.isInstancedMesh)||!o.material||Array.isArray(o.material))return;
   if(/^ct_/.test(o.name)){if(/ICE_SURFACE/.test(o.name))return;
    /* the ground texture is snow already: there the shader adds the grain, the drifts and the glints, and whitens what is left bare */
-   snowMat(o.material,/SNOW_SWEDEN/.test(o.name)?{lo:.05,hi:.4,amt:.8}:/^ct_c$/.test(o.name)?{lo:.22,hi:.5,amt:.95}:{lo:.3,hi:.62,amt:.92});n++}
+   snowMat(o.material,/SNOW_SWEDEN/.test(o.name)?{lo:.05,hi:.4,amt:.8}:/^ct_c$/.test(o.name)?{lo:-.55,hi:.3,amt:.9}/* hoarfrost: the trees and everything else of the model are white almost all over, only the undersides keep their colour */:{lo:.3,hi:.62,amt:.92});n++}
   else if(o.userData.rallyProp){/* the props share one material with every other map: this stage gets its own copy */if(o.userData.ptProp==='snowpole')return;o.material=snowMat(o.material.clone(),{lo:.35,hi:.65,amt:.92});n++}});
- const b=banks(sc,T);flakes(sc);/* a sunny morning: only a light drift of flakes in the air */const f=sc.userData.snow;if(f&&f.m&&f.m.material){f.m.material.size=.3;f.m.material.opacity=.7;f.m.geometry.setDrawRange(0,500)}if(sc.userData.snow2){sc.userData.snow2.m.material.opacity=.3;sc.userData.snow2.m.geometry.setDrawRange(0,300)}
+ sc.userData.sunStar=1;const b=banks(sc,T);flakes(sc);/* a sunny morning: only a light drift of flakes in the air */const f=sc.userData.snow;if(f&&f.m&&f.m.material){f.m.material.size=.3;f.m.material.opacity=.7;f.m.geometry.setDrawRange(0,500)}if(sc.userData.snow2){sc.userData.snow2.m.material.opacity=.3;sc.userData.snow2.m.geometry.setDrawRange(0,300)}
  sc.userData.snowFx={mats:n,bankTris:b,ms:Math.round(performance.now()-t0)}}
 /* after rallyprops.js has dressed the stage (it wraps buildWorld two ticks after load) */
 setTimeout(()=>setTimeout(()=>setTimeout(()=>{const bw=buildWorld;buildWorld=function(T){const sc=bw.apply(this,arguments);if(on())try{dress(sc,T)}catch(e){console.warn('snowfx',e)}return sc}},0),0),0);

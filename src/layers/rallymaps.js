@@ -112,7 +112,7 @@ const ATM={
  mangrove:{sky:[0x4f86c6,0xe8dcc2],fog:0xd9d6c4,near:140,far:640,sun:0xffd9a6,sunI:.78,sunAt:[-260,150,120],hemi:[0xa9c6e6,0x56703f],hemiI:1.7},/* Finland: morning mist through the pines */
  terr:{sky:[0x3f7fcf,0xcfe2f2],fog:0xd3e1ee,near:200,far:900,sun:0xfff0d8,sunI:.82,sunAt:[200,210,-120],hemi:[0xb4cdea,0x8a98a6],hemiI:1.8},/* France: clear alpine air */
  ash:{sky:[0x4a82c8,0xf5d6a4],fog:0xe8cfa6,near:130,far:720,sun:0xffc07a,sunI:.8,sunAt:[-300,110,160],hemi:[0xc8d4e4,0x8f7248],hemiI:1.8},/* Portugal: warm late afternoon dust */
- autumn:{sky:[0x2f78d2,0xd4e6f6],fog:0xd8e6f4,near:150,far:820,sun:0xffe0b4,sunI:1.0,sunAt:[120,62,-200],hemi:[0xa6c6f2,0xb4c2d6],hemiI:1.75,snow:1}};/* Sweden (Nov 10, Hakan: "brighter, like a sunny winter morning"): clear blue sky, a low warm sun, long blue shadows on the snow, a few flakes drifting in the air */
+ autumn:{sky:[0x0d58c2,0xa8cdf2],fog:0xcfe2f6,near:260,far:1250,sun:0xfff3dc,sunI:1.18,sunAt:[120,105,-200],hemi:[0x8db6f6,0xb9c8dc],hemiI:1.7,snow:1,star:1}};/* Sweden (Nov 10, Hakan: "brighter, like a sunny winter morning"): clear blue sky, a low warm sun, long blue shadows on the snow, a few flakes drifting in the air */
 function stageScene(T){const d=T.d,sc=new THREE.Scene(),A=ATM[d._key]||{};
  sc.fog=new THREE.Fog(A.fog!=null?A.fog:d.fog,A.near||150,A.far||620);const hm=A.hemi||d.hemi;sc.add(new THREE.HemisphereLight(hm[0],hm[1],A.hemiI||1.1));const sun=new THREE.DirectionalLight(A.sun!=null?A.sun:d.sun,A.sunI||1.0);sun.position.set(...(A.sunAt||[-150,250,100]));sc.add(sun);
  const sk=A.sky||d.sky;

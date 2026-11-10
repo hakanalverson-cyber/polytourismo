@@ -17,7 +17,7 @@ const lin=h=>new THREE.Color(h).convertSRGBToLinear();
 /* per map: cloud cover (0..1), cloud tint, cloud scale, wind */
 const CL={'Quarry Circuit':[.42,0xffffff,1],'Canyon Viaduct':[.22,0xfff0dc,1.3],'Alpine Pass':[.5,0xffffff,.9],'Afterhours Loop':[.18,0x8a94b8,1.2],'Pinewood Stage':[.46,0xf4f8f4,1],
  'Redrock Stage':[.2,0xffe2c4,1.4],'Highmoor Stage':[.58,0xe4e8ea,.8],'Coastal Run':[.34,0xffd8b0,1.2],'Grand Valley':[.4,0xffffff,1],'Frostline Stage':[.55,0xf4f8ff,.9],
- 'Finland':[.4,0xffffff,1],'France':[.3,0xffffff,1.1],'Portugal':[.24,0xffe8cc,1.3],'Sweden':[.16,0xffffff,1.2]};
+ 'Finland':[.4,0xffffff,1],'France':[.3,0xffffff,1.1],'Portugal':[.24,0xffe8cc,1.3],'Sweden':[.1,0xffffff,1.5]};
 const VS=`varying vec3 vD;void main(){vD=position;vec4 p=projectionMatrix*modelViewMatrix*vec4(position,1.);gl_Position=p.xyww;}`;
 const FS=`varying vec3 vD;uniform vec3 zen,mid,hor,gnd,sunC,sunD,clC;uniform float t,cov,csc,night,warm,sunK;
 float h2(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
@@ -70,7 +70,7 @@ function upgrade(sc,dd){if(sc.userData.skyx!==undefined)return;sc.userData.skyx=
  /* round 4 (Nov 10): a clear day reads as a clear day. The day domes were a pale grey-blue, and after the tone curve and the darker
     exposure on the bright maps they looked overcast; the zenith now gets a deeper, cleaner blue that fades to the old pale horizon */
  if(!night&&!low&&oc<.5&&!(window.PTO&&window.PTO.skyBlue===false)&&((d.id!=null&&d.id<14)||(d.cartoon&&d.cartoon.stage))){const k=1-oc*2;
-  zen.lerp(lin(0x3f86d8),.7*k);hor.lerp(lin(0xb4d0ea),.45*k)}
+  const deep=d._key==='autumn';/* the snow stage keeps its own deep winter blue */zen.lerp(lin(0x3f86d8),(deep?.15:.7)*k);hor.lerp(lin(0xb4d0ea),(deep?.1:.45)*k)}
  /* Nov 10 (Hakan: "the rally tracks are WAYY too dark"): the stage models sit under trees and banks, and with the dimmed sky fill their
     shadow sides went near black. The sky fill on a stage is raised a lot and the sun a little (PTO.stageBright===false: as before) */
  if(d.cartoon&&d.cartoon.stage&&!night&&!(window.PTO&&window.PTO.stageBright===false))sc.traverse(o=>{if(o.isHemisphereLight){o.intensity*=1.7;o.groundColor.lerp(o.color,.25)}else if(o.isDirectionalLight)o.intensity*=1.15});
