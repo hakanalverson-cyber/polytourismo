@@ -25,21 +25,28 @@ const st=document.createElement('style');st.textContent=`
 #s8setup.prepLive::before{opacity:0!important}
 /* Nov 10 (Hakan: "the race preparation phase is the same terrible text boxes"): over the live track the three boxed cards become a row of glass pills
    (small label over a big value) along the bottom edge, with no card frames and no list rows (PTO.prepPills===false: the old cards) */
-#s8setup.prepLive.pillOn #gxSu.g2 .gxCards:not(.g4){display:flex!important;flex-wrap:wrap;align-items:flex-end;gap:8px 10px;max-height:none!important;padding:0 clamp(22px,3vw,48px) clamp(10px,1.6vh,22px)}
-#s8setup.prepLive.pillOn #gxSu.g2 .gxCards:not(.g4) .gxCard{display:contents!important}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxCards{display:flex!important;flex-wrap:wrap;align-items:flex-end;gap:8px 10px;max-height:none!important;padding:0 clamp(22px,3vw,48px) clamp(10px,1.6vh,22px)}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxCards .gxCard{display:contents!important}
 #s8setup.prepLive.pillOn #gxSu.g2 .gxCards:not(.g4) .gxCard h5{display:none}
-#s8setup.prepLive.pillOn #gxSu.g2 .gxCards:not(.g4) .gxOpts{display:contents!important}
-#s8setup.prepLive.pillOn #gxSu.g2 .gxCards:not(.g4) .gxr{flex-direction:column;align-items:flex-start;justify-content:center;gap:1px;min-height:0!important;padding:8px 18px 9px!important;margin:0!important;border-radius:14px!important;background:#0a0e1480;backdrop-filter:blur(10px);box-shadow:inset 0 1px 0 #ffffff26,0 0 0 1px #ffffff1c,0 8px 20px #0006}
-#s8setup.prepLive.pillOn #gxSu.g2 .gxCards:not(.g4) .gxr .l{font:600 10px var(--gt)!important;letter-spacing:.2em;text-transform:uppercase;color:#8fb4d8}
-#s8setup.prepLive.pillOn #gxSu.g2 .gxCards:not(.g4) .gxr .v{margin:0!important;font:400 clamp(15px,2.1vh,22px) var(--gt);gap:8px}
-#s8setup.prepLive.pillOn #gxSu.g2 .gxCards:not(.g4) .gxr.on{background:linear-gradient(180deg,#8fb4d8e0 0%,#4f7eabe8 48%,#33608ce8 52%,#4a77a3e8 100%)}
-#s8setup.prepLive.pillOn #gxSu.g2 .gxCards:not(.g4) .gxr.on .l{color:#e6f0fa}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxCards.g4 .gxCard h5{display:inline-flex;align-items:center;gap:7px;margin:0 2px 0 0!important;padding:6px 4px;font:600 10px var(--gt);letter-spacing:.22em;text-transform:uppercase;color:#8fb4d8}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxCards.g4 .gxCard.empty .gxr.gxAddT{flex-direction:row;gap:10px;min-height:0;padding:9px 18px;border-radius:14px!important;background:#0a0e1466;box-shadow:inset 0 1px 0 #ffffff26,0 0 0 1px #ffffff1c;font:500 12px var(--gt);letter-spacing:.14em;text-transform:uppercase}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxCards.g4 .gxCard.empty .gxr.gxAddT small{display:none}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxCards.g4 .gxCard.empty .gxr.gxAddT{flex:0 0 auto!important;width:auto!important;height:auto!important;min-height:0!important;max-height:none!important;border:0!important;margin:0!important;align-self:flex-end}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxCards.g4 .gxr{padding:6px 14px 7px!important}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxCards.g4 .gxr input{width:104px!important;padding:3px 8px!important;min-height:0!important;height:24px!important}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxCards.g4{overflow:visible!important;gap:6px 8px!important;align-items:center!important}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxCards.g4 .gxCard.empty{border:0!important;background:none!important;min-height:0!important}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxCards .gxOpts{display:contents!important}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxCards .gxr{flex-direction:column;align-items:flex-start;justify-content:center;gap:1px;min-height:0!important;padding:8px 18px 9px!important;margin:0!important;border-radius:14px!important;background:#0a0e1480;backdrop-filter:blur(10px);box-shadow:inset 0 1px 0 #ffffff26,0 0 0 1px #ffffff1c,0 8px 20px #0006}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxCards .gxr .l{font:600 10px var(--gt)!important;letter-spacing:.2em;text-transform:uppercase;color:#8fb4d8}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxCards .gxr .v{margin:0!important;font:400 clamp(15px,2.1vh,22px) var(--gt);gap:8px}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxCards .gxr.on{background:linear-gradient(180deg,#8fb4d8e0 0%,#4f7eabe8 48%,#33608ce8 52%,#4a77a3e8 100%)}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxCards .gxr.on .l{color:#e6f0fa}
 #s8setup.prepLive.pillOn #gxSu.g2 .gxst{display:grid;grid-template-columns:auto minmax(110px,190px) auto;gap:7px 12px;align-items:center;margin-top:12px;font:500 clamp(10px,1.3vh,13px) var(--gt);letter-spacing:.14em;text-transform:uppercase;color:#aebfd0;text-shadow:0 1px 6px #000}
 #s8setup.prepLive.pillOn #gxSu.g2 .gxst u{display:block;height:4px;border-radius:2px!important;background:#ffffff26;overflow:hidden}
 #s8setup.prepLive.pillOn #gxSu.g2 .gxst u i{display:block;height:100%;background:linear-gradient(90deg,#8fb4d8,#dff0ff);box-shadow:0 0 8px #8fb4d8}
 #s8setup.prepLive.pillOn #gxSu.g2 .gxst em{font-style:normal;color:#fff;letter-spacing:.04em;text-transform:none;font-variant-numeric:tabular-nums}
 #s8setup.prepLive.pillOn #gxSu.g2 .gxTn b{font-size:clamp(30px,4.8vh,58px)}
-#s8setup.prepLive.pillOn #gxSu.g2 .gxCards.g4 .gxCard{background:#0a0e1488!important;box-shadow:inset 0 1px 0 #ffffff26,0 0 0 1px #ffffff1c,0 10px 26px #0007!important}
 #s8setup.prepLive.pillOn #gxSu.g2 .gxCards:not(.g4) .gxr.more{border-top:0;margin-top:0!important}
 
 #s8setup.prepLive #gxSu.g2 .gxHero{background:transparent!important;box-shadow:none!important;cursor:grab}
@@ -106,6 +113,16 @@ function camCar(s,dt){const n=s.cars.length;if(!n)return;const C=new THREE.Vecto
  if(dragX==null)s.ang+=dt*.13;s.ang+=drag;drag=0;const ps=s.cars[0].rotation.y,r=(FAST()?9.6:7.4)+2.6*(n-1)+(n>2?1.6:0),h=1.35+.45*(n-1),a=ps+.95+s.ang;
  cam.position.set(C.x+Math.sin(a)*r,C.y+h,C.z+Math.cos(a)*r);const g=GBf(s.T,cam.position.x,cam.position.z);if(isFinite(g)&&cam.position.y<g+.7)cam.position.y=g+.7;
  const L=C.clone();L.y+=.45;cam.lookAt(L);s.look=L}
+/* Nov 10 (Hakan: "there should be no track as a background"): on the car step the track is hidden and the cars stand in a dark studio: a soft round
+   floor that fades out, a deep gradient backdrop, the sun kept as the key light (PTO.prepStudio===false: the cars on the track as before) */
+let BGTEX=null,FLTEX=null;
+function studioTex(){if(BGTEX)return;const c=document.createElement('canvas');c.width=256;c.height=256;const g=c.getContext('2d'),gr=g.createRadialGradient(150,120,10,128,140,200);gr.addColorStop(0,'#3a4656');gr.addColorStop(.5,'#161c25');gr.addColorStop(1,'#05070a');g.fillStyle=gr;g.fillRect(0,0,256,256);BGTEX=new THREE.CanvasTexture(c);BGTEX.encoding=THREE.sRGBEncoding;
+ const f=document.createElement('canvas');f.width=f.height=256;const h=f.getContext('2d'),fg=h.createRadialGradient(128,128,0,128,128,128);fg.addColorStop(0,'#fff');fg.addColorStop(.55,'#9a9a9a');fg.addColorStop(1,'#000');h.fillStyle=fg;h.fillRect(0,0,256,256);FLTEX=new THREE.CanvasTexture(f)}
+function studio(s,on){if(!!s.stOn===on)return;s.stOn=on;
+ if(on){studioTex();if(!s.stGrp){const m=new THREE.MeshStandardMaterial({color:0x2a313b,roughness:.42,metalness:.15,alphaMap:FLTEX,transparent:true});const fl=new THREE.Mesh(new THREE.CircleGeometry(34,48),m);fl.rotation.x=-Math.PI/2;fl.receiveShadow=true;s.stGrp=fl;s.sc.add(fl)}
+  s.stGrp.visible=true;s.stHide=[];for(const o of s.sc.children){if(o===s.stGrp||o.isLight||o===key||o===key.target||(s.sun&&o===s.sun.target)||s.cars.includes(o))continue;if(o.visible){o.visible=false;s.stHide.push(o)}}
+  s.stBg=s.sc.background;s.stFog=s.sc.fog;s.sc.background=BGTEX;s.sc.fog=null}
+ else{if(s.stGrp)s.stGrp.visible=false;for(const o of s.stHide||[])o.visible=true;s.stHide=null;s.sc.background=s.stBg||null;s.sc.fog=s.stFog||null}}
 /* ---- what the setup screen shows right now ---- */
 function want(){const sec=$('s8setup');if(!on()||!sec||!sec.classList.contains('on')||!sec.classList.contains('gxOn'))return null;const u=P.ui;if(!u||!u.ST||u.ST.custom)return null;const ST=u.ST;
  if(!$('gxSu')||$('gxSu').style.display==='none')return null;const chips=document.querySelectorAll('#suSteps i'),step=chips.length>1&&chips[1].classList.contains('on')?2:1;
@@ -128,6 +145,7 @@ function frame(now){raf=requestAnimationFrame(frame);const w=want();
  lastDraw=now;fcount++;
  const s=S,dt=Math.min(.05,(now-(lastT||now))/1000);lastT=now;if(!size(w.sec))return;
  if(w.step===2){carsFor(s,w.cars);for(const c of s.cars)c.visible=true}else for(const c of s.cars)c.visible=false;
+ if(FAST()&&!(window.PTO&&window.PTO.prepStudio===false)){studio(s,w.step===2&&s.cars.length>0);if(s.stOn&&s.stGrp&&s.cars.length){const c0=s.cars[0];s.stGrp.position.set(c0.position.x,c0.position.y-.02,c0.position.z)}}
  if(s.step!==w.step){s.step=w.step;s.shot=null;s.sh=0;s.ang=0;cv.classList.remove('cut');pend=null}
  let far=null;if(w.step===2&&s.cars.length)camCar(s,dt);else far=camRace(s,now);
  /* the subject sits in the open part of the picture (above the cards, right of the name) */
