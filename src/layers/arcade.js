@@ -17,7 +17,9 @@ P.arcHum=c=>hu(c)&&P.arcade()&&!(P.simOn&&P.simOn(c));
    Quick Play: k = sr(u)g(u) / (dialK * VK * sr(v)g(v)), v = physics speed, u = v*dialK (the Quick Play speed with the same dial reading),
    sr = the core's speed-sensitive steering, g = the high-speed calming in rally.js */
 const SR=v=>2.25-.033*Math.min(Math.abs(v),42),GS=v=>v>40?Math.pow(40/v,.85):1;
-P.arcSteerK=c=>{const dk=P.dialK?P.dialK():1,vk=P.VK?P.VK():1;if(dk===1&&vk===1)return 1;const v=Math.max(2,c.sp||0),u=v*dk;return SR(u)*GS(u)/(dk*vk*SR(v)*GS(v))};
+/* Nov 10 (Hakan: "the steering is WAY too sensitive", measured on a straight at 10/18/28/40 m/s with a full-lock tap: 110/95/76/54 deg/s of yaw, 2 to 3.8 g sideways, about 3x what a road car manages): the wheel is scaled by SK(v), a flat 0.4 from 8 m/s up (a full-lock tap now gives about 1.2 to 1.5 g), fading to 0.6 at a crawl so parking turns stay tight. PTO.calmSteer===false puts it back. */
+const SK=v=>window.PTO&&window.PTO.calmSteer===false?1:.45+.2*Math.max(0,Math.min(1,(8-v)/8));
+P.arcSteerK=c=>{const dk=P.dialK?P.dialK():1,vk=P.VK?P.VK():1,k=SK(Math.abs(c.sp||0));if(dk===1&&vk===1)return k;const v=Math.max(2,c.sp||0),u=v*dk;return k*SR(u)*GS(u)/(dk*vk*SR(v)*GS(v))};
 /* rally: some drift. The core's drift mode (grip eased toward 24% of normal at the rear, an assist that holds the slide angle) is started on
    a stage by lifting off or braking into a corner at speed, or by full lock on the power on a loose surface, and lasts while the wheel is
    turned (counter-steer included). Its grip loss is capped at 75% of the full drift and it never pays the drift boost here */
@@ -27,10 +29,13 @@ const rallyHB=c=>{const i=c.in||{},st=Math.abs(i.st||0),v=c.sp||0;if(v<11)return
  if(v<15||st<.62)return false;const d=RACE.T.d||{},loose=d.gravel!==0||c.onRoad===false;
  return (i.br>0&&v>15)||(!(i.th>0)&&v>17)||(loose&&i.th>0&&st>.9&&v>22)};
 setTimeout(()=>{const hb0=window.PT8_HB;window.PT8_HB=c=>rallyOn(c)?rallyHB(c):hb0?hb0(c):false},0);
-{const sc0=stepCar;stepCar=function(c,dt){const r=sc0.apply(this,arguments);if(rallyOn(c)){if(c.ptBlend>.75)c.ptBlend=.75;c.dts=0}return r}}
+/* sideways pull is capped for the player (Nov 10, steering far too sharp on every mode): yaw rate x speed may not pass 1.5 g, the yaw that was turned beyond it is taken back. */
+{const sc0=stepCar;stepCar=function(c,dt){const r=sc0.apply(this,arguments);if(rallyOn(c)){if(c.ptBlend>.75)c.ptBlend=.75;c.dts=0}
+ if(dt>0&&hu(c)&&P.arcade()&&!(window.PTO&&window.PTO.calmSteer===false)){const sp=Math.abs(c.sp||0),yr=c.yr||0;if(sp>4){const lim=14.7/sp*(P.VK?1/Math.max(1,P.VK()):1)*(P.dialK?Math.max(1,P.dialK()):1);if(Math.abs(yr)>lim){const ny=Math.sign(yr)*lim;c.yaw-=(yr-ny)*dt;c.yr=ny}}}
+ return r}}
 {const m0=P.mul;P.mul=c=>{const m=m0?m0(c):{acc:1,top:1,grip:1,brk:1};if(hu(c)&&P.arcade()){m.grip*=1.3;m.brk*=2}return m}}
 /* steering ramp rate: 7 per second in the base game, 12 here */
-P.arcSnap=c=>hu(c)&&P.arcade()?12:7;
+P.arcSnap=c=>hu(c)&&P.arcade()?(window.PTO&&window.PTO.calmSteer===false?12:8):7;
 /* wall contact: the base pushes back 1.3x the speed into the wall (a bounce off it); here 1.05x, and the nose is eased toward the
    road direction so the car slides along the wall and carries on */
 P.arcWall=(c,psi,dt)=>{if(!(hu(c)&&P.arcade()))return 1.3;if(psi!=null){const f=Math.cos(c.yaw-psi)>=0?psi:psi+Math.PI;let d=f-c.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));c.yaw+=d*Math.min(1,(dt||.016)*10);c.yr*=.5}return 1.05};
