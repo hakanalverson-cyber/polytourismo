@@ -118,12 +118,12 @@ function mkEng(car){const a=ctx(),name=EK[EPID[car.id]]?EPID[car.id]:EK[car.eng]
  e.sq=a.createBufferSource();e.sq.buffer=NB;e.sq.loop=true;e.sf=a.createBiquadFilter();e.sf.type='bandpass';e.sf.frequency.value=1900;e.sf.Q.value=7;e.sg=a.createGain();e.sg.gain.value=0;e.sq.connect(e.sf);e.sf.connect(e.sg);e.sg.connect(MG);e.sq.start();
  e.os=[];e.lfo={stop(){}};e.rpm=.2;e.th=0;e.popT=0;e.last={gear:0,nm:0,combo:0,crash:0,lap:0,vy:0,fin:0,drift:0};return e}
 /* lift-off: a turbo chuff, and pops from a hot exhaust */
-function liftFx(e,r){const k=e.k;if(k.turbo&&e.boost>.35)hiss(.28,.16*e.boost*k.turbo,2600,700,1.4,'bandpass');
+function liftFx(e,r){const k=e.k;if(k.turbo&&e.boost>.35){hiss(.28,.16*e.boost*k.turbo,2600,700,1.4,'bandpass');/* compressor flutter: the air chattering back through the turbo */for(let j=0;j<6;j++)hiss(.035,.09*e.boost*k.turbo*(1-j/7),1100-j*80,500,1.2,'bandpass',.1+j*.055)}
  if(r>.55&&(k.cyl>=8||name6(e))){const n=2+(Math.random()*4|0);for(let i=0;i<n;i++){const dl=.05+i*(.05+Math.random()*.09);hiss(.05,.22+Math.random()*.2,700+Math.random()*900,200,.7,'lowpass',dl);tone(70+Math.random()*40,40,.05,'sine',.5,dl)}}}
 const name6=e=>e.name==='f6'||e.name==='v6h';
 function voice(e,c,th,live,t){const k=e.k,rpm=k.idle+e.rpm*(k.red-k.idle),rate=rpm/R0,lo=Math.min(1,th);
  const rr=(rpm-k.idle)/(k.red-k.idle);
- if(e.wk){const W=e.wk.k,wr_=W.idle+e.rpm*(W.red-W.idle);e.wk.set(wr_,lo,1);e.g.gain.setTargetAtTime(live?(.5+lo*.25)*O().master*O().engine*1.6:0,t,.05)}else{
+ if(e.wk){const W=e.wk.k,wr_=W.idle+e.rpm*(W.red-W.idle);e.wk.node.port?e.wk.node.port.postMessage({rpm:wr_,load:c.shiftT>0?.03:lo,vol:1,lim:e.rpm>.975&&lo>.6?1:0,cab:c.camMode?1:0}):e.wk.set(wr_,c.shiftT>0?.03:lo,1,{lim:e.rpm>.975&&lo>.6?1:0,cab:c.camMode?1:0});e.g.gain.setTargetAtTime(live?(.5+lo*.25)*O().master*O().engine*1.6:0,t,.05)}else{
  e.src.playbackRate.setTargetAtTime(rate,t,.03);
  e.ex.frequency.setTargetAtTime(k.cut[0]+(k.cut[1]-k.cut[0])*(.25*rr+.75*rr*lo)+lo*180,t,.05);
  e.pre.gain.setTargetAtTime(.35+lo*.9+rr*.25,t,.05);
@@ -133,7 +133,7 @@ function voice(e,c,th,live,t){const k=e.k,rpm=k.idle+e.rpm*(k.red-k.idle),rate=r
  if(live&&e.th>.6&&th<.15&&rr>.35&&t>e.popT){e.popT=t+.6;liftFx(e,rr)}e.th=th}
 function killEng(e){try{e.src.stop();if(e.tb){e.tb.stop();e.tbG.disconnect()}e.sq.stop();e.g.disconnect();e.sg.disconnect()}catch(er){}}
 function tick(c,i){if(!on()){return}
- try{ctx();let e=eng[i];const car0=c.cs||P.BYID.merc;if(e&&(e.id!==car0.id||(!e.wk&&AC&&AC._ptEng&&P.engWkNode))){const old=e;eng[i]=null;killEng(old);e=null}if(!e)e=eng[i]=mkEng(car0);const a=AC,t=a.currentTime,live=RACE&&scr==='game'&&!paused;
+ try{ctx();let e=eng[i];const car0=c.cs||P.BYID.merc;if(e&&(e.id!==car0.id||(!e.wk&&AC&&(AC._ptEng||AC._ptEngSP)&&P.engWkNode))){const old=e;eng[i]=null;killEng(old);e=null}if(!e)e=eng[i]=mkEng(car0);const a=AC,t=a.currentTime,live=RACE&&scr==='game'&&!paused;
  const car=c.cs||P.BYID.merc,gi=c.gear|0,ceil=Math.max(8,car.top*P.GT(car)[Math.min(gi,P.GT(car).length-1)].top*.92),r=Math.min(1.05,c.sp/ceil),th=c.in?c.in.th:0;
  const cnt=RACE&&RACE.state==='count'&&c.human&&!c.cool;const rpm=cnt?Math.min(1,.16+th*.72+(th>.5?Math.sin(t*38)*.03:0)):Math.max(.14,Math.min(1,.14+r*.86+(c.shiftT>0?-.18:0)+th*.04));e.rpm+=(rpm-e.rpm)*.35;
  voice(e,c,th,live,t);
@@ -146,8 +146,23 @@ function tick(c,i){if(!on()){return}
   if(c.lapT&&c.lapT.length>L.lap&&!c.fin)SFX.lap();if(c.fin&&!L.fin)SFX.fin();
   if(L.vy<-7&&c.vy>L.vy+4)SFX.land(Math.min(1.2,-L.vy/18));}
  L.nm=c.nm||0;L.combo=c.combo||0;L.crash=c.crashes||0;L.lap=c.lapT?c.lapT.length:0;L.fin=c.fin?1:0;L.vy=c.vy||0}catch(er){if(!P._engErr){P._engErr=1;console.error('engine',er)}}}
-engineSnd=(c,i)=>{if(c.human)tick(c,i)};
-stopEng=()=>{eng.forEach(e=>{if(!e)return;try{const t=AC.currentTime;e.g.gain.setTargetAtTime(0,t,.03);e.sg.gain.setTargetAtTime(0,t,.03);if(e.tbG)e.tbG.gain.setTargetAtTime(0,t,.03)}catch(er){}})};
+/* Nov 9 ("take the engines to the next level"): the cars around you are heard too. The three nearest opponents within 140 m each get a
+   modelled engine, quieter with distance, panned to where they are and pitched by their speed toward or away from you (doppler) */
+const AIV=[];let aiT=0;
+function aiTick(c){if(!on()||!P.engWkNode||!AC||!(AC._ptEng||AC._ptEngSP))return;const Rc=RACE;if(!Rc||scr!=='game'||paused)return;const me=Rc.cars.find(q=>q.human);if(!me)return;
+ const now=AC.currentTime;if(now-aiT>.25){aiT=now;/* reassign voices to the nearest cars */const L=Rc.cars.filter(q=>!q.human&&!q.fin).map(q=>[Math.hypot(q.x-me.x,q.z-me.z),q]).filter(x=>x[0]<140).sort((a,b)=>a[0]-b[0]).slice(0,3).map(x=>x[1]);
+  for(const v of AIV)if(!L.includes(v.c)){v.c=null}
+  for(const q of L){if(AIV.some(v=>v.c===q))continue;let v=AIV.find(v=>!v.c);if(!v&&AIV.length<3){const car=q.cs||P.BYID.merc,name=EK[EPID[car.id]]?EPID[car.id]:EK[car.eng]?car.eng:'v8';const pan=AC.createStereoPanner?AC.createStereoPanner():null,g=AC.createGain();g.gain.value=0;const w=P.engWkNode(AC,name,null);if(!w)return;w.node.connect(g);if(pan){g.connect(pan);pan.connect(MG)}else g.connect(MG);v={w,g,pan,c:null,name,rpm:.3};AIV.push(v)}if(v)v.c=q}}
+ const v=AIV.find(v=>v.c===c);if(!v)return;const car=c.cs||P.BYID.merc,gi=c.gear|0,GT=P.GT(car),ceil=Math.max(8,car.top*GT[Math.min(gi,GT.length-1)].top*.92),r=Math.min(1.05,c.sp/ceil),th=c.in?c.in.th:0;
+ v.rpm+=(Math.max(.14,Math.min(1,.14+r*.86))-v.rpm)*.3;const W=v.w.k,dx=c.x-me.x,dz=c.z-me.z,d=Math.hypot(dx,dz)||1;
+ /* doppler: closing speed along the line between the cars */const vr=((c.vx-me.vx)*dx+(c.vz-me.vz)*dz)/d,dop=Math.max(.8,Math.min(1.25,343/(343+vr)));
+ v.w.node.port?v.w.node.port.postMessage({rpm:W.idle+v.rpm*(W.red-W.idle),load:th,vol:1,dop}):v.w.set(W.idle+v.rpm*(W.red-W.idle),th,1,{dop});
+ const t=AC.currentTime,g=Math.pow(1/(1+d/10),1.25)*.55*O().master*O().engine*1.6;v.g.gain.setTargetAtTime(g,t,.08);
+ if(v.pan){const s=Math.sin(me.yaw),co=Math.cos(me.yaw),lat=(dx*co-dz*s)/d;v.pan.pan.setTargetAtTime(Math.max(-.85,Math.min(.85,-lat)),t,.08)}}
+function aiQuiet(){for(const v of AIV){v.c=null;try{v.g.gain.setTargetAtTime(0,AC.currentTime,.05)}catch(e){}}}
+engineSnd=(c,i)=>{if(c.human)tick(c,i);else try{aiTick(c)}catch(e){}};
+setInterval(()=>{if(AIV.length&&(typeof scr==='undefined'||scr!=='game'||paused))aiQuiet();for(const v of AIV)if(!v.c){try{v.g.gain.setTargetAtTime(0,AC.currentTime,.1)}catch(e){}}},300);
+stopEng=()=>{aiQuiet();eng.forEach(e=>{if(!e)return;try{const t=AC.currentTime;e.g.gain.setTargetAtTime(0,t,.03);e.sg.gain.setTargetAtTime(0,t,.03);if(e.tbG)e.tbG.gain.setTargetAtTime(0,t,.03)}catch(er){}})};
 
 /* ---------- UI sounds: every hover / click in the menus ---------- */
 const HOV='button,.card,.trk,.ci,.ev,.rk,.swb,.seg button,#pause .b button,.menuActions button,.mrow';

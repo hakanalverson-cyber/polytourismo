@@ -47,6 +47,29 @@ const ss=sampleTrack;sampleTrack=d=>{const T=ss(d);if(!d.cartoon)return T;const 
  const s0=T.surf;T.surf=(x,z,y)=>{const r=s0(x,z,y),h=hAt(x,z,y);if(h==null)return r;r.h=h;
   if(!r.road){const k=kAt(x,z);if(k===1||k===2)r.near=1;else if(k===3)r.trap=1}return r};
  return T};
+/* Nov 9 (Hakan: "some trees on the rally map don't have brown wood"): in the stage models some trees are painted one colour, trunk and all.
+   Each tree is found as a connected piece of a face-coloured mesh (tall, narrow, all green or teal, nothing brown in it); the faces close to its
+   vertical axis below the crown are its trunk and are painted bark brown. Trees that already have a brown trunk are left alone. */
+function fixTrunks(pos,idx,fc,lut){const nv=pos.length/3,par=new Int32Array(nv);for(let i=0;i<nv;i++)par[i]=i;
+ const f=a=>{while(par[a]!==a){par[a]=par[par[a]];a=par[a]}return a};
+ const nf=idx.length/3;for(let t=0;t<nf;t++){const a=f(idx[t*3]),b=f(idx[t*3+1]),c=f(idx[t*3+2]);if(a!==b)par[a]=b;const b2=f(b);if(f(c)!==b2)par[f(c)]=b2}
+ /* faces per component */
+ const comp=new Map();for(let t=0;t<nf;t++){const r=f(idx[t*3]);let L=comp.get(r);if(!L)comp.set(r,L=[]);L.push(t)}
+ const col=t=>[fc[t*3],fc[t*3+1],fc[t*3+2]],green=c=>c[1]>c[0]*1.04&&c[1]>=c[2]*.8,brown=c=>c[0]>c[1]*1.08&&c[0]>c[2]*1.15;
+ let fixed=0,faces=0;
+ for(const L of comp.values()){if(L.length<12||L.length>4000)continue;let y0=1e9,y1=-1e9,x0=1e9,x1=-1e9,z0=1e9,z1=-1e9,anyB=false,nG=0;
+  for(const t of L){const c=col(t);if(brown(c)){anyB=true;break}if(green(c))nG++;for(let k=0;k<3;k++){const v=idx[t*3+k]*3;y0=Math.min(y0,pos[v+1]);y1=Math.max(y1,pos[v+1]);x0=Math.min(x0,pos[v]);x1=Math.max(x1,pos[v]);z0=Math.min(z0,pos[v+2]);z1=Math.max(z1,pos[v+2])}}
+  if(anyB||nG<L.length*.85)continue;const H=y1-y0,W=Math.max(x1-x0,z1-z0);if(H<2.2||W>1.7*H||W>30)continue;
+  /* the axis: the middle of the lowest part */
+  let ax=0,az=0,n=0;const yb=y0+H*.12;for(const t of L)for(let k=0;k<3;k++){const v=idx[t*3+k]*3;if(pos[v+1]<=yb){ax+=pos[v];az+=pos[v+2];n++}}if(!n)continue;ax/=n;az/=n;
+  const rT=Math.max(.45,H*.07),rd=v=>Math.hypot(pos[v]-ax,pos[v+2]-az);
+  /* the crown starts where the piece first reaches well out from the axis */
+  let cb=y1;for(const t of L)for(let k=0;k<3;k++){const v=idx[t*3+k]*3;if(rd(v)>Math.max(1,rT*2.6)&&pos[v+1]<cb)cb=pos[v+1]}
+  if(cb-y0<H*.1)continue;let hit=0;
+  for(const t of L){let ok=true,cy=0;for(let k=0;k<3;k++){const v=idx[t*3+k]*3;cy+=pos[v+1]/3;if(rd(v)>rT)ok=false}if(!ok||cy>cb-.05)continue;
+   const s=.85+((t*7919)%100)/100*.3;fc[t*3]=Math.round(107*s);fc[t*3+1]=Math.round(74*s);fc[t*3+2]=Math.round(50*s);hit++}
+  if(hit){fixed++;faces+=hit}}
+ return{fixed,faces}}
 /* scenery: tiles of the model, built once per track file */
 function meshes(pack){if(pack._m)return pack._m;const tx={},mats={},lut=new Float32Array(256),alpha=new Set(pack.alpha||[]);for(let i=0;i<256;i++){const c=i/255;lut[i]=c<.04045?c/12.92:Math.pow((c+.055)/1.055,2.4)}
  const tex=k=>tx[k]||(tx[k]=(()=>{const im=new Image(),t=new THREE.Texture(im);im.onload=()=>{t.needsUpdate=true};im.src=pack.tex[k];/* decode now and put the picture on the graphics card now, not when the road first comes into view */if(im.decode)im.decode().then(()=>{t.needsUpdate=true;try{if(window.R&&R.initTexture)R.initTexture(t)}catch(e){}}).catch(()=>{});t.wrapS=t.wrapT=THREE.RepeatWrapping;t.encoding=THREE.sRGBEncoding;t.anisotropy=4;return t})());
@@ -55,7 +78,7 @@ function meshes(pack){if(pack._m)return pack._m;const tx={},mats={},lut=new Floa
  const out=[];
  for(const m of pack.meshes){const q=m.q,o=m.o,p16=new Int16Array(dec(m.p).buffer),u8=dec(m.i),idx=m.i32?new Uint32Array(u8.buffer):new Uint16Array(u8.buffer),g=new THREE.BufferGeometry();
   const pos=new Float32Array(p16.length);for(let i=0;i<p16.length;i++)pos[i]=p16[i]*q+o[i%3];
-  if(m.c){/* one colour per face: unshare the corners */const fc=dec(m.c),n=idx.length,P2=new Float32Array(n*3),C2=new Float32Array(n*3);
+  if(m.c){/* one colour per face: unshare the corners */const fc=dec(m.c),_tf=pack.stage&&!(window.PTO&&PTO.trunkFix===false)?fixTrunks(pos,idx,fc):0,n=idx.length,P2=new Float32Array(n*3),C2=new Float32Array(n*3);
    for(let i=0;i<n;i++){const v=idx[i]*3,f=(i/3|0)*3;P2[i*3]=pos[v];P2[i*3+1]=pos[v+1];P2[i*3+2]=pos[v+2];C2[i*3]=lut[fc[f]];C2[i*3+1]=lut[fc[f+1]];C2[i*3+2]=lut[fc[f+2]]}
    g.setAttribute('position',new THREE.BufferAttribute(P2,3));g.setAttribute('color',new THREE.BufferAttribute(C2,3))}
   else{g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setIndex(new THREE.BufferAttribute(idx,1));

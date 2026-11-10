@@ -27,16 +27,19 @@ class PtEngine extends AudioWorkletProcessor{
   this.intk=mk(k.ipipe||.9,.66,.6);this.lpo=0;this.lpi=0;this.hpx=0;this.hpy=0;this.mr1=0;this.mr2=0;this.lastq=-1;
   /* a resonator for the block (mechanical clatter) */
   const f=k.mech||1300,r=.985;this.ma1=2*r*Math.cos(2*Math.PI*f/sr);this.ma2=-r*r;
-  this.port.onmessage=e=>{const d=e.data;if(d.rpm!=null)this.tr=d.rpm;if(d.load!=null)this.tl=d.load;if(d.vol!=null)this.tv=d.vol}}
+  this.env=0;this.ry1=0;this.ry2=0;this.limT=0;this.lim=0;this.cab=0;this.cb=0;this.dop=1;
+  this.port.onmessage=e=>{const d=e.data;if(d.rpm!=null)this.tr=d.rpm;if(d.load!=null)this.tl=d.load;if(d.vol!=null)this.tv=d.vol;if(d.lim!=null)this.lim=d.lim;if(d.cab!=null)this.cab=d.cab;if(d.dop!=null)this.dop=d.dop}}
  comb(c,x){const D=c.D,i=c.w,j=(i-D+8192)&8191;c.lp+=c.a*(c.b[j]-c.lp);const y=x+c.g*c.lp;c.b[i]=y;c.w=(i+1)&8191;return y}
  process(_,outs){const o=outs[0][0];if(!o)return true;const k=this.k,sr=this.sr,cyl=this.cyl,N=o.length;
   for(let i=0;i<N;i++){
-   this.rpm+=(this.tr-this.rpm)*.0016;this.load+=(this.tl-this.load)*.002;this.vol+=(this.tv-this.vol)*.002;
-   const rpm=this.rpm,cyc=rpm/120,dph=cyc/sr,ph0=this.ph;this.ph+=dph;
+   /* rev limiter: the ignition cuts in and out at about 11 Hz, the revs bounce on it */
+   let cut=false;if(this.lim){this.limT=(this.limT+1/sr)%.09;cut=this.limT<.034}else this.limT=0;
+   this.rpm+=((cut?this.tr*.955:this.tr)-this.rpm)*(cut?.004:.0016);this.load+=(this.tl-this.load)*.002;this.vol+=(this.tv-this.vol)*.002;this.cb+=(this.cab-this.cb)*.0005;
+   const rpm=this.rpm*this.dop,cyc=rpm/120,dph=cyc/sr,ph0=this.ph;this.ph+=dph;
    /* firings this sample */
    for(let q=0;q<cyl;q++){let f=this.off[q]+(this.banks[q]==='L'?-1:1)*(k.uneven||0)*.5/cyl;f-=Math.floor(f);
     const a=ph0-Math.floor(ph0),b=a+dph;if((f>=a&&f<b)||(f+1>=a&&f+1<b)){
-     const ld=this.load,mis=ld<.08&&rpm>2600&&this.rnd()<(k.pop||.06),amp=(mis?1.6:(.22+.78*ld))*(1+(this.rnd()-.5)*(k.jit||.12))*(this.banks[q]==='L'?1:(k.bal||1));
+     const ld=cut?0:this.load,mis=(ld<.08&&rpm>2600&&this.rnd()<(k.pop||.06))||(cut&&this.rnd()<.25),amp=(cut&&!mis?.05:mis?1.6:(.22+.78*ld))*(1+(this.rnd()-.5)*(k.jit||.12))*(this.banks[q]==='L'?1:(k.bal||1));
      const iv=sr/(cyc*cyl),W=Math.max(sr*.00035,Math.min(sr*.0055,iv*(k.wid||.3)*.5))*(mis?.5:1);
      this.pl.push({t:this.n+this.hd[q],a:amp,W,bk:this.banks[q]==='L'?0:1,nz:(k.nz||.25)*(mis?3:1)})}}
    if(this.ph>1e6)this.ph-=Math.floor(this.ph);
@@ -54,7 +57,12 @@ class PtEngine extends AudioWorkletProcessor{
    const it=this.comb(this.intk,-(e0+e1));this.lpi+=.35*(it-this.lpi);const ig=(k.int||.3)*(.1+.9*this.load)*(.2+.8*rr);
    /* block clatter */
    const mx=(e0+e1)*.02+this.ma1*this.mr1+this.ma2*this.mr2;this.mr2=this.mr1;this.mr1=mx;
-   let y=ex+(it-this.lpi)*ig+mx*(k.mk||.25)*(1-this.load*.5);
+   /* the roar: turbulent gas in the pipe, noise riding on the pulses, under load */
+   this.env+=(Math.abs(e0+e1)-this.env)*.01;const rf=140+rpm*.045,rr2=.965,ra1=2*rr2*Math.cos(2*Math.PI*rf/sr),ry=(Math.random()*2-1)*.05+ra1*this.ry1-rr2*rr2*this.ry2;this.ry2=this.ry1;this.ry1=ry;
+   const roar=ry*this.env*(.15+this.load*.85)*(k.roar||.9);
+   /* in the cabin: the exhaust is muffled by the body, the intake and the block come forward */
+   const cb=this.cb,exm=ex*(1-.45*cb)+this.lpo*.45*cb;
+   let y=exm+roar+(it-this.lpi)*ig*(1+1.2*cb)+mx*(k.mk||.25)*(1-this.load*.5)*(1+1.5*cb);
    /* level: more pulses per second are louder, so even it out a bit; saturation grows under load */
    y*=Math.pow(1000/rpm,.32)*(k.g||.5);const dr=1+(k.dr||1.6)*this.load;y=Math.tanh(y*dr)/Math.sqrt(dr);
    /* dc block */
@@ -89,5 +97,5 @@ P.engWkNode=(a,name,dest)=>{if(!ok()||!(a._ptEng||a._ptEngSP))return null;const 
    return{node:n,k,set(rpm,load,vol){n.port.postMessage({rpm,load,vol})},stop(){try{n.port.postMessage({vol:0});setTimeout(()=>{try{n.disconnect()}catch(e){}},120)}catch(e){}}}}
   const pr=new (spClass(a.sampleRate))({processorOptions:k});
   const n=a.createScriptProcessor(1024,1,1);n.onaudioprocess=e=>{const o=e.outputBuffer.getChannelData(0);pr.process([],[[o]])};if(dest)n.connect(dest);
-  return{node:n,k,set(rpm,load,vol){pr.port.onmessage({data:{rpm,load,vol}})},stop(){try{pr.port.onmessage({data:{vol:0}});setTimeout(()=>{try{n.onaudioprocess=null;n.disconnect()}catch(e){}},120)}catch(e){}}}}catch(e){console.warn('engine node',e);return null}};
+  return{node:n,k,set(rpm,load,vol,x){pr.port.onmessage({data:Object.assign({rpm,load,vol},x||{})})},stop(){try{pr.port.onmessage({data:{vol:0}});setTimeout(()=>{try{n.onaudioprocess=null;n.disconnect()}catch(e){}},120)}catch(e){}}}}catch(e){console.warn('engine node',e);return null}};
 })();
