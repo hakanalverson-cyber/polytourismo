@@ -45,6 +45,26 @@ const st=document.createElement('style');st.textContent=`
 /* car step, idle: only the cars, centred, with a hint; zoomed: the frame on the left (name, stats, change car, name, gearbox) */
 #prepHint,#prepZoomX{display:none}
 #s8setup.carIdle #prepHint{display:block;position:absolute;left:0;right:0;bottom:clamp(16px,4vh,44px);text-align:center;font:600 11px var(--gt);letter-spacing:.3em;text-transform:uppercase;color:#aebfd0;text-shadow:0 1px 8px #000;pointer-events:none;z-index:3}
+
+.gxPanels{position:absolute;inset:0;pointer-events:none;display:none;z-index:3}
+#s8setup.carIdle .gxPanels{display:block}
+.gxP{position:absolute;top:clamp(8px,2vh,22px);bottom:clamp(58px,9vh,92px);width:min(400px,calc((100vw - 60px)/var(--n,1) - 18px));display:flex;flex-direction:column;gap:5px;left:20px;color:#eef3f8}
+.gxPH{display:flex;align-items:center;justify-content:space-between;min-height:46px}
+.gxPH b{display:grid;place-items:center;width:38px;height:38px;border-radius:10px;background:#0a0e1499;box-shadow:inset 0 1px 0 #ffffff2a,0 0 0 1px #ffffff26;font:600 18px var(--gt)}
+.gxPH{gap:10px}.gxPH .gxPL{margin-left:auto}.gxPG{pointer-events:auto;display:grid;place-items:center;width:38px;height:38px;padding:0;border:0;border-radius:10px;background:#0a0e1499;box-shadow:inset 0 1px 0 #ffffff2a,0 0 0 1px #ffffff26;color:#d6e3f0;cursor:pointer;transition:background .15s,transform .15s}.gxPG:hover{background:#3a5f86cc;transform:translateY(-1px)}
+.gxPL{display:grid;place-items:center;filter:drop-shadow(0 2px 8px #000a)}.gxPL svg,.gxPL img{max-height:44px;max-width:120px}
+.gxPm{font:600 11px var(--gt);letter-spacing:.2em;text-transform:uppercase;color:#9fb6cc;margin-top:2px}
+.gxP h3{margin:0;font:300 clamp(20px,3.2vh,32px)/1.1 var(--gt);letter-spacing:.02em;text-shadow:0 2px 14px #000}
+.gxPT{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.gxPT i,.gxPT em{font:600 10.5px var(--gt);font-style:normal;letter-spacing:.12em;text-transform:uppercase;padding:5px 11px;border-radius:999px;background:#0a0e1488;box-shadow:inset 0 1px 0 #ffffff22,0 0 0 1px #ffffff1a;color:#d6e3f0}
+.gxPT em{background:#e9eef3;color:#10151a;font-weight:700}
+.gxPS{margin-top:auto;display:flex;gap:8px;justify-content:center;pointer-events:auto}
+.gxPC{flex:0 1 124px;min-width:0;padding:5px 5px 6px;border-radius:12px;background:#0a0e1480;box-shadow:inset 0 1px 0 #ffffff1c,0 0 0 1px #ffffff18;cursor:pointer;opacity:.78;transition:opacity .15s,transform .15s}
+.gxPC:hover{opacity:1;transform:translateY(-2px)}
+.gxPC.on{opacity:1;cursor:default;background:#1a2733c0;box-shadow:inset 0 1px 0 #ffffff33,0 0 0 1.5px #8fb4d8}
+.gxPC canvas{width:100%;height:auto;aspect-ratio:168/100;display:block;border-radius:8px;opacity:0;transition:opacity .25s;background:radial-gradient(ellipse at 50% 85%,#566271,#1a2027)}.gxPC canvas.rdy{opacity:1}
+.gxPC span{display:block;margin-top:4px;font:600 9.5px var(--gt);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;color:#cfdbe8}
+#s8setup.carIdle #prepHint{bottom:clamp(6px,1.6vh,16px)}
 #s8setup.carIdle #gxSu.g2 .gxTn{display:none!important}
 #s8setup.carIdle #gxSu.g2 .gxCards .gxr:not(.gxAddT),#s8setup.carIdle #gxSu.g2 .gxCards h5{display:none!important}
 #s8setup.carIdle #gxSu.g2 .gxCards{position:absolute;right:clamp(16px,2vw,34px);bottom:clamp(14px,3vh,34px);padding:0!important;z-index:3}
@@ -105,7 +125,7 @@ function at(T,f,open){const N=T.N;if(open)f=Math.max(0,Math.min(N-1.001,f));cons
 /* ---- the cars on the grid ---- */
 function carsFor(s,list){const k=list.map(c=>c.id+'.'+c.alt).join('|');if(s.carKey===k)return;for(const c of s.cars)s.sc.remove(c);s.cars=[];s.carKey=k;
  const T=s.T,N=T.N;list.forEach((c,p)=>{const car=P.BYID[c.id],src=car&&P.C10&&P.C10.model(car.k10,c.alt);if(!src)return;const m=src.clone(true);
-  const i=s.open?Math.min(N-1,6):((N-5)%N+N)%N,lat=(p-(list.length-1)/2)*5.6,ps=T.psi[i],cs=Math.cos(ps),sn=Math.sin(ps);
+  const i=s.open?Math.min(N-1,6):((N-5)%N+N)%N,lat=-(p-(list.length-1)/2)*5.6,ps=T.psi[i],cs=Math.cos(ps),sn=Math.sin(ps);
   m.rotation.set(0,ps,0);m.position.set(0,0,0);m.updateMatrixWorld(true);const bx=new THREE.Box3().setFromObject(m);
   m.position.set(T.x[i]+sn*lat,T.y[i]-bx.min.y+.01,T.z[i]+cs*lat);m.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});s.sc.add(m);s.cars.push(m)})}
 /* ---- the camera ---- */
@@ -178,7 +198,7 @@ function frame(now){raf=requestAnimationFrame(frame);const w=want();
  if(s.step!==w.step){s.step=w.step;s.shot=null;s.sh=0;s.ang=0;cv.classList.remove('cut');pend=null}
  let far=null;if(w.step===2&&s.cars.length)camCar(s,dt);else far=camRace(s,now);
  /* the subject sits in the open part of the picture (above the cards, right of the name) */
- const W=1000,H=Math.round(1000/cam.aspect),cars=w.step===2;cam.setViewOffset(W,H,cars?(FAST()?-W*.2*(s.zk||0):-W*.12):-W*.04,H*(cars?(FAST()?.03:.13):.1),W,H);cam.updateProjectionMatrix();
+ const W=1000,H=Math.round(1000/cam.aspect),cars=w.step===2;cam.setViewOffset(W,H,cars?(FAST()?-W*.2*(s.zk||0):-W*.12):-W*.04,H*(cars?(FAST()?(-.07*(1-(s.zk||0))+.03*(s.zk||0)):.13):.1),W,H);cam.updateProjectionMatrix();
  if(s.fog&&s.sc.fog){const f=far||s.fog.far;s.sc.fog.far=f;s.sc.fog.near=far?Math.min(far*.4,s.fog.near+far*.2):s.fog.near}
  if(s.dome)s.dome.position.copy(cam.position);const m=s.sc.userData.skyx;if(m&&m.uniforms)m.uniforms.t.value=(now-s.t0)/1000+40;
  if(s.sun&&s.look){const L=s.look,ext=cars?16:far?Math.min(600,s.box.e*.7):90;s.sun.target.position.copy(L);s.sun.position.copy(L).addScaledVector(s.sd,Math.max(200,ext*1.5));s.sun.target.updateMatrixWorld();const sc_=s.sun.shadow.camera;
@@ -188,6 +208,7 @@ function frame(now){raf=requestAnimationFrame(frame);const w=want();
  const u=U(),sv=u&&s.grade?{mul:u.mul.value.clone(),add:u.add.value.clone(),sat:u.sat.value}:null;
  if(sv){u.mul.value.copy(s.grade.mul);u.add.value.copy(s.grade.add);u.sat.value=s.grade.sat}
  R2.toneMappingExposure=s.expo||1.05;if(FAST()){R2.shadowMap.needsUpdate=s.stOn||(fcount%4===0)||!s.shadowed;s.shadowed=1;if(s.sun&&s.sun.shadow&&s.sun.shadow.mapSize.x!==(s.stOn?2048:1024)){s.sun.shadow.mapSize.set(s.stOn?2048:1024,s.stOn?2048:1024);if(s.sun.shadow.map){s.sun.shadow.map.dispose();s.sun.shadow.map=null}}}
+ if(w.step===2&&FAST()&&s.cars.length&&!(s.zk>.02)){try{const W2=R2.domElement.clientWidth||innerWidth,ps=[...w.sec.querySelectorAll('#gxSu .gxP')];cam.updateMatrixWorld();const xs=ps.map(el=>{const c=s.cars[+el.dataset.p];if(!c)return null;const v=c.position.clone();v.y+=1;v.project(cam);return (v.x*.5+.5)*W2});let gap=1e9;const xv=xs.filter(x=>x!=null).sort((a,b)=>a-b);for(let i=1;i<xv.length;i++)gap=Math.min(gap,xv[i]-xv[i-1]);const pw=Math.max(190,Math.min(400,gap-14,W2*.9));ps.forEach((el,i)=>{if(xs[i]==null)return;el.style.width=pw+'px';el.style.left=Math.max(8,Math.min(W2-pw-8,xs[i]-pw/2))+'px'})}catch(e){}}
  try{R2.render(s.sc,cam)}catch(e){console.warn('prep render',e);lastErr='R '+String(e&&e.stack||e).slice(0,300);if(window.PTO)window.PTO.prepLive=false;free()}
  if(sv){u.mul.value.copy(sv.mul);u.add.value.copy(sv.add);u.sat.value=sv.sat}
  w.sec.classList.add('prepLive');w.sec.classList.toggle('pillOn',!(window.PTO&&window.PTO.prepPills===false))}
