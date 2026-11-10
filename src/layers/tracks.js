@@ -93,7 +93,7 @@ function buildRally(T){const d=T.d,sc=new THREE.Scene(),r=rngf(d.id*91+13),N=T.N
  for(let j=0;j<=sz;j++)for(let i=0;i<=sx;i++){const x=x0+i*cs,z=z0+j*cs;hts[j*W1+i]=terrainBed(T,x,z)}
  for(let j=0;j<=sz;j++)for(let i=0;i<=sx;i++){const k=j*W1+i,x=x0+i*cs,z=z0+j*cs,h=hts[k],hx=hts[j*W1+Math.min(sx,i+1)]-hts[j*W1+Math.max(0,i-1)],hz2=hts[Math.min(sz,j+1)*W1+i]-hts[Math.max(0,j-1)*W1+i],slope=Math.min(1,Math.hypot(hx,hz2)/(2*cs)*1.2);
   const n=T.nz(x*2.1,z*2.1)*.5+.5,n2=T.nz(x*.7+40,z*.7-17)*.5+.5,n3=T.nz(x*5.3,z*5.3)*.5+.5,rd=roadDist(T,x,z,26),near=1-clamp(rd/26,0,1),hn=clamp(h/60,0,1);let c;
-  if(d.biome==='forest'){c=[.2+.08*n,.33+.1*n-.05*hn,.15+.04*n];if(n2>.62){c=[.27+.05*n3,.2+.04*n3,.12]}const rk=sm(.55,.95,slope);c=c.map((v,q)=>lerp(v,[.46,.46,.45][q]*(.8+.3*n3),rk));c=c.map((v,q)=>lerp(v,[.36,.28,.18][q],near*.65*(.7+.3*n3)))}
+  if(d.biome==='forest'){c=[.2+.08*n,.33+.1*n-.05*hn,.15+.04*n];if(n2>.62){c=[.27+.05*n3,.2+.04*n3,.12]}const rk=sm(.5,1.15,slope)*.55;c=c.map((v,q)=>lerp(v,[.34,.36,.24][q]*(.85+.25*n3),rk));c=c.map((v,q)=>lerp(v,[.36,.28,.18][q],near*.65*(.7+.3*n3)))}
   else if(d.biome==='desert'){const band=.5+.5*Math.sin(h*.55+n*2);c=[.78-.12*band+.06*n,.5-.08*band+.04*n,.3-.05*band];if(n2>.66)c=[.88,.8,.68];const rk=sm(.45,.9,slope);c=c.map((v,q)=>lerp(v,[.55,.27,.17][q]*(.85+.3*n3),rk));c=c.map((v,q)=>lerp(v,[.66,.5,.34][q],near*.5))}
   else{c=[.34+.06*n,.4+.06*n,.2+.03*n];if(n2>.55)c=[.37+.05*n3,.28+.04*n3,.38+.05*n3];if(n2<.25)c=[.3,.24,.16];const rk=sm(.5,.9,slope);c=c.map((v,q)=>lerp(v,[.5,.5,.48][q]*(.8+.3*n3),rk));c=c.map((v,q)=>lerp(v,[.42,.36,.26][q],near*.5))}
   pos[k*3]=x;pos[k*3+1]=h;pos[k*3+2]=z;col[k*3]=c[0];col[k*3+1]=c[1];col[k*3+2]=c[2]}
