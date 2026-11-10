@@ -116,7 +116,7 @@ R.render=function(scene,cam){if(bad>3||!want(scene,cam))return prev(scene,cam);
   /* the day's mood: overcast (heavy cloud on the map, or rain, storm, fog) or sunny (clear sky, sun up) */
   const sx=scene.userData.skyx,cov=sx&&sx.uniforms?sx.uniforms.cov.value:.35,wx=P.wxOf?P.wxOf(RACE):null,oc=night?0:Math.max(wx?1:0,Math.min(1,Math.max(0,(cov-.45)/.2))),sunny=night||!sun?0:(1-oc)*Math.min(1,Math.max(0,(sun.position.y-sun.target.position.y)/Math.max(1,sun.position.distanceTo(sun.target.position))*4));
   u.ocK.value=O().mood===false?0:oc;Q.bright.uniforms.thr.value=.9-.08*sunny;
-  u.tBl.value=qc.texture;u.blK.value=G?(night?.35:.16+.1*sunny-.08*oc):0;u.asp.value=W/H;u.star.value=scene.userData.sunStar?1:0;u.wht.value=scene.userData.snowWhite?1:0;u.sunV.value=0;u.ray.value=0;u.aoK.value=aoOn()?.4+.25*oc:0;
+  u.tBl.value=qc.texture;u.blK.value=G?(night?.35:.16+.1*sunny-.08*oc):0;u.asp.value=W/H;u.star.value=scene.userData.sunStar?1:0;u.wht.value=scene.userData.snowWhite?.5:0;u.sunV.value=0;u.ray.value=0;u.aoK.value=aoOn()?.4+.25*oc:0;
   if(G&&sun&&!night&&sunny>0){const sp=CW.clone().multiplyScalar(1000).add(cam.position).project(cam),fw=CW.dot(new THREE.Vector3(0,0,-1).applyQuaternion(cam.quaternion));
    if(fw>.05&&Math.abs(sp.x)<2.2&&Math.abs(sp.y)<2.2){u.sunR.value.set(sp.x*.5+.5,sp.y*.5+.5);u.ray.value=.26*sunny*Math.min(1,fw*3)*(1-Math.max(0,Math.max(Math.abs(sp.x),Math.abs(sp.y))-1)/1.2);if(!u.sunV.value)u.sunCol.value.copy(lin2srgb(sun.color)).lerp(new THREE.Color(1,1,1),.35)}}
   if(G&&sun&&!night){SP.copy(CW);const el=SP.y;SP.multiplyScalar(1000).add(cam.position);SP.project(cam);const fwd=CW.dot(new THREE.Vector3(0,0,-1).applyQuaternion(cam.quaternion));

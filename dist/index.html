@@ -20870,7 +20870,7 @@ R.render=function(scene,cam){if(bad>3||!want(scene,cam))return prev(scene,cam);
   /* the day's mood: overcast (heavy cloud on the map, or rain, storm, fog) or sunny (clear sky, sun up) */
   const sx=scene.userData.skyx,cov=sx&&sx.uniforms?sx.uniforms.cov.value:.35,wx=P.wxOf?P.wxOf(RACE):null,oc=night?0:Math.max(wx?1:0,Math.min(1,Math.max(0,(cov-.45)/.2))),sunny=night||!sun?0:(1-oc)*Math.min(1,Math.max(0,(sun.position.y-sun.target.position.y)/Math.max(1,sun.position.distanceTo(sun.target.position))*4));
   u.ocK.value=O().mood===false?0:oc;Q.bright.uniforms.thr.value=.9-.08*sunny;
-  u.tBl.value=qc.texture;u.blK.value=G?(night?.35:.16+.1*sunny-.08*oc):0;u.asp.value=W/H;u.star.value=scene.userData.sunStar?1:0;u.wht.value=scene.userData.snowWhite?1:0;u.sunV.value=0;u.ray.value=0;u.aoK.value=aoOn()?.4+.25*oc:0;
+  u.tBl.value=qc.texture;u.blK.value=G?(night?.35:.16+.1*sunny-.08*oc):0;u.asp.value=W/H;u.star.value=scene.userData.sunStar?1:0;u.wht.value=scene.userData.snowWhite?.5:0;u.sunV.value=0;u.ray.value=0;u.aoK.value=aoOn()?.4+.25*oc:0;
   if(G&&sun&&!night&&sunny>0){const sp=CW.clone().multiplyScalar(1000).add(cam.position).project(cam),fw=CW.dot(new THREE.Vector3(0,0,-1).applyQuaternion(cam.quaternion));
    if(fw>.05&&Math.abs(sp.x)<2.2&&Math.abs(sp.y)<2.2){u.sunR.value.set(sp.x*.5+.5,sp.y*.5+.5);u.ray.value=.26*sunny*Math.min(1,fw*3)*(1-Math.max(0,Math.max(Math.abs(sp.x),Math.abs(sp.y))-1)/1.2);if(!u.sunV.value)u.sunCol.value.copy(lin2srgb(sun.color)).lerp(new THREE.Color(1,1,1),.35)}}
   if(G&&sun&&!night){SP.copy(CW);const el=SP.y;SP.multiplyScalar(1000).add(cam.position);SP.project(cam);const fwd=CW.dot(new THREE.Vector3(0,0,-1).applyQuaternion(cam.quaternion));
@@ -21838,7 +21838,7 @@ function snowMat(m,o){if(!m||m.userData.snowFx||!m.isMeshStandardMaterial&&!m.is
  /* glints: a few crystals per square metre, each lit only from a narrow range of directions, so they flicker as the camera moves */
  float dist=length(sv);vec3 cell=floor(vSnP*7.);float hsh=sh31(cell);vec3 vd=sv/max(dist,.001);
  float ang=fract(hsh*31.7+dot(vd,vec3(5.3,2.1,4.7))*2.2);snG=step(.94,hsh)*smoothstep(.12,0.,abs(ang-.5))*snK*(1.-smoothstep(18.,60.,dist));}`)
-   .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance=mix(totalEmissiveRadiance,vec3(.085,.095,.115),snK)/* the snow lights itself a little: light scattered inside it keeps the shade white instead of grey-blue */+vec3(1.,.98,.94)*snG*.55;')};
+   .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance=mix(totalEmissiveRadiance,vec3(.05,.058,.075),snK)/* the snow lights itself a little: light scattered inside it keeps the shade white instead of grey-blue */+vec3(1.,.98,.94)*snG*.55;')};
  const k0=m.customProgramCacheKey?m.customProgramCacheKey():'';m.customProgramCacheKey=()=>k0+'|snow'+lo+hi+amt+all;m.needsUpdate=true;return m}
 P.snowMat=snowMat;
 let seed=7;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647};
@@ -21867,7 +21867,7 @@ function dress(sc,T){const d=T.d;if(!d||!d.cartoon||!d.cartoon.stage||d._key!=='
  sc.traverse(o=>{if(!(o.isMesh||o.isInstancedMesh)||!o.material||Array.isArray(o.material))return;
   if(/^ct_/.test(o.name)){if(/ICE_SURFACE/.test(o.name))return;
    /* the ground texture is snow already: there the shader adds the grain, the drifts and the glints, and whitens what is left bare */
-   snowMat(o.material,/SNOW_SWEDEN/.test(o.name)?{lo:-1.,hi:.1,amt:.9}:/^ct_c$/.test(o.name)?{lo:-1.1,hi:.25,amt:.93}/* hoarfrost: the trees and everything else of the model are white almost all over, only the undersides keep their colour */:{lo:-.4,hi:.3,amt:.92});n++}
+   snowMat(o.material,/SNOW_SWEDEN/.test(o.name)?{lo:-1.,hi:.1,amt:.9}:/^ct_c$/.test(o.name)?{lo:-.3,hi:.42,amt:.9}/* hoarfrost: the trees and everything else of the model are white almost all over, only the undersides keep their colour */:{lo:.12,hi:.5,amt:.92});n++}
   else if(o.userData.rallyProp){/* the props share one material with every other map: this stage gets its own copy */if(o.userData.ptProp==='snowpole')return;o.material=snowMat(o.material.clone(),{lo:.35,hi:.65,amt:.92});n++}});
  sc.userData.sunStar=1;sc.userData.snowWhite=1;sc.traverse(o=>{if(o.isHemisphereLight)o.groundColor.lerp(new THREE.Color(0xeef3fb),.7)});const b=banks(sc,T);flakes(sc);/* a sunny morning: only a light drift of flakes in the air */const f=sc.userData.snow;if(f&&f.m&&f.m.material){f.m.material.size=.3;f.m.material.opacity=.7;f.m.geometry.setDrawRange(0,500)}if(sc.userData.snow2){sc.userData.snow2.m.material.opacity=.3;sc.userData.snow2.m.geometry.setDrawRange(0,300)}
  sc.userData.snowFx={mats:n,bankTris:b,ms:Math.round(performance.now()-t0)}}
