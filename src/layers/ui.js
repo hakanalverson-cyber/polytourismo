@@ -625,6 +625,8 @@ function gxCarStep(box){const m=ST.mode,multi=multiOK(m);if(!multi)ST.players=1;
  if(multi&&np<MAXP)rows.push({grp:np,add:1,pn:np+1,hint:'or press +',act:addPlayer});
  const nm=p=>{const v=((ST.names||[])[p]||'').replace(/[<>&"]/g,'').trim();return 'Player '+(p+1)+(v?' &middot; '+v:'')};
  gxRender(box,{kind:(np>1?'Player '+(fi+1)+' &middot; ':'')+'Class '+c.cls,name:c.name+(s.alt?' <small style="font-size:.4em;opacity:.7">ALT</small>':''),facts:[c.type||''],side,rows,side:'',
+  /* Nov 10 (Hakan: the car step was bad): the car's numbers sit under its name as four slim bars (top speed, acceleration, grip, brakes) */
+  extra:`<div class="st gxst">${bar('Top speed',(c.top-30)/26,Math.round(c.top*3.6*(kmh?1:.6214))+(kmh?' km/h':' mph'))}${bar('Acceleration',(c.acc-18)/18,Math.round(c.acc*2.6))}${bar('Grip',(c.grip-.94)/.2,Math.round(c.grip*80))}${bar('Brakes',(c.brk-.9)/.3,Math.round(c.brk*75))}</div>`,
   /* round 32 (Hakan): Add player sits in the next empty frame again, not under the name */onAdd:addPlayer,
   grid:multi,cols:PCOLS,rm:multi?(p,go)=>{if(go){removePlayer(p);return}return p>0&&p<np}:null,
   heroCls:'cars'+(GXS.newP!=null?' fin':''),newP:GXS.newP,groups:multi?[0,1,2,3].map(nm):['Car','Driver','More'],shot:cv=>{const L=Array.from({length:np},(_,p)=>selCar(p)),rg=carReg(box,np);carShot(cv,L,rg);if(np>1){const hc=document.createElement('canvas');hc.id='gxHi';hc.style.setProperty('--pc',PCOLS[fi]);cv.after(hc);carShot(hc,L,rg,fi);gxHiPulse()}},go:'Start'});/* grid: the cars sit between the name (left) and the stats (right) */

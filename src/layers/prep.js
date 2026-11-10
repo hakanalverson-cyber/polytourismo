@@ -34,6 +34,10 @@ const st=document.createElement('style');st.textContent=`
 #s8setup.prepLive.pillOn #gxSu.g2 .gxCards:not(.g4) .gxr .v{margin:0!important;font:400 clamp(15px,2.1vh,22px) var(--gt);gap:8px}
 #s8setup.prepLive.pillOn #gxSu.g2 .gxCards:not(.g4) .gxr.on{background:linear-gradient(180deg,#8fb4d8e0 0%,#4f7eabe8 48%,#33608ce8 52%,#4a77a3e8 100%)}
 #s8setup.prepLive.pillOn #gxSu.g2 .gxCards:not(.g4) .gxr.on .l{color:#e6f0fa}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxst{display:grid;grid-template-columns:auto minmax(110px,190px) auto;gap:7px 12px;align-items:center;margin-top:12px;font:500 clamp(10px,1.3vh,13px) var(--gt);letter-spacing:.14em;text-transform:uppercase;color:#aebfd0;text-shadow:0 1px 6px #000}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxst u{display:block;height:4px;border-radius:2px!important;background:#ffffff26;overflow:hidden}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxst u i{display:block;height:100%;background:linear-gradient(90deg,#8fb4d8,#dff0ff);box-shadow:0 0 8px #8fb4d8}
+#s8setup.prepLive.pillOn #gxSu.g2 .gxst em{font-style:normal;color:#fff;letter-spacing:.04em;text-transform:none;font-variant-numeric:tabular-nums}
 #s8setup.prepLive.pillOn #gxSu.g2 .gxTn b{font-size:clamp(30px,4.8vh,58px)}
 #s8setup.prepLive.pillOn #gxSu.g2 .gxCards.g4 .gxCard{background:#0a0e1488!important;box-shadow:inset 0 1px 0 #ffffff26,0 0 0 1px #ffffff1c,0 10px 26px #0007!important}
 #s8setup.prepLive.pillOn #gxSu.g2 .gxCards:not(.g4) .gxr.more{border-top:0;margin-top:0!important}
