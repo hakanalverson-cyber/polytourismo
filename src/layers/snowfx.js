@@ -26,12 +26,12 @@ function snowMat(m,o){if(!m||m.userData.snowFx||!m.isMeshStandardMaterial&&!m.is
  float n1=svn(vSnP*.55),n2=svn(vSnP*2.3);
  snK=${all?'1.':`smoothstep(${lo},${hi},sn.y+(n1-.5)*.34+(n2-.5)*.12)`}*${amt};
  /* the snow itself: drifts of slightly different white, a fine grain, colder where it faces away from the sky */
- vec3 sc=vec3(.9,.93,.97)*(.93+.09*n1)*(.975+.05*sh31(floor(vSnP*9.)));sc=mix(sc*vec3(.8,.87,1.),sc,smoothstep(.15,.8,sn.y));
+ vec3 sc=vec3(.975,.985,1.)*(.955+.05*n1)*(.985+.03*sh31(floor(vSnP*9.)));sc=mix(sc*vec3(.9,.94,1.),sc,smoothstep(.15,.8,sn.y));
  diffuseColor.rgb=mix(diffuseColor.rgb,sc,snK);
  /* glints: a few crystals per square metre, each lit only from a narrow range of directions, so they flicker as the camera moves */
  float dist=length(sv);vec3 cell=floor(vSnP*7.);float hsh=sh31(cell);vec3 vd=sv/max(dist,.001);
  float ang=fract(hsh*31.7+dot(vd,vec3(5.3,2.1,4.7))*2.2);snG=step(.94,hsh)*smoothstep(.12,0.,abs(ang-.5))*snK*(1.-smoothstep(18.,60.,dist));}`)
-   .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance=mix(totalEmissiveRadiance,vec3(.016,.026,.044),snK)+vec3(1.,.98,.94)*snG*.55;')};
+   .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance=mix(totalEmissiveRadiance,vec3(.085,.095,.115),snK)/* the snow lights itself a little: light scattered inside it keeps the shade white instead of grey-blue */+vec3(1.,.98,.94)*snG*.55;')};
  const k0=m.customProgramCacheKey?m.customProgramCacheKey():'';m.customProgramCacheKey=()=>k0+'|snow'+lo+hi+amt+all;m.needsUpdate=true;return m}
 P.snowMat=snowMat;
 let seed=7;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647};
@@ -60,9 +60,9 @@ function dress(sc,T){const d=T.d;if(!d||!d.cartoon||!d.cartoon.stage||d._key!=='
  sc.traverse(o=>{if(!(o.isMesh||o.isInstancedMesh)||!o.material||Array.isArray(o.material))return;
   if(/^ct_/.test(o.name)){if(/ICE_SURFACE/.test(o.name))return;
    /* the ground texture is snow already: there the shader adds the grain, the drifts and the glints, and whitens what is left bare */
-   snowMat(o.material,/SNOW_SWEDEN/.test(o.name)?{lo:.05,hi:.4,amt:.8}:/^ct_c$/.test(o.name)?{lo:-.55,hi:.3,amt:.9}/* hoarfrost: the trees and everything else of the model are white almost all over, only the undersides keep their colour */:{lo:.3,hi:.62,amt:.92});n++}
+   snowMat(o.material,/SNOW_SWEDEN/.test(o.name)?{lo:-1.,hi:.1,amt:.9}:/^ct_c$/.test(o.name)?{lo:-1.1,hi:.25,amt:.93}/* hoarfrost: the trees and everything else of the model are white almost all over, only the undersides keep their colour */:{lo:-.4,hi:.3,amt:.92});n++}
   else if(o.userData.rallyProp){/* the props share one material with every other map: this stage gets its own copy */if(o.userData.ptProp==='snowpole')return;o.material=snowMat(o.material.clone(),{lo:.35,hi:.65,amt:.92});n++}});
- sc.userData.sunStar=1;const b=banks(sc,T);flakes(sc);/* a sunny morning: only a light drift of flakes in the air */const f=sc.userData.snow;if(f&&f.m&&f.m.material){f.m.material.size=.3;f.m.material.opacity=.7;f.m.geometry.setDrawRange(0,500)}if(sc.userData.snow2){sc.userData.snow2.m.material.opacity=.3;sc.userData.snow2.m.geometry.setDrawRange(0,300)}
+ sc.userData.sunStar=1;sc.userData.snowWhite=1;sc.traverse(o=>{if(o.isHemisphereLight)o.groundColor.lerp(new THREE.Color(0xeef3fb),.7)});const b=banks(sc,T);flakes(sc);/* a sunny morning: only a light drift of flakes in the air */const f=sc.userData.snow;if(f&&f.m&&f.m.material){f.m.material.size=.3;f.m.material.opacity=.7;f.m.geometry.setDrawRange(0,500)}if(sc.userData.snow2){sc.userData.snow2.m.material.opacity=.3;sc.userData.snow2.m.geometry.setDrawRange(0,300)}
  sc.userData.snowFx={mats:n,bankTris:b,ms:Math.round(performance.now()-t0)}}
 /* after rallyprops.js has dressed the stage (it wraps buildWorld two ticks after load) */
 setTimeout(()=>setTimeout(()=>setTimeout(()=>{const bw=buildWorld;buildWorld=function(T){const sc=bw.apply(this,arguments);if(on())try{dress(sc,T)}catch(e){console.warn('snowfx',e)}return sc}},0),0),0);

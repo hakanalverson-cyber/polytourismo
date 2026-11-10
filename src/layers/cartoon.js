@@ -196,7 +196,7 @@ P.menuShot=k=>MNS[k]||(MNS[k]=new Promise(res=>setTimeout(async()=>{let sc=null;
    chase camera, wall contact and car-to-car contact grow with them. Physics speeds are unchanged. */
 const K=()=>{const R=typeof RACE!=="undefined"?RACE:null,d=R&&R.T&&R.T.d;return d&&d.cartoon&&d.cartoon.carScale||1};
 /* the car as drawn: on the bought rally stages it is only a little above real size (Nov 9: "the cars are WAYY too big"); K() still scales the physics, the AI and the camera model */
-P.VK=()=>VK();const VK=()=>{const R=typeof RACE!=="undefined"?RACE:null,d=R&&R.T&&R.T.d;return d&&d.cartoon&&d.cartoon.stage?(P.stageCarK||1.1):K()};
+P.VK=()=>VK();const VK=()=>{const R=typeof RACE!=="undefined"?RACE:null,d=R&&R.T&&R.T.d;return d&&d.cartoon&&d.cartoon.stage?(P.stageCarK||1.22)/* Nov 10 (Hakan: "the car should be bigger, just a lil"): was 1.1 */:K()};
 /* Track mode on any circuit (the Nordschleife too) gets the same handling as the model tracks: grip that builds with speed, harder brakes,
    the steering feel and the smoothed camera. Top speed, pickup, time scale and the dial factor stay model-track only (those make up for
    the models' size; the Nordschleife is real size) */
