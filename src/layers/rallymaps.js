@@ -44,7 +44,7 @@ step=function(dt){const Rc=RACE;if(Rc&&Rc.T&&Rc.T.stage&&!Rc._stg){Rc._stg=1;if(
 /* ---- the world: sky, fog and light only; the stage model (cartoon.js) is added on top ---- */
 /* surface brightness per stage (a multiplier on each material of the model: the dirt roads were blown out, the tarmac and the banks nearly black) */
 const TINT={
- mangrove:[[/ROADS_FINLAND/,.36],[/GRAVEL_FINLAND/,.46],/* Nov 10 (Hakan: "the gravel is too bright and looks super out of place"): were .72 and .8 */[/GRASS_FINLAND/,1.45],[/LAKE_BOTTOM/,1.2],[/^ct_c$/,1.5],[/ATLAS/,1.25]],
+ mangrove:[[/ROADS_FINLAND/,.5],[/GRAVEL_FINLAND/,.46],/* Nov 10 (Hakan: "the gravel is too bright and looks super out of place"): were .72 and .8 */[/GRASS_FINLAND/,1.45],[/LAKE_BOTTOM/,1.2],[/^ct_c$/,1.5],[/ATLAS/,1.25]],
  terr:[[/TARMAC_PLAIN/,2.6],[/ROADS_FRANCE/,2.1],[/GRASS_FRANCE/,1.3],[/SNOW_FRANCE/,.9],[/^ct_c$/,1.3]],
  ash:[[/ROADS_PORTUGAL/,1.1],[/GRAVEL_PORTUGAL/,.9],[/GRASS_PORTUGAL/,1.35],[/^ct_c$/,2.1]],
  autumn:[[/SNOW_SWEDEN/,.86],[/ICE_SURFACE/,.95],[/STONE/,1.3],[/^ct_c$/,1.5]]};
@@ -55,7 +55,9 @@ function bankNoise(m){if(m.userData._nz)return;m.userData._nz=1;m.onBeforeCompil
  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vWp;\nfloat h31(vec3 p){p=fract(p*.3183099+.1);p*=17.;return fract(p.x*p.y*p.z*(p.x+p.y+p.z));}\nfloat vn(vec3 x){vec3 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);return mix(mix(mix(h31(i),h31(i+vec3(1,0,0)),f.x),mix(h31(i+vec3(0,1,0)),h31(i+vec3(1,1,0)),f.x),f.y),mix(mix(h31(i+vec3(0,0,1)),h31(i+vec3(1,0,1)),f.x),mix(h31(i+vec3(0,1,1)),h31(i+vec3(1,1,1)),f.x),f.y),f.z);}')
   .replace('#include <map_fragment>','#include <map_fragment>\nfloat nzN=vn(vWp*vec3(.3,.8,.3))*.6+vn(vWp*1.9)*.4;float nzS=.5+.5*sin(vWp.y*2.4+nzN*5.);float nzK=.55+.6*nzN+.25*nzS;diffuseColor.rgb*=nzK;diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(1.12,.94,.78),nzN);')
   .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance*=nzK;')};m.needsUpdate=true}
-function tintStage(sc,key){const em=EMIS[key]||[];const tb=TINT[key];if(!tb)return;sc.traverse(o=>{const m=o.isMesh&&o.material;if(!m||!m.color||!/^ct_/.test(o.name))return;if(!m.userData._c0)m.userData._c0=m.color.clone();let k=1;for(const[re,v]of tb)if(re.test(o.name)){k=v;break}m.color.copy(m.userData._c0);if(Array.isArray(k))m.color.multiply(new THREE.Color(k[0],k[1],k[2]));else m.color.multiplyScalar(k);if(m.emissive){let e=null;for(const[re,v]of em)if(re.test(o.name)){e=v;break}if(e){m.emissive.setRGB(e[0],e[1],e[2]);if(key==='ash')bankNoise(m)}else m.emissive.setRGB(0,0,0)}})}
+function tintStage(sc,key){const em=EMIS[key]||[];const tb=TINT[key];if(!tb)return;/* Nov 10 (Hakan: "separations still looks off"): the model's ROADS_FINLAND border is a near-black asphalt edge that showed as a dark strip beside the gravel; it wears the gravel picture instead (PTO.roadEdge===false: old) */
+ if(key==='mangrove'&&!(window.PTO&&window.PTO.roadEdge===false)){let gm=null;sc.traverse(o=>{if(!gm&&o.isMesh&&/^ct_GRAVEL_FINLAND/.test(o.name)&&o.material&&o.material.map)gm=o.material.map});if(gm)sc.traverse(o=>{if(o.isMesh&&/^ct_ROADS_FINLAND/.test(o.name)&&o.material&&o.material.map&&o.material.map!==gm)o.material.map=gm,o.material.needsUpdate=true})}
+ sc.traverse(o=>{const m=o.isMesh&&o.material;if(!m||!m.color||!/^ct_/.test(o.name))return;if(!m.userData._c0)m.userData._c0=m.color.clone();let k=1;for(const[re,v]of tb)if(re.test(o.name)){k=v;break}m.color.copy(m.userData._c0);if(Array.isArray(k))m.color.multiply(new THREE.Color(k[0],k[1],k[2]));else m.color.multiplyScalar(k);if(m.emissive){let e=null;for(const[re,v]of em)if(re.test(o.name)){e=v;break}if(e){m.emissive.setRGB(e[0],e[1],e[2]);if(key==='ash')bankNoise(m)}else m.emissive.setRGB(0,0,0)}})}
 /* ---- road surface detail (Nov 8: "the dirt paths look kinda weird, make them look more real"): one ribbon laid just above the road along the whole stage, with a
    texture made here: wheel ruts and a crown of loose gravel with grass at the edges on the dirt stages, white edge lines and a dashed centre line and worn
    tyre tracks on the tarmac, packed tyre tracks and slush on the snow. Lit and fogged like the rest of the world. ---- */
@@ -87,9 +89,13 @@ function roadTex(kind,key){const dry=key==='ash';/* Nov 10 (Hakan: a dark gap be
  }
  const t=new THREE.CanvasTexture(cv);t.wrapS=THREE.ClampToEdgeWrapping;t.wrapT=THREE.RepeatWrapping;t.anisotropy=8;t.encoding=THREE.sRGBEncoding;return t}
 function roadRibbon(sc,T,key){const kind=ROADK[key];if(!kind||!T.finI)return;const C=10,n=T.finI+1,pos=new Float32Array(n*C*3),uv=new Float32Array(n*C*2),idx=[];let dist=0;
- for(let i=0;i<n;i++){if(i)dist+=Math.hypot(T.x[i]-T.x[i-1],T.z[i]-T.z[i-1]);const c=Math.cos(T.psi[i]),s=Math.sin(T.psi[i]),hw=T.hw[i]*.97;
-  for(let k=0;k<C;k++){const l=(k/(C-1)*2-1)*hw,x=T.x[i]+c*l,z=T.z[i]-s*l;let h=T.y[i];try{const q=T.surf(x,z,T.y[i]+30);if(q&&q.h!=null&&Math.abs(q.h-T.y[i])<1.5)h=q.h}catch(e){}
-   const o=(i*C+k)*3;pos[o]=x;pos[o+1]=h+.05;pos[o+2]=z;uv[(i*C+k)*2]=k/(C-1);uv[(i*C+k)*2+1]=dist/RTILE}
+ for(let i=0;i<n;i++){if(i)dist+=Math.hypot(T.x[i]-T.x[i-1],T.z[i]-T.z[i-1]);const c=Math.cos(T.psi[i]),s=Math.sin(T.psi[i]),hw=key==='mangrove'&&!(window.PTO&&window.PTO.roadEdge===false)?T.hw[i]+1.05:T.hw[i]*.97;
+  /* Nov 10 (Hakan, "this bit of the road seems to be above the ground"): where the ground drops away at the edge the ribbon used to hang in the
+     air; walking out from the middle, a point whose ground height jumps more than .35 from the last good one is pulled back onto it (PTO.ribbonClamp===false: old) */
+  const LL=[],HH=[];for(let k=0;k<C;k++){const l=(k/(C-1)*2-1)*hw;let h=T.y[i];try{const q=T.surf(T.x[i]+c*l,T.z[i]-s*l,T.y[i]+30);if(q&&q.h!=null&&Math.abs(q.h-T.y[i])<1.5)h=q.h}catch(e){}LL[k]=l;HH[k]=h}
+  if(!(window.PTO&&window.PTO.ribbonClamp===false)){const m0=C>>1;for(const dir of[1,-1]){let gl=LL[m0],gh=HH[m0],bad=false;for(let k=m0+dir;k>=0&&k<C;k+=dir){if(!bad&&Math.abs(HH[k]-gh)>.35)bad=true;if(bad){LL[k]=gl;HH[k]=gh}else{gl=LL[k];gh=HH[k]}}}}
+  for(let k=0;k<C;k++){const l=LL[k],x=T.x[i]+c*l,z=T.z[i]-s*l,h=HH[k];
+   const o=(i*C+k)*3;pos[o]=x;pos[o+1]=h+.04;pos[o+2]=z;uv[(i*C+k)*2]=k/(C-1);uv[(i*C+k)*2+1]=dist/RTILE}
   if(i)for(let k=0;k<C-1;k++){const a=(i-1)*C+k,b=a+1,c2=i*C+k,d=c2+1;idx.push(a,c2,b,b,c2,d)}}
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('uv',new THREE.BufferAttribute(uv,2));g.setIndex(idx);{const nn=new Float32Array(n*C*3);for(let q=0;q<n*C;q++)nn[q*3+1]=1;g.setAttribute('normal',new THREE.BufferAttribute(nn,3))}
  const m=new THREE.Mesh(g,new THREE.MeshLambertMaterial({map:roadTex(kind,key),transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,side:THREE.DoubleSide}));
