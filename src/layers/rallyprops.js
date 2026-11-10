@@ -63,7 +63,10 @@ function dress(sc,T){const d=T.d,pk=d&&d.cartoon;if(!pk||!pk.stage||!T.finI)retu
   place(n,i,(rnd()<.5?1:-1)*(T.hw[i]+4+rnd()*5),.85+rnd()*.35,n==='stump'||n==='cairn'?.5:n==='boulderR'?1.6:1,rnd()*6.28)}}
  /* draw: one instanced mesh per prop kind */
  let total=0;const M=new THREE.Matrix4(),Q=new THREE.Quaternion(),S=new THREE.Vector3(),V=new THREE.Vector3(),Y=new THREE.Vector3(0,1,0);
- for(const n in put){const L=K.LIB[n],a=put[n];const im=new THREE.InstancedMesh(L.g,K.MAT,a.length);a.forEach((q,i)=>{Q.setFromAxisAngle(Y,q[3]);S.setScalar(q[4]);M.compose(V.set(q[0],q[1],q[2]),Q,S);im.setMatrixAt(i,M)});
+ /* Nov 10 (Hakan, on the bales: "these are missing color"): the stages are lit about twice as bright as the props were made for, so the straw and the
+    logs came out near white; on the dirt stages the props get their own, darker copy of the material (PTO.propDim===false: as before) */
+ let PM=K.MAT;if(d._key!=='autumn'&&!(window.PTO&&window.PTO.propDim===false)){PM=K.MAT.clone();if(PM.color)PM.color.multiplyScalar(.56);if(PM.emissive)PM.emissive.setRGB(0,0,0);PM.userData=Object.assign({},PM.userData,{ibl:1});PM.envMapIntensity=.2;PM.metalness=0;PM.roughness=1}
+ for(const n in put){const L=K.LIB[n],a=put[n];const im=new THREE.InstancedMesh(L.g,PM,a.length);a.forEach((q,i)=>{Q.setFromAxisAngle(Y,q[3]);S.setScalar(q[4]);M.compose(V.set(q[0],q[1],q[2]),Q,S);im.setMatrixAt(i,M)});
   im.castShadow=true;im.receiveShadow=true;im.userData.ptProp=n;im.userData.rallyProp=1;im.frustumCulled=false;sc.add(im);total+=a.length;
   if(L.crowd){for(const q of a)(sc.userData.crowd=sc.userData.crowd||[]).push([q[0],q[2]])}}
  if(P.addPt)for(const c of col)P.addPt(T,c[0],c[1],c[2]);T._bg=null;
