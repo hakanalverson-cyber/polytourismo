@@ -43,7 +43,8 @@ const setG=g=>{if(!U||!U.grC||g===cur)return;cur=g;U.grC.value=g.c;U.grS.value.s
 /* the pale maps: bluer sky, a fog that matches it, and a stronger grade (deeper greens and earth instead of washed-out mint and grey) */
 const PAL={'Quarry Circuit':{c:1.3,sat:1.28,sky:0xb0ccff,fog:[0xc8daf0,.4]},'Canyon Viaduct':{c:1.26,sat:1.22,sky:0xb4ccf6,fog:[0xcfdcef,.45]},'Pinewood Stage':{c:1.3,sat:1.3,sky:0xaac8f6,fog:[0xc6d8ea,.45]},
  'Finland':{c:1.26,sat:1.22},'France':{c:1.24,sat:1.16},'Portugal':{c:1.26,sat:1.24,h:[1.07,.99,.9]},'Sweden':{c:1.22,sat:1.1,s:[-.012,-.004,.03]},
- 'Alpine Pass':{c:1.26,sat:1.12,sky:0xb8d0f8,fog:[0xd4e0f0,.35]},'Frostline Stage':{c:1.26,sat:1.1,always:1,h:[1.0,1,1],s:[0,0,.008],sky:0xc4d6f4,fog:[0xdce6f4,.7]},'Grand Valley':{c:1.24,sat:1.18,lift:1.7}};
+ 'Alpine Pass':{c:1.26,sat:1.12,sky:0xb8d0f8,fog:[0xd4e0f0,.35]},'Frostline Stage':{c:1.26,sat:1.1,always:1,h:[1.0,1,1],s:[0,0,.008],sky:0xc4d6f4,fog:[0xdce6f4,.7]},'Grand Valley':{c:1.24,sat:1.18,lift:1.7},
+ 'Highmoor Stage':{c:1.2,sat:1.12,always:1,lift:1.7,h:[1.06,.99,.93],s:[-.008,-.005,.028]},'Redrock Stage':{c:1.14,sat:1.04,always:1,lift:1.4,h:[1.05,.99,.94],s:[-.01,-.007,.03]}};
 function pal(sc){sc.userData.pal=1;const Rc=typeof RACE!=='undefined'?RACE:null,n=Rc&&Rc.T&&Rc.T.d&&Rc.T.d.name,p=PAL[n];if(!p||(!p.always&&sc.userData.tod&&sc.userData.tod!=='day')||!sc.userData.grade)return;
  sc.userData.grade=Object.assign({},sc.userData.grade,{c:p.c,sat:p.sat},p.h?{h:p.h}:{},p.s?{s:p.s}:{});
  if(p.sky)for(const o of sc.children)if(o.geometry&&o.geometry.type==='SphereGeometry'&&o.geometry.parameters.radius===1500&&o.material&&o.material.color)o.material.color.multiply(C(p.sky).lerp(C(0xffffff),.35));
