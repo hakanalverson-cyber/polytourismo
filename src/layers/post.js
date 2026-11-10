@@ -96,7 +96,9 @@ R.render=function(scene,cam){if(bad>3||!want(scene,cam))return prev(scene,cam);
   const e0=R.toneMappingExposure;R.toneMappingExposure=e0*aeK;R.setRenderTarget(rt);R.clear();try{prev(scene,cam)}finally{R.toneMappingExposure=e0}
   try{const fc=scene.fog&&scene.fog.color;meterRead(scene,scene.userData.tod==='night'||(fc&&fc.r+fc.g+fc.b<.3))}catch(e){aeK=1}
   /* focus: the distance to the player's car */
-  const me=RACE.cars.find(c=>c.human),fd=me&&me.m&&me.m.g?cam.position.distanceTo(me.m.g.position):10,f0=Math.max(70,fd*7),f1=Math.max(320,fd*30),cn=cam.near,cf=cam.far;
+  const me=RACE.cars.find(c=>c.human),fd=me&&me.m&&me.m.g?cam.position.distanceTo(me.m.g.position):10,stg=!!(RACE.T&&RACE.T.d&&RACE.T.d.cartoon&&RACE.T.d.cartoon.stage)&&O().stageDof!==false,
+   /* Nov 10 (Hakan: soften the rally backgrounds): on the stages the blur starts closer and gets stronger, so the car and the next corner are sharp and the far banks and tree lines go soft */
+   f0=stg?Math.max(42,fd*4.2):Math.max(70,fd*7),f1=stg?Math.max(150,fd*14):Math.max(320,fd*30),cn=cam.near,cf=cam.far;
   const D=dofOn();
   if(D){const b=Q.blur,u=b.uniforms;u.tD.value=rt.depthTexture;u.cn.value=cn;u.cf.value=cf;u.f0.value=f0;u.f1.value=f1;Q.q.material=b;
    u.tC.value=rt.texture;u.w.value=1;u.dir.value.set(1.5/W*4,0);R.setRenderTarget(qa);prev(Q.sc,Q.cam);
@@ -107,7 +109,7 @@ R.render=function(scene,cam){if(bad>3||!want(scene,cam))return prev(scene,cam);
   const G=glOn();if(G){const b=Q.bright;b.uniforms.tC.value=rt.texture;Q.q.material=b;R.setRenderTarget(qc);prev(Q.sc,Q.cam);
    const bl=Q.blur,bu=bl.uniforms;bu.w.value=0;Q.q.material=bl;for(const k of[1.5,3]){bu.tC.value=qc.texture;bu.dir.value.set(k/W*4,0);R.setRenderTarget(qd);prev(Q.sc,Q.cam);bu.tC.value=qd.texture;bu.dir.value.set(0,k/H*4);R.setRenderTarget(qc);prev(Q.sc,Q.cam)}}
   const c=Q.comp,u=c.uniforms;u.tC.value=rt.texture;u.tD.value=rt.depthTexture;u.tB.value=qb?qb.texture:rt.texture;u.px.value.set(1/W,1/H);u.cn.value=cn;u.cf.value=cf;u.f0.value=f0;u.f1.value=f1;
-  u.dofK.value=D?.5:0;u.aoK.value=aoOn()?.4:0;
+  u.dofK.value=D?(stg?.85:.5):0;u.aoK.value=aoOn()?.4:0;
   /* the haze: the fog colour, warmed toward the sun */
   const sun=scene.userData.sun,fog=scene.fog,night=scene.userData.tod==='night';
   if(fog&&fog.color){u.hzC.value.copy(lin2srgb(fog.color));u.hzK.value=night?.08:scene.userData.sunStar?.06:.12;u.hz.value=fog.isFog?Math.min(.01,2.2/Math.max(200,fog.far)):.004}else u.hzK.value=0;

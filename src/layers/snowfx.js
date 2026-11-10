@@ -67,8 +67,8 @@ R.render=function(scene,cam){const f=scene&&scene.userData&&scene.userData.snow2
    line; dirt: its colour; k: how much; sp: how far the spatter reaches above the packed line; gl: paint gloss */
 const C3=(r,g,b)=>new THREE.Color(r,g,b);
 const CAR={autumn:{zen:C3(.05,.22,.8),hor:C3(.8,.92,1.15),gnd:C3(1.25,1.28,1.36),shd:C3(.55,.66,.95),tree:C3(.42,.52,.56),top:C3(1.05,1.1,1.18),th:.1,sun:C3(1,.97,.9),dirt:[.93,.95,.99],k:1,sp:.5,gl:1},
- mangrove:{zen:C3(.1,.3,.78),hor:C3(.92,.9,.78),gnd:C3(.2,.3,.11),shd:C3(.07,.12,.05),tree:C3(.03,.07,.03),top:C3(.1,.22,.08),th:.34,sun:C3(1,.9,.72),dirt:[.3,.21,.13],k:.9,sp:.9,gl:.8},
- ash:{zen:C3(.12,.33,.8),hor:C3(1.05,.86,.6),gnd:C3(.5,.36,.21),shd:C3(.26,.18,.11),tree:C3(.1,.14,.05),top:C3(.22,.32,.1),th:.16,sun:C3(1,.85,.6),dirt:[.56,.43,.29],k:.85,sp:1.2,gl:.75},
+ mangrove:{zen:C3(.1,.3,.78),hor:C3(.92,.9,.78),gnd:C3(.2,.3,.11),shd:C3(.07,.12,.05),tree:C3(.03,.07,.03),top:C3(.1,.22,.08),th:.34,sun:C3(1,.9,.72),dirt:[.3,.21,.13],k:.9,sp:.55,gl:.8},
+ ash:{zen:C3(.12,.33,.8),hor:C3(1.05,.86,.6),gnd:C3(.5,.36,.21),shd:C3(.26,.18,.11),tree:C3(.1,.14,.05),top:C3(.22,.32,.1),th:.16,sun:C3(1,.85,.6),dirt:[.47,.37,.26],k:.85,sp:.55,gl:.75},
  terr:{zen:C3(.08,.28,.82),hor:C3(.82,.92,1.08),gnd:C3(.2,.21,.23),shd:C3(.1,.11,.13),tree:C3(.3,.32,.36),top:C3(.75,.78,.84),th:.24,sun:C3(1,.95,.86),dirt:[.34,.33,.32],k:.3,sp:.7,gl:1}};
 let pm=null,envRT=null;
 function snowEnv(sc,K){let sun=null;sc.traverse(o=>{if(o.isDirectionalLight&&!sun)sun=o});const sd=sun?sun.position.clone().sub(sun.target?sun.target.position:new THREE.Vector3()).normalize():new THREE.Vector3(.4,.4,-.8);

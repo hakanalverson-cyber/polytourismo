@@ -44,7 +44,7 @@ step=function(dt){const Rc=RACE;if(Rc&&Rc.T&&Rc.T.stage&&!Rc._stg){Rc._stg=1;if(
 /* ---- the world: sky, fog and light only; the stage model (cartoon.js) is added on top ---- */
 /* surface brightness per stage (a multiplier on each material of the model: the dirt roads were blown out, the tarmac and the banks nearly black) */
 const TINT={
- mangrove:[[/ROADS_FINLAND/,.72],[/GRAVEL_FINLAND/,.8],[/GRASS_FINLAND/,1.45],[/LAKE_BOTTOM/,1.2],[/^ct_c$/,1.5],[/ATLAS/,1.25]],
+ mangrove:[[/ROADS_FINLAND/,.36],[/GRAVEL_FINLAND/,.46],/* Nov 10 (Hakan: "the gravel is too bright and looks super out of place"): were .72 and .8 */[/GRASS_FINLAND/,1.45],[/LAKE_BOTTOM/,1.2],[/^ct_c$/,1.5],[/ATLAS/,1.25]],
  terr:[[/TARMAC_PLAIN/,2.6],[/ROADS_FRANCE/,2.1],[/GRASS_FRANCE/,1.3],[/SNOW_FRANCE/,.9],[/^ct_c$/,1.3]],
  ash:[[/ROADS_PORTUGAL/,1.1],[/GRAVEL_PORTUGAL/,.9],[/GRASS_PORTUGAL/,1.35],[/^ct_c$/,2.1]],
  autumn:[[/SNOW_SWEDEN/,.86],[/ICE_SURFACE/,.95],[/STONE/,1.3],[/^ct_c$/,1.5]]};
@@ -60,18 +60,19 @@ function tintStage(sc,key){const em=EMIS[key]||[];const tb=TINT[key];if(!tb)retu
    texture made here: wheel ruts and a crown of loose gravel with grass at the edges on the dirt stages, white edge lines and a dashed centre line and worn
    tyre tracks on the tarmac, packed tyre tracks and slush on the snow. Lit and fogged like the rest of the world. ---- */
 const ROADK={mangrove:'dirt',ash:'dirt',terr:'tarmac',autumn:'snow'},RTILE=14;
-function roadTex(kind){const W=256,H=512,cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');let seed=kind.length*7919+3;const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
+function roadTex(kind,key){const dry=key==='ash';/* Nov 10 (Hakan: a dark gap beside the Portugal road): the verge strip was grass green everywhere; between a dry road and a dry bank it read as a dark seam. Portugal's verge is now loose pale dirt that fades out */
+ const W=256,H=512,cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');let seed=kind.length*7919+3;const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
  const band=(u,w,col,a,soft)=>{const x0=(u-w/2)*W,x1=(u+w/2)*W,gr=g.createLinearGradient(x0-soft*W,0,x1+soft*W,0);const c=(al)=>`rgba(${col[0]},${col[1]},${col[2]},${al})`;gr.addColorStop(0,c(0));gr.addColorStop(soft/(w+2*soft),c(a));gr.addColorStop(1-soft/(w+2*soft),c(a));gr.addColorStop(1,c(0));g.fillStyle=gr;g.fillRect(x0-soft*W,0,x1-x0+2*soft*W,H)};
  const dots=(n,xa,xb,cols,rmin,rmax)=>{for(let i=0;i<n;i++){const x=(xa+rnd()*(xb-xa))*W,y=rnd()*H,r=rmin+rnd()*(rmax-rmin),c=cols[(rnd()*cols.length)|0];g.fillStyle=c;g.beginPath();g.arc(x,y,r,0,7);g.fill()}};
  if(kind==='dirt'){
-  band(.5,.9,[60,70,34],.0,.0);
-  band(.04,.07,[64,76,38],.5,.05);band(.96,.07,[64,76,38],.5,.05);                       /* grass and dirt at the verge */
-  band(.5,.2,[190,160,118],.2,.08);                                                      /* loose gravel on the crown */
+  if(!dry)band(.5,.86,[112,90,66],.5,.06);/* Finland: a brown wash over the whole width; the model's own road was a pale cream that glared against the forest */
+  if(dry){band(.03,.1,[150,118,84],.3,.07);band(.97,.1,[150,118,84],.3,.07)}else{band(.04,.07,[64,76,38],.5,.05);band(.96,.07,[64,76,38],.5,.05)}                       /* grass and dirt at the verge */
+  band(.5,.2,dry?[190,160,118]:[150,128,98],dry?.2:.13,.08);                                                      /* loose gravel on the crown */
   band(.31,.085,[46,32,22],.46,.045);band(.69,.085,[46,32,22],.46,.045);                     /* the ruts */
   band(.31,.025,[140,112,82],.16,.012);band(.69,.025,[140,112,82],.16,.012);             /* polished by the tyres */
   dots(900,.12,.88,['rgba(120,104,84,.4)','rgba(48,38,30,.4)','rgba(180,158,124,.3)'],.6,1.6);
-  dots(160,.0,.1,['rgba(40,60,28,.55)','rgba(76,92,44,.5)'],1.4,3);dots(160,.9,1.0,['rgba(40,60,28,.55)','rgba(76,92,44,.5)'],1.4,3);
-  for(let i=0;i<14;i++){const x=(.44+rnd()*.12)*W,y=rnd()*H;g.strokeStyle='rgba(70,92,40,.5)';g.lineWidth=1.2;for(let k=0;k<4;k++){g.beginPath();g.moveTo(x,y);g.lineTo(x+(k-1.5)*2.2,y-5-rnd()*4);g.stroke()}}
+  {const vc=dry?['rgba(120,96,70,.4)','rgba(168,138,100,.35)']:['rgba(40,60,28,.55)','rgba(76,92,44,.5)'];dots(160,.0,.1,vc,1.4,3);dots(160,.9,1.0,vc,1.4,3)}
+  for(let i=0;i<(dry?0:14);i++){const x=(.44+rnd()*.12)*W,y=rnd()*H;g.strokeStyle='rgba(70,92,40,.5)';g.lineWidth=1.2;for(let k=0;k<4;k++){g.beginPath();g.moveTo(x,y);g.lineTo(x+(k-1.5)*2.2,y-5-rnd()*4);g.stroke()}}
  }else if(kind==='tarmac'){
   band(.31,.11,[0,0,0],.2,.05);band(.69,.11,[0,0,0],.2,.05);                              /* tyre wear */
   dots(500,.05,.95,['rgba(255,255,255,.07)','rgba(0,0,0,.12)'],.5,1.3);
@@ -91,7 +92,7 @@ function roadRibbon(sc,T,key){const kind=ROADK[key];if(!kind||!T.finI)return;con
    const o=(i*C+k)*3;pos[o]=x;pos[o+1]=h+.05;pos[o+2]=z;uv[(i*C+k)*2]=k/(C-1);uv[(i*C+k)*2+1]=dist/RTILE}
   if(i)for(let k=0;k<C-1;k++){const a=(i-1)*C+k,b=a+1,c2=i*C+k,d=c2+1;idx.push(a,c2,b,b,c2,d)}}
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('uv',new THREE.BufferAttribute(uv,2));g.setIndex(idx);{const nn=new Float32Array(n*C*3);for(let q=0;q<n*C;q++)nn[q*3+1]=1;g.setAttribute('normal',new THREE.BufferAttribute(nn,3))}
- const m=new THREE.Mesh(g,new THREE.MeshLambertMaterial({map:roadTex(kind),transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,side:THREE.DoubleSide}));
+ const m=new THREE.Mesh(g,new THREE.MeshLambertMaterial({map:roadTex(kind,key),transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,side:THREE.DoubleSide}));
  m.frustumCulled=false;m.renderOrder=1;m.name='roadDetail';m.userData.noMerge=1;m.userData.noChunk=1;sc.add(m)}
 /* falling snow: a box of flakes that rides along with the camera (one draw call) */
 function snowAdd(sc){const N=1400,pos=new Float32Array(N*3),seed=new Float32Array(N*3);for(let i=0;i<N*3;i++)seed[i]=Math.random();

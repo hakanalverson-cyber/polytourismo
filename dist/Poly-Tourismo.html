@@ -20850,7 +20850,9 @@ R.render=function(scene,cam){if(bad>3||!want(scene,cam))return prev(scene,cam);
   const e0=R.toneMappingExposure;R.toneMappingExposure=e0*aeK;R.setRenderTarget(rt);R.clear();try{prev(scene,cam)}finally{R.toneMappingExposure=e0}
   try{const fc=scene.fog&&scene.fog.color;meterRead(scene,scene.userData.tod==='night'||(fc&&fc.r+fc.g+fc.b<.3))}catch(e){aeK=1}
   /* focus: the distance to the player's car */
-  const me=RACE.cars.find(c=>c.human),fd=me&&me.m&&me.m.g?cam.position.distanceTo(me.m.g.position):10,f0=Math.max(70,fd*7),f1=Math.max(320,fd*30),cn=cam.near,cf=cam.far;
+  const me=RACE.cars.find(c=>c.human),fd=me&&me.m&&me.m.g?cam.position.distanceTo(me.m.g.position):10,stg=!!(RACE.T&&RACE.T.d&&RACE.T.d.cartoon&&RACE.T.d.cartoon.stage)&&O().stageDof!==false,
+   /* Nov 10 (Hakan: soften the rally backgrounds): on the stages the blur starts closer and gets stronger, so the car and the next corner are sharp and the far banks and tree lines go soft */
+   f0=stg?Math.max(42,fd*4.2):Math.max(70,fd*7),f1=stg?Math.max(150,fd*14):Math.max(320,fd*30),cn=cam.near,cf=cam.far;
   const D=dofOn();
   if(D){const b=Q.blur,u=b.uniforms;u.tD.value=rt.depthTexture;u.cn.value=cn;u.cf.value=cf;u.f0.value=f0;u.f1.value=f1;Q.q.material=b;
    u.tC.value=rt.texture;u.w.value=1;u.dir.value.set(1.5/W*4,0);R.setRenderTarget(qa);prev(Q.sc,Q.cam);
@@ -20861,7 +20863,7 @@ R.render=function(scene,cam){if(bad>3||!want(scene,cam))return prev(scene,cam);
   const G=glOn();if(G){const b=Q.bright;b.uniforms.tC.value=rt.texture;Q.q.material=b;R.setRenderTarget(qc);prev(Q.sc,Q.cam);
    const bl=Q.blur,bu=bl.uniforms;bu.w.value=0;Q.q.material=bl;for(const k of[1.5,3]){bu.tC.value=qc.texture;bu.dir.value.set(k/W*4,0);R.setRenderTarget(qd);prev(Q.sc,Q.cam);bu.tC.value=qd.texture;bu.dir.value.set(0,k/H*4);R.setRenderTarget(qc);prev(Q.sc,Q.cam)}}
   const c=Q.comp,u=c.uniforms;u.tC.value=rt.texture;u.tD.value=rt.depthTexture;u.tB.value=qb?qb.texture:rt.texture;u.px.value.set(1/W,1/H);u.cn.value=cn;u.cf.value=cf;u.f0.value=f0;u.f1.value=f1;
-  u.dofK.value=D?.5:0;u.aoK.value=aoOn()?.4:0;
+  u.dofK.value=D?(stg?.85:.5):0;u.aoK.value=aoOn()?.4:0;
   /* the haze: the fog colour, warmed toward the sun */
   const sun=scene.userData.sun,fog=scene.fog,night=scene.userData.tod==='night';
   if(fog&&fog.color){u.hzC.value.copy(lin2srgb(fog.color));u.hzK.value=night?.08:scene.userData.sunStar?.06:.12;u.hz.value=fog.isFog?Math.min(.01,2.2/Math.max(200,fog.far)):.004}else u.hzK.value=0;
@@ -21093,7 +21095,7 @@ step=function(dt){const Rc=RACE;if(Rc&&Rc.T&&Rc.T.stage&&!Rc._stg){Rc._stg=1;if(
 /* ---- the world: sky, fog and light only; the stage model (cartoon.js) is added on top ---- */
 /* surface brightness per stage (a multiplier on each material of the model: the dirt roads were blown out, the tarmac and the banks nearly black) */
 const TINT={
- mangrove:[[/ROADS_FINLAND/,.72],[/GRAVEL_FINLAND/,.8],[/GRASS_FINLAND/,1.45],[/LAKE_BOTTOM/,1.2],[/^ct_c$/,1.5],[/ATLAS/,1.25]],
+ mangrove:[[/ROADS_FINLAND/,.36],[/GRAVEL_FINLAND/,.46],/* Nov 10 (Hakan: "the gravel is too bright and looks super out of place"): were .72 and .8 */[/GRASS_FINLAND/,1.45],[/LAKE_BOTTOM/,1.2],[/^ct_c$/,1.5],[/ATLAS/,1.25]],
  terr:[[/TARMAC_PLAIN/,2.6],[/ROADS_FRANCE/,2.1],[/GRASS_FRANCE/,1.3],[/SNOW_FRANCE/,.9],[/^ct_c$/,1.3]],
  ash:[[/ROADS_PORTUGAL/,1.1],[/GRAVEL_PORTUGAL/,.9],[/GRASS_PORTUGAL/,1.35],[/^ct_c$/,2.1]],
  autumn:[[/SNOW_SWEDEN/,.86],[/ICE_SURFACE/,.95],[/STONE/,1.3],[/^ct_c$/,1.5]]};
@@ -21109,18 +21111,19 @@ function tintStage(sc,key){const em=EMIS[key]||[];const tb=TINT[key];if(!tb)retu
    texture made here: wheel ruts and a crown of loose gravel with grass at the edges on the dirt stages, white edge lines and a dashed centre line and worn
    tyre tracks on the tarmac, packed tyre tracks and slush on the snow. Lit and fogged like the rest of the world. ---- */
 const ROADK={mangrove:'dirt',ash:'dirt',terr:'tarmac',autumn:'snow'},RTILE=14;
-function roadTex(kind){const W=256,H=512,cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');let seed=kind.length*7919+3;const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
+function roadTex(kind,key){const dry=key==='ash';/* Nov 10 (Hakan: a dark gap beside the Portugal road): the verge strip was grass green everywhere; between a dry road and a dry bank it read as a dark seam. Portugal's verge is now loose pale dirt that fades out */
+ const W=256,H=512,cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');let seed=kind.length*7919+3;const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
  const band=(u,w,col,a,soft)=>{const x0=(u-w/2)*W,x1=(u+w/2)*W,gr=g.createLinearGradient(x0-soft*W,0,x1+soft*W,0);const c=(al)=>`rgba(${col[0]},${col[1]},${col[2]},${al})`;gr.addColorStop(0,c(0));gr.addColorStop(soft/(w+2*soft),c(a));gr.addColorStop(1-soft/(w+2*soft),c(a));gr.addColorStop(1,c(0));g.fillStyle=gr;g.fillRect(x0-soft*W,0,x1-x0+2*soft*W,H)};
  const dots=(n,xa,xb,cols,rmin,rmax)=>{for(let i=0;i<n;i++){const x=(xa+rnd()*(xb-xa))*W,y=rnd()*H,r=rmin+rnd()*(rmax-rmin),c=cols[(rnd()*cols.length)|0];g.fillStyle=c;g.beginPath();g.arc(x,y,r,0,7);g.fill()}};
  if(kind==='dirt'){
-  band(.5,.9,[60,70,34],.0,.0);
-  band(.04,.07,[64,76,38],.5,.05);band(.96,.07,[64,76,38],.5,.05);                       /* grass and dirt at the verge */
-  band(.5,.2,[190,160,118],.2,.08);                                                      /* loose gravel on the crown */
+  if(!dry)band(.5,.86,[112,90,66],.5,.06);/* Finland: a brown wash over the whole width; the model's own road was a pale cream that glared against the forest */
+  if(dry){band(.03,.1,[150,118,84],.3,.07);band(.97,.1,[150,118,84],.3,.07)}else{band(.04,.07,[64,76,38],.5,.05);band(.96,.07,[64,76,38],.5,.05)}                       /* grass and dirt at the verge */
+  band(.5,.2,dry?[190,160,118]:[150,128,98],dry?.2:.13,.08);                                                      /* loose gravel on the crown */
   band(.31,.085,[46,32,22],.46,.045);band(.69,.085,[46,32,22],.46,.045);                     /* the ruts */
   band(.31,.025,[140,112,82],.16,.012);band(.69,.025,[140,112,82],.16,.012);             /* polished by the tyres */
   dots(900,.12,.88,['rgba(120,104,84,.4)','rgba(48,38,30,.4)','rgba(180,158,124,.3)'],.6,1.6);
-  dots(160,.0,.1,['rgba(40,60,28,.55)','rgba(76,92,44,.5)'],1.4,3);dots(160,.9,1.0,['rgba(40,60,28,.55)','rgba(76,92,44,.5)'],1.4,3);
-  for(let i=0;i<14;i++){const x=(.44+rnd()*.12)*W,y=rnd()*H;g.strokeStyle='rgba(70,92,40,.5)';g.lineWidth=1.2;for(let k=0;k<4;k++){g.beginPath();g.moveTo(x,y);g.lineTo(x+(k-1.5)*2.2,y-5-rnd()*4);g.stroke()}}
+  {const vc=dry?['rgba(120,96,70,.4)','rgba(168,138,100,.35)']:['rgba(40,60,28,.55)','rgba(76,92,44,.5)'];dots(160,.0,.1,vc,1.4,3);dots(160,.9,1.0,vc,1.4,3)}
+  for(let i=0;i<(dry?0:14);i++){const x=(.44+rnd()*.12)*W,y=rnd()*H;g.strokeStyle='rgba(70,92,40,.5)';g.lineWidth=1.2;for(let k=0;k<4;k++){g.beginPath();g.moveTo(x,y);g.lineTo(x+(k-1.5)*2.2,y-5-rnd()*4);g.stroke()}}
  }else if(kind==='tarmac'){
   band(.31,.11,[0,0,0],.2,.05);band(.69,.11,[0,0,0],.2,.05);                              /* tyre wear */
   dots(500,.05,.95,['rgba(255,255,255,.07)','rgba(0,0,0,.12)'],.5,1.3);
@@ -21140,7 +21143,7 @@ function roadRibbon(sc,T,key){const kind=ROADK[key];if(!kind||!T.finI)return;con
    const o=(i*C+k)*3;pos[o]=x;pos[o+1]=h+.05;pos[o+2]=z;uv[(i*C+k)*2]=k/(C-1);uv[(i*C+k)*2+1]=dist/RTILE}
   if(i)for(let k=0;k<C-1;k++){const a=(i-1)*C+k,b=a+1,c2=i*C+k,d=c2+1;idx.push(a,c2,b,b,c2,d)}}
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('uv',new THREE.BufferAttribute(uv,2));g.setIndex(idx);{const nn=new Float32Array(n*C*3);for(let q=0;q<n*C;q++)nn[q*3+1]=1;g.setAttribute('normal',new THREE.BufferAttribute(nn,3))}
- const m=new THREE.Mesh(g,new THREE.MeshLambertMaterial({map:roadTex(kind),transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,side:THREE.DoubleSide}));
+ const m=new THREE.Mesh(g,new THREE.MeshLambertMaterial({map:roadTex(kind,key),transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,side:THREE.DoubleSide}));
  m.frustumCulled=false;m.renderOrder=1;m.name='roadDetail';m.userData.noMerge=1;m.userData.noChunk=1;sc.add(m)}
 /* falling snow: a box of flakes that rides along with the camera (one draw call) */
 function snowAdd(sc){const N=1400,pos=new Float32Array(N*3),seed=new Float32Array(N*3);for(let i=0;i<N*3;i++)seed[i]=Math.random();
@@ -21874,8 +21877,8 @@ R.render=function(scene,cam){const f=scene&&scene.userData&&scene.userData.snow2
    line; dirt: its colour; k: how much; sp: how far the spatter reaches above the packed line; gl: paint gloss */
 const C3=(r,g,b)=>new THREE.Color(r,g,b);
 const CAR={autumn:{zen:C3(.05,.22,.8),hor:C3(.8,.92,1.15),gnd:C3(1.25,1.28,1.36),shd:C3(.55,.66,.95),tree:C3(.42,.52,.56),top:C3(1.05,1.1,1.18),th:.1,sun:C3(1,.97,.9),dirt:[.93,.95,.99],k:1,sp:.5,gl:1},
- mangrove:{zen:C3(.1,.3,.78),hor:C3(.92,.9,.78),gnd:C3(.2,.3,.11),shd:C3(.07,.12,.05),tree:C3(.03,.07,.03),top:C3(.1,.22,.08),th:.34,sun:C3(1,.9,.72),dirt:[.3,.21,.13],k:.9,sp:.9,gl:.8},
- ash:{zen:C3(.12,.33,.8),hor:C3(1.05,.86,.6),gnd:C3(.5,.36,.21),shd:C3(.26,.18,.11),tree:C3(.1,.14,.05),top:C3(.22,.32,.1),th:.16,sun:C3(1,.85,.6),dirt:[.56,.43,.29],k:.85,sp:1.2,gl:.75},
+ mangrove:{zen:C3(.1,.3,.78),hor:C3(.92,.9,.78),gnd:C3(.2,.3,.11),shd:C3(.07,.12,.05),tree:C3(.03,.07,.03),top:C3(.1,.22,.08),th:.34,sun:C3(1,.9,.72),dirt:[.3,.21,.13],k:.9,sp:.55,gl:.8},
+ ash:{zen:C3(.12,.33,.8),hor:C3(1.05,.86,.6),gnd:C3(.5,.36,.21),shd:C3(.26,.18,.11),tree:C3(.1,.14,.05),top:C3(.22,.32,.1),th:.16,sun:C3(1,.85,.6),dirt:[.47,.37,.26],k:.85,sp:.55,gl:.75},
  terr:{zen:C3(.08,.28,.82),hor:C3(.82,.92,1.08),gnd:C3(.2,.21,.23),shd:C3(.1,.11,.13),tree:C3(.3,.32,.36),top:C3(.75,.78,.84),th:.24,sun:C3(1,.95,.86),dirt:[.34,.33,.32],k:.3,sp:.7,gl:1}};
 let pm=null,envRT=null;
 function snowEnv(sc,K){let sun=null;sc.traverse(o=>{if(o.isDirectionalLight&&!sun)sun=o});const sd=sun?sun.position.clone().sub(sun.target?sun.target.position:new THREE.Vector3()).normalize():new THREE.Vector3(.4,.4,-.8);
