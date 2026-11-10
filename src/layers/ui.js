@@ -1089,7 +1089,7 @@ frame=function(n){requestAnimationFrame(frame);const dt=Math.min(.05,Math.max(0,
    Only the menu itself and the full-screen fades/vignette stay */
 (function(){const st=document.createElement('style');st.textContent='body.ptPause>div:not(#pause):not(#ptOptions):not(#v8):not(#fade):not(#ptWipe):not(#rlFade):not(#rlDip){visibility:hidden!important}';document.head.appendChild(st);
  const sh=show;show=n=>{sh(n);if(n==='pause')document.body.classList.add('ptPause');else if(n!=='ptOptions')document.body.classList.remove('ptPause')}})();
-P.studioDbg=()=>S;P.okTrack=(m,i)=>okTrack(m,i);P.ui={selCar,openPick,openRally,openCards,openShow,renderSetup,renderCareer,ST,SR,drawTrack,trLen:i=>tr(i).L,trClear:i=>P.trClear(i),refreshTracks:()=>{const e=document.getElementById('s8setup');if(e&&e.offsetParent)renderSetup()}};
+P.studioDbg=()=>S;P.okTrack=(m,i)=>okTrack(m,i);P.ui={pickMode,show,selCar,openPick,openRally,openCards,openShow,renderSetup,renderCareer,ST,SR,drawTrack,trLen:i=>tr(i).L,trClear:i=>P.trClear(i),refreshTracks:()=>{const e=document.getElementById('s8setup');if(e&&e.offsetParent)renderSetup()}};
 document.title='Poly Tourismo v9';
 refreshMenuCars();MS=null;
 })();
