@@ -30,7 +30,11 @@ function build(sc){
  const rt=pm.fromScene(es,0,.1,100);g.dispose();mat.dispose();return rt}
 /* materials: the world keeps most of its look (a little env fill), cars get the reflections */
 const WORLD=.3,CAR=.6;
-function tuneWorld(sc){sc.traverse(o=>{if(!o.isMesh)return;const ms=Array.isArray(o.material)?o.material:[o.material];for(const x of ms){if(!x||!x.isMeshStandardMaterial||x.userData.iblC)continue;if(x.userData.ibl==null){x.userData.ibl=1;x.envMapIntensity=WORLD;x.needsUpdate=true}}})}
+function tuneWorld(sc){sc.traverse(o=>{if(!o.isMesh)return;const ms=Array.isArray(o.material)?o.material:[o.material];for(const x of ms){if(!x||!x.isMeshStandardMaterial||x.userData.iblC)continue;if(x.userData.ibl==null){x.userData.ibl=1;x.envMapIntensity=WORLD;x.needsUpdate=true}
+  /* Nov 10 (Hakan: "make the ground reflect less"): the ground, the road and the big model surfaces are matte: no sky sheen, no shine
+     (PTO.matteGround===false: as before) */
+  if(!x.userData.matte&&!(window.PTO&&window.PTO.matteGround===false)){const g=o.geometry;let big=/^ct_(GRASS|GRAVEL|ROADS|SNOW|TARMAC|DIRT|SAND|FINLAND_LAKE)/.test(o.name);if(!big&&g&&g.attributes&&g.attributes.position&&g.attributes.position.count>800){if(!g.boundingBox)g.computeBoundingBox();const b=g.boundingBox;big=b.max.x-b.min.x>250||b.max.z-b.min.z>250}
+   if(big&&!o.isInstancedMesh){x.userData.matte=1;x.envMapIntensity=.05;x.roughness=1;x.metalness=0;x.needsUpdate=true}}}})}
 function tuneCar(g){if(!g)return;g.traverse(o=>{if(!o.isMesh)return;const ms=Array.isArray(o.material)?o.material:[o.material];for(const x of ms){if(!x||!x.isMeshStandardMaterial||x.userData.iblC)continue;
  x.userData.iblC=1;x.userData.ibl=1;x.envMapIntensity=CAR;
  /* body paint and trim: a touch glossier so the sky runs along the panels; very rough parts (tyres, rubber) stay matte */
