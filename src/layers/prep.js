@@ -31,6 +31,28 @@ const st=document.createElement('style');st.textContent=`
 .gxKV{display:grid;grid-template-columns:104px 1fr;align-items:baseline;font:400 13px var(--gt);color:#9fb0c0}
 .gxKV b{font:500 17px var(--gt);color:#f2f6fa}
 .gxPTag{margin-top:16px;font:400 13px var(--gt);color:#9fb0c0}.gxPTag b{font-weight:600;color:#dff0ff}
+.gxP.solo .gxPH{display:none!important}
+.gxSoloI{width:min(30vw,340px)!important;margin-top:14px!important;gap:0!important}
+.gxGar{margin:0 0 14px;font:300 clamp(26px,4.4vh,38px) var(--gt);color:#f2f6fa;letter-spacing:.01em}
+.gxMk{display:flex;align-items:center;gap:9px;font:500 clamp(14px,2vh,18px) var(--gt);letter-spacing:.04em;text-transform:uppercase;color:#e8eef4}
+.gxMk svg,.gxMk img{height:26px;width:auto;max-width:44px}
+.gxSoloI h3{margin:12px 0 2px!important;font:500 clamp(18px,2.8vh,26px) var(--gt)!important;color:#fff}
+.gxSub{font:500 12px var(--gt);color:#cfd8e1;text-transform:capitalize}
+.gxPill{align-self:flex-start;margin-top:14px;padding:7px 15px;border-radius:20px;box-shadow:inset 0 0 0 1.5px #e8eef4aa;background:#0006;font:500 clamp(13px,1.9vh,17px) var(--gt);color:#fff}
+.gxSoloI .gxPK{margin-top:14px;padding-top:12px;gap:7px}
+.gxSoloI .gxKV{grid-template-columns:86px 1fr;gap:0 16px;font-size:12px}.gxSoloI .gxKV span{text-align:right}
+.gxSoloI .gxKV b{font:600 clamp(14px,2.1vh,19px) var(--gt)}
+.gxSoloI .gxPD{margin-top:12px;padding-top:10px;border-top:1px solid #ffffff2a}
+.gxSoloI .gxPTag{margin-top:12px}
+.gxDots{display:flex;justify-content:center;align-items:center;gap:13px;margin-top:auto;font:500 13px var(--gt);color:#cfd8e1;pointer-events:auto}
+.gxDots u{text-decoration:none;cursor:pointer;padding:3px 7px}.gxDots u:hover{color:#fff}
+.gxDots i{width:6px;height:6px;border-radius:50%;background:#ffffff55}.gxDots i.on{background:#fff}
+.gxP.solo .gxPS{margin-top:auto}
+.gxSB{gap:clamp(24px,5vw,86px)!important}
+.gxSB button{background:none!important;box-shadow:none!important;min-width:96px;padding:6px 8px!important;gap:6px!important}
+.gxSB button:hover{background:none!important;transform:none;color:#fff}.gxSB button:hover svg{transform:translateY(-3px)}
+.gxSB svg{width:44px!important;height:44px!important;transition:transform .15s}
+.gxSB span{font:500 clamp(14px,2vh,18px) var(--gt)!important}
 #prepCv{position:absolute;inset:0;width:100%;height:100%;z-index:0;opacity:0;transition:none;pointer-events:none;display:block}
 #s8setup.prepLive #prepCv{opacity:1;transition:opacity .5s ease}
 #s8setup.prepLive #prepCv.cut{opacity:0;transition:opacity .22s ease}
