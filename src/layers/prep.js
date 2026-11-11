@@ -86,10 +86,10 @@ const st=document.createElement('style');st.textContent=`
 .gxPSet input{min-width:0;width:100%;flex:1;background:transparent;border:0;outline:0;color:#fff;font:500 13px var(--gt);text-align:right}
 .gxPSet input::placeholder{color:#ffffff55}.gxPSet label:focus-within,.gxPB:hover{background:#3a5f86cc}
 .gxP:not(.solo) .gxPS{margin-top:8px}
-.gxP:not(.solo) .gxPSet{display:grid;grid-template-columns:1fr 1fr;gap:6px}.gxP:not(.solo) .gxPSet label{grid-column:1/-1}
+.gxP:not(.solo) .gxPSet{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .gxPB b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
 .gxPanels.n3 .gxPSet{grid-template-columns:1fr!important;gap:4px}.gxPanels.n3 .gxPSet label,.gxPanels.n3 .gxPB{padding:4px 10px;border-radius:10px}
-.gxPanels.n3 .gxPC{flex:0 1 84px;padding:3px 3px 4px}.gxPanels.n3 .gxPC span{font-size:8px;margin-top:2px}.gxPanels.n3 .gxPC.gar{min-height:54px}.gxPanels.n3 .gxPC.gar svg{width:26px;height:26px}
+.gxPanels.n3 .gxPC{flex:1 1 0;max-width:none;padding:3px 3px 4px}.gxPanels.n3 .gxPC span{font-size:8px;margin-top:2px}.gxPanels.n3 .gxPC.gar{min-height:54px}.gxPanels.n3 .gxPC.gar svg{width:26px;height:26px}
 .gxPanels.n3 .gxPS{margin-top:6px}
 .gxP.solo .gxPSet{position:absolute;right:clamp(24px,4.5vw,76px);top:clamp(112px,17vh,150px);width:min(26vw,320px);flex-direction:column;margin:0;padding:12px;border-radius:16px;background:#0a0e1499;box-shadow:inset 0 1px 0 #ffffff26,0 0 0 1px #ffffff1c,0 12px 30px #0008;box-sizing:border-box}
 .gxP.solo .gxPSet label,.gxP.solo .gxPB{background:#ffffff0d;box-shadow:none;padding:9px 14px}
@@ -103,6 +103,8 @@ const st=document.createElement('style');st.textContent=`
 .gxP:not(.solo) h3{font-size:clamp(20px,3.6vh,32px);font-weight:400}
 .gxP:not(.solo) .gxPD{width:min(46%,240px)}.gxP:not(.solo) .gxPR{grid-template-columns:86px 1fr;row-gap:3px}.gxP:not(.solo) .gxPR u{grid-column:1/-1;grid-row:2}
 .gxPanels:not(.n3) .gxPC{flex:1 1 0;max-width:190px}
+.gxPC.lk canvas{filter:brightness(.35) saturate(.4)}.gxPC.lk{opacity:.6;cursor:not-allowed}.gxPC.nope{animation:gxNope .3s}@keyframes gxNope{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.gxP:not(.solo) .gxPH{margin-right:-17px}.gxP.solo .gxPH{right:clamp(14px,3vw,56px)}
 #s8setup.carIdle #gxSu.g2 .gxTn{display:none!important}
 #s8setup.carIdle #gxSu.g2 .gxCards .gxr:not(.gxAddT),#s8setup.carIdle #gxSu.g2 .gxCards h5{display:none!important}
 #s8setup.carIdle #gxSu.g2 .gxCards{position:absolute;right:clamp(16px,2vw,34px);bottom:clamp(14px,3vh,34px);padding:0!important;z-index:3}
