@@ -520,7 +520,12 @@ function gxSetup(){const sec=$('s8setup');if(!sec)return;if(ST.custom){ST.custom
  GXS.rows=rows;GXS.f=Math.max(0,Math.min(rows.length-1,GXS.f));
  const T=tr(ST.track),info=[...$('trkInfo').querySelectorAll('.chip')].map(c=>c.textContent.trim()).filter(Boolean);
  const ta=$('trkExtra').querySelector('.medals');
- gxRender(box,{kind:m==='rally'?'Stage':m==='track'?'Circuit':'Track',name:D[ST.track].name,facts:info,extra:ta?ta.outerHTML:'',shot:()=>{if(m==='rally'&&P.rallyMap&&D[ST.track].cartoon&&D[ST.track].cartoon.stage){const cv=$('gxShot'),oc=document.createElement('canvas');oc.width=960;oc.height=540;cv.classList.add('map','rl');P.rallyMap(ST.track,oc);cv.getContext('2d').drawImage(oc,0,0,cv.width,cv.height);const rf=$('gxRefl');if(rf){const r=rf.getContext('2d');r.clearRect(0,0,rf.width,rf.height);r.drawImage(cv,0,0,rf.width,rf.height)}}else gxShot(ST.track)},map:cv=>{if(m==='rally'&&P.rallyProfile&&D[ST.track].cartoon&&D[ST.track].cartoon.stage)P.rallyProfile(ST.track,cv);else drawTrack(cv,ST.track,false)},rows,go:'Next: car'})}
+ gxRender(box,{kind:m==='rally'?'Stage':m==='track'?'Circuit':'Track',name:D[ST.track].name,facts:info,extra:ta?ta.outerHTML:'',shot:()=>{if(m==='rally'&&P.rallyMap&&D[ST.track].cartoon&&D[ST.track].cartoon.stage){const cv=$('gxShot'),oc=document.createElement('canvas');oc.width=960;oc.height=540;cv.classList.add('map','rl');P.rallyMap(ST.track,oc);cv.getContext('2d').drawImage(oc,0,0,cv.width,cv.height);const rf=$('gxRefl');if(rf){const r=rf.getContext('2d');r.clearRect(0,0,rf.width,rf.height);r.drawImage(cv,0,0,rf.width,rf.height)}}else gxShot(ST.track)},map:cv=>{if(m==='rally'&&P.rallyProfile&&D[ST.track].cartoon&&D[ST.track].cartoon.stage)P.rallyProfile(ST.track,cv);else drawTrack(cv,ST.track,false)},rows,go:'Next: car'});
+ /* Nov 10 (Hakan): no track pill; the track changes from arrows by the big name, Q/E, or the arrows here */
+ GXS.noTrk=m!=='track'&&!!rows[0]&&!!rows[0].opts;box.classList.toggle('noTrk',GXS.noTrk);
+ if(GXS.noTrk){const tn=box.querySelector('.gxTn b');if(tn&&!box.querySelector('.gxTnA')){for(const d of[-1,1]){const a=document.createElement('button');a.className='gxTnA';a.dataset.d=d;a.setAttribute('aria-label',d<0?'Previous':'Next');a.textContent=d<0?'\u2039':'\u203A';a.onclick=e=>{e.stopPropagation();P.sfx&&P.sfx('move');rows[0].go(d)};if(d<0)tn.before(a);else tn.after(a)}}
+  if(GXS.f===0){GXS.f=Math.min(1,rows.length-1);box.querySelectorAll('.gxr').forEach(x=>x.classList.toggle('on',+x.dataset.i===GXS.f))}
+  $('suHint').innerHTML='<u>&uarr;&darr;</u>Choose<u>&larr;&rarr;</u>Change<u>Q</u><u>E</u>Track<u>Enter</u>'+'Next: car'}}
 /* Nov 2: the setup screen in a new arrangement (same blue, rounded look): a wide picture banner with the name and facts, the layout
    inset top right, and the options split into three cards underneath (race / conditions / car). Also used by the bike setup (ST.custom). */
 const GX_GRP=r=>r.grp!=null?r.grp:(r.car||r.more||r.sub||r.l==='Drivers')?2:/^(Weather|Time of day|Damage|Clock|Traffic)$/.test(r.l)?1:0;
@@ -675,9 +680,10 @@ P.gxSuKey=e=>{if(!GXS.rows||!$('s8setup').classList.contains('gxOn'))return fals
  const c=e.code,n=GXS.rows.length,r=GXS.rows[GXS.f],box=$('gxSu');
  const paint=()=>{const q=GXS.rows[GXS.f];if(GXS.step===2&&!ST.custom&&q&&q.pl!=null&&q.pl!==GXS.cf){GXS.cf=q.pl;renderSetup();return}box.querySelectorAll('.gxr').forEach(x=>x.classList.toggle('on',+x.dataset.i===GXS.f));const o=box.querySelector('.gxr.on');if(o)o.scrollIntoView({block:'nearest'})};
  if(GXS.step===2&&!ST.custom&&multiOK(ST.mode)){if(c==='Equal'||c==='NumpadAdd'){addPlayer();e.preventDefault();return true}if((c==='Delete'||c==='Backspace')&&r&&r.pl>0){removePlayer(r.pl);e.preventDefault();return true}}
+ if((c==='KeyQ'||c==='KeyE')&&GXS.step===1&&GXS.noTrk&&GXS.rows[0]&&GXS.rows[0].go){P.sfx&&P.sfx('move');GXS.rows[0].go(c==='KeyQ'?-1:1);e.preventDefault();return true}
  if(c==='KeyG'&&r&&r.garage){r.garage();e.preventDefault();return true}
- if(c==='ArrowDown'||c==='KeyS'){GXS.f=(GXS.f+1)%n;P.sfx&&P.sfx('move');paint();e.preventDefault();return true}
- if(c==='ArrowUp'||c==='KeyW'){GXS.f=(GXS.f+n-1)%n;P.sfx&&P.sfx('move');paint();e.preventDefault();return true}
+ if(c==='ArrowDown'||c==='KeyS'){GXS.f=(GXS.f+1)%n;if(GXS.noTrk&&GXS.f===0&&n>1)GXS.f=1;P.sfx&&P.sfx('move');paint();e.preventDefault();return true}
+ if(c==='ArrowUp'||c==='KeyW'){GXS.f=(GXS.f+n-1)%n;if(GXS.noTrk&&GXS.f===0&&n>1)GXS.f=n-1;P.sfx&&P.sfx('move');paint();e.preventDefault();return true}
  if((c==='ArrowLeft'||c==='KeyA')&&r&&r.go){r.go(-1);e.preventDefault();return true}
  if((c==='ArrowRight'||c==='KeyD')&&r&&r.go){r.go(1);e.preventDefault();return true}
  if(c==='Enter'){if(r&&(r.act)){r.act();return true}if(r&&r.input){r.input.focus();return true}$('suGo').click();return true}
