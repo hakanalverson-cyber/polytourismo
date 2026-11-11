@@ -177,7 +177,7 @@ stepCar=(c,dt)=>{const Rc=RACE,T=Rc.T,st=c.cs||(c.cs=BYID.merc);
 };
 
 /* ---------------- start grid ---------------- */
-function gridSlot(T,c,slot){const row=slot>>1,idx0=-(5+row*5),i=((idx0%T.N)+T.N)%T.N,lat=(slot&1?1:-1)*T.hw[0]*.36,s=Math.sin(T.psi[i]),co=Math.cos(T.psi[i]);
+function gridSlot(T,c,slot){const row=slot>>1,idx0=-(5+row*5)+((T.stage&&RACE&&RACE.cfg&&RACE.cfg.rally)?Math.round(100/(T.sp||3)):0)/* Nov 10 (Hakan): rally stages start 100 m up the road so the end of the road behind the line is out of sight */,i=((idx0%T.N)+T.N)%T.N,lat=(slot&1?1:-1)*T.hw[0]*.36,s=Math.sin(T.psi[i]),co=Math.cos(T.psi[i]);
  c.x=T.x[i]+co*lat;c.z=T.z[i]-s*lat;c.y=T.y[i]-lat*T.bank[i]+1.1;c.yaw=T.psi[i];c.idx=i;c.unw=idx0;c.cy=T.psi[i];c.camY=T.y[i]+1;
  if(PT8.gridHook)PT8.gridHook(T,c,slot);/* track files: the painted grid boxes */
  if(RACE&&RACE.cfg&&RACE.cfg.rolling)rollBack(T,c)}
