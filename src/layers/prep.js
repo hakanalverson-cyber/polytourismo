@@ -233,7 +233,7 @@ document.addEventListener('click',e=>{const s=S;if(!s||!s.cars||!s.cars.length||
 function camCar(s,dt){const n=s.cars.length;if(!n)return;const C=new THREE.Vector3();for(const c of s.cars)C.add(c.position);C.divideScalar(n);
  /* Nov 10 (Hakan: the cars playing, centred; click one and the camera zooms to it, the frame on the left): zk eases 0 to 1 while a car is picked */
  const zi=Math.min(n-1,Math.max(0,s.zoom|0)),zt=FAST()&&s.zoom>=0?1:0;s.zk=(s.zk||0)+(zt-(s.zk||0))*Math.min(1,dt*5);const zk=s.zk;
- if(dragX==null)s.ang+=dt*(zk>.5?.07:.13);s.ang+=drag;drag=0;const ps=s.cars[0].rotation.y,r0=(FAST()?(n===1?5.6:(n===2?17.2:n===3?21.6:26)/(2*Math.tan(cam.fov*Math.PI/360)*cam.aspect)):7.4+2.6*(n-1)+(n>2?1.6:0)),r=r0+(5.4-r0)*zk,h=(1.35+.45*(n-1))*(1-.3*zk),a=ps+.95+s.ang;
+ if(dragX==null)s.ang+=dt*(zk>.5?.07:.13);s.ang+=drag;drag=0;const ps=s.cars[0].rotation.y,r0=(FAST()?(n===1?4.7:(n===2?17.2:n===3?21.6:26)/(2*Math.tan(cam.fov*Math.PI/360)*cam.aspect)):7.4+2.6*(n-1)+(n>2?1.6:0)),r=r0+(5.4-r0)*zk,h=(1.35+.45*(n-1))*(1-.3*zk),a=ps+.95+s.ang;
  /* Nov 10 (Hakan: the split screen of Gran Turismo 7): the cars stand on a line across the view, one column each, wherever the camera turns */
  if(FAST()&&n>1){if(s._ck!==s.carKey){s._ck=s.carKey;s.cc=C.clone();s.cy=s.cars.map(c=>c.position.y)}const dist=Math.hypot(r0,h),sp=2*Math.tan(cam.fov*Math.PI/360)*cam.aspect*dist/n,ca=Math.cos(a),sa=Math.sin(a);s.cars.forEach((c,i)=>{const o=(i-(n-1)/2)*sp;c.position.set(s.cc.x+ca*o,s.cy[i],s.cc.z-sa*o)});C.copy(s.cc)}
  if(zk>.001)C.lerp(s.cars[zi].position,zk);
@@ -277,7 +277,7 @@ function frame(now){raf=requestAnimationFrame(frame);const w=want();
  if(s.step!==w.step){s.step=w.step;s.shot=null;s.sh=0;s.ang=0;cv.classList.remove('cut');pend=null}
  let far=null;if(w.step===2&&s.cars.length)camCar(s,dt);else far=camRace(s,now);
  /* the subject sits in the open part of the picture (above the cards, right of the name) */
- const W=1000,H=Math.round(1000/cam.aspect),cars=w.step===2;cam.setViewOffset(W,H,cars?(FAST()?(-W*.2*(s.zk||0)-(s.cars.length===1?W*.05:0)*(1-(s.zk||0))):-W*.12):-W*.04,H*(cars?(FAST()?((s.cars.length>1?.03:.0)*(1-(s.zk||0))+.03*(s.zk||0)):.13):.1),W,H);cam.updateProjectionMatrix();
+ const W=1000,H=Math.round(1000/cam.aspect),cars=w.step===2;cam.setViewOffset(W,H,cars?(FAST()?(-W*.2*(s.zk||0)-(s.cars.length===1?W*.09:0)*(1-(s.zk||0))):-W*.12):-W*.04,H*(cars?(FAST()?((s.cars.length>1?.03:.045)*(1-(s.zk||0))+.03*(s.zk||0)):.13):.1),W,H);cam.updateProjectionMatrix();
  if(s.fog&&s.sc.fog){const f=far||s.fog.far;s.sc.fog.far=f;s.sc.fog.near=far?Math.min(far*.4,s.fog.near+far*.2):s.fog.near}
  if(s.dome)s.dome.position.copy(cam.position);const m=s.sc.userData.skyx;if(m&&m.uniforms)m.uniforms.t.value=(now-s.t0)/1000+40;
  if(s.sun&&s.look){const L=s.look,ext=cars?16:far?Math.min(600,s.box.e*.7):90;s.sun.target.position.copy(L);s.sun.position.copy(L).addScaledVector(s.sd,Math.max(200,ext*1.5));s.sun.target.updateMatrixWorld();const sc_=s.sun.shadow.camera;
