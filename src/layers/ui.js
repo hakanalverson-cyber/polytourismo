@@ -480,7 +480,7 @@ function renderSetup(){const m=ST.mode;$('s8setup').classList.toggle('pkMode',m=
    press its buttons, so every setting keeps working exactly as before. Rarely used settings fold away under More options ===== */
 const GXS={f:0,more:false,last:null};
 const GX_MORE=['cRev','cStart','cCc','cCpuCar','cGb','cEnd'];
-const GX_DRIVE=[['driftAssist','Drift assist',[[0,'Off'],[.35,'Low'],[.7,'Normal'],[1,'Full']]],['steering','Steering',[[.85,'Slow'],[1,'Normal'],[1.2,'Quick']]],['cameraDistance','Chase camera',[[.9,'Close'],[1,'Normal'],[1.2,'Far']]],['shake','Camera shake',[[true,'On'],[false,'Off']]]];
+const GX_DRIVE=[['driftAssist','Drift assist',[[0,'Off'],[.35,'Low'],[.7,'Normal'],[1,'Full']]],['steering','Steering',[[.6,'Gentle'],[.85,'Slow'],[1,'Normal'],[1.2,'Quick']]],['cameraDistance','Chase camera',[[.9,'Close'],[1,'Normal'],[1.2,'Far']]],['shake','Camera shake',[[true,'On'],[false,'Off']]]];
 const GX_ORDER=['cFmt','cLaps','cRL','cIv','cTime',/* round 25: no 'Drivers' count here, players are added on the car step */'cCpu','cDif','cTr','cWx','cTod','cDmg'];
 const GX_NAME={cTod:'Time of day',cCpu:'Opponents',cDif:'CPU level',cPl:'Drivers',cRL:'Laps',cIv:'Knockout every',cFmt:'Format',cGb:'Gearbox',cRev:'Direction',cCc:'CPU class',cCpuCar:'CPU cars',cStart:'Start',cWx:'Weather',cDmg:'Damage',cTime:'Clock',cTr:'Traffic',cLaps:'Laps'};
 function gxShot(i){const cv=$('gxShot'),rf=$('gxRefl');if(!cv)return;const g=cv.getContext('2d'),c=P.trackShotCached&&P.trackShotCached(i);
