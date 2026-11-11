@@ -1781,3 +1781,13 @@ body.rprep #rlPace,body.rreplay #rlPace{display:none!important}
 #v8 #s8show.gv-grid .gc.lock canvas{filter:brightness(.12) saturate(0) drop-shadow(0 0 6px #0008)}
 #v8 #s8show.gv-grid .gc.lock{background:linear-gradient(180deg,#ffffff0a,#ffffff03)!important}
 #v8 #s8show.gv-grid .gc b{letter-spacing:.03em}
+
+/* Nov 10 (Hakan): rally / track garage: the divisions are folders that open into the same card grid as the main garage */
+#s8show.gv-fold .lst{left:0!important;right:0!important;top:14vh!important;bottom:14vh!important;width:auto!important;display:flex;align-items:center;justify-content:center;background:none!important;-webkit-mask-image:none!important;mask-image:none!important;overflow:visible}
+#s8show.gv-fold .secs{display:flex;gap:clamp(16px,2.6vw,38px);flex-wrap:wrap;justify-content:center}
+#s8show.gv-fold .sect{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;width:clamp(170px,19vw,260px);height:clamp(200px,32vh,300px);border-radius:20px;color:#dbe6f1;background:linear-gradient(180deg,#232a33a6,#0d1014c8);box-shadow:inset 0 1px 0 #ffffff2e,0 0 0 1px #ffffff1c,0 18px 40px #0009;transition:transform .15s,background .15s,color .15s}
+#s8show.gv-fold .sect svg{width:84px;height:auto;opacity:.92}
+#s8show.gv-fold .sect b{font:500 clamp(18px,2.6vh,26px) var(--gt);letter-spacing:.16em}
+#s8show.gv-fold .sect small{font:600 11px var(--gt);letter-spacing:.14em;text-transform:uppercase;color:#8fb4d8}
+#s8show.gv-fold .sect:hover,#s8show.gv-fold .sect.foc{transform:translateY(-4px);background:linear-gradient(180deg,#3a5f86d0,#1d3550d0);color:#fff;box-shadow:inset 0 1px 0 #ffffff44,0 0 0 1.5px #8fb4d8,0 18px 40px #000a}
+#s8show.gv-fold .stat,#s8show.gv-fold .drag{display:none!important}

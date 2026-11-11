@@ -54,8 +54,22 @@ const st=document.createElement('style');st.textContent=`
 .gxSB svg{width:44px!important;height:44px!important;transition:transform .15s}
 .gxSB span{font:500 clamp(14px,2vh,18px) var(--gt)!important}
 .noTrk .gxCards .gxr[data-i="0"]{display:none!important}
+.gxAddTf{all:unset;cursor:pointer;margin-top:10px;padding:6px 14px;border-radius:16px;font:500 12px var(--gt);letter-spacing:.06em;color:#cfe1f3;background:#0a0e1466;box-shadow:inset 0 0 0 1px #ffffff2a;pointer-events:auto}.gxAddTf:hover{background:#3a5f86cc;color:#fff}
 .gxTnA{all:unset;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:34px;height:42px;font:300 34px/1 var(--gt);color:#cfe1f3;border-radius:10px;pointer-events:auto;vertical-align:middle;transition:background .15s,color .15s}
 .gxTnA:hover{background:#ffffff22;color:#fff}.noTrk .gxTn>b{display:inline-block!important;vertical-align:middle}.noTrk .gxTn>small{display:block}
+#bkPick{position:absolute;left:0;right:0;top:66px;bottom:66px;z-index:6;padding:22px 3.4vw 30px;overflow:auto;background:linear-gradient(180deg,#0b0e13f4,#07090cf8)}
+#bkPick .bkPh{display:flex;align-items:baseline;gap:14px;margin-bottom:16px}#bkPick .bkPh b{font:300 26px var(--gt);color:#f2f6fa}#bkPick .bkPh i{font:600 11px var(--gt);letter-spacing:.14em;text-transform:uppercase;color:#8fb4d8;font-style:normal}
+#bkPick .bkPg{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(160px,15.5vw,230px),1fr));gap:12px}
+#bkPick .bkC{cursor:pointer;padding:8px 8px 10px;border-radius:14px;background:#ffffff0e;border:1px solid #ffffff1a;transition:transform .15s,background .15s}
+#bkPick .bkC:hover{transform:translateY(-2px);background:#ffffff1c}#bkPick .bkC.on{background:#f1f3f524;border-color:#f1f3f5}
+#bkPick .bkC canvas{width:100%;height:auto;aspect-ratio:168/100;display:block;border-radius:9px;background:radial-gradient(ellipse at 50% 85%,#566271,#1a2027)}
+#bkPick .bkC b{display:block;margin-top:7px;font:600 11px var(--gt);letter-spacing:.06em;text-transform:uppercase;color:#e8eef4}#bkPick .bkC small{font:500 10px var(--gt);letter-spacing:.1em;text-transform:uppercase;color:#8fb4d8}
+.gxP:not(.solo) .gxSB{gap:6px!important}.gxP:not(.solo) .gxSB button{min-width:0!important;flex:1;padding:6px 4px!important}.gxP:not(.solo) .gxSB svg{width:30px!important;height:30px!important}.gxP:not(.solo) .gxSB span{font-size:11px!important}.gxP:not(.solo) .gxSB small{font-size:8px!important}
+#s8setup[data-still] #prepCv,#s8setup[data-still] #prepVig{display:none}
+#s8setup[data-still] #gxSu.g2 #gxShot{visibility:visible!important;position:fixed;left:0;right:0;top:66px;bottom:66px;width:100%;height:calc(100% - 132px);object-fit:cover;z-index:0;filter:brightness(.82)}
+#s8setup[data-still] #gxSu.g2 .gxHero,#s8setup[data-still] #gxSu.g2 .gxCards{position:relative;z-index:1}
+#s8setup[data-still] #gxSu.g2 .gxHero{background:transparent!important}
+.gxP:not(.solo) .gxPS.bkS{margin-top:auto}
 #prepCv{position:absolute;inset:0;width:100%;height:100%;z-index:0;opacity:0;transition:none;pointer-events:none;display:block}
 #s8setup.prepLive #prepCv{opacity:1;transition:opacity .5s ease}
 #s8setup.prepLive #prepCv.cut{opacity:0;transition:opacity .22s ease}
@@ -116,7 +130,7 @@ const st=document.createElement('style');st.textContent=`
 .gxP.solo h3{font-size:clamp(26px,4.6vh,42px);font-weight:400}
 .gxP.solo hr{display:none}
 .gxPD{display:flex;flex-direction:column;gap:5px;margin-top:6px;width:min(100%,210px)}
-.gxPR{display:grid;grid-template-columns:44px 1fr 34px;align-items:center;gap:8px;font:500 11px var(--gt);color:#e6eef6}
+.gxPR{display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:8px;font:500 11px var(--gt);color:#e6eef6}
 .gxPR span{font:600 8.5px var(--gt);letter-spacing:.14em;text-transform:uppercase;color:#8fa3b6}
 .gxPR b{font-weight:500;text-align:right;font-size:11px}
 .gxPR u{height:3px;border-radius:2px;background:#ffffff22;overflow:hidden;display:block}.gxPR u i{display:block;height:100%;background:linear-gradient(90deg,#8fb4d8,#e9f1f8)}
@@ -180,8 +194,8 @@ let R2=null,cv=null,vig=null,wait=null,S=null,gone=0,raf=0,lastT=0,pend=null;
 const cam=new THREE.PerspectiveCamera(46,16/9,.3,6000),key=new THREE.DirectionalLight(0xffffff,.35);
 const U=()=>window.TODU;
 /* ---- the world ---- */
-function free(){if(!S)return;const s=S;S=null;try{for(const c of s.cars)s.sc.remove(c);s.sc.remove(key);s.sc.remove(key.target);disposeWorld(s.sc);if(R2)R2.renderLists.dispose()}catch(e){console.warn('prep free',e)}const sec=$('s8setup');if(sec)sec.classList.remove('prepLive')}
-P.prepFree=free;let lastErr='';P.prepDbg=()=>({S:!!S,track:S&&S.track,cars:S&&S.cars.length,cv:!!cv,cvOn:!!(cv&&cv.isConnected),cls:($('s8setup')||{}).className,w:JSON.stringify(want()&&{t:want().track,s:want().step}),err:lastErr,building,cam:cam.position.toArray().map(Math.round)});
+function free(){if(!S)return;const s=S;S=null;try{for(const c of s.cars)s.sc.remove(c);s.sc.remove(key);s.sc.remove(key.target);disposeWorld(s.sc);if(R2)R2.renderLists.dispose()}catch(e){console.warn('prep free',e)}const sec=$('s8setup');if(sec&&!sec.dataset.still)sec.classList.remove('prepLive')}
+P.prepFree=free;let lastErr='';P.prepDbg=()=>({S:!!S,track:S&&S.track,cars:S&&S.cars.length,cv:!!cv,cvOn:!!(cv&&cv.isConnected),cls:($('s8setup')||{}).className,w:JSON.stringify(want()&&{t:want().track,s:want().step}),err:lastErr,building,cam:cam.position.toArray().map(Math.round),kind:S&&S.shot&&S.shot.kind,open:S&&S.open,look:S&&S.look&&S.look.toArray().map(Math.round),gnd:S&&Math.round(GBf(S.T,cam.position.x,cam.position.z)),roadY:S&&S.shot&&Math.round(at(S.T,S.shot.k0,S.open).y),Tn:S&&S.T.N,sp:S&&S.T.sp});
 function build(track,tod){free();const d=D[track];if(!d)return null;
  const T=sampleTrack(Object.assign({},d)),sc=buildWorld(T);
  /* time of day: P.applyTod writes the shared grade uniforms and the main exposure; take what it wants for this view and put the game's back */
@@ -197,30 +211,31 @@ function build(track,tod){free();const d=D[track];if(!d)return null;
  let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9,y1=-1e9;for(let i=0;i<T.N;i++){x0=Math.min(x0,T.x[i]);x1=Math.max(x1,T.x[i]);z0=Math.min(z0,T.z[i]);z1=Math.max(z1,T.z[i]);y1=Math.max(y1,T.y[i])}
  const open=!!(d.rally||(d.cartoon&&d.cartoon.stage)||T.open||T.stage);
  const fog=sc.fog?{near:sc.fog.near,far:sc.fog.far}:null;
- return{track,tod,T,sc,sun,sd,dome,grade:look,expo,look:null,cars:[],carKey:'',open,fog,box:{cx:(x0+x1)/2,cz:(z0+z1)/2,e:Math.max(x1-x0,z1-z0),y:y1},t0:performance.now(),shot:null,sh:0,ang:0}}
+ return{track,tod,T,sc,sun,sd,dome,grade:look,expo,look:null,cars:[],carKey:'',open,zoom:-1,fog,box:{cx:(x0+x1)/2,cz:(z0+z1)/2,e:Math.max(x1-x0,z1-z0),y:y1},t0:performance.now(),shot:null,sh:0,ang:0}}
 /* a point on the road at a fractional sample (wraps on a loop, clamps on a stage) */
 function at(T,f,open){const N=T.N;if(open)f=Math.max(0,Math.min(N-1.001,f));const i=Math.floor(f),u=f-i,a=((i%N)+N)%N,b=(((i+1)%N)+N)%N;
  return{x:T.x[a]+(T.x[b]-T.x[a])*u,y:T.y[a]+(T.y[b]-T.y[a])*u,z:T.z[a]+(T.z[b]-T.z[a])*u,psi:T.psi[a],hw:T.hw[a]}}
 /* ---- the cars on the grid ---- */
-function carsFor(s,list){const k=list.map(c=>c.id+'.'+c.alt).join('|');if(s.carKey===k)return;for(const c of s.cars)s.sc.remove(c);s.cars=[];s.carKey=k;
- const T=s.T,N=T.N;list.forEach((c,p)=>{const car=P.BYID[c.id],src=car&&P.C10&&P.C10.model(car.k10,c.alt);if(!src)return;const m=src.clone(true);
+function carsFor(s,list){const k=list.map(c=>c.id+'.'+c.alt).join('|');if(s.carKey===k)return;for(const c of s.cars){s.sc.remove(c);if(c.userData&&c.userData.dispose)c.userData.dispose()}s.cars=[];s.carKey=k;
+ const T=s.T,N=T.N;list.forEach((c,p)=>{let m;if(c.bike){m=P.bikeModel&&P.bikeModel(c);if(!m)return}else{const car=P.BYID[c.id],src=car&&P.C10&&P.C10.model(car.k10,c.alt);if(!src)return;m=src.clone(true)}
   const i=s.open?Math.min(N-1,6):((N-5)%N+N)%N,lat=-(p-(list.length-1)/2)*(list.length>3?7.8:list.length>2?8.6:9.2),ps=T.psi[i],cs=Math.cos(ps),sn=Math.sin(ps);
   m.rotation.set(0,ps,0);m.position.set(0,0,0);m.updateMatrixWorld(true);const bx=new THREE.Box3().setFromObject(m);
   m.position.set(T.x[i]+sn*lat,T.y[i]-bx.min.y+.01,T.z[i]+cs*lat);m.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});s.sc.add(m);s.cars.push(m)})}
 /* ---- the camera ---- */
 const SHOTS=['dolly','crane','orbit','pan','dolly','orbit','crane'];
-function nextShot(s){const T=s.T,N=T.N,sp=T.sp||2;s.sh++;if(s.sh===0&&s.open)s.sh=1;const kind=SHOTS[(s.sh-2+SHOTS.length)%SHOTS.length];
+function nextShot(s){const T=s.T,N=T.N,sp=T.sp||2;s.sh++;if(s.sh===0&&s.open)s.sh=1;const SL=s.open?['dolly','crane','rev','dolly','crane','rev']:SHOTS,kind=SL[(s.sh-2+SL.length)%SL.length];
  const k0=s.open?Math.random()*(N*.8)+N*.05:Math.random()*N;s.shot={kind,k0,side:Math.random()<.5?-1:1,t0:performance.now(),dur:kind==='aerial'?9:kind==='pan'?6.5:kind==='crane'?8.5:kind==='orbit'?9:7.5,sp}}
 function camRace(s,now){const T=s.T;if(!s.shot)nextShot(s);let sh=s.shot,t=(now-sh.t0)/1000;
  if(t>sh.dur&&!pend){pend=1;cv.classList.add('cut');setTimeout(()=>{if(S===s){nextShot(s)}pend=null;setTimeout(()=>cv&&cv.classList.remove('cut'),40)},230)}
  const sp=sh.sp,P_=new THREE.Vector3(),L=new THREE.Vector3();
  if(sh.kind==='aerial'){const b=s.box,a=t*.05+sh.side,r=b.e*.62+120,h=b.e*.42+90;P_.set(b.cx+Math.sin(a)*r,b.y+h,b.cz+Math.cos(a)*r);L.set(b.cx,b.y-b.e*.04,b.cz)}
- else{const v=sh.kind==='fly'?13:sh.kind==='low'?16:sh.kind==='high'?10:20,f=sh.k0+v*t/sp,q=at(T,f,s.open),c=Math.cos(q.psi),sn=Math.sin(q.psi),side=sh.side;
+ else{const v=sh.kind==='dolly'||sh.kind==='rev'?(s.open?15:14):sh.kind==='fly'?13:sh.kind==='low'?16:sh.kind==='high'?10:20,f=sh.k0+v*t/sp,q=at(T,f,s.open),c=Math.cos(q.psi),sn=Math.sin(q.psi),side=sh.side;
   if(sh.kind==='fly'){const a=at(T,f+55/sp,s.open);P_.set(q.x+c*side*(q.hw+6),q.y+5.5,q.z-sn*side*(q.hw+6));L.set(a.x,a.y+1,a.z)}
   else if(sh.kind==='low'){const b=at(T,f-10/sp,s.open),a=at(T,f+34/sp,s.open),cb=Math.cos(b.psi),sb=Math.sin(b.psi);P_.set(b.x+cb*side*b.hw*.45,b.y+1.9,b.z-sb*side*b.hw*.45);L.set(a.x,a.y+1.2,a.z)}
-  else if(sh.kind==='dolly'){/* tracking shot: runs level with the road at a constant offset, looking diagonally ahead */const o=at(T,f,s.open),a=at(T,f+26/sp,s.open),co=Math.cos(o.psi),so=Math.sin(o.psi);P_.set(o.x+co*side*(o.hw+5.5),o.y+2.6,o.z-so*side*(o.hw+5.5));L.set(a.x,a.y+1.1,a.z)}
-  else if(sh.kind==='crane'){/* starts by the verge and rises while pulling away, so the land opens up behind the road */const e=Math.min(1,t/sh.dur),ez=e*e*(3-2*e),o=at(T,sh.k0+5*t/sp,s.open),a=at(T,sh.k0+(46+ez*70+5*t)/sp,s.open),co=Math.cos(o.psi),so=Math.sin(o.psi),off=o.hw+7+ez*30;P_.set(o.x+co*side*off,o.y+1.7+ez*21,o.z-so*side*off);L.set(a.x,a.y+1,a.z)}
-  else if(sh.kind==='orbit'){/* slow circle around a spot on the road while it creeps along */const o=at(T,sh.k0+3.5*t/sp,s.open),ang=side*t*.15+1.1,R=25+t*.9;P_.set(o.x+Math.cos(ang)*R,o.y+3.6+t*.42,o.z+Math.sin(ang)*R);L.set(o.x,o.y+1.3,o.z)}
+  else if(sh.kind==='dolly'){/* tracking shot: runs level with the road at a constant offset, looking diagonally ahead */const o=at(T,f,s.open),a=at(T,f+26/sp,s.open),co=Math.cos(o.psi),so=Math.sin(o.psi);const lo=s.open?0:o.hw+5.5,bk=s.open?at(T,f-16/sp,s.open):o;P_.set((s.open?bk.x:o.x)+co*side*lo,(s.open?bk.y+7:o.y+2.6),(s.open?bk.z:o.z)-so*side*lo);L.set(a.x,a.y+1.1,a.z)}
+  else if(sh.kind==='crane'){/* starts by the verge and rises while pulling away, so the land opens up behind the road */const e=Math.min(1,t/sh.dur),ez=e*e*(3-2*e),o=at(T,sh.k0+5*t/sp,s.open),a=at(T,sh.k0+(46+ez*70+5*t)/sp,s.open),co=Math.cos(o.psi),so=Math.sin(o.psi),off=s.open?ez*10:o.hw+7+ez*30;P_.set(o.x+co*side*off,o.y+(s.open?6:1.7)+ez*(s.open?30:21),o.z-so*side*off);L.set(a.x,a.y+1,a.z)}
+  else if(sh.kind==='rev'){/* stages: a drone ahead of a point on the road, looking back down the corridor */const o=at(T,f+34/sp,s.open),a=at(T,f-8/sp,s.open);P_.set(o.x,o.y+8,o.z);L.set(a.x,a.y+1.2,a.z)}
+  else if(sh.kind==='orbit'){/* slow circle around a spot on the road while it creeps along */const o=at(T,sh.k0+3.5*t/sp,s.open),ang=side*t*.15+1.1,R=(s.open?32:25)+t*.9;P_.set(o.x+Math.cos(ang)*R,o.y+(s.open?9:3.6)+t*.45,o.z+Math.sin(ang)*R);L.set(o.x,o.y+1.3,o.z)}
   else if(sh.kind==='high'){const a=at(T,f+18/sp,s.open);P_.set(q.x+c*side*42,q.y+48,q.z-sn*side*42);L.set(a.x,a.y,a.z)}
   else{/* pan: a fixed camera by the road that follows a point running past it */const o=at(T,sh.k0,s.open),co=Math.cos(o.psi),so=Math.sin(o.psi),a=at(T,sh.k0+(-60+v*t)/sp,s.open);P_.set(o.x+co*side*(o.hw+13),o.y+2.2,o.z-so*side*(o.hw+11));L.set(a.x,a.y+1,a.z)}}
  const g=GBf(T,P_.x,P_.z);if(isFinite(g)&&P_.y<g+2)P_.y=g+2;
@@ -256,11 +271,11 @@ function studio(s,on){if(!!s.stOn===on)return;s.stOn=on;
   s.stBg=s.sc.background;s.stFog=s.sc.fog;s.sc.background=BGTEX;s.sc.fog=null}
  else{if(s.stGrp)s.stGrp.visible=false;for(const o of s.stHide||[])o.visible=true;s.stHide=null;s.sc.background=s.stBg||null;s.sc.fog=s.stFog||null}}
 /* ---- what the setup screen shows right now ---- */
-function want(){const sec=$('s8setup');if(!on()||!sec||!sec.classList.contains('on')||!sec.classList.contains('gxOn'))return null;const u=P.ui;if(!u||!u.ST||u.ST.custom)return null;const ST=u.ST;
+function want(){const sec=$('s8setup');if(!on()||!sec||!sec.classList.contains('on')||!sec.classList.contains('gxOn'))return null;const u=P.ui,bw=u&&u.ST&&u.ST.custom&&P.bikePrepWant?P.bikePrepWant():null;if(!u||!u.ST||(u.ST.custom&&!bw))return null;const ST=u.ST;
  if(!$('gxSu')||$('gxSu').style.display==='none')return null;const chips=document.querySelectorAll('#suSteps i'),step=chips.length>1&&chips[1].classList.contains('on')?2:1;
  const tod=ST.todUser||(D[ST.track]&&D[ST.track].tod0)||'day',np=ST.mode==='ta'?1:Math.max(1,Math.min(4,ST.players||1)),cars=[];
  if(step===2&&u.selCar)for(let p=0;p<np;p++){try{const c=u.selCar(p);if(c)cars.push({id:c.id,alt:c.alt|0})}catch(e){}}
- return{sec,track:ST.track,tod,step,cars}}
+ return bw?{sec,track:bw.track,tod:'day',step:2,cars:bw.list,bike:1}:{sec,track:ST.track,tod,step,cars}}
 function size(sec){/* Nov 10 (Hakan: "2 fps on the track previews"): drawn at about 0.7 of the screen's pixels (it sits behind frosted glass and a vignette) instead of 1.25x (PTO.prepFast===false: as before) */
  const dpr=FAST()?(S&&S.stOn?Math.min(2,devicePixelRatio||1):Math.min(.7,devicePixelRatio||1)*qual):Math.min(1.25,devicePixelRatio||1),w=sec.clientWidth|0,h=sec.clientHeight|0;if(!w||!h)return false;
  if(R2.getPixelRatio()!==dpr)R2.setPixelRatio(dpr);const v=R2.getSize(new THREE.Vector2());if(v.x!==w||v.y!==h)R2.setSize(w,h,false);cam.aspect=w/h;return true}
@@ -268,7 +283,7 @@ function ensure(sec){if(!cv||!cv.isConnected){cv=document.createElement('canvas'
   if(R2){try{R2.dispose()}catch(e){}}R2=new THREE.WebGLRenderer({canvas:cv,antialias:true,powerPreference:'high-performance'});R2.outputEncoding=THREE.sRGBEncoding;R2.toneMapping=THREE.ACESFilmicToneMapping;R2.physicallyCorrectLights=R.physicallyCorrectLights;R2.shadowMap.enabled=true;R2.shadowMap.type=FAST()?THREE.PCFShadowMap:THREE.PCFSoftShadowMap;if(FAST())R2.shadowMap.autoUpdate=false}}
 let building=0;
 function frame(now){raf=requestAnimationFrame(frame);const w=want();
- if(!w){if(S&&!gone)gone=now;if(S&&now-gone>1500)free();const sec=$('s8setup');if(sec)sec.classList.remove('prepLive','prepBuild');return}gone=0;
+ if(!w){if(S&&!gone)gone=now;if(S&&now-gone>1500)free();const sec=$('s8setup');if(sec&&!sec.dataset.still)sec.classList.remove('prepLive','prepBuild');return}gone=0;
  if(document.hidden)return;ensure(w.sec);
  if(!S||S.track!==w.track||S.tod!==w.tod){if(building)return;building=1;w.sec.classList.add('prepBuild');w.sec.classList.remove('prepLive');
   /* let the fade show, then build (a second or so on the big maps) */

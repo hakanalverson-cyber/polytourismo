@@ -793,7 +793,7 @@ P.bikeEnter=()=>{ensureCss();const go=()=>BK.loadPack().then(()=>openPrep());try
 /* Nov 2: the setup is the game's own flat setup screen (ui.js gxRender), not a 3D scene: a still picture of the chosen bike and rider,
    the options in the same blue cards as every other mode */
 function openPrep(step){ensureCss();PR=prepState();PR.sel=0;PR.step=step||1;PR.seed=((Math.random()*1e6)|0)+1;/* the ride previewed on the map is the ride you get *//* 'Change bikes' lands straight on part two */const ST=P.ui.ST;
- const reset=()=>{const g=$i('suGo');if(g)g.innerHTML='<span>Start</span>'};ST.custom={render:bikeRender,go:()=>{if((PR.step||1)===1){sfx.ui('select');PR.step=2;bikeRender();return}prepGo()},back:()=>{if(PR&&PR.step===2){sfx.ui('back');PR.step=1;ST.custom=cst;bikeRender();return}sfx.ui('back');reset();PR=null;goMenu()},leave:reset};const cst=ST.custom;
+ const reset=()=>{const g=$i('suGo');if(g)g.innerHTML='<span>Start</span>';const sc=$i('s8setup');if(sc){delete sc.dataset.still;sc.classList.remove('prepLive','pillOn')}};ST.custom={render:bikeRender,go:()=>{if((PR.step||1)===1){sfx.ui('select');PR.step=2;bikeRender();return}prepGo()},back:()=>{if(PR&&PR.pick){closePick();ST.custom=cst;return}if(PR&&PR.step===2){sfx.ui('back');PR.step=1;ST.custom=cst;bikeRender();return}sfx.ui('back');reset();PR=null;goMenu()},leave:reset};const cst=ST.custom;
  show('s8setup');const t=$i('suTitle');if(t)t.innerHTML='HIGHWAY <em>CUT-UP</em>';const g=$i('suGo');if(g)g.innerHTML='<span>Ride</span>';bikeRender()}
 const shotCache={};
 /* the studio picture: one bike, or both riders' bikes side by side (P.objShot in ui.js renders and caches it) */
@@ -806,6 +806,13 @@ function bikeShot(cv,list,only){if(!cv)return;list=Array.isArray(list)?list:[lis
   m.g.position.set(list.length>1?(i?.75:-.75):0,0,list.length>1?(i?.9:-.9):0);g.add(m.g)});return g},{yaw:2.1,reg:[-.16,.97,-.95,.93],/* round 16: fill more of the picture */fy:list.length>1?1.25:1.1,fx:list.length>1?.8:.62,clear:true,
   /* round 13: the camera frames a fixed bike-sized box in each slot (2.2 m long, 1.5 m tall), so a small scooter is not blown up to a big bike's size */
   ref:(bx,yaw)=>{const b=new THREE.Box3(),v=new THREE.Vector3(),ax=new THREE.Vector3(0,1,0),n=list.length;for(let i=0;i<n;i++){const px=n>1?(i?.75:-.75):0,pz=n>1?(i?.9:-.9):0;for(const sx of[i===0?-.95:-.4,.4])for(const sz of[-.95,.95])for(const sy of[0,1.86]){v.set(px+sx,sy,pz+sz).applyAxisAngle(ax,yaw);b.expandByPoint(v)}}b.min.y=bx.min.y;b.max.y=bx.min.y+1.86;return b}/* round 16: tall enough for the standing rider, with headroom */,dispose:()=>{for(const m of ms)BK.disposeBike(m)}})}
+/* Nov 10 (Hakan): the bike step is the car step's live studio (prep.js): it asks for the lineup here and builds each bike with its rider through bikeModel */
+P.bikePrepWant=()=>{if(!PR||(PR.step||1)!==2||PR.pick)return null;const lst=PR.p[1].in?[PR.p[0],PR.p[1]]:[PR.p[0]];return{track:0,list:lst.map((s,i)=>({id:s.id,alt:s.paint+'.'+s.who+'.'+i,bike:true,spec:s,i,n:lst.length}))}};
+P.bikeModel=c=>{const s=c.spec,i=c.i,d=BK.byId(s.id);if(!d)return null;const m=BK.makeBike(s.id,BK.paintOf(d,s.paint),Object.assign({},RIDER_COL[i]||RIDER_COL[0],{who:s.who}));
+ const fake={m,d,trk_:null,lean:0,k:0};BK.poseBike(m,0,0,.18,0,0);const bp=basePose(fake),I=m.I,ppl=m.rider&&m.rider.people;
+ if(ppl&&i===0){const T=m.rider.T,hy=(T.len.th+T.len.sh)*.98,S=I.seat;BK.poseRider(m,{flat:1,hip:[-.62,hy,S[2]+.1],lean:0,side:0,look:-.05,turn:-.45,feet:[[-.5,0,S[2]+.02],[.76,0,S[2]+.16]],hands:[[-.2,S[1]+.06,S[2]+.3],[.86,hy-.02,S[2]+.12]]})}
+ else{if(ppl)bp.feet[0]=[I.peg[0]+.2,-.02,I.peg[2]+.18];BK.poseRider(m,Object.assign(bp,{look:-.05,turn:.35,side:ppl?-.06:0}))}
+ const g=new THREE.Group();m.g.rotation.set(0,P.bikeYaw!=null?P.bikeYaw:0,0);g.add(m.g);g.scale.setScalar(c.n>1?1.3:1.0);g.userData.dispose=()=>{try{BK.disposeBike(m)}catch(e){}};return g};
 const STATN=[['Top speed',d=>d.stats.top/300,d=>Math.round(kmh()?d.stats.top:d.stats.top/1.609)+(kmh()?' km/h':' mph')],['Acceleration',d=>d.stats.acc,d=>Math.round(d.stats.acc*100)],['Handling',d=>d.stats.hnd,d=>Math.round(d.stats.hnd*100)],['Tricks',d=>d.stats.trk,d=>Math.round(d.stats.trk*100)]];
 const PAINTN=['Stock','Second','Red','Orange','Yellow','Green','Blue','Purple','White','Black'];
 const OPTS={clock:[[120,'2 min'],[180,'3 min'],[300,'5 min'],[0,'Endless']],traffic:[['light','Light'],['normal','Normal'],['heavy','Heavy']],tod:[['day','Day'],['dusk','Sunset'],['night','Night']]};
@@ -898,7 +905,38 @@ function bikeRender(){if(!PR)return;const two=PR.p[1].in,L=BK.list(),rows=[];
  if(step===1)P.gxRender({kind:'Best score '+fmtN(SV().best||0),name:'Highway Cut-Up',facts:['Endless highway','Plains','Up to two riders, split screen'],rows,groups:['The ride','Conditions',''],shot:cv=>levelPrev(cv),map:cv=>rideMini(cv),go:'Next: bikes'});
  else P.gxRender({kind:(two?'Player '+(fi+1)+' &middot; ':'')+esc(d.kind),name:esc(d.name),facts:[esc(d.kind),'Tricks on '+KEYS[fi].tkn.slice(0,TRICKS.length).join(' ')],side:'',rows,groups:['Player 1','Player 2'],grid:true,cols:PCOL,heroCls:'cars'+(PR.newP!=null?' fin':''),newP:PR.newP,rm:(p,go)=>{if(go){dropRider();return}return p===1&&two},
   onAdd:addRider,shot:cv=>{bikeShot(cv,lineup);/* round 15: the bike being edited glows for a moment, like the car screen */if(two&&P.gxHiPulse){const hc=document.createElement('canvas');hc.id='gxHi';hc.style.setProperty('--pc',PCOL[fi]);cv.after(hc);bikeShot(hc,lineup,fi);P.gxHiPulse()}},go:'Ride'});
+ {const sc=$i('s8setup');if(sc){if(step===1){sc.dataset.still='1';sc.classList.add('prepLive','pillOn')}else{delete sc.dataset.still;sc.classList.remove('prepLive','pillOn')}}}
+ if(step===2)bikePanels(two,L);else{const st=$i('suSteps');if(st){const o=st.querySelector('.stAdd');if(o)o.remove()}}
  const g=$i('suGo');if(g)g.innerHTML='<span>'+(step===1?'Next: bikes &rsaquo;':'Ride')+'</span>'}
+/* Nov 10 (Hakan): the car step's layout for bikes: one big studio bike with the spec table and icon buttons (Change Bike opens EVERY bike), or two riders side by side */
+const IC8=p=>`<svg viewBox="0 0 48 48" width="44" height="44" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const BIC={bike:IC8('<circle cx="11" cy="32" r="7"/><circle cx="37" cy="32" r="7"/><path d="M11 32l8-14h12l6 14M19 18l-3-4h-4M27 18l4 14M23 25h10"/>'),rider:IC8('<circle cx="24" cy="16" r="7"/><path d="M8 41c1-9 8-14 16-14s15 5 16 14"/>'),paint:IC8('<path d="M24 6C14 18 10 24 10 30a14 14 0 0 0 28 0c0-6-4-12-14-24z"/>'),add:IC8('<circle cx="20" cy="16" r="7"/><path d="M6 41c1-9 7-14 14-14M36 22v14M29 29h14"/>'),rm:IC8('<circle cx="20" cy="16" r="7"/><path d="M6 41c1-9 7-14 14-14M29 29h14"/>')};
+function closePick(){const e=$i('bkPick');if(e)e.remove();if(PR)PR.pick=null}
+function openPick(p){closePick();PR.pick=p+1;const sec=$i('s8setup'),L=BK.list(),cur=PR.p[p].id,el=document.createElement('div');el.id='bkPick';
+ el.innerHTML=`<div class="bkPh"><b>All bikes</b><i>${L.length} bikes, all unlocked</i></div><div class="bkPg">${L.map(b=>`<div class="bkC${b.id===cur?' on':''}" data-id="${b.id}"><canvas width="336" height="200"></canvas><b>${esc(b.name)}</b><small>${esc(b.kind)}</small></div>`).join('')}</div>`;
+ sec.appendChild(el);const cs=[...el.querySelectorAll('.bkC')];
+ cs.forEach(c=>c.onclick=()=>{PR.p[p].id=c.dataset.id;PR.focus=p;sfx.ui('select');closePick();bikeRender()});
+ let k=0;const nx=()=>{if(!$i('bkPick')||k>=cs.length)return;const c=cs[k++],id=c.dataset.id;try{bikeShot(c.querySelector('canvas'),[{id,paint:2,who:0}],0)}catch(e){}setTimeout(nx,30)};setTimeout(nx,60);
+ const sc=el.querySelector('.bkC.on');if(sc)setTimeout(()=>sc.scrollIntoView({block:'center'}),90)}
+function bikePanels(two,L){const box=$i('gxSu');if(!box)return;const old=box.querySelector('.gxPanels');if(old)old.remove();
+ const wrap=document.createElement('div');wrap.className='gxPanels';wrap.style.setProperty('--n',two?2:1);
+ const kv=(a,b)=>`<div class="gxKV"><span>${a}</span><b>${b}</b></div>`;
+ for(let p=0;p<(two?2:1);p++){const s=PR.p[p],d=BK.byId(s.id),solo=!two,who=BK.PEOPLE&&window.PEOPLE_B64?BK.PEOPLE[s.who%BK.PEOPLE.length].n:'Rider';
+  const pp=Math.round(d.stats.top*1.4+d.stats.acc*160+d.stats.hnd*140+d.stats.trk*60);
+  const bars=STATN.slice(0,solo?4:3).map(([n,f,v])=>`<div class="gxPR"><span>${n.replace('Acceleration','Accel').replace('Top speed','Speed')}</span><u><i style="width:${Math.round(cl(f(d),0,1)*100)}%"></i></u><b>${v(d)}</b></div>`).join('');
+  const sb=`<div class="gxSB bk" data-p="${p}"><button data-k="bike">${BIC.bike}<span>Change Bike</span></button><button data-k="rider">${BIC.rider}<span>Rider</span><small>${esc(who)}</small></button><button data-k="paint">${BIC.paint}<span>Paint</span><small>${PAINTN[s.paint]||'Paint'}</small></button>${p===1?`<button data-k="rm">${BIC.rm}<span>Remove</span></button>`:''}</div>`;
+  const info=solo?`<div class="gxPI gxSoloI"><h6 class="gxGar">Garage</h6><div class="gxMk"><span>${esc(d.kind)}</span></div><h3>${esc(d.name)}</h3><div class="gxPill">${esc(d.kind)} / PP ${pp}</div><div class="gxPK">${kv('Top speed',STATN[0][2](d))}${kv('Kind',esc(d.kind))}${kv('Tricks','Equip '+esc(TRICKS.find(t=>t.id===s.trick)?.n||'Wheelie'))}</div><div class="gxPD">${bars}</div></div>`
+   :`<div class="gxPI"><small class="gxPm">${esc(d.kind)}</small><h3>${esc(d.name)}</h3><div class="gxPT"><em class="cl B">PP ${pp}</em></div><div class="gxPD">${bars}</div></div>`;
+  wrap.insertAdjacentHTML('beforeend',`<div class="gxP${solo?' solo':''}${p===(PR.focus&&two?1:0)?' fp':''}" data-p="${p}"><div class="gxPH"><b>${p+1}</b></div>${info}<div class="gxPS bkS">${sb}</div></div>`)}
+ box.prepend(wrap);
+ wrap.querySelectorAll('.gxSB button').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const p=+b.parentNode.dataset.p,s=PR.p[p],k=b.dataset.k;
+  if(k==='bike'){sfx.ui('select');openPick(p);return}
+  if(k==='rider'&&BK.PEOPLE){s.who=(s.who+1)%BK.PEOPLE.length}
+  else if(k==='paint'){s.paint=(s.paint+1)%BK.PAINTS.length}
+  else if(k==='rm'){PR.p[1].in=false;PR.focus=0;sfx.ui('back');bikeRender();return}
+  PR.focus=p;sfx.ui('move');bikeRender()}));
+ /* the + box beside the step tabs adds the second rider (like the car step) */
+ const st=$i('suSteps');if(st){const o=st.querySelector('.stAdd');if(o)o.remove();if(!two){const a=document.createElement('i');a.className='stAdd';a.textContent='+';a.title='Add rider 2';a.onclick=e=>{e.stopPropagation();if(PR.p[1].in)return;PR.p[1].in=true;PR.focus=1;sfx.ui('select');bikeRender()};st.appendChild(a)}}}
 function stopPrep(){if(!PR)return;const e=$i('bkPrep');if(e)e.style.display='none';if(PR.sc){for(const m of PR.bikes)if(m)BK.disposeBike(m);PR.world.dispose();PR.sky.dispose();R.toneMappingExposure=PR.exp0}PR=null}
 function leavePrep(){sfx.ui('back');stopPrep();document.body.classList.remove('bkOn');goMenu()}
 function prepGo(){if(!PR)return;const sv=SV();PR.p.forEach((s,i)=>{sv.sel[i]={id:s.id,paint:s.paint,trick:s.trick,who:s.who}});sv.opt=Object.assign({},PR.opt);try{P.save()}catch(e){}
