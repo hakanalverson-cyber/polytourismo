@@ -35,7 +35,7 @@ const st=document.createElement('style');st.textContent=`
 .gxSoloI{width:min(30vw,340px)!important;margin-top:14px!important;gap:0!important}
 .gxGar{margin:0 0 14px;font:300 clamp(26px,4.4vh,38px) var(--gt);color:#f2f6fa;letter-spacing:.01em}
 .gxMk{display:flex;align-items:center;gap:9px;font:500 clamp(14px,2vh,18px) var(--gt);letter-spacing:.04em;text-transform:uppercase;color:#e8eef4}
-.gxMk svg,.gxMk img{height:26px;width:auto;max-width:44px}
+.gxMk svg{height:auto;width:36px;border-radius:2px;box-shadow:0 0 0 1px #ffffff40}
 .gxSoloI h3{margin:12px 0 2px!important;font:500 clamp(18px,2.8vh,26px) var(--gt)!important;color:#fff}
 .gxSub{font:500 12px var(--gt);color:#cfd8e1;text-transform:capitalize}
 .gxPill{align-self:flex-start;margin-top:14px;padding:7px 15px;border-radius:20px;box-shadow:inset 0 0 0 1.5px #e8eef4aa;background:#0006;font:500 clamp(13px,1.9vh,17px) var(--gt);color:#fff}
