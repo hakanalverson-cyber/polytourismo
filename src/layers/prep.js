@@ -94,6 +94,15 @@ const st=document.createElement('style');st.textContent=`
 .gxP.solo .gxPSet{position:absolute;right:clamp(24px,4.5vw,76px);top:clamp(112px,17vh,150px);width:min(26vw,320px);flex-direction:column;margin:0;padding:12px;border-radius:16px;background:#0a0e1499;box-shadow:inset 0 1px 0 #ffffff26,0 0 0 1px #ffffff1c,0 12px 30px #0008;box-sizing:border-box}
 .gxP.solo .gxPSet label,.gxP.solo .gxPB{background:#ffffff0d;box-shadow:none;padding:9px 14px}
 .gxP.solo .gxPS{margin-top:auto}
+
+/* two to four players: the split screen of Gran Turismo 7, one column each with a divider */
+.gxP:not(.solo){padding:0 clamp(10px,1.6vw,26px);box-sizing:border-box}
+.gxP:not(.solo)+.gxP:not(.solo){border-left:1px solid #ffffff1f}
+.gxP:not(.solo) .gxPH b{width:42px;height:42px}
+.gxP:not(.solo) .gxPI{display:flex;flex-direction:column;gap:7px}
+.gxP:not(.solo) h3{font-size:clamp(20px,3.6vh,32px);font-weight:400}
+.gxP:not(.solo) .gxPD{width:min(46%,240px)}.gxP:not(.solo) .gxPR{grid-template-columns:86px 1fr;row-gap:3px}.gxP:not(.solo) .gxPR u{grid-column:1/-1;grid-row:2}
+.gxPanels:not(.n3) .gxPC{flex:1 1 0;max-width:190px}
 #s8setup.carIdle #gxSu.g2 .gxTn{display:none!important}
 #s8setup.carIdle #gxSu.g2 .gxCards .gxr:not(.gxAddT),#s8setup.carIdle #gxSu.g2 .gxCards h5{display:none!important}
 #s8setup.carIdle #gxSu.g2 .gxCards{position:absolute;right:clamp(16px,2vw,34px);bottom:clamp(14px,3vh,34px);padding:0!important;z-index:3}
@@ -154,7 +163,7 @@ function at(T,f,open){const N=T.N;if(open)f=Math.max(0,Math.min(N-1.001,f));cons
 /* ---- the cars on the grid ---- */
 function carsFor(s,list){const k=list.map(c=>c.id+'.'+c.alt).join('|');if(s.carKey===k)return;for(const c of s.cars)s.sc.remove(c);s.cars=[];s.carKey=k;
  const T=s.T,N=T.N;list.forEach((c,p)=>{const car=P.BYID[c.id],src=car&&P.C10&&P.C10.model(car.k10,c.alt);if(!src)return;const m=src.clone(true);
-  const i=s.open?Math.min(N-1,6):((N-5)%N+N)%N,lat=-(p-(list.length-1)/2)*(list.length>2?6.8:5.6),ps=T.psi[i],cs=Math.cos(ps),sn=Math.sin(ps);
+  const i=s.open?Math.min(N-1,6):((N-5)%N+N)%N,lat=-(p-(list.length-1)/2)*(list.length>3?7.8:list.length>2?8.6:9.2),ps=T.psi[i],cs=Math.cos(ps),sn=Math.sin(ps);
   m.rotation.set(0,ps,0);m.position.set(0,0,0);m.updateMatrixWorld(true);const bx=new THREE.Box3().setFromObject(m);
   m.position.set(T.x[i]+sn*lat,T.y[i]-bx.min.y+.01,T.z[i]+cs*lat);m.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});s.sc.add(m);s.cars.push(m)})}
 /* ---- the camera ---- */
@@ -186,7 +195,9 @@ document.addEventListener('click',e=>{const s=S;if(!s||!s.cars||!s.cars.length||
 function camCar(s,dt){const n=s.cars.length;if(!n)return;const C=new THREE.Vector3();for(const c of s.cars)C.add(c.position);C.divideScalar(n);
  /* Nov 10 (Hakan: the cars playing, centred; click one and the camera zooms to it, the frame on the left): zk eases 0 to 1 while a car is picked */
  const zi=Math.min(n-1,Math.max(0,s.zoom|0)),zt=FAST()&&s.zoom>=0?1:0;s.zk=(s.zk||0)+(zt-(s.zk||0))*Math.min(1,dt*5);const zk=s.zk;
- if(dragX==null)s.ang+=dt*(zk>.5?.07:.13);s.ang+=drag;drag=0;const ps=s.cars[0].rotation.y,r0=(FAST()?(n===1?9:9.6):7.4)+2.6*(n-1)+(n>2?1.6:0),r=r0+(5.4-r0)*zk,h=(1.35+.45*(n-1))*(1-.3*zk),a=ps+.95+s.ang;
+ if(dragX==null)s.ang+=dt*(zk>.5?.07:.13);s.ang+=drag;drag=0;const ps=s.cars[0].rotation.y,r0=(FAST()?(n===1?9:(n===2?17.2:n===3?21.6:26)/(2*Math.tan(cam.fov*Math.PI/360)*cam.aspect)):7.4+2.6*(n-1)+(n>2?1.6:0)),r=r0+(5.4-r0)*zk,h=(1.35+.45*(n-1))*(1-.3*zk),a=ps+.95+s.ang;
+ /* Nov 10 (Hakan: the split screen of Gran Turismo 7): the cars stand on a line across the view, one column each, wherever the camera turns */
+ if(FAST()&&n>1){if(s._ck!==s.carKey){s._ck=s.carKey;s.cc=C.clone();s.cy=s.cars.map(c=>c.position.y)}const dist=Math.hypot(r0,h),sp=2*Math.tan(cam.fov*Math.PI/360)*cam.aspect*dist/n,ca=Math.cos(a),sa=Math.sin(a);s.cars.forEach((c,i)=>{const o=(i-(n-1)/2)*sp;c.position.set(s.cc.x+ca*o,s.cy[i],s.cc.z-sa*o)});C.copy(s.cc)}
  if(zk>.001)C.lerp(s.cars[zi].position,zk);
  cam.position.set(C.x+Math.sin(a)*r,C.y+h,C.z+Math.cos(a)*r);const g=GBf(s.T,cam.position.x,cam.position.z);if(isFinite(g)&&cam.position.y<g+.7)cam.position.y=g+.7;
  const L=C.clone();L.y+=.45;cam.lookAt(L);s.look=L}
@@ -228,7 +239,7 @@ function frame(now){raf=requestAnimationFrame(frame);const w=want();
  if(s.step!==w.step){s.step=w.step;s.shot=null;s.sh=0;s.ang=0;cv.classList.remove('cut');pend=null}
  let far=null;if(w.step===2&&s.cars.length)camCar(s,dt);else far=camRace(s,now);
  /* the subject sits in the open part of the picture (above the cards, right of the name) */
- const W=1000,H=Math.round(1000/cam.aspect),cars=w.step===2;cam.setViewOffset(W,H,cars?(FAST()?(-W*.2*(s.zk||0)-(s.cars.length===1?W*.05*(1-(s.zk||0)):0)):-W*.12):-W*.04,H*(cars?(FAST()?((s.cars.length>1?.03:-.05)*(1-(s.zk||0))+.03*(s.zk||0)):.13):.1),W,H);cam.updateProjectionMatrix();
+ const W=1000,H=Math.round(1000/cam.aspect),cars=w.step===2;cam.setViewOffset(W,H,cars?(FAST()?(-W*.2*(s.zk||0)-(s.cars.length===1?W*.05:0)*(1-(s.zk||0))):-W*.12):-W*.04,H*(cars?(FAST()?((s.cars.length>1?.03:-.05)*(1-(s.zk||0))+.03*(s.zk||0)):.13):.1),W,H);cam.updateProjectionMatrix();
  if(s.fog&&s.sc.fog){const f=far||s.fog.far;s.sc.fog.far=f;s.sc.fog.near=far?Math.min(far*.4,s.fog.near+far*.2):s.fog.near}
  if(s.dome)s.dome.position.copy(cam.position);const m=s.sc.userData.skyx;if(m&&m.uniforms)m.uniforms.t.value=(now-s.t0)/1000+40;
  if(s.sun&&s.look){const L=s.look,ext=cars?16:far?Math.min(600,s.box.e*.7):90;s.sun.target.position.copy(L);s.sun.position.copy(L).addScaledVector(s.sd,Math.max(200,ext*1.5));s.sun.target.updateMatrixWorld();const sc_=s.sun.shadow.camera;
@@ -238,7 +249,7 @@ function frame(now){raf=requestAnimationFrame(frame);const w=want();
  const u=U(),sv=u&&s.grade?{mul:u.mul.value.clone(),add:u.add.value.clone(),sat:u.sat.value}:null;
  if(sv){u.mul.value.copy(s.grade.mul);u.add.value.copy(s.grade.add);u.sat.value=s.grade.sat}
  R2.toneMappingExposure=s.expo||1.05;{const f=s.stOn?'':'saturate('+((s.grade&&s.grade.sat||1)*1.4).toFixed(2)+') contrast(1.26) brightness(.9)';if(cv._f!==f){cv._f=f;cv.style.filter=f}}if(FAST()){R2.shadowMap.needsUpdate=s.stOn||(fcount%4===0)||!s.shadowed;s.shadowed=1;if(s.sun&&s.sun.shadow&&s.sun.shadow.mapSize.x!==(s.stOn?2048:1024)){s.sun.shadow.mapSize.set(s.stOn?2048:1024,s.stOn?2048:1024);if(s.sun.shadow.map){s.sun.shadow.map.dispose();s.sun.shadow.map=null}}}
- if(w.step===2&&FAST()&&s.cars.length&&!(s.zk>.02)){try{const W2=R2.domElement.clientWidth||innerWidth,ps=[...w.sec.querySelectorAll('#gxSu .gxP:not(.solo)')];cam.updateMatrixWorld();const xs=ps.map(el=>{const c=s.cars[+el.dataset.p];if(!c)return null;const v=c.position.clone();v.y+=1;v.project(cam);return (v.x*.5+.5)*W2});let gap=1e9;const xv=xs.filter(x=>x!=null).sort((a,b)=>a-b);for(let i=1;i<xv.length;i++)gap=Math.min(gap,xv[i]-xv[i-1]);const pw=Math.max(190,Math.min(400,gap-14,W2*.9));ps.forEach((el,i)=>{if(xs[i]==null)return;el.style.width=pw+'px';el.style.left=Math.max(8,Math.min(W2-pw-8,xs[i]-pw/2))+'px'})}catch(e){}}
+ if(w.step===2&&FAST()&&s.cars.length&&!(s.zk>.02)){try{const W2=R2.domElement.clientWidth||innerWidth,ps=[...w.sec.querySelectorAll('#gxSu .gxP:not(.solo)')];cam.updateMatrixWorld();const xs=ps.map(el=>{const c=s.cars[+el.dataset.p];if(!c)return null;const v=c.position.clone();v.y+=1;v.project(cam);return (v.x*.5+.5)*W2});let gap=1e9;const xv=xs.filter(x=>x!=null).sort((a,b)=>a-b);for(let i=1;i<xv.length;i++)gap=Math.min(gap,xv[i]-xv[i-1]);const nn=ps.length,cw=W2/nn;ps.forEach((el,i)=>{el.style.width=(cw-20)+'px';el.style.left=(i*cw+10)+'px'})}catch(e){}}
  try{R2.render(s.sc,cam)}catch(e){console.warn('prep render',e);lastErr='R '+String(e&&e.stack||e).slice(0,300);if(window.PTO)window.PTO.prepLive=false;free()}
  if(sv){u.mul.value.copy(sv.mul);u.add.value.copy(sv.add);u.sat.value=sv.sat}
  w.sec.classList.add('prepLive');w.sec.classList.toggle('pillOn',!(window.PTO&&window.PTO.prepPills===false))}
