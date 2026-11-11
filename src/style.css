@@ -724,8 +724,8 @@ body.barnscene #cd,body.barnscene #mm,body.barnscene #huds,body.barnscene #rlDas
 
 /* menu transitions: a quick black fade between screens; the track list pops in once when the setup screen opens */
 #ptWipe{position:fixed;inset:0;z-index:9000;pointer-events:none;background:#000;opacity:0}
-#ptWipe.go{animation:ptBlack .42s ease-out both}
-@keyframes ptBlack{0%{opacity:1}100%{opacity:0}}
+#ptWipe.go{animation:ptBlack .5s ease-out both}
+@keyframes ptBlack{0%,30%{opacity:1}100%{opacity:0}}
 .v8s.enter .trk,.v8s.enter .card,.v8s.enter .gc,.v8s.enter .drv,.v8s.enter .evc{animation:ptPop .5s cubic-bezier(.16,.85,.25,1) backwards}
 .v8s.enter .trk:nth-child(1){animation-delay:.12s}.v8s.enter .trk:nth-child(2){animation-delay:.16s}.v8s.enter .trk:nth-child(3){animation-delay:.2s}.v8s.enter .trk:nth-child(4){animation-delay:.24s}.v8s.enter .trk:nth-child(5){animation-delay:.28s}.v8s.enter .trk:nth-child(6){animation-delay:.32s}.v8s.enter .trk:nth-child(7){animation-delay:.36s}.v8s.enter .trk:nth-child(n+8){animation-delay:.4s}
 .v8s.enter .card:nth-child(1){animation-delay:.12s}.v8s.enter .card:nth-child(2){animation-delay:.16s}.v8s.enter .card:nth-child(3){animation-delay:.2s}.v8s.enter .card:nth-child(4){animation-delay:.24s}.v8s.enter .card:nth-child(5){animation-delay:.28s}.v8s.enter .card:nth-child(6){animation-delay:.32s}.v8s.enter .card:nth-child(7){animation-delay:.36s}.v8s.enter .card:nth-child(n+8){animation-delay:.4s}

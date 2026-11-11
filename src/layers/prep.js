@@ -17,11 +17,11 @@ let lastDraw=0,fcount=0;
 const $=id=>document.getElementById(id);
 const GBf=(T,x,z)=>{try{return window.GB?window.GB(T,x,z):(T.terr?T.terr(x,z):0)}catch(e){return 0}};
 const st=document.createElement('style');st.textContent=`
-#prepCv{position:absolute;inset:0;width:100%;height:100%;z-index:0;opacity:0;transition:opacity .5s ease;pointer-events:none;display:block}
-#s8setup.prepLive #prepCv{opacity:1}
+#prepCv{position:absolute;inset:0;width:100%;height:100%;z-index:0;opacity:0;transition:none;pointer-events:none;display:block}
+#s8setup.prepLive #prepCv{opacity:1;transition:opacity .5s ease}
 #s8setup.prepLive #prepCv.cut{opacity:0;transition:opacity .22s ease}
-#prepVig{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;transition:opacity .5s;background:radial-gradient(ellipse 90% 80% at 60% 35%,#0000 40%,#0006 100%),linear-gradient(90deg,#0008 0%,#0003 30%,#0000 50%),linear-gradient(0deg,#000c 0%,#0007 30%,#0000 55%)}
-#s8setup.prepLive #prepVig{opacity:1}
+#prepVig{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;transition:none;background:radial-gradient(ellipse 90% 80% at 60% 35%,#0000 40%,#0006 100%),linear-gradient(90deg,#0008 0%,#0003 30%,#0000 50%),linear-gradient(0deg,#000c 0%,#0007 30%,#0000 55%)}
+#s8setup.prepLive #prepVig{opacity:1;transition:opacity .5s}
 #s8setup.prepLive::before{opacity:0!important}
 /* Nov 10 (Hakan: "the race preparation phase is the same terrible text boxes"): over the live track the three boxed cards become a row of glass pills
    (small label over a big value) along the bottom edge, with no card frames and no list rows (PTO.prepPills===false: the old cards) */
