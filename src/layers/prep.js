@@ -44,6 +44,7 @@ const st=document.createElement('style');st.textContent=`
 #s8setup.prepLive.pillOn #gxSu.g2 .gxCards .gxr.on .l{color:#e6f0fa}
 /* car step, idle: only the cars, centred, with a hint; zoomed: the frame on the left (name, stats, change car, name, gearbox) */
 #prepHint,#prepZoomX{display:none}
+#prepHint{display:none!important}
 #s8setup.carIdle #prepHint{display:block;position:absolute;left:0;right:0;bottom:clamp(16px,4vh,44px);text-align:center;font:600 11px var(--gt);letter-spacing:.3em;text-transform:uppercase;color:#aebfd0;text-shadow:0 1px 8px #000;pointer-events:none;z-index:3}
 
 .gxPanels{position:absolute;inset:0;pointer-events:none;display:none;z-index:3}
@@ -74,12 +75,12 @@ const st=document.createElement('style');st.textContent=`
 .gxP.solo .gxPI{width:min(36vw,390px);margin-top:44px;display:flex;flex-direction:column;gap:7px}
 .gxP.solo .gxPH{justify-content:flex-end}
 .gxP.solo h3{font-size:clamp(26px,4.6vh,42px);font-weight:400}
-.gxP.solo hr{border:0;border-top:1px solid #ffffff2a;margin:6px 0 2px}
-.gxPD{display:flex;flex-direction:column;gap:9px}.gxPR{display:grid;grid-template-columns:110px 1fr 82px;align-items:center;gap:10px;font:500 14px var(--gt);color:#fff}
-.gxPR span{font:500 11px var(--gt);letter-spacing:.12em;text-transform:uppercase;color:#9fb0c0;text-align:right}.gxPR b{font-weight:500;text-shadow:0 1px 8px #000}
-.gxPR u{grid-column:3;grid-row:1;height:4px;border-radius:3px;background:#ffffff22;overflow:hidden}.gxPR u i{display:block;height:100%;background:linear-gradient(90deg,#8fb4d8,#e9f1f8);border-radius:3px}
-.gxPR{grid-template-columns:104px 82px 1fr}.gxPR u{grid-column:3;grid-row:1;width:100%}
-/* the player's settings: name, gearbox, keys */
+.gxP.solo hr{display:none}
+.gxPD{display:flex;flex-direction:column;gap:5px;margin-top:6px;width:min(100%,210px)}
+.gxPR{display:grid;grid-template-columns:44px 1fr 34px;align-items:center;gap:8px;font:500 11px var(--gt);color:#e6eef6}
+.gxPR span{font:600 8.5px var(--gt);letter-spacing:.14em;text-transform:uppercase;color:#8fa3b6}
+.gxPR b{font-weight:500;text-align:right;font-size:11px}
+.gxPR u{height:3px;border-radius:2px;background:#ffffff22;overflow:hidden;display:block}.gxPR u i{display:block;height:100%;background:linear-gradient(90deg,#8fb4d8,#e9f1f8)}
 .gxPSet{pointer-events:auto;margin-top:auto;display:flex;gap:6px;align-items:stretch}
 .gxPSet label,.gxPB{flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 12px;border:0;border-radius:12px;background:#0a0e1499;box-shadow:inset 0 1px 0 #ffffff26,0 0 0 1px #ffffff1c;color:#eef3f8;font:500 13px var(--gt);cursor:pointer;box-sizing:border-box}
 .gxPSet span{font:600 9.5px var(--gt);letter-spacing:.16em;text-transform:uppercase;color:#8fb4d8}
@@ -101,7 +102,6 @@ const st=document.createElement('style');st.textContent=`
 .gxP:not(.solo) .gxPH b{width:42px;height:42px}
 .gxP:not(.solo) .gxPI{display:flex;flex-direction:column;gap:7px}
 .gxP:not(.solo) h3{font-size:clamp(20px,3.6vh,32px);font-weight:400}
-.gxP:not(.solo) .gxPD{width:min(46%,240px)}.gxP:not(.solo) .gxPR{grid-template-columns:86px 1fr;row-gap:3px}.gxP:not(.solo) .gxPR u{grid-column:1/-1;grid-row:2}
 .gxPanels:not(.n3) .gxPC{flex:1 1 0;max-width:190px}
 .gxPC.lk canvas{filter:brightness(.35) saturate(.4)}.gxPC.lk{opacity:.6;cursor:not-allowed}.gxPC.nope{animation:gxNope .3s}@keyframes gxNope{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 .gxP:not(.solo) .gxPH{margin-right:-17px}.gxP.solo .gxPH{right:clamp(14px,3vw,56px)}
