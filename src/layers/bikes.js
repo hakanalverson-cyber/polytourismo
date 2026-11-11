@@ -936,7 +936,7 @@ function bikePanels(two,L){const box=$i('gxSu');if(!box)return;const old=box.que
   else if(k==='rm'){PR.p[1].in=false;PR.focus=0;sfx.ui('back');bikeRender();return}
   PR.focus=p;sfx.ui('move');bikeRender()}));
  /* the + box beside the step tabs adds the second rider (like the car step) */
- const st=$i('suSteps');if(st){const o=st.querySelector('.stAdd');if(o)o.remove();if(!two){const a=document.createElement('i');a.className='stAdd';a.textContent='+';a.title='Add rider 2';a.onclick=e=>{e.stopPropagation();if(PR.p[1].in)return;PR.p[1].in=true;PR.focus=1;sfx.ui('select');bikeRender()};st.appendChild(a)}}}
+ const st=$i('suSteps');if(st){st.querySelectorAll('.stAdd,.stRm').forEach(o=>o.remove());if(two){const r=document.createElement('i');r.className='stAdd stRm';r.textContent='\u2212';r.title='Remove rider 2';r.onclick=e=>{e.stopPropagation();PR.p[1].in=false;PR.focus=0;sfx.ui('back');bikeRender()};st.appendChild(r)}if(!two){const a=document.createElement('i');a.className='stAdd';a.textContent='+';a.title='Add rider 2';a.onclick=e=>{e.stopPropagation();if(PR.p[1].in)return;PR.p[1].in=true;PR.focus=1;sfx.ui('select');bikeRender()};st.appendChild(a)}}}
 function stopPrep(){if(!PR)return;const e=$i('bkPrep');if(e)e.style.display='none';if(PR.sc){for(const m of PR.bikes)if(m)BK.disposeBike(m);PR.world.dispose();PR.sky.dispose();R.toneMappingExposure=PR.exp0}PR=null}
 function leavePrep(){sfx.ui('back');stopPrep();document.body.classList.remove('bkOn');goMenu()}
 function prepGo(){if(!PR)return;const sv=SV();PR.p.forEach((s,i)=>{sv.sel[i]={id:s.id,paint:s.paint,trick:s.trick,who:s.who}});sv.opt=Object.assign({},PR.opt);try{P.save()}catch(e){}
