@@ -110,10 +110,11 @@ R.render=function(scene,cam){const u=scene&&scene.userData;if(u&&u.snowCar&&type
    /* every car on the stage, whatever the model (Hakan: "map this for every car too"): each has its own ground height and its own build-up */
    for(const me of RACE.cars){if(!me.m||!me.m.g)continue;const U=me._snU||(me._snU=new THREE.Vector4());
     if(me._snT!==scene||((P.frame+(me.gi|0)*7)%120)===0){if(me._snT!==scene)me._snD=0;me._snT=scene;me._snX=me.x;me._snZ=me.z;me.m.g.traverse(o=>{if(o.isMesh&&!o.userData.contact)for(const m of Array.isArray(o.material)?o.material:[o.material])carMat(m,U)})}
-    /* the dirt climbs with the distance driven: under half at the start, full after about 500 m */
+    /* the dirt climbs with the distance driven: a clean car at the start, full after about 1.3 km */
     const dd=Math.hypot(me.x-me._snX,me.z-me._snZ);if(dd<30)me._snD+=dd;me._snX=me.x;me._snZ=me.z;
-    let gy=me.y;const w=me.m.wheels&&me.m.wheels[0];if(w&&w.s&&w.s.h!=null)gy=w.s.h;else if(RACE.T&&RACE.T.terr){const h=RACE.T.terr(me.x,me.z);if(h!=null&&isFinite(h))gy=h}
-    U.set(me.x,gy,me.z,Math.min(1,.5+me._snD/900)*K.k)}}catch(e){u.snowCar=0;console.warn('snowCar',e)}}
+    /* Nov 12 (Hakan: dirt only stuck at low elevation): the ground height is taken from the car's own height (it rides about 1.05 m above the road); the wheel / terrain heights are only used when they agree with it, so hills and bridges no longer shift the dirt line off the car */
+    const gy0=me.y-1.05;let gy=gy0;const w=me.m.wheels&&me.m.wheels[0];if(w&&w.s&&w.s.h!=null&&Math.abs(w.s.h-gy0)<1.2)gy=w.s.h;
+    U.set(me.x,gy,me.z,Math.min(1,.04+me._snD/1300)*K.k)}}catch(e){u.snowCar=0;console.warn('snowCar',e)}}
   return r1.apply(this,arguments)};
 function dress(sc,T){const d=T.d;if(!d||!d.cartoon||!d.cartoon.stage)return;if(CAR[d._key]){sc.userData.snowCar=1;sc.userData.carCfg=CAR[d._key]}if(d._key!=='autumn')return;const t0=performance.now();seed=977;let n=0;
  sc.traverse(o=>{if(!(o.isMesh||o.isInstancedMesh)||!o.material||Array.isArray(o.material))return;
