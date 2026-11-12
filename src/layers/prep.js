@@ -179,7 +179,7 @@ const st=document.createElement('style');st.textContent=`
 #s8setup.carZoom #gxSu.g2 .gxTn,#s8setup.carZoom #gxSu.g2 .gxCards{box-sizing:border-box!important;left:clamp(20px,3vw,44px)!important;right:auto!important;margin:0!important;width:min(34vw,400px)!important;transform:none!important}
 #s8setup.carZoom #gxSu.g2 .gxCards .gxr{box-sizing:border-box!important;width:100%!important;margin:0!important;min-width:0!important}
 #s8setup.carZoom #gxSu.g2,#s8setup.carZoom #gxSu.g2 .gxHero,#s8setup.carZoom #gxSu.g2 .gxHero *{overflow:visible!important;clip-path:none!important}
-#s8setup.carZoom #gxSu .gxCard.pf.zOff{display:none!important}
+#s8setup.carZoom #gxSu .gxCard.pf.zOff,#s8setup.carZoom #gxSu .gxr.zOff{display:none!important}
 #s8setup.carZoom #gxSu.g2 .gxCards h5,#s8setup.carZoom #gxSu.g2 .gxCards .gxCard.empty{display:none!important}
 #s8setup.prepLive.pillOn #gxSu.g2 .gxst{display:grid;grid-template-columns:auto minmax(110px,190px) auto;gap:7px 12px;align-items:center;margin-top:12px;font:500 clamp(10px,1.3vh,13px) var(--gt);letter-spacing:.14em;text-transform:uppercase;color:#aebfd0;text-shadow:0 1px 6px #000}
 #s8setup.prepLive.pillOn #gxSu.g2 .gxst u{display:block;height:4px;border-radius:2px!important;background:#ffffff26;overflow:hidden}
@@ -252,7 +252,7 @@ function camRace(s,now){const T=s.T;if(!s.shot)nextShot(s);let sh=s.shot,t=(now-
  {const dtc=Math.min(.1,Math.max(.001,(now-(s._pn||now))/1000));s._pn=now;if(s._psh!==sh){s._psh=sh;s._cp=P_.clone();s._cl=L.clone()}const k=1-Math.exp(-dtc*6),k2=1-Math.exp(-dtc*3);s._cp.lerp(P_,k);s._cl.lerp(L,k2);P_.copy(s._cp);L.copy(s._cl);const g2=GBf(T,P_.x,P_.z);if(isFinite(g2)&&P_.y<g2+1.6)P_.y=g2+1.6}
  cam.position.copy(P_);cam.lookAt(L);s.look=L;return sh.kind==='aerial'?b2(s):null}
 const b2=s=>s.box.e*2.4+700;
-P.prepZoomed=()=>!!(S&&S.zoom>=0&&document.getElementById('s8setup').classList.contains('carZoom'));P.prepUnzoom=()=>{if(S)S.zoom=-1;const w=document.getElementById('s8setup');if(w){w.classList.remove('carZoom');w.querySelectorAll('#gxSu .gxCard.pf.zOff').forEach(c=>c.classList.remove('zOff'));const tn=w.querySelector('#gxSu .gxTn');if(tn)tn.style.removeProperty('margin-left')}};
+P.prepZoomed=()=>!!(S&&S.zoom>=0&&document.getElementById('s8setup').classList.contains('carZoom'));P.prepUnzoom=()=>{if(S)S.zoom=-1;const w=document.getElementById('s8setup');if(w){w.classList.remove('carZoom');w.querySelectorAll('#gxSu .zOff').forEach(c=>c.classList.remove('zOff'));const tn=w.querySelector('#gxSu .gxTn');if(tn)tn.style.removeProperty('margin-left')}};
 let drag=0,dragX=null;
 /* the hint, the close button and the label of the car button, kept in the setup box */
 function carChrome(sec,s){const box=document.getElementById('gxSu');if(!box)return;let h=document.getElementById('prepHint');if(!h){h=document.createElement('div');h.id='prepHint';h.textContent='Click a car to customise it';box.appendChild(h)}
@@ -276,7 +276,8 @@ function camCar(s,dt){const n=s.cars.length;if(!n)return;const C=new THREE.Vecto
 let BGTEX=null,FLTEX=null;
 function studioTex(){if(BGTEX)return;const c=document.createElement('canvas');c.width=256;c.height=256;const g=c.getContext('2d'),gr=g.createRadialGradient(150,120,10,128,140,200);gr.addColorStop(0,'#3a4656');gr.addColorStop(.5,'#161c25');gr.addColorStop(1,'#05070a');g.fillStyle=gr;g.fillRect(0,0,256,256);BGTEX=new THREE.CanvasTexture(c);BGTEX.encoding=THREE.sRGBEncoding;
  const f=document.createElement('canvas');f.width=f.height=256;const h=f.getContext('2d'),fg=h.createRadialGradient(128,128,0,128,128,128);fg.addColorStop(0,'#fff');fg.addColorStop(.55,'#9a9a9a');fg.addColorStop(1,'#000');h.fillStyle=fg;h.fillRect(0,0,256,256);FLTEX=new THREE.CanvasTexture(f)}
-function studio(s,on){if(!!s.stOn===on)return;s.stOn=on;
+const STD=new THREE.Vector3(.28,1,.34).normalize();
+function studio(s,on){if(!!s.stOn===on)return;s.stOn=on;s.shadowed=0;
  if(on){studioTex();if(!s.stGrp){const m=new THREE.MeshStandardMaterial({color:0x2a313b,roughness:.42,metalness:.15,alphaMap:FLTEX,transparent:true});const fl=new THREE.Mesh(new THREE.CircleGeometry(34,48),m);fl.rotation.x=-Math.PI/2;fl.receiveShadow=true;s.stGrp=fl;s.sc.add(fl)}
   s.stGrp.visible=true;s.stHide=[];for(const o of s.sc.children){if(o===s.stGrp||o.isLight||o===key||o===key.target||(s.sun&&o===s.sun.target)||s.cars.includes(o))continue;if(o.visible){o.visible=false;s.stHide.push(o)}}
   s.stBg=s.sc.background;s.stFog=s.sc.fog;s.sc.background=BGTEX;s.sc.fog=null}
@@ -305,7 +306,7 @@ function frame(now){raf=requestAnimationFrame(frame);const w=want();
  lastDraw=now;fcount++;
  const s=S,dt=Math.min(.05,(now-(lastT||now))/1000);lastT=now;if(!size(w.sec))return;
  if(w.step===2){carsFor(s,w.cars);for(const c of s.cars)c.visible=true}else for(const c of s.cars)c.visible=false;
- if(w.step!==2||!s.cars.length)s.zoom=-1;w.sec.classList.toggle('carIdle',w.step===2&&FAST()&&s.zoom<0);w.sec.classList.toggle('carSolo',w.step===2&&s.cars.length===1);w.sec.classList.toggle('carZoom',w.step===2&&FAST()&&s.zoom>=0);{const cs=w.sec.querySelectorAll('#gxSu .gxCard.pf');cs.forEach((c,i)=>c.classList.toggle('zOff',s.zoom>=0&&i!==s.zoom))}if(s.zoom>=0){const tn=w.sec.querySelector('#gxSu .gxTn'),cd=w.sec.querySelector('#gxSu .gxCards');if(tn&&cd){tn.style.setProperty('margin-left','0px','important');const d=cd.getBoundingClientRect().left-tn.getBoundingClientRect().left;if(Math.abs(d)>1)tn.style.setProperty('margin-left',d+'px','important')}}
+ if(w.step!==2||!s.cars.length)s.zoom=-1;w.sec.classList.toggle('carIdle',w.step===2&&FAST()&&s.zoom<0);w.sec.classList.toggle('carSolo',w.step===2&&s.cars.length===1);w.sec.classList.toggle('carZoom',w.step===2&&FAST()&&s.zoom>=0);{const cs=w.sec.querySelectorAll('#gxSu .gxCard.pf');cs.forEach((c,i)=>c.classList.toggle('zOff',s.zoom>=0&&i!==s.zoom));w.sec.querySelectorAll('#gxSu .gxr[data-pl]').forEach(r=>r.classList.toggle('zOff',s.zoom>=0&&+r.dataset.pl!==s.zoom))}if(s.zoom>=0){const tn=w.sec.querySelector('#gxSu .gxTn'),cd=w.sec.querySelector('#gxSu .gxCards');if(tn&&cd){tn.style.setProperty('margin-left','0px','important');const d=cd.getBoundingClientRect().left-tn.getBoundingClientRect().left;if(Math.abs(d)>1)tn.style.setProperty('margin-left',d+'px','important')}}
  carChrome(w.sec,s);
  if(FAST()&&!(window.PTO&&window.PTO.prepStudio===false)){studio(s,w.step===2&&s.cars.length>0);if(s.stOn&&s.stGrp&&s.cars.length){const c0=s.cars[0];s.stGrp.position.set(c0.position.x,c0.position.y-.02,c0.position.z)}}
  if(s.step!==w.step){s.step=w.step;s.shot=null;s.sh=0;s.ang=0;cv.classList.remove('cut');pend=null}
@@ -315,7 +316,7 @@ function frame(now){raf=requestAnimationFrame(frame);const w=want();
  const W=1000,H=Math.round(1000/cam.aspect),cars=w.step===2;cam.setViewOffset(W,H,cars?(FAST()?(-W*.2*(s.zk||0)-(s.cars.length===1?W*.09:0)*(1-(s.zk||0))):-W*.12):-W*.04,H*(cars?(FAST()?((s.cars.length>1?.03:.045)*(1-(s.zk||0))+.03*(s.zk||0)):.13):.1),W,H);cam.updateProjectionMatrix();
  if(s.fog&&s.sc.fog){const f=far||s.fog.far;s.sc.fog.far=f;s.sc.fog.near=far?Math.min(far*.4,s.fog.near+far*.2):s.fog.near}
  if(s.dome)s.dome.position.copy(cam.position);const m=s.sc.userData.skyx;if(m&&m.uniforms)m.uniforms.t.value=(now-s.t0)/1000+40;
- if(s.sun&&s.look){const L=s.look,ext=cars?16:far?Math.min(600,s.box.e*.7):90;s.sun.target.position.copy(L);s.sun.position.copy(L).addScaledVector(s.sd,Math.max(200,ext*1.5));s.sun.target.updateMatrixWorld();const sc_=s.sun.shadow.camera;
+ if(s.sun&&s.look){const stu=!!(s.stOn&&s.stGrp&&cars),L=stu?s.stGrp.position:s.look,ext=stu?26:cars?16:far?Math.min(600,s.box.e*.7):90;/* Nov 12 (Hakan: the shadows make no sense): in the studio the light is fixed above and a little to the side of the cars, so each shadow sits under its own car (it used the track's low sun and followed the camera) */s.sun.target.position.copy(L);s.sun.position.copy(L).addScaledVector(stu?STD:s.sd,Math.max(stu?80:200,ext*1.5));s.sun.target.updateMatrixWorld();const sc_=s.sun.shadow.camera;
   if(sc_.right!==ext){sc_.left=-ext;sc_.right=ext;sc_.top=ext;sc_.bottom=-ext;sc_.near=1;sc_.far=ext*4+400;sc_.updateProjectionMatrix()}}
  /* a soft key light from the camera side so the car always reads, whatever the time of day */
  key.intensity=cars?(s.tod==='night'?.55:.3):0;key.position.copy(cam.position).add(new THREE.Vector3(0,3,0));if(s.look)key.target.position.copy(s.look);key.target.updateMatrixWorld();

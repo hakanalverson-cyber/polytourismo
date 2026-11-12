@@ -45,4 +45,6 @@ P.arcSnap=c=>hu(c)&&P.arcade()?(window.PTO&&window.PTO.calmSteer===false?12:13):
 P.arcWall=(c,psi,dt)=>{if(!(hu(c)&&P.arcade()))return 1.3;if(psi!=null){const f=Math.cos(c.yaw-psi)>=0?psi:psi+Math.PI;let d=f-c.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));c.yaw+=d*Math.min(1,(dt||.016)*10);c.yr*=.5}return 1.05};
 /* Nov 11 (Hakan: dial read 150 where it felt like 95): rally dial scaled .65 */
 P.dialS=()=>{const R=typeof RACE!=='undefined'?RACE:null;return R&&R.cfg&&R.cfg.rally&&!R.cfg.circuit&&R.T?0.65:1};
+/* Nov 12 (Hakan: the camera closer to the car by default): the chase view sits 18% nearer to the car, in every mode (not the hood view) */
+setTimeout(()=>{try{const s0=soloCam;soloCam=function(c,dt,out){s0.apply(this,arguments);if(c&&c.human&&!c.fin&&!c.camMode&&!(c.tnB>.4)&&!(window.PTO&&window.PTO.camNear===false)){const k=.82,y=c.camY==null?c.y:c.camY;out.p.set(c.x+(out.p.x-c.x)*k,y+(out.p.y-y)*k,c.z+(out.p.z-c.z)*k)}}}catch(e){}},30);
 })();

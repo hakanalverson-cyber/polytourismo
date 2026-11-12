@@ -27,7 +27,7 @@ P.trackPacks={};
    (road, heights, scenery, walls, start boxes) and the file then counts as carScale 1: cars drawn at their real size, no dial factor, no time
    scale, no extra top speed or pickup, so the handling is the Quick Play one. PTO.mapScale=false switches it off. */
 const MEDSC={ra:73.7,imola:71.4,laguna:68.0,suzuka:93.4,hungaroring:79.5,bathurst:100.9,spa:109.8,nurburg:76.6};
-function mapScalePack(pack){if(pack._sc||!(pack.stage||pack.carScale>1)||(window.PTO&&window.PTO.mapScale===false))return;const k=pack.carScale||1;if(!(k>1))return;const f=1/k;
+function mapScalePack(pack){if(pack._sc||!(pack.stage||pack.carScale>1)||(window.PTO&&window.PTO.mapScale===false))return;const k=pack.carScale||1;if(!(k>1))return;const f=(1/k)*(pack.stage?1.12:.94);/* Nov 12 (Hakan): rally stages a little bigger, circuits a little smaller than car scale */
  pack.pts=pack.pts.map(q=>[q[0]*f,q[1]*f,q[2]*f,q[3]*f]);pack.S=(pack.S||1)*f;const G=pack.grid;G.x0*=f;G.z0*=f;G.cell*=f;G.hs=f;
  pack.over=(pack.over||[]).map(a=>[a[0]*f,a[1]*f]);pack.slots=(pack.slots||[]).map(q=>[q[0]*f,q[1]*f,q[2]*f]);pack.sf=f;
  for(const m of pack.meshes){m.q*=f;m.o=m.o.map(v=>v*f)}
@@ -40,7 +40,7 @@ P.addTrackPack=pack=>{if(pack.stage){/* a rally stage file (rallymaps.js loads a
  {const nr=(window.PT8_PACKREV||{})[pack.replaces]||0;if((pack.rev||0)<nr){const e=new Error('This '+pack.name+' file is an older version: add the new '+({ra:'road-atlanta',suzuka:'suzuka',laguna:'laguna-seca',hungaroring:'hungaroring',bathurst:'bathurst',spa:'spa',nurburg:'nurburgring'}[pack.replaces]||pack.replaces)+'.ptrack');e.older=true;throw e}}
  if(d.cartoon&&(d.cartoon.rev||0)>(pack.rev||0)){const e=new Error('This is an older version of '+pack.name+' than the one already in the game');e.older=true;throw e}
  if(!d._orig)d._orig={pts:d.pts,bank:d.bank,medal:P.MEDAL_REF[i]};
- mapScalePack(pack);d.pts=pack.pts;d.bank=0;d.cartoon=pack;if(pack.medal)P.MEDAL_REF[i]=pack.medal*(MEDK[pack.replaces]||1);/* Nov 12: on the shrunk maps the gold time is the CPU's measured lap (skill 1, same car, 1 lap from the grid) */if(pack.mapScaled&&MEDSC[pack.replaces])P.MEDAL_REF[i]=MEDSC[pack.replaces];P.trackPacks[pack.id]=pack;
+ mapScalePack(pack);d.pts=pack.pts;d.bank=0;d.cartoon=pack;if(pack.medal)P.MEDAL_REF[i]=pack.medal*(MEDK[pack.replaces]||1);/* Nov 12: on the shrunk maps the gold time is the CPU's measured lap (skill 1, same car, 1 lap from the grid) */if(pack.mapScaled&&MEDSC[pack.replaces])P.MEDAL_REF[i]=MEDSC[pack.replaces]*.94;P.trackPacks[pack.id]=pack;
  if(P.ui&&P.ui.trClear)P.ui.trClear(i);return i};
 /* physics: road and ground heights come from the model's surfaces, so the car sits exactly on what is drawn */
 const ss=sampleTrack;sampleTrack=d=>{const T=ss(d);if(!d.cartoon)return T;const {hAt,kAt}=grid(d.cartoon);
@@ -308,7 +308,10 @@ P.gridHook=(T,c,slot)=>{const pk=T.d&&T.d.cartoon;let s=pk&&pk.slots&&pk.slots[s
  /* the slot is the painted line across the front of the box: the car stands with its nose just behind it */
  const bk=2.45*K(),sx=s[0]-Math.sin(T.psi[bi])*bk,sz=s[1]-Math.cos(T.psi[bi])*bk;s=[sx,sz];
  bd=1e18;for(let i=0;i<N;i++){const d=(T.x[i]-s[0])**2+(T.z[i]-s[1])**2;if(d<bd){bd=d;bi=i}}
- c.x=s[0];c.z=s[1];c.lane0=(s[0]-T.x[bi])*Math.cos(T.psi[bi])-(s[1]-T.z[bi])*Math.sin(T.psi[bi]);c.y=T.surf(s[0],s[1],T.y[bi]+2).h+1.1;c.yaw=T.psi[bi];c.idx=bi;c.unw=bi>N/2?bi-N:bi;c.unw0=c.unw;c.cy=c.yaw;c.camY=c.y;return true};
+ c.x=s[0];c.z=s[1];c.lane0=(s[0]-T.x[bi])*Math.cos(T.psi[bi])-(s[1]-T.z[bi])*Math.sin(T.psi[bi]);
+ /* Nov 12 (Hakan: the cars still do not start 100 m ahead of the line): on a rally stage the painted boxes are moved 100 m up the road, keeping each car's lane */
+ if(T.stage&&RACE&&RACE.cfg&&RACE.cfg.rally){const j=Math.min(N-2,(bi>N/2?bi-N:bi)+Math.round(100/(T.sp||3))),jj=((j%N)+N)%N,co=Math.cos(T.psi[jj]),sn=Math.sin(T.psi[jj]);c.x=T.x[jj]+co*c.lane0;c.z=T.z[jj]-sn*c.lane0;bi=jj}
+ c.y=T.surf(c.x,c.z,T.y[bi]+2).h+1.1;c.yaw=T.psi[bi];c.idx=bi;c.unw=bi>N/2?bi-N:bi;c.unw0=c.unw;c.cy=c.yaw;c.camY=c.y;return true};
 /* car-to-car contact (every track): boxes the size of the drawn car (grown with carScale here), not a circle, so cars side by side no
    longer touch at a car's width apart; a softer bounce so two cars don't ping-pong off each other, and one knock gives one set of sparks
    (a pair can't spark/shake again for 0.6 s while they are still rubbing) */

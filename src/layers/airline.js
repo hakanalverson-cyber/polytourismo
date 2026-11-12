@@ -35,7 +35,7 @@ P.aiInput=function(c,dt){const Rc=RACE,T=Rc.T,N=T.N,a=c.ai||(c.ai={skill:.9,lat:
  /* round 18: how good a driver this is, 0 (easy field, skill .75) to 1 (skill 1): the better ones hold the line tighter, brake later and
     carry more speed; the weaker ones wander off it a little (slowly, like a driver, not a twitch) and brake early */
  const nk=clamp((skill-.75)/.25,0,1);a.ph=a.ph||Math.random()*100;const tt=(Rc.t||0)*.23+a.ph,wob=(Math.sin(tt)+.6*Math.sin(tt*2.7+1.3))/1.6;
- let off=RL[ti]+(a.lat||0)*T.hw[ti]*.18*(1-.7*nk)+wob*(1-nk)*1.3;
+ let off=RL[ti]+(a.lat||0)*T.hw[ti]*.18*(1-.7*nk)+wob*(1-nk)*1.3*(c._near?.2:1);
  /* lane hold: off the start each car keeps its own grid lane for the first stretch and eases onto the line over the next 250 m;
     after the finish (the autopilot cool-down lap) it simply stays in the lane it crossed the line in */
  if(c.cool&&c.fin){if(c._finLat==null)c._finLat=clamp(P.latOf(T,c),T.rlo[ti],T.rhi[ti]);off=c._finLat}
@@ -43,11 +43,18 @@ P.aiInput=function(c,dt){const Rc=RACE,T=Rc.T,N=T.N,a=c.ai||(c.ai={skill:.9,lat:
  off=clamp(off,T.rlo[ti],T.rhi[ti]);
  /* side by side: if another car is alongside ahead, move over within the road instead of driving into it */
  /* (widths grow with the drawn car size on the model tracks: the old 2.6 m let big cars run into each other) */
- const kS=(T.d&&T.d.cartoon&&T.d.cartoon.carScale)||1,CW=2.6*kS;let av=0;
- for(const o of Rc.cars){if(o===c||o.respT>0||o.fin&&o!==c)continue;const dx=o.x-c.x,dz=o.z-c.z,fw=dx*Math.sin(c.yaw)+dz*Math.cos(c.yaw);if(fw<-2*kS||fw>14*kS)continue;
-  const lt=dx*Math.cos(c.yaw)-dz*Math.sin(c.yaw);if(Math.abs(lt)>CW||o.sp>c.sp+1)continue;const side=lt>0?-1:1;av+=side*(CW-Math.abs(lt))*.9}
+ /* Nov 12 (Hakan: the AI runs into each other at once): the cars are drawn at their real size now (maps are scaled instead), so the clearance is in metres:
+    a car is "alongside" within 3.3 m sideways, the look-ahead grows with how fast this car closes on the other, a car close ahead in the same lane limits the speed
+    (follow, not ram) and nobody wobbles off the line while another car is within 14 m */
+ const kS=(T.d&&T.d.cartoon&&T.d.cartoon.carScale)||1,CW=3.3*kS;let av=0,fol=1e9,near=false;
+ for(const o of Rc.cars){if(o===c||o.respT>0||o.fin&&o!==c)continue;const dx=o.x-c.x,dz=o.z-c.z,fw=dx*Math.sin(c.yaw)+dz*Math.cos(c.yaw),lt=dx*Math.cos(c.yaw)-dz*Math.sin(c.yaw);
+  if(Math.abs(fw)<14&&Math.abs(lt)<6)near=true;
+  const reach=Math.max(14,8+Math.max(0,c.sp-o.sp)*1.6)*kS;if(fw<-4.5*kS||fw>reach)continue;
+  if(Math.abs(lt)>CW)continue;
+  if(fw>0&&Math.abs(lt)<2.3*kS&&c.sp>o.sp-.5)fol=Math.min(fol,o.sp+Math.max(0,fw-5.2*kS)*.9);
+  if(o.sp>c.sp+1&&fw>0)continue;const side=lt>0?-1:1;av+=side*(CW-Math.abs(lt))*1.0}
  /* the move-over eases in and out (it used to jump sideways from one frame to the next); the racing line itself is followed directly */
- if(c._av==null||!(dt>0))c._av=av;else c._av+=(av-c._av)*Math.min(1,dt*4);off=clamp(off+c._av,T.rlo[ti],T.rhi[ti]);
+ if(c._av==null||!(dt>0))c._av=av;else c._av+=(av-c._av)*Math.min(1,dt*4);c._near=near;off=clamp(off+c._av,T.rlo[ti],T.rhi[ti]);
  const s=Math.sin(T.psi[ti]),co=Math.cos(T.psi[ti]),tx=T.x[ti]+co*off,tz=T.z[ti]-s*off,des=Math.atan2(tx-c.x,tz-c.z);
  let st=clamp(wr(des-c.yaw)*2.2,-1,1);
  /* speed plan from the line's radius */
@@ -55,7 +62,7 @@ P.aiInput=function(c,dt){const Rc=RACE,T=Rc.T,N=T.N,a=c.ai||(c.ai={skill:.9,lat:
  const bk=(T.cbrk||12.5)*(.82+.18*nk)/* weaker drivers brake earlier */,jm=Math.max(44,Math.min(200,Math.ceil(c.sp*c.sp/(2*bk*cs.brk)/T.sp)+8));for(let j=2;j<=jm;j+=2){const i=(c.idx+j)%N;if(T.gap[i])continue;const k=Math.max(K[i],8e-4),R_=1/k,vz=Math.sqrt(6.5/Math.max(T.kz[i],1e-4)),ice=T.ice[i]?.3:1,vlim=Math.min(vz,P.steerLimit(R_)*.9*Math.min(1,.6+gfac*.4)*ice,(T.alat?Math.sqrt(T.alat*gfac*ice*R_/Math.max(1/(T.dfmax||2.2),1-(T.dfk||.6)*T.alat*R_/1225)):Math.sqrt(26*gfac*ice*R_)));
   const vl=vlim*.8/* plan corners at 80% of the grip formula's speed: at 100% the CPU could not turn that hard and ran 2-8 m wide of the line (slower and messier) */;tgt=Math.min(tgt,Math.sqrt(vl*vl+2*(bk*cs.brk)*j*T.sp))}
  const topNow=P.topSpeed(cs,P.GT(cs).length-1)*(mt.top||1);
- tgt=Math.min(tgt,topNow*(.9+.1*skill))*(.9+.1*nk)/* corner and straight pace: 91% for the easy field up to 100% */;c._tg=tgt;c._tn=topNow;
+ tgt=Math.min(tgt,topNow*(.9+.1*skill))*(.9+.1*nk)/* corner and straight pace: 91% for the easy field up to 100% */;if(live&&fol<1e8)tgt=Math.min(tgt,Math.max(fol,3));c._tg=tgt;c._tn=topNow;
  /* running wide of the line in a corner (in too fast, or the front washing out): lift, and brake a little if it gets worse, until the
     car is back on the line, instead of keeping the throttle pinned and sliding across the road */
  const ci=((c.idx|0)%N+N)%N,turn=Math.sign(wr(T.psi[(ci+6)%N]-T.psi[ci])),wide=turn?-(P.latOf(T,c)-RL[ci])*turn:0;/* + = towards the outside of the bend */
