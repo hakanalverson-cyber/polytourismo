@@ -132,7 +132,7 @@ show=n=>{const was=scr;if(n==='s8setup'&&was!=='s8setup'){const gb=document.getE
  if(n==='menu'&&P.menuStats)P.menuStats();
  /* the start-line card belongs to the race: never leave it over a menu */if(n!=='game'&&n!=='pause'&&n!=='ptOptions'){const e=document.getElementById('rlPrep');if(e)e.style.display='none';document.body.classList.remove('rprep')}};
 function refreshMenuCars(){const sv=P.SV();for(let i=0;i<4;i++){const s=sv.sel[i];carChoices[i]=P.modelOf(s.id,s.alt)}}
-const goBack={s8cards:()=>show('menu'),s8quick:()=>show('menu'),s8pick:()=>show(ST.ret),s8rally:()=>show(ST.ret),s8setup:()=>{if(ST.custom){const c=ST.custom;ST.custom=null;c.back();return}if(GXS.step===2){GXS.step=1;GXS.f=0;if(isRL(ST.mode))ST.rstep=1;renderSetup();return}if(ST.fromRally&&ST.mode==='rally'){openRally(true);return}if(ST.fromPick&&ST.mode!=='rally'){openPick(true);return}show(ST.ret)},s8career:()=>{if(P.frBack&&P.frBack())return;show('s8cards')},s8res:()=>resContinue()};
+const goBack={s8cards:()=>show('menu'),s8quick:()=>show('menu'),s8pick:()=>show(ST.ret),s8rally:()=>show(ST.ret),s8setup:()=>{if(P.prepZoomed&&P.prepZoomed()){P.sfx&&P.sfx('back');P.prepUnzoom();return}if(ST.custom){const c=ST.custom;ST.custom=null;c.back();return}if(GXS.step===2){GXS.step=1;GXS.f=0;if(isRL(ST.mode))ST.rstep=1;renderSetup();return}if(ST.fromRally&&ST.mode==='rally'){openRally(true);return}if(ST.fromPick&&ST.mode!=='rally'){openPick(true);return}show(ST.ret)},s8career:()=>{if(P.frBack&&P.frBack())return;show('s8cards')},s8res:()=>resContinue()};
 const leaveShow=()=>{const r=SR.ret;if(r==='s8res_back'){renderSetup();show('s8setup');return}show(r);if(r==='s8setup')renderSetup();if(r==='s8career')renderCareer()};
 function fadeTo(fn){const f=$('shFade');f.classList.add('on');setTimeout(()=>{try{fn()}catch(e){console.error('fadeTo',e&&e.stack||e)}setTimeout(()=>f.classList.remove('on'),260)},230)}
 const inGrid=()=>CARDS()&&SR.view==='grid',inCar=()=>CARDS()&&SR.view==='car';
@@ -591,9 +591,9 @@ const carShot=(cv,list,reg,only)=>{if(!P.C10)return;const lk=list.map(s=>s.id+'.
 const PCOLS=['#f1f3f5','#f2c76b','#7fd68a','#ef6a5a'],MAXP=4;
 const multiOK=m=>m!=='ta';
 const KEYN=p=>p===0?'W A S D':p===1?(P.p2Keys==='numpad'?'Numpad 8 4 5 6':'Arrow keys'):p===2?'I J K L':'T F G H';
-function addPlayer(){const m=ST.mode;if(!multiOK(m)||ST.players>=MAXP)return;ST.players++;if((m==='mp'||m==='elim'||m==='track')&&ST.players+(ST.cpus||0)>8)ST.cpus=8-ST.players;
+function addPlayer(){const m=ST.mode;if(!multiOK(m)||ST.players>=MAXP)return;wipe();ST.players++;if((m==='mp'||m==='elim'||m==='track')&&ST.players+(ST.cpus||0)>8)ST.cpus=8-ST.players;
  GXS.cf=ST.players-1;GXS.fp=ST.players-1;GXS.newP=ST.players-1;P.sfx&&P.sfx('select');renderSetup();GXS.newP=null}
-function removePlayer(p){if(p<1||p>=ST.players)return;const n=ST.players;ST.names=ST.names||[];
+function removePlayer(p){if(p<1||p>=ST.players)return;wipe();const n=ST.players;ST.names=ST.names||[];
  for(let q=p;q<n-1;q++){const s=selCar(q+1);setCar(q,s.id,s.alt);ST.names[q]=ST.names[q+1]||'';P.setTX(q,P.isAuto({human:true,k:q+1}))}ST.names[n-1]='';
  ST.players=n-1;GXS.cf=Math.min(GXS.cf||0,ST.players-1);GXS.fp=GXS.cf;P.sfx&&P.sfx('back');renderSetup()}
 P.addPlayer=addPlayer;P.removePlayer=removePlayer;

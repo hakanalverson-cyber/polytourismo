@@ -12,7 +12,7 @@ function grid(pack){if(pack._g)return pack._g;const G=pack.grid,HG=new Int16Arra
  /* two-level road (Suzuka's crossover): G.up lists the cells where the circuit asphalt also runs higher up; with a height hint the corner
     values come from the level nearest it, without one from the lower road */
  const UP=new Map();if(G.up){const a=new Int32Array(dec(G.up).buffer);for(let i=0;i<a.length;i+=2)UP.set(a[i],a[i+1])}
- const hv=(i,y)=>{const lo=HG[i]*.02;if(y==null||!UP.size)return lo;const u=UP.get(i);if(u==null)return lo;const hi=u*.02;return Math.abs(y-hi)<Math.abs(y-lo)?hi:lo};
+ const hv=(i,y)=>{const lo=HG[i]*.02*(G.hs||1);if(y==null||!UP.size)return lo;const u=UP.get(i);if(u==null)return lo;const hi=u*.02*(G.hs||1);return Math.abs(y-hi)<Math.abs(y-lo)?hi:lo};
  const hAt=(x,z,y)=>{const fx=(x-G.x0)/G.cell,fz=(z-G.z0)/G.cell;if(!(fx>=0&&fz>=0&&fx<G.nx-1&&fz<G.nz-1))return null;
   const ix=fx|0,iz=fz|0,tx=fx-ix,tz=fz-iz,i=iz*G.nx+ix;return(hv(i,y)*(1-tx)+hv(i+1,y)*tx)*(1-tz)+(hv(i+G.nx,y)*(1-tx)+hv(i+G.nx+1,y)*tx)*tz};
  const kAt=(x,z)=>{const ix=Math.round((x-G.x0)/G.cell),iz=Math.round((z-G.z0)/G.cell);return ix<0||iz<0||ix>=G.nx||iz>=G.nz?0:KG[iz*G.nx+ix]};
@@ -23,13 +23,23 @@ P.trackPacks={};
    this much longer: 95.5 -> 107.6 s at Road Atlanta, 98.4 -> 114.7 s at Imola */
 /* round 19: each x the CPU lap ratio after/before the slowdown; nurburg also for the longer lap (hairpin + Arena) */const MEDK={ra:.815,imola:.827,laguna:.796,suzuka:1.061,hungaroring:.884,spa:1.217,bathurst:1.036,nurburg:.849},ALAT=23,DFK=.35,DFMAX=1.5;/* tyre grip (16, then +20% and +20% more turning by request) limit on these tracks, m/s² (see the steering cap below) */
 /* newest file wins (pack.rev = build time): an older copy saved in this browser never replaces a newer built-in one */
+/* Nov 12 (Hakan: leave the cars at normal size and change the map instead): on the listed tracks the whole model is shrunk by 1/carScale when the file loads
+   (road, heights, scenery, walls, start boxes) and the file then counts as carScale 1: cars drawn at their real size, no dial factor, no time
+   scale, no extra top speed or pickup, so the handling is the Quick Play one. PTO.mapScale=false switches it off. */
+const MAPSC={ra:1};
+function mapScalePack(pack){if(pack._sc||pack.stage||!MAPSC[pack.replaces]||(window.PTO&&window.PTO.mapScale===false))return;const k=pack.carScale||1;if(!(k>1))return;const f=1/k;
+ pack.pts=pack.pts.map(q=>[q[0]*f,q[1]*f,q[2]*f,q[3]*f]);pack.S=(pack.S||1)*f;const G=pack.grid;G.x0*=f;G.z0*=f;G.cell*=f;G.hs=f;
+ pack.over=(pack.over||[]).map(a=>[a[0]*f,a[1]*f]);pack.slots=(pack.slots||[]).map(q=>[q[0]*f,q[1]*f,q[2]*f]);pack.sf=f;
+ for(const m of pack.meshes){m.q*=f;m.o=m.o.map(v=>v*f)}
+ pack.carScale0=k;pack.carScale=1;pack.mapScaled=1;pack._sc=1}
+P.mapScalePack=mapScalePack;
 P.addTrackPack=pack=>{if(pack.stage){/* a rally stage file (rallymaps.js loads after this layer) */if(P.addStagePack)return P.addStagePack(pack);(P._stageQueue=P._stageQueue||[]).push(pack);return -1}const i=baseOf(pack);if(i<0)throw new Error('This track file is for a track this game does not have ('+pack.replaces+')');const d=D[i];
  /* the small download has no track built in, so it also knows the newest file's build time: an old copy saved in the browser (Road Atlanta's first
     file drove through the coned loops and had no grid boxes) is turned away and deleted instead of quietly coming back */
  {const nr=(window.PT8_PACKREV||{})[pack.replaces]||0;if((pack.rev||0)<nr){const e=new Error('This '+pack.name+' file is an older version: add the new '+({ra:'road-atlanta',suzuka:'suzuka',laguna:'laguna-seca',hungaroring:'hungaroring',bathurst:'bathurst',spa:'spa',nurburg:'nurburgring'}[pack.replaces]||pack.replaces)+'.ptrack');e.older=true;throw e}}
  if(d.cartoon&&(d.cartoon.rev||0)>(pack.rev||0)){const e=new Error('This is an older version of '+pack.name+' than the one already in the game');e.older=true;throw e}
  if(!d._orig)d._orig={pts:d.pts,bank:d.bank,medal:P.MEDAL_REF[i]};
- d.pts=pack.pts;d.bank=0;d.cartoon=pack;if(pack.medal)P.MEDAL_REF[i]=pack.medal*(MEDK[pack.replaces]||1);P.trackPacks[pack.id]=pack;
+ mapScalePack(pack);d.pts=pack.pts;d.bank=0;d.cartoon=pack;if(pack.medal)P.MEDAL_REF[i]=pack.medal*(MEDK[pack.replaces]||1);P.trackPacks[pack.id]=pack;
  if(P.ui&&P.ui.trClear)P.ui.trClear(i);return i};
 /* physics: road and ground heights come from the model's surfaces, so the car sits exactly on what is drawn */
 const ss=sampleTrack;sampleTrack=d=>{const T=ss(d);if(!d.cartoon)return T;const {hAt,kAt}=grid(d.cartoon);
@@ -97,8 +107,8 @@ setTimeout(()=>{const bw=buildWorld;buildWorld=T=>{const sc=bw(T),pack=T.d&&T.d.
   rm.forEach(o=>{if(o.parent)o.parent.remove(o)});/* removed, not hidden: distance culling turns visibility back on */
   const grp=new THREE.Group();grp.name='cartoonTrack';for(const m of meshes(pack))grp.add(m);sc.add(grp);
   T._bx={segs:[],pts:[]};T._bg=null;/* the removed stock props must not collide */
-  if(P.addSeg){const s=new Float32Array(dec(pack.segs).buffer);for(let i=0;i<s.length;i+=4)P.addSeg(T,s[i],s[i+1],s[i+2],s[i+3],.35)}
-  if(pack.cpts&&P.addPt){const s=new Float32Array(dec(pack.cpts).buffer);for(let i=0;i<s.length;i+=3)P.addPt(T,s[i],s[i+1],s[i+2])}/* tree trunks */
+  if(P.addSeg){const s=new Float32Array(dec(pack.segs).buffer);const sf=pack.sf||1;for(let i=0;i<s.length;i+=4)P.addSeg(T,s[i]*sf,s[i+1]*sf,s[i+2]*sf,s[i+3]*sf,.35)}
+  if(pack.cpts&&P.addPt){const s=new Float32Array(dec(pack.cpts).buffer);const sf=pack.sf||1;for(let i=0;i<s.length;i+=3)P.addPt(T,s[i]*sf,s[i+1]*sf,s[i+2]*sf)}/* tree trunks */
  }catch(e){console.error('cartoon track',e)}
  return sc};
 /* Track Mode card art: a trackside shot of one corner of the bought model (outside of the corner, looking back up the approach).
@@ -206,7 +216,8 @@ P.trkMedK=Object.assign(P.trkMedK||{},{[P.RING_IDX]:1.005});
 const TM=()=>{const R=typeof RACE!=="undefined"?RACE:null,f=R&&R.cfg;return !!(f&&(f.trackRace||f.circuit))};P.trackMode=TM;
 /* Track Mode steering sensitivity: the slider's 1.0 here is the old 0.55 (Hakan's sweet spot); other modes keep the slider as it is */
 P.tmSteer=c=>P.arcHum&&P.arcHum(c)?P.arcSteerK(c):c&&c.human&&!c.forceAI&&TM()?.55:1;
-const TRK=()=>{if(K()>1)return true;const R=typeof RACE!=="undefined"?RACE:null,f=R&&R.cfg;return !!(f&&(f.trackRace||f.circuit))};P.trkPhys=TRK;
+const MS=()=>{const R=typeof RACE!=="undefined"?RACE:null,d=R&&R.T&&R.T.d;return !!(d&&d.cartoon&&d.cartoon.mapScaled)};P.mapScaled=MS;
+const TRK=()=>{if(K()>1||MS())return true;const R=typeof RACE!=="undefined"?RACE:null,f=R&&R.cfg;return !!(f&&(f.trackRace||f.circuit))};P.trkPhys=TRK;
 const uv=updateVisual;updateVisual=function(c,T,t){const m=c&&c.m,k=VK();if(m&&m.g)m.g.scale.setScalar(1);const r=uv.apply(this,arguments);
  if(m&&m.g&&k!==1&&m.g.visible!==false){m.g.scale.setScalar(k);m.g.position.y+=(k-1)*.95;if(m.sh){m.sh.scale.x*=k;m.sh.scale.y*=k}}return r};
 /* chase camera: pulled back less than the car grew (the car fills more of the screen and the camera sits nearer the road, so the ground
@@ -232,7 +243,7 @@ let sfx=null,sfxV=0;const speedFx=(c,v)=>{if(!c.human)return;if(!sfx){sfx=docume
    physics speed. The dial shows that felt speed (it read 100 mph where it looked like 60) */
 P.dialK=()=>K()>1?.6:1;
 {const l0=P.launch;P.launch=function(cfg){const r=l0.apply(this,arguments);const T=typeof RACE!=="undefined"&&RACE&&RACE.T;if(T&&!(T.d&&T.d.cartoon)){if(TRK()){T.alat=ALAT;T.cbrk=24;T.dfk=DFK;T.dfmax=DFMAX}else{delete T.alat;delete T.cbrk}}return r}}
-const SPD=1.25,TOPK=1.32,ACCK=.46,TS=1.4,BRKK=.42;/* round 19: top speed and pickup both about 12% lower (were 1.5 and .52) */{const m0=P.mul;P.mul=c=>{const m=m0?m0(c):{acc:1,top:1,grip:1,brk:1};m.brk*=(window.PT8_BRKK||BRKK);/* round 18: brakes at 42% for every car, everywhere (130 mph to a stop took about 1.3 s of game time; now about 3 s, closer to a real car) */if(K()>1){m.top*=TOPK;{const r=Math.min(.99,(c.sp||0)/Math.max(1,((c.cs&&c.cs.top)||40)*m.top));m.acc*=ACCK*Math.min(4,(1-.5*r)/Math.max(.08,1-r))}}if(TRK()){/* the base pull fades in a straight line to zero at top speed (100-200 mph crawled); this keeps it strong to about 85% of top *//* top speed 50% up and full pickup: these long tracks felt slow (x1.1 pickup gave 0-60 mph in 2.5 s, x.6 felt sluggish) */m.brk*=SPD;m.grip*=SPD;/* the tyre bite grip.js gives human drivers, for the CPU too here (it was a big part of why they were so slow) */if(!(c.human&&!c.forceAI)&&c.onRoad&&!c.cool)m.grip*=(window.PT8_GRIPK||1.4)}return m}}
+const SPD=1.25,TOPK=1.32,ACCK=.46,TS=1.4,BRKK=.42;/* round 19: top speed and pickup both about 12% lower (were 1.5 and .52) */{const m0=P.mul;P.mul=c=>{const m=m0?m0(c):{acc:1,top:1,grip:1,brk:1};m.brk*=(window.PT8_BRKK||BRKK);/* round 18: brakes at 42% for every car, everywhere (130 mph to a stop took about 1.3 s of game time; now about 3 s, closer to a real car) */if(K()>1){m.top*=TOPK;{const r=Math.min(.99,(c.sp||0)/Math.max(1,((c.cs&&c.cs.top)||40)*m.top));m.acc*=ACCK*Math.min(4,(1-.5*r)/Math.max(.08,1-r))}}if(TRK()){/* the base pull fades in a straight line to zero at top speed (100-200 mph crawled); this keeps it strong to about 85% of top *//* top speed 50% up and full pickup: these long tracks felt slow (x1.1 pickup gave 0-60 mph in 2.5 s, x.6 felt sluggish) */if(!(MS()&&c.human&&!c.forceAI)){m.brk*=SPD;m.grip*=SPD}/* the tyre bite grip.js gives human drivers, for the CPU too here (it was a big part of why they were so slow) */if(!(c.human&&!c.forceAI)&&c.onRoad&&!c.cool)m.grip*=(window.PT8_GRIPK||1.4)}return m}}
 /* cornering grip. The arcade model turns as tight as the steering asks at any speed (well over 3 g at 100 mph), so a 40 mph corner went
    at 100. On these tracks the tyres hold about ALAT (1.6 g, scaled by the car's grip and the surface):
    every car (yours and the CPU's): the nose still turns in as sharply as you steer (up to 1.7x what the tyres hold), but the direction you travel can only

@@ -179,6 +179,7 @@ const st=document.createElement('style');st.textContent=`
 #s8setup.carZoom #gxSu.g2 .gxTn,#s8setup.carZoom #gxSu.g2 .gxCards{box-sizing:border-box!important;left:clamp(20px,3vw,44px)!important;right:auto!important;margin:0!important;width:min(34vw,400px)!important;transform:none!important}
 #s8setup.carZoom #gxSu.g2 .gxCards .gxr{box-sizing:border-box!important;width:100%!important;margin:0!important;min-width:0!important}
 #s8setup.carZoom #gxSu.g2,#s8setup.carZoom #gxSu.g2 .gxHero,#s8setup.carZoom #gxSu.g2 .gxHero *{overflow:visible!important;clip-path:none!important}
+#s8setup.carZoom #gxSu .gxCard.pf.zOff{display:none!important}
 #s8setup.carZoom #gxSu.g2 .gxCards h5,#s8setup.carZoom #gxSu.g2 .gxCards .gxCard.empty{display:none!important}
 #s8setup.prepLive.pillOn #gxSu.g2 .gxst{display:grid;grid-template-columns:auto minmax(110px,190px) auto;gap:7px 12px;align-items:center;margin-top:12px;font:500 clamp(10px,1.3vh,13px) var(--gt);letter-spacing:.14em;text-transform:uppercase;color:#aebfd0;text-shadow:0 1px 6px #000}
 #s8setup.prepLive.pillOn #gxSu.g2 .gxst u{display:block;height:4px;border-radius:2px!important;background:#ffffff26;overflow:hidden}
@@ -251,10 +252,11 @@ function camRace(s,now){const T=s.T;if(!s.shot)nextShot(s);let sh=s.shot,t=(now-
  {const dtc=Math.min(.1,Math.max(.001,(now-(s._pn||now))/1000));s._pn=now;if(s._psh!==sh){s._psh=sh;s._cp=P_.clone();s._cl=L.clone()}const k=1-Math.exp(-dtc*6),k2=1-Math.exp(-dtc*3);s._cp.lerp(P_,k);s._cl.lerp(L,k2);P_.copy(s._cp);L.copy(s._cl);const g2=GBf(T,P_.x,P_.z);if(isFinite(g2)&&P_.y<g2+1.6)P_.y=g2+1.6}
  cam.position.copy(P_);cam.lookAt(L);s.look=L;return sh.kind==='aerial'?b2(s):null}
 const b2=s=>s.box.e*2.4+700;
+P.prepZoomed=()=>!!(S&&S.zoom>=0&&document.getElementById('s8setup').classList.contains('carZoom'));P.prepUnzoom=()=>{if(S)S.zoom=-1;const w=document.getElementById('s8setup');if(w){w.classList.remove('carZoom');w.querySelectorAll('#gxSu .gxCard.pf.zOff').forEach(c=>c.classList.remove('zOff'));const tn=w.querySelector('#gxSu .gxTn');if(tn)tn.style.removeProperty('margin-left')}};
 let drag=0,dragX=null;
 /* the hint, the close button and the label of the car button, kept in the setup box */
 function carChrome(sec,s){const box=document.getElementById('gxSu');if(!box)return;let h=document.getElementById('prepHint');if(!h){h=document.createElement('div');h.id='prepHint';h.textContent='Click a car to customise it';box.appendChild(h)}
- let x=document.getElementById('prepZoomX');if(!x){x=document.createElement('button');x.id='prepZoomX';x.type='button';x.textContent='\u2039 All cars';x.onclick=e=>{e.stopPropagation();if(S)S.zoom=-1};box.appendChild(x)}
+ {const x=document.getElementById('prepZoomX');if(x)x.remove()}/* Nov 12: the Back button un-zooms now */
  box.querySelectorAll('.gxr .l').forEach(l=>{if(l.textContent==='Car')l.textContent='Change car'})}
 document.addEventListener('click',e=>{const s=S;if(!s||!s.cars||!s.cars.length||!document.getElementById('s8setup').classList.contains('prepLive'))return;if(!e.target.closest||e.target.closest('button,input,.gxr,.gxCard,.gxTn,.gxMapBox,.foot8,#suSteps'))return;if(!e.target.closest('#gxSu'))return;
  const rc=cv.getBoundingClientRect(),ray=new THREE.Raycaster();ray.setFromCamera(new THREE.Vector2(((e.clientX-rc.left)/rc.width)*2-1,-(((e.clientY-rc.top)/rc.height)*2-1)),cam);
@@ -303,7 +305,7 @@ function frame(now){raf=requestAnimationFrame(frame);const w=want();
  lastDraw=now;fcount++;
  const s=S,dt=Math.min(.05,(now-(lastT||now))/1000);lastT=now;if(!size(w.sec))return;
  if(w.step===2){carsFor(s,w.cars);for(const c of s.cars)c.visible=true}else for(const c of s.cars)c.visible=false;
- if(w.step!==2||!s.cars.length)s.zoom=-1;w.sec.classList.toggle('carIdle',w.step===2&&FAST()&&s.zoom<0);w.sec.classList.toggle('carSolo',w.step===2&&s.cars.length===1);w.sec.classList.toggle('carZoom',w.step===2&&FAST()&&s.zoom>=0);if(s.zoom>=0){const tn=w.sec.querySelector('#gxSu .gxTn'),cd=w.sec.querySelector('#gxSu .gxCards');if(tn&&cd){tn.style.setProperty('margin-left','0px','important');const d=cd.getBoundingClientRect().left-tn.getBoundingClientRect().left;if(Math.abs(d)>1)tn.style.setProperty('margin-left',d+'px','important')}}
+ if(w.step!==2||!s.cars.length)s.zoom=-1;w.sec.classList.toggle('carIdle',w.step===2&&FAST()&&s.zoom<0);w.sec.classList.toggle('carSolo',w.step===2&&s.cars.length===1);w.sec.classList.toggle('carZoom',w.step===2&&FAST()&&s.zoom>=0);{const cs=w.sec.querySelectorAll('#gxSu .gxCard.pf');cs.forEach((c,i)=>c.classList.toggle('zOff',s.zoom>=0&&i!==s.zoom))}if(s.zoom>=0){const tn=w.sec.querySelector('#gxSu .gxTn'),cd=w.sec.querySelector('#gxSu .gxCards');if(tn&&cd){tn.style.setProperty('margin-left','0px','important');const d=cd.getBoundingClientRect().left-tn.getBoundingClientRect().left;if(Math.abs(d)>1)tn.style.setProperty('margin-left',d+'px','important')}}
  carChrome(w.sec,s);
  if(FAST()&&!(window.PTO&&window.PTO.prepStudio===false)){studio(s,w.step===2&&s.cars.length>0);if(s.stOn&&s.stGrp&&s.cars.length){const c0=s.cars[0];s.stGrp.position.set(c0.position.x,c0.position.y-.02,c0.position.z)}}
  if(s.step!==w.step){s.step=w.step;s.shot=null;s.sh=0;s.ang=0;cv.classList.remove('cut');pend=null}
