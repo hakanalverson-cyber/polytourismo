@@ -20,7 +20,10 @@ const SR=v=>2.25-.033*Math.min(Math.abs(v),42),GS=v=>v>40?Math.pow(40/v,.85):1;
 /* Nov 10 (Hakan: "the steering is WAY too sensitive", measured on a straight at 10/18/28/40 m/s with a full-lock tap: 110/95/76/54 deg/s of yaw, 2 to 3.8 g sideways, about 3x what a road car manages): the wheel is scaled by SK(v), a flat 0.4 from 8 m/s up (a full-lock tap now gives about 1.2 to 1.5 g), fading to 0.6 at a crawl so parking turns stay tight. PTO.calmSteer===false puts it back. */
 const SK=v=>window.PTO&&window.PTO.calmSteer===false?1:(v<=10?1:.4+.6*Math.exp(-(v-10)/20));/* Nov 11 (Hakan: too little steering at low speed, too much at high): full wheel up to 10 m/s, then a smooth fall to about a third by 55 m/s */
 P.loose=c=>{const d=(RACE.T&&RACE.T.d)||{};return d.gravel!==0||c.onRoad===false};/* Nov 11: gravel felt like turning a ship, so loose surfaces get 1.35x the wheel and a higher sideways cap */
-P.arcSteerK=c=>{const dk=P.dialK?P.dialK():1,vk=P.VK?P.VK():1,k=SK(Math.abs(c.sp||0))*(rallyOn(c)&&P.loose(c)?1.35:1);if(dk===1&&vk===1)return k;const v=Math.max(2,c.sp||0),u=v*dk;return k*SR(u)*GS(u)/(dk*vk*SR(v)*GS(v))};
+/* Nov 11 (Hakan: Quick Play has bad understeer, cut it by 45%): on the road tracks of Quick Play the wheel loss from the speed curve is 55% of what it was and the sideways limit is 45% higher */
+const QP0=c=>{const R=typeof RACE!=='undefined'?RACE:null,f=R&&R.cfg;return !!(f&&!f.rally&&!f.circuit&&!f.trackRace&&!(P.trkPhys&&P.trkPhys()))};
+const QP=c=>true;/* Nov 11 (Hakan: same handling in every mode, less understeer): applies to Rally and Track as well */
+P.arcSteerK=c=>{const dk=P.dialK?P.dialK():1,vk=P.VK?P.VK():1;let k=SK(Math.abs(c.sp||0));if(QP(c))k=1-.55*(1-k);if(dk===1&&vk===1)return k;const v=Math.max(2,c.sp||0),u=v*dk;return k*SR(u)*GS(u)/(dk*vk*SR(v)*GS(v))};
 /* rally: some drift. The core's drift mode (grip eased toward 24% of normal at the rear, an assist that holds the slide angle) is started on
    a stage by lifting off or braking into a corner at speed, or by full lock on the power on a loose surface, and lasts while the wheel is
    turned (counter-steer included). Its grip loss is capped at 75% of the full drift and it never pays the drift boost here */
