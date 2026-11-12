@@ -252,7 +252,7 @@ function dressIM(T,sc){
  const built=(x,z)=>OC.has(ok_(x,z));
  const AUT={or:{'#0e1709':'#3c1604','#16270f':'#52280a'},ye:{'#0e1709':'#3a2c04','#16270f':'#5a4a12'},ru:{'#0e1709':'#2a0c04','#16270f':'#421a0a'}};
  /* ---- every tree where the real one stands: broadleaf (mostly green, some turning), Italian cypresses, stone pines ---- */
- {const tp=new Int16Array(irB(IR.tp).buffer),tk=irB(IR.tk),n=tk.length/3,G=[[],[],[],[]],CY=[],ST=[],FB=[],FC=[],FU=[];
+ if(IR&&IR.tp&&IR.tk){const tp=new Int16Array(irB(IR.tp).buffer),tk=irB(IR.tk),n=tk.length/3,G=[[],[],[],[]],CY=[],ST=[],FB=[],FC=[],FU=[];
   const FAR=[0x2f5a26,0x3a6a2c,0x2a4f22,0x46722f,0x5a6a26];
   for(let i=0;i<n;i++){const x=tp[i*3]/4,z=tp[i*3+1]/4,kd=tk[i*3],h=tk[i*3+1]/5;
    const r=((i*2654435761)>>>0)/4294967296,y=T.terr(x,z),rot=r*6.28,[,,ex]=near(x,z);
