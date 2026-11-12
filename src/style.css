@@ -1796,3 +1796,33 @@ body.rprep #rlPace,body.rreplay #rlPace{display:none!important}
 #ptOptions select option,#ptOptions select optgroup,select option{background:#11161d!important;color:#e9eef4!important}
 #ptOptions select option:checked,select option:checked{background:#2b4a6e!important;color:#fff!important}
 select,#ptOptions select{color-scheme:dark!important}
+
+/* ===== Nov 12 (Hakan: redo all UI so it looks the same and better, PS3 / Gran Turismo 5-6 feel): one shared skin on top of every screen =====
+   glossy glass panels with a bright top edge, light blue (#8fb4d8 to #33608c) selection, silver buttons, soft shadows and one easing */
+:root{--ps-b1:#8fb4d8;--ps-b2:#4f7eab;--ps-b3:#33608c;--ps-glass:linear-gradient(180deg,#ffffff1c 0%,#ffffff08 42%,#00000022 100%);--ps-ease:cubic-bezier(.2,.7,.2,1)}
+/* top bar: gloss line and a bright rule under it */
+.hdr,#hdr8,.top8{box-shadow:inset 0 1px 0 #ffffff2a,0 1px 0 #00000099,0 2px 0 #ffffff12!important;background-image:linear-gradient(180deg,#ffffff14,#ffffff00 55%,#00000030)!important}
+/* every button: glass pill with a lit top edge, silver when it is the main action */
+.btn{border-radius:999px!important;clip-path:none!important;border:1px solid #ffffff26!important;background:linear-gradient(180deg,#3a424e 0%,#1d232b 48%,#12171d 52%,#1a2028 100%)!important;box-shadow:inset 0 1px 0 #ffffff3d,0 2px 6px #0009!important;transition:transform .12s var(--ps-ease),filter .12s,box-shadow .12s!important}
+.btn:hover{filter:brightness(1.22);transform:translateY(-1px)}
+.btn:active{transform:translateY(1px);filter:brightness(.92)}
+.btn.go,.btn#suGo,#suGo{background:linear-gradient(180deg,#f4f6f8 0%,#c6ccd3 46%,#9ea6af 52%,#c0c7cf 100%)!important;color:#12161b!important;border-color:#ffffffaa!important;box-shadow:inset 0 1px 0 #fff,0 0 0 2px #00000066,0 4px 14px #000a!important}
+/* selected / focused rows and tabs: the light-blue gel */
+#suSteps .sel,#ptOptions nav button.sel{color:#fff!important;text-shadow:0 1px 0 #0008;background-image:linear-gradient(180deg,#8fb4d8e6 0%,#4f7eabee 48%,#33608cee 52%,#4a77a3ee 100%)!important}
+.gc,.sect,.ci,.mk{border-radius:10px!important;border:1px solid #ffffff1c!important;background-image:var(--ps-glass)!important;box-shadow:inset 0 1px 0 #ffffff26,0 6px 18px #0007!important;transition:transform .16s var(--ps-ease),border-color .16s,box-shadow .16s!important}
+.gc:hover,.sect:hover,.ci:hover,.mk:hover{transform:translateY(-3px);border-color:#8fb4d8cc!important;box-shadow:inset 0 1px 0 #ffffff40,0 0 0 1px #8fb4d866,0 10px 26px #000a!important}
+.gc.sel,.ci.sel{border-color:#cfe3f6!important;box-shadow:inset 0 1px 0 #fff6,0 0 0 2px #8fb4d899,0 0 26px #4f7eab88!important}
+/* section headings and chips */
+.gh{letter-spacing:.2em!important;text-transform:uppercase;border-bottom:1px solid #ffffff1f!important;box-shadow:0 1px 0 #00000088}
+.cats button,.gtools .of{border-radius:999px!important;border:1px solid #ffffff22!important;background-image:linear-gradient(180deg,#ffffff22,#ffffff05 50%,#00000030)!important;box-shadow:inset 0 1px 0 #ffffff33,0 2px 6px #0006!important;transition:filter .12s,transform .12s!important}
+.cats button:hover{filter:brightness(1.3);transform:translateY(-1px)}
+/* option and pause screens */
+#ptOptions main label,#pause .b button,#bkPause .b button{border-radius:8px!important;background-image:var(--ps-glass)!important;box-shadow:inset 0 1px 0 #ffffff26,0 3px 10px #0007!important}
+#pause .b button:hover,#bkPause .b button:hover{filter:brightness(1.25)}
+#ptOptions nav button{border-radius:8px!important}
+/* panels */
+.gxCard,.gxTn,.panel8,.stat,.card8{border-radius:12px!important;box-shadow:inset 0 1px 0 #ffffff26,0 10px 30px #0008!important}
+/* inputs */
+input.nm,#ptOptions input[type=text],#ptOptions select{border-radius:8px!important;box-shadow:inset 0 1px 3px #000c,0 1px 0 #ffffff1f!important}
+/* thin scrollbars in the same blue */
+*{scrollbar-width:thin;scrollbar-color:#4f7eab55 transparent}
