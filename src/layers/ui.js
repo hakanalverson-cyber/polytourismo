@@ -495,7 +495,7 @@ function gxSetup(){const sec=$('s8setup');if(!sec)return;if(ST.custom){ST.custom
  const rows=[],src=$('suCfg');
  /* track: cycled here, except in Track Mode where the circuit was picked on the cards */
  const tl=D.map((d,i)=>okTrack(m,i)?i:-1).filter(i=>i>=0);
- rows.push({l:m==='rally'?'Stage':m==='track'?'Circuit':'Track',v:D[ST.track].name,opts:tl.length,go:d=>{const k=tl.indexOf(ST.track);ST.track=tl[((k<0?0:k)+d+tl.length)%tl.length];renderSetup()}});
+ rows.push({l:m==='rally'?'Stage':m==='track'?'Circuit':'Track',v:D[ST.track].name,opts:tl.length,tl,go:d=>{const k=tl.indexOf(ST.track);ST.track=tl[((k<0?0:k)+d+tl.length)%tl.length];renderSetup()}});
  const segRow=(id,label)=>{const s=src.querySelector('#'+id);if(!s)return null;const bs=[...s.querySelectorAll('button')];if(!bs.length)return null;const k=Math.max(0,bs.findIndex(b=>b.classList.contains('sel')));
   return{l:label,v:bs[k].textContent.trim(),opts:bs.length,go:d=>{const n=((k+d)%bs.length+bs.length)%bs.length;if(n!==k){P.sfx&&P.sfx('move');bs[n].click()}}}};
  for(const id of GX_ORDER){const r=segRow(id,GX_NAME[id]);if(r)rows.push(r)}
@@ -515,6 +515,11 @@ function gxSetup(){const sec=$('s8setup');if(!sec)return;if(ST.custom){ST.custom
  gxRender(box,{kind:m==='rally'?'Stage':m==='track'?'Circuit':'Track',name:D[ST.track].name,facts:info,extra:ta?ta.outerHTML:'',shot:()=>{if(m==='rally'&&P.rallyMap&&D[ST.track].cartoon&&D[ST.track].cartoon.stage){const cv=$('gxShot'),oc=document.createElement('canvas');oc.width=960;oc.height=540;cv.classList.add('map','rl');P.rallyMap(ST.track,oc);cv.getContext('2d').drawImage(oc,0,0,cv.width,cv.height);const rf=$('gxRefl');if(rf){const r=rf.getContext('2d');r.clearRect(0,0,rf.width,rf.height);r.drawImage(cv,0,0,rf.width,rf.height)}}else gxShot(ST.track)},map:cv=>{if(m==='rally'&&P.rallyProfile&&D[ST.track].cartoon&&D[ST.track].cartoon.stage)P.rallyProfile(ST.track,cv);else drawTrack(cv,ST.track,false)},rows,go:'Next: car'});
  /* Nov 10 (Hakan): no track pill; the track changes from arrows by the big name, Q/E, or the arrows here */
  GXS.noTrk=!!rows[0]&&!!rows[0].opts&&rows[0].l!=='Drivers';box.classList.toggle('noTrk',GXS.noTrk);
+ /* Nov 12: a course ribbon along the top of the map setup: every course of the mode as a numbered tab, the chosen one lit and centred */
+ {let rb=box.querySelector('#gxCrs');if(rb)rb.remove();const r0=rows[0];if(GXS.noTrk&&r0&&r0.tl&&r0.tl.length>1&&GXS.step===1){rb=document.createElement('div');rb.id='gxCrs';const cur=ST.track;
+  rb.innerHTML='<div class="cr">'+r0.tl.map((i,n)=>'<button data-i="'+i+'" class="'+(i===cur?'on':'')+'"><i>'+String(n+1).padStart(2,'0')+'</i><b>'+D[i].name+'</b></button>').join('')+'</div>';
+  box.appendChild(rb);rb.querySelectorAll('button').forEach(b=>{b.onclick=e=>{e.stopPropagation();const i=+b.dataset.i;if(i===ST.track)return;ST.track=i;P.sfx&&P.sfx('move');renderSetup()}});
+  const on=rb.querySelector('button.on'),cr=rb.firstChild;if(on)cr.scrollLeft=on.offsetLeft-cr.clientWidth/2+on.clientWidth/2}}
  if(GXS.noTrk){const tn=box.querySelector('.gxTn b');if(tn&&!box.querySelector('.gxTnA')){for(const d of[-1,1]){const a=document.createElement('button');a.className='gxTnA';a.dataset.d=d;a.setAttribute('aria-label',d<0?'Previous':'Next');a.textContent=d<0?'\u2039':'\u203A';a.onclick=e=>{e.stopPropagation();P.sfx&&P.sfx('move');rows[0].go(d)};if(d<0)tn.before(a);else tn.after(a)}}
   if(m==='track'&&P.loadTrackFile&&!box.querySelector('.gxAddTf')){const fc=box.querySelector('.gxFacts');if(fc){const b=document.createElement('button');b.className='gxAddTf';b.textContent='+ Add track file';const inp=document.createElement('input');inp.type='file';inp.accept='.ptrack,.json,.gz';inp.style.display='none';inp.onchange=async()=>{const f=inp.files&&inp.files[0];if(!f)return;b.textContent='Loading...';try{const r=await P.loadTrackFile(f);ST.track=r.i;renderSetup()}catch(e){b.textContent='Could not load that file'}};b.onclick=e=>{e.stopPropagation();inp.click()};fc.after(b);fc.after(inp)}}
   if(GXS.f===0){GXS.f=Math.min(1,rows.length-1);box.querySelectorAll('.gxr').forEach(x=>x.classList.toggle('on',+x.dataset.i===GXS.f))}

@@ -98,6 +98,7 @@ window.PT8_BOOT=new Promise(res=>{const run=()=>setTimeout(async()=>{try{const B
   /* the card pictures of the main menu and the Quickplay setup previews are decoded now, so nothing pops in on the menu after loading */
   for(const u of(P.menuImgs||[])){const m=/^url\((.*)\)$/.exec(u);if(m)job(0,'MENU',()=>{const im=new Image();im.src=m[1];return im.decode().then(()=>true)})}
   /* loading the kept pictures: four at a time; the ones that are not kept wait in REST */
+  job(0,'MENU',()=>P.prepWarm?P.prepWarm():true);job(0,'CARS',()=>{try{const ids=Object.keys(P.BYID||{});if(P.carThumb&&ids.length)P.carThumb(ids[0])}catch(e){}return true});
   J.sort((a,b)=>a[0]-b[0]);BP(.5);let n=0,ix=0;
   const worker=async()=>{while(ix<J.length){const j=J[ix++];let ok=false;try{ok=await Promise.race([j[2](true),new Promise(r=>setTimeout(()=>r(false),20000))])}catch(e){}if(!ok)REST.push(j);BP(.5+.5*(++n)/J.length)}};
   await Promise.all([worker(),worker(),worker(),worker()]);

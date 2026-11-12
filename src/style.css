@@ -1833,3 +1833,13 @@ input.nm,#ptOptions input[type=text],#ptOptions select{border-radius:8px!importa
 /* Nov 12: the menu backdrops no longer zoom slowly (a constantly repainted full-screen layer behind the glass caused frame drops); they only crossfade */
 #gxBg canvas.on,#v8Bg canvas.on{animation:none!important;transform:none!important;will-change:opacity}
 #gxBg canvas,#v8Bg canvas{transform:none!important}
+
+/* Nov 12: course ribbon on the map setup */
+#gxSu #gxCrs{position:absolute;left:0;right:0;top:12px;z-index:5;display:flex;justify-content:center;pointer-events:none}
+#gxSu #gxCrs .cr{display:flex;gap:6px;max-width:min(92%,1200px);overflow-x:auto;scrollbar-width:none;padding:6px 40px;pointer-events:auto;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);scroll-behavior:smooth}
+#gxSu #gxCrs .cr::-webkit-scrollbar{display:none}
+#gxSu #gxCrs button{all:unset;box-sizing:border-box;cursor:pointer;flex:none;display:flex;align-items:baseline;gap:8px;padding:8px 16px 9px;border-radius:14px;background:linear-gradient(180deg,#ffffff1f,#ffffff08 50%,#0000001a 52%,#ffffff0d);border:1px solid #ffffff2a;box-shadow:inset 0 1px 0 #ffffff33,0 3px 10px #0007;color:#cdd6dd;font:600 12px var(--gt);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;backdrop-filter:blur(6px)}
+#gxSu #gxCrs button i{font:italic 800 10px var(--gt);color:#8fb4d8;letter-spacing:.14em;font-style:normal}
+#gxSu #gxCrs button:hover{background:linear-gradient(180deg,#ffffff33,#ffffff12 50%,#0000001a 52%,#ffffff18);color:#fff}
+#gxSu #gxCrs button.on{background:linear-gradient(180deg,#8fb4d8e0 0%,#4f7eabe8 48%,#33608ce8 52%,#4a77a3e8 100%);border-color:#bfd8f0aa;color:#fff}
+#gxSu #gxCrs button.on i{color:#e6f0fa}
