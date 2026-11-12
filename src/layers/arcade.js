@@ -37,7 +37,7 @@ setTimeout(()=>{const hb0=window.PT8_HB;window.PT8_HB=c=>rallyOn(c)?rallyHB(c):h
 {const sc0=stepCar;stepCar=function(c,dt){const r=sc0.apply(this,arguments);if(rallyOn(c)){if(c.ptBlend>.75)c.ptBlend=.75;c.dts=0}
  if(dt>0&&hu(c)&&P.arcade()&&!(window.PTO&&window.PTO.calmSteer===false)){const sp=Math.abs(c.sp||0),yr=c.yr||0;if(sp>4){const rl=rallyOn(c),lo=rl&&P.loose(c),lim=((lo?16:rl?13:16)+6*Math.exp(-(Math.max(sp,10)-10)/30))/sp*(P.VK?1/Math.max(1,P.VK()):1)*(P.dialK?Math.max(1,P.dialK()):1);if(Math.abs(yr)>lim){const ny=Math.sign(yr)*lim;c.yaw-=(yr-ny)*dt;c.yr=ny}}}
  return r}}
-{const m0=P.mul;P.mul=c=>{const m=m0?m0(c):{acc:1,top:1,grip:1,brk:1};if(hu(c)&&P.arcade()){m.grip*=1.3;m.brk*=1.35;if(RACE&&RACE.cfg&&RACE.cfg.rally&&!RACE.cfg.circuit)m.acc*=.85}return m}}
+{const m0=P.mul;P.mul=c=>{const m=m0?m0(c):{acc:1,top:1,grip:1,brk:1};if(hu(c)&&P.arcade()){m.grip*=1.3;m.brk*=1.35;if(RACE&&RACE.cfg&&RACE.cfg.rally&&!RACE.cfg.circuit)m.acc*=1.2}return m}}
 /* steering ramp rate: 7 per second in the base game, 12 here */
 P.arcSnap=c=>hu(c)&&P.arcade()?(window.PTO&&window.PTO.calmSteer===false?12:13):7;
 /* wall contact: the base pushes back 1.3x the speed into the wall (a bounce off it); here 1.05x, and the nose is eased toward the
