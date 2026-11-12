@@ -300,7 +300,7 @@ function sorted(){return S.drv.filter(d=>d.time!=null).sort((a,b)=>a.time-b.time
 function standingsHTML(fin){const done=sorted(),lead=done.length?done[0].time:0;
  return P.lbHTML(done.map((d,i)=>({place:i+1,name:d.name.replace(/</g,''),car:BYID[d.id].name,time:d.time,best:d.best,col:PCOL[d.p%4],human:true,medal:d.medal,gap:fin&&i?'+'+(d.time-lead).toFixed(2):''})),{mode:'rally'})}
 const splitsHTML=d=>(d.pen?`<div class="rl-note">CUT PENALTIES / +${d.pen.toFixed(1)} s (${Math.round(d.pen/5)} cut${d.pen>5?'s':''}) included in the time</div>`:'')+(d.splits&&d.splits.length?`<div class="rl-spl">${d.splits.map((t,k)=>`<span>CP${k+1}<b>${fmt(t)}</b></span>`).join('')}</div>`:'');
-const sr0=P.showResults;
+const sr0=P.showResults;P.rallyMid=()=>!!(S&&S.drv&&S.i<S.drv.length-1);
 P.showResults=function(){const Rc=RACE;if(!(Rc&&Rc.cfg&&Rc.cfg.rally&&S))return sr0.apply(this,arguments);
  const c=human(Rc),d=S.drv[S.i];d.pen=Rc.pen||0;d.time=c&&c.fin?c.finT+d.pen:null;d.laps=(c&&c.lapT)||[];d.best=d.laps.length?Math.min(...d.laps):null;d.splits=(Rc.splits||[]).slice();d.rec=Rc.rec||null;
  if(d.time==null){d.time=((c&&c.finT)||9999)+d.pen}
