@@ -244,16 +244,6 @@ const mi=(n,l)=>'<svg class="mi" viewBox="0 0 24 24" fill="none" stroke="current
    if(x){n=x.n;stillTo(bg,x.src);if(!menu.classList.contains('gxBgOn')){menu.classList.add('gxBgOn');for(const e of menu.children){if(e===bg)continue;const st=getComputedStyle(e);if(st.position==='static')e.style.position='relative';if(!(+st.zIndex>0))e.style.zIndex=1}}}
    t=setTimeout(step,bg.children.length&&bg.dataset.ph!=='1'?7000:300)};
   P.menuBg=step;setTimeout(step,50)}
- /* Nov 12 (Hakan: old PS3 main menu, Gran Turismo 5): the menu backdrop is the XMB's slow flowing ribbons, drawn small and scaled up */
- {const bg=$('gxBg')||menu.querySelector('#gxBg');if(bg){const cv=document.createElement('canvas');cv.id='gxWave';cv.width=480;cv.height=270;menu.insertBefore(cv,bg);const g=cv.getContext('2d');let t0=performance.now(),last=0;
-  const draw=now=>{requestAnimationFrame(draw);if(scr!=='menu'||document.hidden||now-last<33)return;last=now;const t=(now-t0)/1000,W=cv.width,H=cv.height;
-   const gr=g.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#050a1c');gr.addColorStop(.55,'#0e2152');gr.addColorStop(1,'#04070f');g.fillStyle=gr;g.fillRect(0,0,W,H);
-   for(let k=0;k<5;k++){const ph=k*1.3,amp=H*(.08+.03*k),y0=H*(.46+.05*k-.1);g.beginPath();g.moveTo(0,H);for(let x=0;x<=W;x+=12){const u=x/W;g.lineTo(x,y0+Math.sin(u*5.2+t*.35+ph)*amp+Math.sin(u*2.3-t*.22+ph*2)*amp*.8)}g.lineTo(W,H);g.closePath();
-    const f=g.createLinearGradient(0,y0-amp,0,y0+amp*2.4);f.addColorStop(0,'rgba(150,190,255,'+(.17-k*.02)+')');f.addColorStop(.5,'rgba(70,110,210,'+(.07)+')');f.addColorStop(1,'rgba(10,20,60,0)');g.fillStyle=f;g.fill();
-    g.lineWidth=1.2;g.strokeStyle='rgba(200,225,255,'+(.22-k*.03)+')';g.beginPath();for(let x=0;x<=W;x+=12){const u=x/W;const y=y0+Math.sin(u*5.2+t*.35+ph)*amp+Math.sin(u*2.3-t*.22+ph*2)*amp*.8;x?g.lineTo(x,y):g.moveTo(x,y)}g.stroke()}
-   /* drifting specks */
-   g.fillStyle='rgba(220,235,255,.5)';for(let i=0;i<34;i++){const x=((i*97.3+t*(4+i%5))%W),y=(i*53.7+Math.sin(t*.3+i)*8)%H;g.fillRect(x,y,1.3,1.3)}};
-  requestAnimationFrame(draw)}}
  /* the screens without a backdrop of their own (modes, circuit select, race office, the rally car step) sit on the same stills, dimmed under the glass */
  {const bg=document.createElement('div');bg.id='v8Bg';root.insertBefore(bg,root.firstChild);let n=Math.random()*8|0,t=0;
   const step=()=>{clearTimeout(t);const x=bg.classList.contains('on')?nextStill(bg,n):null;if(x){n=x.n;stillTo(bg,x.src)}t=setTimeout(step,bg.children.length&&bg.dataset.ph!=='1'?9000:500)};

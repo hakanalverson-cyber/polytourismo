@@ -1826,35 +1826,3 @@ select,#ptOptions select{color-scheme:dark!important}
 input.nm,#ptOptions input[type=text],#ptOptions select{border-radius:8px!important;box-shadow:inset 0 1px 3px #000c,0 1px 0 #ffffff1f!important}
 /* thin scrollbars in the same blue */
 *{scrollbar-width:thin;scrollbar-color:#4f7eab55 transparent}
-
-/* ===== Nov 12: main menu as the PS3 XMB / Gran Turismo 5 home: a row of glossy tiles over flowing ribbons ===== */
-#menu #gxBg canvas:not(#gxWave){display:none!important}
-#gxWave{position:fixed;inset:0;z-index:0;pointer-events:none;width:100%;height:100%;object-fit:cover;opacity:1!important;transform:none!important;animation:none!important}
-#gxBg:after{background:radial-gradient(ellipse at 50% 55%,transparent 40%,#000a 100%)!important}
-#gxShade{display:none!important}
-#gxBot{left:0!important;right:0!important;top:66px!important;bottom:0!important;width:100%!important;height:auto!important;padding:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;border:0!important;backdrop-filter:none!important;pointer-events:none}
-#gxBot>*{pointer-events:auto}
-#gxBot .gxpf{position:absolute;left:4vw;top:22px;margin:0;padding:6px 14px 6px 8px;border:1px solid #ffffff22;border-radius:999px;background:linear-gradient(180deg,#ffffff1c,#00000040);box-shadow:inset 0 1px 0 #ffffff3a}
-#gxBot .gxpf .av{width:38px;height:38px;border-radius:50%!important}
-#gxBot .gxdock{position:absolute!important;left:0;right:0;top:30vh;display:flex!important;flex-direction:row!important;justify-content:center;align-items:flex-end;gap:clamp(14px,2.4vw,40px)!important;width:auto!important;min-width:0!important}
-#gxBot .gxm{position:relative;flex:none;width:clamp(120px,14vw,220px)!important;height:clamp(120px,14vw,220px)!important;padding:0;border:1px solid #ffffff30!important;border-radius:8px!important;overflow:hidden!important;background:#0c1220!important;opacity:.72!important;transform:scale(.88)!important;transition:transform .22s var(--ps-ease),opacity .22s,box-shadow .22s,border-color .22s!important;box-shadow:inset 0 1px 0 #ffffff3a,0 10px 24px #000a!important}
-#gxBot .gxm i{display:block!important;position:absolute;inset:0;background-size:cover;background-position:center;filter:saturate(.8) brightness(.55);transition:filter .22s}
-#gxBot .gxm:before{content:"";position:absolute;left:0;right:0;top:0;height:46%;background:linear-gradient(180deg,#ffffff38,#ffffff00);z-index:2;pointer-events:none}
-#gxBot .gxm b{position:absolute!important;inset:0;height:auto!important;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:8px!important;padding:0 8px!important;border-radius:0!important;font:400 clamp(14px,2.1vh,22px) var(--gt)!important;letter-spacing:.06em!important;text-align:center;color:#e6eef8!important;background:linear-gradient(0deg,#000000b0 0%,#00000030 55%,#00000000 100%)!important;box-shadow:none!important;text-shadow:0 2px 6px #000;z-index:1}
-#gxBot .gxm b .mi{width:clamp(34px,5.2vh,56px)!important;height:clamp(34px,5.2vh,56px)!important;opacity:.95!important;filter:drop-shadow(0 2px 6px #000b)}
-#gxBot .gxm .gxc{margin:0!important;font:400 clamp(9px,1.25vh,12px) var(--gt)!important;letter-spacing:.2em!important;color:#a9c4e2!important}
-#gxBot .gxm.on{opacity:1!important;transform:scale(1.14) translateY(-8px)!important;border-color:#dcebfa!important;box-shadow:inset 0 1px 0 #fff8,0 0 0 2px #8fb4d8aa,0 0 36px #4f7eabbb,0 18px 34px #000c!important;z-index:3}
-#gxBot .gxm.on i{filter:saturate(1.05) brightness(.9)}
-#gxBot .gxm.on b{background:linear-gradient(0deg,#0a1a36d0 0%,#10264a40 50%,#0000 100%)!important;color:#fff!important}
-#gxBot .gxm:hover{opacity:.95!important}
-/* mirror under the row, like the XMB / GT5 shelf */
-#gxBot .gxdock:after{content:"";position:absolute;left:8vw;right:8vw;bottom:-26px;height:1px;background:linear-gradient(90deg,transparent,#ffffff55,transparent);display:none}
-#gxBot .gxds{display:block!important;position:absolute!important;left:0;right:0;top:calc(30vh + clamp(190px,21vw,320px));bottom:auto;text-align:center;font:300 clamp(14px,1.9vh,19px) var(--gt)!important;color:#cfe0f2!important;text-shadow:0 1px 6px #000}
-#gxBot .gxttl{display:none!important}
-
-#menu #gxBg{background:transparent!important}
-#gxBot .gxm i{width:100%!important;height:100%!important;left:0!important;top:0!important;right:0!important;bottom:0!important;margin:0!important}
-#gxBot .gxpf{transform:none!important;perspective:none!important}
-#gxBot .gxds{width:100%!important;box-sizing:border-box;padding:0 6vw;margin:0!important;transform:none!important}
-#gxBot,#gxBot .gxdock,#menu>.gxpad{transform:none!important}
-#gxBot .gxm.on i{filter:saturate(1) brightness(.72)}
