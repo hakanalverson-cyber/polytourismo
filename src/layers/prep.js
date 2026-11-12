@@ -234,7 +234,16 @@ function carsFor(s,list){const k=list.map(c=>c.id+'.'+c.alt).join('|');if(s.carK
 /* ---- the camera ---- */
 const SHOTS=['dolly','crane','orbit','pan','dolly','orbit','crane'];
 function nextShot(s){const T=s.T,N=T.N,sp=T.sp||2;s.sh++;if(s.sh===0&&s.open)s.sh=1;const SL=s.open?['dolly','crane','rev','dolly','crane','rev']:SHOTS,kind=SL[(s.sh-2+SL.length)%SL.length];
- const k0=s.open?Math.random()*(N*.8)+Math.max(N*.05,110/sp):Math.random()*N;s.shot={kind,k0,side:Math.random()<.5?-1:1,t0:performance.now(),dur:kind==='aerial'?9:kind==='pan'?6.5:kind==='crane'?8.5:kind==='orbit'?9:7.5,sp}}
+ /* Nov 12: every shot is built around a corner. The apexes are the sharpest local peaks of curvature; each shot is timed so the
+    moving part of it passes through the bend, and the camera stands on the outside of the turn. */
+ if(!s.cr){const K=P.kappa?P.kappa(T):null,L=[];if(K){const lo=s.open?Math.round(40/sp):0,hi=s.open?Math.round(N*.9):N;for(let i=lo;i<hi;i++){const R_=1/Math.max(K[i],1e-4);if(R_>110)continue;let mx=true;for(let d=-9;d<=9;d++){const j=((i+d)%N+N)%N;if(K[j]>K[i]){mx=false;break}}if(mx)L.push({i,k:K[i]})}}
+  if(L.length<2){for(let i=0;i<N;i+=Math.round(N/8))L.push({i,k:0})}L.sort((a,b)=>b.k-a.k);s.cr=L.slice(0,Math.max(4,Math.min(L.length,14)));s.crN=0;s.crBag=[]}
+ if(!s.crBag.length)s.crBag=s.cr.map((c,i)=>i).sort(()=>Math.random()-.5);
+ const cn=s.cr[s.crBag.pop()],ap=cn.i,dur=kind==='aerial'?9:kind==='pan'?6.5:kind==='crane'?8.5:kind==='orbit'?9:7.5,v=kind==='dolly'||kind==='rev'?(s.open?15:14):kind==='fly'?13:kind==='low'?16:kind==='high'?10:20;
+ const q1=at(T,ap-9,s.open),q2=at(T,ap+9,s.open);let dp=q2.psi-q1.psi;dp=Math.atan2(Math.sin(dp),Math.cos(dp));const out=dp>=0?-1:1;
+ let k0=ap;if(kind==='dolly'||kind==='fly'||kind==='low'||kind==='high'||kind==='rev')k0=ap-(v*dur/2)/sp;else if(kind==='crane')k0=ap-(46+35+5*dur/2)/sp+ (5*dur/2)/sp-(5*dur/2)/sp;else if(kind==='orbit')k0=ap-3.5*dur/2/sp;
+ if(s.open)k0=Math.max(2,Math.min(N-60,k0));
+ s.shot={kind,k0,side:out,t0:performance.now(),dur,sp,apex:ap}}
 function camRace(s,now){const T=s.T;if(!s.shot)nextShot(s);let sh=s.shot,t=(now-sh.t0)/1000;
  if(t>sh.dur&&!pend){pend=1;cv.classList.add('cut');setTimeout(()=>{if(S===s){nextShot(s)}pend=null;setTimeout(()=>cv&&cv.classList.remove('cut'),40)},230)}
  const sp=sh.sp,P_=new THREE.Vector3(),L=new THREE.Vector3();
@@ -248,8 +257,8 @@ function camRace(s,now){const T=s.T;if(!s.shot)nextShot(s);let sh=s.shot,t=(now-
   else if(sh.kind==='orbit'){/* slow circle around a spot on the road while it creeps along */const o=at(T,sh.k0+3.5*t/sp,s.open),ang=side*t*.15+1.1,R=(s.open?32:25)+t*.9;P_.set(o.x+Math.cos(ang)*R,o.y+(s.open?9:3.6)+t*.45,o.z+Math.sin(ang)*R);L.set(o.x,o.y+1.3,o.z)}
   else if(sh.kind==='high'){const a=at(T,f+18/sp,s.open);P_.set(q.x+c*side*42,q.y+48,q.z-sn*side*42);L.set(a.x,a.y,a.z)}
   else{/* pan: a fixed camera by the road that follows a point running past it */const o=at(T,sh.k0,s.open),co=Math.cos(o.psi),so=Math.sin(o.psi),a=at(T,sh.k0+(-60+v*t)/sp,s.open);P_.set(o.x+co*side*(o.hw+13),o.y+2.2,o.z-so*side*(o.hw+11));L.set(a.x,a.y+1,a.z)}}
- const g=GBf(T,P_.x,P_.z);if(isFinite(g)&&P_.y<g+2)P_.y=g+2;
- {const dtc=Math.min(.1,Math.max(.001,(now-(s._pn||now))/1000));s._pn=now;if(s._psh!==sh){s._psh=sh;s._cp=P_.clone();s._cl=L.clone()}const k=1-Math.exp(-dtc*6),k2=1-Math.exp(-dtc*3);s._cp.lerp(P_,k);s._cl.lerp(L,k2);P_.copy(s._cp);L.copy(s._cl);const g2=GBf(T,P_.x,P_.z);if(isFinite(g2)&&P_.y<g2+1.6)P_.y=g2+1.6}
+ const g=GBf(T,P_.x,P_.z);if(isFinite(g)&&P_.y<g+3.2)P_.y=g+3.2;
+ {const dtc=Math.min(.1,Math.max(.001,(now-(s._pn||now))/1000));s._pn=now;if(s._psh!==sh){s._psh=sh;s._cp=P_.clone();s._cl=L.clone()}const k=1-Math.exp(-dtc*6),k2=1-Math.exp(-dtc*3);s._cp.lerp(P_,k);s._cl.lerp(L,k2);P_.copy(s._cp);L.copy(s._cl);const g2=GBf(T,P_.x,P_.z);if(isFinite(g2)&&P_.y<g2+2.8)P_.y=g2+2.8}
  cam.position.copy(P_);cam.lookAt(L);s.look=L;return sh.kind==='aerial'?b2(s):null}
 const b2=s=>s.box.e*2.4+700;
 P.prepZoomed=()=>!!(S&&S.zoom>=0&&document.getElementById('s8setup').classList.contains('carZoom'));P.prepUnzoom=()=>{if(S)S.zoom=-1;const w=document.getElementById('s8setup');if(w){w.classList.remove('carZoom');w.querySelectorAll('#gxSu .zOff').forEach(c=>c.classList.remove('zOff'));const tn=w.querySelector('#gxSu .gxTn');if(tn)tn.style.removeProperty('margin-left')}};
