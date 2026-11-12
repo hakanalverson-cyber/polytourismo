@@ -11,6 +11,7 @@ if(!P||typeof D==='undefined'||typeof THREE==='undefined')return;
 const SLOT={mangrove:'Mangrove Ford',terr:'Terrace Run',ash:'Ashfall Stage',autumn:'Autumn Ridge'};
 P.stagePacks=P.stagePacks||{};
 function addStagePack(pack){
+ if(P.mapScalePack)P.mapScalePack(pack);
  const k=pack.replaces;let i=D.findIndex(d=>d._key===k);if(i<0)i=D.findIndex(d=>d.name===SLOT[k]);
  if(i<0)throw new Error('This stage file is for a stage this game does not have ('+k+')');
  const d=D[i];

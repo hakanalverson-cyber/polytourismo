@@ -26,11 +26,12 @@ P.trackPacks={};
 /* Nov 12 (Hakan: leave the cars at normal size and change the map instead): on the listed tracks the whole model is shrunk by 1/carScale when the file loads
    (road, heights, scenery, walls, start boxes) and the file then counts as carScale 1: cars drawn at their real size, no dial factor, no time
    scale, no extra top speed or pickup, so the handling is the Quick Play one. PTO.mapScale=false switches it off. */
-const MAPSC={ra:1};
-function mapScalePack(pack){if(pack._sc||pack.stage||!MAPSC[pack.replaces]||(window.PTO&&window.PTO.mapScale===false))return;const k=pack.carScale||1;if(!(k>1))return;const f=1/k;
+const MEDSC={ra:73.7,imola:71.4,laguna:68.0,suzuka:93.4,hungaroring:79.5,bathurst:100.9,spa:109.8,nurburg:76.6};
+function mapScalePack(pack){if(pack._sc||!(pack.stage||pack.carScale>1)||(window.PTO&&window.PTO.mapScale===false))return;const k=pack.carScale||1;if(!(k>1))return;const f=1/k;
  pack.pts=pack.pts.map(q=>[q[0]*f,q[1]*f,q[2]*f,q[3]*f]);pack.S=(pack.S||1)*f;const G=pack.grid;G.x0*=f;G.z0*=f;G.cell*=f;G.hs=f;
  pack.over=(pack.over||[]).map(a=>[a[0]*f,a[1]*f]);pack.slots=(pack.slots||[]).map(q=>[q[0]*f,q[1]*f,q[2]*f]);pack.sf=f;
  for(const m of pack.meshes){m.q*=f;m.o=m.o.map(v=>v*f)}
+ if(pack.stage){const st=pack.stage,sc=a=>a&&a.map(v=>v*f);st.len*=f;st.fin=sc(st.fin);if(st.start)st.start=sc(st.start);if(st.net)st.net=st.net.map(v=>v*f);if(st.route)st.route=st.route.map(q=>q.map(v=>v*f));if(st.hw)st.hw=sc(st.hw);if(st.hwMed)st.hwMed*=f;if(st.fords)st.fords=st.fords.map(o=>Object.assign({},o,{x:o.x*f,z:o.z*f}))}
  pack.carScale0=k;pack.carScale=1;pack.mapScaled=1;pack._sc=1}
 P.mapScalePack=mapScalePack;
 P.addTrackPack=pack=>{if(pack.stage){/* a rally stage file (rallymaps.js loads after this layer) */if(P.addStagePack)return P.addStagePack(pack);(P._stageQueue=P._stageQueue||[]).push(pack);return -1}const i=baseOf(pack);if(i<0)throw new Error('This track file is for a track this game does not have ('+pack.replaces+')');const d=D[i];
@@ -39,7 +40,7 @@ P.addTrackPack=pack=>{if(pack.stage){/* a rally stage file (rallymaps.js loads a
  {const nr=(window.PT8_PACKREV||{})[pack.replaces]||0;if((pack.rev||0)<nr){const e=new Error('This '+pack.name+' file is an older version: add the new '+({ra:'road-atlanta',suzuka:'suzuka',laguna:'laguna-seca',hungaroring:'hungaroring',bathurst:'bathurst',spa:'spa',nurburg:'nurburgring'}[pack.replaces]||pack.replaces)+'.ptrack');e.older=true;throw e}}
  if(d.cartoon&&(d.cartoon.rev||0)>(pack.rev||0)){const e=new Error('This is an older version of '+pack.name+' than the one already in the game');e.older=true;throw e}
  if(!d._orig)d._orig={pts:d.pts,bank:d.bank,medal:P.MEDAL_REF[i]};
- mapScalePack(pack);d.pts=pack.pts;d.bank=0;d.cartoon=pack;if(pack.medal)P.MEDAL_REF[i]=pack.medal*(MEDK[pack.replaces]||1);P.trackPacks[pack.id]=pack;
+ mapScalePack(pack);d.pts=pack.pts;d.bank=0;d.cartoon=pack;if(pack.medal)P.MEDAL_REF[i]=pack.medal*(MEDK[pack.replaces]||1);/* Nov 12: on the shrunk maps the gold time is the CPU's measured lap (skill 1, same car, 1 lap from the grid) */if(pack.mapScaled&&MEDSC[pack.replaces])P.MEDAL_REF[i]=MEDSC[pack.replaces];P.trackPacks[pack.id]=pack;
  if(P.ui&&P.ui.trClear)P.ui.trClear(i);return i};
 /* physics: road and ground heights come from the model's surfaces, so the car sits exactly on what is drawn */
 const ss=sampleTrack;sampleTrack=d=>{const T=ss(d);if(!d.cartoon)return T;const {hAt,kAt}=grid(d.cartoon);
@@ -206,7 +207,7 @@ P.menuShot=k=>MNS[k]||(MNS[k]=new Promise(res=>setTimeout(async()=>{let sc=null;
    chase camera, wall contact and car-to-car contact grow with them. Physics speeds are unchanged. */
 const K=()=>{const R=typeof RACE!=="undefined"?RACE:null,d=R&&R.T&&R.T.d;return d&&d.cartoon&&d.cartoon.carScale||1};
 /* the car as drawn: on the bought rally stages it is only a little above real size (Nov 9: "the cars are WAYY too big"); K() still scales the physics, the AI and the camera model */
-P.VK=()=>VK();const VK=()=>{const R=typeof RACE!=="undefined"?RACE:null,d=R&&R.T&&R.T.d;return d&&d.cartoon&&d.cartoon.stage?(P.stageCarK||1.22)/* Nov 10 (Hakan: "the car should be bigger, just a lil"): was 1.1 */:K()};
+P.VK=()=>VK();const VK=()=>{const R=typeof RACE!=="undefined"?RACE:null,d=R&&R.T&&R.T.d;return d&&d.cartoon&&d.cartoon.stage&&!d.cartoon.mapScaled?(P.stageCarK||1.22)/* Nov 10 (Hakan: "the car should be bigger, just a lil"): was 1.1 */:K()};
 /* Track mode on any circuit (the Nordschleife too) gets the same handling as the model tracks: grip that builds with speed, harder brakes,
    the steering feel and the smoothed camera. Top speed, pickup, time scale and the dial factor stay model-track only (those make up for
    the models' size; the Nordschleife is real size) */
