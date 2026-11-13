@@ -213,10 +213,9 @@ P.gx5Draw=(cv,o)=>{const st=window.PTO&&window.PTO.gauge;if(st==='cluster')retur
  const rr=(x,y,w,h,r)=>{g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()};
  const chip=(x,y,w,h,on,col)=>{rr(x,y,w,h,3);const lg=g.createLinearGradient(0,y,0,y+h);if(on){lg.addColorStop(0,'#8fb4d8');lg.addColorStop(.5,'#4f7eab');lg.addColorStop(1,'#33608c')}else{lg.addColorStop(0,'#3a3e44');lg.addColorStop(.5,'#24272c');lg.addColorStop(1,'#17191c')}g.fillStyle=col||lg;g.fill();g.lineWidth=1;g.strokeStyle='#000';g.stroke()};
  const T=(t,x,y,sz,c,al,wt)=>{g.font=(wt||500)+' '+sz+'px '+F;g.fillStyle=c;g.textAlign=al||'center';g.textBaseline='middle';g.fillText(t,x,y)};
- /* gaps */
- {const gap=(x,lab,v,col)=>{chip(x,76,128,22,false);T(lab,x+10,87,8,'rgba(255,255,255,.6)','left',600);if(v==null)T('—',x+118,87,12,'rgba(255,255,255,.4)','right',500);else T((lab==='AHEAD'?'+':'−')+v.toFixed(1)+' s',x+118,87,12.5,col,'right',600)};
-  gap(165,'AHEAD',I.ahead,'#ffd27a');gap(307,'BEHIND',I.behind,'#9fd8ff')}
- if(o.tag)T(o.tag,300,64,12,o.tagCol||'#fff','center',700);
+ /* steering sensor: a dot sliding left and right along a short rule above the plate */
+ {const st=Math.max(-1,Math.min(1,(o.tl&&o.tl.st)||0)),sx=300+st*58;g.fillStyle='rgba(255,255,255,.22)';g.fillRect(240,101,120,1.5);g.fillRect(299,96,2,11);g.beginPath();g.arc(sx,101.7,4.2,0,PI*2);g.fillStyle=Math.abs(st)>.85?'#ffd27a':'#cfe6ff';g.shadowColor='rgba(120,180,255,.9)';g.shadowBlur=6;g.fill();g.shadowBlur=0}
+ if(o.tag)T(o.tag,300,84,11,o.tagCol||'#fff','center',700);
  /* tyres and grip (left) */
  {const cx0=-40,cy0=134,gc=I.grip==null?100:I.grip,tcol=gc>=97?'#9fc3e6':gc>=80?'#f2c76b':'#ef6a5a',dm=I.dmg||0;
   T('TYRES',cx0,92,8,'rgba(255,255,255,.6)','center',600);
@@ -225,26 +224,31 @@ P.gx5Draw=(cv,o)=>{const st=window.PTO&&window.PTO.gauge;if(st==='cluster')retur
   for(const [dx,dy] of[[-19,-22],[11,-22],[-19,10],[11,10]]){rr(cx0+dx,cy0+dy,8,16,2);g.fillStyle=tcol;g.fill();g.lineWidth=1;g.strokeStyle='#000';g.stroke()}
   T((I.surf||'TARMAC'),cx0,cy0+38,8,'rgba(255,255,255,.7)','center',600);T('GRIP '+Math.round(gc)+'%',cx0,cy0+49,9,tcol,'center',600);
   if(I.dmgOn){T('DAMAGE',cx0,cy0+62,8,'rgba(255,255,255,.55)','center',600);const bw=50;g.fillStyle='rgba(255,255,255,.12)';g.fillRect(cx0-bw/2,cy0+68,bw,4);g.fillStyle=dm>=.5?'#ef6a5a':dm>=.2?'#f2c76b':'#9fc3e6';g.fillRect(cx0-bw/2,cy0+68,bw*dm,4)}}
- /* status chips (right) */
- {const x=582,w=70,h=18;[[o.auto?'AUTO':'MANUAL',true],['DAMAGE '+(I.dmgOn?'ON':'OFF'),!!I.dmgOn],['SLIPSTREAM',(I.draft||0)>.12],['LAP '+(I.lap||1)+'/'+(I.laps||1),false]].forEach((c,i)=>{const y=96+i*24;chip(x,y,w,h,c[1]);T(c[0],x+w/2,y+h/2+.5,8,'#fff','center',600)})}
  /* inside the dials: trip and the pedals */
  T('TRIP',92,152,7,'rgba(255,255,255,.55)','center',600);T((I.trip==null?0:I.trip).toFixed(2)+' '+(o.unit==='mph'?'mi':'km'),92,162,9,'#fff','center',600);
  {const bx=508-20,by=152;g.fillStyle='rgba(255,255,255,.12)';g.fillRect(bx,by,17,5);g.fillRect(bx+23,by,17,5);g.fillStyle='#ef6a5a';g.fillRect(bx,by,17*(I.br||0),5);g.fillStyle='#9fd6a8';g.fillRect(bx+23,by,17*(I.th||0),5);T('BRK',bx+8.5,by+12,6.5,'rgba(255,255,255,.55)','center',600);T('THR',bx+31.5,by+12,6.5,'rgba(255,255,255,.55)','center',600)}};
 
 
 /* GT7-inspired info boxes: a position tower on the left (the cars around you with their gaps) and a lap timing box on the right */
-{const st=document.createElement('style');st.textContent=`.gtTw,.gtTm{position:absolute;z-index:4;pointer-events:none;font-family:Inter,"Segoe UI",Arial,sans-serif;color:#fff;transform:scale(var(--s,1));text-shadow:0 1px 2px #000}
-.gtTw{left:12px;top:calc(92px*var(--s,1));transform-origin:0 0;width:176px}
-.gtTw .r{display:flex;align-items:center;height:22px;margin-bottom:2px;padding:0 8px 0 0;border-radius:3px;background:linear-gradient(#2b2f35e6,#17191ce6);border:1px solid rgba(255,255,255,.14);font-size:11px;font-weight:600;letter-spacing:.03em}
-.gtTw .r b{width:24px;text-align:center;font-weight:700;font-style:italic;font-size:12px;color:#c8d0d8}
-.gtTw .r span{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-.gtTw .r em{font-style:normal;font-variant-numeric:tabular-nums;color:#ffd27a;font-size:11px}
+{const st=document.createElement('style');st.textContent=`.gtTw,.gtTm{position:absolute;z-index:4;pointer-events:none;font-family:var(--gt,Inter,"Segoe UI",Arial,sans-serif);color:#fff;transform:scale(max(var(--s,1),.78));text-shadow:0 1px 3px #000c}
+.gtTw{left:12px;top:calc(104px*max(var(--s,1),.78));transform-origin:0 0;width:270px}
+.gtTw .r{display:flex;align-items:center;gap:8px;height:36px;margin-bottom:4px;padding:0 12px 0 0;border-radius:3px;position:relative;overflow:hidden;background:linear-gradient(90deg,#0a0d12ee,#10161dcc 70%,#10161d99);border:1px solid #ffffff22;border-left:3px solid #ffffff33;font:italic 800 13px var(--gt,Inter,sans-serif);letter-spacing:.05em;text-transform:uppercase}
+.gtTw .r:before{content:"";position:absolute;inset:0 0 50% 0;background:linear-gradient(#ffffff1a,#ffffff00)}
+.gtTw .r b{width:34px;text-align:center;font:italic 800 18px var(--gt,Inter,sans-serif);color:#cfd8de;position:relative}
+.gtTw .r span{flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;position:relative}
+.gtTw .r em{font:italic 700 13px var(--gt,Inter,sans-serif);font-variant-numeric:tabular-nums;color:#ffd27a;position:relative}
 .gtTw .r.dn em{color:#9fd8ff}
-.gtTw .r.me{background:linear-gradient(#8fb4d8,#4f7eab 50%,#33608c);border-color:rgba(255,255,255,.5)}
+.gtTw .r.me{border-left-color:#9fd8ff;background:linear-gradient(90deg,#1c2a38f2,#223646d0 70%,#223646aa)}
 .gtTw .r.me b,.gtTw .r.me em{color:#fff}
-.gtTm{right:12px;top:calc(150px*var(--s,1));transform-origin:100% 0;width:158px;padding:6px 9px;border-radius:4px;background:linear-gradient(#2b2f35e6,#17191ce6);border:1px solid rgba(255,255,255,.14)}
-.gtTm div{display:flex;justify-content:space-between;align-items:baseline;font-size:10px;line-height:17px;color:rgba(255,255,255,.62);font-weight:600;letter-spacing:.06em}
-.gtTm div b{font-size:13px;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:0}
+.gtTm{right:12px;top:calc(150px*max(var(--s,1),.78));transform-origin:100% 0;width:190px;padding:8px 12px;border-radius:3px;background:linear-gradient(90deg,#0a0d12ee,#10161dcc 70%,#10161d99);border:1px solid #ffffff22;border-right:3px solid #9fd8ff}
+.gtTm div{display:flex;justify-content:space-between;align-items:baseline;font:italic 700 10px var(--gt,Inter,sans-serif);line-height:20px;color:#aab6bf;letter-spacing:.14em}
+.gtTm div b{font:italic 800 15px var(--gt,Inter,sans-serif);color:#fff;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.gtPass{position:absolute;left:50%;top:calc(16% + 0px);transform:translateX(-50%);z-index:5;pointer-events:none;font-family:var(--gt,Inter,sans-serif);text-align:center;opacity:0;transition:opacity .25s,transform .25s;color:#fff;text-shadow:0 1px 4px #000d}
+.gtPass.on{opacity:1}
+.gtPass div{display:inline-block;padding:7px 22px 8px;border-radius:3px;background:linear-gradient(90deg,#0a0d12ee,#1c2a38ee 50%,#0a0d12ee);border:1px solid #ffffff2a;border-top:2px solid #9fd8ff}
+.gtPass small{display:block;font:italic 800 10px var(--gt,Inter,sans-serif);letter-spacing:.3em;color:#9fd8ff}
+.gtPass b{display:block;font:italic 800 17px var(--gt,Inter,sans-serif);letter-spacing:.05em;text-transform:uppercase}
+.gtPass i{display:block;font:600 10px var(--gt,Inter,sans-serif);letter-spacing:.14em;color:#aab6bf;font-style:normal;text-transform:uppercase}
 .gtTm .dl b.up{color:#ef6a5a}.gtTm .dl b.dn{color:#7fd69a}`;document.head.appendChild(st);
  const hu0=hudUpdate;
  hudUpdate=function(){hu0.apply(this,arguments);try{
@@ -254,6 +258,10 @@ P.gx5Draw=(cv,o)=>{const st=window.PTO&&window.PTO.gauge;if(st==='cluster')retur
    let tw=e.querySelector('.gtTw'),tm=e.querySelector('.gtTm');
    if(!tw){tw=document.createElement('div');tw.className='gtTw';e.appendChild(tw);tm=document.createElement('div');tm.className='gtTm';e.appendChild(tm)}
    tw.style.display=tm.style.display=cut?'none':'';if(cut)return;
+   let pp=e.querySelector('.gtPass');if(!pp){pp=document.createElement('div');pp.className='gtPass';e.appendChild(pp)}
+   {const A=c._ah||(c._ah={}),now=performance.now();Rc.cars.forEach((q,j)=>{if(q===c||q.out)return;const sd=c.unw>q.unw?1:-1,o=A[j]||(A[j]={sd:sd,t:now,seen:false,fired:false});
+     if(o.sd!==sd){o.sd=sd;o.t=now;o.fired=false;o.seen=true}
+     if(sd>0&&o.seen&&!o.fired&&Rc.state==='race'&&now-o.t>700){o.fired=true;const cn=(P.BYID&&P.BYID[q.carId]&&P.BYID[q.carId].name)||'';pp.innerHTML='<div><small>PASSED</small><b>'+cn+'</b><i>'+String(q.ptName||(q.human?'PLAYER '+(q.k+1):'BOT '+(j+1)))+'</i></div>';pp.classList.add('on');clearTimeout(pp._to);pp._to=setTimeout(()=>pp.classList.remove('on'),2800)}})}
    /* tower: up to 5 cars with you in the middle where possible */
    const me=order.indexOf(c);let a=Math.max(0,Math.min(me-2,n-5)),b=Math.min(n,a+5);
    const sp=Math.max(6,c.sp||0);let h='';
