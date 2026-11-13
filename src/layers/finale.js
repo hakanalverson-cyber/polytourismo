@@ -108,6 +108,7 @@ function paint(Rc,ord){const cm=Rc.mode==='cutup',pl=P.fmtT||(t=>t.toFixed(2));
  el.classList.add('on')}
 /* ---------------- run ---------------- */
 function begin(Rc){
+ if(!(window.PTO&&window.PTO.finaleMontage))return false;/* Nov 13: replaced by the drone orbit (camsys.js); the montage stays available with PTO.finaleMontage=true */
  if(!rec||!rec[0]||rec[0].length<30||recFor!==Rc)return false;
  const ord=order(Rc).filter(o=>rec[o.i]&&rec[o.i].length);if(!ord.length)return false;
  F={Rc,ord,sh:build(Rc,ord),k:-1,u:0,tot:0};

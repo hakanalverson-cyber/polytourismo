@@ -1843,3 +1843,16 @@ input.nm,#ptOptions input[type=text],#ptOptions select{border-radius:8px!importa
 #gxSu #gxCrs button:hover{background:linear-gradient(180deg,#ffffff33,#ffffff12 50%,#0000001a 52%,#ffffff18);color:#fff}
 #gxSu #gxCrs button.on{background:linear-gradient(180deg,#8fb4d8e0 0%,#4f7eabe8 48%,#33608ce8 52%,#4a77a3e8 100%);border-color:#bfd8f0aa;color:#fff}
 #gxSu #gxCrs button.on i{color:#e6f0fa}
+
+/* Nov 13: Quick Play drop-down inside the main list: opens under the Quick Play row and pushes the rows below it down */
+#gxBot #gxDrop{position:static!important;display:flex!important;flex-direction:column;gap:2px;width:100%!important;max-height:0;overflow:hidden;opacity:0;transition:max-height .32s cubic-bezier(.2,.8,.2,1),opacity .25s;background:none!important;box-shadow:none!important;padding:0!important;border:0!important;pointer-events:none}
+#gxBot #gxDrop.on{max-height:300px;opacity:1;pointer-events:auto}
+#gxBot #gxDrop .gxi{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:14px;height:clamp(38px,5.6vh,56px);margin:0 0 0 clamp(36px,3.4vw,64px);padding:0 22px;border-radius:999px;font:300 clamp(18px,2.6vh,28px) var(--gt);color:#ffffff9a;letter-spacing:.01em;white-space:nowrap}
+#gxBot #gxDrop .gxi:hover,#gxBot #gxDrop .gxi.foc{color:#fff;background:linear-gradient(180deg,#ffffff26,#ffffff0d 50%,#00000022 52%,#ffffff12);box-shadow:inset 0 1px 0 #ffffff55,0 0 0 1px #ffffff2a}
+#gxBot #gxDrop .gxi.foc{background:var(--gxa);box-shadow:inset 0 1px 0 #ffffffa0,0 0 20px #4f7eab90;text-shadow:0 1px 1px #0005}
+#gxBot #gxDrop .gxi .mi{width:20px;height:20px;opacity:.7}
+#gxBot #gxDrop .gxi em{margin-left:auto;font:italic 800 10px var(--gt);letter-spacing:.2em;color:#ffffff60}
+#gxBot #gxDrop .gxi.lock{opacity:.5;cursor:not-allowed}
+
+/* Nov 13: quieter drone view: the medal times are a small line, not four big blocks */
+#gxSu .gxMed{transform:scale(.55);transform-origin:left top;margin-bottom:-26px;opacity:.9}
