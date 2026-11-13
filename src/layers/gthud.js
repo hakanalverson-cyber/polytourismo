@@ -23,7 +23,7 @@ const st=document.createElement('style');st.textContent=`
 .hud .h8top{transform:scale(max(var(--s),.82))!important;transform-origin:top left!important}
 .h8spd::before{display:none!important}
 .hud .h8spd,body .hud .h8spd{left:50%!important;right:auto!important;transform:translateX(-50%) scale(max(var(--s),.72))!important;transform-origin:50% 100%!important}
-.h8spd .gx5{width:560px!important;height:233px!important;margin:0 0 4px!important}`;document.head.appendChild(st);
+.h8spd .gx5{width:480px!important;height:200px!important;margin:0 0 0!important}`;document.head.appendChild(st);
 const F='"Inter","Segoe UI","Helvetica Neue",Arial,sans-serif';
 /* seven-segment digits, slanted a touch, as on the Gran Turismo 7 cluster */
 const SEG={0:'abcdef',1:'bc',2:'abged',3:'abgcd',4:'fgbc',5:'afgcd',6:'afgedc',7:'abc',8:'abcdefg',9:'abcdfg','-':'g'};
@@ -35,7 +35,7 @@ function seg7(g,txt,x,y,h,col,align){const w=h*.56,t=Math.max(2,h*.12),gap=h*.2,
   if(on.includes('f'))R(X,Y+t*.6,t,a-t*.9);if(on.includes('b'))R(X+w-t,Y+t*.6,t,a-t*.9);if(on.includes('e'))R(X,Y+a+t*.3,t,a-t*.9);if(on.includes('c'))R(X+w-t,Y+a+t*.3,t,a-t*.9);
   x0+=w+gap}
  g.restore();return tot}
-P.gx5Draw=(cv,o)=>{if(cv.width!==960||cv.height!==400){cv.width=960;cv.height=400}
+P.gx5Cluster=(cv,o)=>{if(cv.width!==960||cv.height!==400){cv.width=960;cv.height=400}
  const g=cv.getContext('2d'),k=cv.width/480;g.setTransform(k,0,0,k,0,0);g.clearRect(0,0,480,200);
  /* Nov 13 (Hakan: pay attention to the layout): the whole Gran Turismo 7 cluster. A speedometer dial on the left (white arc fills with the speed), a tachometer
     dial on the right (red zone, red arc fills with the revs), the wide readout (number 13) on top between them with its strip of rev ticks, the speed in
@@ -77,4 +77,22 @@ P.gx5Draw=(cv,o)=>{if(cv.width!==960||cv.height!==400){cv.width=960;cv.height=40
   arc(cx,cy+8,32,PI*1.08,PI*1.92,3,'rgba(255,255,255,.22)');arc(cx,cy+8,32,PI*1.08,PI*1.5,3,'#3b9cf0');g.fillStyle='rgba(255,255,255,.55)';g.font='600 6.5px '+F;g.fillText('LOW',cx-40,cy+10);g.fillText('HIGH',cx+40,cy+10);
   seg7(g,String(o.gear),cx+5,cy+12,20,'#f4f7fa','right');g.fillStyle='rgba(255,255,255,.75)';g.beginPath();g.moveTo(cx-1,cy+40);g.lineTo(cx+5,cy+40);g.lineTo(cx+2,cy+45);g.closePath();g.fill()}
  if(o.tag){g.textAlign='center';g.textBaseline='alphabetic';g.font='700 11px '+F;g.fillStyle=o.tagCol||'#fff';g.fillText(o.tag,240,194)}};
+/* Nov 13 (Hakan: if the cluster can't look good, a different style): a clean, centred readout. Big slanted speed, the gear beside it, a slim segmented rev bar under both
+   that turns red at the top. No dials, no plate. (PTO.gauge==='cluster' brings the dial cluster back.) */
+P.gx5Draw=(cv,o)=>{if(window.PTO&&window.PTO.gauge==='cluster')return P.gx5Cluster(cv,o);
+ if(cv.width!==960||cv.height!==400){cv.width=960;cv.height=400}
+ const g=cv.getContext('2d'),k=cv.width/480;g.setTransform(k,0,0,k,0,0);g.clearRect(0,0,480,200);
+ const rev=Math.max(0,Math.min(1,o.rev)),RED=.86,N=44,cx=240,bw=300,x0=cx-bw/2,y0=170,sw=bw/N;
+ g.shadowColor='rgba(0,0,0,.75)';g.shadowBlur=10;
+ g.textBaseline='alphabetic';g.textAlign='right';g.font='italic 700 78px '+F;g.fillStyle='#fff';g.fillText(String(o.kmh),cx-6,148);
+ g.textAlign='left';g.font='italic 700 78px '+F;g.fillStyle=o.shift?'#ff5446':'#fff';g.fillText(String(o.gear),cx+34,148);
+ g.shadowBlur=0;
+ g.font='600 11px '+F;g.fillStyle='rgba(255,255,255,.72)';g.textAlign='right';g.fillText(o.unit.toUpperCase(),cx-8,166-0);
+ g.textAlign='left';g.fillText(o.auto?'AT':'MT',cx+36,166);
+ g.fillStyle='rgba(255,255,255,.35)';g.save();g.transform(1,0,-.2,1,0,0);g.fillRect(cx+16+ (.2*100),88,2,62);g.restore();
+ /* rev bar: slanted segments */
+ for(let i=0;i<N;i++){const u=(i+.5)/N,on=u<=rev,red=u>=RED;g.fillStyle=on?(red?'#ff4a3d':'#ffffff'):(red?'rgba(255,74,61,.3)':'rgba(255,255,255,.2)');
+  const x=x0+i*sw,h=7+(u>.5?(u-.5)*4:0);g.beginPath();g.moveTo(x+3,y0-h*0);g.lineTo(x+sw-.8+3,y0);g.lineTo(x+sw-.8,y0+h);g.lineTo(x,y0+h);g.closePath();g.fill()}
+ if(o.shift){g.fillStyle='#ff4a3d';g.shadowColor='#ff4a3d';g.shadowBlur=12;g.fillRect(x0,y0+14,bw,2);g.shadowBlur=0}
+ if(o.tag){g.textAlign='right';g.font='700 13px '+F;g.fillStyle=o.tagCol||'#fff';g.fillText(o.tag,x0-8,y0+8)}};
 })();
