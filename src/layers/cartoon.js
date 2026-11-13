@@ -102,11 +102,13 @@ function meshes(pack){if(pack._m)return pack._m;const tx={},mats={},lut=new Floa
  return pack._m=out}
 P.warmPack=pack=>{try{meshes(pack)}catch(e){console.warn('warm',e)}};
 /* wrap buildWorld last (after every other layer has loaded) so whatever they add to the world is removed too */
-setTimeout(()=>{const bw=buildWorld;buildWorld=T=>{const sc=bw(T),pack=T.d&&T.d.cartoon;if(!pack)return sc;
+setTimeout(()=>{{const give=P._ctGive=function(sc){try{let g=null;if(sc&&sc.traverse)sc.traverse(o=>{if(o.name==='cartoonTrack')g=o});
+  if(g){let pv=g.userData.prev;while(pv&&(!pv.parent||pv.userData.dead))pv=pv.userData.prev;const pk=g.userData.pack;if(pv&&pk&&pk._grp===g){for(const m of g.children.slice())pv.add(m);pk._grp=pv;g.userData.gave=1}g.userData.dead=1}}catch(e){}};const dw=disposeWorld;disposeWorld=function(sc){give(sc);return dw.apply(this,arguments)}}
+ const bw=buildWorld;buildWorld=T=>{const sc=bw(T),pack=T.d&&T.d.cartoon;if(!pack)return sc;
  try{const rm=[];sc.traverse(o=>{if(o===sc||!(o.isMesh||o.isInstancedMesh||o.isPoints||o.isLine||o.isSprite))return;const g=o.geometry;if(g&&!g.boundingSphere&&g.computeBoundingSphere)g.computeBoundingSphere();
    if(g&&g.boundingSphere&&g.boundingSphere.radius>1000&&o.material&&o.material.type==='MeshBasicMaterial')return;/* sky dome / horizon backdrop */rm.push(o)});
   rm.forEach(o=>{if(o.parent)o.parent.remove(o)});/* removed, not hidden: distance culling turns visibility back on */
-  const grp=new THREE.Group();grp.name='cartoonTrack';for(const m of meshes(pack))grp.add(m);sc.add(grp);
+  const grp=new THREE.Group();grp.name='cartoonTrack';/* the model's meshes are shared: a second world of the same circuit (a card picture, the race) takes them out of the first. Remember who had them, so they go back when this world is thrown away (the drone preview was left looking at bare ground) */{const o=pack._grp;grp.userData.prev=o&&o.parent&&!o.userData.dead?o:null;if(grp.userData.prev)window.__ctSteal=(new Error()).stack;pack._grp=grp;grp.userData.pack=pack}for(const m of meshes(pack))grp.add(m);sc.add(grp);
   T._bx={segs:[],pts:[]};T._bg=null;/* the removed stock props must not collide */
   if(P.addSeg){const s=new Float32Array(dec(pack.segs).buffer);const sf=pack.sf||1;for(let i=0;i<s.length;i+=4)P.addSeg(T,s[i]*sf,s[i+1]*sf,s[i+2]*sf,s[i+3]*sf,.35)}
   if(pack.cpts&&P.addPt){const s=new Float32Array(dec(pack.cpts).buffer);const sf=pack.sf||1;for(let i=0;i<s.length;i+=3)P.addPt(T,s[i]*sf,s[i+1]*sf,s[i+2]*sf)}/* tree trunks */
@@ -116,6 +118,8 @@ setTimeout(()=>{const bw=buildWorld;buildWorld=T=>{const sc=bw(T),pack=T.d&&T.d.
    Made once per track per session on a small renderer of its own; textures are waited for so the model is not drawn black */
 const SHOT={};let shR=null;
 P.trackShot=idx=>SHOT[idx]||(SHOT[idx]=new Promise(res=>setTimeout(async()=>{let sc=null,grp=null;try{
+ /* never while the live drone view is showing this same circuit: the picture needs the model's meshes, and they can only be in one place */
+ for(let w=0;w<600&&P.prepBusy&&P.prepBusy(idx);w++)await new Promise(r=>setTimeout(r,1000));
  const def=Object.assign({},D[idx]);const T=sampleTrack(def);sc=buildWorld(T);sc.traverse(o=>{if(o.name==='cartoonTrack')grp=o});
  const ims=[];sc.traverse(o=>{const m=o.material;if(m&&m.map&&m.map.image)ims.push(m.map.image)});
  for(let t=0;t<60&&ims.some(im=>!(im.complete&&im.naturalWidth));t++)await new Promise(r=>setTimeout(r,50));
@@ -134,7 +138,11 @@ P.trackShot=idx=>SHOT[idx]||(SHOT[idx]=new Promise(res=>setTimeout(async()=>{let
  /* full HD, rendered half as big again and scaled down, so the previews stay sharp at any size */shR.setSize(2880,1620,false);if(sc.fog&&sc.fog.far)sc.fog.far=Math.max(sc.fog.far,2400);shR.render(sc,cam);
  const out=document.createElement('canvas');out.width=1920;out.height=1080;const og=out.getContext('2d');og.imageSmoothingQuality='high';og.drawImage(shR.domElement,0,0,1920,1080);res(out)}
  catch(e){console.error('track shot',e);delete SHOT[idx];res(null)}
- finally{if(sc){if(grp&&grp.parent)grp.parent.remove(grp);try{disposeWorld(sc)}catch(e){}}}},30)));
+ finally{if(sc){if(P._ctGive)P._ctGive(sc);if(grp&&grp.parent)grp.parent.remove(grp);
+  /* Nov 13: nobody else is showing this circuit, so its model is let go (it stayed in memory, and on the picture renderer's graphics memory, for
+     every circuit a picture was made of: eight whole circuits after the first start). It is decoded again when the circuit is raced */
+  try{const pk=grp&&grp.userData.pack;if(pk&&!grp.userData.gave&&pk._grp===grp){for(const m of grp.children.slice()){grp.remove(m);if(m.geometry)m.geometry.dispose();const mm=m.material;if(mm&&mm.map)mm.map.dispose()}pk._m=null;pk._grp=null}}catch(e){}
+  try{disposeWorld(sc)}catch(e){}}}},30)));
 P.trackShotCached=idx=>SHOT[idx]&&SHOT[idx]._v||null;
 /* a shot saved from an earlier session (title.js keeps them in IndexedDB) */
 P.trackShotSeed=(idx,cv)=>{const pr=Promise.resolve(cv);pr._v=cv;SHOT[idx]=pr};

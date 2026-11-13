@@ -28,12 +28,12 @@ updateVisual=(c,T,t)=>{prev(c,T,t);const m=c.m;if(!m||!RACE)return;const dt=Math
   m.g.rotation.x+=c.swp;m.g.rotation.z+=c.swr;
   if(RL){/* heave: the body rides over dips and bumps on soft springs */
    const ay=(c.vy-(c.pvy===undefined?c.vy:c.pvy))/dt;c.pvy=c.vy;c.hvy=c.hvy||0;c.hh=c.hh||0;const tg=clamp(-ay*.0065,-.16,.16);
-   c.hvy+=(-64*(c.hh-tg)-2*.55*8*c.hvy)*dt;c.hh+=c.hvy*dt;m.g.position.y+=clamp(c.hh,-.2,.2);m.g.rotation.x+=clamp(c.hh*.08,-.03,.03)}
+   c.hvy+=(-64*(c.hh-tg)-2*.55*8*c.hvy)*dt;c.hh+=c.hvy*dt;m.g.position.y+=clamp(c.hh,-.2,.03);/* the body may squat but the whole car never lifts off its tyres */m.g.rotation.x+=clamp(c.hh*.08,-.03,.03)}
   if(m.visualModel)m.visualModel.position.y+=Math.abs(c.swr)*.35;
  }else{c.swr=c.swp=c.swvr=c.swvp=0;c.pyaw=c.yaw;c.psp=c.sp}
  /* --- shadow --- */
  const sh=m.sh;if(!sh)return;
- if(P.realShadows&&RACE.scene.userData.sun&&(!window.PTO||window.PTO.shadows!==false)){sh.visible=false;return}sh.visible=true;
+ /* with sun shadows on, a faint contact patch stays under the car: the shadow map is too coarse to reach the tyres, and without it the cars looked like they hovered */const rs_=!!(P.realShadows&&RACE.scene.userData.sun&&(!window.PTO||window.PTO.shadows!==false));sh.visible=true;if(sh.userData.v9)sh.material.opacity=rs_?.42:.6;
  if(!sh.userData.v9){sh.userData.v9=1;const hu=c.human,sx_=hu?5:2,sz_=hu?9:4;sh.geometry=new THREE.PlaneGeometry(3.3,6.0,sx_,sz_);sh.geometry.rotateX(-Math.PI/2);sh.userData.base=sh.geometry.attributes.position.array.slice();sh.frustumCulled=false;sh.material=new THREE.MeshBasicMaterial({map:shadowTex(),transparent:true,opacity:.6,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,fog:false});sh.renderOrder=-1}
  /* draped shadow: every vertex follows the real ground height, so it never sinks into crests or floats over dips */
  const bs=sh.userData.base,pos=sh.geometry.attributes.position,arr=pos.array,cy=Math.cos(c.yaw),sy=Math.sin(c.yaw);

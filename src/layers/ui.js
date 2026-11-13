@@ -485,7 +485,7 @@ const GX_DRIVE=[['driftAssist','Drift assist',[[0,'Off'],[.35,'Low'],[.7,'Normal
 const GX_ORDER=['cFmt','cLaps','cRL','cIv','cTime',/* round 25: no 'Drivers' count here, players are added on the car step */'cCpu','cDif','cTr','cWx','cTod','cDmg'];
 const GX_NAME={cTod:'Time of day',cCpu:'Opponents',cDif:'CPU level',cPl:'Drivers',cRL:'Laps',cIv:'Knockout every',cFmt:'Format',cGb:'Gearbox',cRev:'Direction',cCc:'CPU class',cCpuCar:'CPU cars',cStart:'Start',cWx:'Weather',cDmg:'Damage',cTime:'Clock',cTr:'Traffic',cLaps:'Laps'};
 function gxShot(i){const cv=$('gxShot'),rf=$('gxRefl');if(!cv)return;const g=cv.getContext('2d'),c=P.trackShotCached&&P.trackShotCached(i);
- if(c){g.drawImage(c,0,0,cv.width,cv.height);cv.classList.remove('map')}else{drawTrack(cv,i,false);cv.classList.add('map');if(P.trackShot)P.trackShot(i).then(v=>{if(v&&ST.track===i&&cv.isConnected)gxShot(i)})}
+ if(c){g.drawImage(c,0,0,cv.width,cv.height);cv.classList.remove('map')}else{drawTrack(cv,i,false);cv.classList.add('map');if(P.trackShot&&window.PTO&&window.PTO.prepLive===false/* Nov 13: only when the live drone view is off; making the still picture built a second copy of the circuit and emptied the live one */)P.trackShot(i).then(v=>{if(v&&ST.track===i&&cv.isConnected)gxShot(i)})}
  if(rf){const r=rf.getContext('2d');r.clearRect(0,0,rf.width,rf.height);r.drawImage(cv,0,0,rf.width,rf.height)}}
 function gxSetup(){const sec=$('s8setup');if(!sec)return;if(ST.custom){ST.custom.render();return}const m=ST.mode;sec.classList.add('gxOn');sec.classList.remove('rs2');let box=$('gxSu');
  if(!box){box=document.createElement('div');box.id='gxSu';sec.insertBefore(box,sec.querySelector('.foot8'))}box.style.display='';

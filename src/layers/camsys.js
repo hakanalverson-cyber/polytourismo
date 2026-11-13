@@ -38,7 +38,11 @@ function install(){
   /* finished: the drone orbit (the old random cinematic is bypassed) */
   if(c.fin&&c.cool&&R_.state!=='done'||c.fin&&R_.state==='done'&&R_._orbOn){orbit(c,dt,out,R_);return}
   c._orb=null;
+  /* under a bridge the view only drops to the bonnet when the bridge would really hide the car from this camera: never in the bonnet, bumper or
+     low views, and in the chase views only if the deck sits on the line between the camera and the car (checked against the model, then held until clear) */
+  if(c.inTn){const m0=c.camX|0;if(m0>=2){c.inTn=false;c.tnB=0;c._tnL=0}else{if(!c._tnL&&under(c,R_,m0))c._tnL=1;if(!c._tnL)c.inTn=false}}else c._tnL=0;
   prev.apply(this,arguments);
+  if(window.__camDbg&&c.human){const d=window.__camDbg,yw=c.yaw,sy_=Math.sin(yw),cy_=Math.cos(yw);out.p.set(c.x+cy_*d.s+sy_*d.f,c.y+d.h,c.z-sy_*d.s+cy_*d.f);out.l.set(c.x,c.y-.2,c.z);out.f=d.fov||34;return}
   const m=c.camX|0;if(!m||c.fin||c.respT>0)return;
   const K=P.carK?P.carK():1,yaw=c.cy!=null?c.cy:c.yaw,sy=Math.sin(yaw),cy=Math.cos(yaw),by=c.camY==null?c.y:c.camY;
   if(m===1){out.p.set(c.x-sy*11.5*K,by+4.6*K,c.z-cy*11.5*K);out.l.set(c.x+sy*7*K,by+.9*K,c.z+cy*7*K);out.f=52}
@@ -47,6 +51,12 @@ function install(){
   else if(m===4){out.p.set(c.x+sy*.15*K,by+1.55*K,c.z+cy*.15*K);out.l.set(c.x+sy*26,by+1.1*K,c.z+cy*26);out.f=74}
   c.cb=0;c.inTn=false};
 }
+const _rc=new THREE.Raycaster(),_ro=new V(),_rd=new V();
+function under(c,R_,m){const sc=R_.scene;if(!sc)return true;if(R_._ctM===undefined){let g=null;sc.traverse(o=>{if(o.name==='cartoonTrack')g=o});R_._ctM=g?g.children.filter(o=>!/road|GRASS|SAND|gravel|tarmac/i.test(o.name)):null}
+ const ms=R_._ctM;if(!ms)return true;const K=P.carK?P.carK():1,yaw=c.cy!=null?c.cy:c.yaw,sy=Math.sin(yaw),cy=Math.cos(yaw),back=(m===1?11.5:7.5)*K,up=(m===1?4.6:3.1)*K,L=Math.hypot(back,up-1.3*K);
+ _rd.set(-sy*back,up-1.3*K,-cy*back).normalize();_rc.far=L+.6;
+ for(const d of[0,7,14,21]){_ro.set(c.x+sy*d,c.y+1.3*K,c.z+cy*d);_rc.set(_ro,_rd);if(_rc.intersectObjects(ms,false).length)return true}
+ return false}
 function orbit(c,dt,out,R_){
  const T=R_.T,K=P.carK?P.carK():1;let s=c._orb;
  if(!s){const yaw=c.cy!=null?c.cy:c.yaw;s=c._orb={a:Math.atan2(-Math.sin(yaw),-Math.cos(yaw)),r:10.5*K,h:3.6*K,t:0,pos:new V(c.x-Math.sin(yaw)*10*K,c.y+4*K,c.z-Math.cos(yaw)*10*K),look:new V(c.x,c.y+.7*K,c.z),f:50}}

@@ -1855,4 +1855,7 @@ input.nm,#ptOptions input[type=text],#ptOptions select{border-radius:8px!importa
 #gxBot #gxDrop .gxi.lock{opacity:.5;cursor:not-allowed}
 
 /* Nov 13: quieter drone view: the medal times are a small line, not four big blocks */
-#gxSu .gxMed{transform:scale(.55);transform-origin:left top;margin-bottom:-26px;opacity:.9}
+#gxSu .gxMed{transform:scale(.44);transform-origin:left top;margin-bottom:-34px;opacity:.9}
+
+/* Nov 13: no buff or state read-outs in the race (slipstream label, grip/speed line) */
+.h9ex .dr,.h8hud .cond,#hud .cond,.cond{display:none!important}

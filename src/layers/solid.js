@@ -30,7 +30,7 @@ function touch(g,x,z){const cx=Math.floor(x/8),cz=Math.floor(z/8);for(let a=-1;a
  for(const s of l){let qx,qz,r;if(s.length===5){const dx=s[2]-s[0],dz=s[3]-s[1],ll=dx*dx+dz*dz||1,t=Math.max(0,Math.min(1,((x-s[0])*dx+(z-s[1])*dz)/ll));qx=s[0]+dx*t;qz=s[1]+dz*t;r=s[4]}else{qx=s[0];qz=s[1];r=s[2]}
   if(Math.hypot(x-qx,z-qz)<r+.88*(P.carK?P.carK():1))return true}}return false}
 function hit(Rc,c,v,nx,nz){if(P.hitFx)P.hitFx(Rc,c,v,c.x-nx*.9,c.y+.35,c.z-nz*.9,nx,nz);if(!c.human)return;if(cd>0)return;cd=.3;c.shk=Math.max(c.shk||0,Math.min(1,v/16));if(P.sfx)P.sfx('crash');if(P.dmgOn&&P.dmgOn(Rc)&&P.hurt&&!((c.cdT||0)>0)){c.cdT=.7;P.hurt(Rc,c,v,nx,nz)}}
-function bStep(Rc,dt){const T=Rc.T;if(!T||Rc.state!=='race')return;cd-=dt;const g=T._bg||grid(T);if(!g.size)return;
+function bStep(Rc,dt){const T=Rc.T;if(!T||Rc.state!=='race')return;cd-=dt;/* Road Atlanta gravel: a real trap, about 30% of the speed gone in the first second */if(T.d&&T.d.cartoon&&T.d.cartoon.replaces==='ra')for(const c of Rc.cars)if(!c.fin&&c.mt===MATS.sandtrap&&c.sp>6){const f=Math.exp(-.45*dt);c.vx*=f;c.vz*=f;c.sp*=f}const g=T._bg||grid(T);if(!g.size)return;
  /* every car, CPU included: nothing the player bumps into can be driven through by the CPU */
  for(const c of Rc.cars){if(c.fin||c.respT>0||c.exp>0)continue;
   /* swept test: walk the path since last frame in half-car steps so a fast car cannot step across a thin wall */

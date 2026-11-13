@@ -232,8 +232,10 @@ function carsFor(s,list){const k=list.map(c=>c.id+'.'+c.alt).join('|');if(s.carK
   m.rotation.set(0,ps,0);m.position.set(0,0,0);m.updateMatrixWorld(true);const bx=new THREE.Box3().setFromObject(m);
   m.position.set(T.x[i]+sn*lat,T.y[i]-bx.min.y+.01,T.z[i]+cs*lat);m.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});s.sc.add(m);s.cars.push(m)})}
 /* ---- the camera ---- */
-const SHOTS=['dolly','crane','orbit','pan','dolly','orbit','crane'];
-function nextShot(s){const T=s.T,N=T.N,sp=T.sp||2;s.sh++;if(s.sh===0&&s.open)s.sh=1;const SL=s.open?['dolly','crane','rev','dolly','crane','rev']:SHOTS,kind=SL[(s.sh-2+SL.length)%SL.length];
+const SHOTS=['dolly','orbit','pan','crane','fly','low','orbit','high','dolly','pan','crane'];
+P._prepDbg=()=>S?{st:(window.__ctSteal||'').split('\n').slice(2,9).map(l=>l.trim().slice(0,60)),sh:S.shot&&{k:S.shot.kind,lift:S.shot.lift,k0:+S.shot.k0.toFixed(1),side:S.shot.side,ap:S.shot.apex},tr:S._vTry,cam:cam.position.toArray().map(v=>+v.toFixed(1)),look:S.look&&S.look.toArray().map(v=>+v.toFixed(1)),N:S.T.N,track:S.track,vis:(()=>{let n=0,v=0;S.sc.traverse(o=>{if(o.name&&o.name.indexOf('ct_')===0){n++;if(o.visible)v++}});return v+'/'+n})(),fog:S.sc.fog&&[S.sc.fog.near|0,S.sc.fog.far|0]}:null;
+function nextShot(s){const sh=pickShot(s);sh.t0=performance.now();s.shot=sh}
+function mkShot(s,force,flip){const T=s.T,N=T.N,sp=T.sp||2;if(flip)return Object.assign({},flip,{side:-flip.side});s.sh++;if(s.sh===0&&s.open)s.sh=1;const SL=s.open?['dolly','crane','rev','dolly','crane','rev']:SHOTS,kind=force||SL[(s.sh-2+SL.length)%SL.length];
  /* Nov 12: every shot is built around a corner. The apexes are the sharpest local peaks of curvature; each shot is timed so the
     moving part of it passes through the bend, and the camera stands on the outside of the turn. */
  if(!s.cr){const K=P.kappa?P.kappa(T):null,L=[];if(K){const lo=s.open?Math.round(40/sp):0,hi=s.open?Math.round(N*.9):N;for(let i=lo;i<hi;i++){const R_=1/Math.max(K[i],1e-4);if(R_>110)continue;let mx=true;for(let d=-9;d<=9;d++){const j=((i+d)%N+N)%N;if(K[j]>K[i]){mx=false;break}}if(mx)L.push({i,k:K[i]})}}
@@ -243,10 +245,47 @@ function nextShot(s){const T=s.T,N=T.N,sp=T.sp||2;s.sh++;if(s.sh===0&&s.open)s.s
  const q1=at(T,ap-9,s.open),q2=at(T,ap+9,s.open);let dp=q2.psi-q1.psi;dp=Math.atan2(Math.sin(dp),Math.cos(dp));const out=dp>=0?-1:1;
  let k0=ap;if(kind==='dolly'||kind==='fly'||kind==='low'||kind==='high'||kind==='rev')k0=ap-(v*dur/2)/sp;else if(kind==='crane')k0=ap-(46+35+5*dur/2)/sp+ (5*dur/2)/sp-(5*dur/2)/sp;else if(kind==='orbit')k0=ap-3.5*dur/2/sp;
  if(s.open)k0=Math.max(2,Math.min(N-60,k0));
- s.shot={kind,k0,side:out,t0:performance.now(),dur,sp,apex:ap}}
+ return{kind,k0,side:out,t0:performance.now(),dur,sp,apex:ap}}
+/* ---- clear-view drone (Nov 13, Hakan: the view must NEVER be blocked) ----
+   Every shot is flown in advance against the circuit model before it is shown: at nine moments along it, a ray from the lens to the piece of road it
+   looks at must reach the road, and a fan of short rays around the lens must find nothing within 10 m (no trunk, canopy, fence or wall near the lens).
+   A shot that fails is thrown away and another corner / side / kind is tried. The checking is spread over the frames of the shot now playing. */
+const _vp=new THREE.Vector3(),_vl=new THREE.Vector3();
+/* the model as a height map of its tallest point per cell (trees, stands, fences, walls, bridges and the ground itself), built once per circuit */
+function vGrid(s){if(s._vg!==undefined)return s._vg;let g=null;s.sc.traverse(o=>{if(o.name==='cartoonTrack')g=o});if(!g)return s._vg=null;
+ let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;const ms=g.children.filter(m=>m.geometry&&m.geometry.attributes.position);
+ for(const m of ms){m.updateMatrixWorld();const gm=m.geometry;if(!gm.boundingBox)gm.computeBoundingBox();const b=gm.boundingBox.clone().applyMatrix4(m.matrixWorld);x0=Math.min(x0,b.min.x);x1=Math.max(x1,b.max.x);z0=Math.min(z0,b.min.z);z1=Math.max(z1,b.max.z)}
+ const cs=Math.max(2,Math.max(x1-x0,z1-z0)/1500),W=Math.ceil((x1-x0)/cs)+2,H=Math.ceil((z1-z0)/cs)+2,top=new Float32Array(W*H).fill(-1e9);
+ const put=(x,y,z)=>{const k=((z-z0)/cs|0)*W+((x-x0)/cs|0);if(y>top[k])top[k]=y},A=new THREE.Vector3(),B=new THREE.Vector3(),C=new THREE.Vector3();
+ for(const m of ms){const pa=m.geometry.attributes.position,ix=m.geometry.index,n=ix?ix.count:pa.count,M=m.matrixWorld;
+  for(let t=0;t<n;t+=3){const a=ix?ix.getX(t):t,b=ix?ix.getX(t+1):t+1,c=ix?ix.getX(t+2):t+2;A.fromBufferAttribute(pa,a).applyMatrix4(M);B.fromBufferAttribute(pa,b).applyMatrix4(M);C.fromBufferAttribute(pa,c).applyMatrix4(M);
+   const e=Math.max(Math.abs(A.x-B.x),Math.abs(A.z-B.z),Math.abs(B.x-C.x),Math.abs(B.z-C.z),Math.abs(A.x-C.x),Math.abs(A.z-C.z)),q=Math.min(48,Math.max(1,Math.ceil(e/cs*1.3)));
+   for(let u=0;u<=q;u++)for(let w=0;w<=q-u;w++){const fa=u/q,fb=w/q,fc=1-fa-fb;put(A.x*fa+B.x*fb+C.x*fc,A.y*fa+B.y*fb+C.y*fc,A.z*fa+B.z*fb+C.z*fc)}}}
+ return s._vg={x0,z0,cs,W,H,top,at(x,z){const i=(x-x0)/cs|0,j=(z-z0)/cs|0;return i<0||j<0||i>=W||j>=H?-1e9:top[j*W+i]}}}
+/* how many of the checks fail for this moment of the shot (0 = a clean view) */
+function clearAt(s,sh,t){const G=vGrid(s);if(!G)return 0;poseAt(s,sh,t,_vp,_vl);const dx=_vl.x-_vp.x,dy=_vl.y-_vp.y,dz=_vl.z-_vp.z,D=Math.hypot(dx,dy,dz);if(D<1)return 0;let bad=0;
+ /* the line of sight: clear of everything for the first 82% of the way to the road it looks at */
+ const n=Math.ceil(D/(G.cs*.7));for(let k=1;k<n;k++){const u=k/n;if(u>.82)break;if(G.at(_vp.x+dx*u,_vp.z+dz*u)>_vp.y+dy*u-.2){bad|=1;break}}
+ /* the lens: nothing as tall as the camera within 4 m, and nothing rising to within a few degrees of the centre of the frame for 16 m ahead */
+ const hx=dx/Math.hypot(dx,dz||1e-6),hz=dz/Math.hypot(dx,dz||1e-6);
+ cone:for(let r=G.cs;r<=16;r+=G.cs)for(let a=-3;a<=3;a++){const an=a*.2,c=Math.cos(an),sn=Math.sin(an),x=_vp.x+(hx*c-hz*sn)*r,z=_vp.z+(hz*c+hx*sn)*r;const tp=G.at(x,z);if(tp<-1e8)continue;const gd=GBf(s.T,x,z),ob=!isFinite(gd)||tp-gd>.6;if(ob&&(tp>_vp.y+dy/D*r-r*.1||Math.hypot(r,_vp.y-tp)<8)){bad|=2;break cone}}
+ ring:for(let a=0;a<8;a++){const an=a*.785;for(const r of[G.cs,4])if(G.at(_vp.x+Math.sin(an)*r,_vp.z+Math.cos(an)*r)>_vp.y-.3){bad|=4;break ring}}
+ return bad}
+function vet(s,sh){let b=0;for(let k=0;k<=10;k++){const m=clearAt(s,sh,sh.dur*k/10);b+=(m&1)+(m>>1&1)+(m>>2&1)}return b}
+P.prepBusy=i=>!!(building||S&&S.track===i);
+P._vetDbg=()=>{const s=S;if(!s||!vGrid(s))return null;const out={};const sh0=s.sh,bag=s.crBag;for(const kind of['dolly','crane','orbit','pan','fly','low','high']){const o=out[kind]={ok:0,n:0,los:0,cone:0,ring:0};for(let c=0;c<s.cr.length;c++)for(const side of[0,1]){s.crBag=[c];let sh=mkShot(s,kind);if(side)sh=mkShot(s,null,sh);let L=0,C=0,Rg=0;for(let k=0;k<=10;k++){const m=clearAt(s,sh,sh.dur*k/10);L+=m&1;C+=m>>1&1;Rg+=m>>2&1}o.n++;if(!(L+C+Rg))o.ok++;o.los+=L?1:0;o.cone+=C?1:0;o.ring+=Rg?1:0}}s.sh=sh0;s.crBag=bag;return out};
+/* choose the next shot: the first candidate with a completely clean view; failing that (never seen on the eight circuits), the cleanest one tried */
+function pickShot(s){if(window.__noVet||!vGrid(s))return mkShot(s);let best=null,bb=1e9;const last=s.shot?s.shot.apex:-1;
+ for(let i=0;i<40;i++){const sh0=mkShot(s);if(sh0.apex===last&&s.cr.length>2)continue;
+  /* the same move from the other side of the road, and from 3, 6 and 10 m higher, before giving up on this corner */
+  for(const lift of sh0.kind==='high'?[0]:[0,3,6,10])for(const fl of[0,1]){const sh=Object.assign({},sh0,{side:fl?-sh0.side:sh0.side,lift}),b=vet(s,sh);if(!b){s._vTry=i;return sh}if(b<bb){bb=b;best=sh}}}
+ s._vTry=-bb;return best||mkShot(s,'high')}
 function camRace(s,now){const T=s.T;if(!s.shot)nextShot(s);let sh=s.shot,t=(now-sh.t0)/1000;
  if(t>sh.dur&&!pend){pend=1;cv.classList.add('cut');setTimeout(()=>{if(S===s){nextShot(s)}pend=null;setTimeout(()=>cv&&cv.classList.remove('cut'),40)},230)}
- const sp=sh.sp,P_=new THREE.Vector3(),L=new THREE.Vector3();
+ const P_=new THREE.Vector3(),L=new THREE.Vector3();poseAt(s,sh,t,P_,L);
+ {const dtc=Math.min(.1,Math.max(.001,(now-(s._pn||now))/1000));s._pn=now;if(s._psh!==sh){s._psh=sh;s._cp=P_.clone();s._cl=L.clone()}const k=1-Math.exp(-dtc*6),k2=1-Math.exp(-dtc*3);s._cp.lerp(P_,k);s._cl.lerp(L,k2);P_.copy(s._cp);L.copy(s._cl);const g2=GBf(T,P_.x,P_.z);if(isFinite(g2)&&P_.y<g2+2.8)P_.y=g2+2.8}
+ cam.position.copy(P_);cam.lookAt(L);s.look=L;return sh.kind==='aerial'?b2(s):null}
+function poseAt(s,sh,t,P_,L){const T=s.T,sp=sh.sp;
  if(sh.kind==='aerial'){const b=s.box,a=t*.05+sh.side,r=b.e*.62+120,h=b.e*.42+90;P_.set(b.cx+Math.sin(a)*r,b.y+h,b.cz+Math.cos(a)*r);L.set(b.cx,b.y-b.e*.04,b.cz)}
  else{const v=sh.kind==='dolly'||sh.kind==='rev'?(s.open?15:14):sh.kind==='fly'?13:sh.kind==='low'?16:sh.kind==='high'?10:20,f=sh.k0+v*t/sp,q=at(T,f,s.open),c=Math.cos(q.psi),sn=Math.sin(q.psi),side=sh.side;
   if(sh.kind==='fly'){const a=at(T,f+55/sp,s.open);P_.set(q.x+c*side*(q.hw+6),q.y+5.5,q.z-sn*side*(q.hw+6));L.set(a.x,a.y+1,a.z)}
@@ -257,9 +296,7 @@ function camRace(s,now){const T=s.T;if(!s.shot)nextShot(s);let sh=s.shot,t=(now-
   else if(sh.kind==='orbit'){/* slow circle around a spot on the road while it creeps along */const o=at(T,sh.k0+3.5*t/sp,s.open),ang=side*t*.15+1.1,R=(s.open?32:25)+t*.9;P_.set(o.x+Math.cos(ang)*R,o.y+(s.open?9:3.6)+t*.45,o.z+Math.sin(ang)*R);L.set(o.x,o.y+1.3,o.z)}
   else if(sh.kind==='high'){const a=at(T,f+18/sp,s.open);P_.set(q.x+c*side*42,q.y+48,q.z-sn*side*42);L.set(a.x,a.y,a.z)}
   else{/* pan: a fixed camera by the road that follows a point running past it */const o=at(T,sh.k0,s.open),co=Math.cos(o.psi),so=Math.sin(o.psi),a=at(T,sh.k0+(-60+v*t)/sp,s.open);P_.set(o.x+co*side*(o.hw+13),o.y+2.2,o.z-so*side*(o.hw+11));L.set(a.x,a.y+1,a.z)}}
- const g=GBf(T,P_.x,P_.z);if(isFinite(g)&&P_.y<g+3.2)P_.y=g+3.2;
- {const dtc=Math.min(.1,Math.max(.001,(now-(s._pn||now))/1000));s._pn=now;if(s._psh!==sh){s._psh=sh;s._cp=P_.clone();s._cl=L.clone()}const k=1-Math.exp(-dtc*6),k2=1-Math.exp(-dtc*3);s._cp.lerp(P_,k);s._cl.lerp(L,k2);P_.copy(s._cp);L.copy(s._cl);const g2=GBf(T,P_.x,P_.z);if(isFinite(g2)&&P_.y<g2+2.8)P_.y=g2+2.8}
- cam.position.copy(P_);cam.lookAt(L);s.look=L;return sh.kind==='aerial'?b2(s):null}
+ if(sh.lift)P_.y+=sh.lift;const g=GBf(T,P_.x,P_.z);if(isFinite(g)&&P_.y<g+3.2)P_.y=g+3.2}
 const b2=s=>s.box.e*2.4+700;
 P.prepZoomed=()=>!!(S&&S.zoom>=0&&document.getElementById('s8setup').classList.contains('carZoom'));P.prepUnzoom=()=>{if(S)S.zoom=-1;const w=document.getElementById('s8setup');if(w){w.classList.remove('carZoom');w.querySelectorAll('#gxSu .zOff').forEach(c=>c.classList.remove('zOff'));const tn=w.querySelector('#gxSu .gxTn');if(tn)tn.style.removeProperty('margin-left')}};
 let drag=0,dragX=null;
