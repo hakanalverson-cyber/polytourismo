@@ -23,7 +23,7 @@ const st=document.createElement('style');st.textContent=`
 .hud .h8top{transform:scale(max(var(--s),.82))!important;transform-origin:top left!important}
 .h8spd::before{display:none!important}
 .hud .h8spd,body .hud .h8spd{left:50%!important;right:auto!important;transform:translateX(-50%) scale(max(var(--s),.72))!important;transform-origin:50% 100%!important}
-.h8spd .gx5{width:400px!important;height:167px!important;margin:0 0 -12px!important}`;document.head.appendChild(st);
+.h8spd .gx5{width:560px!important;height:233px!important;margin:0 0 4px!important}`;document.head.appendChild(st);
 const F='"Inter","Segoe UI","Helvetica Neue",Arial,sans-serif';
 /* seven-segment digits, slanted a touch, as on the Gran Turismo 7 cluster */
 const SEG={0:'abcdef',1:'bc',2:'abged',3:'abgcd',4:'fgbc',5:'afgcd',6:'afgedc',7:'abc',8:'abcdefg',9:'abcdfg','-':'g'};
@@ -60,14 +60,14 @@ P.gx5Draw=(cv,o)=>{if(cv.width!==960||cv.height!==400){cv.width=960;cv.height=40
   for(let v=0;v<=16;v++){const a=A0+SW*v/16,big=v%2===0,red=v/16>=RED;tk(cx,cy,R-8,a,big?7:4,big?1.4:1,red?'#ff8a80':'rgba(255,255,255,'+(big?.9:.5)+')');if(big){const p=pol(cx,cy,R-22,a);g.fillStyle=red?'#ff8a80':'rgba(255,255,255,.85)';g.fillText(String(v/2),p[0],p[1])}}
   g.fillStyle='rgba(255,255,255,.65)';g.font='600 6.5px '+F;g.fillText('x1000 rpm',cx,cy-34);mini(cx,cy+26,15,'-1','2',.4)}
  /* ---- centre top: the readout (number 13) ---- */
- {const cx=240,N=64,Rr=300,ccy=22+Rr;
-  g.beginPath();g.moveTo(166,36);g.lineTo(314,36);g.lineTo(304,86);g.quadraticCurveTo(240,92,176,86);g.closePath();
+ {const cx=240,N=72,Rr=300,ccy=18+Rr;
+  g.beginPath();g.moveTo(152,32);g.lineTo(328,32);g.lineTo(316,92);g.quadraticCurveTo(240,99,164,92);g.closePath();
   const pg=g.createLinearGradient(0,36,0,90);pg.addColorStop(0,'rgba(30,34,41,.92)');pg.addColorStop(1,'rgba(6,8,11,.94)');g.fillStyle=pg;g.fill();g.lineWidth=1;g.strokeStyle='rgba(255,255,255,.2)';g.stroke();
   for(let i=0;i<=N;i++){const u=i/N,a=-PI/2+(u-.5)*.5,on=u<=rev,red=u>=RED,big=i%8===0,L=big?9:6,c=Math.cos(a),sn=Math.sin(a);
    g.strokeStyle=on?(red?'#ff4a3d':'#fff'):(red?'rgba(255,74,61,.5)':'rgba(255,255,255,.32)');g.lineWidth=big?1.6:1.1;g.beginPath();g.moveTo(cx+c*Rr,ccy+sn*Rr);g.lineTo(cx+c*(Rr-L),ccy+sn*(Rr-L));g.stroke()}
-  const dy=42,dh=30;seg7(g,String(o.kmh),cx-10,dy,dh,'#f4f7fa','right');
+  const dy=42,dh=36;seg7(g,String(o.kmh),cx-10,dy,dh,'#f4f7fa','right');
   g.textBaseline='alphabetic';g.textAlign='right';g.font='500 7px '+F;g.fillStyle='rgba(255,255,255,.6)';g.fillText(o.unit.toLowerCase(),cx-10,dy+dh+9);
-  g.fillStyle='rgba(255,255,255,.3)';g.fillRect(cx,42,1,32);
+  g.fillStyle='rgba(255,255,255,.3)';g.fillRect(cx,42,1,38);
   seg7(g,String(o.gear),cx+12,dy,dh,o.shift?'#ff5446':'#f4f7fa','left');
   g.textAlign='left';g.fillStyle='rgba(255,255,255,.6)';g.fillText(o.auto?'AT':'MT',cx+12,dy+dh+9);
   /* the box beside the gear: the next gear, red when it is time to change */
