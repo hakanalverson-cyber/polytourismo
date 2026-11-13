@@ -22,27 +22,25 @@ const st=document.createElement('style');st.textContent=`
 .hud .h8mode .cu b{font:600 13px/1.1 var(--gt)!important;color:#fff!important}
 .hud .h8top{transform:scale(max(var(--s),.82))!important;transform-origin:top left!important}
 .h8spd::before{display:none!important}
-.h8spd .gx5{width:228px!important;height:152px!important}`;document.head.appendChild(st);
+.h8spd .gx5{width:312px!important;height:208px!important;margin:-70px -10px -8px!important}`;document.head.appendChild(st);
 const F='"Inter","Segoe UI","Helvetica Neue",Arial,sans-serif';
 P.gx5Draw=(cv,o)=>{const g=cv.getContext('2d'),W=cv.width,k=W/240;g.setTransform(k,0,0,k,0,0);g.clearRect(0,0,240,160);
- /* Nov 13 (Hakan: the gauge cluster looks pretty bad): one round dial, the way GT5 draws it. The speed is in the dial itself, the gear sits in a small
-    window at its foot (red when it is time to change up), and there are no boxes round anything. */
- const cx=150,cy=82,R=74,A0=Math.PI*.72,A1=Math.PI*2.28,RED=.86,ang=u=>A0+(A1-A0)*u;
- const gr=g.createRadialGradient(cx,cy-20,6,cx,cy,R);gr.addColorStop(0,'rgba(30,34,42,.72)');gr.addColorStop(1,'rgba(4,6,9,.82)');
- g.beginPath();g.arc(cx,cy,R,0,6.2832);g.fillStyle=gr;g.fill();g.lineWidth=1.2;g.strokeStyle='rgba(255,255,255,.3)';g.stroke();
- g.beginPath();g.arc(cx,cy,R-3.5,ang(RED),A1);g.lineWidth=4;g.strokeStyle='rgba(232,39,28,.92)';g.stroke();
- g.textAlign='center';g.textBaseline='middle';g.font='600 10px '+F;
- for(let i=0;i<=32;i++){const u=i/32,a=ang(u),big=i%4===0,red=u>=RED,c=Math.cos(a),s=Math.sin(a);if(!big&&i%2)continue;g.strokeStyle=red?'#ff8a80':'#fff';g.lineWidth=big?1.8:.9;g.beginPath();g.moveTo(cx+c*(R-1.5),cy+s*(R-1.5));g.lineTo(cx+c*(R-(big?9:5)),cy+s*(R-(big?9:5)));g.stroke();
-  if(big){g.fillStyle=red?'#ff6a5e':'#e8edf1';g.fillText(String(i/4),cx+c*(R-18),cy+s*(R-18))}}
- /* needle: a thin tapered pointer, from the rim in to just short of the digits */
- const rv=Math.max(0,Math.min(1.02,o.rev)),a=ang(rv),nc=Math.cos(a),ns=Math.sin(a),px=-ns,py=nc;
- g.shadowColor='rgba(0,0,0,.7)';g.shadowBlur=3;g.fillStyle='#ff3a2c';g.beginPath();g.moveTo(cx+nc*(R-3),cy+ns*(R-3));g.lineTo(cx+nc*30+px*2.2,cy+ns*30+py*2.2);g.lineTo(cx+nc*30-px*2.2,cy+ns*30-py*2.2);g.closePath();g.fill();g.shadowBlur=0;
- /* speed in the dial */
- g.textAlign='center';g.textBaseline='alphabetic';g.font='italic 700 30px '+F;g.fillStyle='#fff';g.fillText(String(o.kmh),cx,cy+14);
- g.font='500 8px '+F;g.fillStyle='rgba(255,255,255,.65)';g.fillText(o.unit.toUpperCase(),cx,cy+25);
- /* gear window at the foot of the dial */
- {const w=22,h=20,x=cx-w/2,y=cy+R-26,r=4;g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();
-  g.fillStyle=o.shift?'#d8261b':'rgba(0,0,0,.55)';g.fill();g.lineWidth=1;g.strokeStyle=o.shift?'#ffd2cd':'rgba(255,255,255,.45)';g.stroke();
-  g.textBaseline='middle';g.font='700 15px '+F;g.fillStyle='#fff';g.fillText(String(o.gear),cx,y+h/2+.5)}
- if(o.tag){g.textAlign='right';g.textBaseline='alphabetic';g.font='700 12px '+F;g.fillStyle=o.tagCol||'#fff';g.fillText(o.tag,cx-R-8,cy+R-4)}};
+ /* Nov 13 (Hakan: make it look like number 13 in the Gran Turismo 7 screen): a curved strip of rev ticks over a dark readout, the speed on the left, a divider, and the gear on the right */
+ const cx=120,rev=Math.max(0,Math.min(1,o.rev)),RED=.86,N=44,Rr=150,ccy=222;
+ /* the readout plate: wide, flat, with slanted ends */
+ g.beginPath();g.moveTo(16,92);g.lineTo(224,92);g.lineTo(212,134);g.quadraticCurveTo(120,142,28,134);g.closePath();
+ const pg=g.createLinearGradient(0,92,0,138);pg.addColorStop(0,'rgba(24,28,34,.86)');pg.addColorStop(1,'rgba(6,8,11,.86)');g.fillStyle=pg;g.fill();
+ g.lineWidth=1;g.strokeStyle='rgba(255,255,255,.14)';g.stroke();
+ /* the rev strip: ticks along a shallow arc, lit up to the revs, the last stretch red */
+ for(let i=0;i<=N;i++){const u=i/N,a=-Math.PI/2+(u-.5)*1.05,c=Math.cos(a),sn=Math.sin(a),on=u<=rev,red=u>=RED,big=i%4===0;
+  const x0=cx+c*Rr,y0=ccy+sn*Rr,x1=cx+c*(Rr-(big?10:7)),y1=ccy+sn*(Rr-(big?10:7));
+  g.strokeStyle=on?(red?'#ff4a3d':'#ffffff'):(red?'rgba(255,74,61,.35)':'rgba(255,255,255,.28)');g.lineWidth=big?2.2:1.5;g.beginPath();g.moveTo(x0,y0);g.lineTo(x1,y1);g.stroke()}
+ /* the speed (left), a divider, the gear (right) */
+ g.textBaseline='alphabetic';g.textAlign='right';g.font='italic 600 36px '+F;g.fillStyle='#fff';g.shadowColor='rgba(0,0,0,.6)';g.shadowBlur=4;g.fillText(String(o.kmh),cx-10,124);g.shadowBlur=0;
+ g.textAlign='right';g.font='500 8px '+F;g.fillStyle='rgba(255,255,255,.6)';g.fillText(o.unit.toLowerCase(),cx-10,134);
+ g.fillStyle='rgba(255,255,255,.28)';g.fillRect(cx,102,1,30);
+ g.textAlign='left';g.font='italic 700 40px '+F;g.fillStyle=o.shift?'#ff4a3d':'#fff';g.shadowColor='rgba(0,0,0,.6)';g.shadowBlur=4;g.fillText(String(o.gear),cx+16,125);g.shadowBlur=0;
+ g.font='600 8px '+F;g.fillStyle='rgba(255,255,255,.6)';g.fillText(o.auto?'AT':'MT',cx+16,134);
+ if(o.shift){g.fillStyle='#d8261b';g.fillRect(cx+46,106,9,9)}
+ if(o.tag){g.textAlign='left';g.textBaseline='alphabetic';g.font='700 11px '+F;g.fillStyle=o.tagCol||'#fff';g.fillText(o.tag,30,124)}};
 })();

@@ -42,6 +42,9 @@ function install(){
      low views, and in the chase views only if the deck sits on the line between the camera and the car (checked against the model, then held until clear) */
   if(c.inTn){const m0=c.camX|0;if(m0>=2){c.inTn=false;c.tnB=0;c._tnL=0}else{if(!c._tnL&&under(c,R_,m0))c._tnL=1;if(!c._tnL)c.inTn=false}}else c._tnL=0;
   prev.apply(this,arguments);
+  /* Nov 13 (Hakan): hold Left Ctrl (player 1) or Right Ctrl (player 2) to look back; off with more than two players */
+  if(c._lb&&!c.fin&&humans().length<=2){const K=P.carK?P.carK():1,yw=c.cy!=null?c.cy:c.yaw,fs=Math.sin(yw),fc=Math.cos(yw),by=c.camY==null?c.y:c.camY;
+   out.p.set(c.x-fs*1.2*K,by+1.45*K,c.z-fc*1.2*K);out.l.set(c.x-fs*30,by+1.1*K,c.z-fc*30);out.f=62;c.cb=0;c.inTn=false;return}
   if(window.__camDbg&&c.human){const d=window.__camDbg,yw=c.yaw,sy_=Math.sin(yw),cy_=Math.cos(yw);out.p.set(c.x+cy_*d.s+sy_*d.f,c.y+d.h,c.z-sy_*d.s+cy_*d.f);out.l.set(c.x,c.y-.2,c.z);out.f=d.fov||34;return}
   const m=c.camX|0;if(!m||c.fin||c.respT>0)return;
   const K=P.carK?P.carK():1,yaw=c.cy!=null?c.cy:c.yaw,sy=Math.sin(yaw),cy=Math.cos(yaw),by=c.camY==null?c.y:c.camY;
@@ -55,28 +58,18 @@ function install(){
     It only looks at the lens position, aim and zoom, so it needs nothing from the car model. */
  const _fp=new V(),_fl=new V();
  soloCam=function(c,dt,out){inner.apply(this,arguments);try{if(!(c&&c.human))return;
-  const key=((c.camX|0)+1)+'|'+(c.fin?1:0)+'|'+(c.tnB>.5?1:0)+'|'+(c.respT>0?1:0),d=Math.min(.1,dt||.016);
-  if(c._bk!==key&&c._bp){c._bk=key;c._bt=0;c._bfp=c._bp.clone();c._bfl=c._bl.clone();c._bff=c._bf}else if(c._bk==null)c._bk=key;
-  if(c._bt!=null&&c._bt<1){c._bt=Math.min(1,c._bt+d/.7);const u=c._bt,e=u*u*(3-2*u);
+  const key=((c.camX|0)+1)+(c._lb?'b':'')+'|'+(c.fin?1:0)+'|'+(c.tnB>.5?1:0)+'|'+(c.respT>0?1:0),d=Math.min(.1,dt||.016);
+  const yw=c.cy!=null?c.cy:c.yaw,sy=Math.sin(yw),cy=Math.cos(yw);
+  /* Nov 13 (Hakan: it shoots backwards, then forwards): the old view is kept as an offset from the car (along it, across it, up), not as a spot in the
+     world, so while the blend runs the old lens travels with the car instead of being left behind and then chased */
+  const loc=(p,o)=>{const dx=p.x-c.x,dz=p.z-c.z;o.f=dx*sy+dz*cy;o.s=dx*cy-dz*sy;o.y=p.y-c.y;return o},wld=(o,v)=>v.set(c.x+o.f*sy+o.s*cy,c.y+o.y,c.z+o.f*cy-o.s*sy);
+  if(c._bk!==key&&c._bp){c._bk=key;c._bt=0;c._bfpL=loc(c._bp,{});c._bflL=loc(c._bl,{});c._bff=c._bf;c._bfp=wld(c._bfpL,new V());c._bfl=wld(c._bflL,new V())}else if(c._bk==null)c._bk=key;
+  if(c._bt!=null&&c._bt<1){c._bt=Math.min(1,c._bt+d/.8);const u=c._bt,e=u*u*u*(u*(u*6-15)+10);
+   wld(c._bfpL,c._bfp);wld(c._bflL,c._bfl);
    /* a jump of more than 60 m is a respawn or a restart: no slide */
    if(c._bfp.distanceTo(out.p)>60){c._bt=1}else{out.p.lerpVectors(c._bfp,out.p,e);out.l.lerpVectors(c._bfl,out.l,e);out.f=c._bff+(out.f-c._bff)*e}}
   c._bp=(c._bp||new V()).copy(out.p);c._bl=(c._bl||new V()).copy(out.l);c._bf=out.f}catch(e){}};
 }
-/* Nov 13 (Hakan): the countdown opens with a sweep like the loading cinematic: it starts on the car's left, swings round the front and the right
-   side, rising over the car, and settles exactly on the normal chase view as the lights finish. Camera keys and pause are locked meanwhile. */
-const _io=new V(),_il=new V();
-function intro(c,dt,out,R_){const u=Math.max(0,Math.min(1,1-R_.cd/3.2));
- const K=P.carK?P.carK():1,yaw=c.cy!=null?c.cy:c.yaw,sy=Math.sin(yaw),cy=Math.cos(yaw);
- const e=u*u*(3-2*u),phi=Math.PI/2+Math.PI*1.5*e;
- const dx=out.p.x-c.x,dz=out.p.z-c.z,rd=Math.hypot(dx,dz),R0=(7.5+Math.sin(Math.PI*u)*2.5)*K,rr=R0+(rd-R0)*Math.pow(u,3);
- /* rear = (-sy,-cy), left = (cy,-sy) */
- const co=Math.cos(phi),si=Math.sin(phi);
- const px=c.x+(-sy*co+cy*si)*rr,pz=c.z+(-cy*co-sy*si)*rr;
- const hh=(1.0+Math.sin(Math.PI*Math.min(1,u*1.05))*3.4)*K;
- let b=Math.max(0,(u-.72)/.28);b=b*b*(3-2*b);
- _io.set(px,c.y+hh,pz);_io.lerp(out.p,b);
- _il.set(c.x,c.y+.8*K,c.z);_il.lerp(out.l,b);
- out.p.copy(_io);out.l.copy(_il);out.f=40+(out.f-40)*b;out.p.y=Math.max(out.p.y,c.y+.5*K);c.cb=0}
 const _rc=new THREE.Raycaster(),_ro=new V(),_rd=new V();
 function under(c,R_,m){const sc=R_.scene;if(!sc)return true;if(R_._ctM===undefined){let g=null;sc.traverse(o=>{if(o.name==='cartoonTrack')g=o});R_._ctM=g?g.children.filter(o=>!/road|GRASS|SAND|gravel|tarmac/i.test(o.name)):null}
  const ms=R_._ctM;if(!ms)return true;const K=P.carK?P.carK():1,yaw=c.cy!=null?c.cy:c.yaw,sy=Math.sin(yaw),cy=Math.cos(yaw),back=(m===1?11.5:7.5)*K,up=(m===1?4.6:3.1)*K,L=Math.hypot(back,up-1.3*K);
@@ -108,6 +101,9 @@ function orbit(c,dt,out,R_){
  out.p.copy(s.pos);out.l.copy(s.look);out.f=s.f;c.cb=0;c.inTn=false}
 const _t=new V(),_l=new V();
 /* ---------------- shift keys ---------------- */
+const lbKey=(e,v)=>{if(e.code!=='ControlLeft'&&e.code!=='ControlRight')return;const R_=typeof RACE!=='undefined'?RACE:null;if(!R_||typeof scr==='undefined'||scr!=='game'||(R_.cfg&&R_.cfg.rally))return;const hs=humans();if(hs.length>2){hs.forEach(c=>c._lb=0);return}
+ const c=e.code==='ControlLeft'?hs[0]:hs[1]||(hs.length===1?hs[0]:null);if(c){c._lb=v&&R_.state!=='count'?1:0;e.preventDefault()}};
+addEventListener('keydown',e=>lbKey(e,1),true);addEventListener('keyup',e=>lbKey(e,0),true);addEventListener('blur',()=>humans().forEach(c=>c._lb=0));
 addEventListener('keydown',e=>{
  const R_=typeof RACE!=='undefined'?RACE:null;if(!R_||R_.state==='done'||typeof scr==='undefined'||scr!=='game'||e.repeat)return;
  if(e.code!=='ShiftLeft'&&e.code!=='ShiftRight')return;if(R_.state==='count')return;if(R_.cfg&&R_.cfg.rally)return;
