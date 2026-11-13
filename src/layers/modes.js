@@ -256,7 +256,7 @@ hudUpdate=()=>{const Rc=RACE,T=Rc.T;
   q('.ghint').textContent=hint;
   /* 0.02: the GT5-style gauge: a thin rev arc round the corner with its numbers outside, the gear inside it, the speed under it */
   {const cv=q('.gx5'),rv=Math.max(0,Math.min(1.04,.2+.8*kmh/Math.max(1,ceilK))),hm=Rc.cars.filter(h=>h.human).length>1,key=kmh+'|'+gx+'|'+Math.round(rv*200)+'|'+(upN?1:0)+'|'+hm+'|'+(P.isAuto&&P.isAuto(c)?1:0);
-   if(cv&&cv._k!==key){cv._k=key;P.gx5Draw(cv,{rev:rv,kmh,gear:gx+1,shift:upN,unit:P.dialK&&P.dialK()>1.2?'km/h':'mph',auto:P.isAuto?P.isAuto(c):false,tag:hm?'P'+(c.k+1):'',tagCol:hm?CS[c.k]:''})}}
+   if(cv&&cv._k!==key){cv._k=key;P.gx5Draw(cv,{rev:rv,kmh,maxK,gear:gx+1,shift:upN,unit:P.dialK&&P.dialK()>1.2?'km/h':'mph',auto:P.isAuto?P.isAuto(c):false,tag:hm?'P'+(c.k+1):'',tagCol:hm?CS[c.k]:''})}}
   {const up=upN,rd=q('.rdot');rd.className='rdot'+(up?' on':'');
    const fx=P.surfFx(st,!!Rc.T.d.gravel),cd=q('.cond');cd.innerHTML=(Rc.T.d.gravel?'GRAVEL':'TARMAC')+' <b class="'+(fx.g>=0?'up':'dn')+'">GRIP '+(fx.g>=0?'+':'')+fx.g+'%</b>'+(fx.t<-1||fx.t>1?' <b class="'+(fx.t>=0?'up':'dn')+'">SPD '+(fx.t>=0?'+':'')+fx.t+'%</b>':'')}
   const w=q('.h8warn');w.textContent=c.warnT>0&&c.warn?c.warn:(c.wrong>1?'WRONG WAY':'');
