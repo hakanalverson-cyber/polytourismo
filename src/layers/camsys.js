@@ -58,12 +58,13 @@ function install(){
   if(c._lb&&!c.fin&&humans().length<=2){const K=P.carK?P.carK():1,yw=c.cy!=null?c.cy:c.yaw,fs=Math.sin(yw),fc=Math.cos(yw),by=c.camY==null?c.y:c.camY;
    out.p.set(c.x-fs*1.2*K,by+1.45*K,c.z-fc*1.2*K);out.l.set(c.x-fs*30,by+1.1*K,c.z-fc*30);out.f=62;c.cb=0;c.inTn=false;return}
   if(window.__camDbg&&c.human){const d=window.__camDbg,yw=c.yaw,sy_=Math.sin(yw),cy_=Math.cos(yw);out.p.set(c.x+cy_*d.s+sy_*d.f,c.y+d.h,c.z-sy_*d.s+cy_*d.f);out.l.set(c.x,c.y-.2,c.z);out.f=d.fov||34;return}
-  const m=c.camX|0;if(!m||c.fin||c.respT>0)return;
+  const m=c.camX|0;if(c.fin||c.respT>0)return;/* the instrument cluster is big: the chase views aim a little lower so the car rides above it */if(!m){if(!c.inTn)out.l.y-=3.4*(P.carK?P.carK():1);return}
   const K=P.carK?P.carK():1,yaw=c.cy!=null?c.cy:c.yaw,sy=Math.sin(yaw),cy=Math.cos(yaw),by=c.camY==null?c.y:c.camY;
   if(m===1){out.p.set(c.x-sy*11.5*K,by+4.6*K,c.z-cy*11.5*K);out.l.set(c.x+sy*7*K,by+.9*K,c.z+cy*7*K);out.f=52}
   else if(m===2){out.p.set(c.x-sy*5.2*K,by+.95*K,c.z-cy*5.2*K);out.l.set(c.x+sy*9*K,by+.7*K,c.z+cy*9*K);out.f=66}
   else if(m===3){out.p.set(c.x+sy*1.45*K,by+.62*K,c.z+cy*1.45*K);out.l.set(c.x+sy*26,by+.3*K,c.z+cy*26);out.f=78}
   else if(m===4){out.p.set(c.x+sy*.15*K,by+1.55*K,c.z+cy*.15*K);out.l.set(c.x+sy*26,by+1.1*K,c.z+cy*26);out.f=74}
+  if(m<3)out.l.y-=3.4*K;
   c.cb=0;c.inTn=false};
  /* Nov 13 (Hakan: the camera transition is still choppy; one that works for any car): whenever the view changes (a camera key, the hood or tunnel view,
     the finish orbit), the picture eases from where the lens was to where the new view wants it, over about 0.7 s with a soft start and end.
