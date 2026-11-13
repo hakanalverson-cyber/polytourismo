@@ -1,0 +1,3 @@
+[["js","(async()=>{for(let i=0;i<60&&!(window.PT8&&PT8.bootDone);i++)await new Promise(r=>setTimeout(r,500));const t=document.getElementById('ptTitle');if(t)t.click();PT8.SV().name='Hakan';return 1})()"],["wait",2500],
+["js","(()=>{PT8.ui?0:0;return Object.keys(PT8).slice(0,40).join()})()"],
+["js","(()=>{PT8.P?0:0;return typeof PT8.P})()"]]

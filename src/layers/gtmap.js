@@ -8,8 +8,8 @@ const P=window.PT8;if(!P)return;
 const st=document.createElement('style');st.textContent=`
 #gtm{position:fixed;z-index:6;pointer-events:none;display:none;top:10px;right:14px;width:clamp(150px,15vw,210px);height:clamp(150px,15vw,210px)}
 #gtm.on{display:block}
-#gtm.multi{top:6px;left:50%;right:auto;width:clamp(200px,21vw,300px);height:clamp(200px,21vw,300px);transform:translateX(-50%)}
-#gtm.multi.four{top:50%;width:clamp(170px,17vw,240px);height:clamp(170px,17vw,240px);transform:translate(-50%,-50%)}
+#gtm.multi{top:50%;left:50%;right:auto;width:clamp(190px,20vw,290px);height:clamp(190px,20vw,290px);transform:translate(-50%,-50%)}
+#gtm.multi.four{width:clamp(170px,17vw,240px);height:clamp(170px,17vw,240px)}
 body.gtm #dtm,body.gtm #mm{display:none!important}
 body.rprep #gtm,body.barnscene #gtm,body.finale #gtm{display:none!important}`;document.head.appendChild(st);
 const cv=document.createElement('canvas');cv.id='gtm';document.body.appendChild(cv);const g=cv.getContext('2d');

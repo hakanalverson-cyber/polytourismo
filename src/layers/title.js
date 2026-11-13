@@ -72,7 +72,7 @@ const SC=(()=>{let dbp;const db=()=>dbp||(dbp=new Promise((res,rej)=>{const r=in
  const put=(k,v)=>db().then(d=>new Promise(res=>{const t=d.transaction('s','readwrite');t.objectStore('s').put(v,k);t.oncomplete=res;t.onerror=res;t.onabort=res})).catch(()=>{});
  const blob=cv=>new Promise(r=>{try{cv.toBlob(b=>r(b),'image/jpeg',.97)}catch(e){r(null)}});
  const canvas=async b=>{const im=await createImageBitmap(b),c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);return c};
- const key=(t,i)=>{const d=D[i];let n=0;try{n=JSON.stringify(d).length}catch(e){}return t+'|r2|'+d.name+'|'+n};
+ const key=(t,i)=>{const d=D[i];let n=0;try{n=JSON.stringify(d).length}catch(e){}return t+'|r3|'+d.name+'|'+n};
  /* Nov 2: the version is no longer in the keys. A new build used to throw every kept picture away and re-render them all behind the menu,
    which dropped the menu to a crawl after every update. The keys already change when a scene or a track changes; PROMO_REV forces a full refresh */
  /* each one answers true when the picture is in (loaded from the kept copy, or rendered), false when it is not kept and co (cache only) is set */

@@ -32,9 +32,9 @@ const humans=()=>{const R_=typeof RACE!=='undefined'?RACE:null;return R_?R_.cars
 const CAMN=['CHASE','FAR CHASE','LOW CHASE','BUMPER','ROOF'];
 function install(){
  const prev=soloCam,_a=new V(),_b=new V();
- soloCam=function(c,dt,out){
+ const inner=function(c,dt,out){
   const R_=typeof RACE!=='undefined'?RACE:null;
-  if(!(c&&c.human&&R_&&R_.T)||(R_.cfg&&R_.cfg.rally)||R_.state==='count'&&!c.fin)return prev.apply(this,arguments);
+  if(!(c&&c.human&&R_&&R_.T)||(R_.cfg&&R_.cfg.rally)||R_.state==='count'&&!c.fin){prev.apply(this,arguments);if(R_.state==='count'&&c.human&&!(R_.cfg&&R_.cfg.rally)&&R_.T)intro(c,dt,out,R_);return}
   /* finished: the drone orbit (the old random cinematic is bypassed) */
   if(c.fin&&c.cool&&R_.state!=='done'||c.fin&&R_.state==='done'&&R_._orbOn){orbit(c,dt,out,R_);return}
   c._orb=null;
@@ -50,7 +50,33 @@ function install(){
   else if(m===3){out.p.set(c.x+sy*1.45*K,by+.62*K,c.z+cy*1.45*K);out.l.set(c.x+sy*26,by+.3*K,c.z+cy*26);out.f=78}
   else if(m===4){out.p.set(c.x+sy*.15*K,by+1.55*K,c.z+cy*.15*K);out.l.set(c.x+sy*26,by+1.1*K,c.z+cy*26);out.f=74}
   c.cb=0;c.inTn=false};
+ /* Nov 13 (Hakan: the camera transition is still choppy; one that works for any car): whenever the view changes (a camera key, the hood or tunnel view,
+    the finish orbit), the picture eases from where the lens was to where the new view wants it, over about 0.7 s with a soft start and end.
+    It only looks at the lens position, aim and zoom, so it needs nothing from the car model. */
+ const _fp=new V(),_fl=new V();
+ soloCam=function(c,dt,out){inner.apply(this,arguments);try{if(!(c&&c.human))return;
+  const key=((c.camX|0)+1)+'|'+(c.fin?1:0)+'|'+(c.tnB>.5?1:0)+'|'+(c.respT>0?1:0),d=Math.min(.1,dt||.016);
+  if(c._bk!==key&&c._bp){c._bk=key;c._bt=0;c._bfp=c._bp.clone();c._bfl=c._bl.clone();c._bff=c._bf}else if(c._bk==null)c._bk=key;
+  if(c._bt!=null&&c._bt<1){c._bt=Math.min(1,c._bt+d/.7);const u=c._bt,e=u*u*(3-2*u);
+   /* a jump of more than 60 m is a respawn or a restart: no slide */
+   if(c._bfp.distanceTo(out.p)>60){c._bt=1}else{out.p.lerpVectors(c._bfp,out.p,e);out.l.lerpVectors(c._bfl,out.l,e);out.f=c._bff+(out.f-c._bff)*e}}
+  c._bp=(c._bp||new V()).copy(out.p);c._bl=(c._bl||new V()).copy(out.l);c._bf=out.f}catch(e){}};
 }
+/* Nov 13 (Hakan): the countdown opens with a sweep like the loading cinematic: it starts on the car's left, swings round the front and the right
+   side, rising over the car, and settles exactly on the normal chase view as the lights finish. Camera keys and pause are locked meanwhile. */
+const _io=new V(),_il=new V();
+function intro(c,dt,out,R_){const u=Math.max(0,Math.min(1,1-R_.cd/3.2));
+ const K=P.carK?P.carK():1,yaw=c.cy!=null?c.cy:c.yaw,sy=Math.sin(yaw),cy=Math.cos(yaw);
+ const e=u*u*(3-2*u),phi=Math.PI/2+Math.PI*1.5*e;
+ const dx=out.p.x-c.x,dz=out.p.z-c.z,rd=Math.hypot(dx,dz),R0=(7.5+Math.sin(Math.PI*u)*2.5)*K,rr=R0+(rd-R0)*Math.pow(u,3);
+ /* rear = (-sy,-cy), left = (cy,-sy) */
+ const co=Math.cos(phi),si=Math.sin(phi);
+ const px=c.x+(-sy*co+cy*si)*rr,pz=c.z+(-cy*co-sy*si)*rr;
+ const hh=(1.0+Math.sin(Math.PI*Math.min(1,u*1.05))*3.4)*K;
+ let b=Math.max(0,(u-.72)/.28);b=b*b*(3-2*b);
+ _io.set(px,c.y+hh,pz);_io.lerp(out.p,b);
+ _il.set(c.x,c.y+.8*K,c.z);_il.lerp(out.l,b);
+ out.p.copy(_io);out.l.copy(_il);out.f=40+(out.f-40)*b;out.p.y=Math.max(out.p.y,c.y+.5*K);c.cb=0}
 const _rc=new THREE.Raycaster(),_ro=new V(),_rd=new V();
 function under(c,R_,m){const sc=R_.scene;if(!sc)return true;if(R_._ctM===undefined){let g=null;sc.traverse(o=>{if(o.name==='cartoonTrack')g=o});R_._ctM=g?g.children.filter(o=>!/road|GRASS|SAND|gravel|tarmac/i.test(o.name)):null}
  const ms=R_._ctM;if(!ms)return true;const K=P.carK?P.carK():1,yaw=c.cy!=null?c.cy:c.yaw,sy=Math.sin(yaw),cy=Math.cos(yaw),back=(m===1?11.5:7.5)*K,up=(m===1?4.6:3.1)*K,L=Math.hypot(back,up-1.3*K);
@@ -68,23 +94,25 @@ function orbit(c,dt,out,R_){
   for(let k=1;k<=7;k++){const u=k/7,x=tx+(px-tx)*u,z=tz+(pz-tz)*u,y=ty+(py-ty)*u;const g=T.surf(x,z,y+40).h;if(g!=null&&g+.7>y)return 2}
   if(pts){const dx=px-tx,dz=pz-tz,L2=dx*dx+dz*dz;for(let i=0;i<pts.length;i++){const q=pts[i],ex=q[0]-tx,ez=q[1]-tz;if(ex*ex+ez*ez>(r+3)*(r+3))continue;const u=clamp((ex*dx+ez*dz)/L2,0,1),qx=tx+dx*u-q[0],qz=tz+dz*u-q[1],rad=(q[2]||.5)+1.1;if(qx*qx+qz*qz<rad*rad&&ty+(py-ty)*u<ty+9*K)return 1}}
   return 0};
- /* keep the angle that is clear, searching outwards from the drifting one; the chosen angle eases, never jumps */
- let want=base,r=s.r,h=hh;
- if(blocked(base,r,h)){let found=false;for(const d of[.22,-.22,.45,-.45,.75,-.75,1.1,-1.1]){const a=base+d;if(!blocked(a,r,h)){want=a;found=true;break}}
-  if(!found){for(const rs of[.78,.6]){if(!blocked(base,r*rs,h*1.25)){r=r*rs;h=h*1.25;found=true;break}}if(!found){h=hh*1.9;r=s.r*.7}}}
- /* the base angle keeps turning; the offset to the clear angle eases in and out */
- s.off=(s.off||0)+(wr(want-base)-(s.off||0))*(1-Math.exp(-dt*3));
- const ang=base+s.off,tp=_t.set(tx+Math.sin(ang)*r,ty+h,tz+Math.cos(ang)*r);
+ /* Nov 13 (Hakan: it jitters trying to avoid trees): the orbit is wider and higher to begin with, looks ahead along its own path, and every choice
+    (angle, radius, height) is a slowly eased value, so it drifts out of the way of a tree before it gets there instead of snapping round it */
+ const R0=s.r*1.3,H0=hh*1.25;let want=base,rT=R0,hT=H0;
+ const bad=(a,r,h)=>blocked(a,r,h)||blocked(a+.28,r,h)||blocked(a+.56,r,h);
+ if(bad(base+(s.off||0),R0,H0)){let found=false;for(const d of[.25,-.25,.5,-.5,.8,-.8,1.2,-1.2]){if(!bad(base+d,R0,H0)){want=base+d;found=true;break}}
+  if(!found){for(const m of[1.25,1.55,1.9]){if(!bad(base,R0*(1+(m-1)*.5),H0*m)){rT=R0*(1+(m-1)*.5);hT=H0*m;found=true;break}}if(!found){hT=H0*2.2;rT=R0*.8}}}
+ s.rr=s.rr==null?rT:s.rr+(rT-s.rr)*(1-Math.exp(-dt*1.4));s.hv=s.hv==null?hT:s.hv+(hT-s.hv)*(1-Math.exp(-dt*1.4));
+ s.off=(s.off||0)+(wr(want-base)-(s.off||0))*(1-Math.exp(-dt*1.6));
+ const ang=base+s.off,r=s.rr,h=s.hv,tp=_t.set(tx+Math.sin(ang)*r,ty+h,tz+Math.cos(ang)*r);
  const g=T.surf(tp.x,tp.z,tp.y+40).h;if(g!=null&&tp.y<g+1.6)tp.y=g+1.6;
- const k=1-Math.exp(-dt*5);s.pos.lerp(tp,k);s.look.lerp(_l.set(tx,ty,tz),1-Math.exp(-dt*7));s.f+=(50-s.f)*(1-Math.exp(-dt*4));
+ const k=1-Math.exp(-dt*3.2);s.pos.lerp(tp,k);s.look.lerp(_l.set(tx,ty,tz),1-Math.exp(-dt*7));s.f+=(50-s.f)*(1-Math.exp(-dt*4));
  out.p.copy(s.pos);out.l.copy(s.look);out.f=s.f;c.cb=0;c.inTn=false}
 const _t=new V(),_l=new V();
 /* ---------------- shift keys ---------------- */
 addEventListener('keydown',e=>{
  const R_=typeof RACE!=='undefined'?RACE:null;if(!R_||R_.state==='done'||typeof scr==='undefined'||scr!=='game'||e.repeat)return;
- if(e.code!=='ShiftLeft'&&e.code!=='ShiftRight')return;if(R_.cfg&&R_.cfg.rally)return;
+ if(e.code!=='ShiftLeft'&&e.code!=='ShiftRight')return;if(R_.state==='count')return;if(R_.cfg&&R_.cfg.rally)return;
  const hs=humans(),c=e.code==='ShiftLeft'?hs[0]:hs[1]||(hs.length===1?hs[0]:null);if(!c||c.fin)return;
- c.camX=((c.camX|0)+1)%CAMN.length;toast((hs.length>1?'P'+(hs.indexOf(c)+1)+'  ':'')+CAMN[c.camX]);P.sfx&&P.sfx('click')},true);
+ c.camX=((c.camX|0)+1)%CAMN.length;P.sfx&&P.sfx('click')},true);
 /* ---------------- early classification ---------------- */
 const KEYSETS=[['KeyQ','KeyW','KeyE','KeyA','KeyS','KeyD'],['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Numpad8','Numpad4','Numpad5','Numpad6'],['KeyI','KeyJ','KeyK','KeyL'],['Numpad7','Numpad9','Numpad1','Numpad3']];
 const dom=[];function dv(i){if(!dom[i]){const d=document.createElement('div');d.className='cbd';d.innerHTML='<div class="bx"></div>';document.body.appendChild(d);dom[i]={d,bx:d.firstChild,on:false}}return dom[i]}

@@ -121,6 +121,10 @@ P.trackShot=idx=>SHOT[idx]||(SHOT[idx]=new Promise(res=>setTimeout(async()=>{let
  /* never while the live drone view is showing this same circuit: the picture needs the model's meshes, and they can only be in one place */
  for(let w=0;w<600&&P.prepBusy&&P.prepBusy(idx);w++)await new Promise(r=>setTimeout(r,1000));
  const def=Object.assign({},D[idx]);const T=sampleTrack(def);sc=buildWorld(T);sc.traverse(o=>{if(o.name==='cartoonTrack')grp=o});
+ /* Nov 13 (Hakan: the map previews use the current shader pack): the same daylight grade the race and the drone view use */
+ const uu=window.TODU,sv0=uu?{mul:uu.mul.value.clone(),add:uu.add.value.clone(),sat:uu.sat.value}:null,ct0=P.curTod,ex0=R.toneMappingExposure,be0=P.baseExpo;let look0=null,expo0=1.05;
+ try{if(P.applyTod)P.applyTod(sc,T,'day');look0=uu?{mul:uu.mul.value.clone(),add:uu.add.value.clone(),sat:uu.sat.value}:null;expo0=R.toneMappingExposure||1.05}catch(e){console.warn('shot tod',e)}
+ if(uu&&sv0){uu.mul.value.copy(sv0.mul);uu.add.value.copy(sv0.add);uu.sat.value=sv0.sat}P.curTod=ct0;R.toneMappingExposure=ex0;P.baseExpo=be0;
  const ims=[];sc.traverse(o=>{const m=o.material;if(m&&m.map&&m.map.image)ims.push(m.map.image)});
  for(let t=0;t<60&&ims.some(im=>!(im.complete&&im.naturalWidth));t++)await new Promise(r=>setTimeout(r,50));
  const N=T.N,k=(def.cartoon&&def.cartoon.carScale)||1,cv_=new Float32Array(N);for(let i=0;i<N;i++){let d=T.psi[(i+6)%N]-T.psi[(i-6+N)%N];d=Math.atan2(Math.sin(d),Math.cos(d));cv_[i]=d/(12*T.sp)}
@@ -135,8 +139,8 @@ P.trackShot=idx=>SHOT[idx]||(SHOT[idx]=new Promise(res=>setTimeout(async()=>{let
   if(!grp){ok=true;break}let clear=true;for(const q of [a,b,(a-Math.round(back/2)+N)%N]){const to=new V(T.x[q],T.y[q]+1.2*k,T.z[q]),dir=to.clone().sub(cam.position),dl=dir.length();rc.set(cam.position,dir.normalize());rc.far=dl-3*k;if(rc.intersectObject(grp,true).length){clear=false;break}}
   if(clear){ok=true;break}}
  if(!shR){shR=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});shR.outputEncoding=THREE.sRGBEncoding;shR.toneMapping=THREE.ACESFilmicToneMapping;shR.toneMappingExposure=1.05;shR.setPixelRatio(1)}
- /* full HD, rendered half as big again and scaled down, so the previews stay sharp at any size */shR.setSize(2880,1620,false);if(sc.fog&&sc.fog.far)sc.fog.far=Math.max(sc.fog.far,2400);shR.render(sc,cam);
- const out=document.createElement('canvas');out.width=1920;out.height=1080;const og=out.getContext('2d');og.imageSmoothingQuality='high';og.drawImage(shR.domElement,0,0,1920,1080);res(out)}
+ /* full HD, rendered half as big again and scaled down, so the previews stay sharp at any size */shR.setSize(2880,1620,false);if(sc.fog&&sc.fog.far)sc.fog.far=Math.max(sc.fog.far,2400);if(uu&&look0){uu.mul.value.copy(look0.mul);uu.add.value.copy(look0.add);uu.sat.value=look0.sat}shR.toneMappingExposure=expo0;try{shR.render(sc,cam)}finally{if(uu&&sv0){uu.mul.value.copy(sv0.mul);uu.add.value.copy(sv0.add);uu.sat.value=sv0.sat}}
+ const out=document.createElement('canvas');out.width=1920;out.height=1080;const og=out.getContext('2d');og.imageSmoothingQuality='high';try{og.filter='saturate(1.05) contrast(1) brightness(1.1)'}catch(e){}og.drawImage(shR.domElement,0,0,1920,1080);res(out)}
  catch(e){console.error('track shot',e);delete SHOT[idx];res(null)}
  finally{if(sc){if(P._ctGive)P._ctGive(sc);if(grp&&grp.parent)grp.parent.remove(grp);
   /* Nov 13: nobody else is showing this circuit, so its model is let go (it stayed in memory, and on the picture renderer's graphics memory, for

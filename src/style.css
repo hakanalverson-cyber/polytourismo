@@ -1859,3 +1859,13 @@ input.nm,#ptOptions input[type=text],#ptOptions select{border-radius:8px!importa
 
 /* Nov 13: no buff or state read-outs in the race (slipstream label, grip/speed line) */
 .h9ex .dr,.h8hud .cond,#hud .cond,.cond{display:none!important}
+
+/* Nov 13 (round 2): no GHOST label, no circuit row, no arrows round the circuit name, no medal row */
+.h9ex .gd,#gxSu .gxMed,#gxSu #gxCrs,#gxSu .gxTnA{display:none!important}
+
+/* Nov 13: the pause menu carries the blue accent */
+#pause .w{border-top:2px solid #6fa0d0!important;box-shadow:0 18px 44px #000d,0 0 40px #4f7eab33!important}
+#pause .tb{box-shadow:inset 0 -2px 0 #4f7eab88!important;position:relative}
+#pause .tb:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,#8fb4d8,#33608c)}
+#pause button:first-of-type{background:linear-gradient(180deg,#8fb4d8e0 0%,#4f7eabe8 48%,#33608ce8 52%,#4a77a3e8 100%)!important;color:#fff!important;box-shadow:inset 0 1px 0 #ffffff55,0 0 16px #4f7eab66!important}
+#pause button:hover,#pause button:focus{background:linear-gradient(180deg,#8fb4d8e0 0%,#4f7eabe8 48%,#33608ce8 52%,#4a77a3e8 100%)!important;color:#fff!important}

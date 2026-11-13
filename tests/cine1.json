@@ -1,0 +1,9 @@
+[["js","(async()=>{for(let i=0;i<60&&!(window.PT8&&PT8.bootDone);i++)await new Promise(r=>setTimeout(r,500));const t=document.getElementById('ptTitle');if(t)t.click();PT8.SV().name='Hakan';return 1})()"],["wait",2500],
+["js","(()=>{document.querySelector('#s8cards .card[data-m=track]').click();return scr})()"],["wait",3000],["shot","a_map"],
+["js","(()=>{document.getElementById('pkGo').click();return scr})()"],["wait",3500],["shot","b_cars"],
+["wait",5000],["shot","b_cars2"],
+["js","(()=>{document.getElementById('suGo').click();return scr})()"],["wait",2500],["shot","c_cine1"],
+["wait",2500],["shot","c_cine2"],["wait",2500],["shot","c_cine3"],["wait",3000],["shot","c_cine4"],
+["js","(()=>JSON.stringify({scr:window.scr,cine:PT8.P.cine&&{on:PT8.P.cine.on,ready:PT8.P.cine.ready}}))()"],
+["wait",8000],["shot","d_after"],
+["js","(()=>JSON.stringify({scr:window.scr,cine:PT8.P.cine&&{on:PT8.P.cine.on,ready:PT8.P.cine.ready}}))()"]]

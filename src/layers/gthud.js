@@ -25,26 +25,24 @@ const st=document.createElement('style');st.textContent=`
 .h8spd .gx5{width:228px!important;height:152px!important}`;document.head.appendChild(st);
 const F='"Inter","Segoe UI","Helvetica Neue",Arial,sans-serif';
 P.gx5Draw=(cv,o)=>{const g=cv.getContext('2d'),W=cv.width,k=W/240;g.setTransform(k,0,0,k,0,0);g.clearRect(0,0,240,160);
- const cx=78,cy=82,R=70,A0=Math.PI*.75,A1=Math.PI*2.25,RED=.84,ang=u=>A0+(A1-A0)*u;
- /* dial */
- const gr=g.createRadialGradient(cx,cy-18,8,cx,cy,R);gr.addColorStop(0,'rgba(34,38,46,.86)');gr.addColorStop(1,'rgba(6,8,11,.9)');
- g.beginPath();g.arc(cx,cy,R,0,6.2832);g.fillStyle=gr;g.fill();g.lineWidth=1.6;g.strokeStyle='rgba(255,255,255,.42)';g.stroke();
- g.beginPath();g.arc(cx,cy,R-4.5,ang(RED),A1);g.lineWidth=5;g.strokeStyle='#e8271c';g.stroke();
- g.textAlign='center';g.textBaseline='middle';g.font='600 11px '+F;
- for(let i=0;i<=32;i++){const u=i/32,a=ang(u),big=i%4===0,red=u>=RED,c=Math.cos(a),s=Math.sin(a);g.strokeStyle=red&&!big?'#ffb4ae':'#fff';g.lineWidth=big?2:1;g.beginPath();g.moveTo(cx+c*(R-2),cy+s*(R-2));g.lineTo(cx+c*(R-(big?11:6)),cy+s*(R-(big?11:6)));g.stroke();
-  if(big){g.fillStyle=red?'#ff6a5e':'#fff';g.fillText(String(i/4),cx+c*(R-21),cy+s*(R-21))}}
- g.font='500 6.5px '+F;g.fillStyle='rgba(255,255,255,.6)';g.fillText('x1000 r/min',cx,cy-22);
- /* needle */
- const rv=Math.max(0,Math.min(1.02,o.rev)),a=ang(rv),nc=Math.cos(a),ns=Math.sin(a);
- g.lineCap='round';g.shadowColor='rgba(0,0,0,.7)';g.shadowBlur=3;g.strokeStyle='#ff3a2c';g.lineWidth=2.6;g.beginPath();g.moveTo(cx-nc*9,cy-ns*9);g.lineTo(cx+nc*(R-9),cy+ns*(R-9));g.stroke();g.shadowBlur=0;g.lineCap='butt';
- g.beginPath();g.arc(cx,cy,7.5,0,6.2832);g.fillStyle='#0b0d11';g.fill();g.lineWidth=1.4;g.strokeStyle='rgba(255,255,255,.55)';g.stroke();
- /* gear window */
- {const x=cx-14,y=cy+28,w=28,h=27,r=4;g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();
-  g.fillStyle=o.shift?'#d8261b':'rgba(4,5,7,.92)';g.fill();g.lineWidth=1.2;g.strokeStyle=o.shift?'#ffd2cd':'rgba(255,255,255,.5)';g.stroke();
-  g.font='700 22px '+F;g.fillStyle='#fff';g.fillText(String(o.gear),cx,y+h/2+1)}
- /* speed */
- {const x=154,y=86,w=84,h=58,r=7;g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();g.fillStyle='rgba(6,8,11,.72)';g.fill();g.lineWidth=1;g.strokeStyle='rgba(255,255,255,.28)';g.stroke();
-  g.textAlign='right';g.textBaseline='alphabetic';g.font='600 36px '+F;g.fillStyle='#fff';g.fillText(String(o.kmh),x+w-8,y+36);
-  g.font='500 10px '+F;g.fillStyle='rgba(255,255,255,.72)';g.fillText(o.unit,x+w-8,y+51);
-  if(o.tag){g.textAlign='left';g.font='700 11px '+F;g.fillStyle=o.tagCol||'#fff';g.fillText(o.tag,x+8,y+51)}}};
+ /* Nov 13 (Hakan: the gauge cluster looks pretty bad): one round dial, the way GT5 draws it. The speed is in the dial itself, the gear sits in a small
+    window at its foot (red when it is time to change up), and there are no boxes round anything. */
+ const cx=150,cy=82,R=74,A0=Math.PI*.72,A1=Math.PI*2.28,RED=.86,ang=u=>A0+(A1-A0)*u;
+ const gr=g.createRadialGradient(cx,cy-20,6,cx,cy,R);gr.addColorStop(0,'rgba(30,34,42,.72)');gr.addColorStop(1,'rgba(4,6,9,.82)');
+ g.beginPath();g.arc(cx,cy,R,0,6.2832);g.fillStyle=gr;g.fill();g.lineWidth=1.2;g.strokeStyle='rgba(255,255,255,.3)';g.stroke();
+ g.beginPath();g.arc(cx,cy,R-3.5,ang(RED),A1);g.lineWidth=4;g.strokeStyle='rgba(232,39,28,.92)';g.stroke();
+ g.textAlign='center';g.textBaseline='middle';g.font='600 10px '+F;
+ for(let i=0;i<=32;i++){const u=i/32,a=ang(u),big=i%4===0,red=u>=RED,c=Math.cos(a),s=Math.sin(a);if(!big&&i%2)continue;g.strokeStyle=red?'#ff8a80':'#fff';g.lineWidth=big?1.8:.9;g.beginPath();g.moveTo(cx+c*(R-1.5),cy+s*(R-1.5));g.lineTo(cx+c*(R-(big?9:5)),cy+s*(R-(big?9:5)));g.stroke();
+  if(big){g.fillStyle=red?'#ff6a5e':'#e8edf1';g.fillText(String(i/4),cx+c*(R-18),cy+s*(R-18))}}
+ /* needle: a thin tapered pointer, from the rim in to just short of the digits */
+ const rv=Math.max(0,Math.min(1.02,o.rev)),a=ang(rv),nc=Math.cos(a),ns=Math.sin(a),px=-ns,py=nc;
+ g.shadowColor='rgba(0,0,0,.7)';g.shadowBlur=3;g.fillStyle='#ff3a2c';g.beginPath();g.moveTo(cx+nc*(R-3),cy+ns*(R-3));g.lineTo(cx+nc*30+px*2.2,cy+ns*30+py*2.2);g.lineTo(cx+nc*30-px*2.2,cy+ns*30-py*2.2);g.closePath();g.fill();g.shadowBlur=0;
+ /* speed in the dial */
+ g.textAlign='center';g.textBaseline='alphabetic';g.font='italic 700 30px '+F;g.fillStyle='#fff';g.fillText(String(o.kmh),cx,cy+14);
+ g.font='500 8px '+F;g.fillStyle='rgba(255,255,255,.65)';g.fillText(o.unit.toUpperCase(),cx,cy+25);
+ /* gear window at the foot of the dial */
+ {const w=22,h=20,x=cx-w/2,y=cy+R-26,r=4;g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();
+  g.fillStyle=o.shift?'#d8261b':'rgba(0,0,0,.55)';g.fill();g.lineWidth=1;g.strokeStyle=o.shift?'#ffd2cd':'rgba(255,255,255,.45)';g.stroke();
+  g.textBaseline='middle';g.font='700 15px '+F;g.fillStyle='#fff';g.fillText(String(o.gear),cx,y+h/2+.5)}
+ if(o.tag){g.textAlign='right';g.textBaseline='alphabetic';g.font='700 12px '+F;g.fillStyle=o.tagCol||'#fff';g.fillText(o.tag,cx-R-8,cy+R-4)}};
 })();

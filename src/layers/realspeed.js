@@ -31,7 +31,7 @@ P.setReal=setReal;setReal(false);
 let live=false,_ro=!!P._ro,_to=!!P._to;const upd=()=>setReal(live||_ro||_to);
 Object.defineProperty(P,'_ro',{get:()=>_ro,set:v=>{_ro=!!v;upd()},configurable:true});
 Object.defineProperty(P,'_to',{get:()=>_to,set:v=>{_to=!!v;upd()},configurable:true});
-{const lh=P.launch;P.launch=cfg=>{live=!!(cfg&&(cfg.circuit||cfg.rally||cfg.mode==='rally'));setReal(live||_ro||_to);return lh(cfg)}}
+{const lh=P.launch;P.launch=cfg=>{live=!!(cfg&&(cfg.circuit||cfg.rally||cfg.mode==='rally'||(cfg.track!=null&&(P.TRK_TRACKS||[]).includes(+String(cfg.track).replace('r','')))/* Nov 13: the imported circuits run at every car's real top speed too */));setReal(live||_ro||_to);return lh(cfg)}}
 {const sh=show;show=function(id){if(id!=='game'&&id!=='pause'&&live){live=false;upd()}return sh.apply(this,arguments)}}
 /* classes follow perf points so a higher-points car can never sit in a lower class than a lower-points one */
 /* performance points come from real-world figures only (true top speed, launch, grip, braking), so a car's rating never shifts with the mode it is shown in */
