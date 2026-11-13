@@ -255,8 +255,11 @@ hudUpdate=()=>{const Rc=RACE,T=Rc.T;
   const ceilK=st.top*P.GT(st)[gx].top*((c.mt&&c.mt.top)||1)*2.23694*DK,upN=Rc.state==='race'&&!c.fin&&gx<NG-1&&kmh>=ceilK*.84,dnN=kmh<ceilK*.34;let hint='';if(Rc.state==='race'&&!c.fin){if(upN)hint='SHIFT UP';else if(gx>0&&dnN)hint='SHIFT DOWN'}
   q('.ghint').textContent=hint;
   /* 0.02: the GT5-style gauge: a thin rev arc round the corner with its numbers outside, the gear inside it, the speed under it */
-  {const cv=q('.gx5'),rv=Math.max(0,Math.min(1.04,.2+.8*kmh/Math.max(1,ceilK))),hm=Rc.cars.filter(h=>h.human).length>1,key=kmh+'|'+gx+'|'+Math.round(rv*200)+'|'+(upN?1:0)+'|'+hm+'|'+(P.isAuto&&P.isAuto(c)?1:0);
-   if(cv&&cv._k!==key){cv._k=key;P.gx5Draw(cv,{rev:rv,kmh,maxK,gear:gx+1,shift:upN,unit:P.dialK&&P.dialK()>1.2?'km/h':'mph',auto:P.isAuto?P.isAuto(c):false,tag:hm?'P'+(c.k+1):'',tagCol:hm?CS[c.k]:''})}}
+  {let key2;const cv=q('.gx5'),rv=Math.max(0,Math.min(1.04,.2+.8*kmh/Math.max(1,ceilK))),hm=Rc.cars.filter(h=>h.human).length>1,key=kmh+'|'+gx+'|'+Math.round(rv*200)+'|'+(upN?1:0)+'|'+hm+'|'+(P.isAuto&&P.isAuto(c)?1:0);
+   {/* telemetry for the gauge: pedals, steering and the real accelerations (from the change in speed and heading), smoothed */const nw=performance.now(),G=c._gq||(c._gq={t:nw,sp:c.sp,yaw:c.yaw,lon:0,lat:0});const dtg=(nw-G.t)/1000;if(dtg>.016){let dy=c.yaw-G.yaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));const lo=(c.sp-G.sp)/dtg/9.81,la=c.sp*dy/dtg/9.81,kk=Math.min(1,dtg*6);G.lon+=(Math.max(-2,Math.min(2,lo))-G.lon)*kk;G.lat+=(Math.max(-2.5,Math.min(2.5,la))-G.lat)*kk;G.t=nw;G.sp=c.sp;G.yaw=c.yaw}
+  const I=c.in||{};c._tl={th:+(I.th||0),br:+(I.br||0),st:+(I.st||0),lon:G.lon,lat:G.lat}}
+   const TL=c._tl||{th:0,br:0,st:0,lon:0,lat:0};key2=key+'|'+Math.round(TL.th*20)+'|'+Math.round(TL.br*20)+'|'+Math.round(TL.st*20)+'|'+Math.round(TL.lon*20)+'|'+Math.round(TL.lat*20);
+   if(cv&&cv._k!==key2){cv._k=key2;P.gx5Draw(cv,{rev:rv,kmh,maxK,tl:TL,gear:gx+1,shift:upN,unit:P.dialK&&P.dialK()>1.2?'km/h':'mph',auto:P.isAuto?P.isAuto(c):false,tag:hm?'P'+(c.k+1):'',tagCol:hm?CS[c.k]:''})}}
   {const up=upN,rd=q('.rdot');rd.className='rdot'+(up?' on':'');
    const fx=P.surfFx(st,!!Rc.T.d.gravel),cd=q('.cond');cd.innerHTML=(Rc.T.d.gravel?'GRAVEL':'TARMAC')+' <b class="'+(fx.g>=0?'up':'dn')+'">GRIP '+(fx.g>=0?'+':'')+fx.g+'%</b>'+(fx.t<-1||fx.t>1?' <b class="'+(fx.t>=0?'up':'dn')+'">SPD '+(fx.t>=0?'+':'')+fx.t+'%</b>':'')}
   const w=q('.h8warn');w.textContent=c.warnT>0&&c.warn?c.warn:(c.wrong>1?'WRONG WAY':'');
