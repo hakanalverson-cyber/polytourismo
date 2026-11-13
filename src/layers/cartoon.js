@@ -139,7 +139,7 @@ P.trackShot=idx=>SHOT[idx]||(SHOT[idx]=new Promise(res=>setTimeout(async()=>{let
   if(!grp){ok=true;break}let clear=true;for(const q of [a,b,(a-Math.round(back/2)+N)%N]){const to=new V(T.x[q],T.y[q]+1.2*k,T.z[q]),dir=to.clone().sub(cam.position),dl=dir.length();rc.set(cam.position,dir.normalize());rc.far=dl-3*k;if(rc.intersectObject(grp,true).length){clear=false;break}}
   if(clear){ok=true;break}}
  if(!shR){shR=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});shR.outputEncoding=THREE.sRGBEncoding;shR.toneMapping=THREE.ACESFilmicToneMapping;shR.toneMappingExposure=1.05;shR.setPixelRatio(1)}
- /* full HD, rendered half as big again and scaled down, so the previews stay sharp at any size */shR.setSize(2880,1620,false);if(sc.fog&&sc.fog.far)sc.fog.far=Math.max(sc.fog.far,2400);if(uu&&look0){uu.mul.value.copy(look0.mul);uu.add.value.copy(look0.add);uu.sat.value=look0.sat}shR.toneMappingExposure=expo0;try{shR.render(sc,cam)}finally{if(uu&&sv0){uu.mul.value.copy(sv0.mul);uu.add.value.copy(sv0.add);uu.sat.value=sv0.sat}}
+ /* full HD, rendered half as big again and scaled down, so the previews stay sharp at any size */shR.setSize(1920,1080,false);if(sc.fog&&sc.fog.far)sc.fog.far=Math.max(sc.fog.far,2400);if(uu&&look0){uu.mul.value.copy(look0.mul);uu.add.value.copy(look0.add);uu.sat.value=look0.sat}shR.toneMappingExposure=expo0;try{shR.render(sc,cam)}finally{if(uu&&sv0){uu.mul.value.copy(sv0.mul);uu.add.value.copy(sv0.add);uu.sat.value=sv0.sat}}
  const out=document.createElement('canvas');out.width=1920;out.height=1080;const og=out.getContext('2d');og.imageSmoothingQuality='high';try{og.filter='saturate(1.05) contrast(1) brightness(1.1)'}catch(e){}og.drawImage(shR.domElement,0,0,1920,1080);res(out)}
  catch(e){console.error('track shot',e);delete SHOT[idx];res(null)}
  finally{if(sc){if(P._ctGive)P._ctGive(sc);if(grp&&grp.parent)grp.parent.remove(grp);
@@ -147,6 +147,7 @@ P.trackShot=idx=>SHOT[idx]||(SHOT[idx]=new Promise(res=>setTimeout(async()=>{let
      every circuit a picture was made of: eight whole circuits after the first start). It is decoded again when the circuit is raced */
   try{const pk=grp&&grp.userData.pack;if(pk&&!grp.userData.gave&&pk._grp===grp){for(const m of grp.children.slice()){grp.remove(m);if(m.geometry)m.geometry.dispose();const mm=m.material;if(mm&&mm.map)mm.map.dispose()}pk._m=null;pk._grp=null}}catch(e){}
   try{disposeWorld(sc)}catch(e){}}}},30)));
+P.trackShotReset=idx=>{delete SHOT[idx]};
 P.trackShotCached=idx=>SHOT[idx]&&SHOT[idx]._v||null;
 /* a shot saved from an earlier session (title.js keeps them in IndexedDB) */
 P.trackShotSeed=(idx,cv)=>{const pr=Promise.resolve(cv);pr._v=cv;SHOT[idx]=pr};

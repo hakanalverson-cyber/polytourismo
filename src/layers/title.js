@@ -76,7 +76,11 @@ const SC=(()=>{let dbp;const db=()=>dbp||(dbp=new Promise((res,rej)=>{const r=in
  /* Nov 2: the version is no longer in the keys. A new build used to throw every kept picture away and re-render them all behind the menu,
    which dropped the menu to a crawl after every update. The keys already change when a scene or a track changes; PROMO_REV forces a full refresh */
  /* each one answers true when the picture is in (loaded from the kept copy, or rendered), false when it is not kept and co (cache only) is set */
- return{track:async(i,co)=>{const k=key('t',i),hit=await get(k);if(hit&&P.trackShotSeed){try{P.trackShotSeed(i,await canvas(hit));return true}catch(e){}}if(co)return false;
+ const OLD={};
+ return{track:async(i,co)=>{const k=key('t',i),hit=await get(k);if(hit&&P.trackShotSeed){try{P.trackShotSeed(i,await canvas(hit));return true}catch(e){}}
+   /* Nov 13: the circuit pictures were re-made with the new look; until the new one is rendered (quietly, one at a time, later) the old one stands in, so the circuit select is never empty */
+   if(co){const old=await get(k.replace('|r3|','|r2|'));if(old&&P.trackShotSeed){try{P.trackShotSeed(i,await canvas(old));OLD[i]=1}catch(e){}}return false}
+   if(OLD[i]&&P.trackShotReset){delete OLD[i];P.trackShotReset(i)}
    const cv=await P.trackShot(i);if(cv){const b=await blob(cv);if(b)put(k,b)}return true},
   menu:async(k,co)=>{const kk='mn|s2|'+P.PROMO_REV+'|'+JSON.stringify(P.MENU_SCENES[k]),i=P.menuTrack(k),kk2=key(kk,i),hit=await get(kk2);if(hit&&P.menuShotSeed){try{P.menuShotSeed(k,await canvas(hit));return true}catch(e){}}if(co)return false;
    const cv=await P.menuShot(k);if(cv){const b=await blob(cv);if(b)put(kk2,b)}return true},
@@ -107,7 +111,7 @@ window.PT8_BOOT=new Promise(res=>{const run=()=>setTimeout(async()=>{try{const B
  setTimeout(async()=>{REST.sort((a,b)=>a[0]-b[0]);const sl=ms=>new Promise(r=>setTimeout(r,ms));
   /* Nov 7: also never while the Career garage or a bike ride is on screen (the render, the JPEG encode and the shader builds were eating the garage's frames) */
   const busy=()=>typeof scr!=='undefined'&&(scr==='game'||scr==='pause'||scr==='bike'||scr==='bikeprep'||scr==='s8career');
-  for(const j of REST){while(busy())await sl(1500);try{await Promise.race([j[2](false),sl(120000)])}catch(e){console.error('picture',j[1],e)}await sl(1400)}P.picsDone=1},1200)},400);if(document.readyState==='complete')run();else addEventListener('load',run)});
+  for(const j of REST){while(busy())await sl(1500);try{await Promise.race([j[2](false),sl(120000)])}catch(e){console.error('picture',j[1],e)}await sl(2600)}P.picsDone=1},1200)},400);if(document.readyState==='complete')run();else addEventListener('load',run)});
 window.PT8_BOOT.then(()=>{P.bootDone=1});window.PT8_BOOT.then(()=>setTimeout(()=>{d.classList.add('on');if(!BT)slide()},400));
 let done=false;
 function go(e){/* the boot warning cards take the first presses: each one skips a card */{const w=document.getElementById('ptWarn');if(w&&getComputedStyle(w).visibility!=='hidden'&&getComputedStyle(w).opacity>.05){w.classList.add(w.classList.contains('s1')?'s2':'s1');if(e){try{e.preventDefault();e.stopImmediatePropagation()}catch(x){}}return}}
