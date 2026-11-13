@@ -231,4 +231,39 @@ P.gx5Draw=(cv,o)=>{const st=window.PTO&&window.PTO.gauge;if(st==='cluster')retur
  T('TRIP',92,152,7,'rgba(255,255,255,.55)','center',600);T((I.trip==null?0:I.trip).toFixed(2)+' '+(o.unit==='mph'?'mi':'km'),92,162,9,'#fff','center',600);
  {const bx=508-20,by=152;g.fillStyle='rgba(255,255,255,.12)';g.fillRect(bx,by,17,5);g.fillRect(bx+23,by,17,5);g.fillStyle='#ef6a5a';g.fillRect(bx,by,17*(I.br||0),5);g.fillStyle='#9fd6a8';g.fillRect(bx+23,by,17*(I.th||0),5);T('BRK',bx+8.5,by+12,6.5,'rgba(255,255,255,.55)','center',600);T('THR',bx+31.5,by+12,6.5,'rgba(255,255,255,.55)','center',600)}};
 
+
+/* GT7-inspired info boxes: a position tower on the left (the cars around you with their gaps) and a lap timing box on the right */
+{const st=document.createElement('style');st.textContent=`.gtTw,.gtTm{position:absolute;z-index:4;pointer-events:none;font-family:Inter,"Segoe UI",Arial,sans-serif;color:#fff;transform:scale(var(--s,1));text-shadow:0 1px 2px #000}
+.gtTw{left:12px;top:calc(92px*var(--s,1));transform-origin:0 0;width:176px}
+.gtTw .r{display:flex;align-items:center;height:22px;margin-bottom:2px;padding:0 8px 0 0;border-radius:3px;background:linear-gradient(#2b2f35e6,#17191ce6);border:1px solid rgba(255,255,255,.14);font-size:11px;font-weight:600;letter-spacing:.03em}
+.gtTw .r b{width:24px;text-align:center;font-weight:700;font-style:italic;font-size:12px;color:#c8d0d8}
+.gtTw .r span{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.gtTw .r em{font-style:normal;font-variant-numeric:tabular-nums;color:#ffd27a;font-size:11px}
+.gtTw .r.dn em{color:#9fd8ff}
+.gtTw .r.me{background:linear-gradient(#8fb4d8,#4f7eab 50%,#33608c);border-color:rgba(255,255,255,.5)}
+.gtTw .r.me b,.gtTw .r.me em{color:#fff}
+.gtTm{right:12px;top:calc(150px*var(--s,1));transform-origin:100% 0;width:158px;padding:6px 9px;border-radius:4px;background:linear-gradient(#2b2f35e6,#17191ce6);border:1px solid rgba(255,255,255,.14)}
+.gtTm div{display:flex;justify-content:space-between;align-items:baseline;font-size:10px;line-height:17px;color:rgba(255,255,255,.62);font-weight:600;letter-spacing:.06em}
+.gtTm div b{font-size:13px;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:0}
+.gtTm .dl b.up{color:#ef6a5a}.gtTm .dl b.dn{color:#7fd69a}`;document.head.appendChild(st);
+ const hu0=hudUpdate;
+ hudUpdate=function(){hu0.apply(this,arguments);try{
+  const Rc=RACE;if(!Rc||!Rc.cars)return;const T=Rc.T,cut=Rc.mode==='cutup',n=Rc.cars.length,single=Rc.cars.filter(q=>q.human).length<2;
+  const order=[...Rc.cars].sort((a,b)=>(b.fin?1e6-b.finT:0)-(a.fin?1e6-a.finT:0)||b.unw-a.unw),fmt=P.fmtT;
+  Rc.cars.forEach((c,i)=>{if(!c.human)return;const e=document.getElementById('h'+i);if(!e||!c.rect)return;
+   let tw=e.querySelector('.gtTw'),tm=e.querySelector('.gtTm');
+   if(!tw){tw=document.createElement('div');tw.className='gtTw';e.appendChild(tw);tm=document.createElement('div');tm.className='gtTm';e.appendChild(tm)}
+   tw.style.display=tm.style.display=cut?'none':'';if(cut)return;
+   /* tower: up to 5 cars with you in the middle where possible */
+   const me=order.indexOf(c);let a=Math.max(0,Math.min(me-2,n-5)),b=Math.min(n,a+5);
+   const sp=Math.max(6,c.sp||0);let h='';
+   if(n>1)for(let k=a;k<b;k++){const q=order[k],d=(q.unw-c.unw)*T.sp/sp,nm=q.ptName||(q.human?'PLAYER '+(q.k+1):'CAR '+(k+1));
+    h+='<div class="r'+(q===c?' me':d<0?' dn':'')+'"><b>'+(k+1)+'</b><span>'+String(nm).toUpperCase()+'</span>'+(q===c?'<em></em>':'<em>'+(d>0?'+':'−')+Math.abs(d).toFixed(1)+'</em>')+'</div>'}
+   if(tw._h!==h){tw._h=h;tw.innerHTML=h}
+   const L=c.lapT||[],last=L.length?L[L.length-1]:null,best=L.length?Math.min(...L):null,cur=Math.max(0,Rc.t-(L.reduce((x,y)=>x+y,0)||0)),dl=last!=null&&best!=null?last-best:null;
+   const lapN=Math.min(Rc.laps,Math.max(1,Math.floor(c.unw/T.N)+1));
+   const m='<div>LAP<b>'+lapN+' / '+Rc.laps+'</b></div><div>CURRENT<b>'+fmt(cur)+'</b></div><div>LAST<b>'+fmt(last)+'</b></div><div>BEST<b>'+fmt(best)+'</b></div>'+(dl!=null?'<div class="dl">DELTA<b class="'+(dl>0.005?'up':'dn')+'">'+(dl>0?'+':'−')+Math.abs(dl).toFixed(2)+'</b></div>':'');
+   if(tm._h!==m){tm._h=m;tm.innerHTML=m}
+  })}catch(_){}};
+}
 })();
