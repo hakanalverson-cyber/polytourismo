@@ -23,7 +23,7 @@ const st=document.createElement('style');st.textContent=`
 .hud .h8top{transform:scale(max(var(--s),.82))!important;transform-origin:top left!important}
 .h8spd::before{display:none!important}
 .hud .h8spd,body .hud .h8spd{left:50%!important;right:auto!important;transform:translateX(-50%) scale(max(var(--s),.72))!important;transform-origin:50% 100%!important}
-.h8spd .gx5{width:400px!important;height:167px!important;margin:0!important}`;document.head.appendChild(st);
+.h8spd .gx5{width:400px!important;height:167px!important;margin:0 0 -12px!important}`;document.head.appendChild(st);
 const F='"Inter","Segoe UI","Helvetica Neue",Arial,sans-serif';
 /* seven-segment digits, slanted a touch, as on the Gran Turismo 7 cluster */
 const SEG={0:'abcdef',1:'bc',2:'abged',3:'abgcd',4:'fgbc',5:'afgcd',6:'afgedc',7:'abc',8:'abcdefg',9:'abcdfg','-':'g'};
