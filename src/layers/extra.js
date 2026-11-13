@@ -33,7 +33,7 @@ updateVisual=(c,T,t)=>{prev(c,T,t);const m=c.m;if(!m||!RACE)return;const dt=Math
  }else{c.swr=c.swp=c.swvr=c.swvp=0;c.pyaw=c.yaw;c.psp=c.sp}
  /* --- shadow --- */
  const sh=m.sh;if(!sh)return;
- /* with sun shadows on, a faint contact patch stays under the car: the shadow map is too coarse to reach the tyres, and without it the cars looked like they hovered */const rs_=!!(P.realShadows&&RACE.scene.userData.sun&&(!window.PTO||window.PTO.shadows!==false));sh.visible=true;if(sh.userData.v9)sh.material.opacity=rs_?.42:.6;
+ /* with sun shadows on, a faint contact patch stays under the car: the shadow map is too coarse to reach the tyres, and without it the cars looked like they hovered */const rs_=!!(P.realShadows&&RACE.scene.userData.sun&&(!window.PTO||window.PTO.shadows!==false));sh.visible=true;if(sh.userData.v9)sh.material.opacity=rs_?.28:.6;
  if(!sh.userData.v9){sh.userData.v9=1;const hu=c.human,sx_=hu?5:2,sz_=hu?9:4;sh.geometry=new THREE.PlaneGeometry(3.3,6.0,sx_,sz_);sh.geometry.rotateX(-Math.PI/2);sh.userData.base=sh.geometry.attributes.position.array.slice();sh.frustumCulled=false;sh.material=new THREE.MeshBasicMaterial({map:shadowTex(),transparent:true,opacity:.6,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,fog:false});sh.renderOrder=-1}
  /* draped shadow: every vertex follows the real ground height, so it never sinks into crests or floats over dips */
  const bs=sh.userData.base,pos=sh.geometry.attributes.position,arr=pos.array,cy=Math.cos(c.yaw),sy=Math.sin(c.yaw);
