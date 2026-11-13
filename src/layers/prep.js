@@ -347,7 +347,7 @@ function want(){const sec=$('s8setup');if(!on()||!sec||!sec.classList.contains('
  if((step===2||step===3)&&u.selCar)for(let p=0;p<(step===3?Math.min(2,np):np);p++){try{const c=u.selCar(p);if(c)cars.push({id:c.id,alt:c.alt|0})}catch(e){}}
  return bw?{sec,track:bw.track,tod:'day',step:2,cars:bw.list,bike:1}:{sec,track:ST.track,tod,step,cars}}
 function size(sec){/* Nov 10 (Hakan: "2 fps on the track previews"): drawn at about 0.7 of the screen's pixels (it sits behind frosted glass and a vignette) instead of 1.25x (PTO.prepFast===false: as before) */
- const dpr=FAST()?(S&&S.stOn?Math.min(2,devicePixelRatio||1)*Math.max(.9,qual):Math.min(.7,devicePixelRatio||1)*qual):Math.min(1.25,devicePixelRatio||1),w=sec.clientWidth|0,h=sec.clientHeight|0;if(!w||!h)return false;
+ const dpr=FAST()?(S&&S.stOn?Math.min(S.step===3?1.2:1.5,devicePixelRatio||1)*Math.max(.8,qual):Math.min(.7,devicePixelRatio||1)*qual):Math.min(1.25,devicePixelRatio||1),w=sec.clientWidth|0,h=sec.clientHeight|0;if(!w||!h)return false;
  if(R2.getPixelRatio()!==dpr)R2.setPixelRatio(dpr);const v=R2.getSize(new THREE.Vector2());if(v.x!==w||v.y!==h)R2.setSize(w,h,false);cam.aspect=w/h;return true}
 const PW={};/* Nov 12: the canvas and the renderer are made once (at loading, see P.prepWarm) and kept, so opening the setup screen never builds a context or compiles shaders */
 function mkR2(){if(PW.R2)return;PW.cv=PW.cv||document.createElement('canvas');PW.R2=new THREE.WebGLRenderer({canvas:PW.cv,antialias:true,powerPreference:'high-performance'});const r=PW.R2;r.outputEncoding=THREE.sRGBEncoding;r.toneMapping=THREE.ACESFilmicToneMapping;r.physicallyCorrectLights=R.physicallyCorrectLights;r.shadowMap.enabled=true;r.shadowMap.type=FAST()?THREE.PCFShadowMap:THREE.PCFSoftShadowMap;if(FAST())r.shadowMap.autoUpdate=false}
@@ -380,7 +380,7 @@ let building=0;
 #cineUI .cnN small{display:block;font:600 11px var(--gt);letter-spacing:.28em;color:#cfd8de;text-transform:uppercase;margin-bottom:6px}
 #cineUI .cnN b{display:block;font:300 34px/1.05 var(--gt);letter-spacing:.02em}
 #cineUI .cnN i{display:block;font:italic 600 12px var(--gt);letter-spacing:.2em;color:#9fd0ff;margin-top:6px;font-style:normal}
-#cineUI .cnB{position:absolute;left:0;right:0;bottom:5.5vh;display:flex;flex-direction:column;align-items:center;gap:9px}
+#cineUI .cnB{position:absolute;z-index:3;left:0;right:0;bottom:1.6vh;display:flex;flex-direction:column;align-items:center;gap:9px}
 #cineUI .cnB em{font:500 12px var(--gt);font-style:normal;letter-spacing:.3em;color:#e4eaee;display:flex;align-items:center;gap:10px;text-transform:uppercase}
 #cineUI .cnB em:before{content:'';width:13px;height:13px;border-radius:50%;border:2px solid #ffffff55;border-top-color:#fff;animation:cnSp .8s linear infinite}
 @keyframes cnSp{to{transform:rotate(360deg)}}

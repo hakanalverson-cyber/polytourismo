@@ -21,6 +21,18 @@ const css=document.createElement('style');css.textContent=`
 .cbd .nm{flex:1;min-width:0;font:italic 800 12px var(--gt);letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cbd .nm small{display:block;font:600 9px var(--gt);letter-spacing:.14em;color:#aab6bf}
 .cbd .tm{font:italic 700 12px var(--gt);color:#e9eef2}
+/* Nov 13 (Hakan: the finish leaderboard in our own UI style): the glossy grey panel, title bar with the blue accent, grey rows, the player's own row in the blue gradient */
+.cbd .bx{width:min(380px,94%);background:var(--gxp,linear-gradient(180deg,#1d2024eb,#101215f0));border:1px solid var(--gxl,#ffffff1c);border-top:2px solid #6fa0d0;border-radius:8px;box-shadow:0 16px 40px #000c,inset 0 1px 0 #ffffff30;padding:0 0 12px;overflow:hidden}
+.cbd h4{margin:0 0 10px;padding:13px 18px 12px;background:var(--gx,linear-gradient(180deg,#3a3e44,#17191c));box-shadow:inset 0 -2px 0 #4f7eab88;font:300 12px var(--gt);font-style:normal;letter-spacing:.3em;color:#cfd8de;position:relative}
+.cbd h4:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,#8fb4d8,#33608c)}
+.cbd h4 b{font:300 22px var(--gt);font-style:normal;letter-spacing:.02em;color:#fff;margin-top:3px}
+.cbd .rw{margin:0 12px 5px;height:36px;border-radius:5px;border:0;border-left:0;background:linear-gradient(180deg,#3a3e44f2 0%,#24272cf2 48%,#17191cf2 52%,#1e2125f2 100%);box-shadow:inset 0 1px 0 #ffffff30,0 0 0 1px #000c}
+.cbd .rw:before{display:none}
+.cbd .rw.me{background:linear-gradient(180deg,#8fb4d8e0 0%,#4f7eabe8 48%,#33608ce8 52%,#4a77a3e8 100%);box-shadow:inset 0 1px 0 #ffffffa0,0 0 14px #4f7eab66,0 0 0 1px #000c}
+.cbd .rk{font:600 16px var(--gt);font-style:normal;width:34px;background:#0006;align-self:stretch;display:flex;align-items:center;justify-content:center;border-radius:5px 0 0 5px}
+.cbd .nm{font:500 12px var(--gt);font-style:normal;letter-spacing:.08em}
+.cbd .tm{font:500 12px var(--gt);font-style:normal;font-variant-numeric:tabular-nums}
+.cbd .ft{text-align:center;color:#9aa3ab;margin-top:10px;font-weight:500;text-shadow:none}
 .cbd .ft{margin-top:8px;font:700 9px var(--gt);letter-spacing:.24em;color:#cfd8de;text-shadow:0 1px 3px #000}
 #cbT{position:fixed;left:50%;top:14%;transform:translateX(-50%);z-index:29;font:italic 800 12px var(--gt,Inter,sans-serif);letter-spacing:.3em;color:#fff;text-shadow:0 1px 4px #000;opacity:0;transition:opacity .25s;pointer-events:none}
 `;document.head.appendChild(css);
@@ -58,7 +70,9 @@ function install(){
     It only looks at the lens position, aim and zoom, so it needs nothing from the car model. */
  const _fp=new V(),_fl=new V();
  soloCam=function(c,dt,out){inner.apply(this,arguments);try{if(!(c&&c.human))return;
-  const key=((c.camX|0)+1)+(c._lb?'b':'')+'|'+(c.fin?1:0)+'|'+(c.tnB>.5?1:0)+'|'+(c.respT>0?1:0),d=Math.min(.1,dt||.016);
+  const key=(c.fin?1:0)+'|'+(c.tnB>.5?1:0)+'|'+(c.respT>0?1:0),ukey=((c.camX|0)+1)+(c._lb?'b':''),d=Math.min(.1,dt||.016);
+  /* Nov 13 (Hakan): a camera the player picks (the camera key, look-behind) switches instantly; only views the game forces (bridge, finish, restart) are blended */
+  if(c._uk!==ukey){c._uk=ukey;c._bt=1}
   const yw=c.cy!=null?c.cy:c.yaw,sy=Math.sin(yw),cy=Math.cos(yw);
   /* Nov 13 (Hakan: it shoots backwards, then forwards): the old view is kept as an offset from the car (along it, across it, up), not as a spot in the
      world, so while the blend runs the old lens travels with the car instead of being left behind and then chased */

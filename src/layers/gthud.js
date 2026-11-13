@@ -22,25 +22,27 @@ const st=document.createElement('style');st.textContent=`
 .hud .h8mode .cu b{font:600 13px/1.1 var(--gt)!important;color:#fff!important}
 .hud .h8top{transform:scale(max(var(--s),.82))!important;transform-origin:top left!important}
 .h8spd::before{display:none!important}
-.h8spd .gx5{width:312px!important;height:208px!important;margin:-70px -10px -8px!important}`;document.head.appendChild(st);
+.h8spd{left:50%!important;right:auto!important;transform:translateX(-50%) scale(max(var(--s),.72))!important;transform-origin:50% 100%!important}
+.h8spd .gx5{width:312px!important;height:208px!important;margin:-70px 0 -8px!important}`;document.head.appendChild(st);
 const F='"Inter","Segoe UI","Helvetica Neue",Arial,sans-serif';
 P.gx5Draw=(cv,o)=>{const g=cv.getContext('2d'),W=cv.width,k=W/240;g.setTransform(k,0,0,k,0,0);g.clearRect(0,0,240,160);
- /* Nov 13 (Hakan: make it look like number 13 in the Gran Turismo 7 screen): a curved strip of rev ticks over a dark readout, the speed on the left, a divider, and the gear on the right */
- const cx=120,rev=Math.max(0,Math.min(1,o.rev)),RED=.86,N=44,Rr=150,ccy=222;
- /* the readout plate: wide, flat, with slanted ends */
- g.beginPath();g.moveTo(16,92);g.lineTo(224,92);g.lineTo(212,134);g.quadraticCurveTo(120,142,28,134);g.closePath();
- const pg=g.createLinearGradient(0,92,0,138);pg.addColorStop(0,'rgba(24,28,34,.86)');pg.addColorStop(1,'rgba(6,8,11,.86)');g.fillStyle=pg;g.fill();
- g.lineWidth=1;g.strokeStyle='rgba(255,255,255,.14)';g.stroke();
- /* the rev strip: ticks along a shallow arc, lit up to the revs, the last stretch red */
- for(let i=0;i<=N;i++){const u=i/N,a=-Math.PI/2+(u-.5)*1.05,c=Math.cos(a),sn=Math.sin(a),on=u<=rev,red=u>=RED,big=i%4===0;
-  const x0=cx+c*Rr,y0=ccy+sn*Rr,x1=cx+c*(Rr-(big?10:7)),y1=ccy+sn*(Rr-(big?10:7));
-  g.strokeStyle=on?(red?'#ff4a3d':'#ffffff'):(red?'rgba(255,74,61,.35)':'rgba(255,255,255,.28)');g.lineWidth=big?2.2:1.5;g.beginPath();g.moveTo(x0,y0);g.lineTo(x1,y1);g.stroke()}
- /* the speed (left), a divider, the gear (right) */
- g.textBaseline='alphabetic';g.textAlign='right';g.font='italic 600 36px '+F;g.fillStyle='#fff';g.shadowColor='rgba(0,0,0,.6)';g.shadowBlur=4;g.fillText(String(o.kmh),cx-10,124);g.shadowBlur=0;
- g.textAlign='right';g.font='500 8px '+F;g.fillStyle='rgba(255,255,255,.6)';g.fillText(o.unit.toLowerCase(),cx-10,134);
- g.fillStyle='rgba(255,255,255,.28)';g.fillRect(cx,102,1,30);
- g.textAlign='left';g.font='italic 700 40px '+F;g.fillStyle=o.shift?'#ff4a3d':'#fff';g.shadowColor='rgba(0,0,0,.6)';g.shadowBlur=4;g.fillText(String(o.gear),cx+16,125);g.shadowBlur=0;
- g.font='600 8px '+F;g.fillStyle='rgba(255,255,255,.6)';g.fillText(o.auto?'AT':'MT',cx+16,134);
- if(o.shift){g.fillStyle='#d8261b';g.fillRect(cx+46,106,9,9)}
- if(o.tag){g.textAlign='left';g.textBaseline='alphabetic';g.font='700 11px '+F;g.fillStyle=o.tagCol||'#fff';g.fillText(o.tag,30,124)}};
+ /* Nov 13 (Hakan: make it look like number 13 in the Gran Turismo 7 screen): a curved strip of rev ticks over a dark glass readout, speed left, divider, gear right */
+ const cx=120,rev=Math.max(0,Math.min(1,o.rev)),RED=.86,N=48,Rr=170,ccy=250;
+ g.beginPath();g.moveTo(14,86);g.lineTo(226,86);g.lineTo(214,138);g.quadraticCurveTo(120,148,26,138);g.closePath();
+ const pg=g.createLinearGradient(0,86,0,142);pg.addColorStop(0,'rgba(34,40,48,.9)');pg.addColorStop(.5,'rgba(14,17,22,.9)');pg.addColorStop(1,'rgba(4,6,9,.92)');g.fillStyle=pg;g.fill();
+ g.lineWidth=1;g.strokeStyle='rgba(255,255,255,.22)';g.stroke();
+ /* the blue accent along the foot of the plate */
+ g.beginPath();g.moveTo(26,138);g.quadraticCurveTo(120,148,214,138);g.lineWidth=2;g.strokeStyle='#5f9bd6';g.stroke();
+ /* the rev strip */
+ for(let i=0;i<=N;i++){const u=i/N,a=-Math.PI/2+(u-.5)*.98,c=Math.cos(a),sn=Math.sin(a),on=u<=rev,red=u>=RED,big=i%4===0;
+  const L=big?15:10,x0=cx+c*Rr,y0=ccy+sn*Rr,x1=cx+c*(Rr-L),y1=ccy+sn*(Rr-L);
+  if(on){g.shadowColor=red?'rgba(255,60,45,.9)':'rgba(255,255,255,.8)';g.shadowBlur=5}
+  g.strokeStyle=on?(red?'#ff4a3d':'#ffffff'):(red?'rgba(255,74,61,.45)':'rgba(255,255,255,.32)');g.lineWidth=big?2.6:1.8;g.beginPath();g.moveTo(x0,y0);g.lineTo(x1,y1);g.stroke();g.shadowBlur=0}
+ g.textBaseline='alphabetic';g.textAlign='right';g.font='italic 600 34px '+F;g.fillStyle='#fff';g.shadowColor='rgba(0,0,0,.7)';g.shadowBlur=5;g.fillText(String(o.kmh),cx-12,124);g.shadowBlur=0;
+ g.font='500 9px '+F;g.fillStyle='rgba(255,255,255,.62)';g.fillText(o.unit.toLowerCase(),cx-12,136);
+ g.fillStyle='rgba(255,255,255,.3)';g.fillRect(cx,98,1,34);
+ g.textAlign='left';g.font='italic 700 40px '+F;g.fillStyle=o.shift?'#ff4a3d':'#fff';g.shadowColor='rgba(0,0,0,.7)';g.shadowBlur=5;g.fillText(String(o.gear),cx+16,126);g.shadowBlur=0;
+ g.font='600 9px '+F;g.fillStyle='rgba(255,255,255,.62)';g.fillText(o.auto?'AT':'MT',cx+16,136);
+ if(o.shift){g.fillStyle='#d8261b';g.fillRect(cx+52,104,10,10)}
+ if(o.tag){g.textAlign='left';g.font='700 10px '+F;g.fillStyle=o.tagCol||'#fff';g.fillText(o.tag,30,100)}};
 })();
