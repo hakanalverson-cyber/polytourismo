@@ -23,7 +23,7 @@ const st=document.createElement('style');st.textContent=`
 .hud .h8top{transform:scale(max(var(--s),.82))!important;transform-origin:top left!important}
 .h8spd::before{display:none!important}
 .hud .h8spd,body .hud .h8spd{left:50%!important;right:auto!important;transform:translateX(-50%) scale(max(var(--s),.72))!important;transform-origin:50% 100%!important}
-.h8spd .gx5{width:600px!important;height:200px!important;margin:0!important}`;document.head.appendChild(st);
+.h8spd .gx5{width:760px!important;height:250px!important;margin:0!important}`;document.head.appendChild(st);
 const F='"Inter","Segoe UI","Helvetica Neue",Arial,sans-serif';
 /* seven-segment digits, slanted a touch, as on the Gran Turismo 7 cluster */
 const SEG={0:'abcdef',1:'bc',2:'abged',3:'abgcd',4:'fgbc',5:'afgcd',6:'afgedc',7:'abc',8:'abcdefg',9:'abcdfg','-':'g'};
@@ -120,8 +120,8 @@ P.gx5Tele=(cv,o)=>{if(cv.width!==1200||cv.height!==400){cv.width=1200;cv.height=
    (the game's blue, red at the limit), the gear in its own dark cell, the speed in steady upright digits. (PTO.gauge = 'cluster' or 'telemetry' bring the others back.) */
 const rr=(g,x,y,w,h,r)=>{g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()};
 P.gx5Plain=(cv,o)=>{
- if(cv.width!==1200||cv.height!==400){cv.width=1200;cv.height=400}
- const g=cv.getContext('2d'),k=cv.width/600;g.setTransform(k,0,0,k,0,0);g.clearRect(0,0,600,200);
+ const LW=o.lw||600,LH=o.lh||200,OX=o.ox||0,OY=o.oy||0;if(cv.width!==LW*2||cv.height!==LH*2){cv.width=LW*2;cv.height=LH*2}
+ const g=cv.getContext('2d'),k=cv.width/LW;g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,cv.width,cv.height);g.setTransform(k,0,0,k,OX*k,OY*k);
  const rev=Math.max(0,Math.min(1,o.rev)),RED=.88,cx=300,W=270,H=70,x0=cx-W/2,y0=118;
  /* plate */
  rr(g,x0,y0,W,H,6);const pg=g.createLinearGradient(0,y0,0,y0+H);pg.addColorStop(0,'#3a3e44');pg.addColorStop(.48,'#24272c');pg.addColorStop(.52,'#17191c');pg.addColorStop(1,'#1e2125');g.fillStyle=pg;g.fill();
@@ -185,8 +185,8 @@ P.gx5Logger=(cv,o)=>{
 /* Nov 13 (Hakan: similar to GT7 but in our UI style, moved around a bit): the GT7 cluster's parts (a speed dial, a rev dial and a readout between them) drawn in the game's own
    glossy grey and blue. The readout plate sits low and centred with the dials flanking it, not stacked under it. (PTO.gauge = 'plain' | 'logger' | 'cluster' | 'telemetry' for the earlier ones.) */
 P.gx5Draw=(cv,o)=>{const st=window.PTO&&window.PTO.gauge;if(st==='cluster')return P.gx5Cluster(cv,o);if(st==='telemetry')return P.gx5Tele(cv,o);if(st==='plain')return P.gx5Plain(cv,o);if(st==='logger')return P.gx5Logger(cv,o);
- P.gx5Plain(cv,{...o,tag:''});
- const g=cv.getContext('2d'),k=cv.width/600,PI=Math.PI,A0=PI*.75,SW=PI*1.5,rev=Math.max(0,Math.min(1,o.rev)),RED=.88,maxS=Math.max(80,o.maxK||240);g.setTransform(k,0,0,k,0,0);
+ P.gx5Plain(cv,{...o,tag:'',lw:760,lh:250,ox:80,oy:44});
+ const g=cv.getContext('2d'),k=cv.width/760,PI=Math.PI,A0=PI*.75,SW=PI*1.5,rev=Math.max(0,Math.min(1,o.rev)),RED=.88,maxS=Math.max(80,o.maxK||240);g.setTransform(k,0,0,k,80*k,44*k);
  const pol=(cx,cy,r,a)=>[cx+Math.cos(a)*r,cy+Math.sin(a)*r];
  const dial=(cx,cy,R,u,col,red,labels,minor)=>{
   /* bezel and glass */
@@ -207,6 +207,28 @@ P.gx5Draw=(cv,o)=>{const st=window.PTO&&window.PTO.gauge;if(st==='cluster')retur
  const stepS=maxS>320?20:10,everyS=maxS>320?80/stepS:40/stepS;
  dial(92,134,60,Math.min(1,o.kmh/maxS),null,false,{n:Math.round(maxS/stepS),every:Math.round(everyS),f:i=>String(i*stepS)});
  dial(508,134,60,rev,null,true,{n:16,every:2,f:i=>String(i/2)});
- g.font='600 8px '+F;g.fillStyle='rgba(255,255,255,.6)';g.textAlign='center';g.fillText(o.unit.toUpperCase(),92,172);g.fillText('RPM x1000',508,172);
- if(o.tag){g.textAlign='center';g.font='700 12px '+F;g.fillStyle=o.tagCol||'#fff';g.shadowColor='rgba(0,0,0,.8)';g.shadowBlur=3;g.fillText(o.tag,300,110);g.shadowBlur=0}};
+ g.font='600 8px '+F;g.fillStyle='rgba(255,255,255,.6)';g.textAlign='center';g.fillText(o.unit.toUpperCase(),92,176);g.fillText('RPM x1000',508,176);
+ /* the information centres (GT7 has them all round the dials): gaps to the cars ahead and behind, tyre / grip state, trip, lap and the assist and status chips */
+ const I=o.info||{};
+ const rr=(x,y,w,h,r)=>{g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()};
+ const chip=(x,y,w,h,on,col)=>{rr(x,y,w,h,3);const lg=g.createLinearGradient(0,y,0,y+h);if(on){lg.addColorStop(0,'#8fb4d8');lg.addColorStop(.5,'#4f7eab');lg.addColorStop(1,'#33608c')}else{lg.addColorStop(0,'#3a3e44');lg.addColorStop(.5,'#24272c');lg.addColorStop(1,'#17191c')}g.fillStyle=col||lg;g.fill();g.lineWidth=1;g.strokeStyle='#000';g.stroke()};
+ const T=(t,x,y,sz,c,al,wt)=>{g.font=(wt||500)+' '+sz+'px '+F;g.fillStyle=c;g.textAlign=al||'center';g.textBaseline='middle';g.fillText(t,x,y)};
+ /* gaps */
+ {const gap=(x,lab,v,col)=>{chip(x,76,128,22,false);T(lab,x+10,87,8,'rgba(255,255,255,.6)','left',600);if(v==null)T('—',x+118,87,12,'rgba(255,255,255,.4)','right',500);else T((lab==='AHEAD'?'+':'−')+v.toFixed(1)+' s',x+118,87,12.5,col,'right',600)};
+  gap(165,'AHEAD',I.ahead,'#ffd27a');gap(307,'BEHIND',I.behind,'#9fd8ff')}
+ if(o.tag)T(o.tag,300,64,12,o.tagCol||'#fff','center',700);
+ /* tyres and grip (left) */
+ {const cx0=-40,cy0=134,gc=I.grip==null?100:I.grip,tcol=gc>=97?'#9fc3e6':gc>=80?'#f2c76b':'#ef6a5a',dm=I.dmg||0;
+  T('TYRES',cx0,92,8,'rgba(255,255,255,.6)','center',600);
+  rr(cx0-11,cy0-24,22,48,7);g.fillStyle='#14171a';g.fill();g.lineWidth=1;g.strokeStyle='rgba(255,255,255,.35)';g.stroke();
+  rr(cx0-6,cy0-12,12,22,4);g.fillStyle='rgba(255,255,255,.12)';g.fill();
+  for(const [dx,dy] of[[-19,-22],[11,-22],[-19,10],[11,10]]){rr(cx0+dx,cy0+dy,8,16,2);g.fillStyle=tcol;g.fill();g.lineWidth=1;g.strokeStyle='#000';g.stroke()}
+  T((I.surf||'TARMAC'),cx0,cy0+38,8,'rgba(255,255,255,.7)','center',600);T('GRIP '+Math.round(gc)+'%',cx0,cy0+49,9,tcol,'center',600);
+  if(I.dmgOn){T('DAMAGE',cx0,cy0+62,8,'rgba(255,255,255,.55)','center',600);const bw=50;g.fillStyle='rgba(255,255,255,.12)';g.fillRect(cx0-bw/2,cy0+68,bw,4);g.fillStyle=dm>=.5?'#ef6a5a':dm>=.2?'#f2c76b':'#9fc3e6';g.fillRect(cx0-bw/2,cy0+68,bw*dm,4)}}
+ /* status chips (right) */
+ {const x=582,w=70,h=18;[[o.auto?'AUTO':'MANUAL',true],['DAMAGE '+(I.dmgOn?'ON':'OFF'),!!I.dmgOn],['SLIPSTREAM',(I.draft||0)>.12],['LAP '+(I.lap||1)+'/'+(I.laps||1),false]].forEach((c,i)=>{const y=96+i*24;chip(x,y,w,h,c[1]);T(c[0],x+w/2,y+h/2+.5,8,'#fff','center',600)})}
+ /* inside the dials: trip and the pedals */
+ T('TRIP',92,152,7,'rgba(255,255,255,.55)','center',600);T((I.trip==null?0:I.trip).toFixed(2)+' '+(o.unit==='mph'?'mi':'km'),92,162,9,'#fff','center',600);
+ {const bx=508-20,by=152;g.fillStyle='rgba(255,255,255,.12)';g.fillRect(bx,by,17,5);g.fillRect(bx+23,by,17,5);g.fillStyle='#ef6a5a';g.fillRect(bx,by,17*(I.br||0),5);g.fillStyle='#9fd6a8';g.fillRect(bx+23,by,17*(I.th||0),5);T('BRK',bx+8.5,by+12,6.5,'rgba(255,255,255,.55)','center',600);T('THR',bx+31.5,by+12,6.5,'rgba(255,255,255,.55)','center',600)}};
+
 })();
