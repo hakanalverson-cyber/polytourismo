@@ -231,17 +231,18 @@ P.gx5Draw=(cv,o)=>{const st=window.PTO&&window.PTO.gauge;if(st==='cluster')retur
 
 /* GT7-inspired info boxes: a position tower on the left (the cars around you with their gaps) and a lap timing box on the right */
 {const st=document.createElement('style');st.textContent=`.gtTw,.gtTm{position:absolute;z-index:4;pointer-events:none;font-family:var(--gt,Inter,"Segoe UI",Arial,sans-serif);color:#fff;transform:scale(max(var(--s,1),.78));text-shadow:0 1px 3px #000c}
-.gtTw{left:12px;top:calc(104px*max(var(--s,1),.78));transform-origin:0 0;width:270px}
-.gtTw .r{display:flex;align-items:center;gap:8px;height:36px;margin-bottom:4px;padding:0 12px 0 0;border-radius:3px;position:relative;overflow:hidden;background:linear-gradient(90deg,#0a0d12ee,#10161dcc 70%,#10161d99);border:1px solid #ffffff22;border-left:3px solid #ffffff33;font:italic 800 13px var(--gt,Inter,sans-serif);letter-spacing:.05em;text-transform:uppercase}
+.hud .h8top,body .hud .h8top{display:none!important}
+.gtTw{left:12px;top:12px;transform-origin:0 0;width:270px}
+.gtTw .r{display:flex;align-items:center;gap:8px;height:30px;margin-bottom:3px;padding:0 12px 0 0;border-radius:3px;position:relative;overflow:hidden;background:linear-gradient(90deg,#0a0d12ee,#10161dcc 70%,#10161d99);border:1px solid #ffffff22;border-left:3px solid #ffffff33;font:italic 800 12px var(--gt,Inter,sans-serif);letter-spacing:.05em;text-transform:uppercase}
 .gtTw .r:before{content:"";position:absolute;inset:0 0 50% 0;background:linear-gradient(#ffffff1a,#ffffff00)}
-.gtTw .r b{width:34px;text-align:center;font:italic 800 18px var(--gt,Inter,sans-serif);color:#cfd8de;position:relative}
+.gtTw .r b{width:34px;text-align:center;font:italic 800 16px var(--gt,Inter,sans-serif);color:#cfd8de;position:relative}
 .gtTw .r span{flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;position:relative}
 .gtTw .r em{font:italic 700 13px var(--gt,Inter,sans-serif);font-variant-numeric:tabular-nums;color:#ffd27a;position:relative}
 .gtTw .r.dn em{color:#9fd8ff}
 .gtTw .r.me{border-left-color:#9fd8ff;background:linear-gradient(90deg,#1c2a38f2,#223646d0 70%,#223646aa)}
 .gtTw .r.me b,.gtTw .r.me em{color:#fff}
-.gtTm{right:12px;top:calc(150px*max(var(--s,1),.78));transform-origin:100% 0;width:190px;padding:8px 12px;border-radius:3px;background:linear-gradient(90deg,#0a0d12ee,#10161dcc 70%,#10161d99);border:1px solid #ffffff22;border-right:3px solid #9fd8ff}
-.gtTm div{display:flex;justify-content:space-between;align-items:baseline;font:italic 700 10px var(--gt,Inter,sans-serif);line-height:20px;color:#aab6bf;letter-spacing:.14em}
+.gtTm{right:12px;top:12px;transform-origin:100% 0;width:210px;padding:4px 12px;border-radius:3px;background:linear-gradient(90deg,#0a0d12ee,#10161dcc 70%,#10161d99);border:1px solid #ffffff22;border-left:3px solid #ffffff33}
+.gtTm div{display:flex;justify-content:space-between;align-items:baseline;font:italic 700 10px var(--gt,Inter,sans-serif);line-height:26px;color:#aab6bf;letter-spacing:.14em}
 .gtTm div b{font:italic 800 15px var(--gt,Inter,sans-serif);color:#fff;font-variant-numeric:tabular-nums;letter-spacing:.02em}
 .gtPass{position:absolute;left:50%;top:calc(16% + 0px);transform:translateX(-50%);z-index:5;pointer-events:none;font-family:var(--gt,Inter,sans-serif);text-align:center;opacity:0;transition:opacity .25s,transform .25s;color:#fff;text-shadow:0 1px 4px #000d}
 .gtPass.on{opacity:1}
@@ -265,7 +266,7 @@ P.gx5Draw=(cv,o)=>{const st=window.PTO&&window.PTO.gauge;if(st==='cluster')retur
    /* tower: up to 5 cars with you in the middle where possible */
    const me=order.indexOf(c);let a=Math.max(0,Math.min(me-2,n-5)),b=Math.min(n,a+5);
    const sp=Math.max(6,c.sp||0);let h='';
-   if(n>1)for(let k=a;k<b;k++){const q=order[k],d=(q.unw-c.unw)*T.sp/sp,nm=q.ptName||(q.human?'PLAYER '+(q.k+1):'CAR '+(k+1));
+   for(let k=a;k<b;k++){const q=order[k],d=(q.unw-c.unw)*T.sp/sp,nm=q.ptName||(q.human?'PLAYER '+(q.k+1):'CAR '+(k+1));
     h+='<div class="r'+(q===c?' me':d<0?' dn':'')+'"><b>'+(k+1)+'</b><span>'+String(nm).toUpperCase()+'</span>'+(q===c?'<em></em>':'<em>'+(d>0?'+':'−')+Math.abs(d).toFixed(1)+'</em>')+'</div>'}
    if(tw._h!==h){tw._h=h;tw.innerHTML=h}
    const L=c.lapT||[],last=L.length?L[L.length-1]:null,best=L.length?Math.min(...L):null,cur=Math.max(0,Rc.t-(L.reduce((x,y)=>x+y,0)||0)),dl=last!=null&&best!=null?last-best:null;
