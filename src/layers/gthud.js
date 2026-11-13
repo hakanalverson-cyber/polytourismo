@@ -22,27 +22,35 @@ const st=document.createElement('style');st.textContent=`
 .hud .h8mode .cu b{font:600 13px/1.1 var(--gt)!important;color:#fff!important}
 .hud .h8top{transform:scale(max(var(--s),.82))!important;transform-origin:top left!important}
 .h8spd::before{display:none!important}
-.h8spd{left:50%!important;right:auto!important;transform:translateX(-50%) scale(max(var(--s),.72))!important;transform-origin:50% 100%!important}
-.h8spd .gx5{width:312px!important;height:208px!important;margin:-70px 0 -8px!important}`;document.head.appendChild(st);
+.hud .h8spd,body .hud .h8spd{left:50%!important;right:auto!important;transform:translateX(-50%) scale(max(var(--s),.72))!important;transform-origin:50% 100%!important}
+.h8spd .gx5{width:312px!important;height:208px!important;margin:-64px 0 -26px!important}`;document.head.appendChild(st);
 const F='"Inter","Segoe UI","Helvetica Neue",Arial,sans-serif';
+/* seven-segment digits, slanted a touch, as on the Gran Turismo 7 cluster */
+const SEG={0:'abcdef',1:'bc',2:'abged',3:'abgcd',4:'fgbc',5:'afgcd',6:'afgedc',7:'abc',8:'abcdefg',9:'abcdfg','-':'g'};
+function seg7(g,txt,x,y,h,col,align){const w=h*.56,t=Math.max(2,h*.12),gap=h*.2,n=txt.length,tot=n*w+(n-1)*gap;let x0=align==='right'?x-tot:x;
+ const sk=-.14;g.save();g.fillStyle=col;
+ for(const ch of txt){const on=SEG[ch]||'';const R=(sx,sy,sw,sh)=>{g.beginPath();g.moveTo(sx+sy*sk*-1,sy);g.lineTo(sx+sw+sy*sk*-1,sy);g.lineTo(sx+sw+(sy+sh)*sk*-1,sy+sh);g.lineTo(sx+(sy+sh)*sk*-1,sy+sh);g.closePath();g.fill()};
+  const a=h/2;const X=x0,Y=y;
+  if(on.includes('a'))R(X+t*.6,Y,w-t*1.2,t);if(on.includes('d'))R(X+t*.6,Y+h-t,w-t*1.2,t);if(on.includes('g'))R(X+t*.6,Y+a-t/2,w-t*1.2,t);
+  if(on.includes('f'))R(X,Y+t*.6,t,a-t*.9);if(on.includes('b'))R(X+w-t,Y+t*.6,t,a-t*.9);if(on.includes('e'))R(X,Y+a+t*.3,t,a-t*.9);if(on.includes('c'))R(X+w-t,Y+a+t*.3,t,a-t*.9);
+  x0+=w+gap}
+ g.restore();return tot}
 P.gx5Draw=(cv,o)=>{const g=cv.getContext('2d'),W=cv.width,k=W/240;g.setTransform(k,0,0,k,0,0);g.clearRect(0,0,240,160);
- /* Nov 13 (Hakan: make it look like number 13 in the Gran Turismo 7 screen): a curved strip of rev ticks over a dark glass readout, speed left, divider, gear right */
- const cx=120,rev=Math.max(0,Math.min(1,o.rev)),RED=.86,N=48,Rr=170,ccy=250;
- g.beginPath();g.moveTo(14,86);g.lineTo(226,86);g.lineTo(214,138);g.quadraticCurveTo(120,148,26,138);g.closePath();
- const pg=g.createLinearGradient(0,86,0,142);pg.addColorStop(0,'rgba(34,40,48,.9)');pg.addColorStop(.5,'rgba(14,17,22,.9)');pg.addColorStop(1,'rgba(4,6,9,.92)');g.fillStyle=pg;g.fill();
- g.lineWidth=1;g.strokeStyle='rgba(255,255,255,.22)';g.stroke();
- /* the blue accent along the foot of the plate */
- g.beginPath();g.moveTo(26,138);g.quadraticCurveTo(120,148,214,138);g.lineWidth=2;g.strokeStyle='#5f9bd6';g.stroke();
- /* the rev strip */
- for(let i=0;i<=N;i++){const u=i/N,a=-Math.PI/2+(u-.5)*.98,c=Math.cos(a),sn=Math.sin(a),on=u<=rev,red=u>=RED,big=i%4===0;
-  const L=big?15:10,x0=cx+c*Rr,y0=ccy+sn*Rr,x1=cx+c*(Rr-L),y1=ccy+sn*(Rr-L);
-  if(on){g.shadowColor=red?'rgba(255,60,45,.9)':'rgba(255,255,255,.8)';g.shadowBlur=5}
-  g.strokeStyle=on?(red?'#ff4a3d':'#ffffff'):(red?'rgba(255,74,61,.45)':'rgba(255,255,255,.32)');g.lineWidth=big?2.6:1.8;g.beginPath();g.moveTo(x0,y0);g.lineTo(x1,y1);g.stroke();g.shadowBlur=0}
- g.textBaseline='alphabetic';g.textAlign='right';g.font='italic 600 34px '+F;g.fillStyle='#fff';g.shadowColor='rgba(0,0,0,.7)';g.shadowBlur=5;g.fillText(String(o.kmh),cx-12,124);g.shadowBlur=0;
- g.font='500 9px '+F;g.fillStyle='rgba(255,255,255,.62)';g.fillText(o.unit.toLowerCase(),cx-12,136);
- g.fillStyle='rgba(255,255,255,.3)';g.fillRect(cx,98,1,34);
- g.textAlign='left';g.font='italic 700 40px '+F;g.fillStyle=o.shift?'#ff4a3d':'#fff';g.shadowColor='rgba(0,0,0,.7)';g.shadowBlur=5;g.fillText(String(o.gear),cx+16,126);g.shadowBlur=0;
- g.font='600 9px '+F;g.fillStyle='rgba(255,255,255,.62)';g.fillText(o.auto?'AT':'MT',cx+16,136);
- if(o.shift){g.fillStyle='#d8261b';g.fillRect(cx+52,104,10,10)}
- if(o.tag){g.textAlign='left';g.font='700 10px '+F;g.fillStyle=o.tagCol||'#fff';g.fillText(o.tag,30,100)}};
+ /* Nov 13 (Hakan: look at number 13 in the Gran Turismo 7 screen): a dense strip of fine rev ticks arching over a wide, low, dark plate with slanted ends:
+    speed in seven-segment digits on the left, a divider, the gear on the right with MT / AT under it and a red box with the next gear when it is time to change */
+ const cx=120,rev=Math.max(0,Math.min(1,o.rev)),RED=.84,N=72,Rr=360,ccy=64+Rr;
+ g.beginPath();g.moveTo(12,84);g.lineTo(228,84);g.lineTo(214,128);g.quadraticCurveTo(120,136,26,128);g.closePath();
+ const pg=g.createLinearGradient(0,84,0,132);pg.addColorStop(0,'rgba(30,34,41,.88)');pg.addColorStop(1,'rgba(5,7,10,.9)');g.fillStyle=pg;g.fill();
+ g.lineWidth=1;g.strokeStyle='rgba(255,255,255,.2)';g.stroke();
+ for(let i=0;i<=N;i++){const u=i/N,a=-Math.PI/2+(u-.5)*.56,c=Math.cos(a),sn=Math.sin(a),on=u<=rev,red=u>=RED,big=i%6===0;
+  const L=big?11:7,x0=cx+c*Rr,y0=ccy+sn*Rr,x1=cx+c*(Rr-L),y1=ccy+sn*(Rr-L);
+  g.strokeStyle=on?(red?'#ff4a3d':'#ffffff'):(red?'rgba(255,74,61,.45)':'rgba(255,255,255,.3)');g.lineWidth=big?1.8:1.2;g.beginPath();g.moveTo(x0,y0);g.lineTo(x1,y1);g.stroke()}
+ const dy=92,dh=30,ink='#f4f7fa';
+ seg7(g,String(o.kmh),cx-14,dy,dh,ink,'right');
+ g.textBaseline='alphabetic';g.textAlign='right';g.font='500 8px '+F;g.fillStyle='rgba(255,255,255,.6)';g.fillText(o.unit.toLowerCase(),cx-14,dy+dh+9);
+ g.fillStyle='rgba(255,255,255,.3)';g.fillRect(cx,90,1,36);
+ seg7(g,String(o.gear),cx+16,dy,dh,o.shift?'#ff5446':ink,'left');
+ g.textAlign='left';g.font='600 8px '+F;g.fillStyle='rgba(255,255,255,.6)';g.fillText(o.auto?'AT':'MT',cx+16,dy+dh+9);
+ if(o.shift){const bx=cx+16+dh*.56+13,by=dy-2;g.fillStyle="#d8261b";g.fillRect(bx,by,14,15);seg7(g,String(Math.min(9,(o.gear|0)+1)),bx+11,by+3,9,"#fff","right")}
+ if(o.tag){g.textAlign='left';g.font='700 10px '+F;g.fillStyle=o.tagCol||'#fff';g.fillText(o.tag,28,104)}};
 })();
