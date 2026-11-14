@@ -228,13 +228,16 @@ P.gx5Split=function(cv,o){const lay=o.lay||1,two=lay===2,LW=two?760:lay===1?560:
  const icon=(x,y,r,lab,on)=>{g.beginPath();g.arc(x,y,r,0,PI*2);g.fillStyle=on?'rgba(235,238,240,.95)':'rgba(255,255,255,.14)';g.fill();g.lineWidth=.8;g.strokeStyle=on?'#fff':'rgba(255,255,255,.22)';g.stroke();if(lab)tx(lab,x,y+.4,r*.62,on?'#16181b':'rgba(255,255,255,.4)','center',700)};
  const icons=(x,y,r,list)=>list.forEach((q,i)=>icon(x+(i%2)*(r*2+4),y+Math.floor(i/2)*(r*2+4),r,q[0],q[1]));
  const tcol=(()=>{const gc=I.grip==null?100:I.grip;return gc>=97?'#f2f4f5':gc>=80?'#f2c76b':'#ef6a5a'})();
- const plate=(p0,p1,ya,yc,yb,inset,N,th)=>{const q=t=>{const x=(1-t)*(1-t)*p0+2*t*(1-t)*cm+t*t*p1,y=(1-t)*(1-t)*ya+2*t*(1-t)*yc+t*t*ya,dx=2*(1-t)*(cm-p0)+2*t*(p1-cm),dy=2*(1-t)*(yc-ya)+2*t*(ya-yc),l=Math.hypot(dx,dy);return{x,y,nx:dy/l,ny:-dx/l}};
-  g.beginPath();for(let i=0;i<=40;i++){const c=q(i/40);i?g.lineTo(c.x,c.y):g.moveTo(c.x,c.y)}g.lineTo(p1-inset,yb-5);g.quadraticCurveTo(p1-inset-1,yb,p1-inset-7,yb);g.lineTo(p0+inset+7,yb);g.quadraticCurveTo(p0+inset+1,yb,p0+inset,yb-5);g.closePath();
-  const gr=g.createLinearGradient(0,yc,0,yb);gr.addColorStop(0,'rgba(40,41,43,.86)');gr.addColorStop(.5,'rgba(22,23,25,.8)');gr.addColorStop(1,'rgba(12,13,15,.72)');g.fillStyle=gr;g.fill();
-  /* the rev band: dense ticks hanging from the arch, pink as the revs climb, red at the limit, dark grey ahead */
-  const sp=(p1-p0)/N;g.lineWidth=Math.max(1,sp*.62);for(let i=0;i<N;i++){const t=(i+.5)/N,c=q(t),on=t<=rv;g.strokeStyle=on?(t>.9?'#ff3b30':'#ec5f93'):'rgba(118,121,126,.78)';g.beginPath();g.moveTo(c.x,c.y);g.lineTo(c.x-c.nx*th,c.y-c.ny*th);g.stroke()}
-  /* steering dot above the arch */
-  const st=Math.max(-1,Math.min(1,TL.st||0)),c=q(.5+st*.3);g.beginPath();g.arc(c.x,c.y-th*.9,Math.max(1.8,th*.26),0,PI*2);g.fillStyle=Math.abs(st)>.85?'#ffd27a':'#ff4a3d';g.fill()};
+ /* the GT5 tachometer: a flat ruler in a dark box, numbered 0 to 9, ticks that light as the revs climb, a red zone at the end and a bar under it; the steering dot slides along above the box */
+ const plate=(p0,p1,ya,yc,yb,inset,N,th)=>{const x0=p0,x1=p1,y0=yc+4,r=5;
+  g.beginPath();g.moveTo(x0+r,y0);g.arcTo(x1,y0,x1,yb,r);g.arcTo(x1,yb,x0,yb,r);g.arcTo(x0,yb,x0,y0,r);g.arcTo(x0,y0,x1,y0,r);g.closePath();
+  const gr=g.createLinearGradient(0,y0,0,yb);gr.addColorStop(0,'rgba(34,36,39,.84)');gr.addColorStop(.5,'rgba(18,19,21,.8)');gr.addColorStop(1,'rgba(10,11,13,.76)');g.fillStyle=gr;g.fill();g.lineWidth=1;g.strokeStyle='rgba(255,255,255,.16)';g.stroke();
+  const sx0=x0+14,sx1=x1-14,sw=sx1-sx0,ny=y0+th*.95,t0=y0+th*1.55,t1=t0+th*1.15,RZ=.86,M=45;
+  for(let i=0;i<=9;i++)tx(String(i),sx0+sw*i/9,ny,th*.78,i/9>=RZ?'#ff6a5a':'#fff','center',600);
+  for(let j=0;j<=M;j++){const t=j/M,x=sx0+sw*t,big=j%5===0,on=t<=rv+.001,red=t>=RZ;g.strokeStyle=on?(red?'#ff3b30':'#fff'):(red?'rgba(255,70,58,.5)':'rgba(255,255,255,.32)');g.lineWidth=big?1.5:1;g.beginPath();g.moveTo(x,big?t0-th*.2:t0+th*.2);g.lineTo(x,t1);g.stroke()}
+  const by=t1+th*.25,bh=Math.max(2,th*.3);g.fillStyle='rgba(255,255,255,.14)';g.fillRect(sx0,by,sw,bh);g.fillStyle='rgba(255,60,48,.4)';g.fillRect(sx0+sw*RZ,by,sw*(1-RZ),bh);g.fillStyle=rv>=RZ?'#ff3b30':'#fff';g.fillRect(sx0,by,sw*rv,bh);
+  /* steering dot above the box */
+  const st=Math.max(-1,Math.min(1,TL.st||0));g.fillStyle='rgba(255,255,255,.25)';g.fillRect(cm-.5,y0-th*1.05,1,th*.55);g.beginPath();g.arc(cm+st*sw*.32,y0-th*.78,Math.max(1.8,th*.26),0,PI*2);g.fillStyle=Math.abs(st)>.85?'#ffd27a':'#ff4a3d';g.fill()};
  const readout=(yd,hs,hg,yu,us)=>{const sw=GD.draw(g,Math.round(o.kmh),cm-hs*.9,yd,hs,'right','#fff',.1);tx(o.unit,cm-hs*.9,yu,us,W_,'right',500);g.fillStyle='rgba(255,255,255,.5)';g.fillRect(cm-.5,yd-hg*.72,1,hg*1.7);
   const gw=GD.draw(g,o.gear,cm+hg*.55,yd+(hs-hg)*-.05,hg,'left','#fff',.1);const bx=cm+hg*.55+gw+hg*.3,bs=hg*.86;
   if(o.shift){g.fillStyle='#e0261b';g.beginPath();const r=bs*.14,by=yd-bs/2;g.moveTo(bx+r,by);g.arcTo(bx+bs*1.25,by,bx+bs*1.25,by+bs,r);g.arcTo(bx+bs*1.25,by+bs,bx,by+bs,r);g.arcTo(bx,by+bs,bx,by,r);g.arcTo(bx,by,bx+bs*1.25,by,r);g.closePath();g.fill();GD.draw(g,o.gear+1,bx+bs*.625,yd,bs*.56,'center','#fff',.12)}
@@ -244,10 +247,10 @@ P.gx5Split=function(cv,o){const lay=o.lay||1,two=lay===2,LW=two?760:lay===1?560:
  const LI=[['ABS',O.abs!==false],['TC',O.tc!==false],['',false],['',false]],RI=[[o.auto?'AT':'MT',true],['',false],['DMG',!!I.dmgOn],['',false]];
  if(!two){const one=lay===1,fx=one?44:40,blx=one?150:88,p0=one?166:96,p1=one?394:324,brx=one?410:332,bdx=one?514:388;
   fuel(fx,42,20);if(one)icons(96,36,8,LI);bracket(blx,-1,26,70,null);
-  plate(p0,p1,28,8,76,14,112,9);readout(52,15,23,68,7.5);arrows(p0+6,p1-6,86,9);
+  plate(p0,p1,28,8,80,14,112,9);readout(59,13,19,73,7);arrows(p0+6,p1-6,89,9);
   bracket(brx,1,26,70,TL.th||0,'#fff');if(one)icons(440,36,8,RI);boost(bdx,42,20)}
  else{fuel(64,44,30);tx('',0,0,1,'#fff');bracket(160,-1,26,94,null);
-  plate(196,604,34,12,92,16,170,11);readout(62,21,32,84,10);arrows(204,596,104,11);
+  plate(210,590,34,12,96,16,170,11);readout(72,17,25,89,9);arrows(218,582,106,11);
   bracket(640,1,26,94,TL.th||0,'#fff');
   /* second row: tyres, icons, the circuit with its cross, icons */
   {const cx=64,cy=146;tx(I.ty||'SM',cx,117,9,W_,'center',600);tx(I.ty||'SM',cx,178,9,W_,'center',600);g.fillStyle=tcol;for(const[dx,dy]of[[-30,-22],[22,-22],[-30,6],[22,6]])g.fillRect(cx+dx,cy+dy,8,20);
