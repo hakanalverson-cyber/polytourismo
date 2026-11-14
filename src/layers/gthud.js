@@ -430,7 +430,7 @@ PB:{W:50,H:130,p:[50,90,4.42],f(g,S){for(const[bx,d,v,col]of[[8,1,S.br,'#ff4a3d'
 R9:{W:70,H:92,p:[69,90,6.3],f(g,S){gplot(g,S,35,46,22,true);tx(g,'G-FORCE',35,12.5,5.6,dim);tx(g,Math.hypot(S.lat,S.lon).toFixed(2)+' g',35,81,6.8,'#fff')}},
 D3:{W:110,H:92,p:[94,91,10],f(g,S){PC.D3.f(g,S);g.clearRect(40,81,60,11);tx(g,'GRIP '+Math.round(S.grip)+'%',68,87,6.5,'#fff')}}
 };
-const ORDER=['A16','R9','D1','D2','G6','D3','S6','D6'],ORDT=['R9','D1','D2','PB','D3'];/* the centre cluster sits 10% smaller than drawn in the builder, shrunk toward the bottom centre */for(const k of['A16','R9','D1','D2','G6','D6']){const q=PC[k].p;PC[k].p=[50+(q[0]-50)*.9,100-(100-q[1])*.9,q[2]*.9]}/* both g circles sit side by side between the rev dial and the wheel load bars, evenly spaced */PC.A16.p=[72.03,90,6.3];PC.R9.p=[76.96,90,6.3];/* lift the gauge stack so the info boxes clear the bottom edge */for(const k of['G6','D6','D1','D2'])PC[k].p[1]-=1.6;let v3=null;
+const ORDER=['A16','R9','D1','D2','G6','D3','S6','D6'],ORDT=['D1','D2','G6','D3','D6'];/* TRIM (Nov 14, Hakan): the full centre cluster and tyre diagram, without the two g charts and the wheel load bars *//* the centre cluster sits 10% smaller than drawn in the builder, shrunk toward the bottom centre */for(const k of['A16','R9','D1','D2','G6','D6']){const q=PC[k].p;PC[k].p=[50+(q[0]-50)*.9,100-(100-q[1])*.9,q[2]*.9]}/* both g circles sit side by side between the rev dial and the wheel load bars, evenly spaced */PC.A16.p=[72.03,90,6.3];PC.R9.p=[76.96,90,6.3];/* lift the gauge stack so the info boxes clear the bottom edge */for(const k of['G6','D6','D1','D2'])PC[k].p[1]-=1.6;let v3=null;
 P.hudPiecesOff=function(e){if(!e._pcs)return;Object.values(e._pcs).forEach(x=>x.remove());if(e._tag)e._tag.remove();e._pcs=null;e._tag=null};
 P.hudPieces=function(e,c,Rc,order){const o=P._o1;if(!o)return;const W=e.clientWidth,H=e.clientHeight;if(!W||!H)return;const T=Rc.T,TL=o.tl||{},now=performance.now();
  const red=o.red||7000,ev=red>10000,stp=ev?2000:1000,maxR=(Math.floor(red/stp)+1)*stp,rpm=Math.max(0,Math.min(1.03,o.rev))*red;
@@ -438,7 +438,7 @@ P.hudPieces=function(e,c,Rc,order){const o=P._o1;if(!o)return;const W=e.clientWi
  const info=o.info||{},mk=Math.max(60,o.maxK||200);
  const S={sp:o.kmh||0,spMax:Math.ceil(mk/50)*50,unit:o.unit||'mph',gear:o.gear,rpm,red,maxR,stp,th:Math.max(0,Math.min(1,TL.th||0)),br:Math.max(0,Math.min(1,TL.br||0)),st:Math.max(-1,Math.min(1,TL.st||0)),lat:+TL.lat||0,lon:+TL.lon||0,grip:info.grip!=null?info.grip:100,trip:+info.trip||0,ty:info.ty||'SM',shift:!!o.shift,hist:hs.a,remain:Math.max(0,(Rc.laps||1)-Math.max(0,c.unw)/T.N)};
  if(c.fin)S.remain=0;
- const trim=(window.PTO&&window.PTO.hudStyle)==='TRIM',set=trim?PCT:PC,ord=trim?ORDT:ORDER;if(e._pcT!==trim){P.hudPiecesOff(e);e._pcT=trim}
+ const trim=(window.PTO&&window.PTO.hudStyle)==='TRIM',set=PC,ord=trim?ORDT:ORDER;if(e._pcT!==trim){P.hudPiecesOff(e);e._pcT=trim}
  const pcs=e._pcs||(e._pcs={}),dpr=Math.min(2,window.devicePixelRatio||1);
  for(const k of ord){const d=set[k];let cv=pcs[k];if(!cv){cv=document.createElement('canvas');cv.className='gtPc';cv.style.cssText='position:absolute;z-index:4;pointer-events:none';e.appendChild(cv);pcs[k]=cv}
   const w=d.p[2]/100*W,h=w*d.H/d.W,x=d.p[0]/100*W-w/2,y=Math.min(d.p[1]/100*H-h/2,H-h*.95),pw=Math.round(w*dpr),ph=Math.round(h*dpr);
