@@ -314,6 +314,7 @@ P.gx5Draw=(cv,o)=>{if(o.split)return P.gx5Split(cv,o);const st=window.PTO&&windo
 .gtLapR small{display:block;font:500 9.5px/12px var(--gt,Inter,sans-serif);letter-spacing:.1em;margin-bottom:5px}
 .gtLapR b{display:block;line-height:1}
 .gtL3 .gtBadge,.gtL3 .gtLapR{display:block}
+.gtL1 .gtTw{transform:scale(calc(var(--k)*1.12))}.gtLaps{display:none!important}
 .gtL3 .gtTim{top:calc(18px*var(--k))}
 .gtL2 .gtP{left:50%;top:14px;transform:translateX(-50%) scale(var(--k));transform-origin:50% 0}
 .gtL2 .gtP .pb{background:none;border:1.5px solid #ffffff59;box-sizing:border-box}
@@ -324,11 +325,11 @@ P.gx5Draw=(cv,o)=>{if(o.split)return P.gx5Split(cv,o);const st=window.PTO&&windo
 .gd{font:italic 700 16px/1 PTExo,var(--gt,Inter,sans-serif);display:inline-block;letter-spacing:.01em;font-variant-numeric:tabular-nums}
 .gtTy{display:none!important}
 .gtL2 .gtTw,.gtL2 .gtLaps,.gtL2 .gtTot,.gtL2 .gtTy,.gtL2 .gtMir,.gtL3 .gtP,.gtL3 .gtTw,.gtL3 .gtLaps,.gtL3 .gtTot,.gtL3 .gtTy,.gtL3 .gtMir{display:none!important}
-.gtPass{position:absolute;right:14px;top:31%;z-index:5;pointer-events:none;font-family:var(--gt,Inter,sans-serif);text-align:right;opacity:0;transition:opacity .25s;color:#fff;text-shadow:0 1px 3px #000c;transform:scale(max(var(--s,1),.8));transform-origin:100% 0}
+.gtPass{position:absolute;left:16px;top:66%;z-index:5;pointer-events:none;font-family:var(--gt,Inter,sans-serif);text-align:left;opacity:0;transition:opacity .25s;color:#f2f4f5;transform:scale(calc(var(--k,1)*1.15));transform-origin:0 0}
 .gtPass.on{opacity:1}
-.gtPass div{padding:7px 14px 8px 18px;border-radius:3px;background:linear-gradient(90deg,#0a0d12cc,#0a0d12ee);border:1px solid #ffffff22;border-right:3px solid #9fd8ff}
-.gtPass small{display:block;font:italic 800 9px var(--gt,Inter,sans-serif);letter-spacing:.26em;color:#9fd8ff}
-.gtPass b{display:block;font:italic 800 15px var(--gt,Inter,sans-serif);letter-spacing:.04em;text-transform:uppercase}
+.gtPass div{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+.gtPass small{display:block;font:500 10px/17px var(--gt,Inter,sans-serif);letter-spacing:.12em;color:#fff;background:#c81e1a;padding:0 9px}
+.gtPass b{display:block;font:600 12.5px/25px var(--gt,Inter,sans-serif);letter-spacing:.02em;text-transform:uppercase;background:rgba(20,22,25,.82);padding:0 10px;white-space:nowrap}
 .hud .h8top,body .hud .h8top{display:none!important}`;document.head.appendChild(st);
  const mk=(e,cls)=>{let d=e.querySelector('.'+cls.split(' ').join('.'));if(!d){d=document.createElement('div');d.className=cls;e.appendChild(d)}return d};
  const set=(d,h)=>{if(d._h!==h){d._h=h;d.innerHTML=h}};
