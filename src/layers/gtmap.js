@@ -6,7 +6,7 @@
 'use strict';
 const P=window.PT8;if(!P)return;
 const st=document.createElement('style');st.textContent=`
-#gtm{position:fixed;z-index:6;pointer-events:none;display:none;top:166px;right:14px;width:clamp(150px,15vw,210px);height:clamp(150px,15vw,210px)}
+#gtm{position:fixed;z-index:6;pointer-events:none;display:none;top:10px;right:14px;width:clamp(150px,15vw,210px);height:clamp(150px,15vw,210px)}
 #gtm.on{display:block}
 #gtm.multi{top:50%;left:50%;right:auto;width:clamp(190px,20vw,290px);height:clamp(190px,20vw,290px);transform:translate(-50%,-50%)}
 #gtm.multi.four{width:clamp(170px,17vw,240px);height:clamp(170px,17vw,240px)}
