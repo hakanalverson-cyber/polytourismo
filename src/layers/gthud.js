@@ -205,14 +205,17 @@ P.gx5Split=function(cv,o){const LW=300,LH=92,k=3;if(cv.width!==LW*k)cv.width=LW*
  for(let j=0;j<=nL*sub;j++){const v=j*stp/sub,x=X(v),big=j%sub===0;g.strokeStyle=v>=red-1?'#ff3b30':'#fff';g.lineWidth=big?1.4:.9;g.beginPath();g.moveTo(x,big?y0+13.5:y0+17);g.lineTo(x,y0+24.5);g.stroke()}
  /* one unbroken base line: white to the redline, red from there on */
  g.fillStyle='#fff';g.fillRect(sx0-.7,y0+24.5,xr-sx0+.7,2.6);g.fillStyle='#ff3b30';g.fillRect(xr,y0+24.5,sx1-xr+.7,2.6);
- /* needle */
- {const nx=X(Math.min(maxR,rpm));g.shadowColor='rgba(0,0,0,.8)';g.shadowBlur=2;g.fillStyle='#ff7a1a';g.fillRect(nx-1.1,y0+12,2.2,16.5);g.beginPath();g.moveTo(nx-3.4,y0+31);g.lineTo(nx+3.4,y0+31);g.lineTo(nx,y0+27);g.closePath();g.fill();g.shadowBlur=0}
+ /* rev bar: fills with rpm and shifts from white through amber to red as it climbs */
+ {const nx=X(Math.min(maxR,rpm)),f=Math.max(0,Math.min(1,rpm/red)),by=y0+29,bh=4.6;g.fillStyle='rgba(255,255,255,.13)';g.fillRect(sx0-.7,by,sw+1.4,bh);
+  const t=Math.max(0,(f-.45)/.55),R=255,G=Math.round(t<.5?255-(255-176)*t*2:176-(176-48)*(t-.5)*2),B=Math.round(t<.5?255-(255-40)*t*2:40);
+  g.fillStyle='rgb('+R+','+G+','+B+')';g.fillRect(sx0-.7,by,Math.max(0,nx-sx0+.7),bh)}
  /* speed | gear */
  GD.draw(g,Math.round(o.kmh),cm-12,61,14,'right','#fff');tx(o.unit,cm-12,74.5,6.5,'rgba(255,255,255,.85)','right',600);g.fillStyle='rgba(255,255,255,.5)';g.fillRect(cm-.5,47,1,29);
  const gw=GD.draw(g,o.gear,cm+13,60,19,'left',o.shift?'#ff5a4a':'#fff');tx(o.auto?'AT':'MT',cm+13+gw+9,74.5,6.5,'rgba(255,255,255,.85)','left',600);
- /* shift arrows beside the box */
- g.fillStyle=o.shift?'rgba(255,255,255,.95)':'rgba(170,170,170,.6)';for(const[x,d]of[[24,1],[276,-1]]){g.beginPath();g.moveTo(x+d*3,46-5);g.lineTo(x-d*5,46);g.lineTo(x+d*3,46+5);g.closePath();g.fill()}
- /* steering dot above the box */
+ /* brake (left) and throttle (right) bars in brackets beside the box */
+ for(const[bx,d,v,col]of[[22,1,TL.br||0,'#ff4a3d'],[278,-1,TL.th||0,'#f4f6f7']]){const ty=20,bb=72,h=bb-ty;g.strokeStyle='rgba(255,255,255,.8)';g.lineWidth=1;g.beginPath();g.moveTo(bx+d*4,ty);g.lineTo(bx,ty);g.lineTo(bx,bb);g.lineTo(bx+d*4,bb);g.stroke();
+  const fx=d>0?bx+3:bx-8,fh=h*Math.max(0,Math.min(1,v));g.fillStyle='rgba(255,255,255,.12)';g.fillRect(fx,ty+1,5,h-2);g.fillStyle=col;g.fillRect(fx,bb-1-Math.max(0,fh-2),5,Math.max(0,fh-2))}
+  /* steering dot above the box */
  const st=Math.max(-1,Math.min(1,TL.st||0));g.fillStyle='rgba(255,255,255,.3)';g.fillRect(cm-.5,2.5,1,5);g.beginPath();g.arc(cm+st*sw*.34,5,2.4,0,PI*2);g.fillStyle=Math.abs(st)>.85?'#ffd27a':'#ff4a3d';g.fill()};
 P.gx5Draw=(cv,o)=>{if(o.split)return P.gx5Split(cv,o);const st=window.PTO&&window.PTO.gauge;if(st==='cluster')return P.gx5Cluster(cv,o);if(st==='telemetry')return P.gx5Tele(cv,o);if(st==='plain')return P.gx5Plain(cv,o);if(st==='logger')return P.gx5Logger(cv,o);
  P.gx5Plain(cv,{...o,tag:'',lw:760,lh:250,ox:80,oy:44});
@@ -346,7 +349,7 @@ P.gx5Draw=(cv,o)=>{if(o.split)return P.gx5Split(cv,o);const st=window.PTO&&windo
     const on=c._lapShow&&performance.now()-c._lapShow<3000&&last!=null;dTim.style.visibility=on?'visible':'hidden';
     if(on){const prev=L.length>1?Math.min(...L.slice(0,-1)):null,dd=prev!=null?last-prev:null;set(dTim,'<div class="rw">'+(lay===1&&dd!=null&&dd<=0?'<span class="tg">BEST</span>':'')+'<span class="t">'+SV(tf(last),lay===2?15:12)+'</span>'+(lay===1&&dd!=null?'<span class="tg '+(dd>0?'u':'d')+'">'+(dd>0?'+':'−')+Math.abs(dd).toFixed(3)+'</span>':'')+'</div>')}}
    {let h='';const from=Math.max(0,L.length-5);for(let k=L.length-1;k>=from;k--)h+='<div'+(L[k]===best?' class="bt"':'')+'><b>'+(k+1)+'</b><span>'+tf(L[k])+'</span></div>';set(dLaps,h)}
-   set(dTot,SV(tf(Rc.t),13,'#fff',.11));
+   set(dTot,SV(tf(c.fin?(L.length?L[L.length-1]:0):Math.max(0,Rc.t-(c.lapStart||0))),13,'#fff',.11));
    {const gr=c._gripPct==null?100:c._gripPct,col=gr>=97?'#f2f4f5':gr>=80?'#f2c76b':'#ef6a5a';dTy.style.setProperty('--tc',col);
     const sm=c._tyLab||'SM';set(dTy,'<div class="lb">'+sm+'</div><div class="cr"><u></u><i style="left:-4px;top:2px"></i><i style="right:-4px;top:2px"></i><i style="left:-4px;bottom:2px"></i><i style="right:-4px;bottom:2px"></i></div><div class="lb">'+sm+'</div>')}
    {const T2=c._tl||{};dBrk.textContent='BRAKE';dBrk.classList.toggle('on',(T2.br||0)>.55&&(c.sp||0)>12)}
