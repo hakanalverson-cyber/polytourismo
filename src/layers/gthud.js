@@ -184,83 +184,36 @@ P.gx5Logger=(cv,o)=>{
  if(o.tag){tx(o.tag,X0,Y0-6,11,o.tagCol||ink,'left',600)}};
 /* Nov 13 (Hakan: similar to GT7 but in our UI style, moved around a bit): the GT7 cluster's parts (a speed dial, a rev dial and a readout between them) drawn in the game's own
    glossy grey and blue. The readout plate sits low and centred with the dials flanking it, not stacked under it. (PTO.gauge = 'plain' | 'logger' | 'cluster' | 'telemetry' for the earlier ones.) */
-/* the GT7 numerals: wide, squared, thin-stroked digits drawn as rounded polylines. The canvas and the DOM (inline SVG) share the same paths. */
-const GD=(()=>{const W=1.4,R=.2,GAP=.3,pc={};
- const f=v=>+v.toFixed(3),u=(a,b)=>{const dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy)||1;return[dx/l,dy/l,l]};
- const cn=(a,b,c)=>{const ab=u(a,b),bc=u(b,c),r=Math.min(R,ab[2]/2,bc[2]/2);return[f(b[0]-ab[0]*r),f(b[1]-ab[1]*r),f(b[0]+bc[0]*r),f(b[1]+bc[1]*r)]};
- const rp=(pts,closed)=>{const n=pts.length;let d='';
-  if(closed){for(let i=0;i<n;i++){const b=pts[i],k=cn(pts[(i+n-1)%n],b,pts[(i+1)%n]);d+=(i?'L':'M')+k[0]+' '+k[1]+'Q'+b[0]+' '+b[1]+' '+k[2]+' '+k[3]}return d+'Z'}
-  d='M'+pts[0][0]+' '+pts[0][1];for(let i=1;i<n-1;i++){const b=pts[i],k=cn(pts[i-1],b,pts[i+1]);d+='L'+k[0]+' '+k[1]+'Q'+b[0]+' '+b[1]+' '+k[2]+' '+k[3]}return d+'L'+pts[n-1][0]+' '+pts[n-1][1]};
- const G={'0':[W,[[[0,0],[W,0],[W,1],[0,1]],1]],'1':[.46,[[[.06,.2],[.3,.02],[.3,1]]]],
-  '2':[W,[[[0,0],[W,0],[W,.5],[0,.5],[0,1],[W,1]]]],'3':[W,[[[0,0],[W,0],[W,1],[0,1]]],[[[W*.3,.5],[W,.5]]]],
-  '4':[W,[[[W*.55,0],[0,.68],[W,.68]]],[[[W*.74,.3],[W*.74,1]]]],'5':[W,[[[W,0],[0,0],[0,.5],[W,.5],[W,1],[0,1]]]],
-  '6':[W,[[[W,0],[0,0],[0,1],[W,1],[W,.5],[0,.5]]]],'7':[W,[[[0,0],[W,0],[W*.42,1]]]],
-  '8':[W,[[[0,0],[W,0],[W,1],[0,1]],1],[[[0,.5],[W,.5]]]],'9':[W,[[[W,.5],[0,.5],[0,0],[W,0],[W,1],[0,1]]]],
-  ':':[.22,[[[.11,.2],[.11,.34]]],[[[.11,.66],[.11,.8]]]],'.':[.22,[[[.11,.86],[.11,1]]]],'/':[.62,[[[.56,0],[.06,1]]]],
-  '-':[.7,[[[.05,.5],[.65,.5]]]],'+':[.7,[[[.05,.5],[.65,.5]]],[[[.35,.2],[.35,.8]]]],' ':[.4]};
- G['−']=G['-'];
- const D={};for(const c in G)D[c]=G[c].slice(1).map(q=>rp(q[0],q[1])).join('');
- const wid=str=>{let w=0;for(const c of str)w+=(G[c]?G[c][0]:.4)+GAP;return Math.max(0,w-GAP)};
- return{w:(str,h)=>wid(String(str))*h,
-  draw(g,str,x,y,h,al,col,lw){str=String(str);const tw=wid(str)*h;let cx=al==='right'?x-tw:al==='center'?x-tw/2:x;g.save();g.strokeStyle=col||'#fff';g.lineJoin='round';g.lineCap='butt';
-   for(const c of str){const q=G[c];if(q&&D[c]){g.save();g.translate(cx,y-h/2);g.scale(h,h);g.lineWidth=lw||.1;g.stroke(pc[c]||(pc[c]=new Path2D(D[c])));g.restore()}cx+=((q?q[0]:.4)+GAP)*h}g.restore();return tw},
-  svg(str,h,col,lw){str=String(str);let x=0,d='';for(const c of str){const q=G[c];if(q&&D[c])d+='<path transform="translate('+f(x)+' 0)" d="'+D[c]+'"/>';x+=(q?q[0]:.4)+GAP}const wu=Math.max(.1,x-GAP);
-   return'<svg width="'+f(wu*h)+'" height="'+h+'" viewBox="0 0 '+f(wu)+' 1" style="overflow:visible;vertical-align:middle;display:inline-block" fill="none" stroke="'+(col||'#fff')+'" stroke-width="'+(lw||.1)+'" stroke-linejoin="round">'+d+'</svg>'}}})();
+/* HUD numerals: the game's own font, italic and bold, as on the GT5 readouts (canvas and DOM share the helper) */
+const GD={draw(g,str,x,y,h,al,col){g.font='italic 700 '+(h*1.32).toFixed(1)+'px "Inter","SF Pro Display","Segoe UI","Helvetica Neue",Arial,sans-serif';g.fillStyle=col||'#fff';g.textAlign=al||'left';g.textBaseline='middle';g.fillText(String(str),x,y+h*.06);return g.measureText(String(str)).width},
+ svg(str,h){return'<span class="gd" style="font-size:'+Math.round(h*1.3)+'px">'+str+'</span>'}};
 P.gtDig=GD;
-/* the circuit outline for the two-player cluster: ~120 points of the track, normalised once per track */
-P.gtCirc=T=>{if(T._gc)return T._gc;const N=T.N,st=Math.max(1,Math.floor(N/120)),pts=[];let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;for(let i=0;i<N;i+=st){const x=T.x[i],z=-T.z[i];pts.push([x,z,i]);x0=Math.min(x0,x);x1=Math.max(x1,x);z0=Math.min(z0,z);z1=Math.max(z1,z)}const sc=1/Math.max(x1-x0,z1-z0,1);return T._gc={pts:pts.map(p=>[(p[0]-(x0+x1)/2)*sc,(p[1]-(z0+z1)/2)*sc,p[2]]),N}};
-/* the GT7 cluster, laid out from the reference screenshots.
-   One player: fuel dial + odometer, assist icons, bracket, the arched plate (dense rev band, speed | gear), bracket with the throttle bar, icons, boost dial.
-   Two players: the same on a longer arch, with a second row under it: tyres, icons, the circuit map with its cross, icons.
-   Three or four players: fuel dial, bracket, plate, bar, boost dial. */
-P.gx5Split=function(cv,o){const lay=o.lay||1,two=lay===2,LW=two?760:lay===1?560:420,LH=two?186:96,k=2;if(cv.width!==LW*k)cv.width=LW*k;if(cv.height!==LH*k)cv.height=LH*k;const g=cv.getContext('2d');g.setTransform(k,0,0,k,0,0);g.clearRect(0,0,LW,LH);
- const F='"Inter","Segoe UI","Helvetica Neue",Arial,sans-serif',PI=Math.PI,TL=o.tl||{},I=o.info||{},O=window.PTO||{},cm=LW/2;
+/* each car's real redline in rpm, by catalogue number (researched per model; an electric car gets its motor's top speed) */
+const RED=[7500,7000,6800,8400,6000,6500,7500,8250,8000,8250,6000,7000,6600,7500,5000,9150,7500,6400,7900,6200,7000,7000,6500,9000,7750,6500,6500,8000,6500,6500,7500,5500,6500,8500,7200,7500,7000,6500,7750,6500,7400,6000,8200,8500,7500,7000,7000,6600,8000,6500,6500,6500,7800,7000,6000,7000,6800,7700,6500,6800,5500,7000,7500,9000,6000,8500,8250,8400,9000,8500,6500,6600,7500,6700,8000,14000,6700,8500,9000,7500,7500,6500,6500,7300,7000,8000,6500,8250,8400,5500,6000,6900,8500,7600,8000,6000,7000,5700,8500,7500,6800,9000,8000,6800,6000,7000,8500,7400,7500,8000,6000,7250,8500,7000,6750,7000,7000,6500,7000,7200,8000,7000,7000,7000,6500,6800,7600,8500,6500,8000,7700,14000,7000,7000,6250,8500];
+P.redOf=id=>{try{const c=P.BYID[id],k=c?(c.k10!=null?c.k10:Math.floor(c.body/2)):null;return(k!=null&&RED[k])||7000}catch(e){return 7000}};
+/* the cluster: the GT5 tachometer and nothing the game does not have. A flat ruler in a dark box, numbered in thousands up to just past the car's own redline:
+   white up to the redline, red beyond it, with no break between the two, and an orange needle at the engine speed. Speed and gear under it, the steering dot above it. */
+P.gx5Split=function(cv,o){const LW=300,LH=92,k=3;if(cv.width!==LW*k)cv.width=LW*k;if(cv.height!==LH*k)cv.height=LH*k;const g=cv.getContext('2d');g.setTransform(k,0,0,k,0,0);g.clearRect(0,0,LW,LH);
+ const F='"Inter","SF Pro Display","Segoe UI","Helvetica Neue",Arial,sans-serif',PI=Math.PI,TL=o.tl||{},cm=LW/2;
  const tx=(t,x,y,sz,c,al,wt)=>{g.font=(wt||500)+' '+sz+'px '+F;g.fillStyle=c;g.textAlign=al||'center';g.textBaseline='middle';g.fillText(t,x,y)};
- const W_='rgba(255,255,255,.9)',D_='rgba(255,255,255,.3)',rv=Math.max(0,Math.min(1,o.rev));
- const fuel=(cx,cy,R)=>{const fu=I.fuel==null?1:I.fuel;g.lineCap='butt';g.lineWidth=R*.13;g.strokeStyle=W_;g.beginPath();g.arc(cx,cy,R,PI*1.04,PI*1.96);g.stroke();
-  g.lineWidth=1;for(const t of[0,.5,1]){const a=PI*1.04+PI*.92*t;g.beginPath();g.moveTo(cx+Math.cos(a)*(R-1),cy+Math.sin(a)*(R-1));g.lineTo(cx+Math.cos(a)*(R-R*.3),cy+Math.sin(a)*(R-R*.3));g.stroke()}
-  const a=PI*1.04+PI*.92*fu;g.strokeStyle='#fff';g.lineWidth=R*.09;g.beginPath();g.moveTo(cx+Math.cos(a)*R*.5,cy+Math.sin(a)*R*.5);g.lineTo(cx+Math.cos(a)*(R-2),cy+Math.sin(a)*(R-2));g.stroke();
-  /* pump icon in a dark disc */g.fillStyle='rgba(60,62,66,.9)';g.beginPath();g.arc(cx,cy-R*.1,R*.4,0,PI*2);g.fill();g.fillStyle='#fff';const u=R*.4;g.fillRect(cx-u*.42,cy-R*.1-u*.5,u*.56,u*.95);g.fillStyle='rgba(60,62,66,1)';g.fillRect(cx-u*.3,cy-R*.1-u*.38,u*.32,u*.3);g.strokeStyle='#fff';g.lineWidth=u*.14;g.beginPath();g.moveTo(cx+u*.14,cy-R*.1-u*.1);g.lineTo(cx+u*.44,cy-R*.1-u*.1);g.lineTo(cx+u*.44,cy-R*.1+u*.4);g.stroke();
-  tx('E',cx-R-7,cy+1,R*.32,W_,'center',500);tx('F',cx+R+7,cy+1,R*.32,W_,'center',500);
-  tx((I.trip==null?0:I.trip).toFixed(1).padStart(8,'0'),cx,cy+R*.62+8,Math.max(7.5,R*.42),W_,'center',500)};
- const bracket=(xv,d,y0,y1,v,col)=>{/* xv: the upright; d: +1 opens to the right ("["), -1 to the left ("]") */g.strokeStyle=W_;g.lineWidth=1.1;g.beginPath();g.moveTo(xv+d*9,y0);g.lineTo(xv,y0);g.lineTo(xv,y1);g.lineTo(xv+d*9,y1);g.moveTo(xv,(y0+y1)/2);g.lineTo(xv+d*5,(y0+y1)/2);g.stroke();if(v!=null&&v>0.01){const h=(y1-y0-6)*Math.max(0,Math.min(1,v));g.fillStyle=col;g.fillRect(d>0?xv+3:xv-9,y1-3-h,6,h)}};
- const arrows=(xl,xr,y,s)=>{g.fillStyle=o.shift?'rgba(255,255,255,.95)':'rgba(170,170,170,.72)';const ar=(x,d)=>{g.beginPath();g.moveTo(x+d*s*.2,y-s*.5);g.lineTo(x-d*s*.55,y);g.lineTo(x+d*s*.2,y+s*.5);g.lineTo(x+d*s*.2,y+s*.2);g.lineTo(x+d*s*.75,y+s*.2);g.lineTo(x+d*s*.75,y-s*.2);g.lineTo(x+d*s*.2,y-s*.2);g.closePath();g.fill()};ar(xl,1);ar(xr,-1)};
- const icon=(x,y,r,lab,on)=>{g.beginPath();g.arc(x,y,r,0,PI*2);g.fillStyle=on?'rgba(235,238,240,.95)':'rgba(255,255,255,.14)';g.fill();g.lineWidth=.8;g.strokeStyle=on?'#fff':'rgba(255,255,255,.22)';g.stroke();if(lab)tx(lab,x,y+.4,r*.62,on?'#16181b':'rgba(255,255,255,.4)','center',700)};
- const icons=(x,y,r,list)=>list.forEach((q,i)=>icon(x+(i%2)*(r*2+4),y+Math.floor(i/2)*(r*2+4),r,q[0],q[1]));
- const tcol=(()=>{const gc=I.grip==null?100:I.grip;return gc>=97?'#f2f4f5':gc>=80?'#f2c76b':'#ef6a5a'})();
- /* the GT5 tachometer: a flat ruler in a dark box, numbered 0 to 9, ticks that light as the revs climb, a red zone at the end and a bar under it; the steering dot slides along above the box */
- const plate=(p0,p1,ya,yc,yb,inset,N,th)=>{const x0=p0,x1=p1,y0=yc+4,r=5;
-  g.beginPath();g.moveTo(x0+r,y0);g.arcTo(x1,y0,x1,yb,r);g.arcTo(x1,yb,x0,yb,r);g.arcTo(x0,yb,x0,y0,r);g.arcTo(x0,y0,x1,y0,r);g.closePath();
-  const gr=g.createLinearGradient(0,y0,0,yb);gr.addColorStop(0,'rgba(34,36,39,.84)');gr.addColorStop(.5,'rgba(18,19,21,.8)');gr.addColorStop(1,'rgba(10,11,13,.76)');g.fillStyle=gr;g.fill();g.lineWidth=1;g.strokeStyle='rgba(255,255,255,.16)';g.stroke();
-  const sx0=x0+14,sx1=x1-14,sw=sx1-sx0,ny=y0+th*.95,t0=y0+th*1.55,t1=t0+th*1.15,RZ=.86,M=45;
-  for(let i=0;i<=9;i++)tx(String(i),sx0+sw*i/9,ny,th*.78,i/9>=RZ?'#ff6a5a':'#fff','center',600);
-  for(let j=0;j<=M;j++){const t=j/M,x=sx0+sw*t,big=j%5===0,on=t<=rv+.001,red=t>=RZ;g.strokeStyle=on?(red?'#ff3b30':'#fff'):(red?'rgba(255,70,58,.5)':'rgba(255,255,255,.32)');g.lineWidth=big?1.5:1;g.beginPath();g.moveTo(x,big?t0-th*.2:t0+th*.2);g.lineTo(x,t1);g.stroke()}
-  const by=t1+th*.25,bh=Math.max(2,th*.3);g.fillStyle='rgba(255,255,255,.14)';g.fillRect(sx0,by,sw,bh);g.fillStyle='rgba(255,60,48,.4)';g.fillRect(sx0+sw*RZ,by,sw*(1-RZ),bh);g.fillStyle=rv>=RZ?'#ff3b30':'#fff';g.fillRect(sx0,by,sw*rv,bh);
-  /* steering dot above the box */
-  const st=Math.max(-1,Math.min(1,TL.st||0));g.fillStyle='rgba(255,255,255,.25)';g.fillRect(cm-.5,y0-th*1.05,1,th*.55);g.beginPath();g.arc(cm+st*sw*.32,y0-th*.78,Math.max(1.8,th*.26),0,PI*2);g.fillStyle=Math.abs(st)>.85?'#ffd27a':'#ff4a3d';g.fill()};
- const readout=(yd,hs,hg,yu,us)=>{const sw=GD.draw(g,Math.round(o.kmh),cm-hs*.9,yd,hs,'right','#fff',.1);tx(o.unit,cm-hs*.9,yu,us,W_,'right',500);g.fillStyle='rgba(255,255,255,.5)';g.fillRect(cm-.5,yd-hg*.72,1,hg*1.7);
-  const gw=GD.draw(g,o.gear,cm+hg*.55,yd+(hs-hg)*-.05,hg,'left','#fff',.1);const bx=cm+hg*.55+gw+hg*.3,bs=hg*.86;
-  if(o.shift){g.fillStyle='#e0261b';g.beginPath();const r=bs*.14,by=yd-bs/2;g.moveTo(bx+r,by);g.arcTo(bx+bs*1.25,by,bx+bs*1.25,by+bs,r);g.arcTo(bx+bs*1.25,by+bs,bx,by+bs,r);g.arcTo(bx,by+bs,bx,by,r);g.arcTo(bx,by,bx+bs*1.25,by,r);g.closePath();g.fill();GD.draw(g,o.gear+1,bx+bs*.625,yd,bs*.56,'center','#fff',.12)}
-  tx(o.auto?'AT':'MT',bx+bs*.625,yu,us,W_,'center',500)};
- const boost=(cx,cy,R)=>{g.lineWidth=1.4;g.strokeStyle=W_;g.beginPath();g.arc(cx,cy,R,PI*.75,PI*2.25);g.stroke();for(let i=0;i<=12;i++){const a=PI*.75+PI*1.5*i/12,r0=R-(i%4===0?5:3);g.lineWidth=.8;g.beginPath();g.moveTo(cx+Math.cos(a)*r0,cy+Math.sin(a)*r0);g.lineTo(cx+Math.cos(a)*(R-1),cy+Math.sin(a)*(R-1));g.stroke()}
-  const a=PI*.75+PI*1.5*(TL.th||0);g.strokeStyle='#fff';g.lineWidth=1.6;g.beginPath();g.moveTo(cx,cy);g.lineTo(cx+Math.cos(a)*(R-6),cy+Math.sin(a)*(R-6));g.stroke();g.fillStyle='#fff';g.beginPath();g.arc(cx,cy,1.8,0,PI*2);g.fill();tx('x100',cx,cy+R*.52,R*.27,W_,'center',500);tx('kPa',cx,cy+R*.86,R*.27,W_,'center',500)};
- const LI=[['ABS',O.abs!==false],['TC',O.tc!==false],['',false],['',false]],RI=[[o.auto?'AT':'MT',true],['',false],['DMG',!!I.dmgOn],['',false]];
- if(!two){const one=lay===1,fx=one?44:40,blx=one?150:88,p0=one?166:96,p1=one?394:324,brx=one?410:332,bdx=one?514:388;
-  fuel(fx,42,20);if(one)icons(96,36,8,LI);bracket(blx,-1,26,70,null);
-  plate(p0,p1,28,8,80,14,112,9);readout(59,13,19,73,7);arrows(p0+6,p1-6,89,9);
-  bracket(brx,1,26,70,TL.th||0,'#fff');if(one)icons(440,36,8,RI);boost(bdx,42,20)}
- else{fuel(64,44,30);tx('',0,0,1,'#fff');bracket(160,-1,26,94,null);
-  plate(210,590,34,12,96,16,170,11);readout(72,17,25,89,9);arrows(218,582,106,11);
-  bracket(640,1,26,94,TL.th||0,'#fff');
-  /* second row: tyres, icons, the circuit with its cross, icons */
-  {const cx=64,cy=146;tx(I.ty||'SM',cx,117,9,W_,'center',600);tx(I.ty||'SM',cx,178,9,W_,'center',600);g.fillStyle=tcol;for(const[dx,dy]of[[-30,-22],[22,-22],[-30,6],[22,6]])g.fillRect(cx+dx,cy+dy,8,20);
-   g.strokeStyle='rgba(255,255,255,.75)';g.lineWidth=1.2;g.beginPath();const x=cx-12,y=cy-24,w=24,h=52,r=9;g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();g.stroke();g.fillStyle='rgba(255,255,255,.18)';g.fillRect(cx-7,cy-10,14,22)}
-  icons(170,136,9,LI);icons(574,136,9,RI);
-  const C=o.circ;{const cx=cm,cy=146;g.strokeStyle='rgba(255,255,255,.3)';g.lineWidth=.8;g.beginPath();g.moveTo(cx,112);g.lineTo(cx,LH-2);g.moveTo(cx-150,cy);g.lineTo(cx+150,cy);g.stroke();
-   if(C){/* the car sits on the cross; the circuit slides under it */let best=0,bd=1e9;const ci=o.ci||0;C.pts.forEach((p,i)=>{let d=Math.abs(p[2]-ci);d=Math.min(d,C.N-d);if(d<bd){bd=d;best=i}});const bp=C.pts[best],S=70;
-    g.save();g.beginPath();g.rect(cx-150,110,300,LH-112);g.clip();g.strokeStyle='rgba(255,255,255,.9)';g.lineWidth=1.8;g.lineJoin='round';g.beginPath();C.pts.forEach((p,i)=>{const x=cx+(p[0]-bp[0])*S,y=cy+(p[1]-bp[1])*S*.62;i?g.lineTo(x,y):g.moveTo(x,y)});g.closePath();g.stroke();g.restore();
-    g.fillStyle='#ff4a3d';g.beginPath();g.arc(cx,cy,3,0,PI*2);g.fill()}}}
-};
+ const red=o.red||7000,ev=red>10000,stp=ev?2000:1000,maxR=(Math.floor(red/stp)+1)*stp+(red%stp===0?0:0),rpm=Math.max(0,Math.min(1.03,o.rev))*red;
+ const x0=36,x1=264,y0=12,yb=80,r=5;
+ g.beginPath();g.moveTo(x0+r,y0);g.arcTo(x1,y0,x1,yb,r);g.arcTo(x1,yb,x0,yb,r);g.arcTo(x0,yb,x0,y0,r);g.arcTo(x0,y0,x1,y0,r);g.closePath();
+ const gr=g.createLinearGradient(0,y0,0,yb);gr.addColorStop(0,'rgba(34,36,39,.84)');gr.addColorStop(.5,'rgba(18,19,21,.8)');gr.addColorStop(1,'rgba(10,11,13,.76)');g.fillStyle=gr;g.fill();g.lineWidth=1;g.strokeStyle='rgba(255,255,255,.16)';g.stroke();
+ const sx0=x0+14,sx1=x1-14,sw=sx1-sx0,X=v=>sx0+sw*v/maxR,xr=X(red),nL=maxR/stp,sub=5;
+ for(let i=0;i<=nL;i++)tx(String(i*stp/1000),X(i*stp),y0+8.5,7,i*stp>=red?'#ff6a5a':'#fff','center',700);
+ for(let j=0;j<=nL*sub;j++){const v=j*stp/sub,x=X(v),big=j%sub===0;g.strokeStyle=v>=red-1?'#ff3b30':'#fff';g.lineWidth=big?1.4:.9;g.beginPath();g.moveTo(x,big?y0+13.5:y0+17);g.lineTo(x,y0+24.5);g.stroke()}
+ /* one unbroken base line: white to the redline, red from there on */
+ g.fillStyle='#fff';g.fillRect(sx0-.7,y0+24.5,xr-sx0+.7,2.6);g.fillStyle='#ff3b30';g.fillRect(xr,y0+24.5,sx1-xr+.7,2.6);
+ /* needle */
+ {const nx=X(Math.min(maxR,rpm));g.shadowColor='rgba(0,0,0,.8)';g.shadowBlur=2;g.fillStyle='#ff7a1a';g.fillRect(nx-1.1,y0+12,2.2,16.5);g.beginPath();g.moveTo(nx-3.4,y0+31);g.lineTo(nx+3.4,y0+31);g.lineTo(nx,y0+27);g.closePath();g.fill();g.shadowBlur=0}
+ /* speed | gear */
+ GD.draw(g,Math.round(o.kmh),cm-12,61,14,'right','#fff');tx(o.unit,cm-12,74.5,6.5,'rgba(255,255,255,.85)','right',600);g.fillStyle='rgba(255,255,255,.5)';g.fillRect(cm-.5,47,1,29);
+ const gw=GD.draw(g,o.gear,cm+13,60,19,'left',o.shift?'#ff5a4a':'#fff');tx(o.auto?'AT':'MT',cm+13+gw+9,74.5,6.5,'rgba(255,255,255,.85)','left',600);
+ /* shift arrows beside the box */
+ g.fillStyle=o.shift?'rgba(255,255,255,.95)':'rgba(170,170,170,.6)';for(const[x,d]of[[24,1],[276,-1]]){g.beginPath();g.moveTo(x+d*3,46-5);g.lineTo(x-d*5,46);g.lineTo(x+d*3,46+5);g.closePath();g.fill()}
+ /* steering dot above the box */
+ const st=Math.max(-1,Math.min(1,TL.st||0));g.fillStyle='rgba(255,255,255,.3)';g.fillRect(cm-.5,2.5,1,5);g.beginPath();g.arc(cm+st*sw*.34,5,2.4,0,PI*2);g.fillStyle=Math.abs(st)>.85?'#ffd27a':'#ff4a3d';g.fill()};
 P.gx5Draw=(cv,o)=>{if(o.split)return P.gx5Split(cv,o);const st=window.PTO&&window.PTO.gauge;if(st==='cluster')return P.gx5Cluster(cv,o);if(st==='telemetry')return P.gx5Tele(cv,o);if(st==='plain')return P.gx5Plain(cv,o);if(st==='logger')return P.gx5Logger(cv,o);
  P.gx5Plain(cv,{...o,tag:'',lw:760,lh:250,ox:80,oy:44});
  const g=cv.getContext('2d'),k=cv.width/760,PI=Math.PI,A0=PI*.75,SW=PI*1.5,rev=Math.max(0,Math.min(1,o.rev)),RED=.88,maxS=Math.max(80,o.maxK||240);g.setTransform(k,0,0,k,80*k,44*k);
@@ -305,7 +258,7 @@ P.gx5Draw=(cv,o)=>{if(o.split)return P.gx5Split(cv,o);const st=window.PTO&&windo
 .gtP .pb{min-width:40px;height:40px;padding:0 9px;display:flex;align-items:center;justify-content:center;background:rgba(20,22,25,.86);border-radius:2px}
 .gtP .pc{display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;padding:1px 0}
 .gtP .pc small{font:500 9.5px/12px var(--gt,Inter,sans-serif);letter-spacing:.12em;color:#f2f4f5}
-.gtP .pc span{display:block;line-height:0;padding-bottom:2px}
+.gtP .pc span{display:block;line-height:1}
 .gtP .lp{margin-left:22px}
 .gtP .pc small.fl{background:#8f1a15;padding:1px 8px;border-radius:2px;letter-spacing:.06em}
 .gtTw{left:16px;top:calc(76px*var(--k));transform:scale(var(--k));transform-origin:0 0;width:230px;font:500 11.5px var(--gt,Inter,sans-serif)}
@@ -320,14 +273,14 @@ P.gx5Draw=(cv,o)=>{if(o.split)return P.gx5Split(cv,o);const st=window.PTO&&windo
 .gtMir{left:50%;top:0;width:34%;aspect-ratio:5.2/1;transform:translateX(-50%);border:2px solid #10161d;border-top:0;border-radius:0 0 6px 6px;box-shadow:0 0 0 1px #ffffff2a inset,0 4px 10px #0008;z-index:3}
 .gtTim{left:50%;top:0;transform:translateX(-50%) scale(var(--k));transform-origin:50% 0;display:flex;flex-direction:column;align-items:center;gap:6px;white-space:nowrap}
 .gtTim .rw{display:flex;align-items:center;gap:8px}
-.gtTim .t{display:block;line-height:0;background:rgba(40,42,45,.72);padding:6px 14px;border-radius:2px}
+.gtTim .t{display:block;line-height:1;background:rgba(40,42,45,.72);padding:5px 14px;border-radius:2px}
 .gtTim .tg{padding:1px 7px;border-radius:2px;font:500 10px/16px var(--gt,Inter,sans-serif);letter-spacing:.1em;background:#7a3fa0}.gtTim .tg.d{background:#2b8a4e}.gtTim .tg.u{background:#b8372d}
 .gtTim .fl{padding:1px 9px;border-radius:2px;font:500 10px/15px var(--gt,Inter,sans-serif);background:#8f1a15;letter-spacing:.06em}
 .gtLaps{right:16px;top:46%;width:150px;transform:scale(var(--k));transform-origin:100% 0}
 .gtLaps div{display:flex;align-items:stretch;gap:3px;height:21px;margin-bottom:3px;font:500 11.5px/21px var(--gt,Inter,sans-serif);font-variant-numeric:tabular-nums}
 .gtLaps div b{width:24px;text-align:center;background:rgba(20,22,25,.82);font-weight:600}
 .gtLaps div span{flex:1;text-align:right;padding:0 8px;background:rgba(20,22,25,.74)}.gtLaps div.bt span{background:#8d4bb8}
-.gtTot{left:16px;bottom:14px;line-height:0;transform:scale(var(--k));transform-origin:0 100%}
+.gtTot{left:16px;bottom:14px;line-height:1;transform:scale(var(--k));transform-origin:0 100%}
 .gtTy{left:calc(50% - var(--gw,600px)/2 - 64px);bottom:calc(var(--gw,600px)*.03);width:56px;text-align:center;transform:scale(var(--k));transform-origin:50% 100%;font:600 8.5px var(--gt,Inter,sans-serif);letter-spacing:.06em;color:#f2f4f5}
 .gtTy .lb{line-height:11px}
 .gtTy .cr{position:relative;width:26px;height:50px;margin:1px auto}
@@ -341,7 +294,7 @@ P.gx5Draw=(cv,o)=>{if(o.split)return P.gx5Split(cv,o);const st=window.PTO&&windo
 .gtBadge span{display:block;margin-top:9px;font:500 12px var(--gt,Inter,sans-serif);letter-spacing:.02em;white-space:nowrap}
 .gtLapR{right:16px;top:14px;text-align:left;transform:scale(var(--k));transform-origin:100% 0;display:none}
 .gtLapR small{display:block;font:500 9.5px/12px var(--gt,Inter,sans-serif);letter-spacing:.1em;margin-bottom:5px}
-.gtLapR b{display:block;line-height:0}
+.gtLapR b{display:block;line-height:1}
 .gtL3 .gtBadge,.gtL3 .gtLapR{display:block}
 .gtL3 .gtTim{top:calc(18px*var(--k))}
 .gtL2 .gtP{left:50%;top:14px;transform:translateX(-50%) scale(var(--k));transform-origin:50% 0}
@@ -349,6 +302,8 @@ P.gx5Draw=(cv,o)=>{if(o.split)return P.gx5Split(cv,o);const st=window.PTO&&windo
 .gtL2 .gtP .lp{margin-left:6px}
 .gtL2 .gtTim{top:calc(76px*var(--k))}
 .gtL2 .gtTim .t{background:none;padding:2px 0}
+.gd{font:italic 700 16px/1 var(--gt,Inter,sans-serif);display:inline-block;letter-spacing:.01em;font-variant-numeric:tabular-nums}
+.gtTy{display:none!important}
 .gtL2 .gtTw,.gtL2 .gtLaps,.gtL2 .gtTot,.gtL2 .gtTy,.gtL2 .gtMir,.gtL3 .gtP,.gtL3 .gtTw,.gtL3 .gtLaps,.gtL3 .gtTot,.gtL3 .gtTy,.gtL3 .gtMir{display:none!important}
 .gtPass{position:absolute;right:14px;top:31%;z-index:5;pointer-events:none;font-family:var(--gt,Inter,sans-serif);text-align:right;opacity:0;transition:opacity .25s;color:#fff;text-shadow:0 1px 3px #000c;transform:scale(max(var(--s,1),.8));transform-origin:100% 0}
 .gtPass.on{opacity:1}
@@ -364,7 +319,7 @@ P.gx5Draw=(cv,o)=>{if(o.split)return P.gx5Split(cv,o);const st=window.PTO&&windo
   const order=[...Rc.cars].sort((a,b)=>(b.fin?1e6-b.finT:0)-(a.fin?1e6-a.finT:0)||b.unw-a.unw);
   Rc.cars.forEach((c,i)=>{if(!c.human)return;const e=document.getElementById('h'+i);if(!e||!c.rect)return;
    e.classList.toggle('gtL1',lay===1);e.classList.toggle('gtL2',lay===2);e.classList.toggle('gtL3',lay===3);
-   const Wv=e.clientWidth||600,gw=lay===1?Math.min(.58*Wv,760):lay===2?Math.min(.92*Wv,760):Math.min(.68*Wv,520);e.style.setProperty('--gw',gw+'px');e.style.setProperty('--gr',(lay===2?186/760:lay===1?96/560:96/420));
+   const Wv=e.clientWidth||600,gw=lay===1?Math.min(.32*Wv,440):lay===2?Math.min(.6*Wv,420):Math.min(.56*Wv,380);e.style.setProperty('--gw',gw+'px');e.style.setProperty('--gr',92/300);
    const ids0=['gtB gtBadge','gtB gtLapR'],[dB,dR]=ids0.map(k=>mk(e,k));
    const ids=['gtB gtP','gtB gtTw','gtB gtMir','gtB gtTim','gtB gtLaps','gtB gtTot','gtB gtTy','gtB gtBrk'];
    const [dP,dTw,dMir,dTim,dLaps,dTot,dTy,dBrk]=ids.map(k=>mk(e,k));
@@ -387,7 +342,9 @@ P.gx5Draw=(cv,o)=>{if(o.split)return P.gx5Split(cv,o);const st=window.PTO&&windo
     set(dTw,h)}
    /* lap timer */
    {const mw=e.clientWidth*.34;dTim.style.top=lay===1?(mw/5.2+8)+'px':''}
-   set(dTim,(fin&&lay===2?'<span class="fl">FINAL LAP</span>':'')+'<div class="rw">'+(lay===1&&best!=null?'<span class="tg">BEST</span>':'')+'<span class="t">'+SV(tf(cur),lay===2?15:11,'#fff',.11)+'</span>'+(lay===1&&dl!=null?'<span class="tg '+(dl>0?'u':'d')+'">'+(dl>0?'+':'−')+Math.abs(dl).toFixed(3)+'</span>':'')+'</div>');
+   {/* the lap time shows for about 3 s after each completed lap */if(c._lapN==null)c._lapN=L.length;if(L.length>c._lapN){c._lapN=L.length;c._lapShow=performance.now()}if(L.length<c._lapN)c._lapN=L.length;
+    const on=c._lapShow&&performance.now()-c._lapShow<3000&&last!=null;dTim.style.visibility=on?'visible':'hidden';
+    if(on){const prev=L.length>1?Math.min(...L.slice(0,-1)):null,dd=prev!=null?last-prev:null;set(dTim,'<div class="rw">'+(lay===1&&dd!=null&&dd<=0?'<span class="tg">BEST</span>':'')+'<span class="t">'+SV(tf(last),lay===2?15:12)+'</span>'+(lay===1&&dd!=null?'<span class="tg '+(dd>0?'u':'d')+'">'+(dd>0?'+':'−')+Math.abs(dd).toFixed(3)+'</span>':'')+'</div>')}}
    {let h='';const from=Math.max(0,L.length-5);for(let k=L.length-1;k>=from;k--)h+='<div'+(L[k]===best?' class="bt"':'')+'><b>'+(k+1)+'</b><span>'+tf(L[k])+'</span></div>';set(dLaps,h)}
    set(dTot,SV(tf(Rc.t),13,'#fff',.11));
    {const gr=c._gripPct==null?100:c._gripPct,col=gr>=97?'#f2f4f5':gr>=80?'#f2c76b':'#ef6a5a';dTy.style.setProperty('--tc',col);
