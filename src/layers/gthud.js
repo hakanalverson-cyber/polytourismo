@@ -297,7 +297,7 @@ P.gx5Draw=(cv,o)=>{const st=window.PTO&&window.PTO.gauge;if(st==='cluster')retur
    {const I=c._tl||{},gr=c._gripPct==null?100:c._gripPct;const col=gr>=97?'#9fc3e6':gr>=80?'#f2c76b':'#ef6a5a';dTy.style.setProperty('--tc',col);
     set(dTy,'<div class="cr"><u></u><i style="left:-4px;top:0"></i><i style="right:-4px;top:0"></i><i style="left:-4px;bottom:0"></i><i style="right:-4px;bottom:0"></i></div>'+(Rc.T&&Rc.T.d&&Rc.T.d.gravel?'GRAVEL':'TARMAC'))}
    /* 25: the car card for the first seconds of the race */
-   {const cn=(P.BYID&&P.BYID[c.carId]&&P.BYID[c.carId].name)||'';set(dCar,'<small>YOUR CAR</small><b>'+cn+'</b>');dCar.classList.toggle('on',Rc.state==='race'&&Rc.t<8)}
+   dCar.style.display='none';
    /* 11: brake warning */
    {const T2=c._tl||{};dBrk.textContent='BRAKE';dBrk.classList.toggle('on',(T2.br||0)>.55&&(c.sp||0)>12)}
    /* pass popup: ahead of a car for more than 0.7 s after being behind it */
