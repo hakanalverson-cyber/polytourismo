@@ -184,7 +184,26 @@ P.gx5Logger=(cv,o)=>{
  if(o.tag){tx(o.tag,X0,Y0-6,11,o.tagCol||ink,'left',600)}};
 /* Nov 13 (Hakan: similar to GT7 but in our UI style, moved around a bit): the GT7 cluster's parts (a speed dial, a rev dial and a readout between them) drawn in the game's own
    glossy grey and blue. The readout plate sits low and centred with the dials flanking it, not stacked under it. (PTO.gauge = 'plain' | 'logger' | 'cluster' | 'telemetry' for the earlier ones.) */
-P.gx5Draw=(cv,o)=>{const st=window.PTO&&window.PTO.gauge;if(st==='cluster')return P.gx5Cluster(cv,o);if(st==='telemetry')return P.gx5Tele(cv,o);if(st==='plain')return P.gx5Plain(cv,o);if(st==='logger')return P.gx5Logger(cv,o);
+/* split screen: the quiet GT7 four-player style, a dark plate with speed and gear, a fuel-style dial and a rev bar */
+P.gx5Split=function(cv,o){const LW=460,LH=120,k=2;if(cv.width!==LW*k)cv.width=LW*k;if(cv.height!==LH*k)cv.height=LH*k;const g=cv.getContext('2d');g.setTransform(k,0,0,k,0,0);g.clearRect(0,0,LW,LH);
+ const F='"Inter","Segoe UI","Helvetica Neue",Arial,sans-serif',PI=Math.PI,TL=o.tl||{},I=o.info||{};
+ const tx=(t,x,y,sz,c,al,wt)=>{g.font=(wt||500)+' '+sz+'px '+F;g.fillStyle=c;g.textAlign=al||'center';g.textBaseline='middle';g.fillText(t,x,y)};
+ /* plate */
+ g.beginPath();g.moveTo(120,36);g.lineTo(340,36);g.lineTo(322,104);g.lineTo(138,104);g.closePath();let gr=g.createLinearGradient(0,36,0,104);gr.addColorStop(0,'rgba(18,22,26,.86)');gr.addColorStop(1,'rgba(10,12,15,.72)');g.fillStyle=gr;g.fill();
+ g.fillStyle='rgba(255,255,255,.07)';g.fillRect(124,36,212,1.5);
+ tx(String(Math.round(o.kmh)),214,64,40,'#fff','right',500);tx(o.unit,214,92,11,'rgba(255,255,255,.7)','right',500);
+ g.fillStyle='rgba(255,255,255,.35)';g.fillRect(230,50,1,44);
+ tx(String(o.gear),262,66,40,'#fff','center',500);tx(o.auto?'AT':'MT',262,92,11,'rgba(255,255,255,.7)','center',500);
+ /* shift arrows */
+ g.fillStyle=o.shift?'#fff':'rgba(255,255,255,.3)';g.beginPath();g.moveTo(104,96);g.lineTo(116,90);g.lineTo(116,102);g.fill();g.beginPath();g.moveTo(356,96);g.lineTo(344,90);g.lineTo(344,102);g.fill();
+ /* rev bar (right) */
+ {const bx=376,by=40,bh=62,rv=Math.max(0,Math.min(1,o.rev));g.fillStyle='rgba(255,255,255,.18)';g.fillRect(bx,by,5,bh);g.fillStyle=rv>.9?'#ff5a4a':'#fff';g.fillRect(bx,by+bh*(1-rv),5,bh*rv);g.fillStyle='rgba(255,255,255,.5)';for(let q=0;q<=6;q++)g.fillRect(bx+8,by+bh*q/6-.5,4,1);tx('N',bx+2.5,by+bh+9,8,'rgba(255,255,255,.6)','center',600)}
+ /* left dial: speed sweep with the trip under it; right dial: throttle */
+ const dial=(cx,cy,v,col)=>{g.lineWidth=2;g.strokeStyle='rgba(255,255,255,.4)';g.beginPath();g.arc(cx,cy,22,PI*.75,PI*2.25);g.stroke();const a=PI*.75+PI*1.5*Math.max(0,Math.min(1,v));g.strokeStyle=col;g.lineWidth=2.4;g.beginPath();g.moveTo(cx,cy);g.lineTo(cx+Math.cos(a)*19,cy+Math.sin(a)*19);g.stroke();g.fillStyle='rgba(255,255,255,.7)';g.beginPath();g.arc(cx,cy,2.4,0,PI*2);g.fill()};
+ dial(70,66,o.kmh/Math.max(1,o.maxK),'#fff');tx((I.trip==null?0:I.trip).toFixed(1).padStart(8,'0'),70,100,9,'rgba(255,255,255,.75)','center',500);
+ dial(420,66,TL.th||0,'#9fd6a8');tx('THR',420,100,8,'rgba(255,255,255,.6)','center',600);
+};
+P.gx5Draw=(cv,o)=>{if(o.split)return P.gx5Split(cv,o);const st=window.PTO&&window.PTO.gauge;if(st==='cluster')return P.gx5Cluster(cv,o);if(st==='telemetry')return P.gx5Tele(cv,o);if(st==='plain')return P.gx5Plain(cv,o);if(st==='logger')return P.gx5Logger(cv,o);
  P.gx5Plain(cv,{...o,tag:'',lw:760,lh:250,ox:80,oy:44});
  const g=cv.getContext('2d'),k=cv.width/760,PI=Math.PI,A0=PI*.75,SW=PI*1.5,rev=Math.max(0,Math.min(1,o.rev)),RED=.88,maxS=Math.max(80,o.maxK||240);g.setTransform(k,0,0,k,80*k,44*k);
  const pol=(cx,cy,r,a)=>[cx+Math.cos(a)*r,cy+Math.sin(a)*r];
@@ -266,6 +285,15 @@ P.gx5Draw=(cv,o)=>{const st=window.PTO&&window.PTO.gauge;if(st==='cluster')retur
 .gtPass div{padding:7px 14px 8px 18px;border-radius:3px;background:linear-gradient(90deg,#0a0d12cc,#0a0d12ee);border:1px solid #ffffff22;border-right:3px solid #9fd8ff}
 .gtPass small{display:block;font:italic 800 9px var(--gt,Inter,sans-serif);letter-spacing:.26em;color:#9fd8ff}
 .gtPass b{display:block;font:italic 800 15px var(--gt,Inter,sans-serif);letter-spacing:.04em;text-transform:uppercase}
+.gtBadge{left:14px;top:12px;transform:scale(var(--k));transform-origin:0 0;display:none}
+.gtBadge b{display:block;width:40px;height:40px;text-align:center;font:500 22px/40px var(--gt,Inter,sans-serif);background:rgba(15,18,22,.9);border-radius:2px}
+.gtBadge span{display:block;margin-top:8px;font:500 12px var(--gt,Inter,sans-serif);letter-spacing:.03em;white-space:nowrap}
+.gtLapR{right:14px;top:12px;text-align:right;transform:scale(var(--k));transform-origin:100% 0;display:none;font:500 10px var(--gt,Inter,sans-serif);letter-spacing:.08em}
+.gtLapR b{display:block;font:500 16px var(--gt,Inter,sans-serif);letter-spacing:.04em}
+.gtSplit .gtBadge,.gtSplit .gtLapR{display:block}
+.gtSplit .gtP,.gtSplit .gtTw,.gtSplit .gtLaps,.gtSplit .gtTot,.gtSplit .gtTy{display:none!important}
+.gtSplit .gtTim .t{background:rgba(15,18,22,.88);padding:2px 14px;border-radius:3px;font:500 15px/22px var(--gt,Inter,sans-serif);font-style:normal;letter-spacing:.04em}
+.gtSplit .h8spd .gx5{width:460px!important;height:120px!important;margin:0!important}
 .hud .h8top,body .hud .h8top{display:none!important}`;document.head.appendChild(st);
  const mk=(e,cls)=>{let d=e.querySelector('.'+cls.split(' ').join('.'));if(!d){d=document.createElement('div');d.className=cls;e.appendChild(d)}return d};
  const set=(d,h)=>{if(d._h!==h){d._h=h;d.innerHTML=h}};
@@ -274,6 +302,7 @@ P.gx5Draw=(cv,o)=>{const st=window.PTO&&window.PTO.gauge;if(st==='cluster')retur
   const Rc=RACE;if(!Rc||!Rc.cars)return;const T=Rc.T,cut=Rc.mode==='cutup',n=Rc.cars.length,fmt=P.fmtT;
   const order=[...Rc.cars].sort((a,b)=>(b.fin?1e6-b.finT:0)-(a.fin?1e6-a.finT:0)||b.unw-a.unw);
   Rc.cars.forEach((c,i)=>{if(!c.human)return;const e=document.getElementById('h'+i);if(!e||!c.rect)return;
+   const ids0=['gtB gtBadge','gtB gtLapR'],[dB,dR]=ids0.map(k=>mk(e,k));const spl=Rc.cars.filter(h=>h.human).length>1;e.classList.toggle('gtSplit',spl);
    const ids=['gtB gtP','gtB gtTw','gtB gtMir','gtB gtTim','gtB gtLaps','gtB gtTot','gtB gtTy','gtB gtCar','gtB gtBrk'];
    const [dP,dTw,dMir,dTim,dLaps,dTot,dTy,dCar,dBrk]=ids.map(k=>mk(e,k));
    const sh=!cut;[dP,dTw,dMir,dTim,dLaps,dTot,dTy,dCar,dBrk].forEach(d=>d.style.display=sh?'':'none');if(!sh)return;
@@ -289,6 +318,7 @@ P.gx5Draw=(cv,o)=>{const st=window.PTO&&window.PTO.gauge;if(st==='cluster')retur
    const L=c.lapT||[],last=L.length?L[L.length-1]:null,best=L.length?Math.min(...L):null,done=L.reduce((x,y)=>x+y,0),cur=Math.max(0,Rc.t-done),frac=(((c.unw%T.N)+T.N)%T.N)/T.N,dl=best!=null?cur-best*frac:null;
    dTim.style.top='calc('+(0)+'px + 0px)';
    {const mw=e.clientWidth*.36;dTim.style.top=(mw/5.2+6)+'px'}
+   if(spl){set(dB,'<b>'+(c.k+1)+'</b><span>'+(c.ptName||'Player '+(c.k+1))+'</span>');set(dR,'LAP<b>'+lapN+'/'+Rc.laps+'</b>');set(dTim,'<span class="t">'+fmt(cur).replace(/^0/,'')+'</span>')}else
    set(dTim,(fin?'<div class="fl">FINAL LAP</div>':'')+(best!=null?'<span class="tg">BEST</span>':'')+'<span class="t">'+fmt(cur).replace(/^0/,'')+'</span>'+(dl!=null?'<span class="tg '+(dl>0?'u':'d')+'">'+(dl>0?'+':'−')+Math.abs(dl).toFixed(3)+'</span>':''));
    /* 5: lap list, newest on top */
    {let h='';const from=Math.max(0,L.length-5);for(let k=L.length-1;k>=from;k--)h+='<div'+(L[k]===best?' class="bt"':'')+'><b>'+(k+1)+'</b><span>'+fmt(L[k]).replace(/^0/,'')+'</span></div>';set(dLaps,h)}
