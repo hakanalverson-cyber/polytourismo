@@ -203,7 +203,7 @@ function rollBack(T,c){const N=T.N,back=Math.round(170/T.sp),i=((c.idx|0)%N+N)%N
 const T_sp=R=>R.T.sp||3;
 
 /* ---------------- race launch ---------------- */
-const NAMES=['KAZE','RIVA','BOLT','MOSS','TANK','VEGA','DUSK','ORCA','NOVA','HAWK','LYNX','ONYX','ROOK','FINN','ZED','JUNO'];
+const NAMES=['A. Jenkins','M. Okafor','T. Lindqvist','R. Castellano','D. Whitaker','K. Yamada','L. Moreau','S. Petrov','J. Halloran','E. Brandt','C. Navarro','H. Sorensen','B. Ashworth','N. Kowalski','G. Ferreira','P. Delacroix'];
 PT8.lastCfg=null;
 function cleanupRace(){if(!RACE)return;try{RACE.cars.forEach(c=>releaseCar(c.m));if(RACE.traffic)RACE.traffic.forEach(t=>releaseCar(t.m));disposeWorld(RACE.scene)}catch(e){}stopEng();RACE=null;FS=null;FX=[];if(PT8.resetTod)PT8.resetTod()}
 PT8.cleanupRace=cleanupRace;

@@ -3,7 +3,7 @@
 'use strict';
 const P=window.PT8,CARS=P.CARS,BYID=P.BYID,CLS=P.CLS,fmtCr=P.fmtCr,fmtT=P.fmtT,ord=P.ord;
 const rnd=(a,b)=>a+Math.random()*(b-a);
-const NAMES=['KAZE','RIVA','BOLT','MOSS','TANK','VEGA','DUSK','ORCA','NOVA','HAWK','LYNX','ONYX','ROOK','FINN','ZED','JUNO','SOL','MAKO','IVY','DRAX'];
+const NAMES=['A. Jenkins','M. Okafor','T. Lindqvist','R. Castellano','D. Whitaker','K. Yamada','L. Moreau','S. Petrov','J. Halloran','E. Brandt','C. Navarro','H. Sorensen','B. Ashworth','N. Kowalski','G. Ferreira','P. Delacroix','V. Rahimi','O. Tanaka','F. Mercer','I. Vasquez'];
 
 /* ================= dust / dirt particles ================= */
 const NP=900;
