@@ -23,7 +23,7 @@ const st=document.createElement('style');st.textContent=`
 .hud .h8top{transform:scale(max(var(--s),.82))!important;transform-origin:top left!important}
 .h8spd::before{display:none!important}
 .hud .h8spd,body .hud .h8spd{left:50%!important;right:auto!important;transform:translateX(-50%) scale(max(var(--s),.72))!important;transform-origin:50% 100%!important}
-.h8spd .gx5{width:760px!important;height:250px!important;margin:0!important}`;document.head.appendChild(st);
+.h8spd .gx5{width:580px!important;height:203px!important;margin:0!important}`;document.head.appendChild(st);
 const F='"Inter","Segoe UI","Helvetica Neue",Arial,sans-serif';
 /* seven-segment digits, slanted a touch, as on the Gran Turismo 7 cluster */
 const SEG={0:'abcdef',1:'bc',2:'abged',3:'abgcd',4:'fgbc',5:'afgcd',6:'afgedc',7:'abc',8:'abcdefg',9:'abcdfg','-':'g'};
@@ -184,25 +184,41 @@ P.gx5Logger=(cv,o)=>{
  if(o.tag){tx(o.tag,X0,Y0-6,11,o.tagCol||ink,'left',600)}};
 /* Nov 13 (Hakan: similar to GT7 but in our UI style, moved around a bit): the GT7 cluster's parts (a speed dial, a rev dial and a readout between them) drawn in the game's own
    glossy grey and blue. The readout plate sits low and centred with the dials flanking it, not stacked under it. (PTO.gauge = 'plain' | 'logger' | 'cluster' | 'telemetry' for the earlier ones.) */
-/* split screen: the quiet GT7 four-player style, a dark plate with speed and gear, a fuel-style dial and a rev bar */
-P.gx5Split=function(cv,o){const LW=460,LH=120,k=2;if(cv.width!==LW*k)cv.width=LW*k;if(cv.height!==LH*k)cv.height=LH*k;const g=cv.getContext('2d');g.setTransform(k,0,0,k,0,0);g.clearRect(0,0,LW,LH);
+/* the GT7 cluster, drawn from the reference shape: a plate with an arched top and a rev tick strip, speed | gear, grey arrows, a big speedo with fuel and trip on the left, a big tach with a boost dial on the right, brackets with pedal bars, and the steering dot above the arch */
+P.gx5Split=function(cv,o){const LW=640,LH=224,k=2;if(cv.width!==LW*k)cv.width=LW*k;if(cv.height!==LH*k)cv.height=LH*k;const g=cv.getContext('2d');g.setTransform(k,0,0,k,0,0);g.clearRect(0,0,LW,LH);
  const F='"Inter","Segoe UI","Helvetica Neue",Arial,sans-serif',PI=Math.PI,TL=o.tl||{},I=o.info||{};
+ const X=x=>(x-335)*.5+8,Y=y=>(y-255)*.5;
  const tx=(t,x,y,sz,c,al,wt)=>{g.font=(wt||500)+' '+sz+'px '+F;g.fillStyle=c;g.textAlign=al||'center';g.textBaseline='middle';g.fillText(t,x,y)};
+ const q=(t)=>{/* the arch: quadratic from (675,318) over (957,258) to (1240,318) */const x=(1-t)*(1-t)*675+2*t*(1-t)*957+t*t*1240,y=(1-t)*(1-t)*318+2*t*(1-t)*258+t*t*318,dx=2*(1-t)*(957-675)+2*t*(1240-957),dy=2*(1-t)*(258-318)+2*t*(318-258),l=Math.hypot(dx,dy);return{x:X(x),y:Y(y),nx:dy/l,ny:-dx/l}};
  /* plate */
- g.beginPath();g.moveTo(120,36);g.quadraticCurveTo(230,10,340,36);g.lineTo(322,104);g.lineTo(138,104);g.closePath();let gr=g.createLinearGradient(0,36,0,104);gr.addColorStop(0,'rgba(18,22,26,.86)');gr.addColorStop(1,'rgba(10,12,15,.72)');g.fillStyle=gr;g.fill();
- /* steering: a dot riding above the curved top edge, centred, moving left and right with the wheel */
- {const st=Math.max(-1,Math.min(1,TL.st||0)),dx=230+st*84,tt=(dx-120)/220,dy=36-52*tt*(1-tt)-9;g.fillStyle='rgba(255,255,255,.18)';for(let q=-1;q<=1;q+=.5){const xx=230+q*84,t2=(xx-120)/220;g.fillRect(xx-.5,36-52*t2*(1-t2)-12,1,6)}g.beginPath();g.arc(dx,dy,4.2,0,PI*2);g.fillStyle=Math.abs(st)>.85?'#ffd27a':'#fff';g.shadowColor='rgba(120,180,255,.9)';g.shadowBlur=6;g.fill();g.shadowBlur=0}
- tx(String(Math.round(o.kmh)),214,64,40,'#fff','right',500);tx(o.unit,214,92,11,'rgba(255,255,255,.7)','right',500);
- g.fillStyle='rgba(255,255,255,.35)';g.fillRect(230,50,1,44);
- tx(String(o.gear),262,66,40,'#fff','center',500);tx(o.auto?'AT':'MT',262,92,11,'rgba(255,255,255,.7)','center',500);
- /* shift arrows */
- g.fillStyle=o.shift?'#fff':'rgba(255,255,255,.3)';g.beginPath();g.moveTo(104,96);g.lineTo(116,90);g.lineTo(116,102);g.fill();g.beginPath();g.moveTo(356,96);g.lineTo(344,90);g.lineTo(344,102);g.fill();
- /* rev bar (right) */
- {const bx=376,by=40,bh=62,rv=Math.max(0,Math.min(1,o.rev));g.fillStyle='rgba(255,255,255,.18)';g.fillRect(bx,by,5,bh);g.fillStyle=rv>.9?'#ff5a4a':'#fff';g.fillRect(bx,by+bh*(1-rv),5,bh*rv);g.fillStyle='rgba(255,255,255,.5)';for(let q=0;q<=6;q++)g.fillRect(bx+8,by+bh*q/6-.5,4,1);tx('N',bx+2.5,by+bh+9,8,'rgba(255,255,255,.6)','center',600)}
- /* left dial: speed sweep with the trip under it; right dial: throttle */
- const dial=(cx,cy,v,col)=>{g.lineWidth=2;g.strokeStyle='rgba(255,255,255,.4)';g.beginPath();g.arc(cx,cy,22,PI*.75,PI*2.25);g.stroke();const a=PI*.75+PI*1.5*Math.max(0,Math.min(1,v));g.strokeStyle=col;g.lineWidth=2.4;g.beginPath();g.moveTo(cx,cy);g.lineTo(cx+Math.cos(a)*19,cy+Math.sin(a)*19);g.stroke();g.fillStyle='rgba(255,255,255,.7)';g.beginPath();g.arc(cx,cy,2.4,0,PI*2);g.fill()};
- dial(70,66,o.kmh/Math.max(1,o.maxK),'#fff');tx((I.trip==null?0:I.trip).toFixed(1).padStart(8,'0'),70,100,9,'rgba(255,255,255,.75)','center',500);
- dial(420,66,TL.th||0,'#9fd6a8');tx('THR',420,100,8,'rgba(255,255,255,.6)','center',600);
+ g.beginPath();for(let i=0;i<=40;i++){const c=q(i/40);i?g.lineTo(c.x,c.y):g.moveTo(c.x,c.y)}g.lineTo(X(1190),Y(416));g.lineTo(X(735),Y(416));g.closePath();
+ let gr=g.createLinearGradient(0,Y(300),0,Y(416));gr.addColorStop(0,'rgba(34,36,38,.9)');gr.addColorStop(1,'rgba(14,15,17,.82)');g.fillStyle=gr;g.fill();
+ /* rev tick strip along the arch */
+ {const rv=Math.max(0,Math.min(1,o.rev)),N=78;for(let i=0;i<N;i++){const t=(i+.5)/N,c=q(t),on=t<=rv,h=on?10:8;g.strokeStyle=on?(t>.88?'#ff4a3d':'#e6463c'):'rgba(255,255,255,.28)';g.lineWidth=1.2;g.beginPath();g.moveTo(c.x,c.y);g.lineTo(c.x+c.nx*h,c.y+c.ny*h);g.stroke()}}
+ /* speed | gear */
+ tx(String(Math.round(o.kmh)),X(935),Y(352),34,'#fff','right',500);tx(o.unit,X(913),Y(397),9,'rgba(255,255,255,.75)','center',500);
+ g.fillStyle='rgba(255,255,255,.45)';g.fillRect(X(957),Y(318),1,45);
+ tx(String(o.gear),X(1022),Y(362),42,'#fff','center',500);tx(o.auto?'AT':'MT',X(1113),Y(397),9,'rgba(255,255,255,.75)','center',500);
+ if(o.shift){g.fillStyle='#e0261b';g.fillRect(X(1084),Y(334),30,30);tx(String(o.gear+1),X(1099),Y(350),20,'#fff','center',500)}
+ /* grey arrows */
+ g.fillStyle='rgba(170,170,170,.75)';const ar=(x,y,d)=>{g.beginPath();g.moveTo(X(x)+d*10,Y(y)-9);g.lineTo(X(x)-d*6,Y(y));g.lineTo(X(x)+d*10,Y(y)+9);g.closePath();g.fill()};ar(677,414,1);ar(1238,414,-1);
+ /* steering dot above the arch */
+ {const st=Math.max(-1,Math.min(1,TL.st||0)),t=.5+st*.3,c=q(t);g.fillStyle='rgba(255,255,255,.2)';for(const u of[.2,.35,.5,.65,.8]){const d=q(u);g.fillRect(d.x-.5,d.y-17,1,5)}g.beginPath();g.arc(c.x,c.y-14,3.4,0,PI*2);g.fillStyle=Math.abs(st)>.85?'#ffd27a':'#ff4a3d';g.shadowColor='rgba(255,70,60,.8)';g.shadowBlur=5;g.fill();g.shadowBlur=0}
+ /* dials */
+ const ring=(cx,cy,R,v,col,dark)=>{g.lineCap='butt';g.lineWidth=3.2;g.strokeStyle=dark||'rgba(255,255,255,.25)';g.beginPath();g.arc(cx,cy,R,PI*.75,PI*2.25);g.stroke();g.strokeStyle=col;g.lineWidth=3.6;g.beginPath();g.arc(cx,cy,R,PI*.75,PI*.75+PI*1.5*Math.max(0,Math.min(1,v)));g.stroke()};
+ const ticks=(cx,cy,R,n,every,f,col)=>{for(let i=0;i<=n;i++){const a=PI*.75+PI*1.5*i/n,big=i%every===0,r0=R-(big?9:5),c=Math.cos(a),sn=Math.sin(a);g.strokeStyle=col;g.lineWidth=big?1.3:.8;g.beginPath();g.moveTo(cx+c*r0,cy+sn*r0);g.lineTo(cx+c*(R-1),cy+sn*(R-1));g.stroke();if(big)tx(f(i),cx+c*(R-17),cy+sn*(R-17),8.5,'#fff','center',500)}};
+ {const cx=X(510),cy=Y(545),R=85,top=Math.max(40,Math.ceil(o.maxK/40)*40),lab=top>320?80:40,nl=top/lab;
+  ring(cx,cy,R,o.kmh/top,'#fff');ticks(cx,cy,R,nl*4,4,i=>String(i/4*lab),'rgba(255,255,255,.8)');
+  tx(o.unit,cx,cy-30,9,'rgba(255,255,255,.8)','center',500);
+  /* fuel */
+  const fu=I.fuel==null?1:I.fuel,fx=cx,fy=cy+24;g.lineWidth=2;g.strokeStyle='rgba(255,255,255,.7)';g.beginPath();g.arc(fx,fy,25,PI*1.05,PI*1.95);g.stroke();const fa=PI*1.05+PI*.9*fu;g.strokeStyle='#fff';g.lineWidth=2.4;g.beginPath();g.moveTo(fx,fy);g.lineTo(fx+Math.cos(fa)*22,fy+Math.sin(fa)*22);g.stroke();tx('E',fx-30,fy+3,8,'rgba(255,255,255,.7)','center',500);tx('F',fx+30,fy+3,8,'rgba(255,255,255,.7)','center',500);
+  g.fillStyle='rgba(30,32,34,.9)';g.fillRect(cx-32,cy+39,64,15);tx((I.trip==null?0:I.trip).toFixed(1).padStart(8,'0'),cx,cy+46.5,10,'#fff','center',500)}
+ {const cx=X(1405),cy=Y(545),R=85;ring(cx,cy,R,o.rev,'#ff2a1f','rgba(255,255,255,.2)');ticks(cx,cy,R,16,2,i=>String(i/2),'rgba(255,255,255,.8)');
+  tx('x1000rpm',cx,cy-30,8.5,'rgba(255,255,255,.8)','center',500);
+  /* boost: the throttle, as a sub-dial */
+  const bx=cx,by=cy+16,br=24;g.lineWidth=2;g.strokeStyle='rgba(255,255,255,.7)';g.beginPath();g.arc(bx,by,br,PI*.75,PI*2.25);g.stroke();const ba=PI*.75+PI*1.5*(TL.th||0);g.strokeStyle='#fff';g.lineWidth=2.2;g.beginPath();g.moveTo(bx,by);g.lineTo(bx+Math.cos(ba)*20,by+Math.sin(ba)*20);g.stroke();tx('THR',bx,by+34,8,'rgba(255,255,255,.75)','center',500)}
+ /* brackets with the pedal bars */
+ {const br=(x,v,col,left)=>{const x0=X(x),y0=Y(490),y1=Y(620);g.strokeStyle='rgba(255,255,255,.7)';g.lineWidth=1.2;g.beginPath();const d=left?1:-1;g.moveTo(x0,y0);g.lineTo(x0+d*20,y0);g.lineTo(x0+d*20,y1);g.lineTo(x0,y1);g.stroke();for(let i=1;i<3;i++){const y=y0+(y1-y0)*i/3;g.beginPath();g.moveTo(x0+d*20,y);g.lineTo(x0+d*10,y);g.stroke()}g.fillStyle=col;const h=(y1-y0)*Math.max(0,Math.min(1,v));g.fillRect(left?x0+2:x0-18,y1-h,16,h)};br(690,TL.br||0,'#ff4a3d',true);br(1230,TL.th||0,'#fff',false)}
 };
 P.gx5Draw=(cv,o)=>{if(o.split)return P.gx5Split(cv,o);const st=window.PTO&&window.PTO.gauge;if(st==='cluster')return P.gx5Cluster(cv,o);if(st==='telemetry')return P.gx5Tele(cv,o);if(st==='plain')return P.gx5Plain(cv,o);if(st==='logger')return P.gx5Logger(cv,o);
  P.gx5Plain(cv,{...o,tag:'',lw:760,lh:250,ox:80,oy:44});
@@ -294,8 +310,8 @@ P.gx5Draw=(cv,o)=>{if(o.split)return P.gx5Split(cv,o);const st=window.PTO&&windo
 .gtSplit .gtBadge,.gtSplit .gtLapR{display:block}
 .gtSplit .gtP,.gtSplit .gtTw,.gtSplit .gtLaps,.gtSplit .gtTot,.gtSplit .gtTy{display:none!important}
 .gtSplit .gtTim .t{background:rgba(15,18,22,.88);padding:2px 14px;border-radius:3px;font:500 15px/22px var(--gt,Inter,sans-serif);font-style:normal;letter-spacing:.04em}
-.gtSplit .h8spd .gx5{width:540px!important;height:141px!important;margin:0!important}
-body .gtSplit .h8spd{transform:translateX(-50%) scale(max(var(--s),.85))!important}
+.gtSplit .h8spd .gx5{width:560px!important;height:196px!important;margin:0!important}
+body .gtSplit .h8spd{transform:translateX(-50%) scale(max(var(--s),.8))!important}
 .gtSplit .gtB{--k:max(var(--s,1),.92)}
 .hud .h8top,body .hud .h8top{display:none!important}`;document.head.appendChild(st);
  const mk=(e,cls)=>{let d=e.querySelector('.'+cls.split(' ').join('.'));if(!d){d=document.createElement('div');d.className=cls;e.appendChild(d)}return d};

@@ -64,7 +64,7 @@ function install(){
   else if(m===2){out.p.set(c.x-sy*5.2*K,by+.95*K,c.z-cy*5.2*K);out.l.set(c.x+sy*9*K,by+.7*K,c.z+cy*9*K);out.f=66}
   else if(m===3){out.p.set(c.x+sy*1.45*K,by+.62*K,c.z+cy*1.45*K);out.l.set(c.x+sy*26,by+.3*K,c.z+cy*26);out.f=78}
   else if(m===4){out.p.set(c.x+sy*.15*K,by+1.55*K,c.z+cy*.15*K);out.l.set(c.x+sy*26,by+1.1*K,c.z+cy*26);out.f=74}
-  if(m<3)out.l.y-=1.2*K;
+  if(m<3)out.l.y-=3.4*K;
   c.cb=0;c.inTn=false};
  /* Nov 13 (Hakan: the camera transition is still choppy; one that works for any car): whenever the view changes (a camera key, the hood or tunnel view,
     the finish orbit), the picture eases from where the lens was to where the new view wants it, over about 0.7 s with a soft start and end.
