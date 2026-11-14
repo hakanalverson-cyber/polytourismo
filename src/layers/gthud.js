@@ -189,8 +189,9 @@ P.gx5Split=function(cv,o){const LW=460,LH=120,k=2;if(cv.width!==LW*k)cv.width=LW
  const F='"Inter","Segoe UI","Helvetica Neue",Arial,sans-serif',PI=Math.PI,TL=o.tl||{},I=o.info||{};
  const tx=(t,x,y,sz,c,al,wt)=>{g.font=(wt||500)+' '+sz+'px '+F;g.fillStyle=c;g.textAlign=al||'center';g.textBaseline='middle';g.fillText(t,x,y)};
  /* plate */
- g.beginPath();g.moveTo(120,36);g.lineTo(340,36);g.lineTo(322,104);g.lineTo(138,104);g.closePath();let gr=g.createLinearGradient(0,36,0,104);gr.addColorStop(0,'rgba(18,22,26,.86)');gr.addColorStop(1,'rgba(10,12,15,.72)');g.fillStyle=gr;g.fill();
- g.fillStyle='rgba(255,255,255,.07)';g.fillRect(124,36,212,1.5);
+ g.beginPath();g.moveTo(120,36);g.quadraticCurveTo(230,10,340,36);g.lineTo(322,104);g.lineTo(138,104);g.closePath();let gr=g.createLinearGradient(0,36,0,104);gr.addColorStop(0,'rgba(18,22,26,.86)');gr.addColorStop(1,'rgba(10,12,15,.72)');g.fillStyle=gr;g.fill();
+ /* steering: a dot riding above the curved top edge, centred, moving left and right with the wheel */
+ {const st=Math.max(-1,Math.min(1,TL.st||0)),dx=230+st*84,tt=(dx-120)/220,dy=36-52*tt*(1-tt)-9;g.fillStyle='rgba(255,255,255,.18)';for(let q=-1;q<=1;q+=.5){const xx=230+q*84,t2=(xx-120)/220;g.fillRect(xx-.5,36-52*t2*(1-t2)-12,1,6)}g.beginPath();g.arc(dx,dy,4.2,0,PI*2);g.fillStyle=Math.abs(st)>.85?'#ffd27a':'#fff';g.shadowColor='rgba(120,180,255,.9)';g.shadowBlur=6;g.fill();g.shadowBlur=0}
  tx(String(Math.round(o.kmh)),214,64,40,'#fff','right',500);tx(o.unit,214,92,11,'rgba(255,255,255,.7)','right',500);
  g.fillStyle='rgba(255,255,255,.35)';g.fillRect(230,50,1,44);
  tx(String(o.gear),262,66,40,'#fff','center',500);tx(o.auto?'AT':'MT',262,92,11,'rgba(255,255,255,.7)','center',500);
@@ -293,7 +294,9 @@ P.gx5Draw=(cv,o)=>{if(o.split)return P.gx5Split(cv,o);const st=window.PTO&&windo
 .gtSplit .gtBadge,.gtSplit .gtLapR{display:block}
 .gtSplit .gtP,.gtSplit .gtTw,.gtSplit .gtLaps,.gtSplit .gtTot,.gtSplit .gtTy{display:none!important}
 .gtSplit .gtTim .t{background:rgba(15,18,22,.88);padding:2px 14px;border-radius:3px;font:500 15px/22px var(--gt,Inter,sans-serif);font-style:normal;letter-spacing:.04em}
-.gtSplit .h8spd .gx5{width:460px!important;height:120px!important;margin:0!important}
+.gtSplit .h8spd .gx5{width:540px!important;height:141px!important;margin:0!important}
+body .gtSplit .h8spd{transform:translateX(-50%) scale(max(var(--s),.85))!important}
+.gtSplit .gtB{--k:max(var(--s,1),.92)}
 .hud .h8top,body .hud .h8top{display:none!important}`;document.head.appendChild(st);
  const mk=(e,cls)=>{let d=e.querySelector('.'+cls.split(' ').join('.'));if(!d){d=document.createElement('div');d.className=cls;e.appendChild(d)}return d};
  const set=(d,h)=>{if(d._h!==h){d._h=h;d.innerHTML=h}};
