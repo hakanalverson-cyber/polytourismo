@@ -6,7 +6,7 @@
 'use strict';
 const P=window.PT8;if(!P)return;
 const st=document.createElement('style');st.textContent=`
-#gtm{position:fixed;z-index:6;pointer-events:none;display:none;top:10px;right:14px;width:clamp(130px,12vw,200px);height:clamp(130px,12vw,200px)}
+#gtm{position:fixed;z-index:6;pointer-events:none;display:none;top:max(4px,calc(13vh - 6.5vw));right:.5vw;width:13vw;height:13vw}
 #gtm.on{display:block}
 #gtm.multi{top:50%;left:50%;right:auto;width:clamp(190px,20vw,290px);height:clamp(190px,20vw,290px);transform:translate(-50%,-50%)}
 #gtm.multi.four{width:clamp(170px,17vw,240px);height:clamp(170px,17vw,240px)}
@@ -22,6 +22,20 @@ function draw(){requestAnimationFrame(draw);
  const T=R.T,hs=R.cars.filter(c=>c.human&&!c.out);if(!hs.length){off();return}
  const multi=hs.length>1;if(!cv.classList.contains('on')){cv.classList.add('on');document.body.classList.add('gtm')}cv.classList.toggle('multi',multi);cv.classList.toggle('four',hs.length>2);
  const dpr=Math.min(2,devicePixelRatio||1),W=Math.round(cv.clientWidth*dpr)||300;if(cv.width!==W){cv.width=W;cv.height=W}
+ /* one player: the whole circuit, north up, as a bold white outline with a dark edge and no backing; numbered dots for you and the two cars ahead */
+ if(!multi){const B=T._mb||(T._mb=(()=>{let a=1e9,b=-1e9,c=1e9,d=-1e9;for(let i=0;i<T.N;i++){a=Math.min(a,T.x[i]);b=Math.max(b,T.x[i]);c=Math.min(c,T.z[i]);d=Math.max(d,T.z[i])}return[a,b,c,d]})());
+  const s=W*.84/Math.max(B[1]-B[0],B[3]-B[2],1),mx=(B[0]+B[1])/2,mz=(B[2]+B[3])/2,h=W/2,X=x=>h+(x-mx)*s,Y=z=>h-(z-mz)*s,N=T.N,stp=Math.max(1,Math.round(6/(T.sp||3)));
+  g.clearRect(0,0,W,W);g.lineJoin='round';g.lineCap='round';
+  const path=()=>{g.beginPath();for(let i=0;i<=N;i+=stp){const j=i%N;if(i)g.lineTo(X(T.x[j]),Y(T.z[j]));else g.moveTo(X(T.x[j]),Y(T.z[j]))}if(!T.open)g.closePath()};
+  /* a hollow road: two thin white edges with a faint grey fill between them */
+  path();g.strokeStyle='rgba(0,0,0,.35)';g.lineWidth=W*.082;g.stroke();path();g.strokeStyle='#f4f6f7';g.lineWidth=W*.07;g.stroke();
+  g.globalCompositeOperation='destination-out';path();g.strokeStyle='#000';g.lineWidth=W*.05;g.stroke();g.globalCompositeOperation='source-over';
+  path();g.strokeStyle='rgba(70,76,84,.42)';g.lineWidth=W*.05;g.stroke();
+  {const c=Math.cos(T.psi[0]),sn=Math.sin(T.psi[0]),w=W*.035/s;g.beginPath();g.moveTo(X(T.x[0]+c*w),Y(T.z[0]-sn*w));g.lineTo(X(T.x[0]-c*w),Y(T.z[0]+sn*w));g.strokeStyle='#f4f6f7';g.lineWidth=W*.012;g.lineCap='butt';g.stroke();g.lineCap='round'}
+  const mark=(c,r,col)=>{const x=X(c.x),y=Y(c.z),yw=c.cy!=null?c.cy:c.yaw,ux=Math.sin(yw),uy=-Math.cos(yw);g.beginPath();g.moveTo(x+ux*r*1.3,y+uy*r*1.3);g.lineTo(x-ux*r*.8-uy*r*.85,y-uy*r*.8+ux*r*.85);g.lineTo(x-ux*r*.8+uy*r*.85,y-uy*r*.8-ux*r*.85);g.closePath();g.fillStyle=col;g.fill();g.lineWidth=W*.006;g.strokeStyle='rgba(0,0,0,.55)';g.stroke()};
+  for(const c of R.cars)if(!c.human&&!c.out)mark(c,W*.026,'#4db4ff');
+  mark(hs[0],W*.034,'#ff3b30');
+  return}
  /* where the map looks */
  let cx=0,cz=0;for(const c of hs){cx+=c.x;cz+=c.z}cx/=hs.length;cz/=hs.length;
  let rad=240,ang=0;
