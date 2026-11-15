@@ -442,7 +442,7 @@ P.hudPieces=function(e,c,Rc,order,o2){const o=o2||P._o1;if(!o)return;const W=e.c
  const info=o.info||{},mk=Math.max(60,o.maxK||200);
  const S={sp:o.kmh||0,spMax:Math.ceil(mk/50)*50,unit:o.unit||'mph',gear:o.gear,rpm,red,maxR,stp,th:Math.max(0,Math.min(1,TL.th||0)),br:Math.max(0,Math.min(1,TL.br||0)),st:Math.max(-1,Math.min(1,TL.st||0)),lat:+TL.lat||0,lon:+TL.lon||0,grip:info.grip!=null?info.grip:100,trip:+info.trip||0,ty:info.ty||'SM',shift:!!o.shift,hist:hs.a,c,Rc,remain:Math.max(0,(Rc.laps||1)-Math.max(0,c.unw)/T.N)};
  if(c.fin)S.remain=0;
- const trim=o2?'2p':(window.PTO&&window.PTO.hudStyle)==='TRIM',set=o2?PC2:PC,ord=o2?ORD2:trim?ORDT:ORDER;if(e._pcT!==trim){P.hudPiecesOff(e);e._pcT=trim}
+ const trim=o2?'2p':(window.PTO&&window.PTO.hud1p)!=='FULL',set=o2?PC2:PC,ord=o2?ORD2:trim?ORDT:ORDER;if(e._pcT!==trim){P.hudPiecesOff(e);e._pcT=trim}
  const pcs=e._pcs||(e._pcs={}),dpr=Math.min(2,window.devicePixelRatio||1);
  for(const k of ord){const d=set[k];let cv=pcs[k];if(!cv){cv=document.createElement('canvas');cv.className='gtPc';cv.style.cssText='position:absolute;z-index:4;pointer-events:none';e.appendChild(cv);pcs[k]=cv}
   let w=d.p[2]/100*W,h=w*d.H/d.W,x=d.p[0]/100*W-w/2,y=Math.min(d.p[1]/100*H-h/2,H-h*.95);if(d.geo)[x,y,w,h]=d.geo(W,H);const pw=Math.round(w*dpr),ph=Math.round(h*dpr);

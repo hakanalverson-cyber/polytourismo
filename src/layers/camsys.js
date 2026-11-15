@@ -121,9 +121,12 @@ const lbKey=(e,v)=>{if(e.code!=='ControlLeft'&&e.code!=='ControlRight')return;co
 addEventListener('keydown',e=>lbKey(e,1),true);addEventListener('keyup',e=>lbKey(e,0),true);addEventListener('blur',()=>humans().forEach(c=>c._lb=0));
 addEventListener('keydown',e=>{
  const R_=typeof RACE!=='undefined'?RACE:null;if(!R_||R_.state==='done'||typeof scr==='undefined'||scr!=='game'||e.repeat)return;
- if(e.code!=='ShiftLeft'&&e.code!=='ShiftRight')return;if(R_.state==='count')return;if(R_.cfg&&R_.cfg.rally)return;
- const hs=humans(),c=e.code==='ShiftLeft'?hs[0]:hs[1]||(hs.length===1?hs[0]:null);if(!c||c.fin)return;
- c.camX=((c.camX|0)+1)%CAMN.length;P.sfx&&P.sfx('click')},true);
+ /* Nov 15 (Hakan): single player also takes C for the camera and M for automatic or manual gears */
+ const solo=(e.code==='KeyC'||e.code==='KeyM')&&humans().length===1&&!/INPUT|TEXTAREA/.test((e.target&&e.target.tagName)||'');
+ if(e.code!=='ShiftLeft'&&e.code!=='ShiftRight'&&!solo)return;if(R_.state==='count')return;if(R_.cfg&&R_.cfg.rally)return;
+ const hs=humans(),c=solo||e.code==='ShiftLeft'?hs[0]:hs[1]||(hs.length===1?hs[0]:null);if(!c||c.fin)return;
+ if(e.code==='KeyM'){if(R_.cfg&&R_.cfg.mode==='free')return;const a=!P.isAuto(c);P.setTX(c.k|0,a);P.sfx&&P.sfx('click');toast(a?'AUTOMATIC':'MANUAL');return}
+ c.camX=((c.camX|0)+1)%CAMN.length;P.sfx&&P.sfx('click');if(solo)toast(CAMN[c.camX])},true);
 /* ---------------- early classification ---------------- */
 const KEYSETS=[['KeyQ','KeyW','KeyE','KeyA','KeyS','KeyD'],['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Numpad8','Numpad4','Numpad5','Numpad6'],['KeyI','KeyJ','KeyK','KeyL'],['Numpad7','Numpad9','Numpad1','Numpad3']];
 const dom=[];function dv(i){if(!dom[i]){const d=document.createElement('div');d.className='cbd';d.innerHTML='<div class="bx"></div>';document.body.appendChild(d);dom[i]={d,bx:d.firstChild,on:false}}return dom[i]}
