@@ -337,7 +337,7 @@ P.gx5Draw=(cv,o)=>{if(o.split)return P.gx5Split(cv,o);const st=window.PTO&&windo
   const order=[...Rc.cars].sort((a,b)=>(b.fin?1e6-b.finT:0)-(a.fin?1e6-a.finT:0)||b.unw-a.unw);
   Rc.cars.forEach((c,i)=>{if(!c.human)return;const e=document.getElementById('h'+i);if(!e||!c.rect)return;
    e.classList.toggle('gtL1',lay===1);e.classList.toggle('gtL2',lay===2);e.classList.toggle('gtL3',lay===3);
-   const Wv=e.clientWidth||600,gw=lay===1?Math.min(.32*Wv,440):lay===2?Math.min(.6*Wv,420):Math.min(.56*Wv,380);e.style.setProperty('--gw',gw+'px');e.style.setProperty('--gr',92/300);e.style.setProperty('--tw',(Wv*(lay===1?.1453:.215)/176).toFixed(4));
+   const Wv=e.clientWidth||600,gw=lay===1?Math.min(.32*Wv,440):lay===2?Math.min(.6*Wv,420):Math.min(.36*Wv,250);e.style.setProperty('--gw',gw+'px');e.style.setProperty('--gr',92/300);e.style.setProperty('--tw',(Wv*(lay===1?.1453:.215)/176).toFixed(4));
    const ids0=['gtB gtBadge','gtB gtLapR'],[dB,dR]=ids0.map(k=>mk(e,k));
    const ids=['gtB gtP','gtB gtTw','gtB gtMir','gtB gtTim','gtB gtLaps','gtB gtTot','gtB gtTy','gtB gtBrk'];
    const [dP,dTw,dMir,dTim,dLaps,dTot,dTy,dBrk]=ids.map(k=>mk(e,k));
