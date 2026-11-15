@@ -1333,7 +1333,8 @@ function ldSlide(first){if(!LD||!LD.classList.contains('on')||LD.classList.conta
  const e=document.createElement('div'),r=()=>(Math.random()*3-1.5).toFixed(2)+'%';e.style.backgroundImage='url(data:image/jpeg;base64,'+x+')';e.style.setProperty('--x0',r());e.style.setProperty('--y0',r());s.appendChild(e);void e.offsetWidth;e.className='on';
  const o=[...s.children].filter(c=>c!==e);setTimeout(()=>o.forEach(c=>c.remove()),1800);LD._t=setTimeout(()=>ldSlide(false),6500)}
 function ldProg(f){if(!LD)return;const u=LD.querySelector('.bt u'),b=LD.querySelector('.bl b');if(u)u.style.width=Math.round(f*100)+'%';if(b)b.textContent=Math.round(f*100)+'%'}
-function ldHide(){sec.classList.remove('ld');aim();if(!LD)return;LD.classList.add('rdy','out');clearTimeout(LD._t);setTimeout(()=>{if(LD&&LD.classList.contains('out'))LD.classList.remove('on')},1000)}
+function ldHide(){/* Nov 15: the loading screen fades to black, the garage comes up out of the black */const fin=()=>{sec.classList.remove('ld');aim();if(!LD)return;LD.style.transition='none';LD.classList.add('rdy','out');clearTimeout(LD._t);LD.classList.remove('on');setTimeout(()=>{LD.style.transition=''},50)};
+ if(P.blackIn&&LD&&LD.classList.contains('on'))P.blackIn(350).then(()=>{fin();setTimeout(()=>P.blackOut(700),80)});else fin()}
 const tick0=()=>new Promise(r=>setTimeout(r,16));
 async function loadCareer(){const t0=performance.now();ldShow();ldProg(.04);GS.onProg=f=>ldProg(.04+f*.6);
  try{await buildScene();ldProg(.66);setCar();await tick0();
@@ -1343,7 +1344,9 @@ async function loadCareer(){const t0=performance.now();ldShow();ldProg(.04);GS.o
  ldProg(1);const left=2400-(performance.now()-t0);if(left>0)await new Promise(r=>setTimeout(r,left));ldHide()}
 
 /* ---------------- entering, keys, back ---------------- */
-P.careerEnter=()=>{P.sfx&&P.sfx('select');P.ui.ST.ret='menu';const g=G();UI.who=g.met?null:'vin';UI.view='talk';UI.f=0;UI.ch=null;UI.menu=null;UI.line='';UI.tag=1;render();show('s8career');loadCareer()};
+P.careerEnter=()=>{P.sfx&&P.sfx('select');P.ui.ST.ret='menu';const g=G();UI.who=g.met?null:'vin';UI.view='talk';UI.f=0;UI.ch=null;UI.menu=null;UI.line='';UI.tag=1;
+ /* Nov 15: the menu fades to black, the career loading screen comes up out of the black */
+ const go=()=>{render();show('s8career');loadCareer();if(P.blackOut)setTimeout(()=>P.blackOut(650),60)};if(P.blackIn)P.blackIn(320).then(go);else go()};
 function escBack(){if(UI.view==='sellForm'){UI.sf=null;openSell();return}if(UI.view==='sell'){UI.view='mkt';UI.f=G().mkt.length;say(`Sure.`);drawDlg();hint();return}
  if(UI.view==='tune'){tuneDone();aim();drawDlg();hint();return}
  if(UI.view==='cars'){UI.view='talk';UI.f=0;leave();return}

@@ -46,7 +46,7 @@ function install(){
  const prev=soloCam,_a=new V(),_b=new V();
  const inner=function(c,dt,out){
   const R_=typeof RACE!=='undefined'?RACE:null;
-  if(!(c&&c.human&&R_&&R_.T)||(R_.cfg&&R_.cfg.rally)||R_.state==='count'&&!c.fin){prev.apply(this,arguments);if(R_.state==='count'&&c.human&&!(R_.cfg&&R_.cfg.rally)&&R_.T)intro(c,dt,out,R_);return}
+  if(!(c&&c.human&&R_&&R_.T)||(R_.cfg&&R_.cfg.rally)||R_.state==='count'&&!c.fin){prev.apply(this,arguments);if(R_.state==='count'&&c.human&&!(R_.cfg&&R_.cfg.rally)&&R_.T&&typeof intro==='function')intro(c,dt,out,R_);return}
   /* finished: the drone orbit (the old random cinematic is bypassed) */
   if(c.fin&&c.cool&&R_.state!=='done'||c.fin&&R_.state==='done'&&R_._orbOn){orbit(c,dt,out,R_);return}
   c._orb=null;

@@ -95,31 +95,41 @@ window.PT8_BOOT=new Promise(res=>{const run=()=>setTimeout(async()=>{try{const B
   const J=[],job=(pri,label,fn)=>J.push([pri,label,fn]);const isC=i=>typeof D!=='undefined'&&D[i]&&D[i].cartoon;
   /* the order the pictures are needed in once the menu is up: the main menu's own scenes first, then the circuit select, then Quickplay, the stages, the rest */
   if(P.menuShot&&!window.PT8_NOSCENE){P.MENU_SCENES.forEach((x,k)=>job(1,'MENU',co=>SC.menu(k,co)));if(P.locShot)P.MENU_LOC.forEach((k,i)=>job(i<4?1:2,'MENU',co=>SC.loc(k,co)))}
-  for(const i of(P.TRK_TRACKS||[]))if(isC(i)&&P.trackShot)job(2,D[i].name,co=>SC.track(i,co));
+  /* Nov 15 (Hakan: "make sure all track previews are loaded"): the circuit pictures are marked must-have: one that is not kept yet is rendered
+     here, behind the loading screen, instead of later behind the menu, so the circuit select never opens on map drawings */
+  const MUST=new Set();for(const i of(P.TRK_TRACKS||[]))if(isC(i)&&P.trackShot){job(2,D[i].name,co=>SC.track(i,co));MUST.add(J[J.length-1])}
   if(P.promoShot&&!window.PT8_NOSCENE){for(let q=0;q<7;q++)for(const k of P.promoFor(q))job(3,'QUICKPLAY',co=>SC.promo(k,co))}
   for(const i of(P.STAGES||[]))if(P.stageRender&&typeof D!=='undefined'&&D[i])job(4,D[i].name,co=>SC.stage(i,co));
-  if(P.quickTracks&&P.trackShot&&!window.PT8_FAST)for(const i of P.quickTracks())if(!isC(i))job(5,D[i].name,co=>SC.track(i,co));
+  if(P.quickTracks&&P.trackShot&&!window.PT8_FAST)for(const i of P.quickTracks())if(!isC(i)){job(5,D[i].name,co=>SC.track(i,co));MUST.add(J[J.length-1])}
   /* the card pictures of the main menu and the Quickplay setup previews are decoded now, so nothing pops in on the menu after loading */
   for(const u of(P.menuImgs||[])){const m=/^url\((.*)\)$/.exec(u);if(m)job(0,'MENU',()=>{const im=new Image();im.src=m[1];return im.decode().then(()=>true)})}
   /* loading the kept pictures: four at a time; the ones that are not kept wait in REST */
   job(0,'MENU',()=>P.prepWarm?P.prepWarm():true);job(0,'CARS',()=>{try{const ids=Object.keys(P.BYID||{});if(P.carThumb&&ids.length)P.carThumb(ids[0])}catch(e){}return true});
   J.sort((a,b)=>a[0]-b[0]);BP(.5);let n=0,ix=0;
-  const worker=async()=>{while(ix<J.length){const j=J[ix++];let ok=false;try{ok=await Promise.race([j[2](true),new Promise(r=>setTimeout(()=>r(false),20000))])}catch(e){}if(!ok)REST.push(j);BP(.5+.5*(++n)/J.length)}};
+  const NOW=[],worker=async()=>{while(ix<J.length){const j=J[ix++];let ok=false;try{ok=await Promise.race([j[2](true),new Promise(r=>setTimeout(()=>r(false),20000))])}catch(e){}if(!ok)(MUST.has(j)?NOW:REST).push(j);BP(.5+.4*(++n)/J.length)}};
   await Promise.all([worker(),worker(),worker(),worker()]);
+  /* the must-have pictures that were not kept: one at a time (each builds its circuit), the bar fills over them */
+  for(let k=0;k<NOW.length;k++){let ok=false;try{ok=await Promise.race([NOW[k][2](false),new Promise(r=>setTimeout(()=>r(false),90000))])}catch(e){console.error('picture',NOW[k][1],e)}if(!ok)REST.push(NOW[k]);BP(.9+.1*(k+1)/NOW.length)}
  }catch(e){console.error('boot warm-up',e)}res();
  /* behind the title: the pictures that had to be rendered, one at a time, never while a race is running */
  setTimeout(async()=>{REST.sort((a,b)=>a[0]-b[0]);const sl=ms=>new Promise(r=>setTimeout(r,ms));
   /* Nov 7: also never while the Career garage or a bike ride is on screen (the render, the JPEG encode and the shader builds were eating the garage's frames) */
   const busy=()=>typeof scr!=='undefined'&&(scr==='game'||scr==='pause'||scr==='bike'||scr==='bikeprep'||scr==='s8career');
+  /* Nov 15 (Hakan: "all tracks loaded by the time the player reaches those checkpoints"): every circuit's meshes are made now, while the player is
+   still in the menus, so picking a circuit, the loading cinematic and the race start only have to place them (P.warmPack keeps them on the pack) */
+  if(P.warmPack)for(const i of(P.TRK_TRACKS||[]))if(typeof D!=='undefined'&&D[i]&&D[i].cartoon&&!D[i].cartoon._m){while(busy())await sl(1500);try{P.warmPack(D[i].cartoon)}catch(e){}await sl(400)}
   for(const j of REST){while(busy())await sl(1500);try{await Promise.race([j[2](false),sl(120000)])}catch(e){console.error('picture',j[1],e)}await sl(2600)}P.picsDone=1},1200)},400);if(document.readyState==='complete')run();else addEventListener('load',run)});
 window.PT8_BOOT.then(()=>{P.bootDone=1});window.PT8_BOOT.then(()=>setTimeout(()=>{d.classList.add('on');if(!BT)slide()},400));
 let done=false;
 function go(e){/* the boot warning cards take the first presses: each one skips a card */{const w=document.getElementById('ptWarn');if(w&&getComputedStyle(w).visibility!=='hidden'&&getComputedStyle(w).opacity>.05){w.classList.add(w.classList.contains('s1')?'s2':'s1');if(e){try{e.preventDefault();e.stopImmediatePropagation()}catch(x){}}return}}
- if(done||!P.bootDone)return;done=true;const bt=document.getElementById('ptBoot');if(bt){bt.style.opacity=0;setTimeout(()=>bt.remove(),1050)}if(e){try{e.preventDefault();e.stopImmediatePropagation()}catch(x){}}
+ if(done||!P.bootDone)return;done=true;const bt=document.getElementById('ptBoot');
+ /* Nov 15 (Hakan: every loading screen linked by a black fade): the title fades to black, the menu comes up out of the black */
+ const K=document.createElement('div');K.style.cssText='position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:2147482600;transition:opacity .35s ease';document.body.appendChild(K);void K.offsetWidth;K.style.opacity='1';
+ setTimeout(()=>{if(bt){bt.style.transition='none';bt.style.opacity=0;setTimeout(()=>bt.remove(),60)}},380);if(e){try{e.preventDefault();e.stopImmediatePropagation()}catch(x){}}
  /* the menu keeps the title's photo behind it until its own first picture is ready (the very first start has to make them), so the backdrop never goes dark in between */
  try{const L=window.PT8_BOOTBG,x=L&&L[window.PT8_BOOTI];if(x&&x.charAt(0)==='u'&&x.charAt(1)===','){const im=new Image();im.onload=()=>{P.bootCv=im};im.src='data:image/jpeg;base64,'+x.slice(2)}}catch(x){}
  try{P.audioReady&&P.audioReady();P.sfx&&P.sfx('select')}catch(x){}
- clearTimeout(slT);d.classList.add('out');document.body.classList.remove('ptTitle');setTimeout(()=>d.remove(),1100);for(const ev of EV)removeEventListener(ev,go,true);clearInterval(gp)}
+ clearTimeout(slT);setTimeout(()=>{d.style.transition='none';d.classList.add('out');document.body.classList.remove('ptTitle');setTimeout(()=>d.remove(),100);setTimeout(()=>{K.style.transition='opacity .8s ease';K.style.opacity='0';setTimeout(()=>K.remove(),900)},350)},380);for(const ev of EV)removeEventListener(ev,go,true);clearInterval(gp)}
 const EV=['keydown','pointerdown','mousedown','touchstart','click'];for(const ev of EV)addEventListener(ev,go,true);
 /* game pads count as buttons too */
 const gp=setInterval(()=>{try{for(const g of(navigator.getGamepads?navigator.getGamepads():[]))if(g&&g.buttons.some(b=>b.pressed))go()}catch(x){}},150);
