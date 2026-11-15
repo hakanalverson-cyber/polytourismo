@@ -26,7 +26,8 @@ function apply(sc,T,key){const d=T&&T.d;if(!on()||!d||!d.cartoon||d.cartoon.stag
  if(typeof R!=='undefined')R.toneMappingExposure*=L.exp;
  sc.userData.gtLook=key||'day'}
 /* the PS3-era finish (Hakan's GT5 references: clean, neutral, silvery, deep contrast): no scanlines over the race, a firmer contrast curve */
-{const st=document.createElement('style');st.textContent='body.gtl:after{background:none!important;box-shadow:inset 0 0 120px #0003!important}body.gtl #c{filter:saturate(1.05) contrast(1) brightness(1.02)!important;image-rendering:auto!important}';document.head.appendChild(st);
+/* Nov 15 (Hakan: the shaders look bland): richer colour and a firmer curve over the race view */
+{const st=document.createElement('style');st.textContent='body.gtl:after{background:none!important;box-shadow:inset 0 0 120px #0003!important}body.gtl #c{filter:saturate(1.2) contrast(1.09) brightness(1.0)!important;image-rendering:auto!important}';document.head.appendChild(st);
  setInterval(()=>{const R_=typeof RACE!=='undefined'?RACE:null,g=!!(on()&&R_&&R_.scene&&R_.scene.userData.gtLook&&typeof scr!=='undefined'&&scr==='game');if(document.body.classList.contains('gtl')!==g)document.body.classList.toggle('gtl',g)},400)}
 setTimeout(()=>{const a0=P.applyTod;if(!a0)return;P.applyTod=function(sc,T,key){const r=a0.apply(this,arguments);try{apply(sc,T,key)}catch(e){console.warn('gtlook',e)}return r};
  P.gtLookDbg=sc=>sc.children.filter(o=>o.isLight).map(o=>o.type+' '+o.color.getHexString()+' '+o.intensity.toFixed(2))},160);
