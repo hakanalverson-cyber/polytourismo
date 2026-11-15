@@ -22,6 +22,8 @@ function draw(){requestAnimationFrame(draw);
  const T=R.T,hs=R.cars.filter(c=>c.human&&!c.out);if(!hs.length){off();return}
  const multi=hs.length>1;if(!cv.classList.contains('on')){cv.classList.add('on');document.body.classList.add('gtm')}cv.classList.toggle('multi',multi);cv.classList.toggle('four',hs.length>2);
  const dpr=Math.min(2,devicePixelRatio||1),W=Math.round(cv.clientWidth*dpr)||300;if(cv.width!==W){cv.width=W;cv.height=W}
+ /* two players: each view draws its own map (gthud), so the shared one stays blank */
+ if(hs.length===2){g.clearRect(0,0,cv.width,cv.height);return}
  /* one player: the whole circuit, north up, as a bold white outline with a dark edge and no backing; numbered dots for you and the two cars ahead */
  if(!multi){const B=T._mb||(T._mb=(()=>{let a=1e9,b=-1e9,c=1e9,d=-1e9;for(let i=0;i<T.N;i++){a=Math.min(a,T.x[i]);b=Math.max(b,T.x[i]);c=Math.min(c,T.z[i]);d=Math.max(d,T.z[i])}return[a,b,c,d]})());
   const s=W*.84/Math.max(B[1]-B[0],B[3]-B[2],1),mx=(B[0]+B[1])/2,mz=(B[2]+B[3])/2,h=W/2,X=x=>h+(x-mx)*s,Y=z=>h-(z-mz)*s,N=T.N,stp=Math.max(1,Math.round(6/(T.sp||3)));
