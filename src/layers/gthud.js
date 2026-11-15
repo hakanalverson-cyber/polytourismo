@@ -231,36 +231,35 @@ P.gx5Split=function(cv,o){cv._o=o;if(o.lay===1){P._o1=o;return}const one=o.lay==
    rows.forEach((r,i)=>{const y=24.5+i*10;tx(r[0],xL,y,5.6,dim,'left',600);tx(r[1],xR,y,6.8,ink,'right',600);g.fillStyle=hair;g.fillRect(xL,y+4.7,xR-xL,.4)})}}
   /* steering dot above the box */
  const st=Math.max(-1,Math.min(1,TL.st||0));g.fillStyle='rgba(255,255,255,.3)';g.fillRect(cm-.5,2.5,1,5);g.beginPath();g.arc(cm+st*sw*.34,5,2.4,0,PI*2);g.fillStyle=Math.abs(st)>.85?'#ffd27a':'#ff4a3d';g.fill()};
-/* Nov 15 (Hakan: "a more simple tachometer for 3-4 players, it looks weird now", then "it doesn't match our scientific vibe"): the single
-   player cluster in miniature for the 3 and 4 player views. A thin speed dial (ticks only), a numbered rev dial with the red zone past the
-   car's redline, and the readout box between them (speed, gear, rpm, segmented rev strip). No pedal brackets or ruler. One and two players
-   keep the full cluster above. */
-P.gx5Simple=function(cv,o){cv._o=o;const CW=250,LH=74,k=3;if(cv.width!==CW*k)cv.width=CW*k;if(cv.height!==LH*k)cv.height=LH*k;if(cv._cw!==CW){cv._cw=CW;cv.style.setProperty('width','calc(var(--gw,600px)*'+(CW/300)+')','important')}
+/* Nov 15 (Hakan: "a more simple tachometer for 3-4 players", then "do the G1 with steering, just simplified" and "the gauges should
+   downgrade the more players there are"): the G1 ruler cluster (one and two players) in two lighter tiers.
+   3 players: the box, the ruler numbered in thousands with the slit rev bar, one tick per 1000, speed | gear, the steering dot. No pedal
+   brackets, no fine graduation, no rpm readout.
+   4 players: the box, the slit rev bar (red past the redline, no numbers or ticks), speed | gear, the steering dot. */
+P.gx5Tier=function(cv,o){cv._o=o;const four=o.np>=4,CW=240,LH=four?70:84,k=3;if(cv.width!==CW*k)cv.width=CW*k;if(cv.height!==LH*k)cv.height=LH*k;if(cv._cw!==CW){cv._cw=CW;cv.style.setProperty('width','calc(var(--gw,600px)*'+(CW/300)+')','important')}
  const g=cv.getContext('2d');g.setTransform(k,0,0,k,0,0);g.clearRect(0,0,CW,LH);
- const F='"PTExo","Inter","SF Pro Display","Segoe UI","Helvetica Neue",Arial,sans-serif',PI=Math.PI,A0=PI*.75,SW=PI*1.5;
- const tx=(t,x,y,sz,c,al,wt)=>{g.font=(wt||600)+' '+sz+'px '+F;g.fillStyle=c;g.textAlign=al||'center';g.textBaseline='middle';g.fillText(t,x,y)};
- const arc=(cx,cy,r,a0,a1,w,c)=>{g.beginPath();g.arc(cx,cy,r,a0,a1);g.lineWidth=w;g.strokeStyle=c;g.lineCap='butt';g.stroke()};
- const tick=(cx,cy,r,a,l,w,c)=>{g.beginPath();g.moveTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);g.lineTo(cx+Math.cos(a)*(r-l),cy+Math.sin(a)*(r-l));g.lineWidth=w;g.strokeStyle=c;g.stroke()};
- const disc=(cx,cy,R)=>{const gr=g.createRadialGradient(cx,cy-R*.3,R*.1,cx,cy,R);gr.addColorStop(0,'rgba(30,33,38,.55)');gr.addColorStop(1,'rgba(6,8,11,.7)');g.beginPath();g.arc(cx,cy,R,0,PI*2);g.fillStyle=gr;g.fill()};
- const red=o.red||7000,ev=red>10000,stp=ev?2000:1000,maxR=(Math.floor(red/stp)+1)*stp,rpm=Math.max(0,Math.min(1.03,o.rev))*red,hot=rpm>=red||o.shift;
- const sst=(o.maxK||160)<=120?20:(o.maxK||160)<=240?40:80,maxS=Math.max(80,Math.ceil((o.maxK||160)/sst)*sst),sp=Math.max(0,o.kmh||0),R=31,cyD=39;
- /* speed dial (left): thin scale, a tick every 20, the fill arc to the speed */
- {const cx=35;disc(cx,cyD,R+3);arc(cx,cyD,R,A0,A0+SW,1,'rgba(255,255,255,.55)');const n=maxS/sst*2;
-  for(let i=0;i<=n;i++)tick(cx,cyD,R,A0+SW*i/n,i%2?2:4,i%2?.6:1,'rgba(255,255,255,.85)');
-  arc(cx,cyD,R+2.4,A0,A0+SW*Math.min(1,sp/maxS),1.8,'#f2f4f6');
-  for(let i=0;i<=n;i+=2){const a=A0+SW*i/n;tx(String(i*sst/2),cx+Math.cos(a)*(R-10),cyD+Math.sin(a)*(R-10),6,'rgba(255,255,255,.85)','center',600)}tx(o.unit,cx,cyD+R*.72,5.4,'rgba(255,255,255,.6)')}
- /* rev dial (right): numbered in thousands, red zone past the car's redline, the fill arc to the engine speed */
- {const cx=CW-35,au=v=>A0+SW*v/maxR,n=maxR/stp;disc(cx,cyD,R+3);arc(cx,cyD,R,A0,au(red),1,'rgba(255,255,255,.55)');arc(cx,cyD,R-1,au(red),A0+SW,2.6,'#ff3b30');
-  for(let i=0;i<=n*2;i++){const v=i*stp/2;tick(cx,cyD,R,au(v),i%2?2:4,i%2?.6:1,v>=red?'#ff6a5a':'rgba(255,255,255,.85)');if(!(i%2))tx(String(v/1000),cx+Math.cos(au(v))*(R-10),cyD+Math.sin(au(v))*(R-10),6.4,v>=red?'#ff6a5a':'rgba(255,255,255,.85)','center',600)}
-  arc(cx,cyD,R+2.4,A0,au(Math.min(rpm,maxR)),1.6,hot?'#ff3b30':'#f2f4f6');tx('x1000rpm',cx,cyD+R*.72,5.4,'rgba(255,255,255,.55)')}
- /* readout (centre): speed over the unit, a hairline, gear and rpm, the segmented rev strip */
- {const x0=CW/2-38,x1=CW/2+38,y0=8,y1=70,rr=3;g.beginPath();g.moveTo(x0+rr,y0);g.arcTo(x1,y0,x1,y1,rr);g.arcTo(x1,y1,x0,y1,rr);g.arcTo(x0,y1,x0,y0,rr);g.arcTo(x0,y0,x1,y0,rr);g.closePath();
-  const gr=g.createLinearGradient(0,y0,0,y1);gr.addColorStop(0,'rgba(34,36,39,.9)');gr.addColorStop(1,'rgba(10,11,13,.84)');g.fillStyle=gr;g.fill();g.lineWidth=.8;g.strokeStyle='rgba(255,255,255,.2)';g.stroke();
-  const cm=CW/2;GD.draw(g,Math.round(sp),cm,25,13,'center','#fff');tx(o.unit,cm,39,5.4,'rgba(255,255,255,.6)');
-  g.fillStyle='rgba(255,255,255,.25)';g.fillRect(x0+6,45,x1-x0-12,.5);
-  GD.draw(g,o.gear,x0+8,54,8.5,'left',o.shift?'#ff5a4a':'#fff');tx(o.auto?'AT':'MT',x0+21,55.5,4.6,'rgba(255,255,255,.6)','left');GD.draw(g,Math.round(rpm/10)*10,x1-7,54,6.4,'right','#fff');
-  const n=24,sx=x0+6,sw=x1-x0-12;for(let j=0;j<n;j++){const v=(j+.5)/n*maxR,on=v<rpm,inR=v>=red;g.fillStyle=on?(inR||hot?'#ff3b30':'#e8505a'):(inR?'rgba(255,59,48,.3)':'rgba(255,255,255,.14)');g.fillRect(sx+j*sw/n+.3,62,sw/n-.6,3.2)}}};
-P.gx5Draw=(cv,o)=>{if(o.split&&o.lay===3)return P.gx5Simple(cv,o);if(o.split)return P.gx5Split(cv,o);const st=window.PTO&&window.PTO.gauge;if(st==='cluster')return P.gx5Cluster(cv,o);if(st==='telemetry')return P.gx5Tele(cv,o);if(st==='plain')return P.gx5Plain(cv,o);if(st==='logger')return P.gx5Logger(cv,o);
+ const F='"PTExo","Inter","SF Pro Display","Segoe UI","Helvetica Neue",Arial,sans-serif',PI=Math.PI,TL=o.tl||{},cm=CW/2;
+ const tx=(t,x,y,sz,c,al,wt)=>{g.font=(wt||500)+' '+sz+'px '+F;g.fillStyle=c;g.textAlign=al||'center';g.textBaseline='middle';g.fillText(t,x,y)};
+ const red=o.red||7000,ev=red>10000,stp=ev?2000:1000,maxR=(Math.floor(red/stp)+1)*stp,rpm=Math.max(0,Math.min(1.03,o.rev))*red;
+ const x0=6,x1=CW-6,y0=12,yb=LH-2,r=5;
+ g.beginPath();g.moveTo(x0+r,y0);g.arcTo(x1,y0,x1,yb,r);g.arcTo(x1,yb,x0,yb,r);g.arcTo(x0,yb,x0,y0,r);g.arcTo(x0,y0,x1,y0,r);g.closePath();
+ const gr=g.createLinearGradient(0,y0,0,yb);gr.addColorStop(0,'rgba(34,36,39,.86)');gr.addColorStop(.5,'rgba(18,19,21,.82)');gr.addColorStop(1,'rgba(10,11,13,.78)');g.fillStyle=gr;g.fill();g.lineWidth=1;g.strokeStyle='rgba(255,255,255,.16)';g.stroke();
+ const sx0=x0+12,sx1=x1-12,sw=sx1-sx0,X=v=>sx0+sw*v/maxR,xr=X(red),nL=maxR/stp;
+ const ty=four?y0+8:y0+19,th=four?10:11;
+ if(!four)for(let i=0;i<=nL;i++)tx(String(i*stp/1000),X(i*stp),y0+9,9,i*stp>=red?'#ff6a5a':'#fff','center',700);
+ /* slit rev bar: one cell per 200 rpm (4 players) or 100 rpm (3 players), red from the redline */
+ {const f=Math.max(0,Math.min(1,rpm/red)),t=Math.max(0,(f-.45)/.55),G=Math.round(t<.5?255-(255-150)*t*2:150-(150-59)*(t-.5)*2),B=Math.round(t<.5?255-(255-185)*t*2:185-(185-48)*(t-.5)*2),lit='rgb(255,'+G+','+B+')';
+  const per=four?5:10,cells=nL*per,cw=sw/cells;
+  for(let j=0;j<cells;j++){const v=j*stp/per,on=v<rpm-1,inR=v>=red-1;g.fillStyle=on?(inR?'#ff3b30':lit):(inR?'rgba(255,59,48,.3)':'rgba(255,255,255,.14)');g.fillRect(sx0+j*cw+.4,ty,cw-.8,th)}
+  if(!four){for(let i=0;i<=nL;i++){const v=i*stp;g.fillStyle=v>=red?'#ff3b30':'rgba(255,255,255,.9)';g.fillRect(X(v)-.6,ty+th+1.5,1.2,4.5)}
+   g.fillStyle='#fff';g.fillRect(sx0-.7,ty+th+.5,xr-sx0+.7,1.6);g.fillStyle='#ff3b30';g.fillRect(xr,ty+th+.5,sx1-xr+.7,1.6)}}
+ /* speed | gear, big */
+ const sy=four?y0+37:y0+52,dh=four?15:16;
+ GD.draw(g,Math.round(o.kmh),cm-12,sy-2,dh,'right','#fff');tx(o.unit,cm-12,sy+dh*.95,7.5,'rgba(255,255,255,.8)','right',600);g.fillStyle='rgba(255,255,255,.5)';g.fillRect(cm-.5,sy-dh*.8,1,dh*1.9);
+ const gw=GD.draw(g,o.gear,cm+13,sy-3,dh*1.2,'left',o.shift?'#ff5a4a':'#fff');tx(o.auto?'AT':'MT',cm+13+gw+7,sy+dh*.95,7.5,'rgba(255,255,255,.8)','left',600);
+ /* steering dot above the box */
+ const st=Math.max(-1,Math.min(1,TL.st||0));g.fillStyle='rgba(255,255,255,.35)';g.fillRect(cm-.6,1.5,1.2,7);g.beginPath();g.arc(cm+st*sw*.36,5,3,0,PI*2);g.fillStyle=Math.abs(st)>.85?'#ffd27a':'#ff4a3d';g.fill()};
+P.gx5Draw=(cv,o)=>{if(o.split&&o.lay===3)return P.gx5Tier(cv,o);if(o.split)return P.gx5Split(cv,o);const st=window.PTO&&window.PTO.gauge;if(st==='cluster')return P.gx5Cluster(cv,o);if(st==='telemetry')return P.gx5Tele(cv,o);if(st==='plain')return P.gx5Plain(cv,o);if(st==='logger')return P.gx5Logger(cv,o);
  P.gx5Plain(cv,{...o,tag:'',lw:760,lh:250,ox:80,oy:44});
  const g=cv.getContext('2d'),k=cv.width/760,PI=Math.PI,A0=PI*.75,SW=PI*1.5,rev=Math.max(0,Math.min(1,o.rev)),RED=.88,maxS=Math.max(80,o.maxK||240);g.setTransform(k,0,0,k,80*k,44*k);
  const pol=(cx,cy,r,a)=>[cx+Math.cos(a)*r,cy+Math.sin(a)*r];
@@ -366,7 +365,7 @@ P.gx5Draw=(cv,o)=>{if(o.split&&o.lay===3)return P.gx5Simple(cv,o);if(o.split)ret
   const order=[...Rc.cars].sort((a,b)=>(b.fin?1e6-b.finT:0)-(a.fin?1e6-a.finT:0)||b.unw-a.unw);
   Rc.cars.forEach((c,i)=>{if(!c.human)return;const e=document.getElementById('h'+i);if(!e||!c.rect)return;
    e.classList.toggle('gtL1',lay===1);e.classList.toggle('gtL2',lay===2);e.classList.toggle('gtL3',lay===3);
-   const Wv=e.clientWidth||600,gw=lay===1?Math.min(.32*Wv,440):lay===2?Math.min(.6*Wv,420):Math.min(.44*Wv,272);e.style.setProperty('--gw',gw+'px');e.style.setProperty('--gr',lay===3?74/300:92/300);e.style.setProperty('--tw',(Wv*(lay===1?.1453:.215)/176).toFixed(4));
+   const Wv=e.clientWidth||600,gw=lay===1?Math.min(.32*Wv,440):lay===2?Math.min(.6*Wv,420):Math.min(.5*Wv,330);e.style.setProperty('--gw',gw+'px');e.style.setProperty('--gr',lay===3?(nh>=4?70:84)/300:92/300);e.style.setProperty('--tw',(Wv*(lay===1?.1453:.215)/176).toFixed(4));
    const ids0=['gtB gtBadge','gtB gtLapR'],[dB,dR]=ids0.map(k=>mk(e,k));
    const ids=['gtB gtP','gtB gtTw','gtB gtMir','gtB gtTim','gtB gtLaps','gtB gtTot','gtB gtTy','gtB gtBrk'];
    const [dP,dTw,dMir,dTim,dLaps,dTot,dTy,dBrk]=ids.map(k=>mk(e,k));
