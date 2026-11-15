@@ -11,11 +11,13 @@ const P=window.PT8;if(!P||typeof THREE==='undefined'||typeof stepCar==='undefine
 const V=(x,y,z)=>new THREE.Vector3(x||0,y||0,z||0);
 const MPH15=6.7056,cl=(v,a,b)=>Math.max(a,Math.min(b,v)),sm=t=>{t=cl(t,0,1);return t*t*(3-2*t)},wr=a=>Math.atan2(Math.sin(a),Math.cos(a));
 /* ---------- the pit lanes (model units). o: a point on the start straight, u: its direction, n: toward the pits ---------- */
-const LANES={ra:(()=>{const o=[72.37,-898.17],u=[.8475,.5308],n=[-.5308,.8475],at=(t,k)=>[o[0]+u[0]*t+n[0]*k,o[1]+u[1]*t+n[1]*k];
+/* Nov 15 (Hakan: straight and lined up with the tents): the straight is now measured off the row of pit tents themselves (o: a point on the
+   tent row, u: along it, n: from the lane toward the tents, 27.96 units = 14.6 m out), and every box sits square in front of one tent */
+const LANES={ra:(()=>{const o=[64.11,-836.97],u=[.8405,.5417],n=[-.5417,.8405],K=27.96,at=t=>[o[0]+u[0]*t-n[0]*K,o[1]+u[1]*t-n[1]*K];
  const pts=[[-284,-901],[-268,-909],[-250,-918],[-225,-929],[-200,-938.5],[-175,-943],[-150,-945],[-125,-948.5],[-100,-954.5],[-75,-949]];
- for(let t=-126;t<=290;t+=32)pts.push(at(t,29));
+ for(let t=-152;t<=264;t+=32)pts.push(at(t));
  pts.push([322,-702.5],[340,-684],[353,-665],[359.5,-645],[362,-625],[366,-606],[372,-590],[377,-573]);
- return{pts,boxes:[20,75,130,185].map(t=>at(t,29)),side:n,shift:9,entry:[10,42]}})()};
+ return{pts,boxes:[-26.2,7.9,41.1,141.2].map(t=>at(t)),side:n,shift:10.53,entry:[10,42]}})()};
 const laneOf=Rc=>{const d=Rc&&Rc.T&&Rc.T.d,pk=d&&d.cartoon;return pk&&LANES[pk.replaces]?{L:LANES[pk.replaces],f:pk.sf||1}:null};
 /* dense path (about a metre a step) through the points, Catmull-Rom */
 function build(Rc){const q=laneOf(Rc);if(!q)return null;const {L,f}=q,c=L.pts.map(p=>[p[0]*f,p[1]*f]),X=[],Z=[],S=[];
@@ -25,12 +27,13 @@ function build(Rc){const q=laneOf(Rc);if(!q)return null;const {L,f}=q,c=L.pts.ma
  X.push(c[c.length-1][0]);Z.push(c[c.length-1][1]);
  let s=0;for(let i=0;i<X.length;i++){if(i)s+=Math.hypot(X[i]-X[i-1],Z[i]-Z[i-1]);S.push(s)}
  const near=(x,z)=>{let b=0,bd=1e18;for(let i=0;i<X.length;i++){const d=(X[i]-x)**2+(Z[i]-z)**2;if(d<bd){bd=d;b=i}}return{i:b,d:Math.sqrt(bd)}};
- const boxes=L.boxes.map(p=>({s:S[near(p[0]*f,p[1]*f).i],by:null,crew:null}));
- return{X,Z,S,len:s,boxes,side:L.side,shift:L.shift*f,entry:L.entry,near,box:5.5+8*f}}
+ const boxes=L.boxes.map(p=>{const x=p[0]*f,z=p[1]*f,i=cl(near(x,z).i,1,X.length-2),tx=X[i+1]-X[i-1],tz=Z[i+1]-Z[i-1],tl=Math.hypot(tx,tz)||1;/* to the centimetre, not the nearest path step */
+  return{s:S[i]+((x-X[i])*tx+(z-Z[i])*tz)/tl,by:null,crew:null}});
+ return{X,Z,S,len:s,boxes,side:L.side,shift:L.shift*f,entry:L.entry,near,box:14}}
 /* a point on the lane at distance s, pulled sideways into box b around its stop point */
 function at(PL,s,b,out){const S=PL.S;let i=Math.min(S.length-2,Math.max(0,Math.floor(s/PL.len*(S.length-1))));while(i>0&&S[i]>s)i--;while(i<S.length-2&&S[i+1]<s)i++;
  const t=cl((s-S[i])/Math.max(1e-6,S[i+1]-S[i]),0,1);let x=PL.X[i]+(PL.X[i+1]-PL.X[i])*t,z=PL.Z[i]+(PL.Z[i+1]-PL.Z[i])*t;
- if(b){const w=sm(1-Math.abs(s-b.s)/PL.box);x+=PL.side[0]*PL.shift*w;z+=PL.side[1]*PL.shift*w}
+ if(b){const w=sm((PL.box-Math.abs(s-b.s))/(PL.box-2));/* flat for 2 m either side of the stop, so the parked car is dead straight */x+=PL.side[0]*PL.shift*w;z+=PL.side[1]*PL.shift*w}
  out.x=x;out.z=z;return out}
 const _a={x:0,z:0},_b={x:0,z:0};
 function pose(PL,s,b){at(PL,s,b,_a);at(PL,Math.min(PL.len,s+.6),b,_b);let dx=_b.x-_a.x,dz=_b.z-_a.z;if(dx*dx+dz*dz<1e-6){at(PL,Math.max(0,s-.6),b,_b);dx=_a.x-_b.x;dz=_a.z-_b.z}return{x:_a.x,z:_a.z,yaw:Math.atan2(dx,dz)}}
@@ -56,7 +59,7 @@ function crewPose(M,k,ph){const R=M.R,T=R.T,hy=T.hipC.y,sy=T.bp[T.idx.upper_armL
 /* a crew for box b beside a car stopped at (x,z) heading yaw. Car space: +X toward the pit wall side the crew waits on, +Z the car's nose.
    Each member has a way out as corner points round the car (1.75 m from its centre line, 3.1 m from its middle fore and aft), so nobody crosses the bodywork */
 const WAYS=[[[1.5,1.35]],[[1.5,-1.35]],[[1.75,3.1],[-1.75,3.1],[-1.5,1.35]],[[1.75,-3.1],[-1.75,-3.1],[-1.5,-1.35]]];
-const HOME=[[3.0,.55],[3.0,-.55],[3.0,1.9],[3.0,-1.9]];
+const HOME=[[1.95,.6],[1.95,-.6],[1.95,2.3],[1.95,-2.3]];/* against the pit wall: the box is 4.8 m wide and the car sits in its middle */
 function mkCrew(Rc,PL,b){if(!CREW||!CREW.length||b.crew)return;const p=pose(PL,b.s,b),T=Rc.T,sd=PL.side,rt=[Math.cos(p.yaw),-Math.sin(p.yaw)],sg=Math.sign(rt[0]*sd[0]+rt[1]*sd[1])||1;
  const W=(lx,lz)=>{const x=p.x+rt[0]*lx*sg+Math.sin(p.yaw)*lz,z=p.z+rt[1]*lx*sg+Math.cos(p.yaw)*lz;return V(x,T.terr(x,z),z)};
  b.crew=WAYS.map((w,i)=>{const R=BK.makeRiderFrom(CREW[(i+b.n*2)%CREW.length],{});R.g.traverse(m=>{if(m.isMesh){m.castShadow=true;m.layers.set(0)}});R.arms.visible=false;

@@ -194,7 +194,7 @@ P.redOf=id=>{try{const c=P.BYID[id],k=c?(c.k10!=null?c.k10:Math.floor(c.body/2))
 /* the cluster: the GT5 tachometer and nothing the game does not have. A flat ruler in a dark box, numbered in thousands up to just past the car's own redline:
    white up to the redline, red beyond it, with no break between the two, and an orange needle at the engine speed. Speed and gear under it, the steering dot above it. */
 try{document.fonts.load('italic 700 12px PTExo');document.fonts.load('600 12px PTExo')}catch(_){}
-P.gx5Split=function(cv,o){cv._o=o;if(o.lay===1){P._o1=o;return}const one=o.lay===1,CW=one?480:300,OX=(CW-300)/2,LW=300,LH=92,k=3;if(cv.width!==CW*k)cv.width=CW*k;if(cv.height!==LH*k)cv.height=LH*k;if(cv._cw!==CW){cv._cw=CW;cv.style.setProperty('width','calc(var(--gw,600px)*'+(CW/300)+')','important')}const g=cv.getContext('2d');g.setTransform(k,0,0,k,0,0);g.clearRect(0,0,CW,LH);g.translate(OX,0);
+P.gx5Split=function(cv,o){cv._o=o;if(o.lay===1){P._o1=o;/* Nov 15 (Hakan: the dials are way too big): the big dial cluster is the hood camera's only; every other view gets this ruler with its flanks */if(P._hood1)return}const one=o.lay===1,CW=one?480:300,OX=(CW-300)/2,LW=300,LH=92,k=3;if(cv.width!==CW*k)cv.width=CW*k;if(cv.height!==LH*k)cv.height=LH*k;if(cv._cw!==CW){cv._cw=CW;cv.style.setProperty('width','calc(var(--gw,600px)*'+(CW/300)+')','important')}const g=cv.getContext('2d');g.setTransform(k,0,0,k,0,0);g.clearRect(0,0,CW,LH);g.translate(OX,0);
  const F='"PTExo","Inter","SF Pro Display","Segoe UI","Helvetica Neue",Arial,sans-serif',PI=Math.PI,TL=o.tl||{},cm=LW/2;
  const tx=(t,x,y,sz,c,al,wt)=>{g.font=(wt||500)+' '+sz+'px '+F;g.fillStyle=c;g.textAlign=al||'center';g.textBaseline='middle';g.fillText(t,x,y)};
  const red=o.red||7000,ev=red>10000,stp=ev?2000:1000,maxR=(Math.floor(red/stp)+1)*stp+(red%stp===0?0:0),rpm=Math.max(0,Math.min(1.03,o.rev))*red;
@@ -365,11 +365,11 @@ P.gx5Draw=(cv,o)=>{if(o.split&&o.lay===3)return P.gx5Tier(cv,o);if(o.split)retur
   const order=[...Rc.cars].sort((a,b)=>(b.fin?1e6-b.finT:0)-(a.fin?1e6-a.finT:0)||b.unw-a.unw);
   Rc.cars.forEach((c,i)=>{if(!c.human)return;const e=document.getElementById('h'+i);if(!e||!c.rect)return;
    e.classList.toggle('gtL1',lay===1);e.classList.toggle('gtL2',lay===2);e.classList.toggle('gtL3',lay===3);
-   const Wv=e.clientWidth||600,gw=lay===1?Math.min(.32*Wv,440):lay===2?Math.min(.6*Wv,420):Math.min(.5*Wv,330);e.style.setProperty('--gw',gw+'px');e.style.setProperty('--gr',lay===3?(nh>=4?70:84)/300:92/300);e.style.setProperty('--tw',(Wv*(lay===1?.1453:.215)/176).toFixed(4));
+   const hood=lay===1&&(c.camX|0)===4&&!c.fin;if(lay===1){P._hood1=hood;e.classList.toggle('gtHood',hood)}else e.classList.remove('gtHood');const Wv=e.clientWidth||600,gw=lay===1?(hood?Math.min(.32*Wv,440):Math.min(.28*Wv,384)):lay===2?Math.min(.6*Wv,420):Math.min(.5*Wv,330);e.style.setProperty('--gw',gw+'px');e.style.setProperty('--gr',lay===3?(nh>=4?70:84)/300:92/300);e.style.setProperty('--tw',(Wv*(lay===1?.1453:.215)/176).toFixed(4));
    const ids0=['gtB gtBadge','gtB gtLapR'],[dB,dR]=ids0.map(k=>mk(e,k));
    const ids=['gtB gtP','gtB gtTw','gtB gtMir','gtB gtTim','gtB gtLaps','gtB gtTot','gtB gtTy','gtB gtBrk'];
    const [dP,dTw,dMir,dTim,dLaps,dTot,dTy,dBrk]=ids.map(k=>mk(e,k));
-   const sh=!cut;[dP,dTw,dMir,dTim,dLaps,dTot,dTy,dBrk].forEach(d=>d.style.display=sh?'':'none');if(lay===1&&sh){if(P.hudPieces)P.hudPieces(e,c,Rc,order)}else if(lay===2&&sh){const gc=e.querySelector('.gx5');if(gc&&gc._o&&P.hudPieces)P.hudPieces(e,c,Rc,order,gc._o)}else if(P.hudPiecesOff)P.hudPiecesOff(e);if(!sh)return;
+   const sh=!cut;[dP,dTw,dMir,dTim,dLaps,dTot,dTy,dBrk].forEach(d=>d.style.display=sh?'':'none');if(lay===1&&sh){if(P.hudPieces)P.hudPieces(e,c,Rc,order,hood?null:'solo')}else if(lay===2&&sh){const gc=e.querySelector('.gx5');if(gc&&gc._o&&P.hudPieces)P.hudPieces(e,c,Rc,order,gc._o)}else if(P.hudPiecesOff)P.hudPiecesOff(e);if(!sh)return;
    const me=order.indexOf(c),fp=c.fin?c.place:me+1,lapN=Math.min(Rc.laps,Math.max(1,Math.floor(c.unw/T.N)+1)),fin=Rc.laps>=1&&lapN===Rc.laps&&!c.fin;
    const L=c.lapT||[],last=L.length?L[L.length-1]:null,best=L.length?Math.min(...L):null,done=L.reduce((x,y)=>x+y,0),cur=Math.max(0,Rc.t-done),frac=(((c.unw%T.N)+T.N)%T.N)/T.N,dl=best!=null?cur-best*frac:null;
    const SV=GD.svg,tf=t=>{if(t==null||!isFinite(t))return'-:--.---';const m=Math.floor(t/60),s=t-m*60;return m+':'+(s<10?'0':'')+s.toFixed(3)},nmOf=(q,k)=>q.ptName||(q.human?'Player '+(q.k+1):'Car '+(k+1)),sp=Math.max(6,c.sp||0),gapTo=q=>(q.unw-c.unw)*T.sp/sp;
@@ -466,13 +466,13 @@ const ORDER=['A16','R9','D1','D2','G6','D3','S6','D6'],ORDT=['D1','D2','G6','D3'
   const mark=(c,r,col)=>{const x=X(c.x),y=Y(c.z),yw=c.cy!=null?c.cy:c.yaw,ux=Math.sin(yw),uy=-Math.cos(yw);g.beginPath();g.moveTo(x+ux*r*1.3,y+uy*r*1.3);g.lineTo(x-ux*r*.8-uy*r*.85,y-uy*r*.8+ux*r*.85);g.lineTo(x-ux*r*.8+uy*r*.85,y-uy*r*.8-ux*r*.85);g.closePath();g.fillStyle=col;g.fill();g.lineWidth=.7;g.strokeStyle='rgba(0,0,0,.55)';g.stroke()};
   for(const q of S.Rc.cars)if(!q.human&&!q.out)mark(q,2.9,'#4db4ff');for(const q of S.Rc.cars)if(q.human&&q!==S.c&&!q.out)mark(q,3.4,'#ffb347');mark(S.c,3.9,'#ff3b30')}},D3:{W:110,H:92,p:[89,87,16],f:PCT.D3.f,/* as tall as the gauge box and centred on it, just right of the throttle bar */geo(W,H){const gw=Math.min(.6*W,420),k=gw/300,h=68*k,w=h*110/92;return[Math.min(W-w-6,W/2+128*k+10),H-8-46*k-h/2,w,h]}}};/* TRIM (Nov 14, Hakan): the full centre cluster and tyre diagram, without the two g charts and the wheel load bars *//* the centre cluster sits 10% smaller than drawn in the builder, shrunk toward the bottom centre */for(const k of['A16','R9','D1','D2','G6','D6']){const q=PC[k].p;PC[k].p=[50+(q[0]-50)*.9,100-(100-q[1])*.9,q[2]*.9]}/* both g circles sit side by side between the rev dial and the wheel load bars, evenly spaced */PC.A16.p=[72.03,90,6.3];PC.R9.p=[76.96,90,6.3];/* lift the gauge stack so the info boxes clear the bottom edge */for(const k of['G6','D6','D1','D2'])PC[k].p[1]-=1.6;let v3=null;
 P.hudPiecesOff=function(e){if(!e._pcs)return;Object.values(e._pcs).forEach(x=>x.remove());if(e._tag)e._tag.remove();e._pcs=null;e._tag=null};
-P.hudPieces=function(e,c,Rc,order,o2){const o=o2||P._o1;if(!o)return;const W=e.clientWidth,H=e.clientHeight;if(!W||!H)return;const T=Rc.T,TL=o.tl||{},now=performance.now();
+P.hudPieces=function(e,c,Rc,order,o2){const solo=o2==='solo';if(solo)o2=null;const o=o2||P._o1;if(!o)return;const W=e.clientWidth,H=e.clientHeight;if(!W||!H)return;const T=Rc.T,TL=o.tl||{},now=performance.now();
  const red=o.red||7000,ev=red>10000,stp=ev?2000:1000,maxR=(Math.floor(red/stp)+1)*stp,rpm=Math.max(0,Math.min(1.03,o.rev))*red;
  const hs=c._gh||(c._gh={t:0,a:[]});if(now-hs.t>50){hs.t=now;hs.a.push([+TL.lat||0,+TL.lon||0]);if(hs.a.length>30)hs.a.shift()}
  const info=o.info||{},mk=Math.max(60,o.maxK||200);
  const S={sp:o.kmh||0,spMax:Math.ceil(mk/50)*50,unit:o.unit||'mph',gear:o.gear,rpm,red,maxR,stp,th:Math.max(0,Math.min(1,TL.th||0)),br:Math.max(0,Math.min(1,TL.br||0)),st:Math.max(-1,Math.min(1,TL.st||0)),lat:+TL.lat||0,lon:+TL.lon||0,grip:info.grip!=null?info.grip:100,trip:+info.trip||0,ty:info.ty||'SM',shift:!!o.shift,hist:hs.a,c,Rc,remain:Math.max(0,(Rc.laps||1)-Math.max(0,c.unw)/T.N)};
  if(c.fin)S.remain=0;
- const trim=o2?'2p':(window.PTO&&window.PTO.hud1p)!=='FULL',set=o2?PC2:PC,ord=o2?ORD2:trim?ORDT:ORDER;if(e._pcT!==trim){P.hudPiecesOff(e);e._pcT=trim}
+ const trim=solo?'solo':o2?'2p':(window.PTO&&window.PTO.hud1p)!=='FULL',set=o2?PC2:PC,ord=solo?[]:o2?ORD2:trim?ORDT:ORDER;if(e._pcT!==trim){P.hudPiecesOff(e);e._pcT=trim}
  const pcs=e._pcs||(e._pcs={}),dpr=Math.min(2,window.devicePixelRatio||1);
  for(const k of ord){const d=set[k];let cv=pcs[k];if(!cv){cv=document.createElement('canvas');cv.className='gtPc';cv.style.cssText='position:absolute;z-index:4;pointer-events:none';e.appendChild(cv);pcs[k]=cv}
   let w=d.p[2]/100*W,h=w*d.H/d.W,x=d.p[0]/100*W-w/2,y=Math.min(d.p[1]/100*H-h/2,H-h*.95);if(d.geo)[x,y,w,h]=d.geo(W,H);const pw=Math.round(w*dpr),ph=Math.round(h*dpr);
@@ -485,7 +485,7 @@ P.hudPieces=function(e,c,Rc,order,o2){const o=o2||P._o1;if(!o)return;const W=e.c
     if(tg._k!==key){tg._k=key;tg.innerHTML='<b>'+me+'</b><span>'+(q.ptName||'Car')+'</span><em>+'+gap.toFixed(2)+'</em>'}
     tg.style.left=((v3.x*.5+.5)*W).toFixed(1)+'px';tg.style.top=((-v3.y*.5+.5)*H).toFixed(1)+'px';tg.style.setProperty('--u',(W*.57/300*.65).toFixed(3)+'px')}}}catch(_){}
  tg.style.display=show?'flex':'none'};
-{const st=document.createElement('style');st.textContent=`.gtL1 .h8spd .gx5{visibility:hidden}
+{const st=document.createElement('style');st.textContent=`.gtL1.gtHood .h8spd .gx5{visibility:hidden}
 .gtRiv{position:absolute;z-index:3;pointer-events:none;transform:translate(-50%,-100%);align-items:center;gap:calc(var(--u)*4);height:calc(var(--u)*20);padding:0 calc(var(--u)*6);background:rgba(20,22,25,.85);border-radius:2px;color:#fff;font:600 calc(var(--u)*7.5) PTExo,var(--gt,Inter,sans-serif);white-space:nowrap}
 .gtRiv::after{content:"";position:absolute;left:50%;top:100%;transform:translateX(-50%);border:calc(var(--u)*4) solid transparent;border-top-color:rgba(20,22,25,.85);border-bottom:0}
 .gtRiv b{font-weight:700}.gtRiv span{flex:1;min-width:calc(var(--u)*52)}.gtRiv em{font-style:normal;font-weight:700;color:#ff8a80;font-variant-numeric:tabular-nums}`;document.head.appendChild(st)}

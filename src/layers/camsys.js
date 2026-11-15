@@ -41,7 +41,7 @@ const toast=t=>{toastEl.textContent=t;toastEl.style.opacity=1;clearTimeout(tt);t
 const PC=['#9fd8ff','#ffb347','#8ef08a','#ff7a9a'];
 const humans=()=>{const R_=typeof RACE!=='undefined'?RACE:null;return R_?R_.cars.filter(c=>c.human):[]};
 /* ---------------- 1 + 2: the camera ---------------- */
-const CAMN=['CHASE','FAR CHASE','LOW CHASE','BUMPER','ROOF'];
+const CAMN=['CHASE','FAR CHASE','LOW CHASE','BUMPER','HOOD'];
 function install(){
  const prev=soloCam,_a=new V(),_b=new V();
  const inner=function(c,dt,out){
@@ -58,13 +58,20 @@ function install(){
   if(c._lb&&!c.fin&&humans().length<=2){const K=P.carK?P.carK():1,yw=c.cy!=null?c.cy:c.yaw,fs=Math.sin(yw),fc=Math.cos(yw),by=c.camY==null?c.y:c.camY;
    out.p.set(c.x-fs*1.2*K,by+1.45*K,c.z-fc*1.2*K);out.l.set(c.x-fs*30,by+1.1*K,c.z-fc*30);out.f=62;c.cb=0;c.inTn=false;return}
   if(window.__camDbg&&c.human){const d=window.__camDbg,yw=c.yaw,sy_=Math.sin(yw),cy_=Math.cos(yw);out.p.set(c.x+cy_*d.s+sy_*d.f,c.y+d.h,c.z-sy_*d.s+cy_*d.f);out.l.set(c.x,c.y-.2,c.z);out.f=d.fov||34;return}
-  const m=c.camX|0;if(c.fin||c.respT>0)return;/* the instrument cluster is big: the chase views aim a little lower so the car rides above it */if(!m){if(!c.inTn){out.l.y-=1.6*(P.carK?P.carK():1);/* Nov 14 (Hakan): every chase view sits closer in; the wide third-player strip closest of all */{const nh=RACE?RACE.cars.filter(h=>h.human).length:1,r=c.rect,asp=r?(r[2]*innerWidth)/Math.max(1,r[3]*innerHeight):1.78;out.f*=nh===1?.72:asp>2.6?.58:.8;/* three and four player: aim lower still so the car rides clear above the gauge */if(nh>=3)out.l.y-=(asp>2.6?2.6:1.9)*(P.carK?P.carK():1)}}return}
+  const m=c.camX|0;if(c.fin||c.respT>0)return;
   const K=P.carK?P.carK():1,yaw=c.cy!=null?c.cy:c.yaw,sy=Math.sin(yaw),cy=Math.cos(yaw),by=c.camY==null?c.y:c.camY;
-  if(m===1){out.p.set(c.x-sy*11.5*K,by+4.6*K,c.z-cy*11.5*K);out.l.set(c.x+sy*7*K,by+.9*K,c.z+cy*7*K);out.f=52}
-  else if(m===2){out.p.set(c.x-sy*5.2*K,by+.95*K,c.z-cy*5.2*K);out.l.set(c.x+sy*9*K,by+.7*K,c.z+cy*9*K);out.f=66}
-  else if(m===3){out.p.set(c.x+sy*1.45*K,by+.62*K,c.z+cy*1.45*K);out.l.set(c.x+sy*26,by+.3*K,c.z+cy*26);out.f=78}
-  else if(m===4){out.p.set(c.x+sy*.15*K,by+1.55*K,c.z+cy*.15*K);out.l.set(c.x+sy*26,by+1.1*K,c.z+cy*26);out.f=74}
-  if(m<3)out.l.y-=1.2*K;
+  const nh=RACE?RACE.cars.filter(h=>h.human).length:1,r=c.rect,asp=r?(r[2]*innerWidth)/Math.max(1,r[3]*innerHeight):1.78,v=Math.min(1,Math.max(0,(c.sp||0)/70));
+  /* Nov 15 (Hakan: the camera angles are really bad): the views are set out again, each from the car's own smoothed heading. The chase cameras sit behind and
+     a little above the roof and look well down the road, so the car rides in the lower third clear of the gauge and the horizon stays in the picture; they
+     drop back and widen a touch with speed. Three and four player keep their close framing. */
+  if(!m){if(c.inTn)return;
+   if(nh<=2){const wide=asp>1.3,d=((wide?6.6:7.4)+1.1*v)*K;out.p.set(c.x-sy*d,by+(wide?2.1:2.4)*K,c.z-cy*d);out.l.set(c.x+sy*9*K,by-(wide?1.1:1.9)*K,c.z+cy*9*K);out.f=(wide?54:58)+7*v}
+   else{out.l.y-=1.6*K;out.f*=asp>2.6?.58:.8;out.l.y-=(asp>2.6?2.6:1.9)*K}
+   return}
+  if(m===1){const d=(10.5+1.5*v)*K;out.p.set(c.x-sy*d,by+3.9*K,c.z-cy*d);out.l.set(c.x+sy*10*K,by-1.0*K,c.z+cy*10*K);out.f=50+6*v}
+  else if(m===2){const d=(5.4+.6*v)*K;out.p.set(c.x-sy*d,by+1.25*K,c.z-cy*d);out.l.set(c.x+sy*12*K,by-1.5*K,c.z+cy*12*K);out.f=60+8*v}
+  else if(m===3){out.p.set(c.x+sy*1.75*K,by+.55*K,c.z+cy*1.75*K);out.l.set(c.x+sy*30,by+.35*K,c.z+cy*30);out.f=72+6*v}
+  else if(m===4){/* hood: at the base of the windscreen, the bonnet filling the bottom of the picture */out.p.set(c.x+sy*.45*K,by+.92*K,c.z+cy*.45*K);out.l.set(c.x+sy*30,by-3.6*K,c.z+cy*30);out.f=66+6*v}
   c.cb=0;c.inTn=false};
  /* Nov 13 (Hakan: the camera transition is still choppy; one that works for any car): whenever the view changes (a camera key, the hood or tunnel view,
     the finish orbit), the picture eases from where the lens was to where the new view wants it, over about 0.7 s with a soft start and end.
