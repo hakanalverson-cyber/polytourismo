@@ -260,7 +260,18 @@ function poseRiderFor(p,dt){const t=p.trk_;
   /* feet stay down on the pegs (as in the photos): the outside foot a touch back, the inside knee open */{const pg=p.m.I.peg;ps.feet=ps.feet.map((f,i)=>[lp(f[0],pg[0]+(i===s_?.04:.0),u),lp(f[1],pg[1]+.06,u),lp(f[2],pg[2]+(i===s_?.02:-.08),u)])}ps.look=lp(ps.look||0,.25,u);ps.turn=lp(ps.turn||0,sg*.5,u)}
  /* stopped: the left foot goes down to the road (people riders) */
  p.fd=lp(p.fd||0,(!p.trk_&&p.v<1.2&&!p.wipe)?1:0,cl(dt*4,0,1));if(p.fd>.01&&p.m.rider&&p.m.rider.people){const f=ps.feet[0].slice(),I=p.m.I;ps.feet[0]=[lp(f[0],I.peg[0]+.2,p.fd),lp(f[1],-.02,p.fd),lp(f[2],I.peg[2]+.18,p.fd)];ps.side-=.06*p.fd}
- BK.poseRider(p.m,ps)}
+ cleanPose(p,ps,dt);BK.poseRider(p.m,ps)}
+/* Nov 15 (Hakan: "make all of the animations for biking cleaner"): the last stage of every rider pose. Whatever the layers above ask for (a trick
+   blending in, a shove, the foot going down, a hand leaving the bars), the body gets there through a critically damped spring: hips, lean, roll,
+   head, feet and free hands all have weight, start and stop smoothly and never snap from one frame to the next. A hand on its grip stays locked to
+   the bar (no lag when steering); it only becomes a free hand while it travels. PTO.bikeClean===false: the old direct poses */
+function cleanPose(p,ps,dt){if(window.PTO&&window.PTO.bikeClean===false)return;const g=p.m.I.grip,now=B?B.t:0;
+ const T={hip:ps.hip,f0:ps.feet[0],f1:ps.feet[1],h0:(ps.hands&&ps.hands[0])||g,h1:(ps.hands&&ps.hands[1])||g,s:[ps.lean,ps.side||0,ps.look||0,ps.turn||0,ps.knee||0]};
+ let C=p.cp;if(!C||!(dt>0)||now-C.t>.3||now<C.t){C=p.cp={t:now,x:{},v:{}};for(const k in T){C.x[k]=T[k].slice();C.v[k]=T[k].map(()=>0)}return}
+ C.t=now;const W={hip:17,f0:19,f1:19,h0:21,h1:21,s:16};let left=Math.min(dt,.1);
+ while(left>1e-5){const h=Math.min(left,1/90);left-=h;for(const k in T){const w=W[k],x=C.x[k],v=C.v[k],t=T[k];for(let i=0;i<x.length;i++){v[i]+=(w*w*(t[i]-x[i])-2*w*v[i])*h;x[i]+=v[i]*h}}}
+ ps.hip=C.x.hip.slice();ps.feet=[C.x.f0.slice(),C.x.f1.slice()];ps.lean=C.x.s[0];ps.side=C.x.s[1];ps.look=C.x.s[2];ps.turn=C.x.s[3];ps.knee=C.x.s[4];
+ const hs=[0,1].map(i=>{const x=C.x['h'+i],free=ps.hands&&ps.hands[i];return !free&&Math.hypot(x[0]-g[0],x[1]-g[1],x[2]-g[2])<.015?null:x.slice()});ps.hands=hs[0]||hs[1]?hs:null}
 
 /* ---------------- bike physics ---------------- */
 const G=9.81;
