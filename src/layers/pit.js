@@ -168,27 +168,35 @@ const STAGES=[3,4,5],SNAME=['JACK UP','REPAIR','TORQUE DOWN'];
 const css=document.createElement('style');css.textContent=`
 .ptQ{position:fixed;z-index:40;display:none;pointer-events:none;font-family:"PTExo",var(--gt,Inter,sans-serif);color:#fff;--u:1px}
 .ptQ.on{display:block}
-.ptQ .bar{position:absolute;left:50%;width:max-content;top:calc(var(--u)*14);transform:translateX(-50%);display:flex;align-items:stretch;gap:calc(var(--u)*3);white-space:nowrap}
-.ptQ .bar span{display:block;padding:0 calc(var(--u)*11);font:600 calc(var(--u)*12)/calc(var(--u)*32) "PTExo",var(--gt,Inter,sans-serif);letter-spacing:.14em;color:#aeb6bd;background:rgba(20,22,25,.82);border-radius:2px}
+.ptQ .bar{position:absolute;left:calc(50% + var(--u)*22);width:max-content;top:calc(var(--u)*14);transform:translateX(-50%);display:flex;align-items:stretch;gap:calc(var(--u)*3);white-space:nowrap}
+.ptQ .bar span{display:block;white-space:nowrap;flex:none;padding:0 calc(var(--u)*8);font:600 calc(var(--u)*11)/calc(var(--u)*30) "PTExo",var(--gt,Inter,sans-serif);letter-spacing:.14em;color:#aeb6bd;background:rgba(20,22,25,.82);border-radius:2px}
+.ptQ .bar span:nth-child(2){min-width:calc(var(--u)*94);text-align:center;box-sizing:border-box;padding:0 calc(var(--u)*5)}.ptQ .bar span{box-sizing:border-box}
 .ptQ .bar span.on{color:#15181c;background:#f4f6f7}
-.ptQ .bar span.tm{color:#fff;background:#c81e1a;font-variant-numeric:tabular-nums;letter-spacing:.04em;min-width:calc(var(--u)*80);text-align:center;font-weight:700}
-.ptQ .mid{position:absolute;left:50%;width:max-content;bottom:calc(var(--vw)*.222);transform:translateX(-50%)}
-.ptQ .ks{display:flex;gap:calc(var(--u)*8)}
-.ptQ .ks b{display:grid;place-items:center;min-width:calc(var(--u)*46);height:calc(var(--u)*46);padding:0 calc(var(--u)*8);box-sizing:border-box;border:1px solid #f1f3f5;border-bottom-width:calc(var(--u)*4);border-radius:4px;font:700 calc(var(--u)*20) var(--mn,monospace);color:#f1f3f5;background:#f1f3f51a;text-shadow:0 1px 3px #000a;transition:transform .08s}
-.ptQ .ks b.now{color:#0a0d11;background:#f1f3f5;transform:translateY(calc(var(--u)*-4))}
-.ptQ .ks b.ok{opacity:.38}
-.ptQ.bad .ks b.now{background:#c81e1a;border-color:#c81e1a;color:#fff;animation:ptQs .24s}
-@keyframes ptQs{25%{transform:translate(calc(var(--u)*-5),calc(var(--u)*-4))}75%{transform:translate(calc(var(--u)*5),calc(var(--u)*-4))}}
-.ptQ.msg .mid{display:none}`;document.head.appendChild(css);
+.ptQ .bar span.tm{color:#fff;background:#c81e1a;font-variant-numeric:tabular-nums;letter-spacing:.04em;min-width:calc(var(--u)*72);text-align:center;font-weight:700}
+.ptQ .pm{position:absolute;left:50%;width:max-content;bottom:calc(var(--u)*26);transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*9)}
+.ptQ .cap{font:700 calc(var(--u)*17) "PTExo",var(--gt,Inter,sans-serif);letter-spacing:.03em;color:#f2c76b;text-shadow:0 1px 0 #000,0 0 calc(var(--u)*8) #000b;white-space:nowrap}
+.ptQ .cap i{font-style:normal;color:#ff8a80;margin-left:calc(var(--u)*10)}
+.ptQ .ks{display:flex;gap:calc(var(--u)*3)}
+.ptQ .ks b{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(var(--u)*5);min-width:calc(var(--u)*92);height:calc(var(--u)*68);padding:0 calc(var(--u)*10);box-sizing:border-box;border-radius:2px;background:rgba(36,38,41,.88);color:#e9edf0;font:700 calc(var(--u)*24)/1 "PTExo",var(--gt,Inter,sans-serif);border-bottom:calc(var(--u)*3) solid rgba(255,255,255,.12)}
+.ptQ .ks b::before{content:attr(data-n);font:600 calc(var(--u)*10)/1 "PTExo",var(--gt,Inter,sans-serif);letter-spacing:.16em;color:#9aa3ab}
+.ptQ .ks b.now{background:#f4f6f7;color:#15181c;border-bottom-color:#c81e1a}.ptQ .ks b.now::before{color:#5d656c}
+.ptQ .ks b.ok{opacity:.4}
+.ptQ.bad .ks b.now{background:#c81e1a;border-bottom-color:#c81e1a;color:#fff;animation:ptQs .24s}
+@keyframes ptQs{25%{transform:translateX(calc(var(--u)*-5))}75%{transform:translateX(calc(var(--u)*5))}}
+.ptQ.msg .pm{display:none}
+.ptPit .h8spd,.ptPit .gtPc:not([data-k=MM]),.ptPit .gtTy,.ptPit .gtBrk{opacity:0!important;transition:opacity .4s}
+.h8spd,.gtPc,.gtTy,.gtBrk{transition:opacity .4s}`;document.head.appendChild(css);
 const QE=[null,null];
-function qel(k){if(QE[k]&&QE[k].isConnected)return QE[k];const e=document.createElement('div');e.className='ptQ';e.innerHTML='<div class="bar"><span>PIT IN</span><span>REPAIR</span><span>PIT OUT</span><span class="tm"></span></div><div class="mid"><div class="ks"></div></div>';document.body.appendChild(e);return QE[k]=e}
+function qel(k){if(QE[k]&&QE[k].isConnected)return QE[k];const e=document.createElement('div');e.className='ptQ';e.innerHTML='<div class="bar"><span>PIT IN</span><span>REPAIR</span><span>PIT OUT</span><span class="tm"></span></div><div class="pm"><div class="cap"></div><div class="ks"></div></div>';document.body.appendChild(e);return QE[k]=e}
 function qPlace(c,e){const r=c.rect||[0,0,1,1],w=r[2]*innerWidth,h=r[3]*innerHeight;e.style.left=(r[0]*100)+'%';e.style.top=((1-(r[1]+r[3]))*100)+'%';e.style.width=(r[2]*100)+'%';e.style.height=(r[3]*100)+'%';e.style.setProperty('--u',Math.max(.6,Math.min(w/640,1.4)).toFixed(3)+'px');e.style.setProperty('--vw',w.toFixed(0)+'px')}
 const fmtT=t=>{const m=Math.floor(t/60),s=t-m*60;return m+':'+(s<10?'0':'')+s.toFixed(3)};
 /* the strip across the top: where the stop has got to, and its clock */
 function qBar(c,st,step){const e=qel(c.k);qPlace(c,e);e.classList.add('on');const sp=e.querySelectorAll('.bar span');if(e._s!==step){e._s=step;for(let i=0;i<3;i++)sp[i].classList.toggle('on',i===step);if(step!==1)sp[1].textContent='REPAIR'}
  const t=fmtT(Math.max(0,st.T));if(e._t!==t){e._t=t;sp[3].textContent=t}return e}
-function qShow(c,st){const e=qBar(c,st,1);e.classList.remove('msg');const sp=e.querySelectorAll('.bar span')[1],tx='REPAIR  '+(st.stg+1)+' / '+STAGES.length+(st.pen>0?'  +'+st.pen.toFixed(0)+' s':'');if(sp.textContent!==tx)sp.textContent=tx;
- e.querySelector('.ks').innerHTML=st.q.map((q,i)=>'<b class="'+(i<st.qi?'ok':i===st.qi?'now':'')+'">'+q[1]+'</b>').join('')}
+function qShow(c,st){const e=qBar(c,st,1);e.classList.remove('msg');const sp=e.querySelectorAll('.bar span')[1],tx='REPAIR '+(st.stg+1)+'/'+STAGES.length;if(sp.textContent!==tx)sp.textContent=tx;
+ e.querySelector('.cap').innerHTML=(SNAME[st.stg]||'REPAIR')+(st.pen>0?'<i>+'+st.pen.toFixed(0)+' s</i>':'');
+ e.querySelector('.ks').innerHTML=st.q.map((q,i)=>'<b data-n="'+(i+1)+'" class="'+(i<st.qi?'ok':i===st.qi?'now':'')+'">'+q[1]+'</b>').join('')}
+function hudPit(c,on){const h=document.getElementById('h'+c.k);if(h)h.classList.toggle('ptPit',!!on)}
 function qHide(c){const e=QE[c.k];if(e){e.classList.remove('on','msg','bad');e._s=null}}
 const newQ=(c,n)=>{const s=KEYS[c.k===1?1:0];let last=-1;return Array.from({length:n},()=>{let i;do{i=Math.floor(Math.random()*s.length)}while(i===last&&Math.random()<.7);last=i;return s[i]})};
 addEventListener('keydown',ev=>{const Rc=typeof RACE!=='undefined'?RACE:null;if(!Rc||!Rc.cars||typeof scr==='undefined'||scr!=='game'||ev.repeat)return;
@@ -207,7 +215,7 @@ function lane(Rc){if(Rc._pl===undefined){Rc._pl=build(Rc);if(Rc._pl){const PL=Rc
 function enter(Rc,c,PL,i){const b=PL.boxes.find(q=>!q.by&&q.s>PL.S[i]+PL.box+4)||PL.boxes.find(q=>!q.by);if(!b)return;b.by=c;const h=Rc.T.surf(c.x,c.z,c.y).h;
  c._pit={ph:'in',s:PL.S[i],b,v:Math.max(MPH15,c.sp||0),ox:c.x-PL.X[i],oz:c.z-PL.Z[i],oy:c.yaw,rh:cl(c.y-h,.25,1.3),lift:0,t:0,T:0,q:null,qi:0,stg:0,pen:0,wait:0};
  const p=pose(PL,c._pit.s,b);c._pit.oy=wr(c.yaw-p.yaw);mkCrew(Rc,PL,b);try{P.sfx&&P.sfx('click')}catch(e){}}
-function leave(Rc,c){const st=c._pit;if(!st)return;if(st.b.by===c)st.b.by=null;c._pit=null;c._pitOut=Rc.t;qHide(c)}
+function leave(Rc,c){const st=c._pit;if(!st)return;if(st.b.by===c)st.b.by=null;c._pit=null;c._pitOut=Rc.t;qHide(c);hudPit(c,false)}
 function rail(Rc,c,dt){const st=c._pit,PL=Rc._pl,T=Rc.T,b=st.b;st.t+=dt;st.T+=dt;
  /* speed: hard on the brakes down to the lane limit, 15 mph for the last metres, to a stop on the box, away again at the limit */
  let vt=LANE_V;const left=b.s-st.s;if(st.ph==='in')vt=left>9?Math.min(LANE_V,Math.sqrt(MPH15*MPH15+2*5*(left-9))):Math.min(MPH15,Math.sqrt(Math.max(0,2*2.6*left))+.03);else if(st.ph!=='go')vt=0;
@@ -223,10 +231,10 @@ function rail(Rc,c,dt){const st=c._pit,PL=Rc._pl,T=Rc.T,b=st.b;st.t+=dt;st.T+=dt
  if(c.in){c.in.th=0;c.in.br=0;c.in.st=0;c.in.hb=0}
  /* lap progress, as the physics step does it */
  {let bi=c.idx,bd=1e18;const N=T.N;for(let q=-6;q<=30;q++){const i=(c.idx+q+N)%N,dx=c.x-T.x[i],dz=c.z-T.z[i],d2=dx*dx+dz*dz;if(d2<bd){bd=d2;bi=i}}let dl=bi-c.idx;if(dl>N/2)dl-=N;if(dl<-N/2)dl+=N;if(Math.abs(dl)<40){c.idx=bi;c.unw+=dl}}
- if(st.ph==='in'){if(b.s-st.s<70)qBar(c,st,0).classList.add('msg');else qHide(c);if(st.v===0&&st.s===b.s){st.ph='qte';st.t=0;st.stg=0;st.q=newQ(c,STAGES[0]);st.qi=0;qShow(c,st)}}
+ if(st.ph==='in'){const near=b.s-st.s<70;hudPit(c,near);if(near)qBar(c,st,0).classList.add('msg');else qHide(c);if(st.v===0&&st.s===b.s){st.ph='qte';st.t=0;st.stg=0;st.q=newQ(c,STAGES[0]);st.qi=0;qShow(c,st)}}
  else if(st.ph==='qte'){qBar(c,st,1);if(st.wait>0)st.wait-=dt;if(st.stg>=STAGES.length-1&&st.qi>=st.q.length&&st.wait<=0){st.ph='back';st.t=0;c.dmg=0;c.tyre=1;c.fuel=1;qBar(c,st,2).classList.add('msg');try{P.sfx&&P.sfx('buy')}catch(e){}}}
  else if(st.ph==='back'){qBar(c,st,2);if((!b.crew||b.clear)&&st.t>.2){st.ph='go';st.t=0}}
- else if(st.ph==='go'){qBar(c,st,2);if(st.t>2.2)qHide(c);if(st.s>=PL.len-.05){c.sp=st.v;leave(Rc,c)}}}
+ else if(st.ph==='go'){qBar(c,st,2);hudPit(c,st.t<1.4||st.s<PL.len-30);if(st.t>2.2)qHide(c);if(st.s>=PL.len-.05){c.sp=st.v;leave(Rc,c)}}}
 function tick(Rc,dt){const PL=lane(Rc);if(!PL)return;
  for(const c of Rc.cars){if(!c.human||c._pit||c.fin||c.respT>0)continue;if(c._pitOut!=null&&Rc.t-c._pitOut<4)continue;if((c.sp||0)<1.5)continue;
   const n=PL.near(c.x,c.z);if(n.d>2.6||PL.S[n.i]<PL.entry[0]||PL.S[n.i]>PL.entry[1])continue;const p=pose(PL,PL.S[n.i],null);if(Math.sin(p.yaw)*c.vx+Math.cos(p.yaw)*c.vz<1)continue;enter(Rc,c,PL,n.i)}
@@ -236,7 +244,7 @@ function tick(Rc,dt){const PL=lane(Rc);if(!PL)return;
   const ok=crewTick(b,dt,ph);if(ph==='work')b.arr=ok}}
 /* the car on the rail skips the physics step altogether; everyone else drives as before */
 const sc0=stepCar;stepCar=function(c,dt){const Rc=typeof RACE!=='undefined'?RACE:null;if(c&&c._pit&&Rc&&Rc._pl){if(Rc.state!=='race'||c.fin){leave(Rc,c)}else{rail(Rc,c,dt);return}}return sc0.apply(this,arguments)};
-const s0=step;step=function(dt){const Rc=typeof RACE!=='undefined'?RACE:null;if(Rc&&pitOK(Rc)){try{tick(Rc,dt)}catch(e){if(!Rc._pe){Rc._pe=1;console.warn('pit',e)}}}else for(const e of QE)if(e)e.classList.remove('on');return s0.apply(this,arguments)};
+const s0=step;step=function(dt){const Rc=typeof RACE!=='undefined'?RACE:null;if(Rc&&pitOK(Rc)){try{tick(Rc,dt)}catch(e){if(!Rc._pe){Rc._pe=1;console.warn('pit',e)}}}else{for(const e of QE)if(e)e.classList.remove('on');document.querySelectorAll('.ptPit').forEach(h=>h.classList.remove('ptPit'))}return s0.apply(this,arguments)};
 /* the pit camera (Nov 15, Hakan: an angle like Gran Turismo's): once the car is nearly on its marks the view cuts to a low three-quarter shot from the lane side,
    the car and its crew in front of the pit wall and the tents, and stays there until the car pulls away. Set after the camera layer so it has the last word. */
 setTimeout(()=>{const pc=soloCam;soloCam=function(c,dt,out){pc.apply(this,arguments);try{const st=c&&c._pit,b=st&&st.b;if(!st||!b||!b.W||!out||!out.p)return;

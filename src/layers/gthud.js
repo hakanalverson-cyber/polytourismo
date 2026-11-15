@@ -474,7 +474,7 @@ P.hudPieces=function(e,c,Rc,order,o2){const solo=o2==='solo';if(solo)o2=null;con
  if(c.fin)S.remain=0;
  const trim=solo?'solo':o2?'2p':(window.PTO&&window.PTO.hud1p)!=='FULL',set=o2?PC2:PC,ord=solo?[]:o2?ORD2:trim?ORDT:ORDER;if(e._pcT!==trim){P.hudPiecesOff(e);e._pcT=trim}
  const pcs=e._pcs||(e._pcs={}),dpr=Math.min(2,window.devicePixelRatio||1);
- for(const k of ord){const d=set[k];let cv=pcs[k];if(!cv){cv=document.createElement('canvas');cv.className='gtPc';cv.style.cssText='position:absolute;z-index:4;pointer-events:none';e.appendChild(cv);pcs[k]=cv}
+ for(const k of ord){const d=set[k];let cv=pcs[k];if(!cv){cv=document.createElement('canvas');cv.className='gtPc';cv.dataset.k=k;cv.style.cssText='position:absolute;z-index:4;pointer-events:none';e.appendChild(cv);pcs[k]=cv}
   let w=d.p[2]/100*W,h=w*d.H/d.W,x=d.p[0]/100*W-w/2,y=Math.min(d.p[1]/100*H-h/2,H-h*.95);if(d.geo)[x,y,w,h]=d.geo(W,H);const pw=Math.round(w*dpr),ph=Math.round(h*dpr);
   if(cv.width!==pw||cv.height!==ph){cv.width=pw;cv.height=ph}if(cv._g!==x+'|'+y+'|'+w){cv._g=x+'|'+y+'|'+w;cv.style.left=x+'px';cv.style.top=y+'px';cv.style.width=w+'px';cv.style.height=h+'px'}
   const g=cv.getContext('2d');g.setTransform(pw/d.W,0,0,pw/d.W,0,0);g.clearRect(0,0,d.W,d.H);g.globalAlpha=1;d.f(g,S)}
