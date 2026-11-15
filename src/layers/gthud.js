@@ -231,7 +231,28 @@ P.gx5Split=function(cv,o){cv._o=o;if(o.lay===1){P._o1=o;return}const one=o.lay==
    rows.forEach((r,i)=>{const y=24.5+i*10;tx(r[0],xL,y,5.6,dim,'left',600);tx(r[1],xR,y,6.8,ink,'right',600);g.fillStyle=hair;g.fillRect(xL,y+4.7,xR-xL,.4)})}}
   /* steering dot above the box */
  const st=Math.max(-1,Math.min(1,TL.st||0));g.fillStyle='rgba(255,255,255,.3)';g.fillRect(cm-.5,2.5,1,5);g.beginPath();g.arc(cm+st*sw*.34,5,2.4,0,PI*2);g.fillStyle=Math.abs(st)>.85?'#ffd27a':'#ff4a3d';g.fill()};
-P.gx5Draw=(cv,o)=>{if(o.split)return P.gx5Split(cv,o);const st=window.PTO&&window.PTO.gauge;if(st==='cluster')return P.gx5Cluster(cv,o);if(st==='telemetry')return P.gx5Tele(cv,o);if(st==='plain')return P.gx5Plain(cv,o);if(st==='logger')return P.gx5Logger(cv,o);
+/* Nov 15 (Hakan: "a more simple tachometer for 3-4 players, it looks weird now"): in the 3 and 4 player views the ruler's tiny numbers,
+   ticks and pedal brackets turned to noise at that size. This is just a small plate: one thick rev bar along the top (white, red past the
+   car's redline), the speed and the gear as big digits under it. Nothing else. One and two players keep the full cluster above. */
+P.gx5Simple=function(cv,o){cv._o=o;const CW=220,LH=60,k=3;if(cv.width!==CW*k)cv.width=CW*k;if(cv.height!==LH*k)cv.height=LH*k;if(cv._cw!==CW){cv._cw=CW;cv.style.setProperty('width','calc(var(--gw,600px)*'+(CW/300)+')','important')}
+ const g=cv.getContext('2d');g.setTransform(k,0,0,k,0,0);g.clearRect(0,0,CW,LH);
+ const F='"PTExo","Inter","SF Pro Display","Segoe UI","Helvetica Neue",Arial,sans-serif';
+ const tx=(t,x,y,sz,c,al)=>{g.font='600 '+sz+'px '+F;g.fillStyle=c;g.textAlign=al||'left';g.textBaseline='middle';g.fillText(t,x,y)};
+ const f=Math.max(0,Math.min(1.03,o.rev)),top=1.12;
+ const x0=4,x1=CW-4,y0=4,yb=LH-4,r=6;
+ g.beginPath();g.moveTo(x0+r,y0);g.arcTo(x1,y0,x1,yb,r);g.arcTo(x1,yb,x0,yb,r);g.arcTo(x0,yb,x0,y0,r);g.arcTo(x0,y0,x1,y0,r);g.closePath();
+ const gr=g.createLinearGradient(0,y0,0,yb);gr.addColorStop(0,'rgba(34,36,39,.86)');gr.addColorStop(1,'rgba(10,11,13,.8)');g.fillStyle=gr;g.fill();g.lineWidth=1;g.strokeStyle='rgba(255,255,255,.16)';g.stroke();
+ /* rev bar: the track, the red zone past the redline, then the fill */
+ const bx0=14,bx1=CW-14,bw=bx1-bx0,by=12,bh=7,xr=bx0+bw/top;
+ g.fillStyle='rgba(255,255,255,.14)';g.fillRect(bx0,by,xr-bx0-1,bh);g.fillStyle='rgba(255,59,48,.35)';g.fillRect(xr,by,bx1-xr,bh);
+ const fx=bx0+bw*Math.min(1,f/top),hot=f>=1||o.shift;g.fillStyle=hot?'#ff3b30':'#f4f6f7';g.fillRect(bx0,by,Math.max(0,Math.min(fx,xr-1)-bx0),bh);
+ if(fx>xr){g.fillStyle='#ff3b30';g.fillRect(xr,by,fx-xr,bh)}
+ /* speed | gear */
+ const cm=CW/2+6,cy=38;
+ GD.draw(g,Math.round(o.kmh),cm-34,cy,16,'right','#fff');tx(o.unit,cm-30,cy+4,9,'rgba(255,255,255,.75)','left');
+ g.fillStyle='rgba(255,255,255,.35)';g.fillRect(cm+4,cy-11,1,22);
+ const gw=GD.draw(g,o.gear,cm+16,cy,16,'left',o.shift?'#ff5a4a':'#fff');tx(o.auto?'AT':'MT',cm+16+gw+5,cy+4,9,'rgba(255,255,255,.75)','left')};
+P.gx5Draw=(cv,o)=>{if(o.split&&o.lay===3)return P.gx5Simple(cv,o);if(o.split)return P.gx5Split(cv,o);const st=window.PTO&&window.PTO.gauge;if(st==='cluster')return P.gx5Cluster(cv,o);if(st==='telemetry')return P.gx5Tele(cv,o);if(st==='plain')return P.gx5Plain(cv,o);if(st==='logger')return P.gx5Logger(cv,o);
  P.gx5Plain(cv,{...o,tag:'',lw:760,lh:250,ox:80,oy:44});
  const g=cv.getContext('2d'),k=cv.width/760,PI=Math.PI,A0=PI*.75,SW=PI*1.5,rev=Math.max(0,Math.min(1,o.rev)),RED=.88,maxS=Math.max(80,o.maxK||240);g.setTransform(k,0,0,k,80*k,44*k);
  const pol=(cx,cy,r,a)=>[cx+Math.cos(a)*r,cy+Math.sin(a)*r];
@@ -337,7 +358,7 @@ P.gx5Draw=(cv,o)=>{if(o.split)return P.gx5Split(cv,o);const st=window.PTO&&windo
   const order=[...Rc.cars].sort((a,b)=>(b.fin?1e6-b.finT:0)-(a.fin?1e6-a.finT:0)||b.unw-a.unw);
   Rc.cars.forEach((c,i)=>{if(!c.human)return;const e=document.getElementById('h'+i);if(!e||!c.rect)return;
    e.classList.toggle('gtL1',lay===1);e.classList.toggle('gtL2',lay===2);e.classList.toggle('gtL3',lay===3);
-   const Wv=e.clientWidth||600,gw=lay===1?Math.min(.32*Wv,440):lay===2?Math.min(.6*Wv,420):Math.min(.36*Wv,250);e.style.setProperty('--gw',gw+'px');e.style.setProperty('--gr',92/300);e.style.setProperty('--tw',(Wv*(lay===1?.1453:.215)/176).toFixed(4));
+   const Wv=e.clientWidth||600,gw=lay===1?Math.min(.32*Wv,440):lay===2?Math.min(.6*Wv,420):Math.min(.36*Wv,250);e.style.setProperty('--gw',gw+'px');e.style.setProperty('--gr',lay===3?60/300:92/300);e.style.setProperty('--tw',(Wv*(lay===1?.1453:.215)/176).toFixed(4));
    const ids0=['gtB gtBadge','gtB gtLapR'],[dB,dR]=ids0.map(k=>mk(e,k));
    const ids=['gtB gtP','gtB gtTw','gtB gtMir','gtB gtTim','gtB gtLaps','gtB gtTot','gtB gtTy','gtB gtBrk'];
    const [dP,dTw,dMir,dTim,dLaps,dTot,dTy,dBrk]=ids.map(k=>mk(e,k));
