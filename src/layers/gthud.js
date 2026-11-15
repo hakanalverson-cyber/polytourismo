@@ -386,7 +386,9 @@ P.gx5Draw=(cv,o)=>{if(o.split&&o.lay===3)return P.gx5Tier(cv,o);if(o.split)retur
      if(mine&&k<n-1)h+='<div class="gp">- '+Math.abs(gapTo(order[k+1])).toFixed(3)+'</div>'}
     let fb=null,fq=null;Rc.cars.forEach(q=>{if(q.lapT&&q.lapT.length){const m=Math.min(...q.lapT);if(fb==null||m<fb){fb=m;fq=q}}});
     if(fb!=null&&lay===1)h+='<div class="r fl"><b>FL</b><span>'+nmOf(fq,0)+'</span></div><div class="flt">'+tf(fb)+'</div>';
-    set(dTw,h)}
+    set(dTw,h)
+    /* Nov 15 (Hakan: the Time Attack box sat on top of the fastest-lap row): the LAST LAP / GOLD TIME panel goes under the leaderboard */
+    {const md=e.querySelector('.h8mode');if(md){if(md.style.display!=='none'&&md.innerHTML){const tr=dTw.getBoundingClientRect();if(tr.height){const mr=md.getBoundingClientRect(),k=(mr.width/(md.offsetWidth||1))||1,cur=md._y||0,want=Math.max(0,(tr.bottom+10-(mr.top-cur*k))/k);if(Math.abs(want-cur)>.5){md._y=want;md.style.position='relative';md.style.top=Math.round(want)+'px'}}}else if(md._y){md._y=0;md.style.top=''}}}}
    /* lap timer */
    {const mw=e.clientWidth*.34;dTim.style.top=lay===1?(mw/5.2+8)+'px':''}
    {/* the lap time shows for about 3 s after each completed lap */if(c._lapN==null)c._lapN=L.length;if(L.length>c._lapN){c._lapN=L.length;c._lapShow=performance.now()}if(L.length<c._lapN)c._lapN=L.length;

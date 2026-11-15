@@ -1869,3 +1869,13 @@ input.nm,#ptOptions input[type=text],#ptOptions select{border-radius:8px!importa
 #pause .tb:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,#8fb4d8,#33608c)}
 #pause button:first-of-type{background:linear-gradient(180deg,#8fb4d8e0 0%,#4f7eabe8 48%,#33608ce8 52%,#4a77a3e8 100%)!important;color:#fff!important;box-shadow:inset 0 1px 0 #ffffff55,0 0 16px #4f7eab66!important}
 #pause button:hover,#pause button:focus{background:linear-gradient(180deg,#8fb4d8e0 0%,#4f7eabe8 48%,#33608ce8 52%,#4a77a3e8 100%)!important;color:#fff!important}
+/* Nov 15 (Hakan: "make sure every loading screen is linked with a black fade"): the screen-change wipe is now a real dip to black.
+   It used to snap to black and fade out; now it fades to black (the screen behind switches while it is black, 170 ms in), holds, then fades back up */
+#ptWipe{z-index:2147482000!important}
+#ptWipe.go{animation:ptBlack .8s ease both!important}
+@keyframes ptBlack{0%{opacity:0}21%,42%{opacity:1}100%{opacity:0}}
+/* Nov 15 (Hakan: "make the track selection cards smaller, so 5 can fit in a row"): the circuit cards, five to a row at any width */
+#s8pick:not(.rally4) .pkGrid{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:clamp(10px,1vw,18px)!important}
+#s8pick:not(.rally4) .pk .pkI{padding:26px 12px 9px}
+#s8pick:not(.rally4) .pk .pkI b{font-size:clamp(11px,.9vw,16px)}
+#s8pick:not(.rally4) .pk .pkI small{font-size:clamp(8px,.6vw,11px);letter-spacing:.16em}

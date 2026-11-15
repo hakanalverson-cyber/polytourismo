@@ -7,6 +7,7 @@
 const P=window.PT8;if(!P)return;
 const st=document.createElement('style');st.textContent=`
 #gtm{position:fixed;z-index:6;pointer-events:none;display:none;top:max(4px,calc(13vh - 6.5vw));right:.5vw;width:13vw;height:13vw}
+#gtm:not(.multi){top:6px;right:10px}
 #gtm.on{display:block}
 #gtm.multi{top:50%;left:50%;right:auto;width:clamp(190px,20vw,290px);height:clamp(190px,20vw,290px);transform:translate(-50%,-50%)}
 #gtm.multi.four{width:clamp(170px,17vw,240px);height:clamp(170px,17vw,240px)}
@@ -26,7 +27,9 @@ function draw(){requestAnimationFrame(draw);
  if(hs.length===2){g.clearRect(0,0,cv.width,cv.height);return}
  /* one player: the whole circuit, north up, as a bold white outline with a dark edge and no backing; numbered dots for you and the two cars ahead */
  if(!multi||hs.length>=3){const B=T._mb||(T._mb=(()=>{let a=1e9,b=-1e9,c=1e9,d=-1e9;for(let i=0;i<T.N;i++){a=Math.min(a,T.x[i]);b=Math.max(b,T.x[i]);c=Math.min(c,T.z[i]);d=Math.max(d,T.z[i])}return[a,b,c,d]})());
-  const s=W*(multi?.72:.84)/Math.max(B[1]-B[0],B[3]-B[2],1),mx=(B[0]+B[1])/2,mz=(B[2]+B[3])/2,h=W/2,X=x=>h+(x-mx)*s,Y=z=>h-(z-mz)*s,N=T.N,stp=Math.max(1,Math.round(6/(T.sp||3)));
+  const s=W*(multi?.72:.86)/Math.max(B[1]-B[0],B[3]-B[2],1),mx=(B[0]+B[1])/2,mz=(B[2]+B[3])/2,h=W/2,pd=W*.06,
+   /* Nov 15 (Hakan: the map was not centred in the top-right corner): one player's map sits tight in the corner, its top and right edge on the same margins whatever the circuit's shape (it used to float in the middle of a square, so a wide circuit hung off the right and a long one sat low) */
+   X=multi?(x=>h+(x-mx)*s):(x=>W-pd-(B[1]-x)*s),Y=multi?(z=>h-(z-mz)*s):(z=>pd+(B[3]-z)*s),N=T.N,stp=Math.max(1,Math.round(6/(T.sp||3)));
   g.clearRect(0,0,W,W);g.lineJoin='round';g.lineCap='round';
   if(multi){const bg=g.createRadialGradient(h,h,W*.1,h,h,W*.5);bg.addColorStop(0,'rgba(10,13,18,.62)');bg.addColorStop(.75,'rgba(10,13,18,.5)');bg.addColorStop(1,'rgba(10,13,18,0)');g.fillStyle=bg;g.beginPath();g.arc(h,h,W*.5,0,6.283);g.fill()}
   const path=()=>{g.beginPath();for(let i=0;i<=N;i+=stp){const j=i%N;if(i)g.lineTo(X(T.x[j]),Y(T.z[j]));else g.moveTo(X(T.x[j]),Y(T.z[j]))}if(!T.open)g.closePath()};

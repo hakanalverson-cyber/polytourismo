@@ -1,22 +1,31 @@
+/* Nov 15 (Hakan: "make sure every loading screen is linked with a black fade"): one shared black layer for screen changes that have no fade of
+   their own. P.blackIn(ms) fades it up and resolves when it is fully black; P.blackOut(ms) fades it away again. */
+(function ptBlk(){
+'use strict';
+const P=window.PT8;if(!P||P.blackIn)return;let el=null,t=0;
+const mk=()=>{if(el&&el.isConnected)return el;el=document.createElement('div');el.id='ptBlk';el.style.cssText='position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:2147482400';document.body.appendChild(el);return el};
+P.blackIn=(ms=320)=>new Promise(res=>{const e=mk();clearTimeout(t);e.style.pointerEvents='auto';e.style.transition='opacity '+ms+'ms ease';void e.offsetWidth;e.style.opacity='1';t=setTimeout(res,ms+30)});
+P.blackOut=(ms=650)=>{const e=mk();clearTimeout(t);e.style.transition='opacity '+ms+'ms ease';e.style.opacity='0';t=setTimeout(()=>{e.style.pointerEvents='none'},ms)};
+})();
 /* ===== Poly GT layer: a short black fade when a race is started from the menus, so the track builds and its first frames draw out of sight ===== */
 (function ptFade(){
 'use strict';
 const P=window.PT8,lw=P.launchWithIntro;if(!lw)return;
 const el=document.createElement('div');el.id='ptFade';
-el.style.cssText='position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:99990;transition:opacity .22s ease';
+el.style.cssText='position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:2147482500;transition:opacity .3s ease';/* Nov 15: above every HUD piece (the mini map showed through the black) */
 document.body.appendChild(el);
 let busy=false;
 P.launchWithIntro=cfg=>{
  /* rally stages keep their own loading screen */
  if(busy||(cfg&&cfg.mode==='rally'&&!cfg.circuit))return lw(cfg);
- busy=true;el.style.transition='opacity .22s ease';el.style.pointerEvents='auto';el.style.opacity='1';
+ busy=true;el.style.transition='opacity .3s ease';el.style.pointerEvents='auto';el.style.opacity='1';
  hold=true;wrap();
  setTimeout(()=>{try{lw(cfg);/* Nov 13: build every shader program for the new scene now, behind the black, so nothing compiles on the first frames */try{const Rc_=typeof RACE!=='undefined'?RACE:null;if(Rc_&&Rc_.scene&&typeof R!=='undefined'&&R.compile)R.compile(Rc_.scene,new THREE.PerspectiveCamera(60,16/9,.5,3000))}catch(e){}}finally{
   /* the race stays frozen behind the black (no formation lap, no countdown) until frames come smoothly: the first frames of a new track
      can take seconds while textures upload and shaders compile, and the countdown used to run out in the dark. Then let go and fade in */
   let n=0,ok=0,last=performance.now();const t0=last;
   let pd=0;const tick=()=>{const now=performance.now(),d=now-last;last=now;n++;/* steady, not necessarily fast: a slow machine settles at its own pace */ok=d<120&&pd&&Math.abs(d-pd)<Math.max(8,pd*.3)?ok+1:0;pd=d;if((n<10||ok<8)&&now-t0<20000)return requestAnimationFrame(tick);
-   hold=false;setTimeout(()=>{el.style.transition='opacity .6s ease';el.style.opacity='0';el.style.pointerEvents='none';busy=false},60)};requestAnimationFrame(tick)}},240)};
+   hold=false;setTimeout(()=>{el.style.transition='opacity .6s ease';el.style.opacity='0';el.style.pointerEvents='none';busy=false},60)};requestAnimationFrame(tick)}},320)};
 /* the freeze: wrapped once at the first launch, when every layer has added its own step, so it sits outside all of them */
 let hold=false,wrapped=false;
 function wrap(){if(wrapped||typeof step!=='function')return;wrapped=true;const s0=step;step=function(){if(hold)return;return s0.apply(this,arguments)}}
