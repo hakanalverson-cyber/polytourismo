@@ -25,9 +25,10 @@ function draw(){requestAnimationFrame(draw);
  /* two players: each view draws its own map (gthud), so the shared one stays blank */
  if(hs.length===2){g.clearRect(0,0,cv.width,cv.height);return}
  /* one player: the whole circuit, north up, as a bold white outline with a dark edge and no backing; numbered dots for you and the two cars ahead */
- if(!multi){const B=T._mb||(T._mb=(()=>{let a=1e9,b=-1e9,c=1e9,d=-1e9;for(let i=0;i<T.N;i++){a=Math.min(a,T.x[i]);b=Math.max(b,T.x[i]);c=Math.min(c,T.z[i]);d=Math.max(d,T.z[i])}return[a,b,c,d]})());
-  const s=W*.84/Math.max(B[1]-B[0],B[3]-B[2],1),mx=(B[0]+B[1])/2,mz=(B[2]+B[3])/2,h=W/2,X=x=>h+(x-mx)*s,Y=z=>h-(z-mz)*s,N=T.N,stp=Math.max(1,Math.round(6/(T.sp||3)));
+ if(!multi||hs.length>=3){const B=T._mb||(T._mb=(()=>{let a=1e9,b=-1e9,c=1e9,d=-1e9;for(let i=0;i<T.N;i++){a=Math.min(a,T.x[i]);b=Math.max(b,T.x[i]);c=Math.min(c,T.z[i]);d=Math.max(d,T.z[i])}return[a,b,c,d]})());
+  const s=W*(multi?.72:.84)/Math.max(B[1]-B[0],B[3]-B[2],1),mx=(B[0]+B[1])/2,mz=(B[2]+B[3])/2,h=W/2,X=x=>h+(x-mx)*s,Y=z=>h-(z-mz)*s,N=T.N,stp=Math.max(1,Math.round(6/(T.sp||3)));
   g.clearRect(0,0,W,W);g.lineJoin='round';g.lineCap='round';
+  if(multi){const bg=g.createRadialGradient(h,h,W*.1,h,h,W*.5);bg.addColorStop(0,'rgba(10,13,18,.62)');bg.addColorStop(.75,'rgba(10,13,18,.5)');bg.addColorStop(1,'rgba(10,13,18,0)');g.fillStyle=bg;g.beginPath();g.arc(h,h,W*.5,0,6.283);g.fill()}
   const path=()=>{g.beginPath();for(let i=0;i<=N;i+=stp){const j=i%N;if(i)g.lineTo(X(T.x[j]),Y(T.z[j]));else g.moveTo(X(T.x[j]),Y(T.z[j]))}if(!T.open)g.closePath()};
   /* a hollow road: two thin white edges with a faint grey fill between them */
   path();g.strokeStyle='rgba(0,0,0,.35)';g.lineWidth=W*.082;g.stroke();path();g.strokeStyle='#f4f6f7';g.lineWidth=W*.07;g.stroke();
@@ -35,8 +36,8 @@ function draw(){requestAnimationFrame(draw);
   path();g.strokeStyle='rgba(70,76,84,.42)';g.lineWidth=W*.05;g.stroke();
   {const c=Math.cos(T.psi[0]),sn=Math.sin(T.psi[0]),w=W*.035/s;g.beginPath();g.moveTo(X(T.x[0]+c*w),Y(T.z[0]-sn*w));g.lineTo(X(T.x[0]-c*w),Y(T.z[0]+sn*w));g.strokeStyle='#f4f6f7';g.lineWidth=W*.012;g.lineCap='butt';g.stroke();g.lineCap='round'}
   const mark=(c,r,col)=>{const x=X(c.x),y=Y(c.z),yw=c.cy!=null?c.cy:c.yaw,ux=Math.sin(yw),uy=-Math.cos(yw);g.beginPath();g.moveTo(x+ux*r*1.3,y+uy*r*1.3);g.lineTo(x-ux*r*.8-uy*r*.85,y-uy*r*.8+ux*r*.85);g.lineTo(x-ux*r*.8+uy*r*.85,y-uy*r*.8-ux*r*.85);g.closePath();g.fillStyle=col;g.fill();g.lineWidth=W*.006;g.strokeStyle='rgba(0,0,0,.55)';g.stroke()};
-  for(const c of R.cars)if(!c.human&&!c.out)mark(c,W*.026,'#4db4ff');
-  mark(hs[0],W*.034,'#ff3b30');
+  if(multi){for(const c of R.cars)if(!c.human&&!c.out)mark(c,W*.02,'#c9d1d9');const hh=R.cars.filter(q=>q.human);hs.forEach(c=>mark(c,W*.036,PC[hh.indexOf(c)%4]))}
+  else{for(const c of R.cars)if(!c.human&&!c.out)mark(c,W*.026,'#4db4ff');mark(hs[0],W*.034,'#ff3b30')}
   return}
  /* where the map looks */
  let cx=0,cz=0;for(const c of hs){cx+=c.x;cz+=c.z}cx/=hs.length;cz/=hs.length;
