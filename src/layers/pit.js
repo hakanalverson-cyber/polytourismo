@@ -101,44 +101,65 @@ function crewTick(b,dt,phase){let all=true,clear=true;const t=performance.now()/
   M.R.g.position.copy(M.pos);M.R.g.rotation.y=M.yaw;crewPose(M,k,k==='run'?M.ph:t+M.ph)}
  b.clear=clear;return all}
 
-/* ---------- pit lane dressing: tyre stacks, tool carts, fuel cans, air bottles, cones and pit boards by every tent (Nov 15, Hakan) ---------- */
-function dress(Rc,PL){const q=laneOf(Rc);if(!q||!q.L.tents||PL.dressed)return;PL.dressed=1;const {L,f}=q,T=Rc.T,o=L.o,u=L.u,n=L.side,yawU=Math.atan2(u[0],u[1]);
- const mats={},mat=(c,r,m)=>mats[c+'|'+r]||(mats[c+'|'+r]=new THREE.MeshStandardMaterial({color:c,roughness:r==null?.8:r,metalness:m||0,flatShading:true}));
- const bins={},_m=new THREE.Matrix4(),_q=new THREE.Quaternion(),_e=new THREE.Euler(),_n=new THREE.Matrix3();
- /* bake one piece into the bin of its material: a handful of draw calls for the whole lane */
- const put=(geo,m,x,y,z,ry,sx,sy,sz,rx)=>{const g=geo.index?geo.toNonIndexed():geo.clone();_e.set(rx||0,ry||0,0,'YXZ');_q.setFromEuler(_e);_m.compose(V(x,y,z),_q,V(sx||1,sy||sx||1,sz||sx||1));g.applyMatrix4(_m);const b=bins[m.uuid]||(bins[m.uuid]={m,p:[],n:[]});
-  const P_=g.attributes.position.array;g.computeVertexNormals();const N_=g.attributes.normal.array;for(let i=0;i<P_.length;i++){b.p.push(P_[i]);b.n.push(N_[i])}g.dispose()};
- const G={tyre:new THREE.CylinderGeometry(.33,.33,.25,12),hub:new THREE.CylinderGeometry(.19,.19,.26,10),box:new THREE.BoxGeometry(1,1,1),cone:new THREE.ConeGeometry(.15,.46,8),cyl:new THREE.CylinderGeometry(.5,.5,1,10)};
- const rub=mat(0x16181b,.92),rim=mat(0xb9bec4,.45,.5),steel=mat(0x6b7178,.5,.5),dark=mat(0x23262b,.7),org=mat(0xe2601c,.7),wht=mat(0xe9ecef,.7),redc=mat(0xb3261e,.6);
- let sd=PL.len*1000|0;const rnd=()=>{sd=(sd*1664525+1013904223)>>>0;return sd/4294967296};
- /* a spot in tent space: a metres along the row from tent t, k metres out from the tent row toward the lane */
- const at=(t,a,k)=>{const x=(o[0]+u[0]*t)*f+u[0]*a-n[0]*k,z=(o[1]+u[1]*t)*f+u[1]*a-n[1]*k;return[x,T.terr(x,z),z]};
- const stack=(p,h,ry,band)=>{for(let i=0;i<h;i++){const j=(rnd()-.5)*.05;put(G.tyre,rub,p[0]+j,p[1]+.125+i*.25,p[2]+j,rnd()*6);put(G.hub,i===h-1&&band?band:rim,p[0]+j,p[1]+.125+i*.25,p[2]+j,0)}};
- const lean=(p,ry)=>{put(G.tyre,rub,p[0],p[1]+.33,p[2],ry,1,1,1,Math.PI/2-.22);put(G.hub,rim,p[0],p[1]+.33,p[2],ry,1,1,1,Math.PI/2-.22)};
- const cart=(p,ry,c)=>{put(G.box,c,p[0],p[1]+.55,p[2],ry,.95,.62,.5);put(G.box,dark,p[0],p[1]+.88,p[2],ry,1.0,.05,.55);put(G.box,steel,p[0],p[1]+.2,p[2],ry,.9,.04,.46);
-  for(const a of[-1,1])for(const b of[-1,1]){const dx=Math.cos(ry)*a*.4+Math.sin(ry)*b*.2,dz=-Math.sin(ry)*a*.4+Math.cos(ry)*b*.2;put(G.cyl,rub,p[0]+dx,p[1]+.08,p[2]+dz,ry,.16,.06,.16,Math.PI/2)}
-  for(let i=0;i<3;i++)put(G.box,steel,p[0]+Math.sin(ry)*.255,p[1]+.36+i*.17,p[2]+Math.cos(ry)*.255,ry,.5,.025,.02)};
- const can=(p,ry,c)=>{put(G.box,c,p[0],p[1]+.23,p[2],ry,.34,.46,.18);put(G.cyl,dark,p[0]+Math.cos(ry)*.1,p[1]+.49,p[2]-Math.sin(ry)*.1,0,.07,.06,.07)};
- const cone=p=>{put(G.box,org,p[0],p[1]+.02,p[2],0,.34,.04,.34);put(G.cone,org,p[0],p[1]+.27,p[2],0);put(G.cyl,wht,p[0],p[1]+.3,p[2],0,.17,.07,.17)};
- const bottle=(p,c)=>{put(G.cyl,c,p[0],p[1]+.6,p[2],0,.24,1.2,.24);put(G.cyl,steel,p[0],p[1]+1.25,p[2],0,.1,.12,.1)};
- const board=(p,ry,c)=>{put(G.cyl,steel,p[0],p[1]+.8,p[2],0,.04,1.6,.04);put(G.box,c,p[0],p[1]+1.75,p[2],ry,.62,.44,.04);put(G.box,wht,p[0],p[1]+1.75,p[2],ry,.5,.1,.045)};
- const rack=(p,ry,c)=>{put(G.box,steel,p[0],p[1]+.05,p[2],ry,1.5,.06,.5);put(G.box,steel,p[0],p[1]+.9,p[2],ry,1.5,.05,.06);for(let i=0;i<4;i++){const d=(i-1.5)*.36,x=p[0]+Math.cos(ry)*d,z=p[2]-Math.sin(ry)*d;put(G.tyre,rub,x,p[1]+.42,z,ry+Math.PI/2,1,1,1,Math.PI/2);put(G.hub,c,x,p[1]+.42,z,ry+Math.PI/2,1,1,1,Math.PI/2)}};
- const boxT=L.boxT||[];
- L.tents.forEach((t,ti)=>{const bi=boxT.indexOf(t),team=mat(new THREE.Color(TEAMS[(bi>=0?bi:ti)%TEAMS.length]).getHex(),.6),isBox=bi>=0;
-  /* behind the wall, under the front of the tent */
-  stack(at(t,-2.1+rnd()*.3,3.5+rnd()*.5),3+(rnd()*2|0),0,team);stack(at(t,-1.35+rnd()*.2,3.9+rnd()*.5),2+(rnd()*3|0),0,team);if(rnd()<.7)stack(at(t,-1.8,4.6),2,0,team);
-  cart(at(t,.3+rnd()*.5,3.6+rnd()*.4),yawU+(rnd()-.5)*.3,team);
-  rack(at(t,2.1,4.9),yawU+Math.PI/2+(rnd()-.5)*.2,team);
-  can(at(t,1.2+rnd()*.3,3.2),yawU+rnd(),redc);if(rnd()<.6)can(at(t,1.65,3.3),yawU+rnd(),redc);
-  bottle(at(t,-.5,3.2),mat(0x2c62a8,.5,.3));bottle(at(t,-.78,3.25),mat(0x2c62a8,.5,.3));
-  if(rnd()<.6)lean(at(t,-2.9,5.2),yawU+rnd()*3);
-  board(at(t,3.3,5.5),yawU+Math.PI/2,team);
-  /* on the lane side of the wall: kept well clear of where a crew stands at a box */
-  const far=isBox?5.4:1.2;stack(at(t,far+rnd()*.4,7.35),2+(rnd()*2|0),0,team);stack(at(t,-far-rnd()*.4,7.35),3,0,team);cone(at(t,far+1.0,7.45));cone(at(t,-far-1.0,7.45));
-  if(!isBox){cart(at(t,-.2,7.4),yawU,team);can(at(t,.75,7.45),yawU,redc)}});
- const grp=new THREE.Group();grp.name='pitDress';for(const k in bins){const b=bins[k],g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(b.p,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(b.n,3));g.computeBoundingSphere();
-  const m=new THREE.Mesh(g,b.m);m.castShadow=true;m.receiveShadow=true;grp.add(m)}
- Rc.scene.add(grp);for(const k in G)G[k].dispose()}
+/* ---------- pit lane dressing (Nov 15, Hakan: only the props he supplied, nothing overlapping, cones where the cars stop, decorated tents) ----------
+   Models: the tyre set, the tool pack (tool box, hammer, wrenches), the tool shelf and the traffic pack (cones, barrels, delineators, barricades),
+   all from PITPROPS_B64 (project files only). Everything is placed in tent space: a metres along the tent row from a tent's centre, d metres from the
+   row's centre line toward the lane. The tent roofs end at d 3, the pit wall is at d 6.2, the apron is 6.4 to 11.4 and the lane's own line is about 14.6.
+   A box's crew works at d 7.2 to 7.8 and the car stops at d 9.1, so the apron by a box is left clear: its cones stand on the lane edge between boxes.
+   Every piece goes through claim(): a footprint rectangle in tent space that may not touch one already placed. */
+let PROPS=null,propsP=null;
+function loadProps(){return propsP||(propsP=new Promise(res=>{const B=window.PITPROPS_B64;if(!B||!THREE.GLTFLoader){res(null);return}
+ const cib=window.createImageBitmap;window.createImageBitmap=undefined;const out={};let left=0;const done=()=>{if(--left===0){window.createImageBitmap=cib;res(PROPS=out)}};
+ for(const k of Object.keys(B)){left++;try{const raw=atob(B[k]),u=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)u[i]=raw.charCodeAt(i);
+  new THREE.GLTFLoader().parse(u.buffer,'',g=>{try{g.scene.updateMatrixWorld(true);const ms=[];g.scene.traverse(o=>{if(o.isMesh)ms.push(o)});out[k]=ms}catch(e){console.warn('pit props',k,e)}done()},e=>{console.warn('pit props',k,e);done()})}catch(e){console.warn('pit props',k,e);done()}}}))}
+/* a mesh's geometry in metres, standing on y=0 and centred on x, z */
+function baked(m,part){const g=(part||m.geometry).clone();g.applyMatrix4(m.matrixWorld);g.computeBoundingBox();const b=g.boundingBox;g.translate(-(b.min.x+b.max.x)/2,-b.min.y,-(b.min.z+b.max.z)/2);g.computeBoundingBox();return{g,mat:m.material,sz:g.boundingBox.getSize(V())}}
+/* the traffic pack has one mesh holding the cone, delineator and barrel as separate parts: split it into the welded islands */
+function islands(m){const g=m.geometry,idx=g.index.array,pos=g.attributes.position,n=pos.count,par=new Int32Array(n).map((_,i)=>i),f=x=>{while(par[x]!==x){par[x]=par[par[x]];x=par[x]}return x},hm=new Map();
+ for(let i=0;i<n;i++){const k=Math.round(pos.getX(i)*400)+','+Math.round(pos.getY(i)*400)+','+Math.round(pos.getZ(i)*400);if(hm.has(k))par[i]=hm.get(k);else hm.set(k,i)}
+ for(let i=0;i<idx.length;i+=3){const a=f(idx[i]);par[f(idx[i+1])]=a;par[f(idx[i+2])]=a}
+ const gr={};for(let i=0;i<idx.length;i+=3)(gr[f(idx[i])]||(gr[f(idx[i])]=[])).push(i);
+ return Object.values(gr).map(tr=>{const map=new Map(),P_=[],N_=[],U_=[],I_=[];for(const t of tr)for(let k=0;k<3;k++){const v=idx[t+k];if(!map.has(v)){map.set(v,P_.length/3);P_.push(pos.getX(v),pos.getY(v),pos.getZ(v));N_.push(g.attributes.normal.getX(v),g.attributes.normal.getY(v),g.attributes.normal.getZ(v));U_.push(g.attributes.uv.getX(v),g.attributes.uv.getY(v))}I_.push(map.get(v))}
+  const G=new THREE.BufferGeometry();G.setAttribute('position',new THREE.Float32BufferAttribute(P_,3));G.setAttribute('normal',new THREE.Float32BufferAttribute(N_,3));G.setAttribute('uv',new THREE.Float32BufferAttribute(U_,2));G.setIndex(I_);return G})}
+function propLib(){if(!PROPS)return null;const L={},find=(k,re)=>(PROPS[k]||[]).find(m=>re.test(m.name));
+ const add=(n,m,part)=>{if(m)try{L[n]=baked(m,part)}catch(e){}};
+ add('tyre',find('tire',/Cylinder002/));add('tyres2',find('tire',/Cylinder004/));
+ add('toolbox',find('tool',/Tool_box/));add('hammer',find('tool',/Hammer/));add('wrench',find('tool',/^Wrench/));add('pipewrench',find('tool',/Pipe_Wrench/));add('shelf',find('shelf',/./));
+ add('barricadeA',find('traffic',/BarricadeA/));add('barricadeB',find('traffic',/BarricadeB/));
+ const ta=find('traffic',/TrafficAssets/);if(ta){ta.updateMatrixWorld(true);for(const G of islands(ta)){G.computeBoundingBox();const g2=G.clone();g2.applyMatrix4(ta.matrixWorld);g2.computeBoundingBox();const z=g2.boundingBox.getSize(V());
+  const nm=z.y>.5&&z.y<.7&&z.x<.5&&z.z<.5&&G.index.count/3>300?'cone':z.y>.9&&z.x>.8?'barrel':z.y>.9&&z.x<.5&&z.z<.4&&z.x>.3?'panel':z.y>1&&z.x<.2?'post':null;if(nm&&!L[nm])add(nm,ta,G)}}
+ return L}
+function dress(Rc,PL){const q=laneOf(Rc);if(!q||!q.L.tents||PL.dressed)return;PL.dressed=1;const {L,f}=q,T=Rc.T,o=L.o,u=L.u,n=L.side,yawU=Math.atan2(u[0],u[1]),lib=propLib();if(!lib)return;
+ const inst={};/* one instanced mesh per model */
+ const used=[];/* footprints already taken: [t, a0, a1, d0, d1] in tent space, tent t's row coordinate */
+ const hit=(t,a,d,ra,rd)=>used.some(r=>Math.abs(r[0]-t)<.001&&a-ra<r[2]&&a+ra>r[1]&&d-rd<r[4]&&d+rd>r[3]);
+ /* put model k at (t, a, d) turned ry about the up axis, scaled s; ra, rd are its half sizes along the row and across it. Refused if it would touch something. */
+ const place=(k,t,a,d,ry,s,y0)=>{const e=lib[k];if(!e)return false;s=s||1;const sx=e.sz.x*s/2,sz=e.sz.z*s/2,c=Math.abs(Math.cos(ry-yawU)),sn=Math.abs(Math.sin(ry-yawU)),ra=sz*c+sx*sn+.04,rd=sx*c+sz*sn+.04;
+  /* the row axis is x in tent space, the cross axis d: a model turned by ry (relative to the row) covers ra by rd */
+  if(!y0){if(hit(t,a,d,ra,rd))return false;used.push([t,a-ra,a+ra,d-rd,d+rd])}
+  const wx=(o[0]+u[0]*t)*f+u[0]*a-n[0]*d,wz=(o[1]+u[1]*t)*f+u[1]*a-n[1]*d,wy=T.terr(wx,wz)+(y0||0);
+  (inst[k]||(inst[k]=[])).push([wx,wy,wz,ry,s]);return true};
+ const row=yawU,across=yawU+Math.PI/2;/* a model's own +x along the row / along the cross axis */
+ const boxT=new Set(L.boxT||[]);
+ L.tents.forEach((t,ti)=>{const isBox=boxT.has(t),r=(i)=>{let x=Math.sin((t+i)*12.9898)*43758.5453;return x-Math.floor(x)};
+  /* under the roof: the shelf against the back, tool boxes and tyre stacks on the floor, a hammer and a wrench on a box */
+  place('shelf',t,0,-2.35,across,.8);place('toolbox',t,-2.15,-.9,row+.2+r(1)*.3,.16);place('toolbox',t,-1.2,-1.7,row-.1,.13);
+  const stack=(a,d,h,k)=>{if(place('tyre',t,a,d,r(k)*6,1))for(let i=1;i<h;i++)place('tyre',t,a,d,r(k+i)*6,1,i*.4)};
+  stack(2.2,-1.5,3,0);stack(1.35,-1.9,2,4);
+  /* between the tent and the pit wall: tall stacks against the tent legs, a pair leaning on the wall, nothing near the crew's gate in the middle */
+  stack(-2.5,3.75,2+(r(7)*3|0),9);stack(2.45,3.7,3+(r(8)*2|0),14);
+  place('tyres2',t,-1.2,5.1,across+r(3)*.3,1);place('tyres2',t,1.6,5.25,across+r(5)*.3,1);
+  if(r(2)<.5)place('barrel',t,-3.0,5.2,0,1);
+  if(isBox){
+   /* the stop: two cones on the lane edge at each end of the box and a delineator on the wall by each, so the driver sees where the car must stand */
+   for(const e of[-1,1]){place('cone',t,e*4.4,11.9,0,1);place('cone',t,e*4.4+e*.45,11.9,0,1);place('panel',t,e*4.65,6.85,across,1)}
+   place('cone',t,0,12.4,0,1)}
+  else{
+   /* a spare bay: barricades against the wall and cones in front of them */
+   place('barricadeA',t,-1.7,6.9,across,1);place('barricadeA',t,1.7,6.9,across,1);for(const e of[-3.0,0,3.0])place('cone',t,e,7.7,0,1);place('post',t,-3.8,7.1,0,1);place('post',t,3.8,7.1,0,1)}});
+ const grp=new THREE.Group();grp.name='pitDress';const _m=new THREE.Matrix4(),_q=new THREE.Quaternion(),_e=new THREE.Euler();
+ for(const k in inst){const e=lib[k],list=inst[k],im=new THREE.InstancedMesh(e.g,e.mat,list.length);list.forEach((p,i)=>{_e.set(0,p[3],0);_q.setFromEuler(_e);_m.compose(V(p[0],p[1],p[2]),_q,V(p[4],p[4],p[4]));im.setMatrixAt(i,_m)});im.instanceMatrix.needsUpdate=true;im.castShadow=true;im.receiveShadow=true;im.frustumCulled=false;grp.add(im)}
+ Rc.scene.add(grp);PL.props=Object.fromEntries(Object.keys(inst).map(k=>[k,inst[k].length]))}
 
 /* ---------- the quick time event: three stages of 3, 4 and 5 keys, drawn like the race HUD (flat dark plates, the white row for what is live, red for the gap) ---------- */
 const KEYS=[[['KeyQ','Q'],['KeyW','W'],['KeyE','E'],['KeyA','A'],['KeyS','S'],['KeyD','D']],
@@ -147,33 +168,27 @@ const STAGES=[3,4,5],SNAME=['JACK UP','REPAIR','TORQUE DOWN'];
 const css=document.createElement('style');css.textContent=`
 .ptQ{position:fixed;z-index:40;display:none;pointer-events:none;font-family:"PTExo",var(--gt,Inter,sans-serif);color:#fff;--u:1px}
 .ptQ.on{display:block}
-.ptQ .bar{position:absolute;left:50%;top:calc(var(--u)*118);transform:translateX(-50%);display:flex;align-items:stretch;gap:calc(var(--u)*3);white-space:nowrap}
-.ptQ .bar span{display:block;padding:0 calc(var(--u)*13);font:600 calc(var(--u)*13)/calc(var(--u)*30) "PTExo",var(--gt,Inter,sans-serif);letter-spacing:.14em;color:#aeb6bd;background:rgba(20,22,25,.82);border-radius:2px}
+.ptQ .bar{position:absolute;left:50%;width:max-content;top:calc(var(--u)*14);transform:translateX(-50%);display:flex;align-items:stretch;gap:calc(var(--u)*3);white-space:nowrap}
+.ptQ .bar span{display:block;padding:0 calc(var(--u)*11);font:600 calc(var(--u)*12)/calc(var(--u)*32) "PTExo",var(--gt,Inter,sans-serif);letter-spacing:.14em;color:#aeb6bd;background:rgba(20,22,25,.82);border-radius:2px}
 .ptQ .bar span.on{color:#15181c;background:#f4f6f7}
-.ptQ .bar span.tm{color:#fff;background:#c81e1a;font-variant-numeric:tabular-nums;letter-spacing:.04em;min-width:calc(var(--u)*74);text-align:center}
-.ptQ .mid{position:absolute;left:50%;bottom:calc(var(--vw)*.222);transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*6)}
-.ptQ .hd{display:flex;align-items:stretch;gap:calc(var(--u)*3);white-space:nowrap}
-.ptQ .hd b,.ptQ .hd i,.ptQ .hd em{display:block;font:600 calc(var(--u)*12)/calc(var(--u)*24) "PTExo",var(--gt,Inter,sans-serif);font-style:normal;letter-spacing:.16em;padding:0 calc(var(--u)*10);border-radius:2px;background:rgba(20,22,25,.86)}
-.ptQ .hd b{background:#f4f6f7;color:#15181c}.ptQ .hd i{color:#d5dadf;font-variant-numeric:tabular-nums}.ptQ .hd em{background:#c81e1a;color:#fff;display:none}.ptQ .hd em.on{display:block}
-.ptQ .ks{display:flex;gap:calc(var(--u)*4)}
-.ptQ .ks b{display:grid;place-items:center;min-width:calc(var(--u)*50);height:calc(var(--u)*50);padding:0 calc(var(--u)*8);box-sizing:border-box;border-radius:2px;font:700 calc(var(--u)*21) "PTExo",var(--gt,Inter,sans-serif);color:#8e979f;background:rgba(20,22,25,.86);border-bottom:calc(var(--u)*3) solid rgba(255,255,255,.14)}
-.ptQ .ks b.now{color:#15181c;background:#f4f6f7;border-bottom-color:#c81e1a}
-.ptQ .ks b.ok{color:#fff;background:rgba(40,42,45,.72);border-bottom-color:#f4f6f7}
-.ptQ.bad .ks b.now{background:#c81e1a;color:#fff;animation:ptQs .24s}
-@keyframes ptQs{25%{transform:translateX(calc(var(--u)*-5))}75%{transform:translateX(calc(var(--u)*5))}}
-.ptQ .pg{display:flex;gap:calc(var(--u)*3)}.ptQ .pg u{display:block;width:calc(var(--u)*38);height:calc(var(--u)*4);background:rgba(20,22,25,.86)}.ptQ .pg u.ok{background:#f4f6f7}.ptQ .pg u.now{background:#c81e1a}
+.ptQ .bar span.tm{color:#fff;background:#c81e1a;font-variant-numeric:tabular-nums;letter-spacing:.04em;min-width:calc(var(--u)*80);text-align:center;font-weight:700}
+.ptQ .mid{position:absolute;left:50%;width:max-content;bottom:calc(var(--vw)*.222);transform:translateX(-50%)}
+.ptQ .ks{display:flex;gap:calc(var(--u)*8)}
+.ptQ .ks b{display:grid;place-items:center;min-width:calc(var(--u)*46);height:calc(var(--u)*46);padding:0 calc(var(--u)*8);box-sizing:border-box;border:1px solid #f1f3f5;border-bottom-width:calc(var(--u)*4);border-radius:4px;font:700 calc(var(--u)*20) var(--mn,monospace);color:#f1f3f5;background:#f1f3f51a;text-shadow:0 1px 3px #000a;transition:transform .08s}
+.ptQ .ks b.now{color:#0a0d11;background:#f1f3f5;transform:translateY(calc(var(--u)*-4))}
+.ptQ .ks b.ok{opacity:.38}
+.ptQ.bad .ks b.now{background:#c81e1a;border-color:#c81e1a;color:#fff;animation:ptQs .24s}
+@keyframes ptQs{25%{transform:translate(calc(var(--u)*-5),calc(var(--u)*-4))}75%{transform:translate(calc(var(--u)*5),calc(var(--u)*-4))}}
 .ptQ.msg .mid{display:none}`;document.head.appendChild(css);
 const QE=[null,null];
-function qel(k){if(QE[k]&&QE[k].isConnected)return QE[k];const e=document.createElement('div');e.className='ptQ';e.innerHTML='<div class="bar"><span>PIT IN</span><span>REPAIR</span><span>PIT OUT</span><span class="tm"></span></div><div class="mid"><div class="hd"><b></b><i></i><em></em></div><div class="ks"></div><div class="pg"></div></div>';document.body.appendChild(e);return QE[k]=e}
+function qel(k){if(QE[k]&&QE[k].isConnected)return QE[k];const e=document.createElement('div');e.className='ptQ';e.innerHTML='<div class="bar"><span>PIT IN</span><span>REPAIR</span><span>PIT OUT</span><span class="tm"></span></div><div class="mid"><div class="ks"></div></div>';document.body.appendChild(e);return QE[k]=e}
 function qPlace(c,e){const r=c.rect||[0,0,1,1],w=r[2]*innerWidth,h=r[3]*innerHeight;e.style.left=(r[0]*100)+'%';e.style.top=((1-(r[1]+r[3]))*100)+'%';e.style.width=(r[2]*100)+'%';e.style.height=(r[3]*100)+'%';e.style.setProperty('--u',Math.max(.6,Math.min(w/640,1.4)).toFixed(3)+'px');e.style.setProperty('--vw',w.toFixed(0)+'px')}
 const fmtT=t=>{const m=Math.floor(t/60),s=t-m*60;return m+':'+(s<10?'0':'')+s.toFixed(3)};
 /* the strip across the top: where the stop has got to, and its clock */
-function qBar(c,st,step){const e=qel(c.k);qPlace(c,e);e.classList.add('on');const sp=e.querySelectorAll('.bar span');if(e._s!==step){e._s=step;for(let i=0;i<3;i++)sp[i].classList.toggle('on',i===step)}
+function qBar(c,st,step){const e=qel(c.k);qPlace(c,e);e.classList.add('on');const sp=e.querySelectorAll('.bar span');if(e._s!==step){e._s=step;for(let i=0;i<3;i++)sp[i].classList.toggle('on',i===step);if(step!==1)sp[1].textContent='REPAIR'}
  const t=fmtT(Math.max(0,st.T));if(e._t!==t){e._t=t;sp[3].textContent=t}return e}
-function qShow(c,st){const e=qBar(c,st,1);e.classList.remove('msg');e.querySelector('.hd b').textContent=SNAME[st.stg]||'REPAIR';e.querySelector('.hd i').textContent=(st.stg+1)+' / '+STAGES.length;
- const em=e.querySelector('.hd em');em.classList.toggle('on',st.pen>0);em.textContent='+'+st.pen.toFixed(0)+' s';
- e.querySelector('.ks').innerHTML=st.q.map((q,i)=>'<b class="'+(i<st.qi?'ok':i===st.qi?'now':'')+'">'+q[1]+'</b>').join('');
- e.querySelector('.pg').innerHTML=STAGES.map((n,i)=>'<u class="'+(i<st.stg?'ok':i===st.stg?'now':'')+'"></u>').join('')}
+function qShow(c,st){const e=qBar(c,st,1);e.classList.remove('msg');const sp=e.querySelectorAll('.bar span')[1],tx='REPAIR  '+(st.stg+1)+' / '+STAGES.length+(st.pen>0?'  +'+st.pen.toFixed(0)+' s':'');if(sp.textContent!==tx)sp.textContent=tx;
+ e.querySelector('.ks').innerHTML=st.q.map((q,i)=>'<b class="'+(i<st.qi?'ok':i===st.qi?'now':'')+'">'+q[1]+'</b>').join('')}
 function qHide(c){const e=QE[c.k];if(e){e.classList.remove('on','msg','bad');e._s=null}}
 const newQ=(c,n)=>{const s=KEYS[c.k===1?1:0];let last=-1;return Array.from({length:n},()=>{let i;do{i=Math.floor(Math.random()*s.length)}while(i===last&&Math.random()<.7);last=i;return s[i]})};
 addEventListener('keydown',ev=>{const Rc=typeof RACE!=='undefined'?RACE:null;if(!Rc||!Rc.cars||typeof scr==='undefined'||scr!=='game'||ev.repeat)return;
@@ -186,7 +201,7 @@ addEventListener('keydown',ev=>{const Rc=typeof RACE!=='undefined'?RACE:null;if(
 
 /* ---------- the stop itself ---------- */
 const pitOK=Rc=>!!(Rc&&Rc.T&&Rc.cars&&Rc.state==='race'&&Rc.cars.filter(c=>c.human).length===2&&!(Rc.cfg&&(Rc.cfg.rally||Rc.cfg.freeroam))&&laneOf(Rc)&&!(window.PTO&&window.PTO.pit===false));
-function lane(Rc){if(Rc._pl===undefined){Rc._pl=build(Rc);if(Rc._pl){const PL=Rc._pl;PL.boxes.forEach((b,i)=>b.n=i);try{dress(Rc,PL)}catch(e){console.warn('pit dress',e)}
+function lane(Rc){if(Rc._pl===undefined){Rc._pl=build(Rc);if(Rc._pl){const PL=Rc._pl;PL.boxes.forEach((b,i)=>b.n=i);loadProps().then(()=>{if(typeof RACE!=='undefined'&&RACE===Rc)try{dress(Rc,PL)}catch(e){console.warn('pit dress',e)}})
    /* every box has its crew standing by from the start, each in its own colour */
    loadCrew().then(()=>{if(typeof RACE!=='undefined'&&RACE===Rc)for(const b of PL.boxes)try{mkCrew(Rc,PL,b)}catch(e){console.warn('pit crew',e)}})}}return Rc._pl}
 function enter(Rc,c,PL,i){const b=PL.boxes.find(q=>!q.by&&q.s>PL.S[i]+PL.box+4)||PL.boxes.find(q=>!q.by);if(!b)return;b.by=c;const h=Rc.T.surf(c.x,c.z,c.y).h;
@@ -208,7 +223,7 @@ function rail(Rc,c,dt){const st=c._pit,PL=Rc._pl,T=Rc.T,b=st.b;st.t+=dt;st.T+=dt
  if(c.in){c.in.th=0;c.in.br=0;c.in.st=0;c.in.hb=0}
  /* lap progress, as the physics step does it */
  {let bi=c.idx,bd=1e18;const N=T.N;for(let q=-6;q<=30;q++){const i=(c.idx+q+N)%N,dx=c.x-T.x[i],dz=c.z-T.z[i],d2=dx*dx+dz*dz;if(d2<bd){bd=d2;bi=i}}let dl=bi-c.idx;if(dl>N/2)dl-=N;if(dl<-N/2)dl+=N;if(Math.abs(dl)<40){c.idx=bi;c.unw+=dl}}
- if(st.ph==='in'){qBar(c,st,0).classList.add('msg');if(st.v===0&&st.s===b.s){st.ph='qte';st.t=0;st.stg=0;st.q=newQ(c,STAGES[0]);st.qi=0;qShow(c,st)}}
+ if(st.ph==='in'){if(b.s-st.s<70)qBar(c,st,0).classList.add('msg');else qHide(c);if(st.v===0&&st.s===b.s){st.ph='qte';st.t=0;st.stg=0;st.q=newQ(c,STAGES[0]);st.qi=0;qShow(c,st)}}
  else if(st.ph==='qte'){qBar(c,st,1);if(st.wait>0)st.wait-=dt;if(st.stg>=STAGES.length-1&&st.qi>=st.q.length&&st.wait<=0){st.ph='back';st.t=0;c.dmg=0;c.tyre=1;c.fuel=1;qBar(c,st,2).classList.add('msg');try{P.sfx&&P.sfx('buy')}catch(e){}}}
  else if(st.ph==='back'){qBar(c,st,2);if((!b.crew||b.clear)&&st.t>.2){st.ph='go';st.t=0}}
  else if(st.ph==='go'){qBar(c,st,2);if(st.t>2.2)qHide(c);if(st.s>=PL.len-.05){c.sp=st.v;leave(Rc,c)}}}

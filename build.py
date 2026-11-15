@@ -336,6 +336,10 @@ if os.environ.get('PACKS') or os.environ.get('BIKES'):
 # pit crew (Low Poly Airport Ground Crew, Studio Ochi, supplied by Hakan: project files only, outfits toned down): pit.js. PACKS or CREW=1 builds
 if (os.environ.get('PACKS') or os.environ.get('CREW')) and os.path.exists('/mnt/project-files/poly-gt/packs/crew.glb'):
   BIKES+='<script>window.CREW_B64="'+base64.b64encode(open('/mnt/project-files/poly-gt/packs/crew.glb','rb').read()).decode()+'";</script>';print('built in crew.glb')
+# pit lane props (tyres, tool pack, tool shelf, traffic cones and barricades, supplied by Hakan: project files only; slimmed to base colour maps, tools/slim.py): pit.js
+if (os.environ.get('PACKS') or os.environ.get('CREW')) and os.path.exists('/mnt/project-files/poly-gt/packs/pit-props/traffic.glb'):
+  import json as _j
+  BIKES+='<script>window.PITPROPS_B64='+_j.dumps({k:base64.b64encode(open('/mnt/project-files/poly-gt/packs/pit-props/'+k+'.glb','rb').read()).decode() for k in('tire','tool','shelf','traffic')})+';</script>';print('built in pit props')
 # action stills on the bought model tracks (kept in project files, not in the public repo): PACKS builds only
 if os.environ.get('PACKS'):
   import glob as _gb
