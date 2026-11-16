@@ -49,9 +49,9 @@ const _st={position:V(),quaternion:new THREE.Quaternion()};
 /* one pose from a few numbers. k: 'stand' | 'set' (crouched, ready to go) | 'run' (ph: stride phase) | 'work' (kneeling at a wheel, ph: time) | 'pump' (on the jack handle).
    The body is posed in its own space (x left, y up, z forward) */
 function crewPose(M,k,ph){const R=M.R,T=R.T,hy=T.hipC.y,sy=T.bp[T.idx.upper_armL].y,arm=(T.len.ua+T.len.fa);let ps;
- if(k==='run'){const s=Math.sin(ph),c=Math.cos(ph);/* a sprint: long stride, high knees, pumping arms, well forward over the feet */
+ if(k==='run'||k==='runc'){const s=Math.sin(ph),c=Math.cos(ph);/* a sprint: long stride, high knees, pumping arms, well forward over the feet */
   ps={hip:[0,hy-.07+.035*Math.cos(2*ph),0],lean:.34,flat:false,look:.16,feet:[[.085,Math.max(0,c)*.27,.43*s+.03],[.085,Math.max(0,-c)*.27,-.43*s+.03]],
-   hands:[[.22,sy-arm*.5+.11*Math.max(0,-s),-.34*s+.14],[.22,sy-arm*.5+.11*Math.max(0,s),.34*s+.14]]}}
+   hands:[[.22,sy-arm*.5+.11*Math.max(0,-s),-.34*s+.14],[.22,sy-arm*.5+.11*Math.max(0,s),.34*s+.14]]};if(k==='runc'){ps.lean=.22;ps.hands=[[.25,sy-arm*.4,.42],[.25,sy-arm*.4,.42]]}}
  else if(k==='work'){const a=Math.sin(ph*9),b=Math.sin(ph*9+1.6),sw=Math.sin(ph*1.3)*.03;
   ps={hip:[sw,hy*.5,-.16],lean:.55,flat:true,look:-.25,feet:[[.17,0,.1],[.17,0,-.3]],
    hands:[[.1+.04*b,hy*.42+.07*a,.42],[.1-.04*b,hy*.42-.07*a,.44]]}}
@@ -87,6 +87,11 @@ function crewMove(M,tgt,dt){if(M.at===tgt&&M.pos.distanceTo(M.path[tgt])<.03)ret
  M.ph+=dt*15;M.mv=1;return false}
 /* phase: 'idle' (at the wall) | 'ready' (the car is coming: out to the first point, crouched) | 'work' (round the car and on it) | 'home' (back to the wall).
    Returns true when everyone is where the phase wants them; b.clear is true while nobody stands in the car's way out */
+let LIB=null;
+function tyreMeshes(M){if(M.tm!==undefined)return M.tm;if(!PROPS)return null;const L=LIB||(LIB=propLib()),t=L&&L.tyre;let g,m,s=1,rx=0;
+ if(t){g=t.g;m=t.mat;s=.62/Math.max(t.sz.x,t.sz.z);rx=t.sz.y<Math.max(t.sz.x,t.sz.z)*.8?Math.PI/2:0}else{g=new THREE.TorusGeometry(.27,.11,10,22);m=new THREE.MeshStandardMaterial({color:0x222222,roughness:.9})}
+ const mk=(mat)=>{const me=new THREE.Mesh(g,mat);me.scale.setScalar(s);me.rotation.x=rx;me.castShadow=true;const gp=new THREE.Group();gp.add(me);gp.position.set(0,.66,.46);gp.visible=false;gp.layers.set(0);me.layers.set(0);M.R.g.add(gp);return gp};
+ const m2=m.clone();if(m2.color)m2.color.setRGB(.42,.42,.42);return M.tm=[mk(m),mk(m2)]}
 let fr=0;
 function crewTick(b,dt,phase){let all=true,clear=true;const t=performance.now()/1000;fr++;
  for(const M of b.crew){M.mv=0;let k='stand';const last=M.path.length-1;
@@ -98,7 +103,9 @@ function crewTick(b,dt,phase){let all=true,clear=true;const t=performance.now()/
    else{const ok=crewMove(M,0,dt);if(!ok){k='run';all=false}else M.yaw+=wr(M.homeYaw-M.yaw)*Math.min(1,dt*8)}}
   /* in the way out: anyone not yet back on the wall side of the car (the first point of every way is on that side) */
   if((M.pos.x-b.p.x)*b.rt[0]+(M.pos.z-b.p.z)*b.rt[1]<1.35)clear=false;
-  M.R.g.position.copy(M.pos);M.R.g.rotation.y=M.yaw;crewPose(M,k,k==='run'?M.ph:t+M.ph)}
+  /* a tyre swap: the four on the wheels run out with a fresh tyre held in front of them, and carry the old one back */
+  {const tw=b.svc==='tyre'&&M.i<4&&k==='run'?(phase==='work'?1:(phase==='home'||phase==='idle')?2:0):0;if(tw||M.tw){const q=tyreMeshes(M);if(q){q[0].visible=tw===1;q[1].visible=tw===2}M.tw=tw}if(tw)k='runc'}
+  M.R.g.position.copy(M.pos);M.R.g.rotation.y=M.yaw;crewPose(M,k,k==='run'||k==='runc'?M.ph:t+M.ph)}
  b.clear=clear;return all}
 
 /* ---------- pit lane dressing (Nov 15, Hakan: only the props he supplied, nothing overlapping, cones where the cars stop, decorated tents) ----------
@@ -164,7 +171,7 @@ function dress(Rc,PL){const q=laneOf(Rc);if(!q||!q.L.tents||PL.dressed)return;PL
 /* ---------- the quick time event: three stages of 3, 4 and 5 keys, drawn like the race HUD (flat dark plates, the white row for what is live, red for the gap) ---------- */
 const KEYS=[[['KeyQ','Q'],['KeyW','W'],['KeyE','E'],['KeyA','A'],['KeyS','S'],['KeyD','D']],
  [['ArrowUp','↑'],['ArrowDown','↓'],['ArrowLeft','←'],['ArrowRight','→'],['PageUp','PG UP'],['PageDown','PG DN']]];
-const STAGES=[3,4,5],SNAME=['JACK UP','REPAIR','TORQUE DOWN'];
+const STAGES=[3,4,5],SNAME=['JACK UP','REPAIR','TORQUE DOWN'],SNAMET=['JACK UP','SWAP TYRES','TORQUE DOWN'];
 const css=document.createElement('style');css.textContent=`
 .ptQ{position:fixed;z-index:40;display:none;pointer-events:none;font-family:"PTExo",var(--gt,Inter,sans-serif);color:#fff;--u:1px}
 .ptQ.on{display:block}
@@ -184,23 +191,52 @@ const css=document.createElement('style');css.textContent=`
 .ptQ.bad .ks b.now{background:#c81e1a;border-bottom-color:#c81e1a;color:#fff;animation:ptQs .24s}
 @keyframes ptQs{25%{transform:translateX(calc(var(--u)*-5))}75%{transform:translateX(calc(var(--u)*5))}}
 .ptQ.msg .pm{display:none}
+.ptQ .ty{display:flex;align-items:center;gap:calc(var(--u)*10);padding:calc(var(--u)*7) calc(var(--u)*10);background:rgba(20,22,25,.82);border-radius:2px}
+.ptQ .ty .tg{display:grid;grid-template-columns:repeat(2,calc(var(--u)*52));gap:calc(var(--u)*3)}
+.ptQ .ty .tg b{display:flex;flex-direction:column;align-items:center;justify-content:center;height:calc(var(--u)*34);border-radius:2px;color:#0e1114;font:700 calc(var(--u)*13)/1 "PTExo",var(--gt,Inter,sans-serif);background:var(--c,#4ade80)}
+.ptQ .ty .tg b::before{content:attr(data-p);font:600 calc(var(--u)*7.5)/1.4 "PTExo",var(--gt,Inter,sans-serif);letter-spacing:.14em;opacity:.7}
+.ptQ .ty .gp{width:calc(var(--u)*118);font:600 calc(var(--u)*9)/1 "PTExo",var(--gt,Inter,sans-serif);letter-spacing:.14em;color:#aeb6bd}
+.ptQ .ty .gp div{height:calc(var(--u)*7);margin-top:calc(var(--u)*6);background:rgba(255,255,255,.14)}.ptQ .ty .gp div i{display:block;height:100%;background:var(--c,#4ade80)}
+.ptQ .ty .gp em{display:block;margin-top:calc(var(--u)*5);font-style:normal;font-size:calc(var(--u)*15);color:#fff;letter-spacing:.02em;font-weight:700}
+.ptQ.mnu .ks b{pointer-events:auto;cursor:pointer;min-width:calc(var(--u)*150);height:calc(var(--u)*74);font-size:calc(var(--u)*20);letter-spacing:.06em}
+.ptQ.mnu .ks b small{font:600 calc(var(--u)*9) "PTExo",var(--gt,Inter,sans-serif);letter-spacing:.08em;color:#9aa3ab}
+.ptQ.mnu .ks b:hover{background:#f4f6f7;color:#15181c;border-bottom-color:#c81e1a}.ptQ.mnu .ks b:hover small,.ptQ.mnu .ks b:hover::before{color:#5d656c}
+.ptFade{position:fixed;z-index:45;background:#000;opacity:0;pointer-events:none;transition:opacity .45s ease}
 .ptPit .h8spd,.ptPit .gtPc:not([data-k=MM]),.ptPit .gtTy,.ptPit .gtBrk{opacity:0!important;transition:opacity .4s}
 .h8spd,.gtPc,.gtTy,.gtBrk{transition:opacity .4s}`;document.head.appendChild(css);
 const QE=[null,null];
-function qel(k){if(QE[k]&&QE[k].isConnected)return QE[k];const e=document.createElement('div');e.className='ptQ';e.innerHTML='<div class="bar"><span>PIT IN</span><span>REPAIR</span><span>PIT OUT</span><span class="tm"></span></div><div class="pm"><div class="cap"></div><div class="ks"></div></div>';document.body.appendChild(e);return QE[k]=e}
+function qel(k){if(QE[k]&&QE[k].isConnected)return QE[k];const e=document.createElement('div');e.className='ptQ';e.innerHTML='<div class="bar"><span>PIT IN</span><span>REPAIR</span><span>PIT OUT</span><span class="tm"></span></div><div class="pm"><div class="cap"></div><div class="ty" style="display:none"></div><div class="ks"></div></div>';document.body.appendChild(e);return QE[k]=e}
 function qPlace(c,e){const r=c.rect||[0,0,1,1],w=r[2]*innerWidth,h=r[3]*innerHeight;e.style.left=(r[0]*100)+'%';e.style.top=((1-(r[1]+r[3]))*100)+'%';e.style.width=(r[2]*100)+'%';e.style.height=(r[3]*100)+'%';e.style.setProperty('--u',Math.max(.6,Math.min(w/640,1.4)).toFixed(3)+'px');e.style.setProperty('--vw',w.toFixed(0)+'px')}
 const fmtT=t=>{const m=Math.floor(t/60),s=t-m*60;return m+':'+(s<10?'0':'')+s.toFixed(3)};
 /* the strip across the top: where the stop has got to, and its clock */
-function qBar(c,st,step){const e=qel(c.k);qPlace(c,e);e.classList.add('on');const sp=e.querySelectorAll('.bar span');if(e._s!==step){e._s=step;for(let i=0;i<3;i++)sp[i].classList.toggle('on',i===step);if(step!==1)sp[1].textContent='REPAIR'}
+function qBar(c,st,step){const e=qel(c.k);qPlace(c,e);e.classList.add('on');const sp=e.querySelectorAll('.bar span');if(e._s!==step){e._s=step;for(let i=0;i<3;i++)sp[i].classList.toggle('on',i===step);if(step!==1)sp[1].textContent='SERVICE'}
  const t=fmtT(Math.max(0,st.T));if(e._t!==t){e._t=t;sp[3].textContent=t}return e}
-function qShow(c,st){const e=qBar(c,st,1);e.classList.remove('msg');const sp=e.querySelectorAll('.bar span')[1],tx='REPAIR '+(st.stg+1)+'/'+STAGES.length;if(sp.textContent!==tx)sp.textContent=tx;
- e.querySelector('.cap').innerHTML=(SNAME[st.stg]||'REPAIR')+(st.pen>0?'<i>+'+st.pen.toFixed(0)+' s</i>':'');
+function qShow(c,st){const e=qBar(c,st,1);e.classList.remove('msg');e.classList.remove('mnu');e._m=null;const sp=e.querySelectorAll('.bar span')[1],tx=(st.svc==='tyre'?'TYRE SWAP ':'REPAIR ')+(st.stg+1)+'/'+STAGES.length;if(sp.textContent!==tx)sp.textContent=tx;
+ e.querySelector('.cap').innerHTML=((st.svc==='tyre'?SNAMET:SNAME)[st.stg]||'REPAIR')+(st.pen>0?'<i>+'+st.pen.toFixed(0)+' s</i>':'');
  e.querySelector('.ks').innerHTML=st.q.map((q,i)=>'<b data-n="'+(i+1)+'" class="'+(i<st.qi?'ok':i===st.qi?'now':'')+'">'+q[1]+'</b>').join('')}
 function hudPit(c,on){const h=document.getElementById('h'+c.k);if(h)h.classList.toggle('ptPit',!!on)}
-function qHide(c){const e=QE[c.k];if(e){e.classList.remove('on','msg','bad');e._s=null}}
+function qHide(c){const e=QE[c.k];if(e){e.classList.remove('on','msg','bad','mnu');e._s=null;e._m=null}}
 const newQ=(c,n)=>{const s=KEYS[c.k===1?1:0];let last=-1;return Array.from({length:n},()=>{let i;do{i=Math.floor(Math.random()*s.length)}while(i===last&&Math.random()<.7);last=i;return s[i]})};
+/* the two menus: PIT IN / PIT OUT, then REPAIR / TIRE SWAP. The tyre meter (one box per tyre, green good to red worn, and the grip bar) shows on the second */
+const tyCol=v=>'hsl('+Math.round(125*Math.pow(cl((v-.05)/.9,0,1),.8))+' 72% 52%)';
+function qMenu(c,st){const e=qBar(c,st,0);e.classList.remove('msg');e.classList.add('mnu');const m=st.ph==='menu1',w=c._tw||[1,1,1,1],g=c._tyG==null?1:c._tyG,kh=c.k===1?['←','→']:['Q','E'];
+ const sig=(m?1:2)+'|'+Math.round(g*100)+'|'+w.map(v=>Math.round(v*100)).join(',')+'|'+Math.round((c.dmg||0)*100);if(e._m===sig)return;e._m=sig;
+ const O=m?[['PIT IN','REPAIR OR NEW TYRES'],['PIT OUT','BACK TO THE RACE']]:[['REPAIR','FIX THE DAMAGE'+((c.dmg||0)>.02?'  '+Math.round(c.dmg*100)+'%':'')],['TIRE SWAP','A FRESH SET OF FOUR']];
+ e.querySelector('.cap').textContent=m?'PIT STOP':'CHOOSE THE WORK';
+ const ty=e.querySelector('.ty');ty.style.display=m?'none':'flex';
+ if(!m)ty.innerHTML='<div class="tg">'+['FL','FR','RL','RR'].map((n,i)=>'<b data-p="'+n+'" style="--c:'+tyCol(w[i])+'">'+Math.round(w[i]*100)+'%</b>').join('')+'</div><div class="gp">TYRE GRIP<div style="--c:'+tyCol(g)+'"><i style="width:'+Math.round(g*100)+'%"></i></div><em>'+Math.round(g*100)+'%</em></div>';
+ e.querySelector('.ks').innerHTML=O.map((o,i)=>'<b data-n="'+kh[i]+'" data-i="'+i+'">'+o[0]+'<small>'+o[1]+'</small></b>').join('')}
+function pick(Rc,c,i){const st=c&&c._pit;if(!st||(st.ph!=='menu1'&&st.ph!=='menu2'))return;try{P.sfx&&P.sfx('select')}catch(e){}
+ if(st.ph==='menu1'){if(i===0){st.ph='menu2';const e=qel(c.k);e._m=null;qMenu(c,st)}else{st.svc=null;startFade(c,st)}return}
+ st.svc=i===0?'repair':'tyre';st.ph='qte';st.t=0;st.stg=0;st.q=newQ(c,STAGES[0]);st.qi=0;st.pen=0;st.wait=0;qShow(c,st)}
+const FE=[null,null];
+function fadeEl(c,on){let f=FE[c.k];if(!f||!f.isConnected){if(!on)return;f=FE[c.k]=document.createElement('div');f.className='ptFade';document.body.appendChild(f)}
+ const r=c.rect||[0,0,1,1];f.style.left=(r[0]*100)+'%';f.style.top=((1-(r[1]+r[3]))*100)+'%';f.style.width=(r[2]*100)+'%';f.style.height=(r[3]*100)+'%';f.style.opacity=on?1:0}
+function startFade(c,st){st.ph='fade';st.t=0;const e=qBar(c,st,2);e.classList.add('msg');e.classList.remove('mnu');e._m=null;fadeEl(c,1)}
+addEventListener('click',ev=>{const b=ev.target&&ev.target.closest&&ev.target.closest('.ptQ .ks b[data-i]');if(!b)return;const Rc=typeof RACE!=='undefined'?RACE:null;if(!Rc||!Rc.cars)return;const k=QE.indexOf(b.closest('.ptQ')),c=Rc.cars.find(h=>h.human&&h.k===k);if(c)pick(Rc,c,+b.dataset.i)},true);
 addEventListener('keydown',ev=>{const Rc=typeof RACE!=='undefined'?RACE:null;if(!Rc||!Rc.cars||typeof scr==='undefined'||scr!=='game'||ev.repeat)return;
- for(const c of Rc.cars){const st=c._pit;if(!st||st.ph!=='qte'||!st.q||st.qi>=st.q.length)continue;const set=KEYS[c.k===1?1:0];if(!set.some(q=>q[0]===ev.code))continue;
+ for(const c of Rc.cars){const st=c._pit;if(st&&(st.ph==='menu1'||st.ph==='menu2')){const mk=c.k===1?['ArrowLeft','ArrowRight']:['KeyQ','KeyE'],i=mk.indexOf(ev.code);if(i>=0){ev.preventDefault();pick(Rc,c,i)}continue}
+  if(!st||st.ph!=='qte'||!st.q||st.qi>=st.q.length)continue;const set=KEYS[c.k===1?1:0];if(!set.some(q=>q[0]===ev.code))continue;
   if(/^(Arrow|Page)/.test(ev.code))ev.preventDefault();
   if(ev.code===st.q[st.qi][0]){st.qi++;try{P.sfx&&P.sfx('select')}catch(e){}
    if(st.qi>=st.q.length&&st.stg<STAGES.length-1){st.stg++;st.q=newQ(c,STAGES[st.stg]);st.qi=0;try{P.sfx&&P.sfx('buy')}catch(e){}}}
@@ -213,10 +249,10 @@ function lane(Rc){if(Rc._pl===undefined){Rc._pl=build(Rc);if(Rc._pl){const PL=Rc
    /* every box has its crew standing by from the start, each in its own colour */
    loadCrew().then(()=>{if(typeof RACE!=='undefined'&&RACE===Rc)for(const b of PL.boxes)try{mkCrew(Rc,PL,b)}catch(e){console.warn('pit crew',e)}})}}return Rc._pl}
 function enter(Rc,c,PL,i){const b=PL.boxes.find(q=>!q.by&&q.s>PL.S[i]+PL.box+4)||PL.boxes.find(q=>!q.by);if(!b)return;b.by=c;const h=Rc.T.surf(c.x,c.z,c.y).h;
- c._pit={ph:'in',s:PL.S[i],b,v:Math.max(MPH15,c.sp||0),ox:c.x-PL.X[i],oz:c.z-PL.Z[i],oy:c.yaw,rh:cl(c.y-h,.25,1.3),lift:0,t:0,T:0,q:null,qi:0,stg:0,pen:0,wait:0};
+ b.svc=null;c.camX=0;c._pit={ph:'in',svc:null,sel:-1,s:PL.S[i],b,v:Math.max(MPH15,c.sp||0),ox:c.x-PL.X[i],oz:c.z-PL.Z[i],oy:c.yaw,rh:cl(c.y-h,.25,1.3),lift:0,t:0,T:0,q:null,qi:0,stg:0,pen:0,wait:0};
  const p=pose(PL,c._pit.s,b);c._pit.oy=wr(c.yaw-p.yaw);mkCrew(Rc,PL,b);try{P.sfx&&P.sfx('click')}catch(e){}}
-function leave(Rc,c){const st=c._pit;if(!st)return;if(st.b.by===c)st.b.by=null;c._pit=null;c._pitOut=Rc.t;qHide(c);hudPit(c,false)}
-function rail(Rc,c,dt){const st=c._pit,PL=Rc._pl,T=Rc.T,b=st.b;st.t+=dt;st.T+=dt;
+function leave(Rc,c){const st=c._pit;if(!st)return;fadeEl(c,0);if(st.b.by===c)st.b.by=null;c._pit=null;c._pitOut=Rc.t;qHide(c);hudPit(c,false)}
+function rail(Rc,c,dt){const st=c._pit,PL=Rc._pl,T=Rc.T,b=st.b;st.t+=dt;if(st.ph==='qte'||st.ph==='back')st.T+=dt;
  /* speed: hard on the brakes down to the lane limit, 15 mph for the last metres, to a stop on the box, away again at the limit */
  let vt=LANE_V;const left=b.s-st.s;if(st.ph==='in')vt=left>9?Math.min(LANE_V,Math.sqrt(MPH15*MPH15+2*5*(left-9))):Math.min(MPH15,Math.sqrt(Math.max(0,2*2.6*left))+.03);else if(st.ph!=='go')vt=0;
  st.v+=cl(vt-st.v,-(st.v>LANE_V+.5?17:8)*dt,5.2*dt);if(st.ph==='in'&&left<.04){st.v=0;st.s=b.s}st.s=Math.min(PL.len,st.s+st.v*dt);
@@ -231,25 +267,35 @@ function rail(Rc,c,dt){const st=c._pit,PL=Rc._pl,T=Rc.T,b=st.b;st.t+=dt;st.T+=dt
  if(c.in){c.in.th=0;c.in.br=0;c.in.st=0;c.in.hb=0}
  /* lap progress, as the physics step does it */
  {let bi=c.idx,bd=1e18;const N=T.N;for(let q=-6;q<=30;q++){const i=(c.idx+q+N)%N,dx=c.x-T.x[i],dz=c.z-T.z[i],d2=dx*dx+dz*dz;if(d2<bd){bd=d2;bi=i}}let dl=bi-c.idx;if(dl>N/2)dl-=N;if(dl<-N/2)dl+=N;if(Math.abs(dl)<40){c.idx=bi;c.unw+=dl}}
- if(st.ph==='in'){const near=b.s-st.s<70;hudPit(c,near);if(near)qBar(c,st,0).classList.add('msg');else qHide(c);if(st.v===0&&st.s===b.s){st.ph='qte';st.t=0;st.stg=0;st.q=newQ(c,STAGES[0]);st.qi=0;qShow(c,st)}}
- else if(st.ph==='qte'){qBar(c,st,1);if(st.wait>0)st.wait-=dt;if(st.stg>=STAGES.length-1&&st.qi>=st.q.length&&st.wait<=0){st.ph='back';st.t=0;c.dmg=0;c.tyre=1;c.fuel=1;qBar(c,st,2).classList.add('msg');try{P.sfx&&P.sfx('buy')}catch(e){}}}
- else if(st.ph==='back'){qBar(c,st,2);if((!b.crew||b.clear)&&st.t>.2){st.ph='go';st.t=0}}
+ if(st.ph==='in'){const near=b.s-st.s<70;hudPit(c,near);if(near)qBar(c,st,0).classList.add('msg');else qHide(c);if(st.v===0&&st.s===b.s){st.ph='menu1';st.t=0;st.sel=-1;qMenu(c,st)}}
+ else if(st.ph==='menu1'||st.ph==='menu2'){hudPit(c,true);qMenu(c,st)}
+ else if(st.ph==='qte'){qBar(c,st,1);if(st.wait>0)st.wait-=dt;if(st.stg>=STAGES.length-1&&st.qi>=st.q.length&&st.wait<=0){st.ph='back';st.t=0;if(st.svc==='tyre'){c._tw=[1,1,1,1];c._tyG=1;c._tyK=1;c.tyre=1}else c.dmg=0;c.fuel=1;qBar(c,st,2).classList.add('msg');try{P.sfx&&P.sfx('buy')}catch(e){}}}
+ else if(st.ph==='back'){qBar(c,st,2);if((!b.crew||b.clear)&&st.t>.2)startFade(c,st)}
+ /* the work is done: a black fade, back to the default camera while it is dark, then the car drives itself out */
+ else if(st.ph==='fade'){qBar(c,st,2);if(st.t>.55&&(!b.crew||b.clear)){c.camX=0;fadeEl(c,0);st.ph='go';st.t=0}}
  else if(st.ph==='go'){qBar(c,st,2);hudPit(c,st.t<1.4||st.s<PL.len-30);if(st.t>2.2)qHide(c);if(st.s>=PL.len-.05){c.sp=st.v;leave(Rc,c)}}}
 function tick(Rc,dt){const PL=lane(Rc);if(!PL)return;
  for(const c of Rc.cars){if(!c.human||c._pit||c.fin||c.respT>0)continue;if(c._pitOut!=null&&Rc.t-c._pitOut<4)continue;if((c.sp||0)<1.5)continue;
   const n=PL.near(c.x,c.z);if(n.d>2.6||PL.S[n.i]<PL.entry[0]||PL.S[n.i]>PL.entry[1])continue;const p=pose(PL,PL.S[n.i],null);if(Math.sin(p.yaw)*c.vx+Math.cos(p.yaw)*c.vz<1)continue;enter(Rc,c,PL,n.i)}
  for(const b of PL.boxes){if(!b.crew)continue;const c=b.by,st=c&&c._pit;let ph='idle';b.arr=false;
   /* the crew is on its way while the car is still rolling in: out to their marks from 45 m away, round the car the moment it stops */
-  if(st){if(st.ph==='in')ph=b.s-st.s<45?(st.v<.6&&b.s-st.s<.5?'work':'ready'):'idle';else if(st.ph==='qte')ph='work';else ph='home'}
+  if(st){b.svc=st.svc||null;if(st.ph==='in')ph=b.s-st.s<45?'ready':'idle';else if(st.ph==='menu1'||st.ph==='menu2')ph='ready';else if(st.ph==='qte')ph='work';else ph='home'}
   const ok=crewTick(b,dt,ph);if(ph==='work')b.arr=ok}}
 /* the car on the rail skips the physics step altogether; everyone else drives as before */
-const sc0=stepCar;stepCar=function(c,dt){const Rc=typeof RACE!=='undefined'?RACE:null;if(c&&c._pit&&Rc&&Rc._pl){if(Rc.state!=='race'||c.fin){leave(Rc,c)}else{rail(Rc,c,dt);return}}return sc0.apply(this,arguments)};
-const s0=step;step=function(dt){const Rc=typeof RACE!=='undefined'?RACE:null;if(Rc&&pitOK(Rc)){try{tick(Rc,dt)}catch(e){if(!Rc._pe){Rc._pe=1;console.warn('pit',e)}}}else{for(const e of QE)if(e)e.classList.remove('on');document.querySelectorAll('.ptPit').forEach(h=>h.classList.remove('ptPit'))}return s0.apply(this,arguments)};
+/* tyre wear (Nov 16, Hakan): each of the four tyres has its own life, worn by cornering (the outside pair most), braking (the fronts) and spinning the drive wheels (the rears).
+   The grip bar is the sum of it: 100% on new tyres, 16% less on worn out ones, and a tyre swap in the pits makes them new again. */
+function wear(c,dt){const w=c._tw||(c._tw=[1,1,1,1]);const dy=wr(c.yaw-(c._twY==null?c.yaw:c._twY));c._twY=c.yaw;const la=(c.sp||0)*dy/Math.max(dt,1e-3)/9.81;c._twL=(c._twL||0)+(cl(la,-3,3)-(c._twL||0))*Math.min(1,dt*5);
+ const sp=c.sp||0;if(sp>2){const ag=Math.min(2,Math.abs(c._twL)),L=c._twL>0?[.5,1.3,.5,1.3]:[1.3,.5,1.3,.5],br=c.in?c.in.br||0:0,th=c.in?c.in.th||0:0,sl=c.drifting?1:0;
+  for(let i=0;i<4;i++){const fr=i<2;w[i]=Math.max(0,w[i]-dt*(.0005+.0014*ag*L[i]+.0011*br*(fr?1.2:.8)+(fr?0:.0007*th*(sp<20?1:.4))+(sl?.0015:0)))}}
+ const g=.6*(w[0]+w[1]+w[2]+w[3])/4+.4*Math.min(w[0],w[1],w[2],w[3]);c._tyG=g;c._tyK=.84+.16*g}
+const sc0=stepCar;stepCar=function(c,dt){const Rc=typeof RACE!=='undefined'?RACE:null;if(c&&c._pit&&Rc&&Rc._pl){if(Rc.state!=='race'||c.fin){leave(Rc,c)}else{rail(Rc,c,dt);return}}
+ const r=sc0.apply(this,arguments);if(c&&c.human&&!c.forceAI&&dt>0&&Rc&&Rc.state==='race'&&!c.fin&&!(c.respT>0)&&Rc._pl&&pitOK(Rc))try{wear(c,dt)}catch(e){}return r};
+const s0=step;step=function(dt){const Rc=typeof RACE!=='undefined'?RACE:null;if(Rc&&Rc.cars&&!Rc._cam0){Rc._cam0=1;for(const c of Rc.cars)if(c.human)c.camX=0}if(Rc&&pitOK(Rc)){try{tick(Rc,dt)}catch(e){if(!Rc._pe){Rc._pe=1;console.warn('pit',e)}}}else{for(const e of QE)if(e)e.classList.remove('on');document.querySelectorAll('.ptPit').forEach(h=>h.classList.remove('ptPit'));for(const f of FE)if(f)f.style.opacity=0}return s0.apply(this,arguments)};
 /* the pit camera (Nov 15, Hakan: an angle like Gran Turismo's): once the car is nearly on its marks the view cuts to a low three-quarter shot from the lane side,
    the car and its crew in front of the pit wall and the tents, and stays there until the car pulls away. Set after the camera layer so it has the last word. */
 setTimeout(()=>{const pc=soloCam;soloCam=function(c,dt,out){pc.apply(this,arguments);try{const st=c&&c._pit,b=st&&st.b;if(!st||!b||!b.W||!out||!out.p)return;
-  const on=st.ph==='qte'||st.ph==='back'||(st.ph==='in'&&b.s-st.s<5.5)||(st.ph==='go'&&st.t<.9);if(!on)return;
+  const on=st.ph==='qte'||st.ph==='back'||st.ph==='fade'||st.ph==='menu1'||st.ph==='menu2'||(st.ph==='in'&&b.s-st.s<5.5);if(!on)return;
   const r=c.rect,asp=r?(r[2]*innerWidth)/Math.max(1,r[3]*innerHeight):1.78,nar=asp<1.25,dr=st.ph==='qte'?Math.sin(st.t*.35)*.25:0;
   const a=b.W(nar?-4.9:-4.5,(nar?4.4:3.9)+dr),l=b.W(.25,.15);out.p.set(a.x,a.y+.85,a.z);out.l.set(l.x,l.y+(nar?-.05:.3),l.z);out.f=nar?60:46;c.cb=0;c.inTn=false}catch(e){}}},600);
-P.pit={lane:Rc=>lane(Rc||RACE),KEYS,loadCrew,enter:(c)=>{const Rc=RACE,PL=lane(Rc);if(PL&&!c._pit)enter(Rc,c,PL,PL.near(PL.X[12],PL.Z[12]).i)}};
+P.pit={pick:(c,i)=>pick(RACE,c,i),lane:Rc=>lane(Rc||RACE),KEYS,loadCrew,enter:(c)=>{const Rc=RACE,PL=lane(Rc);if(PL&&!c._pit)enter(Rc,c,PL,PL.near(PL.X[12],PL.Z[12]).i)}};
 })();

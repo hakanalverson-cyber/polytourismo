@@ -11,7 +11,7 @@
 'use strict';
 const P=window.PT8;if(!P||!P.ui||!P.CARS||typeof THREE==='undefined')return;
 const $=id=>document.getElementById(id),BYID=P.BYID,CLS=P.CLS,fmtCr=P.fmtCr,fmtT=P.fmtT||(t=>t.toFixed(2));
-const QP_K=.25;
+const QP_K=0;/* Nov 16 (Hakan): Quick Play gives no money at all */
 const esc_=s=>String(s).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]);
 const V3=(x,y,z)=>new THREE.Vector3(x||0,y||0,z||0);
 
