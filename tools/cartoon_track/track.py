@@ -75,11 +75,40 @@ def ring(M,H,x0,z0,cell):
   Hf=np.where(np.isnan(H),np.nanmean(H),H);hy=Hf[pa[:,0].astype(int),pa[:,1].astype(int)]
   pa=pa[::8];w=w[::8];hy=hy[::8]
   return np.c_[x0+pa[:,1]*cell,hy,z0+pa[:,0]*cell],w
+def rays(M,H,x0,z0,cell):
+  # a plain oval: cast rays from the middle, keep the widest-but-not-paddock outermost road run per angle, interpolate the gaps
+  rc=cc['rays'];ys,xs=np.nonzero(M);cy,cx=(ys.min()+ys.max())/2,(xs.min()+xs.max())/2
+  if rc.get('c'):cx,cy=rc['c']
+  N=720;mid=np.full((N,2),np.nan);wd=np.full(N,np.nan)
+  lo,hi=rc.get('w',[30,70])  # accepted run widths in cells
+  for i,a in enumerate(np.linspace(0,2*np.pi,N,endpoint=False)):
+    r=np.arange(0,900,.5);y=(cy+r*np.sin(a)).round().astype(int);x=(cx+r*np.cos(a)).round().astype(int);ok=(y>=0)&(y<M.shape[0])&(x>=0)&(x<M.shape[1]);v=np.zeros(len(r),bool);v[ok]=M[y[ok],x[ok]]
+    d=np.diff(np.r_[0,v.astype(int),0]);s_=np.nonzero(d==1)[0];e_=np.nonzero(d==-1)[0]
+    runs=[(r[p],r[q-1]) for p,q in zip(s_,e_) if (r[q-1]-r[p])>=lo]
+    dg=np.degrees(a)
+    if runs and not any(x0_<=dg<=x1_ for x0_,x1_ in rc.get('skip',[])):
+      a0,b0=runs[-1]
+      if b0-a0<=rc.get('w',[30,70])[1]:mid[i]=(a0+b0)/2;wd[i]=b0-a0
+      else:mid[i]=b0-rc.get('W',49)/2;wd[i]=rc.get('W',49)
+  np.save(C['work']+'/rays_dbg.npy',np.c_[mid[:,0],wd]);np.save(C['work']+'/rays_M.npy',M);good=~np.isnan(mid[:,0])
+  from scipy.ndimage import median_filter as _mf
+  for _ in range(3):  # drop picks on a different road than the ring: outliers against a wide running median
+    r0=np.interp(np.arange(N),np.arange(N)[good],mid[good,0],period=N);good&=~(np.abs(r0-_mf(r0,size=61,mode='wrap'))>rc.get('tol',1e9))
+  idx=np.arange(N);rr=np.interp(idx,idx[good],np.where(good,(mid[:,0]),0)[good],period=N);ww=np.interp(idx,idx[good],wd[good],period=N)
+  ang=np.linspace(0,2*np.pi,N,endpoint=False);print('ray gaps',int((~good).sum()),'of',N)
+  from scipy.ndimage import median_filter,uniform_filter1d
+  gx=cx+mid[:,0]*np.cos(ang);gy=cy+mid[:,0]*np.sin(ang);px=np.interp(idx,idx[good],gx[good],period=N);py=np.interp(idx,idx[good],gy[good],period=N)
+  for _ in range(rc.get('smooth',10)):px=(np.roll(px,1)+2*px+np.roll(px,-1))/4;py=(np.roll(py,1)+2*py+np.roll(py,-1))/4
+  ww=np.full(N,np.median(ww))
+  Hf=np.where(np.isnan(H),np.nanmean(H),H);hy=Hf[py.round().astype(int).clip(0,M.shape[0]-1),px.round().astype(int).clip(0,M.shape[1]-1)]
+  np.save(C['work']+'/rays_fin.npy',np.c_[px,py])
+  return np.c_[x0+px*cell,hy,z0+py*cell],ww*cell
 def skeleton(v,f):
   # the road mask is a ring: walk its outer contour, pair each point with the nearest point of the inner contour
   from skimage import measure
   cell=cc.get('cell',.25);x0,z0=v[:,[0,2]].min(0)-4*cell;nx,nz=(np.ceil((v[:,[0,2]].max(0)-[x0,z0])/cell)+8).astype(int)
   H=raster(v,f,x0,z0,nx,nz,cell);M=~np.isnan(H);M=ndimage.binary_closing(M,iterations=3);M=ndimage.binary_opening(M,iterations=2)
+  if cc.get('rays'):return rays(M,H,x0,z0,cell)
   M=gates(M,x0,z0,cell);lab,nl=ndimage.label(M);M=lab==np.argmax(np.bincount(lab.ravel())[1:])+1
   if cc.get('prune'):return ring(M,H,x0,z0,cell)
   cs=sorted(measure.find_contours(M.astype(float),.5),key=lambda c:-len(c));out,inn=cs[0],cs[1]
@@ -106,6 +135,7 @@ R=sm(R,3);Wr=sm(Wr,4)
 area=0.5*np.sum(R[:,0]*np.roll(R[:,2],-1)-np.roll(R[:,0],-1)*R[:,2])
 if np.sign(area)!=C['sign']:R=R[::-1];Wr=Wr[::-1]
 st=C['start'];sv=np.concatenate([d[n+'_v'] for n in pick(st['mesh'])]).astype(np.float64)*S
+if st.get('at'):sv=np.array([[st['at'][0]*S,0,st['at'][1]*S]])
 if st['mode']=='centroid':k0=int(np.argmin(np.linalg.norm(R[:,[0,2]]-sv.mean(0)[[0,2]],axis=1)))
 else:  # the furthest point of the start boxes along the lap, plus a few metres
   _,ii=cKDTree(R[:,[0,2]]).query(sv[:,[0,2]]);ii=np.unique(ii);c0=int(np.median(ii));rel=(ii-c0+len(R)//2)%len(R)-len(R)//2;k0=(c0+rel.max()+int(st.get('ahead',6)/8))%len(R)

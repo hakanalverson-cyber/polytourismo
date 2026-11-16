@@ -11,36 +11,32 @@
   "method": "skeleton",
   "mesh": "1TARMAC",
   "cell": 0.5,
-  "prune": 1,
-  "block": [
-   [
-    -137.8,
-    -38.9,
-    22
+  "rays": {
+   "w": [
+    20,
+    75
    ],
-   [
-    121,
-    -43.7,
-    22
+   "c": [
+    593,
+    308
    ],
-   [
-    103.8,
-    -266.2,
-    22
+   "skip": [
+    [
+     50,
+     135
+    ]
    ],
-   [
-    -142.6,
-    -283.3,
-    22
-   ]
-  ]
+   "W": 45
+  }
  },
  "sign": 1,
  "start": {
   "mesh": "line_seg_42",
-  "mode": "front",
-  "ahead": 8,
-  "boxes": "line_seg_42"
+  "mode": "centroid",
+  "at": [
+   -1.9574479166666665,
+   -27.603333333333335
+  ]
  },
  "ground": [
   [
@@ -75,10 +71,11 @@
  "rock": "Cylinder001_rock",
  "colliders": "barriers_003|wall_a|wall_d|wall_end|plastic_barrier|wall_fence",
  "skip": "^$",
- "bake": "tree|tyre|startlights",
+ "bake": "tree|tyre|startlights|wall_[ade]|plastic|lamp|grandstand|barriers",
  "ratio": {
-  "tree": 0.16,
-  "tyre": 0.14,
+  "tree": 0.1,
+  "tyre": 0.1,
+  "wall_[ade]|plastic|lamp|grandstand|barriers": 0.35,
   "default": 0.2
  },
  "bigtex": [
