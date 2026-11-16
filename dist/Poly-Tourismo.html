@@ -23827,11 +23827,11 @@ const css=document.createElement('style');css.textContent=`
 .ptQ.on{display:block}
 .ptQ .bar{position:absolute;left:calc(50% + var(--u)*22);width:max-content;top:calc(var(--u)*14);transform:translateX(-50%);display:flex;align-items:stretch;gap:calc(var(--u)*3);white-space:nowrap}
 .ptQ .bar span{display:block;white-space:nowrap;flex:none;padding:0 calc(var(--u)*8);font:600 calc(var(--u)*11)/calc(var(--u)*30) "PTExo",var(--gt,Inter,sans-serif);letter-spacing:.14em;color:#aeb6bd;background:rgba(20,22,25,.82);border-radius:2px}
-.ptQ .bar span:nth-child(2){min-width:calc(var(--u)*94);text-align:center;box-sizing:border-box;padding:0 calc(var(--u)*5)}.ptQ .bar span{box-sizing:border-box}
+.ptQ .bar span:nth-child(1){min-width:calc(var(--u)*118);text-align:center;box-sizing:border-box;padding:0 calc(var(--u)*5)}.ptQ .bar span{box-sizing:border-box}
 .ptQ .bar span.on{color:#15181c;background:#f4f6f7}
 .ptQ .bar span.tm{color:#fff;background:#c81e1a;font-variant-numeric:tabular-nums;letter-spacing:.04em;min-width:calc(var(--u)*72);text-align:center;font-weight:700}
 .ptQ .pm{position:absolute;left:50%;width:max-content;bottom:calc(var(--u)*26);transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*9)}
-.ptQ .cap{font:700 calc(var(--u)*17) "PTExo",var(--gt,Inter,sans-serif);letter-spacing:.03em;color:#f2c76b;text-shadow:0 1px 0 #000,0 0 calc(var(--u)*8) #000b;white-space:nowrap}
+.ptQ .cap{font:700 calc(var(--u)*17) "PTExo",var(--gt,Inter,sans-serif);letter-spacing:.03em;color:#fff;text-shadow:0 1px 0 #000,0 0 calc(var(--u)*8) #000b;white-space:nowrap}
 .ptQ .cap i{font-style:normal;color:#ff8a80;margin-left:calc(var(--u)*10)}
 .ptQ .ks{display:flex;gap:calc(var(--u)*3)}
 .ptQ .ks b{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(var(--u)*5);min-width:calc(var(--u)*92);height:calc(var(--u)*68);padding:0 calc(var(--u)*10);box-sizing:border-box;border-radius:2px;background:rgba(36,38,41,.88);color:#e9edf0;font:700 calc(var(--u)*24)/1 "PTExo",var(--gt,Inter,sans-serif);border-bottom:calc(var(--u)*3) solid rgba(255,255,255,.12)}
@@ -23850,6 +23850,7 @@ const css=document.createElement('style');css.textContent=`
 .ptQ.bad .ks b.now{background:linear-gradient(180deg,#e0605a,#b02a24 50%,#8f1a15);box-shadow:inset 0 1px 0 #ffffffa0,0 0 16px #c81e1a90}
 .ptQ .ty .tg b{border-radius:calc(var(--u)*4);box-shadow:none;background:var(--c,#4ade80)}
 .ptQ .cap{font-family:var(--mn,"PTExo",sans-serif)}
+.ptQ .bar span.cn{pointer-events:auto;cursor:pointer;min-width:calc(var(--u)*86);text-align:center}.ptQ .bar span.cn:hover{color:#fff;background:linear-gradient(180deg,#e0605a,#b02a24 50%,#8f1a15)}.ptQ .bar span.cn.off{opacity:.35;pointer-events:none}
 .ptFade{z-index:45}
 .ptQ .ty{display:flex;align-items:center;gap:calc(var(--u)*10);padding:calc(var(--u)*7) calc(var(--u)*10);background:rgba(20,22,25,.82);border-radius:2px}
 .ptQ .ty .tg{display:grid;grid-template-columns:repeat(2,calc(var(--u)*52));gap:calc(var(--u)*3)}
@@ -23865,13 +23866,13 @@ const css=document.createElement('style');css.textContent=`
 .ptPit .h8spd,.ptPit .gtPc:not([data-k=MM]),.ptPit .gtTy,.ptPit .gtBrk{opacity:0!important;transition:opacity .4s}
 .h8spd,.gtPc,.gtTy,.gtBrk{transition:opacity .4s}`;document.head.appendChild(css);
 const QE=[null,null];
-function qel(k){if(QE[k]&&QE[k].isConnected)return QE[k];const e=document.createElement('div');e.className='ptQ';e.innerHTML='<div class="bar"><span>PIT IN</span><span>REPAIR</span><span>PIT OUT</span><span class="tm"></span></div><div class="pm"><div class="cap"></div><div class="ty" style="display:none"></div><div class="ks"></div></div>';document.body.appendChild(e);return QE[k]=e}
+function qel(k){if(QE[k]&&QE[k].isConnected)return QE[k];const e=document.createElement('div');e.className='ptQ';e.innerHTML='<div class="bar"><span>SERVICE</span><span class="cn">CANCEL</span><span class="tm"></span></div><div class="pm"><div class="cap"></div><div class="ty" style="display:none"></div><div class="ks"></div></div>';document.body.appendChild(e);return QE[k]=e}
 function qPlace(c,e){const r=c.rect||[0,0,1,1],w=r[2]*innerWidth,h=r[3]*innerHeight;e.style.left=(r[0]*100)+'%';e.style.top=((1-(r[1]+r[3]))*100)+'%';e.style.width=(r[2]*100)+'%';e.style.height=(r[3]*100)+'%';e.style.setProperty('--u',Math.max(.6,Math.min(w/640,1.4)).toFixed(3)+'px');e.style.setProperty('--vw',w.toFixed(0)+'px')}
 const fmtT=t=>{const m=Math.floor(t/60),s=t-m*60;return m+':'+(s<10?'0':'')+s.toFixed(3)};
 /* the strip across the top: where the stop has got to, and its clock */
-function qBar(c,st,step){const e=qel(c.k);qPlace(c,e);e.classList.add('on');const sp=e.querySelectorAll('.bar span');if(e._s!==step){e._s=step;for(let i=0;i<3;i++)sp[i].classList.toggle('on',i===step);if(step!==1)sp[1].textContent='SERVICE'}
- const t=fmtT(Math.max(0,st.T));if(e._t!==t){e._t=t;sp[3].textContent=t}return e}
-function qShow(c,st){const e=qBar(c,st,1);e.classList.remove('msg');e.classList.remove('mnu');e._m=null;const sp=e.querySelectorAll('.bar span')[1],tx=(st.svc==='tyre'?'TYRE SWAP ':'REPAIR ')+(st.stg+1)+'/'+STAGES.length;if(sp.textContent!==tx)sp.textContent=tx;
+function qBar(c,st,step){const e=qel(c.k);qPlace(c,e);e.classList.add('on');const sp=e.querySelectorAll('.bar span');if(e._s!==step){e._s=step;sp[0].classList.toggle('on',step<2);sp[1].classList.toggle('off',step>1);if(step!==1)sp[0].textContent='SERVICE'}
+ const t=fmtT(Math.max(0,st.T));if(e._t!==t){e._t=t;sp[2].textContent=t}return e}
+function qShow(c,st){const e=qBar(c,st,1);e.classList.remove('msg');e.classList.remove('mnu');e._m=null;const sp=e.querySelectorAll('.bar span')[0],tx=(st.svc==='tyre'?'TYRE SWAP ':'REPAIR ')+(st.stg+1)+'/'+STAGES.length;if(sp.textContent!==tx)sp.textContent=tx;
  e.querySelector('.cap').innerHTML=((st.svc==='tyre'?SNAMET:SNAME)[st.stg]||'REPAIR')+(st.pen>0?'<i>+'+st.pen.toFixed(0)+' s</i>':'');
  e.querySelector('.ks').innerHTML=st.q.map((q,i)=>'<b data-n="'+(i+1)+'" class="'+(i<st.qi?'ok':i===st.qi?'now':'')+'">'+q[1]+'</b>').join('')}
 function hudPit(c,on){const h=document.getElementById('h'+c.k);if(h)h.classList.toggle('ptPit',!!on)}
@@ -23880,11 +23881,11 @@ const newQ=(c,n)=>{const s=KEYS[c.k===1?1:0];let last=-1;return Array.from({leng
 /* the two menus: PIT IN / PIT OUT, then REPAIR / TIRE SWAP. The tyre meter (one box per tyre, green good to red worn, and the grip bar) shows on the second */
 const tyCol=v=>'hsl('+Math.round(125*Math.pow(cl((v-.05)/.9,0,1),.8))+' 72% 52%)';
 function qMenu(c,st){const e=qBar(c,st,0);e.classList.remove('msg');e.classList.add('mnu');const m=st.ph==='menu1',w=c._tw||[1,1,1,1],g=c._tyG==null?1:c._tyG,kh=c.k===1?['←','→']:['Q','E'];
- const sig=(m?1:2)+'|'+Math.round(g*100)+'|'+w.map(v=>Math.round(v*100)).join(',')+'|'+Math.round((c.dmg||0)*100);if(e._m===sig)return;e._m=sig;
- const O=m?[['PIT IN','REPAIR OR NEW TYRES'],['PIT OUT','BACK TO THE RACE']]:[['REPAIR','FIX THE DAMAGE'+((c.dmg||0)>.02?'  '+Math.round(c.dmg*100)+'%':'')],['TIRE SWAP','A FRESH SET OF FOUR']];
+ const pc=v=>'<em style="font-style:normal;color:'+tyCol(v)+'">'+Math.round(v*100)+'%</em>';const sig=(m?1:2)+'|'+Math.round(g*100)+'|'+w.map(v=>Math.round(v*100)).join(',')+'|'+Math.round((c.dmg||0)*100);if(e._m===sig)return;e._m=sig;
+ const O=m?[['PIT IN','REPAIR OR NEW TYRES'],['PIT OUT','BACK TO THE RACE']]:[['REPAIR','FIX THE DAMAGE  '+pc(1-(c.dmg||0))],['TIRE SWAP','TYRE CONDITION  '+pc((w[0]+w[1]+w[2]+w[3])/4)]];
  e.querySelector('.cap').textContent=m?'PIT STOP':'CHOOSE THE WORK';
- const ty=e.querySelector('.ty');ty.style.display=m?'none':'flex';
- if(!m)ty.innerHTML='<div class="tg">'+['FL','FR','RL','RR'].map((n,i)=>'<b data-p="'+n+'" style="--c:'+tyCol(w[i])+'">'+Math.round(w[i]*100)+'%</b>').join('')+'</div><div class="gp">TYRE GRIP<div style="--c:'+tyCol(g)+'"><i style="width:'+Math.round(g*100)+'%"></i></div><em>'+Math.round(g*100)+'%</em></div>';
+ const ty=e.querySelector('.ty');ty.style.display='none';
+ if(0)ty.innerHTML='<div class="tg">'+['FL','FR','RL','RR'].map((n,i)=>'<b data-p="'+n+'" style="--c:'+tyCol(w[i])+'">'+Math.round(w[i]*100)+'%</b>').join('')+'</div><div class="gp">TYRE GRIP<div style="--c:'+tyCol(g)+'"><i style="width:'+Math.round(g*100)+'%"></i></div><em>'+Math.round(g*100)+'%</em></div>';
  e.querySelector('.ks').innerHTML=O.map((o,i)=>'<b data-n="'+kh[i]+'" data-i="'+i+'">'+o[0]+'<small>'+o[1]+'</small></b>').join('')}
 function pick(Rc,c,i){const st=c&&c._pit;if(!st||(st.ph!=='menu1'&&st.ph!=='menu2'))return;try{P.sfx&&P.sfx('select')}catch(e){}
  if(st.ph==='menu1'){if(i===0){st.ph='menu2';const e=qel(c.k);e._m=null;qMenu(c,st)}else{st.svc=null;startFade(c,st)}return}
@@ -23893,7 +23894,8 @@ const FE=[null,null];
 function fadeEl(c,on){let f=FE[c.k];if(!f||!f.isConnected){if(!on)return;f=FE[c.k]=document.createElement('div');f.className='ptFade';document.body.appendChild(f)}
  const r=c.rect||[0,0,1,1];f.style.left=(r[0]*100)+'%';f.style.top=((1-(r[1]+r[3]))*100)+'%';f.style.width=(r[2]*100)+'%';f.style.height=(r[3]*100)+'%';f.style.opacity=on?1:0}
 function startFade(c,st){st.ph='fade';st.t=0;const e=qBar(c,st,2);e.classList.add('msg');e.classList.remove('mnu');e._m=null;fadeEl(c,1)}
-addEventListener('click',ev=>{const b=ev.target&&ev.target.closest&&ev.target.closest('.ptQ .ks b[data-i]');if(!b)return;const Rc=typeof RACE!=='undefined'?RACE:null;if(!Rc||!Rc.cars)return;const k=QE.indexOf(b.closest('.ptQ')),c=Rc.cars.find(h=>h.human&&h.k===k);if(c)pick(Rc,c,+b.dataset.i)},true);
+addEventListener('click',ev=>{const cn=ev.target&&ev.target.closest&&ev.target.closest('.ptQ .bar .cn');if(cn){const Rc=typeof RACE!=='undefined'?RACE:null,k=QE.indexOf(cn.closest('.ptQ')),c=Rc&&Rc.cars&&Rc.cars.find(h=>h.human&&h.k===k),st=c&&c._pit;if(st&&(st.ph==='menu1'||st.ph==='menu2'||st.ph==='qte')){st.svc=null;try{P.sfx&&P.sfx('back')}catch(e){}startFade(c,st)}return}
+ const b=ev.target&&ev.target.closest&&ev.target.closest('.ptQ .ks b[data-i]');if(!b)return;const Rc=typeof RACE!=='undefined'?RACE:null;if(!Rc||!Rc.cars)return;const k=QE.indexOf(b.closest('.ptQ')),c=Rc.cars.find(h=>h.human&&h.k===k);if(c)pick(Rc,c,+b.dataset.i)},true);
 addEventListener('keydown',ev=>{const Rc=typeof RACE!=='undefined'?RACE:null;if(!Rc||!Rc.cars||typeof scr==='undefined'||scr!=='game'||ev.repeat)return;
  for(const c of Rc.cars){const st=c._pit;if(st&&(st.ph==='menu1'||st.ph==='menu2')){const mk=c.k===1?['ArrowLeft','ArrowRight']:['KeyQ','KeyE'],i=mk.indexOf(ev.code);if(i>=0){ev.preventDefault();pick(Rc,c,i)}continue}
   if(!st||st.ph!=='qte'||!st.q||st.qi>=st.q.length)continue;const set=KEYS[c.k===1?1:0];if(!set.some(q=>q[0]===ev.code))continue;
