@@ -27,7 +27,7 @@ P.trackPacks={};
    (road, heights, scenery, walls, start boxes) and the file then counts as carScale 1: cars drawn at their real size, no dial factor, no time
    scale, no extra top speed or pickup, so the handling is the Quick Play one. PTO.mapScale=false switches it off. */
 const MEDSC={ra:73.7,imola:71.4,laguna:68.0,suzuka:93.4,hungaroring:79.5,bathurst:100.9,spa:109.8,nurburg:76.6,oval:70,monza:100,interlagos:85,silverstone:95,florence:90};
-function mapScalePack(pack){if(pack._sc||!(pack.stage||pack.carScale>1)||(window.PTO&&window.PTO.mapScale===false))return;const k=pack.carScale||1;if(!(k>1))return;const f=(1/k)*(pack.stage?1.12:.94);/* Nov 12 (Hakan): rally stages a little bigger, circuits a little smaller than car scale */
+function mapScalePack(pack){if(pack._sc||!(pack.stage||pack.carScale>1)||(window.PTO&&window.PTO.mapScale===false))return;const k=pack.carScale||1;if(!(k>1))return;const f=(1/k)*(pack.stage?1.12:.94)*(({oval:2.1,silverstone:1.3})[pack.replaces]||1);/* Nov 16 (Hakan: some maps are not to scale): the Oval was a 0.8 km lap and Silverstone about a third of the real one, the rest sit near half *//* Nov 12 (Hakan): rally stages a little bigger, circuits a little smaller than car scale */
  pack.pts=pack.pts.map(q=>[q[0]*f,q[1]*f,q[2]*f,q[3]*f]);pack.S=(pack.S||1)*f;const G=pack.grid;G.x0*=f;G.z0*=f;G.cell*=f;G.hs=f;
  pack.over=(pack.over||[]).map(a=>[a[0]*f,a[1]*f]);pack.slots=(pack.slots||[]).map(q=>[q[0]*f,q[1]*f,q[2]*f]);pack.sf=f;
  for(const m of pack.meshes){m.q*=f;m.o=m.o.map(v=>v*f)}

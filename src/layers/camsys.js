@@ -78,18 +78,18 @@ function install(){
     It only looks at the lens position, aim and zoom, so it needs nothing from the car model. */
  const _fp=new V(),_fl=new V();
  soloCam=function(c,dt,out){inner.apply(this,arguments);try{if(!(c&&c.human))return;
-  const key=(c.fin?1:0)+'|'+(c.tnB>.5?1:0)+'|'+(c.respT>0?1:0),ukey=((c.camX|0)+1)+(c._lb?'b':''),d=Math.min(.1,dt||.016);
+  const cnt=RACE&&RACE.state==='count'?1:0,key=(c.fin?1:0)+'|'+(c.tnB>.5?1:0)+'|'+(c.respT>0?1:0)+'|'+cnt,ukey=((c.camX|0)+1)+(c._lb?'b':''),d=Math.min(.1,dt||.016);
   /* Nov 13 (Hakan): a camera the player picks (the camera key, look-behind) switches instantly; only views the game forces (bridge, finish, restart) are blended */
   if(c._uk!==ukey){c._uk=ukey;c._bt=1}
   const yw=c.cy!=null?c.cy:c.yaw,sy=Math.sin(yw),cy=Math.cos(yw);
   /* Nov 13 (Hakan: it shoots backwards, then forwards): the old view is kept as an offset from the car (along it, across it, up), not as a spot in the
      world, so while the blend runs the old lens travels with the car instead of being left behind and then chased */
   const loc=(p,o)=>{const dx=p.x-c.x,dz=p.z-c.z;o.f=dx*sy+dz*cy;o.s=dx*cy-dz*sy;o.y=p.y-c.y;return o},wld=(o,v)=>v.set(c.x+o.f*sy+o.s*cy,c.y+o.y,c.z+o.f*cy-o.s*sy);
-  if(c._bk!==key&&c._bp){c._bk=key;c._bt=0;c._bfpL=loc(c._bp,{});c._bflL=loc(c._bl,{});c._bff=c._bf;c._bfp=wld(c._bfpL,new V());c._bfl=wld(c._bflL,new V())}else if(c._bk==null)c._bk=key;
-  if(c._bt!=null&&c._bt<1){c._bt=Math.min(1,c._bt+d/.8);const u=c._bt,e=u*u*u*(u*(u*6-15)+10);
+  if(c._bk!==key&&c._bp){c._bkC=c._bc===1&&!cnt;c._bc=cnt;c._bk=key;c._bt=0;c._bfpL=loc(c._bp,{});c._bflL=loc(c._bl,{});c._bff=c._bf;c._bfp=wld(c._bfpL,new V());c._bfl=wld(c._bflL,new V())}else if(c._bk==null){c._bk=key;c._bc=cnt}
+  if(c._bt!=null&&c._bt<1){c._bt=Math.min(1,c._bt+d/(c._bkC?1.3:.8));const u=c._bt,e=u*u*u*(u*(u*6-15)+10);
    wld(c._bfpL,c._bfp);wld(c._bflL,c._bfl);
    /* a jump of more than 60 m is a respawn or a restart: no slide */
-   if(c._bfp.distanceTo(out.p)>60){c._bt=1}else{out.p.lerpVectors(c._bfp,out.p,e);out.l.lerpVectors(c._bfl,out.l,e);out.f=c._bff+(out.f-c._bff)*e}}
+   if(c._bfp.distanceTo(out.p)>(c._bkC?400:60)){c._bt=1}else{out.p.lerpVectors(c._bfp,out.p,e);out.l.lerpVectors(c._bfl,out.l,e);out.f=c._bff+(out.f-c._bff)*e}}
   c._bp=(c._bp||new V()).copy(out.p);c._bl=(c._bl||new V()).copy(out.l);c._bf=out.f}catch(e){}};
 }
 const _rc=new THREE.Raycaster(),_ro=new V(),_rd=new V(),_up=new V();
