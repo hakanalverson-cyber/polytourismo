@@ -1,0 +1,149 @@
+{
+ "id": "monza",
+ "name": "Monza",
+ "replaces": "monza",
+ "credit": "Cartoon Race Track Monza (Retro Cartoon Racing), bought by Hakan",
+ "work": "/tmp/cv/w_Monza",
+ "texdir": "/tmp/cv/Monza/textures/",
+ "carScale": 1.8,
+ "centre": {
+  "method": "skeleton",
+  "mesh": "TARMAC_MAIN|TARMAC_T1|road_secondary",
+  "cell": 0.4,
+  "prune": 1,
+  "via": [
+   [
+    148.2,
+    237.92000000000002
+   ],
+   [
+    -161.8,
+    127.92000000000002
+   ],
+   [
+    -291.8,
+    57.920000000000016
+   ],
+   [
+    -399.8,
+    -97.07999999999998
+   ],
+   [
+    -376.8,
+    -297.08
+   ],
+   [
+    -381.8,
+    -472.08
+   ],
+   [
+    -231.8,
+    -457.08
+   ],
+   [
+    -191.8,
+    -327.08
+   ],
+   [
+    -111.80000000000001,
+    -157.07999999999998
+   ],
+   [
+    -31.80000000000001,
+    -17.079999999999984
+   ],
+   [
+    33.19999999999999,
+    42.920000000000016
+   ],
+   [
+    148.2,
+    74.92000000000002
+   ],
+   [
+    388.2,
+    164.92000000000002
+   ],
+   [
+    458.2,
+    202.92000000000002
+   ],
+   [
+    408.2,
+    272.92
+   ],
+   [
+    288.2,
+    272.92
+   ]
+  ]
+ },
+ "sign": 1,
+ "start": {
+  "mesh": "Box001_white_line_montreal",
+  "mode": "front",
+  "ahead": 6,
+  "boxes": "Box001_white_line_montreal",
+  "cluster": 1
+ },
+ "ground": [
+  [
+   "grass_2_grass_2",
+   0,
+   0
+  ],
+  [
+   "grass_collider",
+   0,
+   -0.02
+  ],
+  [
+   "sand_patches",
+   3,
+   0.05
+  ],
+  [
+   "gravel_trap",
+   3,
+   0.06
+  ],
+  [
+   "tarmac_dirty",
+   2,
+   0.08
+  ],
+  [
+   "road_secondary",
+   2,
+   0.1
+  ],
+  [
+   "TARMAC",
+   1,
+   0.12
+  ]
+ ],
+ "lift": {
+  "white_line": 0.15
+ },
+ "colliders": "collider",
+ "skip": "collider|grass_collider",
+ "bake": "trees|startlights|prop_cone|seats|fence",
+ "ratio": {
+  "trees": 0.12,
+  "seats": 0.2,
+  "default": 0.2
+ },
+ "bigtex": [
+  "road",
+  "garages",
+  "banners"
+ ],
+ "alpha": [
+  "fence"
+ ],
+ "sat": 1.3,
+ "medal": 60,
+ "overhead": "trees|grass|gravel|sand|tarmac|TARMAC|white_line|startlights|fence|seats",
+ "width": 24
+}

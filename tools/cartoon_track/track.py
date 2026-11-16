@@ -103,12 +103,31 @@ def rays(M,H,x0,z0,cell):
   Hf=np.where(np.isnan(H),np.nanmean(H),H);hy=Hf[py.round().astype(int).clip(0,M.shape[0]-1),px.round().astype(int).clip(0,M.shape[1]-1)]
   np.save(C['work']+'/rays_fin.npy',np.c_[px,py])
   return np.c_[x0+px*cell,hy,z0+py*cell],ww*cell
+def viaPath(M,H,x0,z0,cell):
+  # waypoints (model units) snapped onto the road mask, joined by least-cost paths that hug the middle of the road: a closed loop through any network of roads
+  from skimage.graph import route_through_array
+  from scipy.ndimage import distance_transform_edt
+  dt=distance_transform_edt(M);cost=np.where(M,1+(dt.max()-dt)**2/ (dt.max()**2)*40,1e4)
+  idx=np.argwhere(M);vp=[]
+  for x,z in cc['via']:
+    p=np.array([(z-z0)/cell,(x-x0)/cell]);k=np.argmin(((idx-p)**2).sum(1));vp.append(tuple(idx[k]))
+  path=[]
+  for a,b in zip(vp,vp[1:]+vp[:1]):
+    r,_=route_through_array(cost,a,b,fully_connected=True,geometric=True);path+=r[:-1]
+  pa=np.array(path,float);w=dt[pa[:,0].astype(int),pa[:,1].astype(int)]*2*cell
+  Hf=np.where(np.isnan(H),np.nanmean(H),H);hy=Hf[pa[:,0].astype(int),pa[:,1].astype(int)]
+  np.save(C['work']+'/via_fin.npy',pa);np.save(C['work']+'/ringM.npy',M)
+  from scipy.ndimage import uniform_filter1d
+  k=int(cc.get('sm',12));pa=np.c_[uniform_filter1d(pa[:,0],k,mode='wrap'),uniform_filter1d(pa[:,1],k,mode='wrap')];w=uniform_filter1d(w,40,mode='wrap');hy=uniform_filter1d(hy,k,mode='wrap')
+  st=max(1,int(round(4/cell)));pa=pa[::st];w=w[::st];hy=hy[::st];print('via loop pixels',len(path),'pts',len(pa))
+  return np.c_[x0+pa[:,1]*cell,hy,z0+pa[:,0]*cell],w
 def skeleton(v,f):
   # the road mask is a ring: walk its outer contour, pair each point with the nearest point of the inner contour
   from skimage import measure
   cell=cc.get('cell',.25);x0,z0=v[:,[0,2]].min(0)-4*cell;nx,nz=(np.ceil((v[:,[0,2]].max(0)-[x0,z0])/cell)+8).astype(int)
   H=raster(v,f,x0,z0,nx,nz,cell);M=~np.isnan(H);M=ndimage.binary_closing(M,iterations=3);M=ndimage.binary_opening(M,iterations=2)
   if cc.get('rays'):return rays(M,H,x0,z0,cell)
+  if cc.get('via'):return viaPath(M,H,x0,z0,cell)
   M=gates(M,x0,z0,cell);lab,nl=ndimage.label(M);M=lab==np.argmax(np.bincount(lab.ravel())[1:])+1
   if cc.get('prune'):return ring(M,H,x0,z0,cell)
   cs=sorted(measure.find_contours(M.astype(float),.5),key=lambda c:-len(c));out,inn=cs[0],cs[1]

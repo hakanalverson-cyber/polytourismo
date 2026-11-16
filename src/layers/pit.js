@@ -22,7 +22,7 @@ const LANES={ra:(()=>{const o=[64.11,-836.97],u=[.8405,.5417],n=[-.5417,.8405],K
    most paved ground, a fast lane just off the road edge with the boxes in a row further out. It is only built where the ground is paved and free of walls the
    whole way (checked on the pack's surface grid and wall segments); the entry is a ramp off the road edge, the exit a ramp back onto it. */
 /* per circuit, measured on the model: side (1 right, -1 left of the direction of travel), lane distance from the centreline, box row distance beyond the lane */
-const TUNE={imola:{sg:-1,D:23,S:4},hungaroring:{sg:-1,D:13.5,S:3.5},bathurst:{sg:1,D:20,S:3},spa:{sg:-1,D:17.5,S:4},suzuka:{sg:-1,D:18,S:4},laguna:{sg:1,D:27,S:4}};
+const TUNE={imola:{sg:-1,D:23,S:4},hungaroring:{sg:-1,D:13.5,S:3.5},bathurst:{sg:1,D:20,S:3},spa:{sg:-1,D:17.5,S:4},suzuka:{sg:-1,D:18,S:4},laguna:{sg:1,D:27,S:4},monza:{sg:-1,D:13,S:4},silverstone:{sg:-1,D:11,S:3},interlagos:{sg:1,D:10.5,S:2.5},florence:{sg:-1,D:12,S:3},oval:{sg:-1,D:9,S:3},nurburg:{sg:-1,D:11.5,S:3}};
 function autoLane(Rc){const T=Rc.T,pk=T.d&&T.d.cartoon,g=pk&&pk._g;if(!g||!T.psi||!T.hw)return null;const N=T.N,ds=T.sp,kAt=g.kAt;if(!(ds>0))return null;
  const ix=s=>((Math.round(s/ds)%N)+N)%N,X0=T.x[0],Z0=T.z[0];
  const ctr=s=>{const f=s/ds,i=Math.floor(f),t=f-i,a=((i%N)+N)%N,b=(a+1)%N;return[T.x[a]+(T.x[b]-T.x[a])*t,T.z[a]+(T.z[b]-T.z[a])*t,T.psi[a],T.hw[a]]};

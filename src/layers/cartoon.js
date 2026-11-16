@@ -17,16 +17,16 @@ function grid(pack){if(pack._g)return pack._g;const G=pack.grid,HG=new Int16Arra
   const ix=fx|0,iz=fz|0,tx=fx-ix,tz=fz-iz,i=iz*G.nx+ix;return(hv(i,y)*(1-tx)+hv(i+1,y)*tx)*(1-tz)+(hv(i+G.nx,y)*(1-tx)+hv(i+G.nx+1,y)*tx)*tz};
  const kAt=(x,z)=>{const ix=Math.round((x-G.x0)/G.cell),iz=Math.round((z-G.z0)/G.cell);return ix<0||iz<0||ix>=G.nx||iz>=G.nz?0:KG[iz*G.nx+ix]};
  return pack._g={hAt,kAt}}
-const baseOf=pack=>D.findIndex(d=>/^(imola|ra|laguna|suzuka|hungaroring|bathurst|spa|nurburg|oval)$/.test(pack.replaces)&&!!d[pack.replaces]);
+const baseOf=pack=>D.findIndex(d=>/^(imola|ra|laguna|suzuka|hungaroring|bathurst|spa|nurburg|oval|monza|interlagos|silverstone|florence)$/.test(pack.replaces)&&!!d[pack.replaces]);
 P.trackPacks={};
 /* the files' gold times were measured with cars 30% quicker and no grip limit; now (25% quicker, 1.6 g grip) a CPU time-trial lap takes
    this much longer: 95.5 -> 107.6 s at Road Atlanta, 98.4 -> 114.7 s at Imola */
-/* round 19: each x the CPU lap ratio after/before the slowdown; nurburg also for the longer lap (hairpin + Arena) */const MEDK={ra:.815,imola:.827,laguna:.796,suzuka:1.061,hungaroring:.884,spa:1.217,bathurst:1.036,nurburg:.849,oval:.85},ALAT=23,DFK=.35,DFMAX=1.5;/* tyre grip (16, then +20% and +20% more turning by request) limit on these tracks, m/s² (see the steering cap below) */
+/* round 19: each x the CPU lap ratio after/before the slowdown; nurburg also for the longer lap (hairpin + Arena) */const MEDK={ra:.815,imola:.827,laguna:.796,suzuka:1.061,hungaroring:.884,spa:1.217,bathurst:1.036,nurburg:.849,oval:.85,monza:.9,interlagos:.9,silverstone:.9,florence:.9},ALAT=23,DFK=.35,DFMAX=1.5;/* tyre grip (16, then +20% and +20% more turning by request) limit on these tracks, m/s² (see the steering cap below) */
 /* newest file wins (pack.rev = build time): an older copy saved in this browser never replaces a newer built-in one */
 /* Nov 12 (Hakan: leave the cars at normal size and change the map instead): on the listed tracks the whole model is shrunk by 1/carScale when the file loads
    (road, heights, scenery, walls, start boxes) and the file then counts as carScale 1: cars drawn at their real size, no dial factor, no time
    scale, no extra top speed or pickup, so the handling is the Quick Play one. PTO.mapScale=false switches it off. */
-const MEDSC={ra:73.7,imola:71.4,laguna:68.0,suzuka:93.4,hungaroring:79.5,bathurst:100.9,spa:109.8,nurburg:76.6,oval:70};
+const MEDSC={ra:73.7,imola:71.4,laguna:68.0,suzuka:93.4,hungaroring:79.5,bathurst:100.9,spa:109.8,nurburg:76.6,oval:70,monza:100,interlagos:85,silverstone:95,florence:90};
 function mapScalePack(pack){if(pack._sc||!(pack.stage||pack.carScale>1)||(window.PTO&&window.PTO.mapScale===false))return;const k=pack.carScale||1;if(!(k>1))return;const f=(1/k)*(pack.stage?1.12:.94);/* Nov 12 (Hakan): rally stages a little bigger, circuits a little smaller than car scale */
  pack.pts=pack.pts.map(q=>[q[0]*f,q[1]*f,q[2]*f,q[3]*f]);pack.S=(pack.S||1)*f;const G=pack.grid;G.x0*=f;G.z0*=f;G.cell*=f;G.hs=f;
  pack.over=(pack.over||[]).map(a=>[a[0]*f,a[1]*f]);pack.slots=(pack.slots||[]).map(q=>[q[0]*f,q[1]*f,q[2]*f]);pack.sf=f;

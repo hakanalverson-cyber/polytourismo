@@ -1,0 +1,190 @@
+{
+ "id": "silverstone",
+ "name": "Silverstone",
+ "replaces": "silverstone",
+ "credit": "Cartoon Race Track Silverstone (Retro Cartoon Racing), bought by Hakan",
+ "work": "/tmp/cv/w_Silverstone",
+ "texdir": "/tmp/cv/Silverstone/textures/",
+ "carScale": 1.8,
+ "centre": {
+  "method": "skeleton",
+  "mesh": "TARMAC_road|SS_bridge_tarmac",
+  "cell": 0.4,
+  "sm": 6,
+  "via": [
+   [
+    -355,
+    -20
+   ],
+   [
+    -345,
+    -190
+   ],
+   [
+    -200,
+    -205
+   ],
+   [
+    -90,
+    -205
+   ],
+   [
+    -60,
+    -175
+   ],
+   [
+    0,
+    -160
+   ],
+   [
+    60,
+    -170
+   ],
+   [
+    95,
+    -150
+   ],
+   [
+    150,
+    -90
+   ],
+   [
+    250,
+    10
+   ],
+   [
+    345,
+    100
+   ],
+   [
+    345,
+    140
+   ],
+   [
+    270,
+    190
+   ],
+   [
+    170,
+    210
+   ],
+   [
+    100,
+    270
+   ],
+   [
+    50,
+    225
+   ],
+   [
+    -40,
+    120
+   ],
+   [
+    -70,
+    100
+   ],
+   [
+    -130,
+    110
+   ],
+   [
+    -190,
+    95
+   ],
+   [
+    -215,
+    50
+   ],
+   [
+    -190,
+    0
+   ],
+   [
+    -290,
+    -10
+   ],
+   [
+    -330,
+    30
+   ],
+   [
+    -300,
+    95
+   ],
+   [
+    -345,
+    60
+   ]
+  ]
+ },
+ "sign": 1,
+ "start": {
+  "mesh": "start_line",
+  "mode": "front",
+  "ahead": 6,
+  "boxes": "start_line",
+  "cluster": 1
+ },
+ "ground": [
+  [
+   "grass_outside",
+   0,
+   -0.02
+  ],
+  [
+   "grass_2",
+   0,
+   0
+  ],
+  [
+   "sand_patches",
+   3,
+   0.05
+  ],
+  [
+   "gravel_trap",
+   3,
+   0.06
+  ],
+  [
+   "Stowe_tarmac_dirty",
+   2,
+   0.08
+  ],
+  [
+   "red_bumps",
+   2,
+   0.1
+  ],
+  [
+   "TARMAC_road|SS_bridge",
+   1,
+   0.12
+  ]
+ ],
+ "lift": {
+  "start_line": 0.15
+ },
+ "colliders": "collider",
+ "skip": "collider",
+ "bake": "tree|startlights|prop_cone|seats|fence|startlight",
+ "ratio": {
+  "tree": 0.12,
+  "seats": 0.2,
+  "default": 0.2
+ },
+ "bigtex": [
+  "road",
+  "garages",
+  "banners"
+ ],
+ "alpha": [
+  "fence"
+ ],
+ "sat": 1.3,
+ "medal": 60,
+ "overhead": "tree|grass|gravel|sand|tarmac|TARMAC|start_line|fence|seats|road|SS_",
+ "width": 24,
+ "treecol": 0
+}
