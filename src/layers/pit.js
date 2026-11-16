@@ -18,7 +18,35 @@ const LANES={ra:(()=>{const o=[64.11,-836.97],u=[.8405,.5417],n=[-.5417,.8405],K
  for(let t=-152;t<=264;t+=32)pts.push(at(t));
  pts.push([322,-702.5],[340,-684],[353,-665],[359.5,-645],[362,-625],[366,-606],[372,-590],[377,-573]);
  return{pts,boxes:[-26.2,7.9,41.1,141.2].map(t=>at(t)),boxT:[-26.2,7.9,41.1,141.2],tents:[-41.8,-26.2,-9.3,7.9,24.8,41.1,58.1,108,124.9,141.2,158.2,172.9],o,u,side:n,shift:10.53,entry:[10,42]}})()};
-const laneOf=Rc=>{const d=Rc&&Rc.T&&Rc.T.d,pk=d&&d.cartoon;return pk&&LANES[pk.replaces]?{L:LANES[pk.replaces],f:pk.sf||1}:null};
+/* Nov 16 (Hakan: pit lanes on every map): any other circuit gets its lane worked out from the track itself. The lane runs beside the start straight on the side with the
+   most paved ground, a fast lane just off the road edge with the boxes in a row further out. It is only built where the ground is paved and free of walls the
+   whole way (checked on the pack's surface grid and wall segments); the entry is a ramp off the road edge, the exit a ramp back onto it. */
+/* per circuit, measured on the model: side (1 right, -1 left of the direction of travel), lane distance from the centreline, box row distance beyond the lane */
+const TUNE={imola:{sg:-1,D:23,S:4},hungaroring:{sg:-1,D:13.5,S:3.5},bathurst:{sg:1,D:20,S:3},spa:{sg:-1,D:17.5,S:4},suzuka:{sg:-1,D:18,S:4},laguna:{sg:1,D:27,S:4}};
+function autoLane(Rc){const T=Rc.T,pk=T.d&&T.d.cartoon,g=pk&&pk._g;if(!g||!T.psi||!T.hw)return null;const N=T.N,ds=T.sp,kAt=g.kAt;if(!(ds>0))return null;
+ const ix=s=>((Math.round(s/ds)%N)+N)%N,X0=T.x[0],Z0=T.z[0];
+ const ctr=s=>{const f=s/ds,i=Math.floor(f),t=f-i,a=((i%N)+N)%N,b=(a+1)%N;return[T.x[a]+(T.x[b]-T.x[a])*t,T.z[a]+(T.z[b]-T.z[a])*t,T.psi[a],T.hw[a]]};
+ /* the wall segments near the start */
+ const walls=[];try{const sf=pk.sf||1,a=pk._segs||(pk._segs=new Float32Array(Uint8Array.from(atob(pk.segs),c=>c.charCodeAt(0)).buffer));for(let i=0;i<a.length;i+=4){const x1=a[i]*sf,z1=a[i+1]*sf,x2=a[i+2]*sf,z2=a[i+3]*sf;if(Math.min(Math.abs(x1-X0),Math.abs(x2-X0))<540&&Math.min(Math.abs(z1-Z0),Math.abs(z2-Z0))<540)walls.push([x1,z1,x2,z2])}}catch(e){}
+ const wd=(x,z)=>{let b=1e9;for(const w of walls){const dx=w[2]-w[0],dz=w[3]-w[1],l=dx*dx+dz*dz||1,t=cl(((x-w[0])*dx+(z-w[1])*dz)/l,0,1),d=Math.hypot(x-w[0]-dx*t,z-w[1]-dz*t);if(d<b)b=d}return b};
+ const hw0=T.hw[0];
+ const ok=(sg,lat,from,to,half)=>{for(let s=from;s<=to;s+=5){const c=ctr(s),nx=sg*Math.cos(c[2]),nz=-sg*Math.sin(c[2]);for(const o of[-half,0,half]){const x=c[0]+nx*(lat+o),z=c[1]+nz*(lat+o),k=kAt(x,z);if(k<1||k===3)return false}if(wd(c[0]+nx*lat,c[1]+nz*lat)<half+1)return false}return true};
+ /* the side with the most paved ground beside the straight */
+ const paved=sg=>{let n=0;for(let s=-60;s<=120;s+=10){const c=ctr(s),nx=sg*Math.cos(c[2]),nz=-sg*Math.sin(c[2]);for(let o=c[3]+2;o<c[3]+26;o+=3){const k=kAt(c[0]+nx*o,c[1]+nz*o);if(k===2)n+=1;else if(k===1)n+=.5}}return n};
+ const order=paved(1)>=paved(-1)?[1,-1]:[-1,1],tu=(window.PT8_PITTUNE||{})[pk.replaces]||TUNE[pk.replaces];
+ for(const sg of tu?[tu.sg]:order)for(const S of tu?[tu.S]:[9,7.5,6]){for(let D=tu?tu.D:hw0+3;D<=(tu?tu.D:hw0+10);D+=1){
+   if(!tu&&(!ok(sg,D,-30,40,2.6)||!ok(sg,D+S,-56,56,3.4)||!ok(sg,D,-150,150,2.2)))continue;
+   /* the entry and exit ramps have to go through a gap in the pit wall: the nearest gap before and after the line, found by trying each start (walls within 1.3 m of the ramp reject it) */
+   const e=hw0-1.5,RL=80,rampOK=(s0,dir)=>{for(let u=0;u<=RL;u+=4){const s=s0+dir*u,l=e+(D-e)*sm(u/RL),c=ctr(s),nx=sg*Math.cos(c[2]),nz=-sg*Math.sin(c[2]);if(l>hw0+2.5&&wd(c[0]+nx*l,c[1]+nz*l)<1.6)return false}return true};
+   let LS=-150,LE=150;if(tu){for(let t=-60-RL;t>=-460;t-=6)if(rampOK(t,1)){LS=t;break}for(let t=60+RL;t<=460;t+=6)if(rampOK(t,-1)){LE=t;break}}
+   /* the lane: off the road edge down the straight, back onto it */
+   const pts=[],lat=s=>{let w=1;if(s<LS+RL)w=sm((s-LS)/RL);else if(s>LE-RL)w=sm((LE-s)/RL);return e+(D-e)*w};
+   for(let s=LS;s<=LE;s+=6){const c=ctr(s),l=lat(s);pts.push([c[0]+sg*Math.cos(c[2])*l,c[1]-sg*Math.sin(c[2])*l])}
+   const c0=ctr(0),side=[sg*Math.cos(c0[2]),-sg*Math.sin(c0[2])],bt=[-32,-16,0,16,32],at0=t=>{const c=ctr(t);return[c[0]+sg*Math.cos(c[2])*D,c[1]-sg*Math.sin(c[2])*D]};
+   return{pts,boxes:bt.map(at0),boxT:bt,tents:null,side,shift:S,entry:[10,70],auto:1,sg,D,S,towards:(c,T2)=>{const sp=Math.hypot(c.vx,c.vz)||1,ps=T2.psi[((c.idx|0)%N+N)%N];return(c.vx*sg*Math.cos(ps)-c.vz*sg*Math.sin(ps))/sp>.03}}}}
+ return null}
+const laneOf=Rc=>{const d=Rc&&Rc.T&&Rc.T.d,pk=d&&d.cartoon;if(!pk)return null;if(LANES[pk.replaces])return{L:LANES[pk.replaces],f:pk.sf||1};
+ if(Rc._ln===undefined){Rc._ln=null;try{const L=autoLane(Rc);Rc._ln=L?{L,f:1}:null;console.log('pit lane',pk.replaces,L?'built, side '+L.sg+' D '+L.D.toFixed(1)+' S '+L.S:'none')}catch(e){console.warn('pit lane',e)}}return Rc._ln}
 /* dense path (about a metre a step) through the points, Catmull-Rom */
 function build(Rc){const q=laneOf(Rc);if(!q)return null;const {L,f}=q,c=L.pts.map(p=>[p[0]*f,p[1]*f]),X=[],Z=[],S=[];
  const g=i=>c[cl(i,0,c.length-1)];
@@ -29,7 +57,7 @@ function build(Rc){const q=laneOf(Rc);if(!q)return null;const {L,f}=q,c=L.pts.ma
  const near=(x,z)=>{let b=0,bd=1e18;for(let i=0;i<X.length;i++){const d=(X[i]-x)**2+(Z[i]-z)**2;if(d<bd){bd=d;b=i}}return{i:b,d:Math.sqrt(bd)}};
  const boxes=L.boxes.map(p=>{const x=p[0]*f,z=p[1]*f,i=cl(near(x,z).i,1,X.length-2),tx=X[i+1]-X[i-1],tz=Z[i+1]-Z[i-1],tl=Math.hypot(tx,tz)||1;/* to the centimetre, not the nearest path step */
   return{s:S[i]+((x-X[i])*tx+(z-Z[i])*tz)/tl,by:null,crew:null}});
- return{X,Z,S,len:s,boxes,side:L.side,shift:L.shift*f,entry:L.entry,near,box:14}}
+ return{X,Z,S,len:s,boxes,side:L.side,shift:L.shift*f,entry:L.entry,near,box:14,towards:L.towards}}
 /* a point on the lane at distance s, pulled sideways into box b around its stop point */
 function at(PL,s,b,out){const S=PL.S;let i=Math.min(S.length-2,Math.max(0,Math.floor(s/PL.len*(S.length-1))));while(i>0&&S[i]>s)i--;while(i<S.length-2&&S[i+1]<s)i++;
  const t=cl((s-S[i])/Math.max(1e-6,S[i+1]-S[i]),0,1);let x=PL.X[i]+(PL.X[i+1]-PL.X[i])*t,z=PL.Z[i]+(PL.Z[i+1]-PL.Z[i])*t;
@@ -75,7 +103,7 @@ function teamMat(T,team){const m0=T.sm.material,map=m0&&m0.map,key=(map?map.uuid
 const WAYS=[[[1.5,1.35]],[[1.5,-1.35]],[[1.8,3.3],[-1.75,3.3],[-1.5,1.35]],[[1.8,-3.3],[-1.75,-3.3],[-1.5,-1.35]],[[1.55,2.95],[.05,3.0]],[[1.55,-2.95],[.05,-3.0]]];
 const HOME=[[1.95,.7],[1.95,-.7],[1.95,3.3],[1.95,-3.3],[1.95,2.1],[1.95,-2.1]],ROLE=['work','work','work','work','pump','pump'];
 function mkCrew(Rc,PL,b){if(!CREW||!CREW.length||b.crew)return;const p=pose(PL,b.s,b),T=Rc.T,sd=PL.side,rt=[Math.cos(p.yaw),-Math.sin(p.yaw)],sg=Math.sign(rt[0]*sd[0]+rt[1]*sd[1])||1;b.p=p;b.sg=sg;b.rt=[rt[0]*sg,rt[1]*sg];
- const W=b.W=(lx,lz)=>{const x=p.x+rt[0]*lx*sg+Math.sin(p.yaw)*lz,z=p.z+rt[1]*lx*sg+Math.cos(p.yaw)*lz;return V(x,T.terr(x,z),z)};
+ const W=b.W=(lx,lz)=>{const x=p.x+rt[0]*lx*sg+Math.sin(p.yaw)*lz,z=p.z+rt[1]*lx*sg+Math.cos(p.yaw)*lz;return V(x,T.surf(x,z,T.terr(x,z)).h,z)};/* the ground the car stands on (the model's own surface), not the terrain under it */
  b.crew=WAYS.map((w,i)=>{const Tm=CREW[(i+b.n*2)%CREW.length],R=BK.makeRiderFrom(Tm,{});try{R.body.material=teamMat(Tm,b.n)}catch(e){}R.g.traverse(m=>{if(m.isMesh){m.castShadow=true;m.layers.set(0)}});R.arms.visible=false;
   const home=W(HOME[i][0],HOME[i][1]),path=[home,...w.map(q=>W(q[0],q[1]))],e=w[w.length-1],look=ROLE[i]==='pump'?W(0,e[1]*.4):W(e[0]*.55,e[1]);
   const M={R,i,role:ROLE[i],path,lx:[HOME[i][0],...w.map(q=>q[0])],at:0,pos:home.clone(),yaw:p.yaw-sg*Math.PI/2,ph:i*1.7,face:look,homeYaw:p.yaw-sg*Math.PI/2,mv:0,idle:1};R.g.position.copy(home);R.g.rotation.y=M.yaw;Rc.scene.add(R.g);crewPose(M,'stand',0);return M})}
@@ -201,6 +229,7 @@ const css=document.createElement('style');css.textContent=`
 .ptQ .ty .tg b{border-radius:calc(var(--u)*4);box-shadow:none;background:var(--c,#4ade80)}
 .ptQ .cap{font-family:var(--mn,"PTExo",sans-serif)}
 .ptQ .bar span.cn{pointer-events:auto;cursor:pointer;min-width:calc(var(--u)*86);text-align:center}.ptQ .bar span.cn:hover{color:#fff;background:linear-gradient(180deg,#e0605a,#b02a24 50%,#8f1a15)}.ptQ .bar span.cn.off{opacity:.35;pointer-events:none}
+.ptQ.solo .bar{top:calc(var(--u)*86)}
 .ptFade{z-index:45}
 .ptQ .ty{display:flex;align-items:center;gap:calc(var(--u)*10);padding:calc(var(--u)*7) calc(var(--u)*10);background:rgba(20,22,25,.82);border-radius:2px}
 .ptQ .ty .tg{display:grid;grid-template-columns:repeat(2,calc(var(--u)*52));gap:calc(var(--u)*3)}
@@ -217,7 +246,7 @@ const css=document.createElement('style');css.textContent=`
 .h8spd,.gtPc,.gtTy,.gtBrk{transition:opacity .4s}`;document.head.appendChild(css);
 const QE=[null,null];
 function qel(k){if(QE[k]&&QE[k].isConnected)return QE[k];const e=document.createElement('div');e.className='ptQ';e.innerHTML='<div class="bar"><span>SERVICE</span><span class="cn">CANCEL</span><span class="tm"></span></div><div class="pm"><div class="cap"></div><div class="ty" style="display:none"></div><div class="ks"></div></div>';document.body.appendChild(e);return QE[k]=e}
-function qPlace(c,e){const r=c.rect||[0,0,1,1],w=r[2]*innerWidth,h=r[3]*innerHeight;e.style.left=(r[0]*100)+'%';e.style.top=((1-(r[1]+r[3]))*100)+'%';e.style.width=(r[2]*100)+'%';e.style.height=(r[3]*100)+'%';e.style.setProperty('--u',Math.max(.6,Math.min(w/640,1.4)).toFixed(3)+'px');e.style.setProperty('--vw',w.toFixed(0)+'px')}
+function qPlace(c,e){e.classList.toggle('solo',!!(typeof RACE!=='undefined'&&RACE&&RACE.cars&&RACE.cars.filter(h=>h.human).length<2));const r=c.rect||[0,0,1,1],w=r[2]*innerWidth,h=r[3]*innerHeight;e.style.left=(r[0]*100)+'%';e.style.top=((1-(r[1]+r[3]))*100)+'%';e.style.width=(r[2]*100)+'%';e.style.height=(r[3]*100)+'%';e.style.setProperty('--u',Math.max(.6,Math.min(w/640,1.4)).toFixed(3)+'px');e.style.setProperty('--vw',w.toFixed(0)+'px')}
 const fmtT=t=>{const m=Math.floor(t/60),s=t-m*60;return m+':'+(s<10?'0':'')+s.toFixed(3)};
 /* the strip across the top: where the stop has got to, and its clock */
 function qBar(c,st,step){const e=qel(c.k);qPlace(c,e);e.classList.add('on');const sp=e.querySelectorAll('.bar span');if(e._s!==step){e._s=step;sp[0].classList.toggle('on',step<2);sp[1].classList.toggle('off',step>1);if(step!==1)sp[0].textContent='SERVICE'}
@@ -256,7 +285,7 @@ addEventListener('keydown',ev=>{const Rc=typeof RACE!=='undefined'?RACE:null;if(
   qShow(c,st)}},true);
 
 /* ---------- the stop itself ---------- */
-const pitOK=Rc=>!!(Rc&&Rc.T&&Rc.cars&&Rc.state==='race'&&Rc.cars.filter(c=>c.human).length===2&&!(Rc.cfg&&(Rc.cfg.rally||Rc.cfg.freeroam))&&laneOf(Rc)&&!(window.PTO&&window.PTO.pit===false));
+const pitOK=Rc=>!!(Rc&&Rc.T&&Rc.cars&&Rc.state==='race'&&Rc.cars.filter(c=>c.human).length<=2&&!(Rc.cfg&&(Rc.cfg.rally||Rc.cfg.freeroam||Rc.cfg.cutup||Rc.cfg.mode==='ta'||Rc.cfg.mode==='elim'))&&laneOf(Rc)&&!(window.PTO&&window.PTO.pit===false));
 function lane(Rc){if(Rc._pl===undefined){Rc._pl=build(Rc);if(Rc._pl){const PL=Rc._pl;PL.boxes.forEach((b,i)=>b.n=i);loadProps().then(()=>{if(typeof RACE!=='undefined'&&RACE===Rc)try{dress(Rc,PL)}catch(e){console.warn('pit dress',e)}})
    /* every box has its crew standing by from the start, each in its own colour */
    loadCrew().then(()=>{if(typeof RACE!=='undefined'&&RACE===Rc)for(const b of PL.boxes)try{mkCrew(Rc,PL,b)}catch(e){console.warn('pit crew',e)}})}}return Rc._pl}
@@ -288,7 +317,7 @@ function rail(Rc,c,dt){const st=c._pit,PL=Rc._pl,T=Rc.T,b=st.b;st.t+=dt;if(st.ph
  else if(st.ph==='go'){qBar(c,st,2);hudPit(c,st.t<1.4||st.s<PL.len-30);if(st.t>2.2)qHide(c);if(st.s>=PL.len-.05){c.sp=st.v;leave(Rc,c)}}}
 function tick(Rc,dt){const PL=lane(Rc);if(!PL)return;
  for(const c of Rc.cars){if(!c.human||c._pit||c.fin||c.respT>0)continue;if(c._pitOut!=null&&Rc.t-c._pitOut<4)continue;if((c.sp||0)<1.5)continue;
-  const n=PL.near(c.x,c.z);if(n.d>2.6||PL.S[n.i]<PL.entry[0]||PL.S[n.i]>PL.entry[1])continue;const p=pose(PL,PL.S[n.i],null);if(Math.sin(p.yaw)*c.vx+Math.cos(p.yaw)*c.vz<1)continue;enter(Rc,c,PL,n.i)}
+  const n=PL.near(c.x,c.z);if(n.d>2.6||PL.S[n.i]<PL.entry[0]||PL.S[n.i]>PL.entry[1])continue;const p=pose(PL,PL.S[n.i],null);if(Math.sin(p.yaw)*c.vx+Math.cos(p.yaw)*c.vz<1)continue;if(PL.towards&&!PL.towards(c,Rc.T))continue;enter(Rc,c,PL,n.i)}
  for(const b of PL.boxes){if(!b.crew)continue;const c=b.by,st=c&&c._pit;let ph='idle';b.arr=false;
   /* the crew is on its way while the car is still rolling in: out to their marks from 45 m away, round the car the moment it stops */
   if(st){b.svc=st.svc||null;if(st.ph==='in')ph=b.s-st.s<45?'ready':'idle';else if(st.ph==='menu1'||st.ph==='menu2')ph='ready';else if(st.ph==='qte')ph='work';else ph='home'}
@@ -309,5 +338,7 @@ setTimeout(()=>{const pc=soloCam;soloCam=function(c,dt,out){pc.apply(this,argume
   const on=st.ph==='qte'||st.ph==='back'||st.ph==='fade'||st.ph==='menu1'||st.ph==='menu2'||(st.ph==='in'&&b.s-st.s<5.5);if(!on)return;
   const r=c.rect,asp=r?(r[2]*innerWidth)/Math.max(1,r[3]*innerHeight):1.78,nar=asp<1.25,dr=st.ph==='qte'?Math.sin(st.t*.35)*.25:0;
   const a=b.W(nar?-4.9:-4.5,(nar?4.4:3.9)+dr),l=b.W(.25,.15);out.p.set(a.x,a.y+.85,a.z);out.l.set(l.x,l.y+(nar?-.05:.3),l.z);out.f=nar?60:46;c.cb=0;c.inTn=false}catch(e){}}},600);
+P.pitDbg2=Rc=>{const PL=lane(Rc);if(!PL)return null;const g=new THREE.Group(),T=Rc.T,pts=PL.X.map((x,i)=>new THREE.Vector3(x,T.terr(x,PL.Z[i])+3,PL.Z[i]));const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0x00ff40,depthTest:false}));ln.renderOrder=99;g.add(ln);for(const b of PL.boxes){const i=PL.S.findIndex(v=>v>=b.s),x=PL.X[i],z=PL.Z[i],m=new THREE.Mesh(new THREE.BoxGeometry(1.2,1,1.2),new THREE.MeshBasicMaterial({color:0xff00ff,depthTest:false}));m.position.set(x,T.terr(x,z)+3,z);m.renderOrder=99;g.add(m)}Rc.scene.add(g);return{len:PL.len|0,x0:PL.X[0],z0:PL.Z[0],x1:PL.X[PL.X.length-1],z1:PL.Z[PL.X.length-1]}};
+P.pitDbg=Rc=>{const T=Rc.T,g=new THREE.Group();const ds=T.sp,ix=s=>((Math.round(s/ds)%T.N)+T.N)%T.N;for(const sg of[1,-1])for(let k=1;k<=9;k++){const lat=T.hw[0]+k*4,pts=[];for(let s=-130;s<=130;s+=6){const i=ix(s);pts.push(new THREE.Vector3(T.x[i]+sg*Math.cos(T.psi[i])*lat,T.y?T.y[i]+3:50,T.z[i]-sg*Math.sin(T.psi[i])*lat))}const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:sg>0?(k%2?0xff2020:0xffff00):(k%2?0x2080ff:0xffffff),depthTest:false}));ln.renderOrder=99;g.add(ln)}Rc.scene.add(g);return g};
 P.pit={pick:(c,i)=>pick(RACE,c,i),lane:Rc=>lane(Rc||RACE),KEYS,loadCrew,enter:(c)=>{const Rc=RACE,PL=lane(Rc);if(PL&&!c._pit)enter(Rc,c,PL,PL.near(PL.X[12],PL.Z[12]).i)}};
 })();

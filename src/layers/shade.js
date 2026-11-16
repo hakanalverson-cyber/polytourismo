@@ -3,12 +3,12 @@
 'use strict';
 const P=window.PT8;P.realShadows=true;
 /* PCF with a radius instead of PCF-soft: about half the shadow-map reads per pixel for nearly the same soft edge */
-R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFShadowMap;R.shadowMap.autoUpdate=true;
+R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;/* Nov 16 (Hakan: the shadows are way too harsh): soft-edged shadows */R.shadowMap.autoUpdate=true;
 const on=()=>P.realShadows&&(!window.PTO||window.PTO.shadows!==false);
 P.shadeSetup=sc=>{let sun=null,hemi=null;sc.traverse(o=>{if(o.isDirectionalLight&&!sun)sun=o;if(o.isHemisphereLight&&!hemi)hemi=o});if(!sun)return;
  sun.castShadow=true;const S=sun.shadow;S.mapSize.set(2048,2048);const c=S.camera;c.left=-72;c.right=72;c.top=72;c.bottom=-72;c.near=1;c.far=620;S.bias=-.0006;S.normalBias=.5;S.radius=2.2;c.updateProjectionMatrix();
  sun.userData.d0=sun.position.clone().normalize();sun.userData.k=1;if(!sun.target.parent)sc.add(sun.target);
- sun.intensity*=1.28;if(hemi)hemi.intensity*=.86;sc.userData.sun=sun;sc.userData.flagT=0};
+ sun.intensity*=1.02;if(hemi)hemi.intensity*=1.08;/* Nov 16: a gentler sun and more sky fill, so the shadow side is not near black and bright panels do not blow out */sc.userData.sun=sun;sc.userData.flagT=0};
 function flag(sc){sc.traverse(o=>{if(o.userData.shd)return;if(!(o.isMesh||o.isInstancedMesh)){return}
  const m=Array.isArray(o.material)?o.material[0]:o.material;o.userData.shd=1;if(!m)return;
  if(m.transparent||m.isMeshBasicMaterial||m.depthWrite===false||o.isSkinnedMesh===undefined&&m.blending===THREE.AdditiveBlending){o.castShadow=false;o.receiveShadow=false;return}
