@@ -317,7 +317,7 @@ function rail(Rc,c,dt){const st=c._pit,PL=Rc._pl,T=Rc.T,b=st.b;st.t+=dt;if(st.ph
  else if(st.ph==='go'){qBar(c,st,2);hudPit(c,st.t<1.4||st.s<PL.len-30);if(st.t>2.2)qHide(c);if(st.s>=PL.len-.05){c.sp=st.v;leave(Rc,c)}}}
 function tick(Rc,dt){const PL=lane(Rc);if(!PL)return;
  for(const c of Rc.cars){if(!c.human||c._pit||c.fin||c.respT>0)continue;if(c._pitOut!=null&&Rc.t-c._pitOut<4)continue;if((c.sp||0)<1.5)continue;
-  const n=PL.near(c.x,c.z);if(n.d>2.6||PL.S[n.i]<PL.entry[0]||PL.S[n.i]>PL.entry[1])continue;const p=pose(PL,PL.S[n.i],null);if(Math.sin(p.yaw)*c.vx+Math.cos(p.yaw)*c.vz<1)continue;if(PL.towards&&!PL.towards(c,Rc.T))continue;enter(Rc,c,PL,n.i)}
+  const n=PL.near(c.x,c.z);if(n.d>4.2||PL.S[n.i]<PL.entry[0]-6||PL.S[n.i]>PL.entry[1]+10)continue;const p=pose(PL,PL.S[n.i],null);if(Math.sin(p.yaw)*c.vx+Math.cos(p.yaw)*c.vz<1)continue;if(PL.towards&&!PL.towards(c,Rc.T))continue;enter(Rc,c,PL,n.i)}
  for(const b of PL.boxes){if(!b.crew)continue;const c=b.by,st=c&&c._pit;let ph='idle';b.arr=false;
   /* the crew is on its way while the car is still rolling in: out to their marks from 45 m away, round the car the moment it stops */
   if(st){b.svc=st.svc||null;if(st.ph==='in')ph=b.s-st.s<45?'ready':'idle';else if(st.ph==='menu1'||st.ph==='menu2')ph='ready';else if(st.ph==='qte')ph='work';else ph='home'}

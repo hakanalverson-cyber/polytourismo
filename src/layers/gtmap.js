@@ -38,7 +38,7 @@ function draw(){requestAnimationFrame(draw);
   g.globalCompositeOperation='destination-out';path();g.strokeStyle='#000';g.lineWidth=W*.05;g.stroke();g.globalCompositeOperation='source-over';
   path();g.strokeStyle='rgba(70,76,84,.42)';g.lineWidth=W*.05;g.stroke();
   {const c=Math.cos(T.psi[0]),sn=Math.sin(T.psi[0]),w=W*.035/s;g.beginPath();g.moveTo(X(T.x[0]+c*w),Y(T.z[0]-sn*w));g.lineTo(X(T.x[0]-c*w),Y(T.z[0]+sn*w));g.strokeStyle='#f4f6f7';g.lineWidth=W*.012;g.lineCap='butt';g.stroke();g.lineCap='round'}
-  const mark=(c,r,col)=>{const x=X(c.x),y=Y(c.z),yw=c.cy!=null?c.cy:c.yaw,ux=Math.sin(yw),uy=-Math.cos(yw);g.beginPath();g.moveTo(x+ux*r*1.3,y+uy*r*1.3);g.lineTo(x-ux*r*.8-uy*r*.85,y-uy*r*.8+ux*r*.85);g.lineTo(x-ux*r*.8+uy*r*.85,y-uy*r*.8-ux*r*.85);g.closePath();g.fillStyle=col;g.fill();g.lineWidth=W*.006;g.strokeStyle='rgba(0,0,0,.55)';g.stroke()};
+  const mark=(c,r,col)=>{const x=X(c.x),y=Y(c.z),yw=c.human&&c.cy!=null?c.cy:c.yaw,/* Nov 16: a CPU's cy is only its grid heading */ux=Math.sin(yw),uy=-Math.cos(yw);g.beginPath();g.moveTo(x+ux*r*1.3,y+uy*r*1.3);g.lineTo(x-ux*r*.8-uy*r*.85,y-uy*r*.8+ux*r*.85);g.lineTo(x-ux*r*.8+uy*r*.85,y-uy*r*.8-ux*r*.85);g.closePath();g.fillStyle=col;g.fill();g.lineWidth=W*.006;g.strokeStyle='rgba(0,0,0,.55)';g.stroke()};
   if(multi){for(const c of R.cars)if(!c.human&&!c.out)mark(c,W*.02,'#c9d1d9');const hh=R.cars.filter(q=>q.human);hs.forEach(c=>mark(c,W*.036,PC[hh.indexOf(c)%4]))}
   else{for(const c of R.cars)if(!c.human&&!c.out)mark(c,W*.026,'#4db4ff');mark(hs[0],W*.034,'#ff3b30')}
   return}

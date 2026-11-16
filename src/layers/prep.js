@@ -74,6 +74,7 @@ const st=document.createElement('style');st.textContent=`
 #suSteps .stAdd:hover{background:#fff!important;color:#0a0e14!important}
 #prepFade{position:absolute;inset:0;z-index:7;background:#000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .35s ease}
 #s8setup.prepBuild #prepFade{opacity:1;transition:opacity .12s ease}
+#s8setup.prepPre #prepFade{transition:none!important}
 #prepFade b{display:block;font:italic 800 28px var(--gt);letter-spacing:.04em;color:#f1f3f5;text-align:center}#prepFade b i{font-style:italic;color:#8fb4d8}
 #prepFade u{display:block;width:190px;height:2px;margin:16px auto 0;background:#ffffff22;overflow:hidden;text-decoration:none}#prepFade s{display:block;height:100%;width:40%;background:#f1f3f5;animation:pfBar 1s ease-in-out infinite}@keyframes pfBar{from{transform:translateX(-100%)}to{transform:translateX(260%)}}
 #s8setup.carN3 #prepVig{background:radial-gradient(ellipse 90% 80% at 60% 35%,#0000 40%,#0006 100%),linear-gradient(0deg,#000c 0%,#0007 30%,#0000 55%)}
@@ -442,7 +443,7 @@ function frame(now){raf=requestAnimationFrame(frame);const w=want();
  if(!S||S.track!==w.track||S.tod!==w.tod){if(building)return;building=1;w.sec._bt=performance.now();w.sec.classList.add('prepBuild');w.sec.classList.remove('prepLive');
   /* let the fade show, then build (a second or so on the big maps) */
   setTimeout(()=>{try{const s=build(w.track,w.tod);S=s}catch(e){console.warn('prep build',e);lastErr=String(e&&e.stack||e).slice(0,300);S=null;if(window.PTO)window.PTO.prepLive=false}building=0;setTimeout(()=>w.sec.classList.remove('prepBuild'),450)},60);return}
- if(!building&&w.sec.classList.contains('prepBuild')&&performance.now()-(w.sec._bt||0)>1600)w.sec.classList.remove('prepBuild');
+ if(!building&&w.sec.classList.contains('prepBuild')&&performance.now()-(w.sec._bt||0)>((S&&S.track===w.track&&S.tod===w.tod)?350:1600))w.sec.classList.remove('prepBuild');
  if(FAST()&&now-lastDraw<13)return;/* Nov 10 (Hakan: really choppy): the old 22 ms gate locked 60 Hz screens to 30 fps; now it aims for 60 and lowers the resolution if the GPU can't keep up */
  {const iv=Math.min(100,now-lastDraw);ema+=(iv-ema)*.08;if(++qn%24===0){if(ema>22&&qual>.5)qual=Math.max(.5,qual-.08);else if(ema<17.8&&qual<1)qual=Math.min(1,qual+.04)}}
  lastDraw=now;fcount++;
@@ -476,4 +477,12 @@ document.addEventListener('pointerdown',e=>{if(!S||!e.target.closest||!e.target.
  const mv=ev=>{if(dragX==null)return;drag+=(ev.clientX-dragX)*-.006;dragX=ev.clientX},up=()=>{dragX=null;removeEventListener('pointermove',mv);removeEventListener('pointerup',up)};addEventListener('pointermove',mv);addEventListener('pointerup',up)});
 /* a race frees the preview world before it builds its own */
 {const l0=P.launch;if(l0)P.launch=function(){try{free()}catch(e){}return l0.apply(this,arguments)}}
+})();
+/* Nov 16 (Hakan: the black fade of some loading screens starts too late and flickers): the preview loop only raised the black a frame or more after the
+   setup screen was already showing. Now the black is up before the screen's first frame, with no fade-in, and the usual slow fade-out lifts it */
+(function ptPrepBlack(){
+const P=window.PT8;if(typeof show!=='function')return;const s0=show;
+show=function(n){const was=typeof scr!=='undefined'?scr:null,r=s0.apply(this,arguments);
+ try{if(n==='s8setup'&&was!=='s8setup'&&!(window.PTO&&window.PTO.prepLive===false)){const sec=document.getElementById('s8setup');if(sec&&!sec.dataset.still&&!sec.classList.contains('prepBuild')){sec.classList.add('prepBuild','prepPre');sec._bt=performance.now();setTimeout(()=>sec.classList.remove('prepPre'),90)}}}catch(e){}
+ return r};
 })();

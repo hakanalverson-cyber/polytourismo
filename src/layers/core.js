@@ -248,7 +248,7 @@ function launch(cfg){
  RACE.cars.forEach(c=>{c.lapT=[];c.lapStart=0;c.curLap=0});
 }
 PT8.launch=launch;
-startRace=()=>{if(PT8.lastCfg)PT8.launch(PT8.lastCfg)};
+startRace=()=>{const c=PT8.lastCfg;if(!c)return;/* Nov 16: a restart gets the same black fade as a first start */(PT8.launchWithIntro&&!(c.mode==='rally'&&!c.circuit)?PT8.launchWithIntro:PT8.launch)(c)};
 /* rolling start: the cars are already moving at the formation pace from the first frame (no standing countdown first) */
 {const L0=PT8.launch;PT8.launch=function(cfg){const r=L0.apply(this,arguments);const R=RACE;if(R&&cfg&&cfg.rolling&&cfg.mode!=='rally'){R.state='race';R.cd=0;R.t=0;
  for(const c of R.cars){const v=27.5;c.vx=Math.sin(c.yaw)*v;c.vz=Math.cos(c.yaw)*v;c.sp=v;if(c.human&&!c.forceAI){c.forceAI=true;c._rollAI=true}}}return r}}

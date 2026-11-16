@@ -92,10 +92,12 @@ function install(){
    if(c._bfp.distanceTo(out.p)>60){c._bt=1}else{out.p.lerpVectors(c._bfp,out.p,e);out.l.lerpVectors(c._bfl,out.l,e);out.f=c._bff+(out.f-c._bff)*e}}
   c._bp=(c._bp||new V()).copy(out.p);c._bl=(c._bl||new V()).copy(out.l);c._bf=out.f}catch(e){}};
 }
-const _rc=new THREE.Raycaster(),_ro=new V(),_rd=new V();
+const _rc=new THREE.Raycaster(),_ro=new V(),_rd=new V(),_up=new V();
 function under(c,R_,m){const sc=R_.scene;if(!sc)return true;if(R_._ctM===undefined){let g=null;sc.traverse(o=>{if(o.name==='cartoonTrack')g=o});R_._ctM=g?g.children.filter(o=>!/road|GRASS|SAND|gravel|tarmac/i.test(o.name)):null}
  const ms=R_._ctM;if(!ms)return true;const K=P.carK?P.carK():1,yaw=c.cy!=null?c.cy:c.yaw,sy=Math.sin(yaw),cy=Math.cos(yaw),back=(m===1?11.5:7.5)*K,up=(m===1?4.6:3.1)*K,L=Math.hypot(back,up-1.3*K);
  _rd.set(-sy*back,up-1.3*K,-cy*back).normalize();_rc.far=L+.6;
+ /* Nov 16 (Hakan: the camera bugs going under an overpass): a deck right above the car counts too, whatever the line to the lens does */
+ for(const d of[0,5,10]){_ro.set(c.x+sy*d,c.y+1.2*K,c.z+cy*d);_rc.set(_ro,_up.set(0,1,0));_rc.far=9*K;if(_rc.intersectObjects(ms,false).length){_rc.far=L+.6;return true}}_rc.far=L+.6;
  for(const d of[0,7,14,21]){_ro.set(c.x+sy*d,c.y+1.3*K,c.z+cy*d);_rc.set(_ro,_rd);if(_rc.intersectObjects(ms,false).length)return true}
  return false}
 function orbit(c,dt,out,R_){

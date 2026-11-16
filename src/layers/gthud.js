@@ -380,11 +380,11 @@ P.gx5Draw=(cv,o)=>{if(o.split&&o.lay===3)return P.gx5Tier(cv,o);if(o.split)retur
    set(dP,'<div class="pb">'+SV(fp,22,'#fff',.11)+'</div><div class="pc"><small>POSITION</small><span>'+SV('/'+n,15,'#fff',.1)+'</span></div><div class="pc lp">'+(fin?'<small class="fl">FINAL LAP</small>':'<small>LAP</small>')+'<span>'+SV(lapN+'/'+Rc.laps,15,'#fff',.1)+'</span></div>');
    if(lay===3){set(dB,'<b>'+SV(c.k+1,17,'#fff',.11)+'</b><span>'+nmOf(c,0)+'</span>');set(dR,'<small>LAP</small><b>'+SV(lapN+'/'+Rc.laps,13,'#fff',.1)+'</b>')}
    /* leaderboard: number cell + name cell, your row light with the red tag outside it, the intervals to the cars ahead and behind between the rows, then the fastest lap */
-   if(lay===1){const win=8,a=Math.max(0,Math.min(me-(lay===1?3:2),n-win)),b=Math.min(n,a+win);let h='';
+   if(lay===1){const MP1=Rc.cars.filter(h_=>h_.human).length,win=8,a=Math.max(0,Math.min(me-(lay===1?3:2),n-win)),b=Math.min(n,a+win);let h='';
     for(let k=a;k<b;k++){const q=order[k],mine=q===c;
-     if(mine&&k>0)h+='<div class="gp">+ '+Math.abs(gapTo(order[k-1])).toFixed(3)+'</div>';
+     if(mine&&k>0&&MP1<2)h+='<div class="gp">+ '+Math.abs(gapTo(order[k-1])).toFixed(3)+'</div>';
      h+='<div class="r'+(mine?' me':'')+'"><b>'+(k+1)+'</b><span>'+nmOf(q,k)+'</span>'+(mine?'<em>'+(k>0?'+'+Math.abs(gapTo(order[0])).toFixed(3):'--.--')+'</em>':'')+'</div>';
-     if(mine&&k<n-1)h+='<div class="gp">- '+Math.abs(gapTo(order[k+1])).toFixed(3)+'</div>'}
+     if(mine&&k<n-1&&MP1<2)h+='<div class="gp">- '+Math.abs(gapTo(order[k+1])).toFixed(3)+'</div>'}
     let fb=null,fq=null;Rc.cars.forEach(q=>{if(q.lapT&&q.lapT.length){const m=Math.min(...q.lapT);if(fb==null||m<fb){fb=m;fq=q}}});
     if(fb!=null&&lay===1)h+='<div class="r fl"><b>FL</b><span>'+nmOf(fq,0)+'</span></div><div class="flt">'+tf(fb)+'</div>';
     set(dTw,h)
@@ -403,7 +403,7 @@ P.gx5Draw=(cv,o)=>{if(o.split&&o.lay===3)return P.gx5Tier(cv,o);if(o.split)retur
    let pp=e.querySelector('.gtPass');if(!pp){pp=document.createElement('div');pp.className='gtPass';e.appendChild(pp)}
    {const A=c._ah||(c._ah={}),now=performance.now();Rc.cars.forEach((q,j)=>{if(q===c||q.out)return;const sd=c.unw>q.unw?1:-1,o=A[j]||(A[j]={sd:sd,t:now,seen:false,fired:false});
      if(o.sd!==sd){o.sd=sd;o.t=now;o.fired=false;o.seen=true}
-     if(sd>0&&o.seen&&!o.fired&&Rc.state==='race'&&now-o.t>700){o.fired=true;const cn=(P.BYID&&P.BYID[q.carId]&&P.BYID[q.carId].name)||'';pp.innerHTML='<div><small>PASSED</small><b>'+cn+'</b></div>';pp.classList.add('on');clearTimeout(pp._to);pp._to=setTimeout(()=>pp.classList.remove('on'),2800)}})}
+     if(sd>0&&o.seen&&!o.fired&&Rc.state==='race'&&now-o.t>700&&Rc.cars.filter(h=>h.human).length<2){o.fired=true;const cn=(P.BYID&&P.BYID[q.carId]&&P.BYID[q.carId].name)||'';pp.innerHTML='<div><small>PASSED</small><b>'+cn+'</b></div>';pp.classList.add('on');clearTimeout(pp._to);pp._to=setTimeout(()=>pp.classList.remove('on'),2800)}})}
   })}catch(_){}};
  /* the rear-view mirror: one player only (a second render per view is too dear for split screen) */
  {const R0=R.render.bind(R),v4=new THREE.Vector4(),mc=new THREE.PerspectiveCamera(62,5.2,.3,700),d=new THREE.Vector3();
@@ -464,7 +464,7 @@ const ORDER=['A16','R9','D1','D2','G6','D3','S6','D6'],ORDT=['D1','D2','G6','D3'
   const sc=110*.84/Math.max(B[1]-B[0],B[3]-B[2],1),X=x=>102-(B[1]-x)*sc,Y=z=>8+(B[3]-z)*sc,N=T.N,stp=Math.max(1,Math.round(6/(T.sp||3)));g.lineJoin='round';g.lineCap='round';
   const path=()=>{g.beginPath();for(let i=0;i<=N;i+=stp){const j=i%N;if(i)g.lineTo(X(T.x[j]),Y(T.z[j]));else g.moveTo(X(T.x[j]),Y(T.z[j]))}if(!T.open)g.closePath()};
   path();g.strokeStyle='rgba(0,0,0,.35)';g.lineWidth=9;g.stroke();path();g.strokeStyle='#f4f6f7';g.lineWidth=7.7;g.stroke();g.globalCompositeOperation='destination-out';path();g.strokeStyle='#000';g.lineWidth=5.5;g.stroke();g.globalCompositeOperation='source-over';path();g.strokeStyle='rgba(70,76,84,.42)';g.lineWidth=5.5;g.stroke();
-  const mark=(c,r,col)=>{const x=X(c.x),y=Y(c.z),yw=c.cy!=null?c.cy:c.yaw,ux=Math.sin(yw),uy=-Math.cos(yw);g.beginPath();g.moveTo(x+ux*r*1.3,y+uy*r*1.3);g.lineTo(x-ux*r*.8-uy*r*.85,y-uy*r*.8+ux*r*.85);g.lineTo(x-ux*r*.8+uy*r*.85,y-uy*r*.8-ux*r*.85);g.closePath();g.fillStyle=col;g.fill();g.lineWidth=.7;g.strokeStyle='rgba(0,0,0,.55)';g.stroke()};
+  const mark=(c,r,col)=>{const x=X(c.x),y=Y(c.z),yw=c.human&&c.cy!=null?c.cy:c.yaw,/* Nov 16: a CPU's cy is only its grid heading */ux=Math.sin(yw),uy=-Math.cos(yw);g.beginPath();g.moveTo(x+ux*r*1.3,y+uy*r*1.3);g.lineTo(x-ux*r*.8-uy*r*.85,y-uy*r*.8+ux*r*.85);g.lineTo(x-ux*r*.8+uy*r*.85,y-uy*r*.8-ux*r*.85);g.closePath();g.fillStyle=col;g.fill();g.lineWidth=.7;g.strokeStyle='rgba(0,0,0,.55)';g.stroke()};
   for(const q of S.Rc.cars)if(!q.human&&!q.out)mark(q,2.9,'#4db4ff');for(const q of S.Rc.cars)if(q.human&&q!==S.c&&!q.out)mark(q,3.4,'#ffb347');mark(S.c,3.9,'#ff3b30')}},D3:{W:110,H:92,p:[89,87,16],f:PCT.D3.f,/* as tall as the gauge box and centred on it, just right of the throttle bar */geo(W,H){const gw=Math.min(.6*W,420),k=gw/300,h=68*k,w=h*110/92;return[Math.min(W-w-6,W/2+128*k+10),H-8-46*k-h/2,w,h]}}};/* TRIM (Nov 14, Hakan): the full centre cluster and tyre diagram, without the two g charts and the wheel load bars *//* the centre cluster sits 10% smaller than drawn in the builder, shrunk toward the bottom centre */for(const k of['A16','R9','D1','D2','G6','D6']){const q=PC[k].p;PC[k].p=[50+(q[0]-50)*.9,100-(100-q[1])*.9,q[2]*.9]}/* both g circles sit side by side between the rev dial and the wheel load bars, evenly spaced */PC.A16.p=[72.03,90,6.3];PC.R9.p=[76.96,90,6.3];/* lift the gauge stack so the info boxes clear the bottom edge */for(const k of['G6','D6','D1','D2'])PC[k].p[1]-=1.6;let v3=null;
 P.hudPiecesOff=function(e){if(!e._pcs)return;Object.values(e._pcs).forEach(x=>x.remove());if(e._tag)e._tag.remove();e._pcs=null;e._tag=null};
 P.hudPieces=function(e,c,Rc,order,o2){const solo=o2==='solo';if(solo)o2=null;const o=o2||P._o1;if(!o)return;const W=e.clientWidth,H=e.clientHeight;if(!W||!H)return;const T=Rc.T,TL=o.tl||{},now=performance.now();
