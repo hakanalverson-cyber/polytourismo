@@ -211,7 +211,7 @@ function launch(cfg){
  PT8.lastCfg=cfg;cleanupRace();
  const trackDef=Object.assign({},D[cfg.track]);
  if(cfg.mode==='cutup'){trackDef.jumps=[];trackDef.ice=[]}
- if(cfg.rev){trackDef.rev=true;trackDef.jumps=[]}
+ if(cfg.rev&&!trackDef.cartoon){trackDef.rev=true;trackDef.jumps=[]}/* Nov 16 (Hakan): the painted grid faces one way, so the circuit files only run forward */
  if(trackDef.look!=null)trackDef.id=trackDef.look;
  const T=sampleTrack(trackDef);selT=cfg.track;
  const scene=buildWorld(T);FS=scene;FX=[];if(PT8.applyTod)PT8.applyTod(scene,T,cfg.tod||(D[cfg.track].tod0)||'day');if(PT8.shadeSetup)PT8.shadeSetup(scene);
@@ -236,6 +236,8 @@ function launch(cfg){
   gridSlot(T,c,c.slot);
   RACE.cars.push(c);scene.add(c.m.g);scene.add(c.m.sh);
  });
+ /* Nov 16: nobody starts inside another car: a car that lands within a car length of one already placed is moved back up the grid */
+ {const done=[],srt=[...RACE.cars].sort((a,b)=>a.slot-b.slot),N_=T.N;for(const c of srt){let g=0;while(g++<12&&done.some(o=>Math.hypot(o.x-c.x,o.z-c.z)<4.7)){const i=(((c.idx|0)-1)%N_+N_)%N_,lat=(c.x-T.x[c.idx|0])*Math.cos(T.psi[c.idx|0])-(c.z-T.z[c.idx|0])*Math.sin(T.psi[c.idx|0]);const nx=Math.cos(T.psi[i]),nz=-Math.sin(T.psi[i]);c.x=T.x[i]+nx*lat;c.z=T.z[i]+nz*lat;c.y=T.y[i]+1.1;c.yaw=T.psi[i];c.cy=c.yaw;c.idx=i;c.unw-=1;if(c.unw0!=null)c.unw0=c.unw}done.push(c)}}
  RACE.cars.forEach(c=>{c.camY=c.y;if(c.human){c.seenU=undefined}});
  RACE.rubber=cfg.mode==='career'?()=>{let b=-1e9;for(const c of RACE.cars)if(c.human&&!c.fin)b=Math.max(b,c.unw);return b>-1e8?b:0}:null;
  /* HUD shells */

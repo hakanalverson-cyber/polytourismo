@@ -1290,7 +1290,7 @@ P.racePay0=P.racePay;{const rp=P.racePay;P.racePay=function(){return Math.round(
 /* ---------------- results ---------------- */
 function judge(){const Rc=typeof RACE!=='undefined'?RACE:null,run=P.gcRun;if(!Rc||!run)return null;const o=run.o,c=Rc.cars.find(x=>x.human);if(!c)return null;
  if(c.carId)G().wear[c.carId]=Math.max(0,Math.min(1,+(c.dmg||0)));
- if(o.type==='race'||o.type==='circuit'||o.type==='elim'){const order=[...Rc.cars].sort((a,b)=>(b.fin?1e6-b.finT:0)-(a.fin?1e6-a.finT:0)||b.unw-a.unw),pl=order.indexOf(c)+1;
+ if(o.type==='race'||o.type==='circuit'||o.type==='elim'){const order=[...Rc.cars].sort((a,b)=>(b.out?-1e6-(b.place||0):b.fin?1e6-b.finT:0)-(a.out?-1e6-(a.place||0):a.fin?1e6-a.finT:0)||b.unw-a.unw),pl=order.indexOf(c)+1;
   return{ok:pl<=3,what:(P.ord?P.ord(pl):pl)+' place'}}
  if(o.type==='ta'){const bl=c.lapT&&c.lapT.length?Math.min(...c.lapT):null,t=o.target;if(bl==null)return{ok:false,what:'No lap set'};
   if(t==null)return{ok:!!P.medalFor&&P.medalFor(o.track,BYID[c.carId],bl)<=o.medal,what:'Best lap '+fmtT(bl)};return{ok:bl<=t,what:'Best lap '+fmtT(bl)+(bl<=t?'':', the target was '+fmtT(t))}}

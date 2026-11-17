@@ -162,7 +162,7 @@ P.eventCfg=(ev,humanPick)=>{const rk=RANKS[ev.rank],rally=ev.type==='rally';
 P.showResults=function(){const Rc=RACE,cfg=Rc.cfg,N=Rc.T.N,humans=Rc.cars.filter(c=>c.human);
  const res={cfg,mode:cfg.cutup?'cutup':cfg.mode,rows:[],notes:[],pay:[],total:0,title:'',sub:'',promo:null,medal:null};
  const sv=P.SV();
- const rank=cars=>[...cars].sort((a,b)=>(b.fin?1e6-b.finT:0)-(a.fin?1e6-a.finT:0)||b.unw-a.unw);
+ const rank=cars=>[...cars].sort((a,b)=>(b.out?-1e6-(b.place||0):b.fin?1e6-b.finT:0)-(a.out?-1e6-(a.place||0):a.fin?1e6-a.finT:0)||b.unw-a.unw);
  if(Rc.mode==='cutup'){
   const hs=humans.slice().sort((a,b)=>b.score-a.score);
   hs.forEach((c,i)=>{const cr=Math.round(c.score/10)+(c.bestCombo>=8?250:0);res.rows.push({name:c.ptName,car:BYID[c.carId].name,score:c.score,stats:[['Near misses',c.nm],['Best combo','x'+Math.max(1,c.bestCombo)],['Crashes',c.crashes]],combo:c.bestCombo,crashes:c.crashes,cr,human:true,place:i+1,col:CS[c.k]});res.total+=cr});
@@ -227,7 +227,7 @@ P.gx5Draw=(cv,o)=>{const g=cv.getContext('2d'),W=cv.width,H=cv.height,k=W/240;g.
  for(let i=0;i<3;i++){g.fillStyle=o.shift?(i<2?'#fff':'#ff3b30'):'rgba(255,255,255,.18)';g.fillRect(146+i*13,114,10,4)}
  if(o.tag){g.textAlign='left';g.font='italic 700 13px "Inter","Segoe UI",Arial,sans-serif';g.fillStyle=o.tagCol||'#fff';g.fillText(o.tag,120,148)}};
 hudUpdate=()=>{const Rc=RACE,T=Rc.T;
- const order=[...Rc.cars].sort((a,b)=>(b.fin?1e6-b.finT:0)-(a.fin?1e6-a.finT:0)||b.unw-a.unw);
+ const order=[...Rc.cars].sort((a,b)=>(b.out?-1e6-(b.place||0):b.fin?1e6-b.finT:0)-(a.out?-1e6-(a.place||0):a.fin?1e6-a.finT:0)||b.unw-a.unw);
  Rc.cars.forEach((c,i)=>{if(!c.human)return;const e=$('h'+i);if(!e||!c.rect)return;const r=c.rect,g=c.grp||[c],gi=g.indexOf(c);
   e.style.left=r[0]*innerWidth+'px';e.style.top=(1-r[1]-r[3])*innerHeight+'px';e.style.width=r[2]*innerWidth+'px';e.style.height=r[3]*innerHeight+'px';
   if(!e.dataset.b){e.innerHTML=HUDHTML;e.dataset.b=1;const sg=e.querySelector('.segs');for(let k=0;k<SEGS;k++)sg.appendChild(document.createElement('i'))}

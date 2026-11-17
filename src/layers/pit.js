@@ -57,7 +57,7 @@ function build(Rc){const q=laneOf(Rc);if(!q)return null;const {L,f}=q,c=L.pts.ma
  const near=(x,z)=>{let b=0,bd=1e18;for(let i=0;i<X.length;i++){const d=(X[i]-x)**2+(Z[i]-z)**2;if(d<bd){bd=d;b=i}}return{i:b,d:Math.sqrt(bd)}};
  const boxes=L.boxes.map(p=>{const x=p[0]*f,z=p[1]*f,i=cl(near(x,z).i,1,X.length-2),tx=X[i+1]-X[i-1],tz=Z[i+1]-Z[i-1],tl=Math.hypot(tx,tz)||1;/* to the centimetre, not the nearest path step */
   return{s:S[i]+((x-X[i])*tx+(z-Z[i])*tz)/tl,by:null,crew:null}});
- return{X,Z,S,len:s,boxes,side:L.side,shift:L.shift*f,entry:L.entry,near,box:14,towards:L.towards}}
+ return{X,Z,S,len:s,boxes,side:L.side,shift:L.shift*f,entry:L.entry,near,box:14,towards:L.towards,D:L.D||0}}
 /* a point on the lane at distance s, pulled sideways into box b around its stop point */
 function at(PL,s,b,out){const S=PL.S;let i=Math.min(S.length-2,Math.max(0,Math.floor(s/PL.len*(S.length-1))));while(i>0&&S[i]>s)i--;while(i<S.length-2&&S[i+1]<s)i++;
  const t=cl((s-S[i])/Math.max(1e-6,S[i+1]-S[i]),0,1);let x=PL.X[i]+(PL.X[i+1]-PL.X[i])*t,z=PL.Z[i]+(PL.Z[i+1]-PL.Z[i])*t;
@@ -317,7 +317,7 @@ function rail(Rc,c,dt){const st=c._pit,PL=Rc._pl,T=Rc.T,b=st.b;st.t+=dt;if(st.ph
  else if(st.ph==='go'){qBar(c,st,2);hudPit(c,st.t<1.4||st.s<PL.len-30);if(st.t>2.2)qHide(c);if(st.s>=PL.len-.05){c.sp=st.v;leave(Rc,c)}}}
 function tick(Rc,dt){const PL=lane(Rc);if(!PL)return;
  for(const c of Rc.cars){if(!c.human||c._pit||c.fin||c.respT>0)continue;if(c._pitOut!=null&&Rc.t-c._pitOut<4)continue;if((c.sp||0)<1.5)continue;
-  const n=PL.near(c.x,c.z);if(n.d>4.2||PL.S[n.i]<PL.entry[0]-6||PL.S[n.i]>PL.entry[1]+10)continue;const p=pose(PL,PL.S[n.i],null);if(Math.sin(p.yaw)*c.vx+Math.cos(p.yaw)*c.vz<1)continue;if(PL.towards&&n.d>1.5&&!PL.towards(c,Rc.T))continue;enter(Rc,c,PL,n.i)}
+  const far=PL.D>20,n=PL.near(c.x,c.z);if(n.d>(far?8:4.2)||PL.S[n.i]<(far?0:PL.entry[0]-6)||PL.S[n.i]>PL.entry[1]+10)continue;const p=pose(PL,PL.S[n.i],null);if(Math.sin(p.yaw)*c.vx+Math.cos(p.yaw)*c.vz<1)continue;if(!far&&PL.towards&&n.d>1.5&&!PL.towards(c,Rc.T))continue;enter(Rc,c,PL,n.i)}
  for(const b of PL.boxes){if(!b.crew)continue;const c=b.by,st=c&&c._pit;let ph='idle';b.arr=false;
   /* the crew is on its way while the car is still rolling in: out to their marks from 45 m away, round the car the moment it stops */
   if(st){b.svc=st.svc||null;if(st.ph==='in')ph=b.s-st.s<45?'ready':'idle';else if(st.ph==='menu1'||st.ph==='menu2')ph='ready';else if(st.ph==='qte')ph='work';else ph='home'}

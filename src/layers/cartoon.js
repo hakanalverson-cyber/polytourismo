@@ -111,6 +111,16 @@ setTimeout(()=>{{const give=P._ctGive=function(sc){try{let g=null;if(sc&&sc.trav
   const grp=new THREE.Group();grp.name='cartoonTrack';/* the model's meshes are shared: a second world of the same circuit (a card picture, the race) takes them out of the first. Remember who had them, so they go back when this world is thrown away (the drone preview was left looking at bare ground) */{const o=pack._grp;grp.userData.prev=o&&o.parent&&!o.userData.dead?o:null;if(grp.userData.prev)window.__ctSteal=(new Error()).stack;pack._grp=grp;grp.userData.pack=pack}for(const m of meshes(pack))grp.add(m);sc.add(grp);
   T._bx={segs:[],pts:[]};T._bg=null;/* the removed stock props must not collide */
   if(P.addSeg){const s=new Float32Array(dec(pack.segs).buffer);const sf=pack.sf||1;for(let i=0;i<s.length;i+=4)P.addSeg(T,s[i]*sf,s[i+1]*sf,s[i+2]*sf,s[i+3]*sf,.35)}
+  /* escape guard: wherever no real wall stands near the road edge, an invisible barrier 14 m out catches a car before it can leave the map */
+  if(P.addSeg)try{const N=T.N,H=new Map(),key=(x,z)=>Math.floor(x/16)+','+Math.floor(z/16);
+   for(const q of T._bx.segs){const L=Math.hypot(q[2]-q[0],q[3]-q[1]),n=Math.max(1,Math.ceil(L/8));for(let k=0;k<=n;k++){const x=q[0]+(q[2]-q[0])*k/n,z=q[1]+(q[3]-q[1])*k/n,kk=key(x,z);let l=H.get(kk);if(!l)H.set(kk,l=[]);l.push(x,z)}}
+   const near=(x,z,R)=>{const cx=Math.floor(x/16),cz=Math.floor(z/16);for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const l=H.get((cx+a)+','+(cz+b));if(l)for(let k=0;k<l.length;k+=2)if(Math.hypot(l[k]-x,l[k+1]-z)<R)return true}return false};
+   const C=new Map();for(let i=0;i<N;i++){const kk=key(T.x[i],T.z[i]);let l=C.get(kk);if(!l)C.set(kk,l=[]);l.push(i)}
+   const other=(x,z,i)=>{const cx=Math.floor(x/16),cz=Math.floor(z/16);for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const l=C.get((cx+a)+','+(cz+b));if(l)for(const j of l){let d=Math.abs(j-i);d=Math.min(d,N-d);if(d>30&&Math.hypot(T.x[j]-x,T.z[j]-z)<T.hw[j]+16)return true}}return false};
+   for(const sd of[-1,1]){let pv=null;for(let i=0;i<=N;i+=2){const k=i%N,c=Math.cos(T.psi[k]),sn=Math.sin(T.psi[k]),l=sd*(T.hw[k]+14),x=T.x[k]+c*l,z=T.z[k]-sn*l;
+     const ok=!T.gap[k]&&!near(x,z,16)&&!other(x,z,k);
+     if(ok&&pv)P.addSeg(T,pv[0],pv[1],x,z,.4);pv=ok?[x,z]:null}}
+  }catch(e){console.warn('guard',e)}
   if(pack.cpts&&P.addPt){const s=new Float32Array(dec(pack.cpts).buffer);const sf=pack.sf||1;for(let i=0;i<s.length;i+=3)P.addPt(T,s[i]*sf,s[i+1]*sf,s[i+2]*sf)}/* tree trunks */
  }catch(e){console.error('cartoon track',e)}
  return sc};
@@ -316,12 +326,20 @@ P.simGrip=gripAt;/* Nov 8: the Sim handling layer (sim.js) uses the same tyre bu
 {const sc0=stepCar;stepCar=function(c,dt){const r=sc0.apply(this,arguments);const R=typeof RACE!=='undefined'?RACE:null,T=R&&R.T;if(T&&T.ov){const N=T.N,i0=((c.idx|0)%N+N)%N,ah=Math.ceil(Math.max(20,(c.sp||0)*1.7)/T.sp);
   let on=false;for(let j=-1;j<=ah&&!on;j++)if(T.ov[(i0+j+N)%N])on=true;c.inTn=on&&!!c.onRoad;c.tnR=1.9}return r}}
 /* grid: each car stands in one of the boxes painted on the model's start straight (front row first) */
-P.gridHook=(T,c,slot)=>{const pk=T.d&&T.d.cartoon;let s=pk&&pk.slots&&pk.slots[slot];if(!s)return false;const N=T.N;let bi=0,bd=1e18;
+/* Nov 16 (Hakan: the grids are misaligned): the painted boxes are used while they sit on the road. Packs with fewer boxes than cars carry the pattern on
+   backwards (same columns, the same row gap), and a pack whose boxes lie off the road (the Florence pit side) falls back to the plain two-wide grid. */
+function gridInfo(T,pk){if(pk._gi&&pk._giT===T.N)return pk._gi;const N=T.N,sl=pk.slots||[];let bad=0,al=[];
+ for(const q of sl){let bi=0,bd=1e18;for(let i=0;i<N;i++){const d=(T.x[i]-q[0])**2+(T.z[i]-q[1])**2;if(d<bd){bd=d;bi=i}}const lat=(q[0]-T.x[bi])*Math.cos(T.psi[bi])-(q[1]-T.z[bi])*Math.sin(T.psi[bi]);if(Math.abs(lat)>T.hw[bi]+.5)bad++;al.push(bi>N/2?bi-N:bi)}
+ const m=sl.length,rows=Math.max(1,(m-1)/2),gap=m>2?Math.max(8/T.sp,Math.abs(al[0]-al[m-1])/rows):12/T.sp;
+ pk._giT=T.N;return pk._gi={ok:m>0&&bad<=m*.2,m,gap}}
+P.gridHook=(T,c,slot)=>{const pk=T.d&&T.d.cartoon;if(!pk||!pk.slots)return false;const gi=gridInfo(T,pk);if(!gi.ok)return false;let s=pk.slots[slot],back=0;if(!s&&gi.m>1){const k=slot-gi.m,base=gi.m-2+(k&1);s=pk.slots[base];back=(k>>1)+1}if(!s)return false;const N=T.N;let bi=0,bd=1e18;
  for(let i=0;i<N;i++){const d=(T.x[i]-s[0])**2+(T.z[i]-s[1])**2;if(d<bd){bd=d;bi=i}}
  /* the slot is the painted line across the front of the box: the car stands with its nose just behind it */
  const bk=2.45*K(),sx=s[0]-Math.sin(T.psi[bi])*bk,sz=s[1]-Math.cos(T.psi[bi])*bk;s=[sx,sz];
  bd=1e18;for(let i=0;i<N;i++){const d=(T.x[i]-s[0])**2+(T.z[i]-s[1])**2;if(d<bd){bd=d;bi=i}}
- c.x=s[0];c.z=s[1];c.lane0=(s[0]-T.x[bi])*Math.cos(T.psi[bi])-(s[1]-T.z[bi])*Math.sin(T.psi[bi]);
+ c.lane0=(s[0]-T.x[bi])*Math.cos(T.psi[bi])-(s[1]-T.z[bi])*Math.sin(T.psi[bi]);
+ if(back){const j=(((bi-Math.round(back*gi.gap))%N)+N)%N,co=Math.cos(T.psi[j]),sn=Math.sin(T.psi[j]);s=[T.x[j]+co*c.lane0,T.z[j]-sn*c.lane0];bi=j}
+ c.x=s[0];c.z=s[1];
  /* Nov 12 (Hakan: the cars still do not start 100 m ahead of the line): on a rally stage the painted boxes are moved 100 m up the road, keeping each car's lane */
  if(T.stage&&RACE&&RACE.cfg&&RACE.cfg.rally){const j=Math.min(N-2,(bi>N/2?bi-N:bi)+Math.round(100/(T.sp||3))),jj=((j%N)+N)%N,co=Math.cos(T.psi[jj]),sn=Math.sin(T.psi[jj]);c.x=T.x[jj]+co*c.lane0;c.z=T.z[jj]-sn*c.lane0;bi=jj}
  c.y=T.surf(c.x,c.z,T.y[bi]+2).h+1.1;c.yaw=T.psi[bi];c.idx=bi;c.unw=bi>N/2?bi-N:bi;c.unw0=c.unw;c.cy=c.yaw;c.camY=c.y;return true};
