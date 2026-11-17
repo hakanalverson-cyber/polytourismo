@@ -254,7 +254,7 @@ src=rep(src,"let bi=c.idx,bd=1e9;for(let k=-6;k<=30;k++){","let bi=c.idx,bd=1e9;
 src=rep(src,"c.wrong=hd<-3&&live?c.wrong+dt:0;","c.wrong=!T.free&&hd<-3&&live?c.wrong+dt:0;")
 src=rep(src,"if(live&&(c.y<T.y[c.idx]-12||Math.abs(c.roll)>.68","if(live&&((!T.free&&c.y<T.y[c.idx]-12)||Math.abs(c.roll)>.68")
 src=rep(src," if(!live)return;\n const sf=T.surf(c.x,c.z,c.y);"," if(!live||T.free)return;\n const sf=T.surf(c.x,c.z,c.y);")
-parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','frmodels','frdress','frtown','frisland','frisdress','frworld','frwater','freeroam','cars10','audio','modes','tracks','hpack','tracks2','extra','race2','elim','tod','bridge','props','bld','stages','trees_q','propkit','scenery','ra_data','tracks3','imola_data','tracks4','ring_data','ring_forest','tracks5','tracks6','cartoon','logos','weather','ambience','menuaudio','tutorial','updatelog','hud2','shade','ui','promo','cinema','rally','trackmode','realspeed','barn','animals','franimals','frlife','frrock','clean','solid','damage','grip','airline','ride','snap','perf','econ','frhud','title','brandbg','uifx','fade','arcade','drivelab','bkworld','bkpeople','bikes','career','menufx','lightfx','mood','post','sim','sky','rallymaps','rallyui','skyx','tunnelfix','propsolid','mapfix','prep','engwk','rallyprops','snowfx','distbar','finale','camsys','ra','gtlook','gtmap','gthud']  if os.path.exists(f'{SRC}/layers/{n}.js')]
+parts=[open(f'{SRC}/layers/{n}.js').read() for n in ['core','frmodels','frdress','frtown','frisland','frisdress','frworld','frwater','freeroam','cars10','audio','modes','tracks','hpack','tracks2','extra','race2','elim','tod','bridge','props','bld','stages','trees_q','propkit','scenery','ra_data','tracks3','imola_data','tracks4','ring_data','ring_forest','tracks5','tracks6','cartoon','logos','weather','ambience','menuaudio','tutorial','updatelog','hud2','shade','ui','promo','cinema','rally','trackmode','realspeed','barn','animals','franimals','frlife','frrock','clean','solid','damage','grip','airline','ride','snap','perf','econ','frhud','title','brandbg','uifx','fade','arcade','drivelab','bkworld','bkpeople','bikes','career','menufx','lightfx','mood','post','sim','sky','rallymaps','rallyui','skyx','tunnelfix','propsolid','mapfix','prep','engwk','rallyprops','snowfx','distbar','finale','camsys','ra','gtlook','gtmap','gthud','pit']  if os.path.exists(f'{SRC}/layers/{n}.js')]
 # track files (bought cartoon models of Imola / Road Atlanta, made by tools/cartoon_track, kept out of the public repo in project files).
 # PACKS=1 builds them in (Artifact, full build); otherwise players load them with "+ Add track file" so the lite file stays small.
 # DRIVE=1: the Drive Lab test build (src/layers/drivelab.js): lite assets plus only the packs named in DRIVE_TRACKS (default the Nurburgring)
@@ -333,6 +333,13 @@ if os.environ.get('PACKS') or os.environ.get('BIKES'):
     BIKES+='<script>window.GAR3_B64="'+base64.b64encode(open('/mnt/project-files/poly-gt/packs/garage_tex.glb','rb').read()).decode()+'";</script>';print('built in garage_tex.glb')
   if os.path.exists('/mnt/project-files/poly-gt/packs/props_lp.bin'):  # Hakan's phone.glb + laptop.glb, baked by tools/garage/props.py (career props)
     BIKES+='<script>window.GPROP_B64="'+base64.b64encode(open('/mnt/project-files/poly-gt/packs/props_lp.bin','rb').read()).decode()+'";</script>';print('built in props_lp.bin')
+# pit crew (Low Poly Airport Ground Crew, Studio Ochi, supplied by Hakan: project files only, outfits toned down): pit.js. PACKS or CREW=1 builds
+if (os.environ.get('PACKS') or os.environ.get('CREW')) and os.path.exists('/mnt/project-files/poly-gt/packs/crew.glb'):
+  BIKES+='<script>window.CREW_B64="'+base64.b64encode(open('/mnt/project-files/poly-gt/packs/crew.glb','rb').read()).decode()+'";</script>';print('built in crew.glb')
+# pit lane props (tyres, tool pack, tool shelf, traffic cones and barricades, supplied by Hakan: project files only; slimmed to base colour maps, tools/slim.py): pit.js
+if (os.environ.get('PACKS') or os.environ.get('CREW')) and os.path.exists('/mnt/project-files/poly-gt/packs/pit-props/traffic.glb'):
+  import json as _j
+  BIKES+='<script>window.PITPROPS_B64='+_j.dumps({k:base64.b64encode(open('/mnt/project-files/poly-gt/packs/pit-props/'+k+'.glb','rb').read()).decode() for k in('tire','tool','shelf','traffic')})+';</script>';print('built in pit props')
 # action stills on the bought model tracks (kept in project files, not in the public repo): PACKS builds only
 if os.environ.get('PACKS'):
   import glob as _gb

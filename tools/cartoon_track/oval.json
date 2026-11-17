@@ -1,0 +1,92 @@
+{
+ "id": "oval",
+ "name": "Oval",
+ "replaces": "oval",
+ "credit": "Cartoon Race Track - Oval (Retro Cartoon Racing), bought by Hakan",
+ "work": "/tmp/cv/w_oval",
+ "texdir": "/tmp/cv/oval/textures/",
+ "width": 24,
+ "carScale": 1.8,
+ "centre": {
+  "method": "skeleton",
+  "mesh": "1TARMAC",
+  "cell": 0.5,
+  "rays": {
+   "w": [
+    20,
+    75
+   ],
+   "c": [
+    593,
+    308
+   ],
+   "skip": [
+    [
+     50,
+     135
+    ]
+   ],
+   "W": 45
+  }
+ },
+ "sign": 1,
+ "start": {
+  "mesh": "line_seg_42",
+  "mode": "centroid",
+  "at": [
+   -1.9574479166666665,
+   -27.603333333333335
+  ]
+ },
+ "ground": [
+  [
+   "Cylinder001_rock",
+   0,
+   -0.1
+  ],
+  [
+   "0GRASS2",
+   0,
+   0.03
+  ],
+  [
+   "0GRASS_",
+   0,
+   0
+  ],
+  [
+   "Object021_gravel",
+   3,
+   0.06
+  ],
+  [
+   "1TARMAC",
+   1,
+   0.12
+  ]
+ ],
+ "lift": {
+  "white_line": 0.15
+ },
+ "rock": "Cylinder001_rock",
+ "colliders": "barriers_003|wall_a|wall_d|wall_end|plastic_barrier|wall_fence",
+ "skip": "^$",
+ "bake": "tree|tyre|startlights|wall_[ade]|plastic|lamp|grandstand|barriers",
+ "ratio": {
+  "tree": 0.1,
+  "tyre": 0.1,
+  "wall_[ade]|plastic|lamp|grandstand|barriers": 0.35,
+  "default": 0.2
+ },
+ "bigtex": [
+  "road",
+  "garages",
+  "banners"
+ ],
+ "alpha": [
+  "fence"
+ ],
+ "sat": 1.3,
+ "medal": 60,
+ "overhead": "tree|grass|gravel|rock|tarmac|white_line|startlights|fence"
+}

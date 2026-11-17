@@ -11,7 +11,7 @@
 'use strict';
 const P=window.PT8;if(!P||!P.ui||!P.CARS||typeof THREE==='undefined')return;
 const $=id=>document.getElementById(id),BYID=P.BYID,CLS=P.CLS,fmtCr=P.fmtCr,fmtT=P.fmtT||(t=>t.toFixed(2));
-const QP_K=.25;
+const QP_K=0;/* Nov 16 (Hakan): Quick Play gives no money at all */
 const esc_=s=>String(s).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]);
 const V3=(x,y,z)=>new THREE.Vector3(x||0,y||0,z||0);
 
@@ -315,8 +315,10 @@ function tick(dt){GS.t+=dt;const k=1-Math.exp(-dt*3.4);GS.cp.lerp(GS.tp,k);GS.cl
 const QW=new THREE.Quaternion(),QP=new THREE.Quaternion(),QD=new THREE.Quaternion();
 function rotW(b,axis,ang){if(!b||!ang)return;b.parent.updateWorldMatrix(true,false);b.parent.getWorldQuaternion(QP);QW.setFromAxisAngle(axis,ang);QD.copy(QP).invert().multiply(QW).multiply(QP);b.quaternion.premultiply(QD)}
 /* talking gestures stay small and low: a nod, a shrug, a hand to the hip. Nothing that lifts the hands into the air without a reason */
-const GEST={red:{idle:['look'],talk:['nod','shrug','nod','hip','nod']},vin:{idle:['watch','look'],talk:['nod','shrug','nod','palm']}};
-const GLEN={tap:2.4,wipe:2.2,stretch:2.6,look:2.8,watch:2.6,jacket:2.0,shift:3.0,nod:1.1,shrug:1.4,point:1.8,hip:2.0,palm:1.6,hey:1.5};
+/* Nov 15 (Hakan: more animations for Nina and Vincent): a proper wave when you walk in, a hand to the chin while they think, a laugh, a shake of the head,
+   a thumbs up, a clap, a hand over the face (Nina, at an ugly car), counting on the fingers (Vince, at a price) */
+const GEST={red:{idle:['look'],talk:['nod','shrug','nod','hip','think','nod','thumb']},vin:{idle:['watch','look'],talk:['nod','shrug','nod','palm','think','count']}};
+const GLEN={wave:2.2,think:2.8,laugh:1.8,no:1.5,thumb:1.7,clap:2.0,facepalm:2.4,count:2.4,tap:2.4,wipe:2.2,stretch:2.6,look:2.8,watch:2.6,jacket:2.0,shift:3.0,nod:1.1,shrug:1.4,point:1.8,hip:2.0,palm:1.6,hey:1.5};
 function gesture(pe,k){if(!pe)return;pe.gs={k,t:0,d:GLEN[k]||1.5}}
 P.gcGesture=(who,k)=>gesture(GS[who],k);
 function anim(pe,k,dt){const B=pe.rig,t=GS.t+(k==='red'?1.7:0),g=pe.g;for(const r in B)if(B[r].userData.q0)B[r].quaternion.copy(B[r].userData.q0);
@@ -344,16 +346,18 @@ function anim(pe,k,dt){const B=pe.rig,t=GS.t+(k==='red'?1.7:0),g=pe.g;for(const 
  if(work){rotW(B.spine002,rt,.1+Math.sin(t*.8)*.02);rotW(B.spine003,rt,.05)}
  rotW(B.spine002,rt,-br*.02-(gk==='stretch'?E*.2:0));rotW(B.spine003,rt,-br*.024);rotW(B.spine003,fw,-sw*.016-shift*.05+hip*.05);
  /* head */
- const nod=gk==='nod'?Math.sin(gp*Math.PI*3)*E*.14:0;
+ const nod=gk==='nod'?Math.sin(gp*Math.PI*3)*E*.14:gk==='laugh'?-E*.16+Math.sin(t*15)*E*.03:gk==='facepalm'?E*.3:gk==='think'?E*.07:0,shk=gk==='no'?Math.sin(gp*Math.PI*5)*E*.3:gk==='think'?E*.12:0;
+ rotW(B.spine005,up,shk);
  rotW(B.spine004,up,pe.hy_*.35);rotW(B.spine005,up,pe.hy_*.4);rotW(B.spine006,up,pe.hy_*.25);
  rotW(B.spine004,rt,pe.hp_*.3);rotW(B.spine005,rt,pe.hp_*.45+tk*.04+nod);rotW(B.spine006,rt,pe.hp_*.2-(gk==='stretch'?E*.2:0));
  rotW(B.spine006,fw,Math.sin(t*.37)*.035+(gk==='shrug'?E*.1:0));
  /* shoulders */
- const sh=gk==='shrug'?E:gk==='stretch'?E*.6:0;
+ const sh=gk==='shrug'?E:gk==='stretch'?E*.6:gk==='laugh'?E*(.25+.2*Math.sin(t*15)):0;
  for(const [s,sg] of [['L',1],['R',-1]])rotW(B['shoulder'+s],fw,-sg*(br*.012+sh*.16));
  /* arms (negative about the body's right axis lifts the arm forwards) */
  for(const [s,sg] of [['L',1],['R',-1]]){rotW(B['upper_arm'+s],rt,Math.sin(t*.42+sg)*.025);rotW(B['upper_arm'+s],fw,sg*br*.015);rotW(B['forearm'+s],rt,-.08-Math.sin(t*.5+sg)*.025)}
  const A=(s,u,f)=>{rotW(B['upper_arm'+s],rt,u);rotW(B['forearm'+s],rt,f)};
+ /* the free hand: Nina's right holds the hammer, so her one-handed moves use the left */const HS=k==='red'?'L':'R',OS=k==='red'?'R':'L',hsg=k==='red'?1:-1;
  if(work){A('L',.05,-.2);rotW(B.upper_armL,fw,.5);rotW(B.forearmL,fw,-1.15)}
  else if(gk==='tap'){A('L',-.35*E,-1.2*E);A('R',-.3*E,-(1.0+Math.max(0,Math.sin(t*8))*.45)*E)}
  else if(gk==='wipe'){A('L',-.35*E,-1.3*E);A('R',-.35*E,-1.3*E);rotW(B.forearmR,up,Math.sin(t*7)*.25*E);rotW(B.forearmL,up,-Math.sin(t*7)*.25*E)}
@@ -364,6 +368,13 @@ function anim(pe,k,dt){const B=pe.rig,t=GS.t+(k==='red'?1.7:0),g=pe.g;for(const 
  else if(gk==='palm'){A('R',-.3*E,-.6*E);A('L',-.2*E,-.45*E);for(const [s,sg] of [['L',1],['R',-1]])rotW(B['forearm'+s],fw,sg*.35*E)}
  else if(gk==='shrug'){A('L',-.2*E,-.75*E);A('R',-.2*E,-.75*E);for(const [s,sg] of [['L',1],['R',-1]])rotW(B['forearm'+s],fw,sg*.4*E)}
  else if(gk==='hip'){A('R',.05*E,-.2*E);rotW(B.upper_armR,fw,-.5*E);rotW(B.forearmR,fw,1.15*E)}
+ else if(gk==='wave'){const e=E*Math.min(1,(1-gp)*3);A(HS,-.25*e,-.2*e);rotW(B['upper_arm'+HS],fw,hsg*1.15*e);rotW(B['forearm'+HS],fw,hsg*(1.25+Math.sin(t*9)*.3)*e)}
+ else if(gk==='think'){A(HS,-.5*E,-2.05*E);rotW(B['upper_arm'+HS],fw,-hsg*.12*E);A(OS,-.12*E,-1.25*E);rotW(B['forearm'+OS],up,hsg*.75*E)}
+ else if(gk==='facepalm'){A(HS,-.8*E,-2.15*E);rotW(B['upper_arm'+HS],fw,-hsg*.2*E)}
+ else if(gk==='thumb'){A(HS,-.55*E,-1.15*E);rotW(B['upper_arm'+HS],fw,hsg*.15*E)}
+ else if(gk==='clap'){const c_=Math.max(0,Math.sin(t*15));A('L',-.45*E,-1.25*E);A('R',-.45*E,-1.25*E);rotW(B.forearmL,up,-(.42-.2*c_)*E);rotW(B.forearmR,up,(.42-.2*c_)*E)}
+ else if(gk==='count'){A('L',-.4*E,-1.35*E);A('R',-.35*E,-(1.2+Math.max(0,Math.sin(t*6))*.3)*E);rotW(B.forearmL,up,-.35*E);rotW(B.forearmR,up,.35*E)}
+ else if(gk==='laugh'){A('L',-.1*E,-.35*E);A('R',-.1*E,-.35*E)}
  else if(gk==='hey'){const e=E*Math.min(1,(1-gp)*3);A('R',-.35*e,-1.15*e);rotW(B.forearmR,fw,Math.sin(t*9)*.12*e)}
  g.position.y=walkPose(pe,B,rt,fw,up);posePP(pe,k,B,t,dt,rt,fw,up,A,me,work||!!G_)}
 /* ---------------- moving around the shop ----------------
@@ -790,7 +801,7 @@ function bringOut(i){const x=owned()[i];if(!x)return;const was=curCar().id;if(x.
 function bringOut_(x){
  /* back to the overview; Nina says it over her head. A car that looks like shit (bad paint, or worn out) gets an insult instead */
  const ugly=!!paintOf(x.id)||pctOK(x.id)<55;UI.who=null;UI.view='talk';UI.ch=null;UI.f=0;UI.line='';aim();const d=$('gcDlg');if(d)d.classList.remove('on');hint();P.sfx&&P.sfx('select');
- bubble('red',withName(ugly?rnd(ROAST):rnd(GOT).replace('%s',x.car.name),.4),ugly?3.4:3);gesture(GS.red,ugly?rnd(['point','shrug']):'hey')}
+ bubble('red',withName(ugly?rnd(ROAST):rnd(GOT).replace('%s',x.car.name),.4),ugly?3.4:3);gesture(GS.red,ugly?rnd(['facepalm','laugh','point']):rnd(['thumb','hey','clap']))}
 const ROAST=[`What the FUCK is that?`,`Jesus Christ, that's ugly.`,`Oh hell no. Get that piece of shit out of here.`,`That is fucking disgusting.`,`Are you fucking kidding me?`,`What the hell did you drag in here?`,`God, that's hideous.`,`Ew. No. What the fuck.`,`That thing is a goddamn eyesore.`];
 /* ---------------- selling through Vince ----------------
    Marketplace > Sell one of yours: pick a car (not your last one), set the asking price, write a title and a description. The chance meter is
@@ -1150,7 +1161,7 @@ function pcBuy(l){const g=G(),sv=P.SV(),c=BYID[l.id],pr=lPrice(l);if(sv.cr<pr)re
 const inRace=()=>scr==='game'||scr==='bike';let ANN=null,annQ=[];
 function announce(o){annQ.push(o);if(!ANN||!ANN.classList.contains('on'))annNext()}
 function annNext(){const o=annQ.shift();if(!o)return;if(!ANN){ANN=document.createElement('div');ANN.id='gcAnn';document.body.appendChild(ANN);ANN.onclick=()=>{ANN.classList.remove('on');const c=ANN._cv;if(c&&scr==='s8career'&&GS.ok){if(UI.who)leave();openPC('msg',c)}setTimeout(annNext,400)}}
- ANN._cv=o.cv||null;const pic=GS.vin&&GS.vin.pic;ANN.innerHTML=`<div class="pic">${pic?`<img src="${pic}" alt="">`:'V'}</div><div class="tx"><small class="${o.ok?'ok':'no'}">${o.tag||(o.ok?'SOLD':'NO BUYERS')} &middot; MARKETPLACE</small><b>${esc_(o.h)}</b><p>${esc_(o.p)}</p></div>${o.cr?`<div class="cr${o.cr<0?' neg':''}">${o.cr<0?'&minus;':'+'}${fmtCr(Math.abs(o.cr))}</div>`:''}`;
+ ANN._cv=o.cv||null;try{if(GS.vin&&!GS.vin.gs)gesture(GS.vin,o.ok?'clap':'no')}catch(e){}const pic=GS.vin&&GS.vin.pic;ANN.innerHTML=`<div class="pic">${pic?`<img src="${pic}" alt="">`:'V'}</div><div class="tx"><small class="${o.ok?'ok':'no'}">${o.tag||(o.ok?'SOLD':'NO BUYERS')} &middot; MARKETPLACE</small><b>${esc_(o.h)}</b><p>${esc_(o.p)}</p></div>${o.cr?`<div class="cr${o.cr<0?' neg':''}">${o.cr<0?'&minus;':'+'}${fmtCr(Math.abs(o.cr))}</div>`:''}`;
  ANN.classList.remove('on');void ANN.offsetWidth;ANN.classList.add('on');P.sfx&&P.sfx(o.ok?'select':'back');clearTimeout(ANN._t);ANN._t=setTimeout(()=>{ANN.classList.remove('on');setTimeout(annNext,450)},6000)}
 function salesTick(){let S;try{S=sales()}catch(e){return}if(!S.length||inRace()||document.hidden)return;const now=Date.now();
  for(const s of S.slice()){if(!s.uid)s.uid=uid();if(s.due>now||(s.tx&&CV().some(c=>c.sid===s.uid&&c.st==='open')))continue;if(!s.tx&&s.ask>=1500&&Math.random()<.5){s.tx=1;cvSell(s);continue}S.splice(S.indexOf(s),1);const c=BYID[s.id],nm=c?c.name:'car',sv=P.SV();
@@ -1189,7 +1200,7 @@ function popIn(id,bad){const c=BYID[id],oil=Math.max(150,Math.round(fixCost(id)*
  L.push({ic:'bye',t:'Later',a:()=>{UI.ch=null;say(rnd([`Suit yourself. It'll sound like a damn coffee grinder till then.`,`Your funeral.`]))}});
  UI.who='red';UI.view='talk';UI.f=0;UI.ch=L.length>1?L:null;aim();UI.line=line;UI.ty=null;if(GS.red){GS.red.tk=2.5;gesture(GS.red,'shrug')}drawDlg();hint()}
 function talk(who,keep,line){UI.who=who;if(!keep){UI.view='talk';UI.f=0;UI.ch=null}
- aim();if(!keep&&GS[who])gesture(GS[who],who==='red'?'hey':'nod');UI.line=String(line||UI.line||(who==='red'?redLine():vinLine())).replace(/Cr\.\./g,'Cr.');UI.ty=null;if(GS[who])GS[who].tk=2.5;if(who==='vin'){const g=G();if(!g.met){g.met=1;P.save()}}P.sfx&&!keep&&P.sfx('select');drawDlg();hint()}
+ aim();if(!keep&&GS[who]){const pe_=GS[who];/* the first hello of a visit is a wave */gesture(pe_,pe_.waved?(who==='red'?'hey':'nod'):'wave');pe_.waved=1}UI.line=String(line||UI.line||(who==='red'?redLine():vinLine())).replace(/Cr\.\./g,'Cr.');UI.ty=null;if(GS[who])GS[who].tk=2.5;if(who==='vin'){const g=G();if(!g.met){g.met=1;P.save()}}P.sfx&&!keep&&P.sfx('select');drawDlg();hint()}
 function leave(){UI.who=null;UI.line='';UI.view='talk';UI.ch=null;aim();const d=$('gcDlg');if(d)d.classList.remove('on');const b=$('gcBox');if(b)b.classList.remove('on');P.sfx&&P.sfx('back');hint()}
 function act(k){if(k==='pc'){openPC('buy');return}if(k==='car'){P.sfx&&P.sfx('select');openCars()}else if(k)talk(k)}
 function say(t){setLine(t)}
@@ -1279,7 +1290,7 @@ P.racePay0=P.racePay;{const rp=P.racePay;P.racePay=function(){return Math.round(
 /* ---------------- results ---------------- */
 function judge(){const Rc=typeof RACE!=='undefined'?RACE:null,run=P.gcRun;if(!Rc||!run)return null;const o=run.o,c=Rc.cars.find(x=>x.human);if(!c)return null;
  if(c.carId)G().wear[c.carId]=Math.max(0,Math.min(1,+(c.dmg||0)));
- if(o.type==='race'||o.type==='circuit'||o.type==='elim'){const order=[...Rc.cars].sort((a,b)=>(b.fin?1e6-b.finT:0)-(a.fin?1e6-a.finT:0)||b.unw-a.unw),pl=order.indexOf(c)+1;
+ if(o.type==='race'||o.type==='circuit'||o.type==='elim'){const order=[...Rc.cars].sort((a,b)=>(b.out?-1e6-(b.place||0):b.fin?1e6-b.finT:0)-(a.out?-1e6-(a.place||0):a.fin?1e6-a.finT:0)||b.unw-a.unw),pl=order.indexOf(c)+1;
   return{ok:pl<=3,what:(P.ord?P.ord(pl):pl)+' place'}}
  if(o.type==='ta'){const bl=c.lapT&&c.lapT.length?Math.min(...c.lapT):null,t=o.target;if(bl==null)return{ok:false,what:'No lap set'};
   if(t==null)return{ok:!!P.medalFor&&P.medalFor(o.track,BYID[c.carId],bl)<=o.medal,what:'Best lap '+fmtT(bl)};return{ok:bl<=t,what:'Best lap '+fmtT(bl)+(bl<=t?'':', the target was '+fmtT(t))}}
@@ -1333,7 +1344,8 @@ function ldSlide(first){if(!LD||!LD.classList.contains('on')||LD.classList.conta
  const e=document.createElement('div'),r=()=>(Math.random()*3-1.5).toFixed(2)+'%';e.style.backgroundImage='url(data:image/jpeg;base64,'+x+')';e.style.setProperty('--x0',r());e.style.setProperty('--y0',r());s.appendChild(e);void e.offsetWidth;e.className='on';
  const o=[...s.children].filter(c=>c!==e);setTimeout(()=>o.forEach(c=>c.remove()),1800);LD._t=setTimeout(()=>ldSlide(false),6500)}
 function ldProg(f){if(!LD)return;const u=LD.querySelector('.bt u'),b=LD.querySelector('.bl b');if(u)u.style.width=Math.round(f*100)+'%';if(b)b.textContent=Math.round(f*100)+'%'}
-function ldHide(){sec.classList.remove('ld');aim();if(!LD)return;LD.classList.add('rdy','out');clearTimeout(LD._t);setTimeout(()=>{if(LD&&LD.classList.contains('out'))LD.classList.remove('on')},1000)}
+function ldHide(){/* Nov 15: the loading screen fades to black, the garage comes up out of the black */const fin=()=>{sec.classList.remove('ld');aim();if(!LD)return;LD.style.transition='none';LD.classList.add('rdy','out');clearTimeout(LD._t);LD.classList.remove('on');setTimeout(()=>{LD.style.transition=''},50)};
+ if(P.blackIn&&LD&&LD.classList.contains('on'))P.blackIn(350).then(()=>{fin();setTimeout(()=>P.blackOut(700),80)});else fin()}
 const tick0=()=>new Promise(r=>setTimeout(r,16));
 async function loadCareer(){const t0=performance.now();ldShow();ldProg(.04);GS.onProg=f=>ldProg(.04+f*.6);
  try{await buildScene();ldProg(.66);setCar();await tick0();
@@ -1343,7 +1355,9 @@ async function loadCareer(){const t0=performance.now();ldShow();ldProg(.04);GS.o
  ldProg(1);const left=2400-(performance.now()-t0);if(left>0)await new Promise(r=>setTimeout(r,left));ldHide()}
 
 /* ---------------- entering, keys, back ---------------- */
-P.careerEnter=()=>{P.sfx&&P.sfx('select');P.ui.ST.ret='menu';const g=G();UI.who=g.met?null:'vin';UI.view='talk';UI.f=0;UI.ch=null;UI.menu=null;UI.line='';UI.tag=1;render();show('s8career');loadCareer()};
+P.careerEnter=()=>{P.sfx&&P.sfx('select');for(const k_ of['red','vin'])if(GS[k_])GS[k_].waved=0;P.ui.ST.ret='menu';const g=G();UI.who=g.met?null:'vin';UI.view='talk';UI.f=0;UI.ch=null;UI.menu=null;UI.line='';UI.tag=1;
+ /* Nov 15: the menu fades to black, the career loading screen comes up out of the black */
+ const go=()=>{render();show('s8career');loadCareer();if(P.blackOut)setTimeout(()=>P.blackOut(650),60)};if(P.blackIn)P.blackIn(320).then(go);else go()};
 function escBack(){if(UI.view==='sellForm'){UI.sf=null;openSell();return}if(UI.view==='sell'){UI.view='mkt';UI.f=G().mkt.length;say(`Sure.`);drawDlg();hint();return}
  if(UI.view==='tune'){tuneDone();aim();drawDlg();hint();return}
  if(UI.view==='cars'){UI.view='talk';UI.f=0;leave();return}

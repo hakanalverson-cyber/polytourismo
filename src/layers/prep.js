@@ -74,6 +74,7 @@ const st=document.createElement('style');st.textContent=`
 #suSteps .stAdd:hover{background:#fff!important;color:#0a0e14!important}
 #prepFade{position:absolute;inset:0;z-index:7;background:#000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .35s ease}
 #s8setup.prepBuild #prepFade{opacity:1;transition:opacity .12s ease}
+#s8setup.prepPre #prepFade{transition:none!important}
 #prepFade b{display:block;font:italic 800 28px var(--gt);letter-spacing:.04em;color:#f1f3f5;text-align:center}#prepFade b i{font-style:italic;color:#8fb4d8}
 #prepFade u{display:block;width:190px;height:2px;margin:16px auto 0;background:#ffffff22;overflow:hidden;text-decoration:none}#prepFade s{display:block;height:100%;width:40%;background:#f1f3f5;animation:pfBar 1s ease-in-out infinite}@keyframes pfBar{from{transform:translateX(-100%)}to{transform:translateX(260%)}}
 #s8setup.carN3 #prepVig{background:radial-gradient(ellipse 90% 80% at 60% 35%,#0000 40%,#0006 100%),linear-gradient(0deg,#000c 0%,#0007 30%,#0000 55%)}
@@ -371,11 +372,13 @@ let building=0;
 #cineUI{position:absolute;inset:0;z-index:3;display:none;pointer-events:none;color:#fff;font-family:var(--gt,Inter,sans-serif)}
 #s8setup.cine #cineUI{display:block}
 #s8setup.cine .hdr,#s8setup.cine .foot8,#s8setup.cine #gxSu,#s8setup.cine #prepWait,#s8setup.cine #suSteps{visibility:hidden!important}
-#cineUI .cnL{position:absolute;left:0;right:0;height:7.5vh;background:#000;z-index:1;animation:cnLb .9s cubic-bezier(.2,.8,.2,1) both}#cineUI .cnL.t{top:0}#cineUI .cnL.b{bottom:0;animation-name:cnLb2}
+#cineUI .cnL{position:absolute;left:0;right:0;height:7.5vh;background:#000;z-index:1}#cineUI .cnL.t{top:0}#cineUI .cnL.b{bottom:0;animation-name:cnLb2}
 @keyframes cnLb{from{transform:translateY(-100%)}}@keyframes cnLb2{from{transform:translateY(100%)}}
-#cineUI .cnF{position:absolute;left:-30%;top:46%;width:60%;height:2px;background:linear-gradient(90deg,transparent,#bfe0ffcc 40%,#fff 50%,#bfe0ffcc 60%,transparent);box-shadow:0 0 24px 6px #7fb8ff55;opacity:0;pointer-events:none;mix-blend-mode:screen}
-#cineUI .cnF.go{animation:cnFl 1.3s ease-out both}@keyframes cnFl{0%{opacity:0;transform:translateX(0) scaleX(.4)}15%{opacity:.9}100%{opacity:0;transform:translateX(220%) scaleX(1.4)}}
-#cineUI .cnN.go{animation:cnNi .8s cubic-bezier(.2,.8,.2,1) both}@keyframes cnNi{from{opacity:0;transform:translateX(-30px)}}
+/* Nov 15 (Hakan: "get rid of the loading screen cinematic blue whoosh effects"): the blue light streak and the slide-ins are gone; the name just fades up,
+   and the shots are joined by a plain dip to black (no blur) */
+#cineUI .cnN.go{animation:cnNi .6s ease both}@keyframes cnNi{from{opacity:0}}
+#s8setup.cine{background:#000!important}
+#s8setup.prepLive #prepCv.cutK{opacity:0!important;transition:opacity .3s ease!important}
 #cineUI .cnN{position:absolute;left:5vw;bottom:15vh;text-shadow:0 1px 4px #000c}
 #cineUI .cnN small{display:block;font:600 11px var(--gt);letter-spacing:.28em;color:#cfd8de;text-transform:uppercase;margin-bottom:6px}
 #cineUI .cnN b{display:block;font:300 34px/1.05 var(--gt);letter-spacing:.02em}
@@ -385,10 +388,10 @@ let building=0;
 #cineUI .cnB em:before{content:'';width:13px;height:13px;border-radius:50%;border:2px solid #ffffff55;border-top-color:#fff;animation:cnSp .8s linear infinite}
 @keyframes cnSp{to{transform:rotate(360deg)}}
 #cineUI .cnB u{display:block;width:min(46vw,520px);height:3px;background:#ffffff26;border-radius:2px;overflow:hidden}
-#cineUI .cnB s{display:block;height:100%;width:0;background:linear-gradient(90deg,#6aaeff,#fff);text-decoration:none}
+#cineUI .cnB s{display:block;height:100%;width:0;background:#f1f3f5;text-decoration:none}
 #cineUI .cnH{position:absolute;right:5vw;bottom:15vh;font:600 10px var(--gt);letter-spacing:.26em;color:#aab6bf;text-transform:uppercase;text-shadow:0 1px 3px #000c}`;document.head.appendChild(st)})();
 let cnUI=null;
-function cineUI(sec){if(cnUI&&cnUI.isConnected)return cnUI;cnUI=document.createElement('div');cnUI.id='cineUI';cnUI.innerHTML='<div class="cnL t"></div><div class="cnL b"></div><div class="cnF"></div><div class="cnN"><small></small><b></b><i></i></div><div class="cnB"><em>Loading</em><u><s></s></u></div>';sec.appendChild(cnUI);return cnUI}
+function cineUI(sec){if(cnUI&&cnUI.isConnected)return cnUI;cnUI=document.createElement('div');cnUI.id='cineUI';cnUI.innerHTML='<div class="cnL t"></div><div class="cnL b"></div><div class="cnN"><small></small><b></b><i></i></div><div class="cnB"><em>Loading</em><u><s></s></u></div>';sec.appendChild(cnUI);return cnUI}
 /* engine note: a saw and a square an octave down through a low-pass, pitch and brightness following the revs */
 let rvA=null,rv=0,rvKeys=new Set();
 function revAudio(on,r){try{if(!rvA){if(!on)return;const AC_=window.AudioContext||window.webkitAudioContext;if(!AC_)return;const ctx=new AC_(),o1=ctx.createOscillator(),o2=ctx.createOscillator(),f=ctx.createBiquadFilter(),g=ctx.createGain();o1.type='sawtooth';o2.type='square';f.type='lowpass';g.gain.value=0;o1.connect(f);o2.connect(f);f.connect(g);g.connect(ctx.destination);o1.start();o2.start();rvA={ctx,o1,o2,f,g}}
@@ -418,11 +421,11 @@ let cpend=null;
 function cnNext(s){const C=P.cine,n=Math.min(2,s.cars.length);if(!C.bag||!C.bag.length){C.bag=[];for(let k=0;k<n;k++)C.bag.push(k);C.bag.sort(()=>Math.random()-.5);if(C.last===C.bag[0]&&n>1)C.bag.reverse()}
  const ci=C.bag.shift();C.last=ci;let k;do{k=CN_KINDS[Math.floor(Math.random()*CN_KINDS.length)]}while(k===C.lk&&CN_KINDS.length>1);C.lk=k;
  s.cn={ci,kind:k,sg:Math.random()<.5?-1:1,dur:3.4+Math.random()*1.6,t0:performance.now()};s.cars.forEach((c,i)=>c.visible=i===ci);if(s.stGrp)s.stGrp.position.set(s.cars[ci].position.x,s.cars[ci].position.y-.02,s.cars[ci].position.z);
- const ui=cnUI;if(ui){const car=P.BYID[(P.ui&&P.ui.selCar?P.ui.selCar(ci):{}).id],mk=car?(car.name.split(' ')[0]):'',nm=car?car.name.slice(mk.length).trim():'';ui.querySelector('small').textContent=mk;ui.querySelector('b').textContent=nm||(car&&car.name)||'';ui.querySelector('i').textContent=n>1?'PLAYER '+(ci+1):'';for(const q of ['.cnF','.cnN']){const e=ui.querySelector(q);e.classList.remove('go');void e.offsetWidth;e.classList.add('go')}}}
+ const ui=cnUI;if(ui){const car=P.BYID[(P.ui&&P.ui.selCar?P.ui.selCar(ci):{}).id],mk=car?(car.name.split(' ')[0]):'',nm=car?car.name.slice(mk.length).trim():'';ui.querySelector('small').textContent=mk;ui.querySelector('b').textContent=nm||(car&&car.name)||'';ui.querySelector('i').textContent=n>1?'PLAYER '+(ci+1):'';for(const q of ['.cnN']){const e=ui.querySelector(q);e.classList.remove('go');void e.offsetWidth;e.classList.add('go')}}}
 function camCine(s,dt,now,w){const C=P.cine;cineUI(w.sec);const el=now-C.t0;
  if(!s.cn||s.cn.ci>=s.cars.length)nextCine(s);
  const sh=s.cn,t=(now-sh.t0)/1000;
- if(t>sh.dur&&!cpend){cpend=1;cv.classList.add('cut');setTimeout(()=>{if(S===s)cnNext(s);cpend=null;setTimeout(()=>cv&&cv.classList.remove('cut'),60)},340)}
+ if(t>sh.dur&&!cpend){cpend=1;cv.classList.add('cutK');setTimeout(()=>{if(S===s)cnNext(s);cpend=null;setTimeout(()=>cv&&cv.classList.remove('cutK'),60)},340)}
  const Pp=new THREE.Vector3(),Ll=new THREE.Vector3();cnPose(s,sh,Math.min(t,sh.dur),Pp,Ll);
  /* the first frame of a shot starts where it should: no smoothing across a cut, only a light smoothing inside one */
  if(s._cnS!==sh){s._cnS=sh;s._cp=Pp.clone();s._cl=Ll.clone()}else{const k=1-Math.exp(-dt*9);s._cp.lerp(Pp,k);s._cl.lerp(Ll,k)}
@@ -440,7 +443,7 @@ function frame(now){raf=requestAnimationFrame(frame);const w=want();
  if(!S||S.track!==w.track||S.tod!==w.tod){if(building)return;building=1;w.sec._bt=performance.now();w.sec.classList.add('prepBuild');w.sec.classList.remove('prepLive');
   /* let the fade show, then build (a second or so on the big maps) */
   setTimeout(()=>{try{const s=build(w.track,w.tod);S=s}catch(e){console.warn('prep build',e);lastErr=String(e&&e.stack||e).slice(0,300);S=null;if(window.PTO)window.PTO.prepLive=false}building=0;setTimeout(()=>w.sec.classList.remove('prepBuild'),450)},60);return}
- if(!building&&w.sec.classList.contains('prepBuild')&&performance.now()-(w.sec._bt||0)>1600)w.sec.classList.remove('prepBuild');
+ if(!building&&w.sec.classList.contains('prepBuild')&&performance.now()-(w.sec._bt||0)>((S&&S.track===w.track&&S.tod===w.tod)?350:1600))w.sec.classList.remove('prepBuild');
  if(FAST()&&now-lastDraw<13)return;/* Nov 10 (Hakan: really choppy): the old 22 ms gate locked 60 Hz screens to 30 fps; now it aims for 60 and lowers the resolution if the GPU can't keep up */
  {const iv=Math.min(100,now-lastDraw);ema+=(iv-ema)*.08;if(++qn%24===0){if(ema>22&&qual>.5)qual=Math.max(.5,qual-.08);else if(ema<17.8&&qual<1)qual=Math.min(1,qual+.04)}}
  lastDraw=now;fcount++;
@@ -449,7 +452,7 @@ function frame(now){raf=requestAnimationFrame(frame);const w=want();
  if(w.step!==2||!s.cars.length)s.zoom=-1;w.sec.classList.toggle('carIdle',w.step===2&&FAST()&&s.zoom<0);w.sec.classList.toggle('carSolo',w.step===2&&s.cars.length===1);w.sec.classList.toggle('carZoom',w.step===2&&FAST()&&s.zoom>=0);{const cs=w.sec.querySelectorAll('#gxSu .gxCard.pf');cs.forEach((c,i)=>c.classList.toggle('zOff',s.zoom>=0&&i!==s.zoom));w.sec.querySelectorAll('#gxSu .gxr[data-pl]').forEach(r=>r.classList.toggle('zOff',s.zoom>=0&&+r.dataset.pl!==s.zoom))}{let zc=document.getElementById('zoomCard');if(s.zoom>=0&&w.step===2){const src=document.querySelectorAll('#gxSu .gxP')[s.zoom],zd=src&&src.querySelector('.gxZD');if(zd){if(!zc){zc=document.createElement('div');zc.id='zoomCard';w.sec.appendChild(zc)}if(zc._k!==s.zoom+zd.innerHTML.length){zc._k=s.zoom+zd.innerHTML.length;zc.innerHTML='<div class="gxZD gxSoloI">'+zd.innerHTML+'</div>'}}}else if(zc)zc.remove()}if(s.zoom>=0){const tn=w.sec.querySelector('#gxSu .gxTn'),cd=w.sec.querySelector('#gxSu .gxCards');if(tn&&cd){tn.style.setProperty('margin-left','0px','important');const d=cd.getBoundingClientRect().left-tn.getBoundingClientRect().left;if(Math.abs(d)>1)tn.style.setProperty('margin-left',d+'px','important')}}
  carChrome(w.sec,s);
  if(FAST()&&!(window.PTO&&window.PTO.prepStudio===false)){studio(s,(w.step===2||w.step===3)&&s.cars.length>0);if(s.stOn&&s.stGrp&&s.cars.length){const c0=s.cars[0];s.stGrp.position.set(c0.position.x,c0.position.y-.02,c0.position.z)}}
- if(s.step!==w.step){s.step=w.step;s.shot=null;s.sh=0;s.ang=0;cv.classList.remove('cut');pend=null}
+ if(s.step!==w.step){s.step=w.step;s.shot=null;s.sh=0;s.ang=0;cv.classList.remove('cut','cutK');pend=null}
  if(w.step!==3){const nf=(w.step===2&&s.cars.length>2)?26:(w.step===2&&s.cars.length===2)?36:46;if(cam.fov!==nf){cam.fov=nf;cam.updateProjectionMatrix()}w.sec.classList.toggle('carN3',w.step===2&&s.cars.length>2)}
  let far=null;if(w.step===3&&s.cars.length)camCine(s,dt,now,w);else if(w.step===2&&s.cars.length)camCar(s,dt);else far=camRace(s,now);
  /* the subject sits in the open part of the picture (above the cards, right of the name) */
@@ -474,4 +477,12 @@ document.addEventListener('pointerdown',e=>{if(!S||!e.target.closest||!e.target.
  const mv=ev=>{if(dragX==null)return;drag+=(ev.clientX-dragX)*-.006;dragX=ev.clientX},up=()=>{dragX=null;removeEventListener('pointermove',mv);removeEventListener('pointerup',up)};addEventListener('pointermove',mv);addEventListener('pointerup',up)});
 /* a race frees the preview world before it builds its own */
 {const l0=P.launch;if(l0)P.launch=function(){try{free()}catch(e){}return l0.apply(this,arguments)}}
+})();
+/* Nov 16 (Hakan: the black fade of some loading screens starts too late and flickers): the preview loop only raised the black a frame or more after the
+   setup screen was already showing. Now the black is up before the screen's first frame, with no fade-in, and the usual slow fade-out lifts it */
+(function ptPrepBlack(){
+const P=window.PT8;if(typeof show!=='function')return;const s0=show;
+show=function(n){const was=typeof scr!=='undefined'?scr:null,r=s0.apply(this,arguments);
+ try{if(n==='s8setup'&&was!=='s8setup'&&!(window.PTO&&window.PTO.prepLive===false)){const sec=document.getElementById('s8setup');if(sec&&!sec.dataset.still&&!sec.classList.contains('prepBuild')){sec.classList.add('prepBuild','prepPre');sec._bt=performance.now();setTimeout(()=>sec.classList.remove('prepPre'),90)}}}catch(e){}
+ return r};
 })();

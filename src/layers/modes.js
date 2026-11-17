@@ -162,7 +162,7 @@ P.eventCfg=(ev,humanPick)=>{const rk=RANKS[ev.rank],rally=ev.type==='rally';
 P.showResults=function(){const Rc=RACE,cfg=Rc.cfg,N=Rc.T.N,humans=Rc.cars.filter(c=>c.human);
  const res={cfg,mode:cfg.cutup?'cutup':cfg.mode,rows:[],notes:[],pay:[],total:0,title:'',sub:'',promo:null,medal:null};
  const sv=P.SV();
- const rank=cars=>[...cars].sort((a,b)=>(b.fin?1e6-b.finT:0)-(a.fin?1e6-a.finT:0)||b.unw-a.unw);
+ const rank=cars=>[...cars].sort((a,b)=>(b.out?-1e6-(b.place||0):b.fin?1e6-b.finT:0)-(a.out?-1e6-(a.place||0):a.fin?1e6-a.finT:0)||b.unw-a.unw);
  if(Rc.mode==='cutup'){
   const hs=humans.slice().sort((a,b)=>b.score-a.score);
   hs.forEach((c,i)=>{const cr=Math.round(c.score/10)+(c.bestCombo>=8?250:0);res.rows.push({name:c.ptName,car:BYID[c.carId].name,score:c.score,stats:[['Near misses',c.nm],['Best combo','x'+Math.max(1,c.bestCombo)],['Crashes',c.crashes]],combo:c.bestCombo,crashes:c.crashes,cr,human:true,place:i+1,col:CS[c.k]});res.total+=cr});
@@ -227,7 +227,7 @@ P.gx5Draw=(cv,o)=>{const g=cv.getContext('2d'),W=cv.width,H=cv.height,k=W/240;g.
  for(let i=0;i<3;i++){g.fillStyle=o.shift?(i<2?'#fff':'#ff3b30'):'rgba(255,255,255,.18)';g.fillRect(146+i*13,114,10,4)}
  if(o.tag){g.textAlign='left';g.font='italic 700 13px "Inter","Segoe UI",Arial,sans-serif';g.fillStyle=o.tagCol||'#fff';g.fillText(o.tag,120,148)}};
 hudUpdate=()=>{const Rc=RACE,T=Rc.T;
- const order=[...Rc.cars].sort((a,b)=>(b.fin?1e6-b.finT:0)-(a.fin?1e6-a.finT:0)||b.unw-a.unw);
+ const order=[...Rc.cars].sort((a,b)=>(b.out?-1e6-(b.place||0):b.fin?1e6-b.finT:0)-(a.out?-1e6-(a.place||0):a.fin?1e6-a.finT:0)||b.unw-a.unw);
  Rc.cars.forEach((c,i)=>{if(!c.human)return;const e=$('h'+i);if(!e||!c.rect)return;const r=c.rect,g=c.grp||[c],gi=g.indexOf(c);
   e.style.left=r[0]*innerWidth+'px';e.style.top=(1-r[1]-r[3])*innerHeight+'px';e.style.width=r[2]*innerWidth+'px';e.style.height=r[3]*innerHeight+'px';
   if(!e.dataset.b){e.innerHTML=HUDHTML;e.dataset.b=1;const sg=e.querySelector('.segs');for(let k=0;k<SEGS;k++)sg.appendChild(document.createElement('i'))}
@@ -257,7 +257,7 @@ hudUpdate=()=>{const Rc=RACE,T=Rc.T;
   /* 0.02: the GT5-style gauge: a thin rev arc round the corner with its numbers outside, the gear inside it, the speed under it */
   {let key2;const cv=q('.gx5'),rv=Math.max(0,Math.min(1.04,.2+.8*kmh/Math.max(1,ceilK))),hm=Rc.cars.filter(h=>h.human).length>1,key=kmh+'|'+gx+'|'+Math.round(rv*200)+'|'+(upN?1:0)+'|'+hm+'|'+(P.isAuto&&P.isAuto(c)?1:0);
    {/* telemetry for the gauge: pedals, steering and the real accelerations (from the change in speed and heading), smoothed */const nw=performance.now(),G=c._gq||(c._gq={t:nw,sp:c.sp,yaw:c.yaw,lon:0,lat:0});const dtg=(nw-G.t)/1000;if(dtg>.016){let dy=c.yaw-G.yaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));const lo=(c.sp-G.sp)/dtg/9.81,la=c.sp*dy/dtg/9.81,kk=Math.min(1,dtg*6);G.lon+=(Math.max(-2,Math.min(2,lo))-G.lon)*kk;G.lat+=(Math.max(-2.5,Math.min(2.5,la))-G.lat)*kk;G.t=nw;G.sp=c.sp;G.yaw=c.yaw}
-  const I=c.in||{};c._tl={th:+(I.th||0),br:+(I.br||0),st:+(I.st||0),lon:G.lon,lat:G.lat}}
+  const I=c.in||{};c._tl={th:+(I.th||0),br:+(I.br||0),st:-(+(I.st||0))/* Nov 16: the physics steers left with a positive value; the gauges want right to be positive */,lon:G.lon,lat:G.lat}}
    const TL=c._tl||{th:0,br:0,st:0,lon:0,lat:0};key2=key+'|'+Math.round(TL.th*20)+'|'+Math.round(TL.br*20)+'|'+Math.round(TL.st*20)+'|'+Math.round(TL.lon*20)+'|'+Math.round(TL.lat*20);
    const mi=P.dialK&&P.dialK()>1.2?.001:.000621371,sp0=Math.max(6,c.sp||0),oth=Rc.cars.filter(q=>q!==c&&!q.out),ahead=oth.filter(q=>q.unw>c.unw).sort((x,y)=>x.unw-y.unw)[0],behind=oth.filter(q=>q.unw<=c.unw).sort((x,y)=>y.unw-x.unw)[0],
    INFO={ty:c._tyLab||(c._tyLab=(()=>{try{const q=P.tuneGet(c.carId,c.alt||0).tyre;return q<0?'SS':q>0?'SH':'SM'}catch(e){return'SM'}})()),fuel:c.fuel==null?1:c.fuel,ahead:ahead?(ahead.unw-c.unw)*T.sp/sp0:null,behind:behind?(c.unw-behind.unw)*T.sp/sp0:null,lap:lap,laps:Rc.laps,trip:Math.max(0,c.unw*T.sp*mi),grip:100+(P.surfFx?P.surfFx(st,!!Rc.T.d.gravel).g:0),surf:Rc.T.d.gravel?'GRAVEL':'TARMAC',dmg:c.dmg||0,dmgOn:!!(P.dmgOn&&P.dmgOn(Rc)),draft:c.draft||0,th:TL.th,br:TL.br};

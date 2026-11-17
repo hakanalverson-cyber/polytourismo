@@ -14,4 +14,9 @@ mk('hungaroring','Hungaroring','hungarian grand prix circuit / tight and twisty 
 mk('bathurst','Bathurst','mount panorama / the mountain climb and the dipper / australia',['MOUNTAIN','THE DIPPER','6.2 KM']);
 mk('spa','Spa-Francorchamps','belgian grand prix circuit / eau rouge and raidillon / the ardennes',['EAU ROUGE','ARDENNES','7.0 KM']);
 mk('nurburg','Nürburgring','german grand prix circuit / mercedes arena / under the castle',['GP CIRCUIT','EIFEL','4.0 KM']);
+mk('oval','Oval Speedway','tri-oval superspeedway / banked turns / flat out',['TRI-OVAL','SPEEDWAY','3.4 KM']);
+mk('monza','Monza','the temple of speed / long straights / parabolica',['FAST','PARABOLICA','5.0 KM']);
+mk('interlagos','Interlagos','brazilian grand prix circuit / the senna s / anticlockwise',['ANTICLOCKWISE','SENNA S','BRAZIL']);
+mk('silverstone','Silverstone','british grand prix circuit / fast sweepers / maggots and becketts',['FAST','BRITAIN','5.9 KM']);
+mk('florence','Florence','tuscan street-style circuit / tight and twisty / crossover',['TWISTY','TUSCANY','CROSSOVER']);
 })();

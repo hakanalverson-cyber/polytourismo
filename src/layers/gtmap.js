@@ -7,6 +7,7 @@
 const P=window.PT8;if(!P)return;
 const st=document.createElement('style');st.textContent=`
 #gtm{position:fixed;z-index:6;pointer-events:none;display:none;top:max(4px,calc(13vh - 6.5vw));right:.5vw;width:13vw;height:13vw}
+#gtm:not(.multi){top:6px;right:10px}
 #gtm.on{display:block}
 #gtm.multi{top:50%;left:50%;right:auto;width:clamp(190px,20vw,290px);height:clamp(190px,20vw,290px);transform:translate(-50%,-50%)}
 #gtm.multi.four{width:clamp(170px,17vw,240px);height:clamp(170px,17vw,240px)}
@@ -26,7 +27,9 @@ function draw(){requestAnimationFrame(draw);
  if(hs.length===2){g.clearRect(0,0,cv.width,cv.height);return}
  /* one player: the whole circuit, north up, as a bold white outline with a dark edge and no backing; numbered dots for you and the two cars ahead */
  if(!multi||hs.length>=3){const B=T._mb||(T._mb=(()=>{let a=1e9,b=-1e9,c=1e9,d=-1e9;for(let i=0;i<T.N;i++){a=Math.min(a,T.x[i]);b=Math.max(b,T.x[i]);c=Math.min(c,T.z[i]);d=Math.max(d,T.z[i])}return[a,b,c,d]})());
-  const s=W*(multi?.72:.84)/Math.max(B[1]-B[0],B[3]-B[2],1),mx=(B[0]+B[1])/2,mz=(B[2]+B[3])/2,h=W/2,X=x=>h+(x-mx)*s,Y=z=>h-(z-mz)*s,N=T.N,stp=Math.max(1,Math.round(6/(T.sp||3)));
+  const s=W*(multi?.72:.86)/Math.max(B[1]-B[0],B[3]-B[2],1),mx=(B[0]+B[1])/2,mz=(B[2]+B[3])/2,h=W/2,pd=W*.06,
+   /* Nov 15 (Hakan: the map was not centred in the top-right corner): one player's map sits tight in the corner, its top and right edge on the same margins whatever the circuit's shape (it used to float in the middle of a square, so a wide circuit hung off the right and a long one sat low) */
+   X=multi?(x=>h+(x-mx)*s):(x=>W-pd-(B[1]-x)*s),Y=multi?(z=>h-(z-mz)*s):(z=>pd+(B[3]-z)*s),N=T.N,stp=Math.max(1,Math.round(6/(T.sp||3)));
   g.clearRect(0,0,W,W);g.lineJoin='round';g.lineCap='round';
   if(multi){const bg=g.createRadialGradient(h,h,W*.1,h,h,W*.5);bg.addColorStop(0,'rgba(10,13,18,.62)');bg.addColorStop(.75,'rgba(10,13,18,.5)');bg.addColorStop(1,'rgba(10,13,18,0)');g.fillStyle=bg;g.beginPath();g.arc(h,h,W*.5,0,6.283);g.fill()}
   const path=()=>{g.beginPath();for(let i=0;i<=N;i+=stp){const j=i%N;if(i)g.lineTo(X(T.x[j]),Y(T.z[j]));else g.moveTo(X(T.x[j]),Y(T.z[j]))}if(!T.open)g.closePath()};
@@ -35,7 +38,7 @@ function draw(){requestAnimationFrame(draw);
   g.globalCompositeOperation='destination-out';path();g.strokeStyle='#000';g.lineWidth=W*.05;g.stroke();g.globalCompositeOperation='source-over';
   path();g.strokeStyle='rgba(70,76,84,.42)';g.lineWidth=W*.05;g.stroke();
   {const c=Math.cos(T.psi[0]),sn=Math.sin(T.psi[0]),w=W*.035/s;g.beginPath();g.moveTo(X(T.x[0]+c*w),Y(T.z[0]-sn*w));g.lineTo(X(T.x[0]-c*w),Y(T.z[0]+sn*w));g.strokeStyle='#f4f6f7';g.lineWidth=W*.012;g.lineCap='butt';g.stroke();g.lineCap='round'}
-  const mark=(c,r,col)=>{const x=X(c.x),y=Y(c.z),yw=c.cy!=null?c.cy:c.yaw,ux=Math.sin(yw),uy=-Math.cos(yw);g.beginPath();g.moveTo(x+ux*r*1.3,y+uy*r*1.3);g.lineTo(x-ux*r*.8-uy*r*.85,y-uy*r*.8+ux*r*.85);g.lineTo(x-ux*r*.8+uy*r*.85,y-uy*r*.8-ux*r*.85);g.closePath();g.fillStyle=col;g.fill();g.lineWidth=W*.006;g.strokeStyle='rgba(0,0,0,.55)';g.stroke()};
+  const mark=(c,r,col)=>{const x=X(c.x),y=Y(c.z),yw=c.human&&c.cy!=null?c.cy:c.yaw,/* Nov 16: a CPU's cy is only its grid heading */ux=Math.sin(yw),uy=-Math.cos(yw);g.beginPath();g.moveTo(x+ux*r*1.3,y+uy*r*1.3);g.lineTo(x-ux*r*.8-uy*r*.85,y-uy*r*.8+ux*r*.85);g.lineTo(x-ux*r*.8+uy*r*.85,y-uy*r*.8-ux*r*.85);g.closePath();g.fillStyle=col;g.fill();g.lineWidth=W*.006;g.strokeStyle='rgba(0,0,0,.55)';g.stroke()};
   if(multi){for(const c of R.cars)if(!c.human&&!c.out)mark(c,W*.02,'#c9d1d9');const hh=R.cars.filter(q=>q.human);hs.forEach(c=>mark(c,W*.036,PC[hh.indexOf(c)%4]))}
   else{for(const c of R.cars)if(!c.human&&!c.out)mark(c,W*.026,'#4db4ff');mark(hs[0],W*.034,'#ff3b30')}
   return}

@@ -1,0 +1,202 @@
+{
+ "id": "interlagos",
+ "name": "Interlagos",
+ "replaces": "interlagos",
+ "credit": "Cartoon Race Track Interlagos (Retro Cartoon Racing), bought by Hakan",
+ "work": "/tmp/cv/w_Interlagos",
+ "texdir": "/tmp/cv/Interlagos/textures/",
+ "carScale": 1.8,
+ "centre": {
+  "method": "skeleton",
+  "mesh": "TARMAC_road",
+  "cell": 20,
+  "sm": 6,
+  "via": [
+   [
+    9000,
+    3500
+   ],
+   [
+    9850,
+    1000
+   ],
+   [
+    9500,
+    -1800
+   ],
+   [
+    5000,
+    -4300
+   ],
+   [
+    0,
+    -6800
+   ],
+   [
+    -1000,
+    -7400
+   ],
+   [
+    -1950,
+    -5800
+   ],
+   [
+    -1950,
+    -4000
+   ],
+   [
+    0,
+    -1800
+   ],
+   [
+    2500,
+    0
+   ],
+   [
+    3000,
+    1500
+   ],
+   [
+    2200,
+    2400
+   ],
+   [
+    0,
+    2800
+   ],
+   [
+    -1700,
+    2500
+   ],
+   [
+    -1700,
+    1200
+   ],
+   [
+    -1000,
+    300
+   ],
+   [
+    -2300,
+    -300
+   ],
+   [
+    -3500,
+    -700
+   ],
+   [
+    -4600,
+    200
+   ],
+   [
+    -4000,
+    -1500
+   ],
+   [
+    -3000,
+    -2500
+   ],
+   [
+    -3300,
+    -3000
+   ],
+   [
+    -5200,
+    -5700
+   ],
+   [
+    -6500,
+    -4500
+   ],
+   [
+    -6800,
+    -2500
+   ],
+   [
+    -6000,
+    1000
+   ],
+   [
+    -5000,
+    2000
+   ],
+   [
+    -3000,
+    3000
+   ],
+   [
+    0,
+    3800
+   ],
+   [
+    4000,
+    3800
+   ]
+  ]
+ },
+ "sign": 1,
+ "start": {
+  "mesh": "startlines",
+  "mode": "centroid",
+  "at": [
+   1500,
+   3500
+  ]
+ },
+ "ground": [
+  [
+   "outer_terrain_grass",
+   0,
+   -0.02
+  ],
+  [
+   "interlagos_sand",
+   3,
+   0.05
+  ],
+  [
+   "gravel_runoff",
+   3,
+   0.06
+  ],
+  [
+   "outer_roads",
+   2,
+   0.08
+  ],
+  [
+   "inner_road",
+   2,
+   0.1
+  ],
+  [
+   "TARMAC_road",
+   1,
+   0.12
+  ]
+ ],
+ "lift": {
+  "startlines": 0.15
+ },
+ "colliders": "collider",
+ "skip": "collider",
+ "bake": "tree|startlights|prop_cone|seats|fence",
+ "ratio": {
+  "tree": 0.12,
+  "seats": 0.2,
+  "default": 0.2
+ },
+ "bigtex": [
+  "road",
+  "garages",
+  "banners"
+ ],
+ "alpha": [
+  "fence"
+ ],
+ "sat": 1.3,
+ "medal": 60,
+ "overhead": "tree|grass|gravel|sand|tarmac|TARMAC|startlines|fence|seats|road",
+ "width": 16,
+ "treecol": 0
+}

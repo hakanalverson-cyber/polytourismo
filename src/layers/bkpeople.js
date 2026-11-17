@@ -62,7 +62,10 @@ function subGeo(geo,sk,keep,idx,par){const n=sk.bones.length,under=new Uint8Arra
 const RLAY=k=>1+k;
 const mkBones=T=>{const a=[];for(let i=0;i<T.n;i++){const b=new THREE.Bone();b.matrixAutoUpdate=true;a.push(b)}return a};
 BK.makeRider0=BK.makeRider;BK.poseRider0=BK.poseRider;BK.riderLayer0=BK.riderLayer;BK.disposeRider0=BK.disposeRider;
-BK.makeRider=o=>{o=o||{};if(!PEO)return BK.makeRider0(o);const pick=BK.PEOPLE[((o.who|0)%BK.PEOPLE.length+BK.PEOPLE.length)%BK.PEOPLE.length],T=PEO.find(t=>t&&Math.round(t.hipC.x)===pick.x);if(!T)return BK.makeRider0(o);
+BK.makeRider=o=>{o=o||{};if(!PEO)return BK.makeRider0(o);const pick=BK.PEOPLE[((o.who|0)%BK.PEOPLE.length+BK.PEOPLE.length)%BK.PEOPLE.length],T=PEO.find(t=>t&&Math.round(t.hipC.x)===pick.x);if(!T)return BK.makeRider0(o);return BK.makeRiderFrom(T,o)};
+/* Nov 15: the same rig for any Studio Ochi pack with this skeleton (the pit crew, pit.js): BK.peoPrep(gltf) gives the templates, BK.makeRiderFrom(T,o) a posable person */
+BK.peoPrep=g=>prep(g);
+BK.makeRiderFrom=(T,o)=>{o=o||{};
  const g=new THREE.Group(),bones=mkBones(T);for(const b of bones)g.add(b);/* flat: every bone is placed in rider space directly */
  const skel=new THREE.Skeleton(bones,T.sm.skeleton.boneInverses);
  const body=new THREE.SkinnedMesh(T.sm.geometry,T.sm.material);body.bind(skel,T.sm.bindMatrix);body.frustumCulled=false;g.add(body);
